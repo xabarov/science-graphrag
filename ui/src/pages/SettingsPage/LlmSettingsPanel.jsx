@@ -46,7 +46,12 @@ function computeSaveBlockingMessage(t, advValues, timeoutSeconds) {
     return t("llm.field.error.invalidTimeout");
   }
   for (const k of LLM_RUNTIME_OVERRIDE_KEYS) {
-    if (k === "agent_turn_policy_llm_enabled" || k === "agent_runtime" || k === "llm_distributed_quota_enabled")
+    if (
+      k === "agent_turn_policy_llm_enabled" ||
+      k === "agent_runtime" ||
+      k === "llm_distributed_quota_enabled" ||
+      k === "llm_distributed_quota_key_prefix"
+    )
       continue;
     if (!(k in advValues)) continue;
     const raw = advValues[k];
@@ -202,6 +207,8 @@ export default function LlmSettingsPanel({
   const [baseUrl, setBaseUrl] = useState(llm?.base_url || "");
   const [model, setModel] = useState(llm?.model || "");
   const [chatModel, setChatModel] = useState(llm?.chat_model || "");
+  const [vlModel, setVlModel] = useState("");
+  const [vlBaseUrl, setVlBaseUrl] = useState("");
   const [temperature, setTemperature] = useState(String(llm?.temperature ?? 0));
   const [timeoutSeconds, setTimeoutSeconds] = useState(String(llm?.effective?.resolved_timeout_seconds ?? 180));
   const [apiKey, setApiKey] = useState("");
@@ -239,6 +246,10 @@ export default function LlmSettingsPanel({
     setBaseUrl(llm.base_url || "");
     setModel(llm.model || "");
     setChatModel(llm.chat_model || "");
+    const pVm = (llm.vl_model || "").trim();
+    const pVb = (llm.vl_base_url || "").trim();
+    setVlModel(pVm || (llm.effective?.resolved_vl_model ?? "") || "");
+    setVlBaseUrl(pVb || (llm.effective?.resolved_vl_base_url ?? "") || "");
     setTemperature(String(llm.temperature ?? 0));
     setTimeoutSeconds(String(llm.effective?.resolved_timeout_seconds ?? 180));
     setAdvValues(buildAdvValuesFromLlm(llm));
@@ -259,17 +270,42 @@ export default function LlmSettingsPanel({
     return false;
   }, [llm, advValues]);
 
+  const baselineVlModel = useMemo(() => {
+    const p = (llm?.vl_model || "").trim();
+    return p || (llm?.effective?.resolved_vl_model || "").trim();
+  }, [llm]);
+
+  const baselineVlBaseUrl = useMemo(() => {
+    const p = (llm?.vl_base_url || "").trim();
+    return p || (llm?.effective?.resolved_vl_base_url || "").trim();
+  }, [llm]);
+
   const providerDirty = useMemo(() => {
     return (
       baseUrl !== (llm?.base_url || "") ||
       model !== (llm?.model || "") ||
       chatModel !== (llm?.chat_model || "") ||
+      vlModel.trim() !== baselineVlModel ||
+      vlBaseUrl.trim() !== baselineVlBaseUrl ||
       Number(temperature) !== Number(llm?.temperature ?? 0) ||
       Number(timeoutSeconds) !== Number(llm?.effective?.resolved_timeout_seconds ?? 180) ||
       Boolean(apiKey) ||
       replaceKey
     );
-  }, [apiKey, baseUrl, chatModel, llm, model, replaceKey, temperature, timeoutSeconds]);
+  }, [
+    apiKey,
+    baseUrl,
+    baselineVlBaseUrl,
+    baselineVlModel,
+    chatModel,
+    llm,
+    model,
+    replaceKey,
+    temperature,
+    timeoutSeconds,
+    vlBaseUrl,
+    vlModel,
+  ]);
 
   const dirty = providerDirty || advDirty;
 
@@ -298,6 +334,8 @@ export default function LlmSettingsPanel({
     const payload = {
       base_url: baseUrl,
       model,
+      vl_model: vlModel.trim(),
+      vl_base_url: vlBaseUrl.trim(),
       chat_model: chatModel.trim(),
       temperature: Number(temperature),
       timeout_seconds: Number(timeoutSeconds),
@@ -505,13 +543,21 @@ export default function LlmSettingsPanel({
             fullWidth
           />
           <TextField
-            label={t("llm.field.chatModel")}
+            label={t("llm.field.vlModel")}
             size="small"
-            value={chatModel}
-            onChange={(e) => setChatModel(e.target.value)}
+            value={vlModel}
+            onChange={(e) => setVlModel(e.target.value)}
             sx={fieldSx}
             fullWidth
-            helperText={t("llm.hint.chatModelFallback")}
+          />
+          <TextField
+            label={t("llm.field.vlBaseUrl")}
+            size="small"
+            value={vlBaseUrl}
+            onChange={(e) => setVlBaseUrl(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+            helperText={t("llm.hint.vlBaseUrlFallback")}
           />
           <TextField
             label={t("llm.field.temperature")}
@@ -538,33 +584,6 @@ export default function LlmSettingsPanel({
         </Box>
       </Box>
 
-      <Box sx={{ ...cardSx, padding: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}>
-          <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
-            {t("llm.advanced.title")}
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Switch checked={advancedOpen} onChange={(e) => setAdvancedOpen(e.target.checked)} />
-            <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>{t("llm.advanced.toggle")}</Typography>
-          </Box>
-        </Box>
-        <Typography sx={{ marginTop: 0.75, fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.5 }}>
-          {t("llm.advanced.intro")}
-        </Typography>
-        <Collapse in={advancedOpen}>
-          <Box sx={{ marginTop: 1.5, display: "flex", gap: 1, flexWrap: "wrap" }}>
-            <CursorSmallButton type="button" onClick={restoreRecommendedDefaults}>
-              {t("llm.advanced.restoreRecommended")}
-            </CursorSmallButton>
-          </Box>
-          {renderAdvancedGroup("llm_concurrency", LLM_ADVANCED_GROUPS.llm_concurrency)}
-          {renderAdvancedGroup("llm_distributed_quota", LLM_ADVANCED_GROUPS.llm_distributed_quota)}
-          {renderAdvancedGroup("llm_deadlines", LLM_ADVANCED_GROUPS.llm_deadlines)}
-          {renderAdvancedGroup("llm_agent_runtime", LLM_ADVANCED_GROUPS.llm_agent_runtime)}
-          {renderAdvancedGroup("llm_advanced", "llm.advanced.group.other")}
-        </Collapse>
-      </Box>
-
       <Box
         sx={{
           ...cardSx,
@@ -578,6 +597,12 @@ export default function LlmSettingsPanel({
         <Typography sx={{ marginTop: 0.5, fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.5 }}>
           {credentialsBlurbSecond}
         </Typography>
+
+        {llm?.status?.vl_api_key_explicit_env ? (
+          <Alert severity="info" sx={{ marginTop: 2, ...alertMutedSx }}>
+            <Typography sx={{ fontSize: "0.72rem" }}>{t("llm.credentials.vlEnvOverride")}</Typography>
+          </Alert>
+        ) : null}
 
         <Alert
           severity={alertSev}
@@ -662,6 +687,51 @@ export default function LlmSettingsPanel({
         onTestSaved={onTestSaved}
         onTestDraft={handleDraftTest}
       />
+
+      <Box sx={{ ...cardSx, padding: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, flexWrap: "wrap" }}>
+          <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
+            {t("llm.advanced.title")}
+          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Switch checked={advancedOpen} onChange={(e) => setAdvancedOpen(e.target.checked)} />
+            <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>{t("llm.advanced.toggle")}</Typography>
+          </Box>
+        </Box>
+        <Typography sx={{ marginTop: 0.75, fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.5 }}>
+          {t("llm.advanced.intro")}
+        </Typography>
+        <Collapse in={advancedOpen}>
+          <Box
+            sx={{
+              marginTop: 1.5,
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              gap: 1.5,
+            }}
+          >
+            <TextField
+              label={t("llm.field.chatModel")}
+              size="small"
+              value={chatModel}
+              onChange={(e) => setChatModel(e.target.value)}
+              sx={fieldSx}
+              fullWidth
+              helperText={t("llm.hint.chatModelFallback")}
+            />
+          </Box>
+          <Box sx={{ marginTop: 1.5, display: "flex", gap: 1, flexWrap: "wrap" }}>
+            <CursorSmallButton type="button" onClick={restoreRecommendedDefaults}>
+              {t("llm.advanced.restoreRecommended")}
+            </CursorSmallButton>
+          </Box>
+          {renderAdvancedGroup("llm_concurrency", LLM_ADVANCED_GROUPS.llm_concurrency)}
+          {renderAdvancedGroup("llm_distributed_quota", LLM_ADVANCED_GROUPS.llm_distributed_quota)}
+          {renderAdvancedGroup("llm_deadlines", LLM_ADVANCED_GROUPS.llm_deadlines)}
+          {renderAdvancedGroup("llm_agent_runtime", LLM_ADVANCED_GROUPS.llm_agent_runtime)}
+          {renderAdvancedGroup("llm_advanced", "llm.advanced.group.other")}
+        </Collapse>
+      </Box>
     </Box>
   );
 }

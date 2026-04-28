@@ -12,6 +12,7 @@ import LinearProgress from "@mui/material/LinearProgress";
 import Stack from "@mui/material/Stack";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { CopyIdButton, CursorIconAction } from "../../components/common/index.js";
 import {
@@ -34,6 +35,8 @@ import WorkspaceIngestMenu from "./WorkspaceIngestMenu.jsx";
  * @param {{ t: (key: string, vars?: Record<string, string>) => string, vm: Record<string, unknown> }} props
  */
 export default function WorkspaceContextStrip({ t, vm }) {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const gs = vm.graphStats && typeof vm.graphStats === "object" ? vm.graphStats : null;
   const hasWs = Boolean(vm.workspaceMeta?.id);
   const multiPapers = vm.effectiveWorkIds?.length > 1;
@@ -154,32 +157,32 @@ export default function WorkspaceContextStrip({ t, vm }) {
         mb: 1.5,
         p: 1,
         borderRadius: 1,
-        border: "1px solid rgba(255,255,255,0.08)",
-        backgroundColor: "rgba(255,255,255,0.02)",
+        border: `1px solid ${tk.border.default}`,
+        backgroundColor: tk.surface.subtle,
       }}
     >
       <Stack direction="row" flexWrap="wrap" alignItems="center" gap={1} useFlexGap sx={{ rowGap: 1 }}>
         <Box sx={{ minWidth: 0, flex: "1 1 200px" }}>
           {vm.workspaceLoading ? (
             <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
-              <CircularProgress size={16} sx={{ color: "rgba(129,140,248,0.9)" }} />
-              <Typography component="span" sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.65)" }}>
+              <CircularProgress size={16} sx={{ color: tk.accent.fg }} />
+              <Typography component="span" sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>
                 {t("workspace.header.loadingWs")}
               </Typography>
             </Box>
           ) : hasWs ? (
             <>
-              <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: "rgba(255,255,255,0.92)", lineHeight: 1.25 }} noWrap>
+              <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary, lineHeight: 1.25 }} noWrap>
                 {vm.workspaceMeta.name || t("workspace.header.titleFallback")}
               </Typography>
-              <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.48)", mt: 0.25 }}>
+              <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mt: 0.25 }}>
                 {vm.effectiveWorkIds.length === 1
                   ? t("workspace.header.paperCountOne", { count: String(vm.effectiveWorkIds.length) })
                   : t("workspace.header.paperCountMany", { count: String(vm.effectiveWorkIds.length) })}
               </Typography>
               {multiPapers && vm.selectedWorkId ? (
-                <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.55)", mt: 0.35, lineHeight: 1.35 }} noWrap title={focusedTitle || ""}>
-                  <Box component="span" sx={{ color: "rgba(129,140,248,0.9)" }}>
+                <Typography sx={{ fontSize: "0.72rem", color: tk.text.secondary, mt: 0.35, lineHeight: 1.35 }} noWrap title={focusedTitle || ""}>
+                  <Box component="span" sx={{ color: tk.text.accent }}>
                     {t("workspace.header.focusedPaper")}{" "}
                   </Box>
                   {focusedTitle || t("workspace.paper.noTitle")}
@@ -188,16 +191,16 @@ export default function WorkspaceContextStrip({ t, vm }) {
             </>
           ) : (
             <>
-              <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: "rgba(255,255,255,0.42)", letterSpacing: "0.02em" }}>
+              <Typography sx={{ fontSize: "0.68rem", fontWeight: 700, color: tk.text.muted, letterSpacing: "0.02em" }}>
                 {t("workspace.header.eyebrow")}
               </Typography>
-              <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: "rgba(255,255,255,0.88)", mt: 0.25 }}>
+              <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary, mt: 0.25 }}>
                 {t("workspace.header.titleFallback")}
               </Typography>
               <Box sx={{ mt: 0.75 }}>
                 <WorkIdGlossaryHint variant="workspace" />
               </Box>
-              <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", mt: 0.75, lineHeight: 1.45 }}>
+              <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mt: 0.75, lineHeight: 1.45 }}>
                 {t("workspace.hero.switchWorkspaceHint")}
               </Typography>
             </>
@@ -206,7 +209,7 @@ export default function WorkspaceContextStrip({ t, vm }) {
 
         {hasWs && gs ? (
           <>
-            <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)", alignSelf: "stretch", minHeight: 28, display: { xs: "none", sm: "block" } }} />
+            <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28, display: { xs: "none", sm: "block" } }} />
             <Stack direction="row" flexWrap="wrap" gap={0.5} useFlexGap sx={{ alignItems: "center" }}>
               <Tooltip title={t("workspace.strip.statsWorksTip")}>
                 <Chip
@@ -216,9 +219,10 @@ export default function WorkspaceContextStrip({ t, vm }) {
                     height: 24,
                     fontSize: "0.6875rem",
                     borderRadius: "6px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    "& .MuiChip-label": { px: 0.75 },
+                    border: `1px solid ${tk.border.default}`,
+                    backgroundColor: tk.control.chipMutedBg,
+                    color: tk.control.chipMutedFg,
+                    "& .MuiChip-label": { px: 0.75, color: tk.control.chipMutedFg },
                   }}
                 />
               </Tooltip>
@@ -230,9 +234,10 @@ export default function WorkspaceContextStrip({ t, vm }) {
                     height: 24,
                     fontSize: "0.6875rem",
                     borderRadius: "6px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    "& .MuiChip-label": { px: 0.75 },
+                    border: `1px solid ${tk.border.default}`,
+                    backgroundColor: tk.control.chipMutedBg,
+                    color: tk.control.chipMutedFg,
+                    "& .MuiChip-label": { px: 0.75, color: tk.control.chipMutedFg },
                   }}
                 />
               </Tooltip>
@@ -244,9 +249,10 @@ export default function WorkspaceContextStrip({ t, vm }) {
                     height: 24,
                     fontSize: "0.6875rem",
                     borderRadius: "6px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    "& .MuiChip-label": { px: 0.75 },
+                    border: `1px solid ${tk.border.default}`,
+                    backgroundColor: tk.control.chipMutedBg,
+                    color: tk.control.chipMutedFg,
+                    "& .MuiChip-label": { px: 0.75, color: tk.control.chipMutedFg },
                   }}
                 />
               </Tooltip>
@@ -258,9 +264,10 @@ export default function WorkspaceContextStrip({ t, vm }) {
                     height: 24,
                     fontSize: "0.6875rem",
                     borderRadius: "6px",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    backgroundColor: "rgba(255,255,255,0.04)",
-                    "& .MuiChip-label": { px: 0.75 },
+                    border: `1px solid ${tk.border.default}`,
+                    backgroundColor: tk.control.chipMutedBg,
+                    color: tk.control.chipMutedFg,
+                    "& .MuiChip-label": { px: 0.75, color: tk.control.chipMutedFg },
                   }}
                 />
               </Tooltip>
@@ -273,10 +280,10 @@ export default function WorkspaceContextStrip({ t, vm }) {
             <Tooltip
               title={
                 <Stack spacing={0.75} sx={{ maxWidth: 280 }}>
-                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.92)" }}>
+                  <Typography sx={{ fontSize: "0.75rem", fontWeight: 600, color: "common.white" }}>
                     {t("workspace.strip.ingestProgressTip")}
                   </Typography>
-                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.65)", lineHeight: 1.45 }}>
+                  <Typography sx={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.82)", lineHeight: 1.45 }}>
                     {t("workspace.strip.ingestProgressTwoScalesHint")}
                   </Typography>
                 </Stack>
@@ -286,7 +293,7 @@ export default function WorkspaceContextStrip({ t, vm }) {
                 <Stack direction="row" alignItems="center" justifyContent="space-between" gap={0.5}>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     {ingestStrip?.failed ? (
-                      <Typography sx={{ fontSize: "0.72rem", color: "rgba(239,68,68,0.88)", fontWeight: 500 }} noWrap>
+                      <Typography sx={{ fontSize: "0.72rem", color: tk.state.dangerFg, fontWeight: 500 }} noWrap>
                         {t("workspace.strip.ingestFailed")}
                       </Typography>
                     ) : ingestStrip?.starting ? (
@@ -300,7 +307,7 @@ export default function WorkspaceContextStrip({ t, vm }) {
                     )}
                   </Box>
                   {!ingestIndeterminate && progressValue != null ? (
-                    <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.42)", flexShrink: 0 }}>
+                    <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, flexShrink: 0 }}>
                       {`${Math.round(progressValue)}%`}
                     </Typography>
                   ) : null}
@@ -317,7 +324,7 @@ export default function WorkspaceContextStrip({ t, vm }) {
                   const line = [subStr, core].filter(Boolean).join(" · ");
                   if (!line) return null;
                   return (
-                    <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)" }} noWrap title={ingestStrip.stageId}>
+                    <Typography sx={{ fontSize: "0.65rem", color: tk.text.faint }} noWrap title={ingestStrip.stageId}>
                       {line.length > 96 ? `${line.slice(0, 96)}…` : line}
                     </Typography>
                   );
@@ -334,9 +341,9 @@ export default function WorkspaceContextStrip({ t, vm }) {
                   sx={{
                     height: 4,
                     borderRadius: 2,
-                    backgroundColor: "rgba(255,255,255,0.06)",
+                    backgroundColor: tk.control.chipMutedBg,
                     "& .MuiLinearProgress-bar": {
-                      backgroundColor: ingestStrip?.failed ? "rgba(239,68,68,0.55)" : "rgba(99,102,241,0.75)",
+                      backgroundColor: ingestStrip?.failed ? tk.state.dangerFg : tk.accent.fg,
                     },
                   }}
                 />
@@ -352,8 +359,7 @@ export default function WorkspaceContextStrip({ t, vm }) {
                             flex: 1,
                             height: 3,
                             borderRadius: 1,
-                            backgroundColor:
-                              done || active ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.06)",
+                            backgroundColor: done || active ? tk.accent.softBorder : tk.control.chipMutedBg,
                             opacity: active ? 1 : done ? 0.85 : 1,
                           }}
                         />

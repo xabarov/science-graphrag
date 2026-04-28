@@ -5,11 +5,8 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import {
-  buildStandaloneEvidencePath,
-  buildStandaloneTracePath,
-  buildWorkspaceTracePath,
-} from "./traceabilityState.js";
+import { GRAPH_PATH, READER_PATH } from "../../routes/paths.js";
+import { buildStandaloneEvidencePath, buildStandaloneTracePath } from "./traceabilityState.js";
 import {
   BibliographyBlock,
   IdeaSuggestionsBlock,
@@ -273,7 +270,7 @@ export function AskAnswerPanel({
                   {sameAsWorkspace ? (
                     <>
                       <Link
-                        to={buildWorkspaceTracePath(wid, "reader", {
+                        to={buildStandaloneTracePath(READER_PATH, wid, {
                           ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
                         })}
                         style={{ fontSize: "0.75rem", color: tk.text.accent }}
@@ -287,7 +284,7 @@ export function AskAnswerPanel({
                         {t("askPanel.openEvidence")}
                       </Link>
                       <Link
-                        to={buildWorkspaceTracePath(wid, "graph", {
+                        to={buildStandaloneTracePath(GRAPH_PATH, wid, {
                           ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
                         })}
                         style={{ fontSize: "0.75rem", color: tk.text.accent }}
@@ -298,7 +295,7 @@ export function AskAnswerPanel({
                   ) : (
                     <>
                       <Link
-                        to={buildWorkspaceTracePath(wid, "reader", {
+                        to={buildStandaloneTracePath(READER_PATH, wid, {
                           ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
                         })}
                         style={{ fontSize: "0.75rem", color: tk.text.accent }}
@@ -306,7 +303,7 @@ export function AskAnswerPanel({
                         {t("askPanel.openInWorkspace")}
                       </Link>
                       <Link
-                        to={buildStandaloneTracePath("/reader", wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
+                        to={buildStandaloneTracePath(READER_PATH, wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
                         style={{ fontSize: "0.75rem", color: tk.text.muted }}
                       >
                         {t("askPanel.standaloneReader")}
@@ -318,7 +315,7 @@ export function AskAnswerPanel({
                         {t("askPanel.standaloneEvidence")}
                       </Link>
                       <Link
-                        to={buildStandaloneTracePath("/graph", wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
+                        to={buildStandaloneTracePath(GRAPH_PATH, wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
                         style={{ fontSize: "0.75rem", color: tk.text.muted }}
                       >
                         {t("askPanel.standaloneGraph")}

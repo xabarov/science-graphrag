@@ -22,7 +22,7 @@ alwaysApply: true
 1. **API keys видимы внутри окружения процесса.** Smoke-check одной строкой:
 
  ```bash
- .venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('extraction_llm_api_key:', bool(s.extraction_llm_api_key), 'vl_api_key:', bool(s.vl_api_key))"
+ .venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('api_key:', bool(s.api_key), 'extraction_llm_api_key:', bool(s.extraction_llm_api_key), 'vl_effective:', bool(s.resolved_vl_api_key))"
  ```
 
  Должно напечатать `True True`. Если что-то `False` — НЕ запускать долгую команду.

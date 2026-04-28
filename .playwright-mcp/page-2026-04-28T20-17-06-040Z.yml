@@ -1,0 +1,41 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - img "science-graphrag" [ref=e8]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - link "Workspace" [ref=e12] [cursor=pointer]:
+          - /url: "#/workspace?workspace_id=2678c5f1-1b31-4aac-92c9-6bd0f4472b23"
+          - img [ref=e14]
+          - paragraph [ref=e16]: Workspace
+        - link "Graph" [ref=e18] [cursor=pointer]:
+          - /url: "#/graph?workspace_id=2678c5f1-1b31-4aac-92c9-6bd0f4472b23"
+          - img [ref=e20]
+          - paragraph [ref=e22]: Graph
+        - link "Chat" [ref=e24] [cursor=pointer]:
+          - /url: "#/chat?workspace_id=2678c5f1-1b31-4aac-92c9-6bd0f4472b23"
+          - img [ref=e26]
+          - paragraph [ref=e28]: Chat
+      - separator [ref=e29]
+      - paragraph [ref=e30]: Operations
+      - generic [ref=e31]:
+        - link "Admin" [ref=e33] [cursor=pointer]:
+          - /url: "#/admin"
+          - img [ref=e35]
+          - paragraph [ref=e40]: Admin
+        - link "Benchmarks" [ref=e42] [cursor=pointer]:
+          - /url: "#/admin/benchmarks"
+          - img [ref=e44]
+          - paragraph [ref=e46]: Benchmarks
+        - link "Settings" [ref=e48] [cursor=pointer]:
+          - /url: "#/admin/settings"
+          - img [ref=e50]
+          - paragraph [ref=e52]: Settings
+    - button "toggle sidebar" [ref=e55] [cursor=pointer]:
+      - generic [ref=e56]: <
+  - main [ref=e57]:
+    - button "Workspace menu — open list to switch workspace" [ref=e59] [cursor=pointer]:
+      - img [ref=e60]
+      - generic [ref=e62]: Object Detection (clean ingested + claims)
+      - img [ref=e63]
+    - progressbar [ref=e67]:
+      - img [ref=e68]

@@ -47,6 +47,12 @@ export default {
   "home.card.admin.openAdmin": "Открыть админ",
   "home.card.admin.benchmarks": "Бенчмарки",
 
+  "home.setup.eyebrow": "Настройка LLM",
+  "home.setup.title": "Добавьте API-ключ для полноценного извлечения",
+  "home.setup.description":
+    "Стек поднимается и без ключа, но извлечение, PDF→Markdown (VL) и research-агенту нужен OpenAI-compatible ключ (например OpenRouter). Задайте один раз в Настройках — значения по умолчанию совпадают с окружением сервера.",
+  "home.setup.openSettings": "Открыть настройки LLM",
+
   "home.recentWorks.title": "Недавние работы",
   "home.recentWorks.empty": "Пока нет недавних. Откройте «Рабочие области» и добавьте статью.",
   "home.recentWorks.open": "Открыть",
@@ -165,7 +171,7 @@ export default {
   "settings.snapshot.ingestion.label": "Загрузка и обработка документов",
   "settings.snapshot.ingestion.description": "PDF, front-matter, ссылки и настройка пайплайна извлечения.",
   "settings.snapshot.storage.label": "Хранилище и интеграции",
-  "settings.snapshot.storage.description": "Neo4j, Qdrant, Postgres, OpenAlex и внешние интеграции.",
+  "settings.snapshot.storage.description": "Neo4j, Qdrant, Postgres, Redis, S3 и локальные пути данных.",
   "settings.snapshot.benchmark.label": "Бенчмарк",
   "settings.snapshot.benchmark.description": "Настройки teacher/student и параметры запуска бенчмарков.",
   "settings.snapshot.security.label": "Безопасность и доступ",

@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
+import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { Link } from "react-router-dom";
+import { useTheme } from "@mui/material/styles";
 
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
@@ -16,6 +17,8 @@ import { useI18n } from "../i18n/useI18n.js";
 import { getContinueWorkspaceTarget } from "./HomePage/homeState.js";
 
 export default function NotFoundPage() {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const { t } = useI18n();
   const continueTarget = useMemo(() => getContinueWorkspaceTarget(), []);
   const adminModeEnabled = useMemo(() => isAdminModeEnabled(), []);
@@ -31,15 +34,15 @@ export default function NotFoundPage() {
       <Box
         sx={{
           borderRadius: "6px",
-          border: "1px solid rgba(255,255,255,0.08)",
-          backgroundColor: "#1a1a1a",
+          border: `1px solid ${tk.border.default}`,
+          backgroundColor: tk.surface.panel,
           p: 2,
         }}
       >
-        <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)" }}>
+        <Typography sx={{ fontWeight: 600, fontSize: "0.875rem", color: tk.text.primary }}>
           {t("notFound.actions.title")}
         </Typography>
-        <Typography sx={{ mt: 1, fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.55, maxWidth: 700 }}>
+        <Typography sx={{ mt: 1, fontSize: "0.8125rem", color: tk.text.secondary, lineHeight: 1.55, maxWidth: 700 }}>
           {t("notFound.actions.body")}
         </Typography>
         <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 0.75 }}>

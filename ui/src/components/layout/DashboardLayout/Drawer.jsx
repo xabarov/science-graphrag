@@ -19,6 +19,7 @@ import { isAdminModeEnabled } from "../adminVisibility.js";
 import { useWorkspaceContext } from "../useWorkspaceContext.js";
 import { appendWorkspaceQuery } from "../../../utils/workspaceStore.js";
 import { getLastWorkId } from "../../../pages/WorkspacePage/utils/workContext.js";
+import { dispatchShellNavigationIntent } from "../shellNavigationEvents.js";
 import darkLogo from "../../../assets/logo/dark-logo.png";
 import lightLogo from "../../../assets/logo/light-logo.png";
 
@@ -100,12 +101,19 @@ export default function Drawer({ onNavigate }) {
 
   function renderNavItem(item) {
     const active = itemActive(location, item.to);
+    const notifyNavigationIntent = () => {
+      if (!active) dispatchShellNavigationIntent(item.to);
+    };
     const content = (
       <Box
         component={RouterLink}
         to={item.to}
         aria-label={expanded ? undefined : item.label}
-        onClick={() => onNavigate?.()}
+        onPointerDownCapture={notifyNavigationIntent}
+        onClick={() => {
+          notifyNavigationIntent();
+          onNavigate?.();
+        }}
         sx={{
           display: "flex",
           alignItems: "center",

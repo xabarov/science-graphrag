@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -10,7 +11,14 @@ from science_graphrag.config import Settings
 from science_graphrag.embeddings.openrouter_provider import resolve_openrouter_embedding_settings
 
 
-def test_main_llm_api_key_does_not_fill_extraction(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_main_llm_api_key_does_not_fill_extraction(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.chdir(tmp_path)
+    for key in (
+        "SCIENCE_GRAPHRAG_API_KEY",
+        "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
+        "SCIENCE_GRAPHRAG_VL_API_KEY",
+    ):
+        monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY", "")
     monkeypatch.setenv("MAIN_LLM_API_KEY", "legacy-should-be-ignored")
     s = Settings()

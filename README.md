@@ -46,7 +46,7 @@ python -m venv .venv
 .venv/bin/science-graphrag config-check --no-strict
 ```
 
-В `.env` задайте **`SCIENCE_GRAPHRAG_OPENALEX_MAILTO`** — это не секрет, а ваш contact email для OpenAlex metadata enrichment. Для нормальной практической работы также обычно нужны **`SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`** и **`SCIENCE_GRAPHRAG_VL_API_KEY`**: без них стек поднимется, но extraction и качество обработки PDF будут заметно ограничены.
+В `.env` задайте **`SCIENCE_GRAPHRAG_OPENALEX_MAILTO`** — contact email для OpenAlex metadata enrichment (не секрет; то же значение можно задать в **Настройки → Общие** и сохранить в `data/settings/runtime_settings.json`). Для нормальной практической работы обычно достаточно одного ключа **`SCIENCE_GRAPHRAG_API_KEY`** (OpenAI-compatible, например OpenRouter): он используется для extraction, embeddings по пути OpenRouter и для VL PDF→Markdown. Без ключа стек поднимется, но extraction и качество обработки PDF будут заметно ограничены.
 
 Для prod-like режима:
 

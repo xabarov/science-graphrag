@@ -29,6 +29,7 @@ if _skip_host_dotenv:
     # Separately ensure canonical LLM/VL credential vars from `.env` are visible when the shell
     # exported them empty (override=False would otherwise leave os.environ blocking dotenv).
     _api_key_vars = (
+        "SCIENCE_GRAPHRAG_API_KEY",
         "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY",
         "SCIENCE_GRAPHRAG_EXTRACTION_LLM_BASE_URL",
         "SCIENCE_GRAPHRAG_EXTRACTION_LLM_MODEL",
@@ -168,6 +169,14 @@ class Settings(BaseSettings):
         description="If true, resolve Institution.ror_id via ROR API during ingest (HTTP).",
     )
     use_vl_for_pdf: bool = Field(default=True)
+    api_key: str | None = Field(
+        default=None,
+        description=(
+            "Canonical unified OpenAI-compatible API key (SCIENCE_GRAPHRAG_API_KEY). "
+            "When set, it supplies extraction_llm_api_key unless that field is set separately; "
+            "VL calls use vl_api_key when set, otherwise this unified / extraction key."
+        ),
+    )
     vl_api_key: str | None = Field(default=None)
     vl_base_url: str = Field(default="https://openrouter.ai/api/v1")
     vl_model: str = Field(default="qwen/qwen3-vl-235b-a22b-instruct")
@@ -735,7 +744,29 @@ class Settings(BaseSettings):
         return data
 
     @model_validator(mode="after")
+    def merge_unified_llm_api_credentials(self) -> "Settings":
+        """Apply SCIENCE_GRAPHRAG_API_KEY before legacy extraction_llm_api_key."""
+
+        shared = (self.api_key or "").strip()
+        legacy_ex = (self.extraction_llm_api_key or "").strip()
+        merged_ex = shared or legacy_ex or None
+        object.__setattr__(self, "extraction_llm_api_key", merged_ex)
+        return self
+
+    @property
+    def resolved_vl_api_key(self) -> str | None:
+        """VL-specific key when set; otherwise reuse unified / extraction key."""
+
+        raw_vl = (self.vl_api_key or "").strip()
+        if raw_vl:
+            return raw_vl
+        ex = (self.extraction_llm_api_key or "").strip()
+        return ex or None
+
+    @model_validator(mode="after")
     def validate_object_storage_config(self) -> "Settings":
+        """Validate optional S3 / object-storage flags."""
+
         if self.object_storage_enabled:
             missing: list[str] = []
             if not (self.s3_access_key_id or "").strip():
@@ -759,6 +790,8 @@ class Settings(BaseSettings):
 
 
 def get_settings() -> Settings:
+    """Return ``Settings`` with persisted runtime overlays and managed LLM secret applied."""
+
     base_settings = Settings()
     service = SettingsService(repo_root=Path(__file__).resolve().parents[1])
     return service.build_runtime_settings(base_settings)

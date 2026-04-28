@@ -12,8 +12,10 @@ from science_graphrag.api.settings_models import (
     SettingsSchemaResponse,
     SettingsSnapshotResponse,
     TestLlmConnectionRequest,
+    UpdateGeneralSettingsRequest,
     UpdateIngestionSettingsRequest,
     UpdateLlmSettingsRequest,
+    UpdateStorageSettingsRequest,
 )
 from science_graphrag.config import get_settings
 from science_graphrag.settings.service import LlmTestDraft, SettingsService
@@ -35,6 +37,8 @@ def get_settings_snapshot(_: str = Depends(require_settings_access)) -> Settings
         sections=snapshot.sections,
         llm=snapshot.llm,
         ingestion=snapshot.ingestion,
+        general=snapshot.general,
+        storage=snapshot.storage,
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
         work_dedup=snapshot.work_dedup,
@@ -56,6 +60,10 @@ def patch_llm_settings(
         "actor": actor,
         "api_key": body.api_key,
     }
+    if "vl_model" in raw:
+        kwargs["vl_model"] = body.vl_model
+    if "vl_base_url" in raw:
+        kwargs["vl_base_url"] = body.vl_base_url
     if "chat_model" in raw:
         kwargs["chat_model"] = body.chat_model
     if body.runtime_overrides is not None:
@@ -70,6 +78,8 @@ def patch_llm_settings(
         sections=snapshot.sections,
         llm=snapshot.llm,
         ingestion=snapshot.ingestion,
+        general=snapshot.general,
+        storage=snapshot.storage,
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
         work_dedup=snapshot.work_dedup,
@@ -91,6 +101,59 @@ def patch_ingestion_settings(
         sections=snapshot.sections,
         llm=snapshot.llm,
         ingestion=snapshot.ingestion,
+        general=snapshot.general,
+        storage=snapshot.storage,
+        diagnostics=snapshot.diagnostics,
+        security=snapshot.security,
+        work_dedup=snapshot.work_dedup,
+    )
+
+
+@router.patch("/general", response_model=SettingsSnapshotResponse)
+def patch_general_settings(
+    body: UpdateGeneralSettingsRequest,
+    actor: str = Depends(require_settings_access),
+) -> SettingsSnapshotResponse:
+    try:
+        snapshot = _SETTINGS_SERVICE.update_general_settings(
+            base_settings=get_settings(),
+            openalex_mailto=body.openalex_mailto,
+            actor=actor,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return SettingsSnapshotResponse(
+        sections=snapshot.sections,
+        llm=snapshot.llm,
+        ingestion=snapshot.ingestion,
+        general=snapshot.general,
+        storage=snapshot.storage,
+        diagnostics=snapshot.diagnostics,
+        security=snapshot.security,
+        work_dedup=snapshot.work_dedup,
+    )
+
+
+@router.patch("/storage", response_model=SettingsSnapshotResponse)
+def patch_storage_settings(
+    body: UpdateStorageSettingsRequest,
+    actor: str = Depends(require_settings_access),
+) -> SettingsSnapshotResponse:
+    raw = body.model_dump(exclude_unset=True)
+    try:
+        snapshot = _SETTINGS_SERVICE.update_storage_settings(
+            base_settings=get_settings(),
+            actor=actor,
+            updates=raw,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return SettingsSnapshotResponse(
+        sections=snapshot.sections,
+        llm=snapshot.llm,
+        ingestion=snapshot.ingestion,
+        general=snapshot.general,
+        storage=snapshot.storage,
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
         work_dedup=snapshot.work_dedup,
@@ -105,6 +168,8 @@ def delete_llm_secret(actor: str = Depends(require_settings_access)) -> Settings
         sections=snapshot.sections,
         llm=snapshot.llm,
         ingestion=snapshot.ingestion,
+        general=snapshot.general,
+        storage=snapshot.storage,
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
         work_dedup=snapshot.work_dedup,

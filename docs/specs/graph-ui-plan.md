@@ -205,9 +205,9 @@ flowchart TB
 
 **Shipped (Wave 6):**
 
-- [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx): optional `?focus=1` (implies compact panel layout; collapses page chrome/links like `compact`); preserves `focus` / `compact` / `lab` when submitting **Load**. Helpers in [`graphPageUrl.js`](../../ui/src/pages/graphPageUrl.js).
+- [`GraphPage.jsx`](../../ui/src/pages/GraphPage.jsx): optional `?focus=1` (implies compact panel layout; collapses page chrome/links like `compact`); preserves `focus` / `compact` / `lab` when submitting **Load**. Helpers in [`graphPageQuery.js`](../../ui/src/routing/graphPageQuery.js).
 - [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/GraphWorkspacePanel.jsx) (`standalone`): prop `focusLayout` — initial **title / legend / alerts / details** collapsed for max canvas; **slider** for detail column `minmax` width (260–480px), key `graphStandaloneDetailMinPx`.
-- Unit tests: [`graphPageUrl.test.js`](../../ui/src/pages/graphPageUrl.test.js).
+- Unit tests: [`graphPageQuery.test.js`](../../ui/src/routing/graphPageQuery.test.js).
 
 ### Standalone Graph page — drag-resize gutter (Wave 7)
 

@@ -316,7 +316,7 @@ The standalone graph page is implemented in [`ui/src/pages/GraphPage.jsx`](../..
 | `compact=1` | Denser standalone layout: compact panel defaults (e.g. Graph/canvas mode), collapsed chrome-friendly defaults. |
 | `focus=1` | **Max canvas:** implies compact panel behavior and starts with page chrome collapsed, workspace links collapsed, and panel secondary blocks (title block, legend, alerts, details) hidden until the user expands them. Preserved on **Load** with `compact` / `lab`. |
 
-Implementation helpers: [`ui/src/pages/graphPageUrl.js`](../../ui/src/pages/graphPageUrl.js).
+Implementation helpers: [`ui/src/routing/graphPageQuery.js`](../../ui/src/routing/graphPageQuery.js).
 
 **Client-only layout (not in URL):** The standalone graph/detail **split width** is stored in `localStorage` under key `graphStandaloneDetailMinPx` (pixel width of the detail column track, clamped **260–480**). The toolbar slider and the **`md+` drag gutter** between graph and detail update the same value; see [`graphDetailColumnWidth.js`](../../ui/src/components/graph/graphDetailColumnWidth.js) and *Wave 7* in [`graph-ui-plan.md`](./graph-ui-plan.md). No backend or URL contract.
 

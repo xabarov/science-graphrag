@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getContinueWorkspaceTarget, getHomeStatus, getRecentWorks, RECENT_WORKS_KEY, rememberRecentWork } from "./homeState.js";
-import { LAST_WORK_ID_KEY, LAST_WORK_TAB_KEY } from "../WorkspacePage/utils/workContext.js";
+import { LAST_WORK_ID_KEY } from "../WorkspacePage/utils/workContext.js";
 
 describe("homeState", () => {
   beforeEach(() => {
@@ -28,7 +28,6 @@ describe("homeState", () => {
 
   it("builds continue target from last work and workspace on recent entry", () => {
     window.localStorage.setItem(LAST_WORK_ID_KEY, "w1");
-    window.localStorage.setItem(LAST_WORK_TAB_KEY, "graph");
     window.localStorage.setItem(
       RECENT_WORKS_KEY,
       JSON.stringify([

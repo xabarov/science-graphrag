@@ -192,7 +192,13 @@ describe("formatStreamEventOneLine", () => {
   });
 
   it("formats tool_call with query", () => {
-    expect(formatStreamEventOneLine(t, { type: "tool_call", tool: "search", args_summary: { query: "papers about x" } })).toContain("search");
+    const line = formatStreamEventOneLine(t, {
+      type: "tool_call",
+      tool: "search",
+      args_summary: { query: "papers about x" },
+    });
+    expect(line).toContain("papers about x");
+    expect(line).toContain("chat.run.toolLabel.generic");
   });
 
   it("formats tool_result", () => {

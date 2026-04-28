@@ -6,9 +6,10 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useTheme } from "@mui/material/styles";
 
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import HistoryIcon from "@mui/icons-material/History";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
@@ -20,9 +21,12 @@ import PageHeader from "../components/layout/PageHeader.jsx";
 import { useI18n } from "../i18n/useI18n.js";
 import ReaderWorkBody from "../components/work/ReaderWorkBody.jsx";
 import { getLastWorkId, persistWorkId } from "./WorkspacePage/utils/workContext.js";
-import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
+import { GRAPH_PATH, READER_PATH } from "../routes/paths.js";
+import { buildStandaloneTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
 
 export default function ReaderPage() {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
@@ -126,13 +130,13 @@ export default function ReaderPage() {
             flexWrap: "wrap",
             gap: 0.75,
             alignItems: "center",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
+            borderBottom: `1px solid ${tk.border.default}`,
             pb: 1.25,
           }}
         >
           <CursorIconAction
             component={Link}
-            to={buildWorkspaceTracePath(workId, "reader", {
+            to={buildStandaloneTracePath(READER_PATH, workId, {
               chunkFingerprint: trace.chunkFingerprint,
               section: trace.section,
               citation: trace.citation,
@@ -143,7 +147,7 @@ export default function ReaderPage() {
           </CursorIconAction>
           <CursorIconAction
             component={Link}
-            to={buildWorkspaceTracePath(workId, "graph", {
+            to={buildStandaloneTracePath(GRAPH_PATH, workId, {
               section: trace.section,
               citation: trace.citation,
             })}
@@ -161,18 +165,18 @@ export default function ReaderPage() {
           sx={{
             mb: 2,
             borderRadius: "6px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(255,255,255,0.02)",
+            border: `1px solid ${tk.border.default}`,
+            backgroundColor: tk.surface.subtle,
             "&:before": { display: "none" },
           }}
         >
-          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "rgba(255,255,255,0.5)", fontSize: "1.1rem" }} />}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: tk.text.muted, fontSize: "1.1rem" }} />}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>
               {t("readerShell.advancedTitle")}
             </Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
-            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.42)", mb: 1.5 }}>{t("readerShell.advancedHint")}</Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 1.5 }}>{t("readerShell.advancedHint")}</Typography>
             <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "flex-start" }}>
               <TextField
                 label={t("readerShell.workIdLabel")}
@@ -183,7 +187,7 @@ export default function ReaderPage() {
                   flex: "1 1 280px",
                   maxWidth: 520,
                   "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-                  "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+                  "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: tk.text.secondary },
                 }}
               />
               <CursorIconAction type="submit" title={t("readerShell.load")}>

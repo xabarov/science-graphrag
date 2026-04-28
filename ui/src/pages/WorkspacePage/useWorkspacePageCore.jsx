@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
+import { useTheme } from "@mui/material/styles";
 
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -25,6 +26,7 @@ import {
   listEntityDedupConflicts,
 } from "../../utils/workspaceStore.js";
 import { isAdminModeEnabled } from "../../components/layout/adminVisibility.js";
+import { legacyWorkspaceTabRedirectTarget } from "../../components/work/traceabilityState.js";
 import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import useJobStream from "../../hooks/useJobStream.js";
@@ -33,11 +35,18 @@ import { useWorkspacePapersModel } from "./useWorkspacePapersModel.js";
 const INGEST_JOB_STORAGE_PREFIX = "science-graphrag:workspaceIngestJob:";
 
 export function useWorkspacePageCore() {
+  const theme = useTheme();
   const { t } = useI18n();
   const { confirm, showToast } = useFeedback();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const workspaceIdFromUrl = (searchParams.get("workspace_id") || "").trim();
   const workIdFromUrl = (searchParams.get("work_id") || "").trim();
+
+  useEffect(() => {
+    const target = legacyWorkspaceTabRedirectTarget(searchParams);
+    if (target) navigate(target, { replace: true });
+  }, [navigate, searchParams]);
 
   const [workspaceMeta, setWorkspaceMeta] = useState({ id: "", name: "", work_ids: [] });
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
@@ -292,10 +301,20 @@ export function useWorkspacePageCore() {
     }
   }, [setSearchParams]);
 
-  const emptyState = useMemo(
-    () => (
+  const emptyState = useMemo(() => {
+    const tokens = theme.appTokens;
+    return (
       <Box sx={{ maxWidth: 560, mt: 2 }}>
-        <Alert severity="info" sx={{ fontSize: "0.8125rem", mb: 2, backgroundColor: "rgba(99,102,241,0.08)", color: "rgba(255,255,255,0.85)" }}>
+        <Alert
+          severity="info"
+          sx={{
+            fontSize: "0.8125rem",
+            mb: 2,
+            bgcolor: tokens.accent.softBg,
+            color: tokens.text.primary,
+            "& .MuiAlert-icon": { color: tokens.accent.fg },
+          }}
+        >
           {t("workspace.empty.alert")}
         </Alert>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", mb: emptyCreateErr ? 1 : 0 }}>
@@ -317,9 +336,8 @@ export function useWorkspacePageCore() {
           </Alert>
         ) : null}
       </Box>
-    ),
-    [t, emptyCreateBusy, emptyCreateErr, handleEmptyCreateWorkspace],
-  );
+    );
+  }, [t, emptyCreateBusy, emptyCreateErr, handleEmptyCreateWorkspace, theme]);
 
   async function handleAddWork(e) {
     e?.preventDefault?.();

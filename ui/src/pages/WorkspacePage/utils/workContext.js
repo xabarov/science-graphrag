@@ -1,3 +1,6 @@
+import { WORKSPACE_SHELL_QUERY_KEYS } from "../../../routing/queryKeys.js";
+import { WORKSPACE_PATH } from "../../../routes/paths.js";
+
 /**
  * Active work context: URL + localStorage restore for workspace-first navigation.
  *
@@ -10,12 +13,23 @@
  *   paper in the workspace, use it; else use the first paper in list order (Neo4j `collect` order);
  *   if the list is empty, none.
  * - Callers that open a specific paper must set both query params via {@link buildWorkspacePath}.
+ *
+ * ## Tabs vs standalone tools
+ *
+ * - **Canonical:** the workspace shell is a paper list (`overview`-equivalent); Reader, Graph, Chat,
+ *   Evidence are top-level routes (`/reader`, `/graph`, `/chat`, `/evidence`).
+ * - **Legacy:** `tab=reader|graph|ask` in `/workspace` URLs is still recognized by
+ *   {@link normalizeWorkspaceTab} and traceability parsing for bookmarks; the app redirects to
+ *   standalone routes (see `legacyWorkspaceTabRedirectTarget` in `traceabilityState.js`).
  */
 
 export const LAST_WORK_ID_KEY = "science-graphrag:lastWorkId";
-export const LAST_WORK_TAB_KEY = "science-graphrag:lastWorkspaceTab";
 
-/** Workspace URL `tab=` values still parsed for backward compatibility; `evidence` is not a workspace shell tab (use `/evidence`). */
+/**
+ * Slugs accepted in legacy `tab=` query values and localStorage-shaped payloads.
+ * Only `overview` is meaningful for the workspace shell; `reader` / `graph` / `ask` are legacy
+ * tool tabs mapped to standalone routes elsewhere.
+ */
 export const WORKSPACE_TAB_SLUGS = ["overview", "reader", "graph", "ask"];
 
 /**
@@ -38,12 +52,12 @@ export function buildWorkspacePath(workId, tab = "overview", options = {}) {
   const wid = workId && String(workId).trim() ? String(workId).trim() : "";
   const ws = options?.workspaceId != null && String(options.workspaceId).trim() ? String(options.workspaceId).trim() : "";
   if (!wid && !ws) {
-    return "/workspace";
+    return WORKSPACE_PATH;
   }
   const params = new URLSearchParams();
-  if (wid) params.set("work_id", wid);
-  if (ws) params.set("workspace_id", ws);
-  return `/workspace?${params.toString()}`;
+  if (wid) params.set(WORKSPACE_SHELL_QUERY_KEYS.workId, wid);
+  if (ws) params.set(WORKSPACE_SHELL_QUERY_KEYS.workspaceId, ws);
+  return `${WORKSPACE_PATH}?${params.toString()}`;
 }
 
 /**
@@ -75,18 +89,6 @@ export function persistWorkId(workId) {
 }
 
 /**
- * @param {string} tab
- */
-export function persistWorkspaceTab(tab) {
-  const next = normalizeWorkspaceTab(tab);
-  try {
-    window.localStorage.setItem(LAST_WORK_TAB_KEY, next);
-  } catch {
-    // ignore
-  }
-}
-
-/**
  * @returns {string}
  */
 export function getLastWorkId() {
@@ -95,16 +97,5 @@ export function getLastWorkId() {
     return raw && String(raw).trim() ? String(raw).trim() : "";
   } catch {
     return "";
-  }
-}
-
-/**
- * @returns {string}
- */
-export function getLastWorkspaceTab() {
-  try {
-    return normalizeWorkspaceTab(window.localStorage.getItem(LAST_WORK_TAB_KEY) || "overview");
-  } catch {
-    return "overview";
   }
 }

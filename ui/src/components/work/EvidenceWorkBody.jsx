@@ -10,7 +10,8 @@ import { Link } from "react-router-dom";
 
 import { formatResearchApiError, getWorkClaims, getWorkChunks } from "../../services/researchApi.js";
 import { CursorSmallButton } from "../common/index.js";
-import { buildStandaloneChatPath, buildWorkspaceTracePath, describeTraceabilityState } from "./traceabilityState.js";
+import { GRAPH_PATH, READER_PATH } from "../../routes/paths.js";
+import { buildStandaloneChatPath, buildStandaloneTracePath, describeTraceabilityState } from "./traceabilityState.js";
 import { useI18n } from "../../i18n/useI18n.js";
 
 /**
@@ -76,6 +77,11 @@ export default function EvidenceWorkBody({
       cancelled = true;
     };
   }, [workId]);
+
+  const traceLinkExtras = useMemo(() => {
+    const ws = String(workspaceId || "").trim();
+    return ws ? { workspaceId: ws } : {};
+  }, [workspaceId]);
 
   const visibleChunkItems = useMemo(() => {
     const raw = chunks?.items;
@@ -168,7 +174,8 @@ export default function EvidenceWorkBody({
               <Box sx={{ mt: 0.75, display: "flex", flexWrap: "wrap", gap: 1 }}>
                 <CursorSmallButton
                   component={Link}
-                  to={buildWorkspaceTracePath(workId, "reader", {
+                  to={buildStandaloneTracePath(READER_PATH, workId, {
+                    ...traceLinkExtras,
                     chunkFingerprint: fingerprint,
                     section: sectionPath,
                     citation,
@@ -179,7 +186,8 @@ export default function EvidenceWorkBody({
                 </CursorSmallButton>
                 <CursorSmallButton
                   component={Link}
-                  to={buildWorkspaceTracePath(workId, "graph", {
+                  to={buildStandaloneTracePath(GRAPH_PATH, workId, {
+                    ...traceLinkExtras,
                     section: sectionPath,
                     citation,
                   })}

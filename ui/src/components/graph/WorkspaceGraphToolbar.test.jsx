@@ -61,7 +61,7 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
         />,
       ),
     );
-    expect(html).toContain("Workspace graph");
+    expect(html).toContain("All papers in workspace");
     expect(html).toContain("Nodes ·");
     expect(html).not.toContain("Scope:");
     expect(html).not.toContain("Depth");

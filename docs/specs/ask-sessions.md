@@ -19,7 +19,7 @@ Local-only named **sessions** partition Ask history by **scope** so workspace an
 
 ## URL: `ask_session`
 
-- Query parameter **`ask_session`** (see `TRACEABILITY_QUERY_KEYS.askSession` in [`traceabilityState.js`](../../ui/src/components/work/traceabilityState.js)) holds the **active session id** for deep links on **`/ask`** and **`/workspace?tab=ask`**.
+- Query parameter **`ask_session`** (see `TRACEABILITY_QUERY_KEYS.askSession` in [`queryKeys.js`](../../ui/src/routing/queryKeys.js)) holds the **active session id** for deep links on **`/ask`** and **`/workspace?tab=ask`**.
 - Changing the session in the UI updates the URL with **`replace: true`** (no history spam). Invalid or unknown ids are **removed** from the URL after load.
 - Leaving the Ask workspace tab **clears** `ask_session` from the query string (see [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx) `setTabParams`).
 - Links built with **`mergeTraceabilityParams`** preserve `ask_session` when navigating between tabs (e.g. Graph → Ask) if it was already present.

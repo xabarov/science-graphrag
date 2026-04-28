@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
 from science_graphrag.api.settings_llm_runtime_patch import LlmRuntimeOverridesPatch
 
@@ -13,6 +13,14 @@ class SettingsSnapshotResponse(BaseModel):
     sections: list[dict[str, Any]]
     llm: dict[str, Any]
     ingestion: dict[str, Any] = Field(default_factory=dict)
+    general: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Non-secret general runtime overrides (e.g. OpenAlex mailto).",
+    )
+    storage: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Neo4j, Qdrant, Postgres, Redis, paths, and S3 integration (masked secrets).",
+    )
     diagnostics: dict[str, Any] = Field(default_factory=dict)
     security: dict[str, Any] = Field(default_factory=dict)
     work_dedup: dict[str, Any] = Field(
@@ -24,6 +32,23 @@ class SettingsSnapshotResponse(BaseModel):
 class SettingsSchemaResponse(BaseModel):
     version: int
     sections: list[dict[str, Any]]
+
+
+class UpdateGeneralSettingsRequest(BaseModel):
+    openalex_mailto: str = Field(
+        ...,
+        min_length=3,
+        max_length=320,
+        description="Contact email for OpenAlex polite-pool (stored in runtime_settings.json).",
+    )
+
+    @field_validator("openalex_mailto")
+    @classmethod
+    def _mailto_shape(cls, value: str) -> str:
+        stripped = value.strip()
+        if "@" not in stripped or " " in stripped:
+            raise ValueError("openalex_mailto must look like a single email address")
+        return stripped
 
 
 class UpdateIngestionSettingsRequest(BaseModel):
@@ -42,6 +67,16 @@ class UpdateIngestionSettingsRequest(BaseModel):
 class UpdateLlmSettingsRequest(BaseModel):
     base_url: HttpUrl
     model: str = Field(..., min_length=1, max_length=256)
+    vl_model: str | None = Field(
+        default=None,
+        max_length=256,
+        description="Optional VL model override for PDF→Markdown; empty clears persisted override.",
+    )
+    vl_base_url: str | None = Field(
+        default=None,
+        max_length=512,
+        description="Optional VL base URL; empty string clears persisted override.",
+    )
     chat_model: str | None = Field(
         default=None,
         max_length=256,
@@ -63,3 +98,34 @@ class TestLlmConnectionRequest(BaseModel):
     timeout_seconds: float | None = Field(default=None, ge=1.0, le=900.0)
     api_key: str | None = Field(default=None, min_length=1, max_length=4096)
     use_saved_secret: bool = True
+
+
+class UpdateStorageSettingsRequest(BaseModel):
+    """Partial storage and integration update; unset fields are left unchanged."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    neo4j_uri: str | None = Field(default=None, max_length=512)
+    neo4j_user: str | None = Field(default=None, max_length=256)
+    neo4j_password: str | None = Field(default=None, max_length=2048)
+    qdrant_url: str | None = Field(default=None, max_length=512)
+    qdrant_collection: str | None = Field(default=None, max_length=256)
+    qdrant_claims_collection: str | None = Field(default=None, max_length=256)
+    qdrant_work_embeddings_collection: str | None = Field(default=None, max_length=256)
+    qdrant_author_embeddings_collection: str | None = Field(default=None, max_length=256)
+    database_url: str | None = Field(default=None, max_length=2048)
+    redis_url: str | None = Field(default=None, max_length=512)
+    blob_root: str | None = Field(default=None, max_length=1024)
+    artifact_root: str | None = Field(default=None, max_length=1024)
+    object_storage_enabled: bool | None = None
+    s3_endpoint_url: str | None = Field(default=None, max_length=512)
+    s3_bucket: str | None = Field(default=None, max_length=256)
+    s3_use_ssl: bool | None = None
+    s3_addressing_style: Literal["path", "virtual"] | None = None
+    s3_artifact_key_prefix: str | None = Field(default=None, max_length=512)
+    s3_access_key_id: str | None = Field(default=None, max_length=256)
+    s3_secret_access_key: str | None = Field(default=None, max_length=2048)
+    benchmark_runs_object_storage: bool | None = None
+    diagnostics_object_storage: bool | None = None
+    s3_benchmark_runs_key_prefix: str | None = Field(default=None, max_length=512)
+    s3_diagnostics_key_prefix: str | None = Field(default=None, max_length=512)

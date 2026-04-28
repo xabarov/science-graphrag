@@ -1,0 +1,690 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - img "science-graphrag" [ref=e8]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - link "Workspace" [ref=e12] [cursor=pointer]:
+          - /url: "#/workspaces"
+          - img [ref=e14]
+          - paragraph [ref=e16]: Workspace
+        - link "Graph" [ref=e18] [cursor=pointer]:
+          - /url: "#/graph"
+          - img [ref=e20]
+          - paragraph [ref=e22]: Graph
+        - link "Chat" [ref=e24] [cursor=pointer]:
+          - /url: "#/chat"
+          - img [ref=e26]
+          - paragraph [ref=e28]: Chat
+      - separator [ref=e29]
+      - paragraph [ref=e30]: Operations
+      - generic [ref=e31]:
+        - link "Admin" [ref=e33] [cursor=pointer]:
+          - /url: "#/admin"
+          - img [ref=e35]
+          - paragraph [ref=e40]: Admin
+        - link "Benchmarks" [ref=e42] [cursor=pointer]:
+          - /url: "#/admin/benchmarks"
+          - img [ref=e44]
+          - paragraph [ref=e46]: Benchmarks
+        - link "Settings" [ref=e48] [cursor=pointer]:
+          - /url: "#/admin/settings"
+          - img [ref=e50]
+          - paragraph [ref=e52]: Settings
+    - button "toggle sidebar" [ref=e55] [cursor=pointer]:
+      - generic [ref=e56]: <
+  - main [ref=e57]:
+    - button "Workspace menu — open list to switch workspace" [ref=e59] [cursor=pointer]:
+      - img [ref=e60]
+      - generic [ref=e62]: No workspace
+      - img [ref=e63]
+    - generic [ref=e66]:
+      - generic [ref=e68]:
+        - paragraph [ref=e69]: Collections
+        - paragraph [ref=e70]: Workspaces
+        - paragraph [ref=e72]: Create a workspace, pick the add-to target below, and open a workspace to work.
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - generic [ref=e75]:
+            - generic [ref=e76]: New workspace name
+            - generic [ref=e77]:
+              - textbox "New workspace name" [ref=e78]: Research
+              - group:
+                - generic: New workspace name
+          - generic "Create" [ref=e79]:
+            - button "Create" [ref=e80] [cursor=pointer]:
+              - img [ref=e81]
+        - generic [ref=e83]:
+          - generic [ref=e84]: Target for “Add to workspace”
+          - generic [ref=e85]:
+            - combobox "Target for “Add to workspace”" [ref=e86] [cursor=pointer]: LogSmoke ingest check
+            - textbox: 0cea2754-f9a7-41f7-9740-cfb97feb6c48
+            - img
+            - group:
+              - generic: Target for “Add to workspace”
+        - generic [ref=e87]:
+          - generic "Export JSON" [ref=e88]:
+            - button "Export JSON" [ref=e89] [cursor=pointer]:
+              - img [ref=e90]
+          - generic "Import JSON" [ref=e92]:
+            - button "Import JSON" [ref=e93] [cursor=pointer]:
+              - img [ref=e94]
+      - generic [ref=e96]:
+        - generic [ref=e97]:
+          - generic [ref=e98]:
+            - paragraph [ref=e99]: Workspaces
+            - generic [ref=e101]: 8 workspaces
+          - generic [ref=e102]:
+            - generic [ref=e103]:
+              - generic [ref=e104]:
+                - generic [ref=e105]:
+                  - img [ref=e107]
+                  - generic [ref=e109]:
+                    - paragraph [ref=e110]: LogSmoke ingest check
+                    - paragraph [ref=e111]: 0cea27…6c48
+                - generic [ref=e112]:
+                  - generic "Open" [ref=e113]:
+                    - link "Open" [ref=e114] [cursor=pointer]:
+                      - /url: "#/workspace?workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                      - img [ref=e115]
+                  - generic "More" [ref=e117]:
+                    - button "More" [ref=e118] [cursor=pointer]:
+                      - img [ref=e119]
+              - generic [ref=e121]:
+                - generic [ref=e123]: 1 paper(s)
+                - generic [ref=e125]: Current target
+            - generic [ref=e126]:
+              - generic [ref=e127]:
+                - generic [ref=e128]:
+                  - img [ref=e130]
+                  - generic [ref=e132]:
+                    - paragraph [ref=e133]: Object Detection (clean ingested + claims)
+                    - paragraph [ref=e134]: 2678c5…2b23
+                - generic [ref=e135]:
+                  - generic "Open" [ref=e136]:
+                    - link "Open" [ref=e137] [cursor=pointer]:
+                      - /url: "#/workspace?workspace_id=2678c5f1-1b31-4aac-92c9-6bd0f4472b23"
+                      - img [ref=e138]
+                  - generic "More" [ref=e140]:
+                    - button "More" [ref=e141] [cursor=pointer]:
+                      - img [ref=e142]
+              - generic [ref=e146]: 32 paper(s)
+            - generic [ref=e147]:
+              - generic [ref=e148]:
+                - generic [ref=e149]:
+                  - img [ref=e151]
+                  - generic [ref=e153]:
+                    - paragraph [ref=e154]: Research
+                    - paragraph [ref=e155]: cf5076…7622
+                - generic [ref=e156]:
+                  - generic "Open" [ref=e157]:
+                    - link "Open" [ref=e158] [cursor=pointer]:
+                      - /url: "#/workspace?workspace_id=cf50765c-29f8-4981-8924-2efd13407622"
+                      - img [ref=e159]
+                  - generic "More" [ref=e161]:
+                    - button "More" [ref=e162] [cursor=pointer]:
+                      - img [ref=e163]
+              - generic [ref=e167]: 4 paper(s)
+            - generic [ref=e168]:
+              - generic [ref=e169]:
+                - generic [ref=e170]:
+                  - img [ref=e172]
+                  - generic [ref=e174]:
+                    - paragraph [ref=e175]: Full pilot object-detection corpus
+                    - paragraph [ref=e176]: ws_full_corpus
+                - generic [ref=e177]:
+                  - generic "Open" [ref=e178]:
+                    - link "Open" [ref=e179] [cursor=pointer]:
+                      - /url: "#/workspace?workspace_id=ws_full_corpus"
+                      - img [ref=e180]
+                  - generic "More" [ref=e182]:
+                    - button "More" [ref=e183] [cursor=pointer]:
+                      - img [ref=e184]
+              - generic [ref=e188]: 0 paper(s)
+            - generic [ref=e189]:
+              - generic [ref=e190]:
+                - generic [ref=e191]:
+                  - img [ref=e193]
+                  - generic [ref=e195]:
+                    - paragraph [ref=e196]: "Pilot: PDF corpus slice (YOLOv1)"
+                    - paragraph [ref=e197]: ws-pilot-pdf
+                - generic [ref=e198]:
+                  - generic "Open" [ref=e199]:
+                    - link "Open" [ref=e200] [cursor=pointer]:
+                      - /url: "#/workspace?workspace_id=ws-pilot-pdf"
+                      - img [ref=e201]
+                  - generic "More" [ref=e203]:
+                    - button "More" [ref=e204] [cursor=pointer]:
+                      - img [ref=e205]
+              - generic [ref=e209]: 1 paper(s)
+            - generic [ref=e210]:
+              - generic [ref=e211]:
+                - generic [ref=e212]:
+                  - img [ref=e214]
+                  - generic [ref=e216]:
+                    - paragraph [ref=e217]: "Pilot: Object Detection (YOLOv1)"
+                    - paragraph [ref=e218]: ws-pilot-od
+                - generic [ref=e219]:
+                  - generic "Open" [ref=e220]:
+                    - link "Open" [ref=e221] [cursor=pointer]:
+                      - /url: "#/workspace?workspace_id=ws-pilot-od"
+                      - img [ref=e222]
+                  - generic "More" [ref=e224]:
+                    - button "More" [ref=e225] [cursor=pointer]:
+                      - img [ref=e226]
+              - generic [ref=e230]: 1 paper(s)
+            - generic [ref=e231]:
+              - generic [ref=e232]:
+                - generic [ref=e233]:
+                  - img [ref=e235]
+                  - generic [ref=e237]:
+                    - paragraph [ref=e238]: Two-stage detectors (R-CNN family)
+                    - paragraph [ref=e239]: ws_two_stage
+                - generic [ref=e240]:
+                  - generic "Open" [ref=e241]:
+                    - link "Open" [ref=e242] [cursor=pointer]:
+                      - /url: "#/workspace?workspace_id=ws_two_stage"
+                      - img [ref=e243]
+                  - generic "More" [ref=e245]:
+                    - button "More" [ref=e246] [cursor=pointer]:
+                      - img [ref=e247]
+              - generic [ref=e251]: 8 paper(s)
+            - generic [ref=e252]:
+              - generic [ref=e253]:
+                - generic [ref=e254]:
+                  - img [ref=e256]
+                  - generic [ref=e258]:
+                    - paragraph [ref=e259]: YOLO family
+                    - paragraph [ref=e260]: ws_yolo_family
+                - generic [ref=e261]:
+                  - generic "Open" [ref=e262]:
+                    - link "Open" [ref=e263] [cursor=pointer]:
+                      - /url: "#/workspace?workspace_id=ws_yolo_family"
+                      - img [ref=e264]
+                  - generic "More" [ref=e266]:
+                    - button "More" [ref=e267] [cursor=pointer]:
+                      - img [ref=e268]
+              - generic [ref=e272]: 4 paper(s)
+        - generic [ref=e273]:
+          - generic [ref=e274]:
+            - paragraph [ref=e275]: Recent works
+            - generic [ref=e277]: "0"
+          - paragraph [ref=e278]: No recent works yet.
+      - generic [ref=e279]:
+        - 'heading "Browse indexed catalog (attach existing work_id) Total in index: 421" [level=3] [ref=e280]':
+          - 'button "Browse indexed catalog (attach existing work_id) Total in index: 421" [expanded] [ref=e281] [cursor=pointer]':
+            - generic [ref=e283]:
+              - paragraph [ref=e284]: Browse indexed catalog (attach existing work_id)
+              - generic [ref=e286]: "Total in index: 421"
+            - img [ref=e288]
+        - region [ref=e293]:
+          - generic [ref=e294]:
+            - paragraph [ref=e295]:
+              - generic [ref=e297]:
+                - text: Browse indexed works
+                - code [ref=e298]: GET /v1/works
+                - text: . Each row is a work_id in the corpus; open a work in Workspace for a full session (reader, chat, chunk inspection at /evidence, graph).
+            - paragraph [ref=e299]: Open and attach already indexed works only when you need them.
+            - generic [ref=e301]:
+              - generic [ref=e302]:
+                - generic: Search (title)
+                - generic [ref=e303]:
+                  - textbox "Search (title)" [ref=e304]
+                  - group:
+                    - generic: Search (title)
+              - generic "Search" [ref=e305]:
+                - button "Search" [ref=e306] [cursor=pointer]:
+                  - img [ref=e307]
+              - generic [ref=e309]:
+                - generic [ref=e310]: Sort
+                - generic [ref=e311]:
+                  - combobox "Sort" [ref=e312] [cursor=pointer]: API order
+                  - textbox: api
+                  - img
+                  - group:
+                    - generic: Sort
+              - generic "More filters" [ref=e313]:
+                - button "More filters" [ref=e314] [cursor=pointer]:
+                  - img [ref=e315]
+            - paragraph [ref=e317]: "Total in index: 421 · Loaded: 40"
+            - generic [ref=e318]:
+              - generic [ref=e319]:
+                - generic [ref=e320]:
+                  - paragraph [ref=e321]: (no title)
+                  - paragraph [ref=e322]: 2017 · e83747c0-bded-429e-8145-ff5d68d5f23c
+                - generic "Workspace" [ref=e323]:
+                  - link "Workspace" [ref=e324] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=e83747c0-bded-429e-8145-ff5d68d5f23c&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e325]
+                - generic "Add to target" [ref=e327]:
+                  - button "Add to target" [ref=e328] [cursor=pointer]:
+                    - img [ref=e329]
+              - generic [ref=e332]:
+                - generic [ref=e333]:
+                  - paragraph [ref=e334]: (no title)
+                  - paragraph [ref=e335]: 2018 · 953a70cd-0294-45b4-ab42-8e07677d1480
+                - generic "Workspace" [ref=e336]:
+                  - link "Workspace" [ref=e337] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=953a70cd-0294-45b4-ab42-8e07677d1480&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e338]
+                - generic "Add to target" [ref=e340]:
+                  - button "Add to target" [ref=e341] [cursor=pointer]:
+                    - img [ref=e342]
+              - generic [ref=e345]:
+                - generic [ref=e346]:
+                  - paragraph [ref=e347]: (no title)
+                  - paragraph [ref=e348]: 2016 · 410a31fe-a63c-4e73-a78e-f2577438a443
+                - generic "Workspace" [ref=e349]:
+                  - link "Workspace" [ref=e350] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=410a31fe-a63c-4e73-a78e-f2577438a443&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e351]
+                - generic "Add to target" [ref=e353]:
+                  - button "Add to target" [ref=e354] [cursor=pointer]:
+                    - img [ref=e355]
+              - generic [ref=e358]:
+                - generic [ref=e359]:
+                  - paragraph [ref=e360]: (no title)
+                  - paragraph [ref=e361]: 2023 · b539d6b0-191c-480e-86fe-5f78b00c7000
+                - generic "Workspace" [ref=e362]:
+                  - link "Workspace" [ref=e363] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=b539d6b0-191c-480e-86fe-5f78b00c7000&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e364]
+                - generic "Add to target" [ref=e366]:
+                  - button "Add to target" [ref=e367] [cursor=pointer]:
+                    - img [ref=e368]
+              - generic [ref=e371]:
+                - generic [ref=e372]:
+                  - paragraph [ref=e373]: (no title)
+                  - paragraph [ref=e374]: 7a20e166-9666-455f-a566-7cad11dbf349
+                - generic "Workspace" [ref=e375]:
+                  - link "Workspace" [ref=e376] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=7a20e166-9666-455f-a566-7cad11dbf349&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e377]
+                - generic "Add to target" [ref=e379]:
+                  - button "Add to target" [ref=e380] [cursor=pointer]:
+                    - img [ref=e381]
+              - generic [ref=e384]:
+                - generic [ref=e385]:
+                  - paragraph [ref=e386]: (no title)
+                  - paragraph [ref=e387]: 2023 · 2264360a-ea7f-4604-8749-3d120555e19c
+                - generic "Workspace" [ref=e388]:
+                  - link "Workspace" [ref=e389] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=2264360a-ea7f-4604-8749-3d120555e19c&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e390]
+                - generic "Add to target" [ref=e392]:
+                  - button "Add to target" [ref=e393] [cursor=pointer]:
+                    - img [ref=e394]
+              - generic [ref=e397]:
+                - generic [ref=e398]:
+                  - paragraph [ref=e399]: (no title)
+                  - paragraph [ref=e400]: 72e50d6d-821d-45d3-a583-1270849381cf
+                - generic "Workspace" [ref=e401]:
+                  - link "Workspace" [ref=e402] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=72e50d6d-821d-45d3-a583-1270849381cf&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e403]
+                - generic "Add to target" [ref=e405]:
+                  - button "Add to target" [ref=e406] [cursor=pointer]:
+                    - img [ref=e407]
+              - generic [ref=e410]:
+                - generic [ref=e411]:
+                  - paragraph [ref=e412]: (no title)
+                  - paragraph [ref=e413]: 2022 · 9756b390-aecc-46e9-b7f6-88e29a19406e
+                - generic "Workspace" [ref=e414]:
+                  - link "Workspace" [ref=e415] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=9756b390-aecc-46e9-b7f6-88e29a19406e&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e416]
+                - generic "Add to target" [ref=e418]:
+                  - button "Add to target" [ref=e419] [cursor=pointer]:
+                    - img [ref=e420]
+              - generic [ref=e423]:
+                - generic [ref=e424]:
+                  - paragraph [ref=e425]: (no title)
+                  - paragraph [ref=e426]: 2023 · 012bfb68-df70-4020-af55-265bdc013b2c
+                - generic "Workspace" [ref=e427]:
+                  - link "Workspace" [ref=e428] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=012bfb68-df70-4020-af55-265bdc013b2c&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e429]
+                - generic "Add to target" [ref=e431]:
+                  - button "Add to target" [ref=e432] [cursor=pointer]:
+                    - img [ref=e433]
+              - generic [ref=e436]:
+                - generic [ref=e437]:
+                  - paragraph [ref=e438]: (no title)
+                  - paragraph [ref=e439]: 2024 · 1c92feb8-61b2-467d-ba41-9e388608c707
+                - generic "Workspace" [ref=e440]:
+                  - link "Workspace" [ref=e441] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=1c92feb8-61b2-467d-ba41-9e388608c707&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e442]
+                - generic "Add to target" [ref=e444]:
+                  - button "Add to target" [ref=e445] [cursor=pointer]:
+                    - img [ref=e446]
+              - generic [ref=e449]:
+                - generic [ref=e450]:
+                  - paragraph [ref=e451]: (no title)
+                  - paragraph [ref=e452]: 92994e8c-0320-4188-8182-0186bdaa697b
+                - generic "Workspace" [ref=e453]:
+                  - link "Workspace" [ref=e454] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=92994e8c-0320-4188-8182-0186bdaa697b&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e455]
+                - generic "Add to target" [ref=e457]:
+                  - button "Add to target" [ref=e458] [cursor=pointer]:
+                    - img [ref=e459]
+              - generic [ref=e462]:
+                - generic [ref=e463]:
+                  - paragraph [ref=e464]: (no title)
+                  - paragraph [ref=e465]: 2021 · d057d3ed-89fa-41d9-923c-c662bfee41f0
+                - generic "Workspace" [ref=e466]:
+                  - link "Workspace" [ref=e467] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=d057d3ed-89fa-41d9-923c-c662bfee41f0&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e468]
+                - generic "Add to target" [ref=e470]:
+                  - button "Add to target" [ref=e471] [cursor=pointer]:
+                    - img [ref=e472]
+              - generic [ref=e475]:
+                - generic [ref=e476]:
+                  - paragraph [ref=e477]: (no title)
+                  - paragraph [ref=e478]: 2023 · 166dd955-01f6-4ea9-8156-0e972ef892b2
+                - generic "Workspace" [ref=e479]:
+                  - link "Workspace" [ref=e480] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=166dd955-01f6-4ea9-8156-0e972ef892b2&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e481]
+                - generic "Add to target" [ref=e483]:
+                  - button "Add to target" [ref=e484] [cursor=pointer]:
+                    - img [ref=e485]
+              - generic [ref=e488]:
+                - generic [ref=e489]:
+                  - paragraph [ref=e490]: (no title)
+                  - paragraph [ref=e491]: 2023 · e97eb44d-676a-40f2-af68-7649fed4e679
+                - generic "Workspace" [ref=e492]:
+                  - link "Workspace" [ref=e493] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=e97eb44d-676a-40f2-af68-7649fed4e679&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e494]
+                - generic "Add to target" [ref=e496]:
+                  - button "Add to target" [ref=e497] [cursor=pointer]:
+                    - img [ref=e498]
+              - generic [ref=e501]:
+                - generic [ref=e502]:
+                  - paragraph [ref=e503]: (no title)
+                  - paragraph [ref=e504]: 2023 · 3f4daf96-77a3-40d5-9352-636f7708a6fe
+                - generic "Workspace" [ref=e505]:
+                  - link "Workspace" [ref=e506] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=3f4daf96-77a3-40d5-9352-636f7708a6fe&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e507]
+                - generic "Add to target" [ref=e509]:
+                  - button "Add to target" [ref=e510] [cursor=pointer]:
+                    - img [ref=e511]
+              - generic [ref=e514]:
+                - generic [ref=e515]:
+                  - paragraph [ref=e516]: (no title)
+                  - paragraph [ref=e517]: 2023 · f23b005e-9ccf-42ff-b360-206af12ff2bc
+                - generic "Workspace" [ref=e518]:
+                  - link "Workspace" [ref=e519] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=f23b005e-9ccf-42ff-b360-206af12ff2bc&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e520]
+                - generic "Add to target" [ref=e522]:
+                  - button "Add to target" [ref=e523] [cursor=pointer]:
+                    - img [ref=e524]
+              - generic [ref=e527]:
+                - generic [ref=e528]:
+                  - paragraph [ref=e529]: (no title)
+                  - paragraph [ref=e530]: b5ab901a-6da9-4f9b-8f49-a99f689c8b1b
+                - generic "Workspace" [ref=e531]:
+                  - link "Workspace" [ref=e532] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=b5ab901a-6da9-4f9b-8f49-a99f689c8b1b&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e533]
+                - generic "Add to target" [ref=e535]:
+                  - button "Add to target" [ref=e536] [cursor=pointer]:
+                    - img [ref=e537]
+              - generic [ref=e540]:
+                - generic [ref=e541]:
+                  - paragraph [ref=e542]: (no title)
+                  - paragraph [ref=e543]: 08b70008-d5b3-4f74-83c0-ee70c0a4989e
+                - generic "Workspace" [ref=e544]:
+                  - link "Workspace" [ref=e545] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=08b70008-d5b3-4f74-83c0-ee70c0a4989e&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e546]
+                - generic "Add to target" [ref=e548]:
+                  - button "Add to target" [ref=e549] [cursor=pointer]:
+                    - img [ref=e550]
+              - generic [ref=e553]:
+                - generic [ref=e554]:
+                  - paragraph [ref=e555]: (no title)
+                  - paragraph [ref=e556]: 2014 · 28974082-2a55-4d1b-8d45-1e6e55035f27
+                - generic "Workspace" [ref=e557]:
+                  - link "Workspace" [ref=e558] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=28974082-2a55-4d1b-8d45-1e6e55035f27&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e559]
+                - generic "Add to target" [ref=e561]:
+                  - button "Add to target" [ref=e562] [cursor=pointer]:
+                    - img [ref=e563]
+              - generic [ref=e566]:
+                - generic [ref=e567]:
+                  - paragraph [ref=e568]: (no title)
+                  - paragraph [ref=e569]: 2022 · 1b546034-5b73-4412-9b97-9d382051c176
+                - generic "Workspace" [ref=e570]:
+                  - link "Workspace" [ref=e571] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=1b546034-5b73-4412-9b97-9d382051c176&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e572]
+                - generic "Add to target" [ref=e574]:
+                  - button "Add to target" [ref=e575] [cursor=pointer]:
+                    - img [ref=e576]
+              - generic [ref=e579]:
+                - generic [ref=e580]:
+                  - paragraph [ref=e581]: (no title)
+                  - paragraph [ref=e582]: 2023 · 7fb5db40-35a8-4acf-bd27-e74c5c3678b0
+                - generic "Workspace" [ref=e583]:
+                  - link "Workspace" [ref=e584] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=7fb5db40-35a8-4acf-bd27-e74c5c3678b0&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e585]
+                - generic "Add to target" [ref=e587]:
+                  - button "Add to target" [ref=e588] [cursor=pointer]:
+                    - img [ref=e589]
+              - generic [ref=e592]:
+                - generic [ref=e593]:
+                  - paragraph [ref=e594]: (no title)
+                  - paragraph [ref=e595]: 2023 · 2c9ebfa1-89ed-438b-a331-273ad0609247
+                - generic "Workspace" [ref=e596]:
+                  - link "Workspace" [ref=e597] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=2c9ebfa1-89ed-438b-a331-273ad0609247&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e598]
+                - generic "Add to target" [ref=e600]:
+                  - button "Add to target" [ref=e601] [cursor=pointer]:
+                    - img [ref=e602]
+              - generic [ref=e605]:
+                - generic [ref=e606]:
+                  - paragraph [ref=e607]: (no title)
+                  - paragraph [ref=e608]: 2015 · e839bcba-680b-4bcb-9d98-23d5d5fedd99
+                - generic "Workspace" [ref=e609]:
+                  - link "Workspace" [ref=e610] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=e839bcba-680b-4bcb-9d98-23d5d5fedd99&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e611]
+                - generic "Add to target" [ref=e613]:
+                  - button "Add to target" [ref=e614] [cursor=pointer]:
+                    - img [ref=e615]
+              - generic [ref=e618]:
+                - generic [ref=e619]:
+                  - paragraph [ref=e620]: (no title)
+                  - paragraph [ref=e621]: 2021 · 28f39da5-b0ed-498e-89af-11288606f079
+                - generic "Workspace" [ref=e622]:
+                  - link "Workspace" [ref=e623] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=28f39da5-b0ed-498e-89af-11288606f079&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e624]
+                - generic "Add to target" [ref=e626]:
+                  - button "Add to target" [ref=e627] [cursor=pointer]:
+                    - img [ref=e628]
+              - generic [ref=e631]:
+                - generic [ref=e632]:
+                  - paragraph [ref=e633]: (no title)
+                  - paragraph [ref=e634]: 2013 · f7b4a463-3701-4162-8bfd-bddd31308693
+                - generic "Workspace" [ref=e635]:
+                  - link "Workspace" [ref=e636] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=f7b4a463-3701-4162-8bfd-bddd31308693&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e637]
+                - generic "Add to target" [ref=e639]:
+                  - button "Add to target" [ref=e640] [cursor=pointer]:
+                    - img [ref=e641]
+              - generic [ref=e644]:
+                - generic [ref=e645]:
+                  - paragraph [ref=e646]: (no title)
+                  - paragraph [ref=e647]: 2023 · dfd0ae8b-5f8d-4e7d-9e9b-8b84fa2c41f2
+                - generic "Workspace" [ref=e648]:
+                  - link "Workspace" [ref=e649] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=dfd0ae8b-5f8d-4e7d-9e9b-8b84fa2c41f2&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e650]
+                - generic "Add to target" [ref=e652]:
+                  - button "Add to target" [ref=e653] [cursor=pointer]:
+                    - img [ref=e654]
+              - generic [ref=e657]:
+                - generic [ref=e658]:
+                  - paragraph [ref=e659]: (no title)
+                  - paragraph [ref=e660]: 734fc903-fa6b-42ea-a5c3-ff3669b5c1e9
+                - generic "Workspace" [ref=e661]:
+                  - link "Workspace" [ref=e662] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=734fc903-fa6b-42ea-a5c3-ff3669b5c1e9&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e663]
+                - generic "Add to target" [ref=e665]:
+                  - button "Add to target" [ref=e666] [cursor=pointer]:
+                    - img [ref=e667]
+              - generic [ref=e670]:
+                - generic [ref=e671]:
+                  - paragraph [ref=e672]: (no title)
+                  - paragraph [ref=e673]: 2024 · b78e24f6-956a-4387-87a6-505a0c28b089
+                - generic "Workspace" [ref=e674]:
+                  - link "Workspace" [ref=e675] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=b78e24f6-956a-4387-87a6-505a0c28b089&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e676]
+                - generic "Add to target" [ref=e678]:
+                  - button "Add to target" [ref=e679] [cursor=pointer]:
+                    - img [ref=e680]
+              - generic [ref=e683]:
+                - generic [ref=e684]:
+                  - paragraph [ref=e685]: (no title)
+                  - paragraph [ref=e686]: 2014 · f681dfb6-b225-4381-96e9-2b795788a798
+                - generic "Workspace" [ref=e687]:
+                  - link "Workspace" [ref=e688] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=f681dfb6-b225-4381-96e9-2b795788a798&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e689]
+                - generic "Add to target" [ref=e691]:
+                  - button "Add to target" [ref=e692] [cursor=pointer]:
+                    - img [ref=e693]
+              - generic [ref=e696]:
+                - generic [ref=e697]:
+                  - paragraph [ref=e698]: (no title)
+                  - paragraph [ref=e699]: 2023 · 6266ab96-c1b8-4632-a76a-2078a08008d8
+                - generic "Workspace" [ref=e700]:
+                  - link "Workspace" [ref=e701] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=6266ab96-c1b8-4632-a76a-2078a08008d8&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e702]
+                - generic "Add to target" [ref=e704]:
+                  - button "Add to target" [ref=e705] [cursor=pointer]:
+                    - img [ref=e706]
+              - generic [ref=e709]:
+                - generic [ref=e710]:
+                  - paragraph [ref=e711]: (no title)
+                  - paragraph [ref=e712]: 2014 · 20862f02-6cb4-4783-8b7d-d3814b421395
+                - generic "Workspace" [ref=e713]:
+                  - link "Workspace" [ref=e714] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=20862f02-6cb4-4783-8b7d-d3814b421395&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e715]
+                - generic "Add to target" [ref=e717]:
+                  - button "Add to target" [ref=e718] [cursor=pointer]:
+                    - img [ref=e719]
+              - generic [ref=e722]:
+                - generic [ref=e723]:
+                  - paragraph [ref=e724]: (no title)
+                  - paragraph [ref=e725]: 2022 · ad2261c7-522f-4c6d-8910-1b3fdb7a95bd
+                - generic "Workspace" [ref=e726]:
+                  - link "Workspace" [ref=e727] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=ad2261c7-522f-4c6d-8910-1b3fdb7a95bd&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e728]
+                - generic "Add to target" [ref=e730]:
+                  - button "Add to target" [ref=e731] [cursor=pointer]:
+                    - img [ref=e732]
+              - generic [ref=e735]:
+                - generic [ref=e736]:
+                  - paragraph [ref=e737]: (no title)
+                  - paragraph [ref=e738]: 2001 · 57b2cf72-6add-42cf-9329-271b72bba4f4
+                - generic "Workspace" [ref=e739]:
+                  - link "Workspace" [ref=e740] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=57b2cf72-6add-42cf-9329-271b72bba4f4&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e741]
+                - generic "Add to target" [ref=e743]:
+                  - button "Add to target" [ref=e744] [cursor=pointer]:
+                    - img [ref=e745]
+              - generic [ref=e748]:
+                - generic [ref=e749]:
+                  - paragraph [ref=e750]: (no title)
+                  - paragraph [ref=e751]: 2023 · 64719b48-e784-489a-92e6-109d9a7818e4
+                - generic "Workspace" [ref=e752]:
+                  - link "Workspace" [ref=e753] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=64719b48-e784-489a-92e6-109d9a7818e4&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e754]
+                - generic "Add to target" [ref=e756]:
+                  - button "Add to target" [ref=e757] [cursor=pointer]:
+                    - img [ref=e758]
+              - generic [ref=e761]:
+                - generic [ref=e762]:
+                  - paragraph [ref=e763]: (no title)
+                  - paragraph [ref=e764]: 2024 · 0f77ff99-1ce8-4dfa-8590-1080f0c51122
+                - generic "Workspace" [ref=e765]:
+                  - link "Workspace" [ref=e766] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=0f77ff99-1ce8-4dfa-8590-1080f0c51122&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e767]
+                - generic "Add to target" [ref=e769]:
+                  - button "Add to target" [ref=e770] [cursor=pointer]:
+                    - img [ref=e771]
+              - generic [ref=e774]:
+                - generic [ref=e775]:
+                  - paragraph [ref=e776]: (no title)
+                  - paragraph [ref=e777]: 2024 · bbde925e-5989-40e8-b27c-9edf980fd060
+                - generic "Workspace" [ref=e778]:
+                  - link "Workspace" [ref=e779] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=bbde925e-5989-40e8-b27c-9edf980fd060&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e780]
+                - generic "Add to target" [ref=e782]:
+                  - button "Add to target" [ref=e783] [cursor=pointer]:
+                    - img [ref=e784]
+              - generic [ref=e787]:
+                - generic [ref=e788]:
+                  - paragraph [ref=e789]: (no title)
+                  - paragraph [ref=e790]: 2022 · ccd6d0b4-f8d9-48bf-b405-8114b85c1feb
+                - generic "Workspace" [ref=e791]:
+                  - link "Workspace" [ref=e792] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=ccd6d0b4-f8d9-48bf-b405-8114b85c1feb&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e793]
+                - generic "Add to target" [ref=e795]:
+                  - button "Add to target" [ref=e796] [cursor=pointer]:
+                    - img [ref=e797]
+              - generic [ref=e800]:
+                - generic [ref=e801]:
+                  - paragraph [ref=e802]: (no title)
+                  - paragraph [ref=e803]: 2022 · b556e286-6dc3-4b7e-b05c-93699a689c21
+                - generic "Workspace" [ref=e804]:
+                  - link "Workspace" [ref=e805] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=b556e286-6dc3-4b7e-b05c-93699a689c21&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e806]
+                - generic "Add to target" [ref=e808]:
+                  - button "Add to target" [ref=e809] [cursor=pointer]:
+                    - img [ref=e810]
+              - generic [ref=e813]:
+                - generic [ref=e814]:
+                  - paragraph [ref=e815]: (no title)
+                  - paragraph [ref=e816]: 2023 · 2eb3984a-0ea8-4fba-939e-10d513778150
+                - generic "Workspace" [ref=e817]:
+                  - link "Workspace" [ref=e818] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=2eb3984a-0ea8-4fba-939e-10d513778150&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e819]
+                - generic "Add to target" [ref=e821]:
+                  - button "Add to target" [ref=e822] [cursor=pointer]:
+                    - img [ref=e823]
+              - generic [ref=e826]:
+                - generic [ref=e827]:
+                  - paragraph [ref=e828]: (no title)
+                  - paragraph [ref=e829]: 2014 · ff318edf-513b-47c3-a1c7-975577af6c78
+                - generic "Workspace" [ref=e830]:
+                  - link "Workspace" [ref=e831] [cursor=pointer]:
+                    - /url: "#/workspace?work_id=ff318edf-513b-47c3-a1c7-975577af6c78&workspace_id=0cea2754-f9a7-41f7-9740-cfb97feb6c48"
+                    - img [ref=e832]
+                - generic "Add to target" [ref=e834]:
+                  - button "Add to target" [ref=e835] [cursor=pointer]:
+                    - img [ref=e836]
+            - button "Load more" [ref=e840] [cursor=pointer]

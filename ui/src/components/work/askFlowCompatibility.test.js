@@ -1,28 +1,29 @@
 import { describe, expect, it } from "vitest";
 
 import { deriveAskScopeKey } from "./askSessionState.js";
+import { CHAT_PATH, EVIDENCE_PATH } from "../../routes/paths.js";
 import {
+  buildStandaloneChatPath,
   buildStandaloneEvidencePath,
   buildStandaloneTracePath,
-  buildWorkspaceTracePath,
   describeTraceabilityState,
 } from "./traceabilityState.js";
 import { buildQueryBody, normalizeQueryResponse } from "../../services/researchApi.js";
 
 describe("askFlowCompatibility", () => {
   it("keeps standalone ask links free of workspace tab params", () => {
-    expect(buildStandaloneTracePath("/chat", "w1")).toBe("/chat?work_id=w1");
-    expect(buildStandaloneTracePath("/evidence", "w1", { chunkFingerprint: "fp-1", citation: "2" })).toBe(
-      "/evidence?work_id=w1&chunk_fingerprint=fp-1&citation=2",
+    expect(buildStandaloneTracePath(CHAT_PATH, "w1")).toBe("/chat?work_id=w1");
+    expect(buildStandaloneTracePath(EVIDENCE_PATH, "w1", { chunkFingerprint: "fp-1", citation: "2" })).toBe(
+      `${EVIDENCE_PATH}?work_id=w1&chunk_fingerprint=fp-1&citation=2`,
     );
     expect(buildStandaloneEvidencePath("w1", { chunkFingerprint: "fp-1", citation: "2" })).toBe(
-      "/evidence?work_id=w1&chunk_fingerprint=fp-1&citation=2",
+      `${EVIDENCE_PATH}?work_id=w1&chunk_fingerprint=fp-1&citation=2`,
     );
   });
 
-  it("keeps workspace ask links scoped to the active tab", () => {
-    expect(buildWorkspaceTracePath("w1", "ask", { chunkFingerprint: "fp-1", section: "intro", citation: "2" })).toBe(
-      "/workspace?work_id=w1&tab=ask&chunk_fingerprint=fp-1&section=intro&citation=2",
+  it("routes ask deep links to standalone /chat (no workspace tab)", () => {
+    expect(buildStandaloneChatPath("w1", { chunkFingerprint: "fp-1", section: "intro", citation: "2" })).toBe(
+      "/chat?work_id=w1&chunk_fingerprint=fp-1&section=intro&citation=2",
     );
   });
 

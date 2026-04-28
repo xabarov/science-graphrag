@@ -6,6 +6,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
@@ -21,9 +22,12 @@ import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useI18n } from "../i18n/useI18n.js";
 import EvidenceWorkBody from "../components/work/EvidenceWorkBody.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
-import { buildWorkspaceTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
+import { GRAPH_PATH, READER_PATH } from "../routes/paths.js";
+import { buildStandaloneTracePath, readTraceabilityState } from "../components/work/traceabilityState.js";
 
 export default function EvidencePage() {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const initial = searchParams.get("work_id") || "";
@@ -81,15 +85,15 @@ export default function EvidencePage() {
           sx={{
             p: 2,
             borderRadius: "6px",
-            border: "1px dashed rgba(255,255,255,0.12)",
-            backgroundColor: "rgba(255,255,255,0.02)",
+            border: `1px dashed ${tk.border.strong}`,
+            backgroundColor: tk.surface.subtle,
             mb: 2,
           }}
         >
-          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>
             {t("evidence.empty.title")}
           </Typography>
-          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: "rgba(255,255,255,0.55)" }}>{t("evidence.empty.body")}</Typography>
+          <Typography sx={{ mt: 0.75, fontSize: "0.8125rem", color: tk.text.secondary }}>{t("evidence.empty.body")}</Typography>
           <Box sx={{ mt: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
             <CursorIconAction component={Link} to="/workspaces" title={t("readerShell.openWorkspaces")}>
               <FolderOpenOutlinedIcon sx={{ fontSize: "1.15rem" }} />
@@ -105,14 +109,14 @@ export default function EvidencePage() {
         <Box sx={{ mb: 1.5, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
           <CursorIconAction
             component={Link}
-            to={buildWorkspaceTracePath(workId, "reader", traceExtras)}
+            to={buildStandaloneTracePath(READER_PATH, workId, traceExtras)}
             title={t("reader.openReaderWs")}
           >
             <MenuBookOutlinedIcon sx={{ fontSize: "1.1rem" }} />
           </CursorIconAction>
           <CursorIconAction
             component={Link}
-            to={buildWorkspaceTracePath(workId, "graph", traceExtras)}
+            to={buildStandaloneTracePath(GRAPH_PATH, workId, traceExtras)}
             title={t("reader.openGraphWs")}
           >
             <AccountTreeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
@@ -137,18 +141,18 @@ export default function EvidencePage() {
           sx={{
             mt: 2,
             borderRadius: "6px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            backgroundColor: "rgba(255,255,255,0.02)",
+            border: `1px solid ${tk.border.default}`,
+            backgroundColor: tk.surface.subtle,
             "&:before": { display: "none" },
           }}
         >
-          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: "rgba(255,255,255,0.5)", fontSize: "1.1rem" }} />}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.85)" }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: tk.text.muted, fontSize: "1.1rem" }} />}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>
               {t("evidence.devAdvancedTitle")}
             </Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0 }}>
-            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.42)", mb: 1.5 }}>{t("evidence.devAdvancedHint")}</Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 1.5 }}>{t("evidence.devAdvancedHint")}</Typography>
             <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", gap: 1, flexWrap: "wrap", alignItems: "flex-start" }}>
               <TextField
                 label={t("reader.workIdLabel")}
@@ -159,7 +163,7 @@ export default function EvidencePage() {
                 sx={{
                   maxWidth: 480,
                   "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-                  "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+                  "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: tk.text.secondary },
                 }}
               />
               <CursorIconAction type="submit" title={t("reader.load")}>

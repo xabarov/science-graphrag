@@ -3,12 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   buildWorkspacePath,
   getLastWorkId,
-  getLastWorkspaceTab,
   LAST_WORK_ID_KEY,
-  LAST_WORK_TAB_KEY,
   normalizeWorkspaceTab,
   persistWorkId,
-  persistWorkspaceTab,
   resolveSelectedWorkId,
   WORKSPACE_TAB_SLUGS,
 } from "./workContext.js";
@@ -26,9 +23,10 @@ describe("workContext", () => {
     });
   });
 
-  it("supports graph tab in workspace slugs", () => {
+  it("normalizes legacy tool tab slugs for URL parsing (tools are standalone routes)", () => {
     expect(WORKSPACE_TAB_SLUGS).toContain("graph");
     expect(normalizeWorkspaceTab("GRAPH")).toBe("graph");
+    expect(normalizeWorkspaceTab("reader")).toBe("reader");
   });
 
   it("maps legacy evidence tab slug to overview (evidence uses standalone /evidence route)", () => {
@@ -70,11 +68,5 @@ describe("workContext", () => {
     persistWorkId("w-123");
     expect(getLastWorkId()).toBe("w-123");
     expect(window.localStorage.getItem(LAST_WORK_ID_KEY)).toBe("w-123");
-  });
-
-  it("persists and restores last workspace tab", () => {
-    persistWorkspaceTab("graph");
-    expect(getLastWorkspaceTab()).toBe("graph");
-    expect(window.localStorage.getItem(LAST_WORK_TAB_KEY)).toBe("graph");
   });
 });

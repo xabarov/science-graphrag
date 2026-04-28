@@ -30,7 +30,7 @@ Backlog item на структурное решение: `docs/backlog/refactor-
 ### 1.1 API keys видимы внутри окружения процесса
 
 ```bash
-.venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('extraction_llm_api_key:', bool(s.extraction_llm_api_key), 'vl_api_key:', bool(s.vl_api_key))"
+.venv/bin/python -c "from science_graphrag.config import Settings; s=Settings(); print('api_key:', bool(s.api_key), 'extraction_llm_api_key:', bool(s.extraction_llm_api_key), 'vl_effective:', bool(s.resolved_vl_api_key))"
 ```
 
 Должно напечатать `True True` для ingest с LLM+VL. Если что-то `False`:

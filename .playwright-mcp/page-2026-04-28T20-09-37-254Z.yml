@@ -1,0 +1,1675 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - img "science-graphrag" [ref=e8]
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - link "Workspace" [ref=e961] [cursor=pointer]:
+          - /url: "#/workspace?workspace_id=2678c5f1-1b31-4aac-92c9-6bd0f4472b23"
+          - img [ref=e963]
+          - paragraph [ref=e965]: Workspace
+        - link "Reader" [ref=e3453] [cursor=pointer]:
+          - /url: "#/reader?work_id=4c381718-6fc0-48fb-b2c8-8ad550d5c765&workspace_id=2678c5f1-1b31-4aac-92c9-6bd0f4472b23"
+          - img [ref=e3455]
+          - paragraph [ref=e3458]: Reader
+        - link "Graph" [ref=e974] [cursor=pointer]:
+          - /url: "#/graph?workspace_id=2678c5f1-1b31-4aac-92c9-6bd0f4472b23"
+          - img [ref=e976]
+          - paragraph [ref=e978]: Graph
+        - link "Chat" [ref=e980] [cursor=pointer]:
+          - /url: "#/chat?workspace_id=2678c5f1-1b31-4aac-92c9-6bd0f4472b23"
+          - img [ref=e982]
+          - paragraph [ref=e984]: Chat
+      - separator [ref=e29]
+      - paragraph [ref=e30]: Operations
+      - generic [ref=e31]:
+        - link "Admin" [ref=e33] [cursor=pointer]:
+          - /url: "#/admin"
+          - img [ref=e35]
+          - paragraph [ref=e40]: Admin
+        - link "Benchmarks" [ref=e42] [cursor=pointer]:
+          - /url: "#/admin/benchmarks"
+          - img [ref=e44]
+          - paragraph [ref=e46]: Benchmarks
+        - link "Settings" [ref=e48] [cursor=pointer]:
+          - /url: "#/admin/settings"
+          - img [ref=e50]
+          - paragraph [ref=e52]: Settings
+    - button "toggle sidebar" [ref=e55] [cursor=pointer]:
+      - generic [ref=e56]: <
+  - main [ref=e57]:
+    - button "Workspace menu — open list to switch workspace" [ref=e59] [cursor=pointer]:
+      - img [ref=e60]
+      - generic [ref=e62]: Object Detection (clean ingested + claims)
+      - img [ref=e63]
+    - generic [ref=e4313]:
+      - generic [ref=e4314]:
+        - paragraph [ref=e4315]: Graph
+        - button "Load graph by work id" [ref=e4316] [cursor=pointer]:
+          - img [ref=e4317]
+        - button "Toggle page description" [ref=e4319] [cursor=pointer]:
+          - img [ref=e4320]
+      - generic [ref=e4323]:
+        - generic:
+          - paragraph
+        - generic [ref=e4324]:
+          - paragraph [ref=e4325]: All papers in workspace (1-hop graph)
+          - generic [ref=e4326]:
+            - generic "Choose which loaded node types are shown (including external cited works). The server graph is always loaded in full; this only affects the canvas." [ref=e4327]:
+              - button "Nodes · 3/8" [ref=e4328] [cursor=pointer]:
+                - img [ref=e4330]
+                - text: Nodes · 3/8
+                - img [ref=e4333]
+            - separator [ref=e4335]
+            - generic [ref=e4337]:
+              - textbox "Filter loaded graph nodes by title or id" [ref=e4338]:
+                - /placeholder: Filter nodes in view…
+              - group
+            - generic "Select the first matching node and center the canvas on it" [ref=e4339]:
+              - button "Center on first match" [disabled]:
+                - img
+            - separator [ref=e4340]
+            - generic [ref=e4341]:
+              - button "Toggle details panel" [pressed] [ref=e4342] [cursor=pointer]:
+                - img [ref=e4343]
+                - generic [ref=e4345]: Details
+              - button "Toggle type legend" [pressed] [ref=e4346] [cursor=pointer]:
+                - img [ref=e4347]
+                - generic [ref=e4349]: Legend
+              - button "Toggle diagnostics" [ref=e4350] [cursor=pointer]:
+                - img [ref=e4351]
+                - generic [ref=e4353]: Diagnostics
+            - separator [ref=e4354]
+            - button "Toggle loading institution nodes on work graph" [ref=e4355] [cursor=pointer]:
+              - img [ref=e4356]
+              - generic [ref=e4358]: Institutions
+            - generic [ref=e4359]: 32 works · 122 authors · 357 ext cites
+        - generic [ref=e4363]:
+          - generic [ref=e4364]:
+            - paragraph [ref=e4365]: 12 nodes · 11 edges
+            - group "Sort legend chips" [ref=e4366]:
+              - button "By count" [pressed] [ref=e4367] [cursor=pointer]
+              - button "A–Z" [ref=e4368] [cursor=pointer]
+          - generic [ref=e4369]:
+            - paragraph [ref=e4370]: Nodes
+            - paragraph [ref=e4371]: Works
+            - generic [ref=e4372]:
+              - img [ref=e4373]
+              - generic [ref=e4376]: Work (internal) (1)
+            - paragraph [ref=e4377]: Semantic
+            - generic [ref=e4378]:
+              - img [ref=e4379]
+              - generic [ref=e4382]: Method (4)
+            - paragraph [ref=e4383]: People
+            - generic [ref=e4384]:
+              - img [ref=e4385]
+              - generic [ref=e4387]: Author (7)
+            - paragraph [ref=e4388]: Edges
+            - generic [ref=e4389]:
+              - img [ref=e4390]
+              - generic [ref=e4392]: wrote (7)
+            - generic [ref=e4393]:
+              - img [ref=e4394]
+              - generic [ref=e4396]: uses method (4)
+        - generic [ref=e4397]:
+          - region "Graph canvas. Double-click the canvas to zoom the view to the selected node." [ref=e4399]:
+            - generic [ref=e4400]:
+              - 'button "Canvas controls: wheel zoom, drag pan, double-click canvas to fit the selected node." [ref=e4402] [cursor=pointer]':
+                - img [ref=e4403]
+              - separator [ref=e4405]
+              - generic [ref=e4406]:
+                - generic [ref=e4407]: Color
+                - group "Canvas node fill coloring" [ref=e4408]:
+                  - button "By type" [pressed] [ref=e4409] [cursor=pointer]
+                  - button "By cluster" [ref=e4410] [cursor=pointer]
+              - separator [ref=e4411]
+              - generic [ref=e4412]:
+                - generic [ref=e4413]: Labels
+                - group "Edge label visibility on canvas" [ref=e4414]:
+                  - button "All" [ref=e4415] [cursor=pointer]
+                  - button "Hover" [ref=e4416] [cursor=pointer]
+                  - button "Auto" [pressed] [ref=e4417] [cursor=pointer]
+              - separator [ref=e4418]
+              - generic [ref=e4419]:
+                - generic [ref=e4420]: View
+                - generic [ref=e4421]:
+                  - button "Fit graph to view" [ref=e4422] [cursor=pointer]:
+                    - img [ref=e4423]
+                  - button "Reset zoom to 1:1 at center" [ref=e4425] [cursor=pointer]:
+                    - img [ref=e4426]
+                  - button "Center on selected node" [ref=e4428] [cursor=pointer]:
+                    - img [ref=e4429]
+                - generic "Repulsion strength (force simulation spacing)" [ref=e4431]:
+                  - generic [ref=e4432]:
+                    - paragraph [ref=e4433]: sim
+                    - paragraph [ref=e4434]: Repulsion 0%
+                  - slider "Force layout repulsion strength" [ref=e4438]: "0"
+                - generic [ref=e4439]:
+                  - button "Restart force layout" [ref=e4440] [cursor=pointer]:
+                    - img [ref=e4441]
+                  - button "Unpin all dragged nodes" [disabled]:
+                    - img
+          - separator "Resize graph and detail panels" [ref=e4445]
+          - region "Details" [ref=e4447]:
+            - heading "Details" [level=2] [ref=e4448]
+            - paragraph [ref=e4449]: This paper's neighborhood · workspace membership · limit 200
+            - generic [ref=e4450]:
+              - paragraph [ref=e4451]: Work (internal)
+              - paragraph [ref=e4452]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+              - paragraph [ref=e4453]: Work
+              - generic [ref=e4454]:
+                - paragraph [ref=e4455]: internal
+                - paragraph [ref=e4456]: "int cites: 0"
+                - paragraph [ref=e4457]: "ext cites: 77"
+              - button "Expand external neighborhood (+77)" [ref=e4459] [cursor=pointer]:
+                - generic [ref=e4460]: Expand external neighborhood (+77)
+              - paragraph [ref=e4461]: Key properties
+              - generic [ref=e4462]:
+                - generic [ref=e4463]:
+                  - paragraph [ref=e4464]: Cites In Count
+                  - paragraph [ref=e4465]: "0"
+                - generic [ref=e4466]:
+                  - paragraph [ref=e4467]: Cites Out Count
+                  - paragraph [ref=e4468]: "77"
+                - generic [ref=e4469]:
+                  - paragraph [ref=e4470]: Authors Count
+                  - paragraph [ref=e4471]: "7"
+              - paragraph [ref=e4472]: Connections
+              - generic [ref=e4473]:
+                - 'button "Edge direction: from the selected node to the neighbor. cites → To believe or not to believe your LLM A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ To believe or not to believe your LLM" [ref=e4474] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4475]': Outgoing
+                  - generic [ref=e4476]:
+                    - img [ref=e4477]
+                    - generic [ref=e4480]: cites
+                  - paragraph [ref=e4481]: → To believe or not to believe your LLM
+                  - paragraph [ref=e4482]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ To believe or not to believe your LLM
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Moreover, if the consistency function is effective at least once, the model error of self-consistency is strictly less than the model error of perplexity A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Moreover, if the consistency function is effective at least once, the model error of self-consistency is strictly less than the model error of perplexity" [ref=e4483] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4484]': Outgoing
+                  - generic [ref=e4485]:
+                    - img [ref=e4486]
+                    - generic [ref=e4489]: cites
+                  - paragraph [ref=e4490]: → Moreover, if the consistency function is effective at least once, the model error of self-consistency is strictly less than the model error of perplexity
+                  - paragraph [ref=e4491]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Moreover, if the consistency function is effective at least once, the model error of self-consistency is strictly less than the model error of perplexity
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Guidelines: • The answer NA means that the paper does not involve crowdsourcing nor research with human subjects A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Guidelines: • The answer NA means that the paper does not involve crowdsourcing nor research with human subjects" [ref=e4492] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4493]': Outgoing
+                  - generic [ref=e4494]:
+                    - img [ref=e4495]
+                    - generic [ref=e4498]: cites
+                  - paragraph [ref=e4499]: "→ Guidelines: • The answer NA means that the paper does not involve crowdsourcing nor research with human subjects"
+                  - paragraph [ref=e4500]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Guidelines: • The answer NA means that the paper does not involve crowdsourcing nor research with human subjects"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Le, and Ed H. Chi A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Le, and Ed H. Chi" [ref=e4501] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4502]': Outgoing
+                  - generic [ref=e4503]:
+                    - img [ref=e4504]
+                    - generic [ref=e4507]: cites
+                  - paragraph [ref=e4508]: → Le, and Ed H. Chi
+                  - paragraph [ref=e4509]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Le, and Ed H. Chi
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Fact-and-reflection (far) improves confidence calibration of large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Fact-and-reflection (far) improves confidence calibration of large language models" [ref=e4510] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4511]': Outgoing
+                  - generic [ref=e4512]:
+                    - img [ref=e4513]
+                    - generic [ref=e4516]: cites
+                  - paragraph [ref=e4517]: → Fact-and-reflection (far) improves confidence calibration of large language models
+                  - paragraph [ref=e4518]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Fact-and-reflection (far) improves confidence calibration of large language models
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Automatic chain of thought prompting in large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Automatic chain of thought prompting in large language models" [ref=e4519] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4520]': Outgoing
+                  - generic [ref=e4521]:
+                    - img [ref=e4522]
+                    - generic [ref=e4525]: cites
+                  - paragraph [ref=e4526]: → Automatic chain of thought prompting in large language models
+                  - paragraph [ref=e4527]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Automatic chain of thought prompting in large language models
+                - 'button "Edge direction: from the selected node to the neighbor. cites → The lessons of developing process reward models in mathematical reasoning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ The lessons of developing process reward models in mathematical reasoning" [ref=e4528] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4529]': Outgoing
+                  - generic [ref=e4530]:
+                    - img [ref=e4531]
+                    - generic [ref=e4534]: cites
+                  - paragraph [ref=e4535]: → The lessons of developing process reward models in mathematical reasoning
+                  - paragraph [ref=e4536]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ The lessons of developing process reward models in mathematical reasoning
+                - 'button "Edge direction: from the selected node to the neighbor. cites → ReST-MCTS*: LLM self-training via process reward guided tree search A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ ReST-MCTS*: LLM self-training via process reward guided tree search" [ref=e4537] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4538]': Outgoing
+                  - generic [ref=e4539]:
+                    - img [ref=e4540]
+                    - generic [ref=e4543]: cites
+                  - paragraph [ref=e4544]: "→ ReST-MCTS*: LLM self-training via process reward guided tree search"
+                  - paragraph [ref=e4545]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ ReST-MCTS*: LLM self-training via process reward guided tree search"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Aime problems 1983 to 2024, 2024 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Aime problems 1983 to 2024, 2024" [ref=e4546] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4547]': Outgoing
+                  - generic [ref=e4548]:
+                    - img [ref=e4549]
+                    - generic [ref=e4552]: cites
+                  - paragraph [ref=e4553]: → Aime problems 1983 to 2024, 2024
+                  - paragraph [ref=e4554]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Aime problems 1983 to 2024, 2024
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Metamath: Bootstrap your own mathematical questions for large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Metamath: Bootstrap your own mathematical questions for large language models" [ref=e4555] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4556]': Outgoing
+                  - generic [ref=e4557]:
+                    - img [ref=e4558]
+                    - generic [ref=e4561]: cites
+                  - paragraph [ref=e4562]: "→ Metamath: Bootstrap your own mathematical questions for large language models"
+                  - paragraph [ref=e4563]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Metamath: Bootstrap your own mathematical questions for large language models"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Internlm- math: Open math large language models toward verifiable reasoning, 2024 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Internlm- math: Open math large language models toward verifiable reasoning, 2024" [ref=e4564] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4565]': Outgoing
+                  - generic [ref=e4566]:
+                    - img [ref=e4567]
+                    - generic [ref=e4570]: cites
+                  - paragraph [ref=e4571]: "→ Internlm- math: Open math large language models toward verifiable reasoning, 2024"
+                  - paragraph [ref=e4572]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Internlm- math: Open math large language models toward verifiable reasoning, 2024"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Learning from correctness without prompting makes LLM efficient reasoner A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Learning from correctness without prompting makes LLM efficient reasoner" [ref=e4573] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4574]': Outgoing
+                  - generic [ref=e4575]:
+                    - img [ref=e4576]
+                    - generic [ref=e4579]: cites
+                  - paragraph [ref=e4580]: → Learning from correctness without prompting makes LLM efficient reasoner
+                  - paragraph [ref=e4581]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Learning from correctness without prompting makes LLM efficient reasoner
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Tree of thoughts: Deliberate problem solving with large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Tree of thoughts: Deliberate problem solving with large language models" [ref=e4582] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4583]': Outgoing
+                  - generic [ref=e4584]:
+                    - img [ref=e4585]
+                    - generic [ref=e4588]: cites
+                  - paragraph [ref=e4589]: "→ Tree of thoughts: Deliberate problem solving with large language models"
+                  - paragraph [ref=e4590]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Tree of thoughts: Deliberate problem solving with large language models"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Confidence calibration and rationalization for LLMs via multi-agent deliberation A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Confidence calibration and rationalization for LLMs via multi-agent deliberation" [ref=e4591] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4592]': Outgoing
+                  - generic [ref=e4593]:
+                    - img [ref=e4594]
+                    - generic [ref=e4597]: cites
+                  - paragraph [ref=e4598]: → Confidence calibration and rationalization for LLMs via multi-agent deliberation
+                  - paragraph [ref=e4599]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Confidence calibration and rationalization for LLMs via multi-agent deliberation
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Can llms express their uncertainty? an empirical evaluation of confidence elicitation in llms A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Can llms express their uncertainty? an empirical evaluation of confidence elicitation in llms" [ref=e4600] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4601]': Outgoing
+                  - generic [ref=e4602]:
+                    - img [ref=e4603]
+                    - generic [ref=e4606]: cites
+                  - paragraph [ref=e4607]: → Can llms express their uncertainty? an empirical evaluation of confidence elicitation in llms
+                  - paragraph [ref=e4608]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Can llms express their uncertainty? an empirical evaluation of confidence elicitation in llms
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Waloddi Weibull A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Waloddi Weibull" [ref=e4609] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4610]': Outgoing
+                  - generic [ref=e4611]:
+                    - img [ref=e4612]
+                    - generic [ref=e4615]: cites
+                  - paragraph [ref=e4616]: → Waloddi Weibull
+                  - paragraph [ref=e4617]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Waloddi Weibull
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Le, and Denny Zhou A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Le, and Denny Zhou" [ref=e4618] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4619]': Outgoing
+                  - generic [ref=e4620]:
+                    - img [ref=e4621]
+                    - generic [ref=e4624]: cites
+                  - paragraph [ref=e4625]: → Le, and Denny Zhou
+                  - paragraph [ref=e4626]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Le, and Denny Zhou
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Self-consistency improves chain of thought reasoning in language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Self-consistency improves chain of thought reasoning in language models" [ref=e4627] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4628]': Outgoing
+                  - generic [ref=e4629]:
+                    - img [ref=e4630]
+                    - generic [ref=e4633]: cites
+                  - paragraph [ref=e4634]: → Self-consistency improves chain of thought reasoning in language models
+                  - paragraph [ref=e4635]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Self-consistency improves chain of thought reasoning in language models
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Make every penny count: Difficulty-adaptive self-consistency for cost-efficient reasoning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Make every penny count: Difficulty-adaptive self-consistency for cost-efficient reasoning" [ref=e4636] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4637]': Outgoing
+                  - generic [ref=e4638]:
+                    - img [ref=e4639]
+                    - generic [ref=e4642]: cites
+                  - paragraph [ref=e4643]: "→ Make every penny count: Difficulty-adaptive self-consistency for cost-efficient reasoning"
+                  - paragraph [ref=e4644]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Make every penny count: Difficulty-adaptive self-consistency for cost-efficient reasoning"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Reasoning in token economies: Budget-aware evaluation of LLM reasoning strategies A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Reasoning in token economies: Budget-aware evaluation of LLM reasoning strategies" [ref=e4645] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4646]': Outgoing
+                  - generic [ref=e4647]:
+                    - img [ref=e4648]
+                    - generic [ref=e4651]: cites
+                  - paragraph [ref=e4652]: "→ Reasoning in token economies: Budget-aware evaluation of LLM reasoning strategies"
+                  - paragraph [ref=e4653]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Reasoning in token economies: Budget-aware evaluation of LLM reasoning strategies"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Dynamic self-consistency: Leveraging reasoning paths for efficient LLM sampling.CoRR, abs/2408.17017, 2024 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Dynamic self-consistency: Leveraging reasoning paths for efficient LLM sampling.CoRR, abs/2408.17017, 2024" [ref=e4654] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4655]': Outgoing
+                  - generic [ref=e4656]:
+                    - img [ref=e4657]
+                    - generic [ref=e4660]: cites
+                  - paragraph [ref=e4661]: "→ Dynamic self-consistency: Leveraging reasoning paths for efficient LLM sampling.CoRR, abs/2408.17017, 2024"
+                  - paragraph [ref=e4662]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Dynamic self-consistency: Leveraging reasoning paths for efficient LLM sampling.CoRR, abs/2408.17017, 2024"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → On the planning abilities of large language models - A critical investigation A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ On the planning abilities of large language models - A critical investigation" [ref=e4663] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4664]': Outgoing
+                  - generic [ref=e4665]:
+                    - img [ref=e4666]
+                    - generic [ref=e4669]: cites
+                  - paragraph [ref=e4670]: → On the planning abilities of large language models - A critical investigation
+                  - paragraph [ref=e4671]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ On the planning abilities of large language models - A critical investigation
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Just ask for calibration: Strategies for eliciting calibrated confidence scores from language models fine-tuned with human feedback A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Just ask for calibration: Strategies for eliciting calibrated confidence scores from language models fine-tuned with human feedback" [ref=e4672] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4673]': Outgoing
+                  - generic [ref=e4674]:
+                    - img [ref=e4675]
+                    - generic [ref=e4678]: cites
+                  - paragraph [ref=e4679]: "→ Just ask for calibration: Strategies for eliciting calibrated confidence scores from language models fine-tuned with human feedback"
+                  - paragraph [ref=e4680]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Just ask for calibration: Strategies for eliciting calibrated confidence scores from language models fine-tuned with human feedback"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Confidence improves self-consistency in llms A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Confidence improves self-consistency in llms" [ref=e4681] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4682]': Outgoing
+                  - generic [ref=e4683]:
+                    - img [ref=e4684]
+                    - generic [ref=e4687]: cites
+                  - paragraph [ref=e4688]: → Confidence improves self-consistency in llms
+                  - paragraph [ref=e4689]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Confidence improves self-consistency in llms
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Confidence improves self-consistency in llms.CoRR, abs/2502.06233, 2025 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Confidence improves self-consistency in llms.CoRR, abs/2502.06233, 2025" [ref=e4690] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4691]': Outgoing
+                  - generic [ref=e4692]:
+                    - img [ref=e4693]
+                    - generic [ref=e4696]: cites
+                  - paragraph [ref=e4697]: → Confidence improves self-consistency in llms.CoRR, abs/2502.06233, 2025
+                  - paragraph [ref=e4698]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Confidence improves self-consistency in llms.CoRR, abs/2502.06233, 2025
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Wu, and Daya Guo A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Wu, and Daya Guo" [ref=e4699] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4700]': Outgoing
+                  - generic [ref=e4701]:
+                    - img [ref=e4702]
+                    - generic [ref=e4705]: cites
+                  - paragraph [ref=e4706]: → Wu, and Daya Guo
+                  - paragraph [ref=e4707]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Wu, and Daya Guo
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Integrating human expertise & automated methods for a dynamic and multi-parametric evaluation of large language models’ feasibility in clinical decision-making.International Journal of Medical Informa A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Integrating human expertise & automated methods for a dynamic and multi-parametric evaluation of large language models’ feasibility in clinical decision-making.International Journal of Medical Informa" [ref=e4708] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4709]': Outgoing
+                  - generic [ref=e4710]:
+                    - img [ref=e4711]
+                    - generic [ref=e4714]: cites
+                  - paragraph [ref=e4715]: → Integrating human expertise & automated methods for a dynamic and multi-parametric evaluation of large language models’ feasibility in clinical decision-making.International Journal of Medical Informa
+                  - paragraph [ref=e4716]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Integrating human expertise & automated methods for a dynamic and multi-parametric evaluation of large language models’ feasibility in clinical decision-making.International Journal of Medical Informa
+                - 'button "Edge direction: from the selected node to the neighbor. cites → GPQA: A graduate-level google-proof q&a benchmark A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ GPQA: A graduate-level google-proof q&a benchmark" [ref=e4717] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4718]': Outgoing
+                  - generic [ref=e4719]:
+                    - img [ref=e4720]
+                    - generic [ref=e4723]: cites
+                  - paragraph [ref=e4724]: "→ GPQA: A graduate-level google-proof q&a benchmark"
+                  - paragraph [ref=e4725]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ GPQA: A graduate-level google-proof q&a benchmark"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Ensembling large language models with process reward-guided tree search for better complex reasoning.CoRR, abs/2412.15797, 2024 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Ensembling large language models with process reward-guided tree search for better complex reasoning.CoRR, abs/2412.15797, 2024" [ref=e4726] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4727]': Outgoing
+                  - generic [ref=e4728]:
+                    - img [ref=e4729]
+                    - generic [ref=e4732]: cites
+                  - paragraph [ref=e4733]: → Ensembling large language models with process reward-guided tree search for better complex reasoning.CoRR, abs/2412.15797, 2024
+                  - paragraph [ref=e4734]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Ensembling large language models with process reward-guided tree search for better complex reasoning.CoRR, abs/2412.15797, 2024
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Autoplan: Automatic planning of interactive decision-making tasks with large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Autoplan: Automatic planning of interactive decision-making tasks with large language models" [ref=e4735] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4736]': Outgoing
+                  - generic [ref=e4737]:
+                    - img [ref=e4738]
+                    - generic [ref=e4741]: cites
+                  - paragraph [ref=e4742]: "→ Autoplan: Automatic planning of interactive decision-making tasks with large language models"
+                  - paragraph [ref=e4743]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Autoplan: Automatic planning of interactive decision-making tasks with large language models"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Evaluating the evaluator: Measuring LLMs’ adherence to task evaluation instructions A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Evaluating the evaluator: Measuring LLMs’ adherence to task evaluation instructions" [ref=e4744] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4745]': Outgoing
+                  - generic [ref=e4746]:
+                    - img [ref=e4747]
+                    - generic [ref=e4750]: cites
+                  - paragraph [ref=e4751]: "→ Evaluating the evaluator: Measuring LLMs’ adherence to task evaluation instructions"
+                  - paragraph [ref=e4752]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Evaluating the evaluator: Measuring LLMs’ adherence to task evaluation instructions"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → The truncated mean of an asymmetric distribution.Computational Statistics & Data Analysis, 32(1):79–100 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ The truncated mean of an asymmetric distribution.Computational Statistics & Data Analysis, 32(1):79–100" [ref=e4753] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4754]': Outgoing
+                  - generic [ref=e4755]:
+                    - img [ref=e4756]
+                    - generic [ref=e4759]: cites
+                  - paragraph [ref=e4760]: → The truncated mean of an asymmetric distribution.Computational Statistics & Data Analysis, 32(1):79–100
+                  - paragraph [ref=e4761]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ The truncated mean of an asymmetric distribution.Computational Statistics & Data Analysis, 32(1):79–100
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Automatically checking semantic equivalence between versions of large-scale c projects A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Automatically checking semantic equivalence between versions of large-scale c projects" [ref=e4762] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4763]': Outgoing
+                  - generic [ref=e4764]:
+                    - img [ref=e4765]
+                    - generic [ref=e4768]: cites
+                  - paragraph [ref=e4769]: → Automatically checking semantic equivalence between versions of large-scale c projects
+                  - paragraph [ref=e4770]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Automatically checking semantic equivalence between versions of large-scale c projects
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Wizardmath: Empowering mathematical reasoning for large language models via reinforced evol-instruct A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Wizardmath: Empowering mathematical reasoning for large language models via reinforced evol-instruct" [ref=e4771] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4772]': Outgoing
+                  - generic [ref=e4773]:
+                    - img [ref=e4774]
+                    - generic [ref=e4777]: cites
+                  - paragraph [ref=e4778]: "→ Wizardmath: Empowering mathematical reasoning for large language models via reinforced evol-instruct"
+                  - paragraph [ref=e4779]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Wizardmath: Empowering mathematical reasoning for large language models via reinforced evol-instruct"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Conference on Computational Linguistics, Language Resources and Evaluation, pages 2638–2656, 2024 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Conference on Computational Linguistics, Language Resources and Evaluation, pages 2638–2656, 2024" [ref=e4780] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4781]': Outgoing
+                  - generic [ref=e4782]:
+                    - img [ref=e4783]
+                    - generic [ref=e4786]: cites
+                  - paragraph [ref=e4787]: → Conference on Computational Linguistics, Language Resources and Evaluation, pages 2638–2656, 2024
+                  - paragraph [ref=e4788]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Conference on Computational Linguistics, Language Resources and Evaluation, pages 2638–2656, 2024
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Calibrating llm-based evaluator A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Calibrating llm-based evaluator" [ref=e4789] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4790]': Outgoing
+                  - generic [ref=e4791]:
+                    - img [ref=e4792]
+                    - generic [ref=e4795]: cites
+                  - paragraph [ref=e4796]: → Calibrating llm-based evaluator
+                  - paragraph [ref=e4797]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Calibrating llm-based evaluator
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Logiqa: A challenge dataset for machine reading comprehension with logical reasoning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Logiqa: A challenge dataset for machine reading comprehension with logical reasoning" [ref=e4798] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4799]': Outgoing
+                  - generic [ref=e4800]:
+                    - img [ref=e4801]
+                    - generic [ref=e4804]: cites
+                  - paragraph [ref=e4805]: "→ Logiqa: A challenge dataset for machine reading comprehension with logical reasoning"
+                  - paragraph [ref=e4806]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Logiqa: A challenge dataset for machine reading comprehension with logical reasoning"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Neuro- symbolic data generation for math reasoning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Neuro- symbolic data generation for math reasoning" [ref=e4807] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4808]': Outgoing
+                  - generic [ref=e4809]:
+                    - img [ref=e4810]
+                    - generic [ref=e4813]: cites
+                  - paragraph [ref=e4814]: → Neuro- symbolic data generation for math reasoning
+                  - paragraph [ref=e4815]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Neuro- symbolic data generation for math reasoning
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Escape sky-high cost: Early-stopping self-consistency for multi-step reasoning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Escape sky-high cost: Early-stopping self-consistency for multi-step reasoning" [ref=e4816] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4817]': Outgoing
+                  - generic [ref=e4818]:
+                    - img [ref=e4819]
+                    - generic [ref=e4822]: cites
+                  - paragraph [ref=e4823]: "→ Escape sky-high cost: Early-stopping self-consistency for multi-step reasoning"
+                  - paragraph [ref=e4824]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Escape sky-high cost: Early-stopping self-consistency for multi-step reasoning"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Chain of code: Reasoning with a language model-augmented code emulator A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Chain of code: Reasoning with a language model-augmented code emulator" [ref=e4825] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4826]': Outgoing
+                  - generic [ref=e4827]:
+                    - img [ref=e4828]
+                    - generic [ref=e4831]: cites
+                  - paragraph [ref=e4832]: "→ Chain of code: Reasoning with a language model-augmented code emulator"
+                  - paragraph [ref=e4833]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Chain of code: Reasoning with a language model-augmented code emulator"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → MuggleMath: Assessing the impact of query and response augmentation on math reasoning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ MuggleMath: Assessing the impact of query and response augmentation on math reasoning" [ref=e4834] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4835]': Outgoing
+                  - generic [ref=e4836]:
+                    - img [ref=e4837]
+                    - generic [ref=e4840]: cites
+                  - paragraph [ref=e4841]: "→ MuggleMath: Assessing the impact of query and response augmentation on math reasoning"
+                  - paragraph [ref=e4842]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ MuggleMath: Assessing the impact of query and response augmentation on math reasoning"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Ra- masesh, Ambrose Slone, Cem Anil, Imanol Schlag, Theo Gutman-Solo, Yuhuai Wu, Behnam Neyshabur, Guy Gur-Ari, and Vedant Misra A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Ra- masesh, Ambrose Slone, Cem Anil, Imanol Schlag, Theo Gutman-Solo, Yuhuai Wu, Behnam Neyshabur, Guy Gur-Ari, and Vedant Misra" [ref=e4843] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4844]': Outgoing
+                  - generic [ref=e4845]:
+                    - img [ref=e4846]
+                    - generic [ref=e4849]: cites
+                  - paragraph [ref=e4850]: → Ra- masesh, Ambrose Slone, Cem Anil, Imanol Schlag, Theo Gutman-Solo, Yuhuai Wu, Behnam Neyshabur, Guy Gur-Ari, and Vedant Misra
+                  - paragraph [ref=e4851]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Ra- masesh, Ambrose Slone, Cem Anil, Imanol Schlag, Theo Gutman-Solo, Yuhuai Wu, Behnam Neyshabur, Guy Gur-Ari, and Vedant Misra
+                - 'button "Edge direction: from the selected node to the neighbor. cites → László Kozma A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ László Kozma" [ref=e4852] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4853]': Outgoing
+                  - generic [ref=e4854]:
+                    - img [ref=e4855]
+                    - generic [ref=e4858]: cites
+                  - paragraph [ref=e4859]: → László Kozma
+                  - paragraph [ref=e4860]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ László Kozma
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Large language models are zero-shot reasoners A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Large language models are zero-shot reasoners" [ref=e4861] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4862]': Outgoing
+                  - generic [ref=e4863]:
+                    - img [ref=e4864]
+                    - generic [ref=e4867]: cites
+                  - paragraph [ref=e4868]: → Large language models are zero-shot reasoners
+                  - paragraph [ref=e4869]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Large language models are zero-shot reasoners
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Language models (mostly) know what they know.CoRR, abs/2207.05221, 2022 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Language models (mostly) know what they know.CoRR, abs/2207.05221, 2022" [ref=e4870] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4871]': Outgoing
+                  - generic [ref=e4872]:
+                    - img [ref=e4873]
+                    - generic [ref=e4876]: cites
+                  - paragraph [ref=e4877]: → Language models (mostly) know what they know.CoRR, abs/2207.05221, 2022
+                  - paragraph [ref=e4878]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Language models (mostly) know what they know.CoRR, abs/2207.05221, 2022
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Regularized best-of-n sampling to mitigate reward hacking for language model alignment.CoRR, abs/2404.01054, 2024 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Regularized best-of-n sampling to mitigate reward hacking for language model alignment.CoRR, abs/2404.01054, 2024" [ref=e4879] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4880]': Outgoing
+                  - generic [ref=e4881]:
+                    - img [ref=e4882]
+                    - generic [ref=e4885]: cites
+                  - paragraph [ref=e4886]: → Regularized best-of-n sampling to mitigate reward hacking for language model alignment.CoRR, abs/2404.01054, 2024
+                  - paragraph [ref=e4887]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Regularized best-of-n sampling to mitigate reward hacking for language model alignment.CoRR, abs/2404.01054, 2024
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Look before you leap: An exploratory study of uncertainty measurement for large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Look before you leap: An exploratory study of uncertainty measurement for large language models" [ref=e4888] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4889]': Outgoing
+                  - generic [ref=e4890]:
+                    - img [ref=e4891]
+                    - generic [ref=e4894]: cites
+                  - paragraph [ref=e4895]: "→ Look before you leap: An exploratory study of uncertainty measurement for large language models"
+                  - paragraph [ref=e4896]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Look before you leap: An exploratory study of uncertainty measurement for large language models"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Springer Series in Statistics A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Springer Series in Statistics" [ref=e4897] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4898]': Outgoing
+                  - generic [ref=e4899]:
+                    - img [ref=e4900]
+                    - generic [ref=e4903]: cites
+                  - paragraph [ref=e4904]: → Springer Series in Statistics
+                  - paragraph [ref=e4905]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Springer Series in Statistics
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Deepseek-r1 incentivizes reasoning in llms through reinforcement learning.Nature, 645(8081):633–638, 2025 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Deepseek-r1 incentivizes reasoning in llms through reinforcement learning.Nature, 645(8081):633–638, 2025" [ref=e4906] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4907]': Outgoing
+                  - generic [ref=e4908]:
+                    - img [ref=e4909]
+                    - generic [ref=e4912]: cites
+                  - paragraph [ref=e4913]: → Deepseek-r1 incentivizes reasoning in llms through reinforcement learning.Nature, 645(8081):633–638, 2025
+                  - paragraph [ref=e4914]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Deepseek-r1 incentivizes reasoning in llms through reinforcement learning.Nature, 645(8081):633–638, 2025
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Ng, and Michael I. Jordan A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Ng, and Michael I. Jordan" [ref=e4915] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4916]': Outgoing
+                  - generic [ref=e4917]:
+                    - img [ref=e4918]
+                    - generic [ref=e4921]: cites
+                  - paragraph [ref=e4922]: → Ng, and Michael I. Jordan
+                  - paragraph [ref=e4923]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Ng, and Michael I. Jordan
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Let’s sample step by step: Adaptive- consistency for efficient reasoning and coding with llms A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Let’s sample step by step: Adaptive- consistency for efficient reasoning and coding with llms" [ref=e4924] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4925]': Outgoing
+                  - generic [ref=e4926]:
+                    - img [ref=e4927]
+                    - generic [ref=e4930]: cites
+                  - paragraph [ref=e4931]: "→ Let’s sample step by step: Adaptive- consistency for efficient reasoning and coding with llms"
+                  - paragraph [ref=e4932]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Let’s sample step by step: Adaptive- consistency for efficient reasoning and coding with llms"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → To believe or not to believe your LLM.CoRR, 2024 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ To believe or not to believe your LLM.CoRR, 2024" [ref=e4933] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4934]': Outgoing
+                  - generic [ref=e4935]:
+                    - img [ref=e4936]
+                    - generic [ref=e4939]: cites
+                  - paragraph [ref=e4940]: → To believe or not to believe your LLM.CoRR, 2024
+                  - paragraph [ref=e4941]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ To believe or not to believe your LLM.CoRR, 2024
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Let’s sample step by step: Adaptive-consistency for efficient reasoning and coding with llms A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Let’s sample step by step: Adaptive-consistency for efficient reasoning and coding with llms" [ref=e4942] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4943]': Outgoing
+                  - generic [ref=e4944]:
+                    - img [ref=e4945]
+                    - generic [ref=e4948]: cites
+                  - paragraph [ref=e4949]: "→ Let’s sample step by step: Adaptive-consistency for efficient reasoning and coding with llms"
+                  - paragraph [ref=e4950]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Let’s sample step by step: Adaptive-consistency for efficient reasoning and coding with llms"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Program synthesis with large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Program synthesis with large language models" [ref=e4951] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4952]': Outgoing
+                  - generic [ref=e4953]:
+                    - img [ref=e4954]
+                    - generic [ref=e4957]: cites
+                  - paragraph [ref=e4958]: → Program synthesis with large language models
+                  - paragraph [ref=e4959]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Program synthesis with large language models
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Cycles of thought: Measuring LLM confidence through stable explanations A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Cycles of thought: Measuring LLM confidence through stable explanations" [ref=e4960] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4961]': Outgoing
+                  - generic [ref=e4962]:
+                    - img [ref=e4963]
+                    - generic [ref=e4966]: cites
+                  - paragraph [ref=e4967]: "→ Cycles of thought: Measuring LLM confidence through stable explanations"
+                  - paragraph [ref=e4968]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Cycles of thought: Measuring LLM confidence through stable explanations"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Towards open set deep networks A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Towards open set deep networks" [ref=e4969] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4970]': Outgoing
+                  - generic [ref=e4971]:
+                    - img [ref=e4972]
+                    - generic [ref=e4975]: cites
+                  - paragraph [ref=e4976]: → Towards open set deep networks
+                  - paragraph [ref=e4977]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Towards open set deep networks
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Latent dirichlet allocation A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Latent dirichlet allocation" [ref=e4978] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4979]': Outgoing
+                  - generic [ref=e4980]:
+                    - img [ref=e4981]
+                    - generic [ref=e4984]: cites
+                  - paragraph [ref=e4985]: → Latent dirichlet allocation
+                  - paragraph [ref=e4986]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Latent dirichlet allocation
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Codet: Code generation with generated tests A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Codet: Code generation with generated tests" [ref=e4987] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4988]': Outgoing
+                  - generic [ref=e4989]:
+                    - img [ref=e4990]
+                    - generic [ref=e4993]: cites
+                  - paragraph [ref=e4994]: "→ Codet: Code generation with generated tests"
+                  - paragraph [ref=e4995]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Codet: Code generation with generated tests"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Evaluating large language models trained on code A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Evaluating large language models trained on code" [ref=e4996] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e4997]': Outgoing
+                  - generic [ref=e4998]:
+                    - img [ref=e4999]
+                    - generic [ref=e5002]: cites
+                  - paragraph [ref=e5003]: → Evaluating large language models trained on code
+                  - paragraph [ref=e5004]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Evaluating large language models trained on code
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Towards reasoning era: a survey of long chain-of-thought for reasoning large language models, 2025 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Towards reasoning era: a survey of long chain-of-thought for reasoning large language models, 2025" [ref=e5005] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5006]': Outgoing
+                  - generic [ref=e5007]:
+                    - img [ref=e5008]
+                    - generic [ref=e5011]: cites
+                  - paragraph [ref=e5012]: "→ Towards reasoning era: a survey of long chain-of-thought for reasoning large language models, 2025"
+                  - paragraph [ref=e5013]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Towards reasoning era: a survey of long chain-of-thought for reasoning large language models, 2025"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Evaluation metrics for language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Evaluation metrics for language models" [ref=e5014] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5015]': Outgoing
+                  - generic [ref=e5016]:
+                    - img [ref=e5017]
+                    - generic [ref=e5020]: cites
+                  - paragraph [ref=e5021]: → Evaluation metrics for language models
+                  - paragraph [ref=e5022]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Evaluation metrics for language models
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Universal self-consistency for large language model generation A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Universal self-consistency for large language model generation" [ref=e5023] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5024]': Outgoing
+                  - generic [ref=e5025]:
+                    - img [ref=e5026]
+                    - generic [ref=e5029]: cites
+                  - paragraph [ref=e5030]: → Universal self-consistency for large language model generation
+                  - paragraph [ref=e5031]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Universal self-consistency for large language model generation
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Relic: Investigating large language model responses using self-consistency A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Relic: Investigating large language model responses using self-consistency" [ref=e5032] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5033]': Outgoing
+                  - generic [ref=e5034]:
+                    - img [ref=e5035]
+                    - generic [ref=e5038]: cites
+                  - paragraph [ref=e5039]: "→ Relic: Investigating large language model responses using self-consistency"
+                  - paragraph [ref=e5040]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Relic: Investigating large language model responses using self-consistency"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Plug-and-play policy planner for large language model powered dialogue agents A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Plug-and-play policy planner for large language model powered dialogue agents" [ref=e5041] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5042]': Outgoing
+                  - generic [ref=e5043]:
+                    - img [ref=e5044]
+                    - generic [ref=e5047]: cites
+                  - paragraph [ref=e5048]: → Plug-and-play policy planner for large language model powered dialogue agents
+                  - paragraph [ref=e5049]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Plug-and-play policy planner for large language model powered dialogue agents
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Chain-of-verification reduces hallucination in large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Chain-of-verification reduces hallucination in large language models" [ref=e5050] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5051]': Outgoing
+                  - generic [ref=e5052]:
+                    - img [ref=e5053]
+                    - generic [ref=e5056]: cites
+                  - paragraph [ref=e5057]: → Chain-of-verification reduces hallucination in large language models
+                  - paragraph [ref=e5058]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Chain-of-verification reduces hallucination in large language models
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Shifting attention to relevance: Towards the predictive uncertainty quantification of free-form large language models A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Shifting attention to relevance: Towards the predictive uncertainty quantification of free-form large language models" [ref=e5059] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5060]': Outgoing
+                  - generic [ref=e5061]:
+                    - img [ref=e5062]
+                    - generic [ref=e5065]: cites
+                  - paragraph [ref=e5066]: "→ Shifting attention to relevance: Towards the predictive uncertainty quantification of free-form large language models"
+                  - paragraph [ref=e5067]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Shifting attention to relevance: Towards the predictive uncertainty quantification of free-form large language models"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Methodyssey: Benchmarking mathematical problem-solving skills in large language models using odyssey math data A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Methodyssey: Benchmarking mathematical problem-solving skills in large language models using odyssey math data" [ref=e5068] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5069]': Outgoing
+                  - generic [ref=e5070]:
+                    - img [ref=e5071]
+                    - generic [ref=e5074]: cites
+                  - paragraph [ref=e5075]: "→ Methodyssey: Benchmarking mathematical problem-solving skills in large language models using odyssey math data"
+                  - paragraph [ref=e5076]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Methodyssey: Benchmarking mathematical problem-solving skills in large language models using odyssey math data"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Complexity-based prompting for multi-step reasoning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Complexity-based prompting for multi-step reasoning" [ref=e5077] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5078]': Outgoing
+                  - generic [ref=e5079]:
+                    - img [ref=e5080]
+                    - generic [ref=e5083]: cites
+                  - paragraph [ref=e5084]: → Complexity-based prompting for multi-step reasoning
+                  - paragraph [ref=e5085]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Complexity-based prompting for multi-step reasoning
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Deep think with confidence A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Deep think with confidence" [ref=e5086] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5087]': Outgoing
+                  - generic [ref=e5088]:
+                    - img [ref=e5089]
+                    - generic [ref=e5092]: cites
+                  - paragraph [ref=e5093]: → Deep think with confidence
+                  - paragraph [ref=e5094]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Deep think with confidence
+                - 'button "Edge direction: from the selected node to the neighbor. cites → rstar-math: Small llms can master math reasoning with self-evolved deep thinking, 2025 A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ rstar-math: Small llms can master math reasoning with self-evolved deep thinking, 2025" [ref=e5095] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5096]': Outgoing
+                  - generic [ref=e5097]:
+                    - img [ref=e5098]
+                    - generic [ref=e5101]: cites
+                  - paragraph [ref=e5102]: "→ rstar-math: Small llms can master math reasoning with self-evolved deep thinking, 2025"
+                  - paragraph [ref=e5103]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ rstar-math: Small llms can master math reasoning with self-evolved deep thinking, 2025"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Bonbon alignment for large language models and the sweetness of best-of-n sampling A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Bonbon alignment for large language models and the sweetness of best-of-n sampling" [ref=e5104] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5105]': Outgoing
+                  - generic [ref=e5106]:
+                    - img [ref=e5107]
+                    - generic [ref=e5110]: cites
+                  - paragraph [ref=e5111]: → Bonbon alignment for large language models and the sweetness of best-of-n sampling
+                  - paragraph [ref=e5112]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Bonbon alignment for large language models and the sweetness of best-of-n sampling
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Deepseek-r1 incentivizes reasoning in llms through reinforcement learning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Deepseek-r1 incentivizes reasoning in llms through reinforcement learning" [ref=e5113] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5114]': Outgoing
+                  - generic [ref=e5115]:
+                    - img [ref=e5116]
+                    - generic [ref=e5119]: cites
+                  - paragraph [ref=e5120]: → Deepseek-r1 incentivizes reasoning in llms through reinforcement learning
+                  - paragraph [ref=e5121]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Deepseek-r1 incentivizes reasoning in llms through reinforcement learning
+                - 'button "Edge direction: from the selected node to the neighbor. cites → The Elements of Statistical Learning: Data Mining, Inference, and Prediction A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ The Elements of Statistical Learning: Data Mining, Inference, and Prediction" [ref=e5122] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5123]': Outgoing
+                  - generic [ref=e5124]:
+                    - img [ref=e5125]
+                    - generic [ref=e5128]: cites
+                  - paragraph [ref=e5129]: "→ The Elements of Statistical Learning: Data Mining, Inference, and Prediction"
+                  - paragraph [ref=e5130]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ The Elements of Statistical Learning: Data Mining, Inference, and Prediction"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Olympiadbench: A challenging benchmark for promoting AGI with olympiad-level bilingual multimodal scientific problems A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Olympiadbench: A challenging benchmark for promoting AGI with olympiad-level bilingual multimodal scientific problems" [ref=e5131] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5132]': Outgoing
+                  - generic [ref=e5133]:
+                    - img [ref=e5134]
+                    - generic [ref=e5137]: cites
+                  - paragraph [ref=e5138]: "→ Olympiadbench: A challenging benchmark for promoting AGI with olympiad-level bilingual multimodal scientific problems"
+                  - paragraph [ref=e5139]: "A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Olympiadbench: A challenging benchmark for promoting AGI with olympiad-level bilingual multimodal scientific problems"
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Measuring coding challenge competence with APPS A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Measuring coding challenge competence with APPS" [ref=e5140] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5141]': Outgoing
+                  - generic [ref=e5142]:
+                    - img [ref=e5143]
+                    - generic [ref=e5146]: cites
+                  - paragraph [ref=e5147]: → Measuring coding challenge competence with APPS
+                  - paragraph [ref=e5148]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Measuring coding challenge competence with APPS
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Measuring mathematical problem solving with the math dataset A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Measuring mathematical problem solving with the math dataset" [ref=e5149] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5150]': Outgoing
+                  - generic [ref=e5151]:
+                    - img [ref=e5152]
+                    - generic [ref=e5155]: cites
+                  - paragraph [ref=e5156]: → Measuring mathematical problem solving with the math dataset
+                  - paragraph [ref=e5157]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Measuring mathematical problem solving with the math dataset
+                - 'button "Edge direction: from the selected node to the neighbor. cites → Efficient test-time scaling via self-calibration A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Efficient test-time scaling via self-calibration" [ref=e5158] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5159]': Outgoing
+                  - generic [ref=e5160]:
+                    - img [ref=e5161]
+                    - generic [ref=e5164]: cites
+                  - paragraph [ref=e5165]: → Efficient test-time scaling via self-calibration
+                  - paragraph [ref=e5166]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[cites]→ Efficient test-time scaling via self-calibration
+                - 'button "Edge direction: from the selected node to the neighbor. uses method → Self-Consistency A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[uses method]→ Self-Consistency" [ref=e5167] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5168]': Outgoing
+                  - generic [ref=e5169]:
+                    - img [ref=e5170]
+                    - generic [ref=e5173]: uses method
+                  - paragraph [ref=e5174]: → Self-Consistency
+                  - paragraph [ref=e5175]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[uses method]→ Self-Consistency
+                - 'button "Edge direction: from the selected node to the neighbor. uses method → Perplexity Consistency A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[uses method]→ Perplexity Consistency" [ref=e5176] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5177]': Outgoing
+                  - generic [ref=e5178]:
+                    - img [ref=e5179]
+                    - generic [ref=e5182]: uses method
+                  - paragraph [ref=e5183]: → Perplexity Consistency
+                  - paragraph [ref=e5184]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[uses method]→ Perplexity Consistency
+                - 'button "Edge direction: from the selected node to the neighbor. uses method → Reasoning Pruning A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[uses method]→ Reasoning Pruning" [ref=e5185] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5186]': Outgoing
+                  - generic [ref=e5187]:
+                    - img [ref=e5188]
+                    - generic [ref=e5191]: uses method
+                  - paragraph [ref=e5192]: → Reasoning Pruning
+                  - paragraph [ref=e5193]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[uses method]→ Reasoning Pruning
+                - 'button "Edge direction: from the selected node to the neighbor. uses method → RPC A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[uses method]→ RPC" [ref=e5194] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5195]': Outgoing
+                  - generic [ref=e5196]:
+                    - img [ref=e5197]
+                    - generic [ref=e5200]: uses method
+                  - paragraph [ref=e5201]: → RPC
+                  - paragraph [ref=e5202]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[uses method]→ RPC
+                - 'button "Edge direction: from the selected node to the neighbor. evaluated on → SVAMP A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ SVAMP" [ref=e5203] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5204]': Outgoing
+                  - generic [ref=e5205]:
+                    - img [ref=e5206]
+                    - generic [ref=e5209]: evaluated on
+                  - paragraph [ref=e5210]: → SVAMP
+                  - paragraph [ref=e5211]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ SVAMP
+                - 'button "Edge direction: from the selected node to the neighbor. evaluated on → GSM8K A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ GSM8K" [ref=e5212] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5213]': Outgoing
+                  - generic [ref=e5214]:
+                    - img [ref=e5215]
+                    - generic [ref=e5218]: evaluated on
+                  - paragraph [ref=e5219]: → GSM8K
+                  - paragraph [ref=e5220]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ GSM8K
+                - 'button "Edge direction: from the selected node to the neighbor. evaluated on → AQuA A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ AQuA" [ref=e5221] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5222]': Outgoing
+                  - generic [ref=e5223]:
+                    - img [ref=e5224]
+                    - generic [ref=e5227]: evaluated on
+                  - paragraph [ref=e5228]: → AQuA
+                  - paragraph [ref=e5229]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ AQuA
+                - 'button "Edge direction: from the selected node to the neighbor. evaluated on → ASDiv A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ ASDiv" [ref=e5230] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5231]': Outgoing
+                  - generic [ref=e5232]:
+                    - img [ref=e5233]
+                    - generic [ref=e5236]: evaluated on
+                  - paragraph [ref=e5237]: → ASDiv
+                  - paragraph [ref=e5238]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ ASDiv
+                - 'button "Edge direction: from the selected node to the neighbor. evaluated on → MAWPS A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ MAWPS" [ref=e5239] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e5240]': Outgoing
+                  - generic [ref=e5241]:
+                    - img [ref=e5242]
+                    - generic [ref=e5245]: evaluated on
+                  - paragraph [ref=e5246]: → MAWPS
+                  - paragraph [ref=e5247]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[evaluated on]→ MAWPS
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5248] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5249]': Incoming
+                  - generic [ref=e5250]:
+                    - img [ref=e5251]
+                    - generic [ref=e5254]: anchored in
+                  - paragraph [ref=e5255]: → Evidence
+                  - paragraph [ref=e5256]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5257] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5258]': Incoming
+                  - generic [ref=e5259]:
+                    - img [ref=e5260]
+                    - generic [ref=e5263]: anchored in
+                  - paragraph [ref=e5264]: → Evidence
+                  - paragraph [ref=e5265]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5266] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5267]': Incoming
+                  - generic [ref=e5268]:
+                    - img [ref=e5269]
+                    - generic [ref=e5272]: anchored in
+                  - paragraph [ref=e5273]: → Evidence
+                  - paragraph [ref=e5274]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5275] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5276]': Incoming
+                  - generic [ref=e5277]:
+                    - img [ref=e5278]
+                    - generic [ref=e5281]: anchored in
+                  - paragraph [ref=e5282]: → Evidence
+                  - paragraph [ref=e5283]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5284] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5285]': Incoming
+                  - generic [ref=e5286]:
+                    - img [ref=e5287]
+                    - generic [ref=e5290]: anchored in
+                  - paragraph [ref=e5291]: → Evidence
+                  - paragraph [ref=e5292]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5293] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5294]': Incoming
+                  - generic [ref=e5295]:
+                    - img [ref=e5296]
+                    - generic [ref=e5299]: anchored in
+                  - paragraph [ref=e5300]: → Evidence
+                  - paragraph [ref=e5301]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5302] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5303]': Incoming
+                  - generic [ref=e5304]:
+                    - img [ref=e5305]
+                    - generic [ref=e5308]: anchored in
+                  - paragraph [ref=e5309]: → Evidence
+                  - paragraph [ref=e5310]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5311] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5312]': Incoming
+                  - generic [ref=e5313]:
+                    - img [ref=e5314]
+                    - generic [ref=e5317]: anchored in
+                  - paragraph [ref=e5318]: → Evidence
+                  - paragraph [ref=e5319]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5320] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5321]': Incoming
+                  - generic [ref=e5322]:
+                    - img [ref=e5323]
+                    - generic [ref=e5326]: anchored in
+                  - paragraph [ref=e5327]: → Evidence
+                  - paragraph [ref=e5328]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5329] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5330]': Incoming
+                  - generic [ref=e5331]:
+                    - img [ref=e5332]
+                    - generic [ref=e5335]: anchored in
+                  - paragraph [ref=e5336]: → Evidence
+                  - paragraph [ref=e5337]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5338] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5339]': Incoming
+                  - generic [ref=e5340]:
+                    - img [ref=e5341]
+                    - generic [ref=e5344]: anchored in
+                  - paragraph [ref=e5345]: → Evidence
+                  - paragraph [ref=e5346]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5347] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5348]': Incoming
+                  - generic [ref=e5349]:
+                    - img [ref=e5350]
+                    - generic [ref=e5353]: anchored in
+                  - paragraph [ref=e5354]: → Evidence
+                  - paragraph [ref=e5355]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5356] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5357]': Incoming
+                  - generic [ref=e5358]:
+                    - img [ref=e5359]
+                    - generic [ref=e5362]: anchored in
+                  - paragraph [ref=e5363]: → Evidence
+                  - paragraph [ref=e5364]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5365] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5366]': Incoming
+                  - generic [ref=e5367]:
+                    - img [ref=e5368]
+                    - generic [ref=e5371]: anchored in
+                  - paragraph [ref=e5372]: → Evidence
+                  - paragraph [ref=e5373]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5374] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5375]': Incoming
+                  - generic [ref=e5376]:
+                    - img [ref=e5377]
+                    - generic [ref=e5380]: anchored in
+                  - paragraph [ref=e5381]: → Evidence
+                  - paragraph [ref=e5382]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5383] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5384]': Incoming
+                  - generic [ref=e5385]:
+                    - img [ref=e5386]
+                    - generic [ref=e5389]: anchored in
+                  - paragraph [ref=e5390]: → Evidence
+                  - paragraph [ref=e5391]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5392] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5393]': Incoming
+                  - generic [ref=e5394]:
+                    - img [ref=e5395]
+                    - generic [ref=e5398]: anchored in
+                  - paragraph [ref=e5399]: → Evidence
+                  - paragraph [ref=e5400]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5401] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5402]': Incoming
+                  - generic [ref=e5403]:
+                    - img [ref=e5404]
+                    - generic [ref=e5407]: anchored in
+                  - paragraph [ref=e5408]: → Evidence
+                  - paragraph [ref=e5409]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5410] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5411]': Incoming
+                  - generic [ref=e5412]:
+                    - img [ref=e5413]
+                    - generic [ref=e5416]: anchored in
+                  - paragraph [ref=e5417]: → Evidence
+                  - paragraph [ref=e5418]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5419] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5420]': Incoming
+                  - generic [ref=e5421]:
+                    - img [ref=e5422]
+                    - generic [ref=e5425]: anchored in
+                  - paragraph [ref=e5426]: → Evidence
+                  - paragraph [ref=e5427]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5428] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5429]': Incoming
+                  - generic [ref=e5430]:
+                    - img [ref=e5431]
+                    - generic [ref=e5434]: anchored in
+                  - paragraph [ref=e5435]: → Evidence
+                  - paragraph [ref=e5436]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5437] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5438]': Incoming
+                  - generic [ref=e5439]:
+                    - img [ref=e5440]
+                    - generic [ref=e5443]: anchored in
+                  - paragraph [ref=e5444]: → Evidence
+                  - paragraph [ref=e5445]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5446] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5447]': Incoming
+                  - generic [ref=e5448]:
+                    - img [ref=e5449]
+                    - generic [ref=e5452]: anchored in
+                  - paragraph [ref=e5453]: → Evidence
+                  - paragraph [ref=e5454]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5455] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5456]': Incoming
+                  - generic [ref=e5457]:
+                    - img [ref=e5458]
+                    - generic [ref=e5461]: anchored in
+                  - paragraph [ref=e5462]: → Evidence
+                  - paragraph [ref=e5463]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5464] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5465]': Incoming
+                  - generic [ref=e5466]:
+                    - img [ref=e5467]
+                    - generic [ref=e5470]: anchored in
+                  - paragraph [ref=e5471]: → Evidence
+                  - paragraph [ref=e5472]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5473] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5474]': Incoming
+                  - generic [ref=e5475]:
+                    - img [ref=e5476]
+                    - generic [ref=e5479]: anchored in
+                  - paragraph [ref=e5480]: → Evidence
+                  - paragraph [ref=e5481]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5482] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5483]': Incoming
+                  - generic [ref=e5484]:
+                    - img [ref=e5485]
+                    - generic [ref=e5488]: anchored in
+                  - paragraph [ref=e5489]: → Evidence
+                  - paragraph [ref=e5490]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5491] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5492]': Incoming
+                  - generic [ref=e5493]:
+                    - img [ref=e5494]
+                    - generic [ref=e5497]: anchored in
+                  - paragraph [ref=e5498]: → Evidence
+                  - paragraph [ref=e5499]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5500] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5501]': Incoming
+                  - generic [ref=e5502]:
+                    - img [ref=e5503]
+                    - generic [ref=e5506]: anchored in
+                  - paragraph [ref=e5507]: → Evidence
+                  - paragraph [ref=e5508]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5509] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5510]': Incoming
+                  - generic [ref=e5511]:
+                    - img [ref=e5512]
+                    - generic [ref=e5515]: anchored in
+                  - paragraph [ref=e5516]: → Evidence
+                  - paragraph [ref=e5517]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5518] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5519]': Incoming
+                  - generic [ref=e5520]:
+                    - img [ref=e5521]
+                    - generic [ref=e5524]: anchored in
+                  - paragraph [ref=e5525]: → Evidence
+                  - paragraph [ref=e5526]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5527] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5528]': Incoming
+                  - generic [ref=e5529]:
+                    - img [ref=e5530]
+                    - generic [ref=e5533]: anchored in
+                  - paragraph [ref=e5534]: → Evidence
+                  - paragraph [ref=e5535]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5536] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5537]': Incoming
+                  - generic [ref=e5538]:
+                    - img [ref=e5539]
+                    - generic [ref=e5542]: anchored in
+                  - paragraph [ref=e5543]: → Evidence
+                  - paragraph [ref=e5544]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5545] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5546]': Incoming
+                  - generic [ref=e5547]:
+                    - img [ref=e5548]
+                    - generic [ref=e5551]: anchored in
+                  - paragraph [ref=e5552]: → Evidence
+                  - paragraph [ref=e5553]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5554] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5555]': Incoming
+                  - generic [ref=e5556]:
+                    - img [ref=e5557]
+                    - generic [ref=e5560]: anchored in
+                  - paragraph [ref=e5561]: → Evidence
+                  - paragraph [ref=e5562]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5563] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5564]': Incoming
+                  - generic [ref=e5565]:
+                    - img [ref=e5566]
+                    - generic [ref=e5569]: anchored in
+                  - paragraph [ref=e5570]: → Evidence
+                  - paragraph [ref=e5571]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5572] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5573]': Incoming
+                  - generic [ref=e5574]:
+                    - img [ref=e5575]
+                    - generic [ref=e5578]: anchored in
+                  - paragraph [ref=e5579]: → Evidence
+                  - paragraph [ref=e5580]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5581] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5582]': Incoming
+                  - generic [ref=e5583]:
+                    - img [ref=e5584]
+                    - generic [ref=e5587]: anchored in
+                  - paragraph [ref=e5588]: → Evidence
+                  - paragraph [ref=e5589]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5590] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5591]': Incoming
+                  - generic [ref=e5592]:
+                    - img [ref=e5593]
+                    - generic [ref=e5596]: anchored in
+                  - paragraph [ref=e5597]: → Evidence
+                  - paragraph [ref=e5598]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5599] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5600]': Incoming
+                  - generic [ref=e5601]:
+                    - img [ref=e5602]
+                    - generic [ref=e5605]: anchored in
+                  - paragraph [ref=e5606]: → Evidence
+                  - paragraph [ref=e5607]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5608] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5609]': Incoming
+                  - generic [ref=e5610]:
+                    - img [ref=e5611]
+                    - generic [ref=e5614]: anchored in
+                  - paragraph [ref=e5615]: → Evidence
+                  - paragraph [ref=e5616]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5617] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5618]': Incoming
+                  - generic [ref=e5619]:
+                    - img [ref=e5620]
+                    - generic [ref=e5623]: anchored in
+                  - paragraph [ref=e5624]: → Evidence
+                  - paragraph [ref=e5625]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5626] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5627]': Incoming
+                  - generic [ref=e5628]:
+                    - img [ref=e5629]
+                    - generic [ref=e5632]: anchored in
+                  - paragraph [ref=e5633]: → Evidence
+                  - paragraph [ref=e5634]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5635] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5636]': Incoming
+                  - generic [ref=e5637]:
+                    - img [ref=e5638]
+                    - generic [ref=e5641]: anchored in
+                  - paragraph [ref=e5642]: → Evidence
+                  - paragraph [ref=e5643]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5644] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5645]': Incoming
+                  - generic [ref=e5646]:
+                    - img [ref=e5647]
+                    - generic [ref=e5650]: anchored in
+                  - paragraph [ref=e5651]: → Evidence
+                  - paragraph [ref=e5652]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5653] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5654]': Incoming
+                  - generic [ref=e5655]:
+                    - img [ref=e5656]
+                    - generic [ref=e5659]: anchored in
+                  - paragraph [ref=e5660]: → Evidence
+                  - paragraph [ref=e5661]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5662] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5663]': Incoming
+                  - generic [ref=e5664]:
+                    - img [ref=e5665]
+                    - generic [ref=e5668]: anchored in
+                  - paragraph [ref=e5669]: → Evidence
+                  - paragraph [ref=e5670]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5671] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5672]': Incoming
+                  - generic [ref=e5673]:
+                    - img [ref=e5674]
+                    - generic [ref=e5677]: anchored in
+                  - paragraph [ref=e5678]: → Evidence
+                  - paragraph [ref=e5679]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5680] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5681]': Incoming
+                  - generic [ref=e5682]:
+                    - img [ref=e5683]
+                    - generic [ref=e5686]: anchored in
+                  - paragraph [ref=e5687]: → Evidence
+                  - paragraph [ref=e5688]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5689] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5690]': Incoming
+                  - generic [ref=e5691]:
+                    - img [ref=e5692]
+                    - generic [ref=e5695]: anchored in
+                  - paragraph [ref=e5696]: → Evidence
+                  - paragraph [ref=e5697]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5698] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5699]': Incoming
+                  - generic [ref=e5700]:
+                    - img [ref=e5701]
+                    - generic [ref=e5704]: anchored in
+                  - paragraph [ref=e5705]: → Evidence
+                  - paragraph [ref=e5706]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5707] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5708]': Incoming
+                  - generic [ref=e5709]:
+                    - img [ref=e5710]
+                    - generic [ref=e5713]: anchored in
+                  - paragraph [ref=e5714]: → Evidence
+                  - paragraph [ref=e5715]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5716] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5717]': Incoming
+                  - generic [ref=e5718]:
+                    - img [ref=e5719]
+                    - generic [ref=e5722]: anchored in
+                  - paragraph [ref=e5723]: → Evidence
+                  - paragraph [ref=e5724]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5725] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5726]': Incoming
+                  - generic [ref=e5727]:
+                    - img [ref=e5728]
+                    - generic [ref=e5731]: anchored in
+                  - paragraph [ref=e5732]: → Evidence
+                  - paragraph [ref=e5733]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5734] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5735]': Incoming
+                  - generic [ref=e5736]:
+                    - img [ref=e5737]
+                    - generic [ref=e5740]: anchored in
+                  - paragraph [ref=e5741]: → Evidence
+                  - paragraph [ref=e5742]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5743] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5744]': Incoming
+                  - generic [ref=e5745]:
+                    - img [ref=e5746]
+                    - generic [ref=e5749]: anchored in
+                  - paragraph [ref=e5750]: → Evidence
+                  - paragraph [ref=e5751]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5752] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5753]': Incoming
+                  - generic [ref=e5754]:
+                    - img [ref=e5755]
+                    - generic [ref=e5758]: anchored in
+                  - paragraph [ref=e5759]: → Evidence
+                  - paragraph [ref=e5760]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5761] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5762]': Incoming
+                  - generic [ref=e5763]:
+                    - img [ref=e5764]
+                    - generic [ref=e5767]: anchored in
+                  - paragraph [ref=e5768]: → Evidence
+                  - paragraph [ref=e5769]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5770] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5771]': Incoming
+                  - generic [ref=e5772]:
+                    - img [ref=e5773]
+                    - generic [ref=e5776]: anchored in
+                  - paragraph [ref=e5777]: → Evidence
+                  - paragraph [ref=e5778]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5779] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5780]': Incoming
+                  - generic [ref=e5781]:
+                    - img [ref=e5782]
+                    - generic [ref=e5785]: anchored in
+                  - paragraph [ref=e5786]: → Evidence
+                  - paragraph [ref=e5787]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5788] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5789]': Incoming
+                  - generic [ref=e5790]:
+                    - img [ref=e5791]
+                    - generic [ref=e5794]: anchored in
+                  - paragraph [ref=e5795]: → Evidence
+                  - paragraph [ref=e5796]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5797] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5798]': Incoming
+                  - generic [ref=e5799]:
+                    - img [ref=e5800]
+                    - generic [ref=e5803]: anchored in
+                  - paragraph [ref=e5804]: → Evidence
+                  - paragraph [ref=e5805]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5806] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5807]': Incoming
+                  - generic [ref=e5808]:
+                    - img [ref=e5809]
+                    - generic [ref=e5812]: anchored in
+                  - paragraph [ref=e5813]: → Evidence
+                  - paragraph [ref=e5814]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5815] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5816]': Incoming
+                  - generic [ref=e5817]:
+                    - img [ref=e5818]
+                    - generic [ref=e5821]: anchored in
+                  - paragraph [ref=e5822]: → Evidence
+                  - paragraph [ref=e5823]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5824] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5825]': Incoming
+                  - generic [ref=e5826]:
+                    - img [ref=e5827]
+                    - generic [ref=e5830]: anchored in
+                  - paragraph [ref=e5831]: → Evidence
+                  - paragraph [ref=e5832]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5833] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5834]': Incoming
+                  - generic [ref=e5835]:
+                    - img [ref=e5836]
+                    - generic [ref=e5839]: anchored in
+                  - paragraph [ref=e5840]: → Evidence
+                  - paragraph [ref=e5841]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5842] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5843]': Incoming
+                  - generic [ref=e5844]:
+                    - img [ref=e5845]
+                    - generic [ref=e5848]: anchored in
+                  - paragraph [ref=e5849]: → Evidence
+                  - paragraph [ref=e5850]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5851] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5852]': Incoming
+                  - generic [ref=e5853]:
+                    - img [ref=e5854]
+                    - generic [ref=e5857]: anchored in
+                  - paragraph [ref=e5858]: → Evidence
+                  - paragraph [ref=e5859]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5860] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5861]': Incoming
+                  - generic [ref=e5862]:
+                    - img [ref=e5863]
+                    - generic [ref=e5866]: anchored in
+                  - paragraph [ref=e5867]: → Evidence
+                  - paragraph [ref=e5868]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5869] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5870]': Incoming
+                  - generic [ref=e5871]:
+                    - img [ref=e5872]
+                    - generic [ref=e5875]: anchored in
+                  - paragraph [ref=e5876]: → Evidence
+                  - paragraph [ref=e5877]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5878] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5879]': Incoming
+                  - generic [ref=e5880]:
+                    - img [ref=e5881]
+                    - generic [ref=e5884]: anchored in
+                  - paragraph [ref=e5885]: → Evidence
+                  - paragraph [ref=e5886]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5887] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5888]': Incoming
+                  - generic [ref=e5889]:
+                    - img [ref=e5890]
+                    - generic [ref=e5893]: anchored in
+                  - paragraph [ref=e5894]: → Evidence
+                  - paragraph [ref=e5895]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5896] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5897]': Incoming
+                  - generic [ref=e5898]:
+                    - img [ref=e5899]
+                    - generic [ref=e5902]: anchored in
+                  - paragraph [ref=e5903]: → Evidence
+                  - paragraph [ref=e5904]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5905] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5906]': Incoming
+                  - generic [ref=e5907]:
+                    - img [ref=e5908]
+                    - generic [ref=e5911]: anchored in
+                  - paragraph [ref=e5912]: → Evidence
+                  - paragraph [ref=e5913]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5914] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5915]': Incoming
+                  - generic [ref=e5916]:
+                    - img [ref=e5917]
+                    - generic [ref=e5920]: anchored in
+                  - paragraph [ref=e5921]: → Evidence
+                  - paragraph [ref=e5922]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5923] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5924]': Incoming
+                  - generic [ref=e5925]:
+                    - img [ref=e5926]
+                    - generic [ref=e5929]: anchored in
+                  - paragraph [ref=e5930]: → Evidence
+                  - paragraph [ref=e5931]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5932] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5933]': Incoming
+                  - generic [ref=e5934]:
+                    - img [ref=e5935]
+                    - generic [ref=e5938]: anchored in
+                  - paragraph [ref=e5939]: → Evidence
+                  - paragraph [ref=e5940]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5941] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5942]': Incoming
+                  - generic [ref=e5943]:
+                    - img [ref=e5944]
+                    - generic [ref=e5947]: anchored in
+                  - paragraph [ref=e5948]: → Evidence
+                  - paragraph [ref=e5949]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5950] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5951]': Incoming
+                  - generic [ref=e5952]:
+                    - img [ref=e5953]
+                    - generic [ref=e5956]: anchored in
+                  - paragraph [ref=e5957]: → Evidence
+                  - paragraph [ref=e5958]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5959] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5960]': Incoming
+                  - generic [ref=e5961]:
+                    - img [ref=e5962]
+                    - generic [ref=e5965]: anchored in
+                  - paragraph [ref=e5966]: → Evidence
+                  - paragraph [ref=e5967]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5968] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5969]': Incoming
+                  - generic [ref=e5970]:
+                    - img [ref=e5971]
+                    - generic [ref=e5974]: anchored in
+                  - paragraph [ref=e5975]: → Evidence
+                  - paragraph [ref=e5976]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5977] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5978]': Incoming
+                  - generic [ref=e5979]:
+                    - img [ref=e5980]
+                    - generic [ref=e5983]: anchored in
+                  - paragraph [ref=e5984]: → Evidence
+                  - paragraph [ref=e5985]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5986] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5987]': Incoming
+                  - generic [ref=e5988]:
+                    - img [ref=e5989]
+                    - generic [ref=e5992]: anchored in
+                  - paragraph [ref=e5993]: → Evidence
+                  - paragraph [ref=e5994]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e5995] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e5996]': Incoming
+                  - generic [ref=e5997]:
+                    - img [ref=e5998]
+                    - generic [ref=e6001]: anchored in
+                  - paragraph [ref=e6002]: → Evidence
+                  - paragraph [ref=e6003]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e6004] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e6005]': Incoming
+                  - generic [ref=e6006]:
+                    - img [ref=e6007]
+                    - generic [ref=e6010]: anchored in
+                  - paragraph [ref=e6011]: → Evidence
+                  - paragraph [ref=e6012]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e6013] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e6014]': Incoming
+                  - generic [ref=e6015]:
+                    - img [ref=e6016]
+                    - generic [ref=e6019]: anchored in
+                  - paragraph [ref=e6020]: → Evidence
+                  - paragraph [ref=e6021]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e6022] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e6023]': Incoming
+                  - generic [ref=e6024]:
+                    - img [ref=e6025]
+                    - generic [ref=e6028]: anchored in
+                  - paragraph [ref=e6029]: → Evidence
+                  - paragraph [ref=e6030]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e6031] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e6032]': Incoming
+                  - generic [ref=e6033]:
+                    - img [ref=e6034]
+                    - generic [ref=e6037]: anchored in
+                  - paragraph [ref=e6038]: → Evidence
+                  - paragraph [ref=e6039]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e6040] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e6041]': Incoming
+                  - generic [ref=e6042]:
+                    - img [ref=e6043]
+                    - generic [ref=e6046]: anchored in
+                  - paragraph [ref=e6047]: → Evidence
+                  - paragraph [ref=e6048]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e6049] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e6050]': Incoming
+                  - generic [ref=e6051]:
+                    - img [ref=e6052]
+                    - generic [ref=e6055]: anchored in
+                  - paragraph [ref=e6056]: → Evidence
+                  - paragraph [ref=e6057]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the neighbor to the selected node. anchored in → Evidence Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning" [ref=e6058] [cursor=pointer]':
+                  - 'generic "Edge direction: from the neighbor to the selected node." [ref=e6059]': Incoming
+                  - generic [ref=e6060]:
+                    - img [ref=e6061]
+                    - generic [ref=e6064]: anchored in
+                  - paragraph [ref=e6065]: → Evidence
+                  - paragraph [ref=e6066]: Evidence —[anchored in]→ A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning
+                - 'button "Edge direction: from the selected node to the neighbor. has method evidence → MethodEvidence A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence" [ref=e6067] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6068]': Outgoing
+                  - generic [ref=e6069]:
+                    - img [ref=e6070]
+                    - generic [ref=e6073]: has method evidence
+                  - paragraph [ref=e6074]: → MethodEvidence
+                  - paragraph [ref=e6075]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence
+                - 'button "Edge direction: from the selected node to the neighbor. has method evidence → MethodEvidence A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence" [ref=e6076] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6077]': Outgoing
+                  - generic [ref=e6078]:
+                    - img [ref=e6079]
+                    - generic [ref=e6082]: has method evidence
+                  - paragraph [ref=e6083]: → MethodEvidence
+                  - paragraph [ref=e6084]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence
+                - 'button "Edge direction: from the selected node to the neighbor. has method evidence → MethodEvidence A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence" [ref=e6085] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6086]': Outgoing
+                  - generic [ref=e6087]:
+                    - img [ref=e6088]
+                    - generic [ref=e6091]: has method evidence
+                  - paragraph [ref=e6092]: → MethodEvidence
+                  - paragraph [ref=e6093]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence
+                - 'button "Edge direction: from the selected node to the neighbor. has method evidence → MethodEvidence A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence" [ref=e6094] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6095]': Outgoing
+                  - generic [ref=e6096]:
+                    - img [ref=e6097]
+                    - generic [ref=e6100]: has method evidence
+                  - paragraph [ref=e6101]: → MethodEvidence
+                  - paragraph [ref=e6102]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence
+                - 'button "Edge direction: from the selected node to the neighbor. has method evidence → MethodEvidence A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence" [ref=e6103] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6104]': Outgoing
+                  - generic [ref=e6105]:
+                    - img [ref=e6106]
+                    - generic [ref=e6109]: has method evidence
+                  - paragraph [ref=e6110]: → MethodEvidence
+                  - paragraph [ref=e6111]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has method evidence]→ MethodEvidence
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → reasoning pruning mitigates the degradation issue of estimation error reduction rate when the internal llm probability magnitude is low by automatically modeling the probability di A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ reasoning pruning mitigates the degradation issue of estimation error reduction rate when the internal llm probability magnitude is low by automatically modeling the probability di" [ref=e6112] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6113]': Outgoing
+                  - generic [ref=e6114]:
+                    - img [ref=e6115]
+                    - generic [ref=e6118]: has claim
+                  - paragraph [ref=e6119]: → reasoning pruning mitigates the degradation issue of estimation error reduction rate when the internal llm probability magnitude is low by automatically modeling the probability di
+                  - paragraph [ref=e6120]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ reasoning pruning mitigates the degradation issue of estimation error reduction rate when the internal llm probability magnitude is low by automatically modeling the probability di
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → a promising direction for improving self-consistency is to develop methods that achieve faster estimation error convergence rates. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ a promising direction for improving self-consistency is to develop methods that achieve faster estimation error convergence rates." [ref=e6121] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6122]': Outgoing
+                  - generic [ref=e6123]:
+                    - img [ref=e6124]
+                    - generic [ref=e6127]: has claim
+                  - paragraph [ref=e6128]: → a promising direction for improving self-consistency is to develop methods that achieve faster estimation error convergence rates.
+                  - paragraph [ref=e6129]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ a promising direction for improving self-consistency is to develop methods that achieve faster estimation error convergence rates.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the success of sampling-based test-time scaling hinges on accurately estimating the confidence of sampled reasoning paths. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the success of sampling-based test-time scaling hinges on accurately estimating the confidence of sampled reasoning paths." [ref=e6130] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6131]': Outgoing
+                  - generic [ref=e6132]:
+                    - img [ref=e6133]
+                    - generic [ref=e6136]: has claim
+                  - paragraph [ref=e6137]: → the success of sampling-based test-time scaling hinges on accurately estimating the confidence of sampled reasoning paths.
+                  - paragraph [ref=e6138]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the success of sampling-based test-time scaling hinges on accurately estimating the confidence of sampled reasoning paths.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc demonstrates effectiveness across different model scales and architectures. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc demonstrates effectiveness across different model scales and architectures." [ref=e6139] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6140]': Outgoing
+                  - generic [ref=e6141]:
+                    - img [ref=e6142]
+                    - generic [ref=e6145]: has claim
+                  - paragraph [ref=e6146]: → rpc demonstrates effectiveness across different model scales and architectures.
+                  - paragraph [ref=e6147]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc demonstrates effectiveness across different model scales and architectures.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the estimated probability of any possible reasoning path is calculated using a set of sampled reasoning paths. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the estimated probability of any possible reasoning path is calculated using a set of sampled reasoning paths." [ref=e6148] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6149]': Outgoing
+                  - generic [ref=e6150]:
+                    - img [ref=e6151]
+                    - generic [ref=e6154]: has claim
+                  - paragraph [ref=e6155]: → the estimated probability of any possible reasoning path is calculated using a set of sampled reasoning paths.
+                  - paragraph [ref=e6156]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the estimated probability of any possible reasoning path is calculated using a set of sampled reasoning paths.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the reasoning error is decomposed into estimation error and model error. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the reasoning error is decomposed into estimation error and model error." [ref=e6157] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6158]': Outgoing
+                  - generic [ref=e6159]:
+                    - img [ref=e6160]
+                    - generic [ref=e6163]: has claim
+                  - paragraph [ref=e6164]: → the reasoning error is decomposed into estimation error and model error.
+                  - paragraph [ref=e6165]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the reasoning error is decomposed into estimation error and model error.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the estimation error of self-consistency consists solely of variance since the sampling is unbiased. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the estimation error of self-consistency consists solely of variance since the sampling is unbiased." [ref=e6166] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6167]': Outgoing
+                  - generic [ref=e6168]:
+                    - img [ref=e6169]
+                    - generic [ref=e6172]: has claim
+                  - paragraph [ref=e6173]: → the estimation error of self-consistency consists solely of variance since the sampling is unbiased.
+                  - paragraph [ref=e6174]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the estimation error of self-consistency consists solely of variance since the sampling is unbiased.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc achieves lower expected calibration error (ece) and higher accuracy compared to ppl and sc. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc achieves lower expected calibration error (ece) and higher accuracy compared to ppl and sc." [ref=e6175] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6176]': Outgoing
+                  - generic [ref=e6177]:
+                    - img [ref=e6178]
+                    - generic [ref=e6181]: has claim
+                  - paragraph [ref=e6182]: → rpc achieves lower expected calibration error (ece) and higher accuracy compared to ppl and sc.
+                  - paragraph [ref=e6183]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc achieves lower expected calibration error (ece) and higher accuracy compared to ppl and sc.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the degradation issues observed in pc are effectively addressed in rpc. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the degradation issues observed in pc are effectively addressed in rpc." [ref=e6184] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6185]': Outgoing
+                  - generic [ref=e6186]:
+                    - img [ref=e6187]
+                    - generic [ref=e6190]: has claim
+                  - paragraph [ref=e6191]: → the degradation issues observed in pc are effectively addressed in rpc.
+                  - paragraph [ref=e6192]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the degradation issues observed in pc are effectively addressed in rpc.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the reasoning correctness is evaluated by the indicator function. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the reasoning correctness is evaluated by the indicator function." [ref=e6193] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6194]': Outgoing
+                  - generic [ref=e6195]:
+                    - img [ref=e6196]
+                    - generic [ref=e6199]: has claim
+                  - paragraph [ref=e6200]: → the reasoning correctness is evaluated by the indicator function.
+                  - paragraph [ref=e6201]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the reasoning correctness is evaluated by the indicator function.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc integrates the internal probability of the llm into the self-consistency framework, enabling rapid estimation error reduction that transitions from linear to exponential conver A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc integrates the internal probability of the llm into the self-consistency framework, enabling rapid estimation error reduction that transitions from linear to exponential conver" [ref=e6202] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6203]': Outgoing
+                  - generic [ref=e6204]:
+                    - img [ref=e6205]
+                    - generic [ref=e6208]: has claim
+                  - paragraph [ref=e6209]: → rpc integrates the internal probability of the llm into the self-consistency framework, enabling rapid estimation error reduction that transitions from linear to exponential conver
+                  - paragraph [ref=e6210]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc integrates the internal probability of the llm into the self-consistency framework, enabling rapid estimation error reduction that transitions from linear to exponential conver
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc provides significant time savings by reducing the number of required llm inferences. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc provides significant time savings by reducing the number of required llm inferences." [ref=e6211] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6212]': Outgoing
+                  - generic [ref=e6213]:
+                    - img [ref=e6214]
+                    - generic [ref=e6217]: has claim
+                  - paragraph [ref=e6218]: → rpc provides significant time savings by reducing the number of required llm inferences.
+                  - paragraph [ref=e6219]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc provides significant time savings by reducing the number of required llm inferences.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the reasoning error can be decomposed into estimation error and model error. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the reasoning error can be decomposed into estimation error and model error." [ref=e6220] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6221]': Outgoing
+                  - generic [ref=e6222]:
+                    - img [ref=e6223]
+                    - generic [ref=e6226]: has claim
+                  - paragraph [ref=e6227]: → the reasoning error can be decomposed into estimation error and model error.
+                  - paragraph [ref=e6228]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the reasoning error can be decomposed into estimation error and model error.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc reduces the required sampling budget by at least 50% while maintaining the same level of reasoning performance as self-consistency on four mathematical reasoning datasets. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc reduces the required sampling budget by at least 50% while maintaining the same level of reasoning performance as self-consistency on four mathematical reasoning datasets." [ref=e6229] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6230]': Outgoing
+                  - generic [ref=e6231]:
+                    - img [ref=e6232]
+                    - generic [ref=e6235]: has claim
+                  - paragraph [ref=e6236]: → rpc reduces the required sampling budget by at least 50% while maintaining the same level of reasoning performance as self-consistency on four mathematical reasoning datasets.
+                  - paragraph [ref=e6237]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc reduces the required sampling budget by at least 50% while maintaining the same level of reasoning performance as self-consistency on four mathematical reasoning datasets.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the ground-truth probability can only be accessed for sampled reasoning paths. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the ground-truth probability can only be accessed for sampled reasoning paths." [ref=e6238] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6239]': Outgoing
+                  - generic [ref=e6240]:
+                    - img [ref=e6241]
+                    - generic [ref=e6244]: has claim
+                  - paragraph [ref=e6245]: → the ground-truth probability can only be accessed for sampled reasoning paths.
+                  - paragraph [ref=e6246]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the ground-truth probability can only be accessed for sampled reasoning paths.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc introduces the rp module to automatically prune reasoning paths with low probability without requiring manual threshold setting. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc introduces the rp module to automatically prune reasoning paths with low probability without requiring manual threshold setting." [ref=e6247] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6248]': Outgoing
+                  - generic [ref=e6249]:
+                    - img [ref=e6250]
+                    - generic [ref=e6253]: has claim
+                  - paragraph [ref=e6254]: → rpc introduces the rp module to automatically prune reasoning paths with low probability without requiring manual threshold setting.
+                  - paragraph [ref=e6255]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc introduces the rp module to automatically prune reasoning paths with low probability without requiring manual threshold setting.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → sc suffers from slow estimation error convergence, leading to efficiency concerns. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ sc suffers from slow estimation error convergence, leading to efficiency concerns." [ref=e6256] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6257]': Outgoing
+                  - generic [ref=e6258]:
+                    - img [ref=e6259]
+                    - generic [ref=e6262]: has claim
+                  - paragraph [ref=e6263]: → sc suffers from slow estimation error convergence, leading to efficiency concerns.
+                  - paragraph [ref=e6264]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ sc suffers from slow estimation error convergence, leading to efficiency concerns.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the estimation error of sc consists solely of variance. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the estimation error of sc consists solely of variance." [ref=e6265] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6266]': Outgoing
+                  - generic [ref=e6267]:
+                    - img [ref=e6268]
+                    - generic [ref=e6271]: has claim
+                  - paragraph [ref=e6272]: → the estimation error of sc consists solely of variance.
+                  - paragraph [ref=e6273]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the estimation error of sc consists solely of variance.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc achieves the best performance on three code generation tasks using the deepseek-coder 33b model. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc achieves the best performance on three code generation tasks using the deepseek-coder 33b model." [ref=e6274] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6275]': Outgoing
+                  - generic [ref=e6276]:
+                    - img [ref=e6277]
+                    - generic [ref=e6280]: has claim
+                  - paragraph [ref=e6281]: → rpc achieves the best performance on three code generation tasks using the deepseek-coder 33b model.
+                  - paragraph [ref=e6282]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc achieves the best performance on three code generation tasks using the deepseek-coder 33b model.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc achieves reasoning performance comparable to self-consistency while enhancing confidence reliability and reducing sampling costs by 50%. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc achieves reasoning performance comparable to self-consistency while enhancing confidence reliability and reducing sampling costs by 50%." [ref=e6283] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6284]': Outgoing
+                  - generic [ref=e6285]:
+                    - img [ref=e6286]
+                    - generic [ref=e6289]: has claim
+                  - paragraph [ref=e6290]: → rpc achieves reasoning performance comparable to self-consistency while enhancing confidence reliability and reducing sampling costs by 50%.
+                  - paragraph [ref=e6291]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc achieves reasoning performance comparable to self-consistency while enhancing confidence reliability and reducing sampling costs by 50%.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc improves reasoning performance under high sampling temperatures. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc improves reasoning performance under high sampling temperatures." [ref=e6292] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6293]': Outgoing
+                  - generic [ref=e6294]:
+                    - img [ref=e6295]
+                    - generic [ref=e6298]: has claim
+                  - paragraph [ref=e6299]: → rpc improves reasoning performance under high sampling temperatures.
+                  - paragraph [ref=e6300]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc improves reasoning performance under high sampling temperatures.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc outperforms existing methods on gpqa and logiqa benchmarks. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc outperforms existing methods on gpqa and logiqa benchmarks." [ref=e6301] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6302]': Outgoing
+                  - generic [ref=e6303]:
+                    - img [ref=e6304]
+                    - generic [ref=e6307]: has claim
+                  - paragraph [ref=e6308]: → rpc outperforms existing methods on gpqa and logiqa benchmarks.
+                  - paragraph [ref=e6309]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc outperforms existing methods on gpqa and logiqa benchmarks.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → the estimation error of self-consistency decreases only linearly with increasing sample size. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the estimation error of self-consistency decreases only linearly with increasing sample size." [ref=e6310] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6311]': Outgoing
+                  - generic [ref=e6312]:
+                    - img [ref=e6313]
+                    - generic [ref=e6316]: has claim
+                  - paragraph [ref=e6317]: → the estimation error of self-consistency decreases only linearly with increasing sample size.
+                  - paragraph [ref=e6318]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ the estimation error of self-consistency decreases only linearly with increasing sample size.
+                - 'button "Edge direction: from the selected node to the neighbor. has claim → rpc reduces the number of samples required to achieve comparable performance through faster convergence. A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc reduces the number of samples required to achieve comparable performance through faster convergence." [ref=e6319] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6320]': Outgoing
+                  - generic [ref=e6321]:
+                    - img [ref=e6322]
+                    - generic [ref=e6325]: has claim
+                  - paragraph [ref=e6326]: → rpc reduces the number of samples required to achieve comparable performance through faster convergence.
+                  - paragraph [ref=e6327]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[has claim]→ rpc reduces the number of samples required to achieve comparable performance through faster convergence.
+                - 'button "Edge direction: from the selected node to the neighbor. wrote → Zenan Li A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Zenan Li" [ref=e6328] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6329]': Outgoing
+                  - generic [ref=e6330]:
+                    - img [ref=e6331]
+                    - generic [ref=e6334]: wrote
+                  - paragraph [ref=e6335]: → Zenan Li
+                  - paragraph [ref=e6336]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Zenan Li
+                - 'button "Edge direction: from the selected node to the neighbor. wrote → Zhi Zhou A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Zhi Zhou" [ref=e6337] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6338]': Outgoing
+                  - generic [ref=e6339]:
+                    - img [ref=e6340]
+                    - generic [ref=e6343]: wrote
+                  - paragraph [ref=e6344]: → Zhi Zhou
+                  - paragraph [ref=e6345]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Zhi Zhou
+                - 'button "Edge direction: from the selected node to the neighbor. wrote → Yu-Feng Li A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Yu-Feng Li" [ref=e6346] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6347]': Outgoing
+                  - generic [ref=e6348]:
+                    - img [ref=e6349]
+                    - generic [ref=e6352]: wrote
+                  - paragraph [ref=e6353]: → Yu-Feng Li
+                  - paragraph [ref=e6354]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Yu-Feng Li
+                - 'button "Edge direction: from the selected node to the neighbor. wrote → Lan-Zhe Guo A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Lan-Zhe Guo" [ref=e6355] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6356]': Outgoing
+                  - generic [ref=e6357]:
+                    - img [ref=e6358]
+                    - generic [ref=e6361]: wrote
+                  - paragraph [ref=e6362]: → Lan-Zhe Guo
+                  - paragraph [ref=e6363]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Lan-Zhe Guo
+                - 'button "Edge direction: from the selected node to the neighbor. wrote → Xiaoxing Ma A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Xiaoxing Ma" [ref=e6364] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6365]': Outgoing
+                  - generic [ref=e6366]:
+                    - img [ref=e6367]
+                    - generic [ref=e6370]: wrote
+                  - paragraph [ref=e6371]: → Xiaoxing Ma
+                  - paragraph [ref=e6372]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Xiaoxing Ma
+                - 'button "Edge direction: from the selected node to the neighbor. wrote → Yuan Yao A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Yuan Yao" [ref=e6373] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6374]': Outgoing
+                  - generic [ref=e6375]:
+                    - img [ref=e6376]
+                    - generic [ref=e6379]: wrote
+                  - paragraph [ref=e6380]: → Yuan Yao
+                  - paragraph [ref=e6381]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Yuan Yao
+                - 'button "Edge direction: from the selected node to the neighbor. wrote → Yuhao Tan A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Yuhao Tan" [ref=e6382] [cursor=pointer]':
+                  - 'generic "Edge direction: from the selected node to the neighbor." [ref=e6383]': Outgoing
+                  - generic [ref=e6384]:
+                    - img [ref=e6385]
+                    - generic [ref=e6388]: wrote
+                  - paragraph [ref=e6389]: → Yuhao Tan
+                  - paragraph [ref=e6390]: A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning —[authored by]→ Yuhao Tan
+              - button "Show advanced (raw JSON)" [ref=e6392] [cursor=pointer]:
+                - generic [ref=e6393]: Show advanced (raw JSON)
+        - generic [ref=e6394]:
+          - paragraph [ref=e6395]: "Server: 214 nodes · 213 edges"
+          - paragraph [ref=e6396]: "Projected: 214 · 213"
+          - paragraph [ref=e6397]: "Visible (Nodes menu): 12 · 11"
+          - paragraph [ref=e6398]: "On screen (UI cap): 12 · 11"

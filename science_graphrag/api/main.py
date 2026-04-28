@@ -37,6 +37,7 @@ from science_graphrag.api.ingest.registry import _registry
 from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.api.ingest_jobs import router as ingest_router
 from science_graphrag.api.retrieval import router as retrieval_router
+from science_graphrag.api.setup_hints import router as setup_hints_router
 from science_graphrag.api.settings import router as settings_router
 from science_graphrag.api.task_store import attach_benchmark_run_persistence
 from science_graphrag.api.translation import router as translation_router
@@ -97,6 +98,7 @@ app.include_router(
     prefix="/v1",
     dependencies=[Depends(require_admin_if_configured)],
 )
+app.include_router(setup_hints_router, prefix="/v1")
 app.include_router(ask_sessions_router, prefix="/v1")
 app.include_router(entity_dedup_router, prefix="/v1")
 app.include_router(workspaces_router, prefix="/v1")

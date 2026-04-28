@@ -2,6 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import AskPanel from "../../../components/work/AskPanel.jsx";
 import { sessionExistsInScope } from "../../../components/work/askSessionState.js";
@@ -12,6 +13,8 @@ import { useI18n } from "../../../i18n/useI18n.js";
  * @param {{ workId: string }} props
  */
 export default function AskTab({ workId }) {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const trace = readTraceabilityState(searchParams);
@@ -41,7 +44,7 @@ export default function AskTab({ workId }) {
 
   if (!workId.trim()) {
     return (
-      <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>{t("wsTab.ask.pickWork")}</Typography>
+      <Typography sx={{ fontSize: "0.8125rem", color: tk.text.muted }}>{t("wsTab.ask.pickWork")}</Typography>
     );
   }
 
@@ -53,12 +56,12 @@ export default function AskTab({ workId }) {
             mb: 2,
             p: 1.25,
             borderRadius: "6px",
-            border: "1px solid rgba(255,255,255,0.08)",
-            backgroundColor: "#1a1a1a",
+            border: `1px solid ${tk.border.default}`,
+            backgroundColor: tk.surface.panel,
           }}
         >
-          <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{t("wsTab.ask.researchContext")}</Typography>
-          <Typography sx={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.8)", mt: 0.5 }}>
+          <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>{t("wsTab.ask.researchContext")}</Typography>
+          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, mt: 0.5 }}>
             {t("wsTab.ask.contextLine", { summary: traceSummary.join(" · ") })}
           </Typography>
         </Box>

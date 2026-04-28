@@ -15,6 +15,16 @@ export default {
   "settings.general.note": "Без запроса к серверу; выбор хранится отдельно в каждом браузере.",
   "settings.general.envDoc":
     "Секреты и значения по умолчанию на сервере: см. файл репозитория .env.example (SCIENCE_GRAPHRAG_*).",
+  "settings.general.openalex.title": "Контакт OpenAlex",
+  "settings.general.openalex.intro":
+    "Адрес email для запросов к OpenAlex (polite pool). После сохранения хранится на сервере в data/settings/runtime_settings.json.",
+  "settings.general.openalex.fromEnv":
+    "Сейчас значение берётся из переменной окружения SCIENCE_GRAPHRAG_OPENALEX_MAILTO. Сохранение здесь переопределит его для этого деплоя.",
+  "settings.general.openalex.fromServer": "Для этого деплоя используется email из runtime settings (перекрывает .env, если задан).",
+  "settings.general.openalex.fieldLabel": "Контактный email (mailto)",
+  "settings.general.openalex.helper": "Например: you@your-institution.edu — та же роль, что у SCIENCE_GRAPHRAG_OPENALEX_MAILTO.",
+  "settings.general.openalex.save": "Сохранить контакт OpenAlex",
+  "settings.general.openalex.saveError": "Не удалось сохранить настройки OpenAlex.",
 
   "settings.diagnostics.title": "Диагностика",
   "settings.diagnostics.intro": "Только чтение: версия и окружение для поддержки.",
@@ -59,6 +69,46 @@ export default {
   "settings.ingestion.saveButton": "Сохранить настройки ingestion",
   "settings.ingestion.saveError": "Не удалось сохранить настройки ingestion.",
 
+  "settings.storage.restartIntro":
+    "Строки подключения и учётные данные сохраняются в data/settings/ на сервере. Процесс API один раз при старте создаёт клиентов Neo4j, Qdrant и SQL: после изменения настроек хранилища нужно перезапустить API (и воркеры, если есть), чтобы значения применились.",
+  "settings.storage.restartPending":
+    "Настройки хранилища были сохранены на этом развёртывании. Перезапустите процесс API, чтобы пересоздать подключения (singleton StoreRegistry в lifespan сервера).",
+  "settings.storage.save": "Сохранить хранилище и интеграции",
+  "settings.storage.saving": "Сохранение…",
+  "settings.storage.saveError": "Не удалось сохранить настройки хранилища.",
+  "settings.storage.envHint": "Значения по умолчанию и имена переменных: см. .env.example ({{keys}}).",
+  "settings.storage.secret.clearUseEnv": "Удалить сохранённое значение и использовать окружение / встроенные значения по умолчанию",
+  "settings.storage.neo4j.title": "Neo4j",
+  "settings.storage.neo4j.uri": "Bolt / URI Neo4j",
+  "settings.storage.neo4j.user": "Имя пользователя",
+  "settings.storage.neo4j.password": "Пароль (опциональное обновление)",
+  "settings.storage.qdrant.title": "Qdrant",
+  "settings.storage.qdrant.url": "Базовый URL Qdrant",
+  "settings.storage.qdrant.chunks": "Коллекция чанков",
+  "settings.storage.qdrant.claims": "Коллекция claims",
+  "settings.storage.qdrant.workEmb": "Коллекция эмбеддингов работ",
+  "settings.storage.qdrant.authorEmb": "Коллекция эмбеддингов авторов",
+  "settings.storage.postgres.title": "Postgres (URL SQLAlchemy)",
+  "settings.storage.postgres.databaseUrl": "Database URL (полный DSN; при сохранении хранится как серверный секрет)",
+  "settings.storage.redis.title": "Redis",
+  "settings.storage.redis.url": "URL Redis",
+  "settings.storage.paths.title": "Локальные пути",
+  "settings.storage.paths.blobRoot": "Корень blob",
+  "settings.storage.paths.artifactRoot": "Корень артефактов",
+  "settings.storage.s3.title": "S3 / объектное хранилище",
+  "settings.storage.s3.objectStorageEnabled": "Объектное хранилище включено",
+  "settings.storage.s3.endpoint": "URL endpoint S3",
+  "settings.storage.s3.bucket": "Бакет",
+  "settings.storage.s3.useSsl": "TLS для S3",
+  "settings.storage.s3.addressingStyle": "Стиль адресации",
+  "settings.storage.s3.artifactPrefix": "Префикс ключей артефактов",
+  "settings.storage.s3.accessKeyId": "Access key ID",
+  "settings.storage.s3.secretKey": "Secret access key (опциональное обновление)",
+  "settings.storage.s3.benchmarkRunsObjectStorage": "Хранить JSON прогонов benchmark в S3",
+  "settings.storage.s3.diagnosticsObjectStorage": "Хранить диагностические дампы в S3",
+  "settings.storage.s3.benchmarkPrefix": "Префикс ключей benchmark",
+  "settings.storage.s3.diagnosticsPrefix": "Префикс ключей diagnostics",
+
   "llm.summary.sourceServer": "API-ключ: сохранён на сервере",
   "llm.summary.sourceEnv": "API-ключ: из окружения",
   "llm.summary.hasCredential": "API-ключ: задан",
@@ -68,7 +118,10 @@ export default {
 
   "llm.panel.title": "Настройки LLM",
   "llm.field.baseUrl": "Base URL",
-  "llm.field.model": "Модель",
+  "llm.field.model": "Модель (извлечение / текст)",
+  "llm.field.vlModel": "VL-модель (PDF → Markdown)",
+  "llm.field.vlBaseUrl": "VL base URL",
+  "llm.hint.vlBaseUrlFallback": "Пусто = тот же OpenAI-compatible хост, что и для извлечения (типичный OpenRouter).",
   "llm.field.chatModel": "Модель чата (research agent)",
   "llm.hint.chatModelFallback": "Пусто = модель извлечения (или SCIENCE_GRAPHRAG_CHAT_LLM_MODEL из окружения).",
   "llm.field.temperature": "Температура",
@@ -78,7 +131,7 @@ export default {
   "llm.hint.transportTimeout":
     "Общий HTTP-таймаут транспорта для извлечения и многих вызовов агента (extraction_llm_timeout_seconds).",
   "llm.advanced.title": "Параллелизм и дедлайны",
-  "llm.advanced.toggle": "Расширенные настройки",
+  "llm.advanced.toggle": "Расширенные (чат-модель, пулы, дедлайны)",
   "llm.advanced.intro":
     "Локальные для процесса лимиты параллельных LLM-вызовов, дедлайн шага агента и таймауты LLM-судей dedup. Вступают в силу после сохранения и перекрывают значения из окружения.",
   "llm.advanced.restoreRecommended": "Сбросить к рекомендуемым значениям",
@@ -124,16 +177,19 @@ export default {
   "llm.advanced.field.agent_max_tool_calls": "Макс. вызовов инструментов за ход",
   "llm.advanced.field.agent_turn_policy_llm_enabled": "Включить LLM-классификатор хода",
   "llm.credentials.title": "Учётные данные",
-  "llm.credentials.blurbLead": "Извлечение (extraction LLM) использует ключ OpenAI-совместимого API.",
+  "llm.credentials.blurbLead":
+    "Обычно достаточно одного API-ключа для извлечения, embeddings (путь OpenRouter) и VL PDF→Markdown, если в окружении не задан отдельный SCIENCE_GRAPHRAG_VL_API_KEY.",
+  "llm.credentials.vlEnvOverride":
+    "В окружении задан отдельный VL-ключ SCIENCE_GRAPHRAG_VL_API_KEY — он перекрывает общий ключ только для vision-вызовов.",
   "llm.credentials.blurbVault":
     "Если сохранить ключ здесь, он попадёт в серверное хранилище и перекроет ключи из окружения.",
   "llm.credentials.blurbEnv":
     "Сервер сейчас использует ключ из переменных окружения, пока вы не сохраните другой ниже.",
   "llm.credentials.blurbNone": "Задайте ключ через переменные окружения или сохраните его ниже.",
-  "llm.credentials.fromEnv": "Ключ извлечения загружается из переменных окружения{{masked}}.",
+  "llm.credentials.fromEnv": "API-ключ LLM загружается из переменных окружения{{masked}}.",
   "llm.credentials.fromServer":
-    "Ключ извлечения сохранён на этом сервере и имеет приоритет над переменными окружения{{masked}}.",
-  "llm.credentials.none": "Нет ключа извлечения (ни сохранённого секрета, ни из окружения).",
+    "API-ключ LLM сохранён на этом сервере и имеет приоритет над переменными окружения{{masked}}.",
+  "llm.credentials.none": "Нет API-ключа LLM (ни сохранённого секрета, ни из окружения).",
   "llm.credentials.replaceSwitch": "Заменить сохранённый API-ключ",
   "llm.credentials.setSwitch": "Задать API-ключ",
   "llm.credentials.newKey": "Новый API-ключ",

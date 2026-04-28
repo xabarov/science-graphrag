@@ -6,6 +6,7 @@ import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 import CheckOutlinedIcon from "@mui/icons-material/CheckOutlined";
 import CloseOutlinedIcon from "@mui/icons-material/CloseOutlined";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
@@ -19,25 +20,28 @@ import GraphWorkspacePanel from "../components/graph/GraphWorkspacePanel.jsx";
 import { GraphMissingWorkCallout } from "../components/graph/graphShellStates.jsx";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import {
-  mergeTraceabilityStateWithHashSelection,
+  GRAPH_PAGE_QUERY_KEYS,
+  mergeTraceabilityParams,
+  preserveGraphPageOptionalParams,
+  readGraphPageLayoutFlags,
   readTraceabilityState,
-  replaceHashTraceabilitySelection,
-} from "../components/work/traceabilityState.js";
-import { useHashTraceabilityGraphSelection } from "../components/work/useHashTraceabilityGraphSelection.js";
-import { readGraphPageLayoutFlags, preserveGraphPageOptionalParams } from "./graphPageUrl.js";
+  TRACEABILITY_QUERY_KEYS,
+} from "../routing/index.js";
 import { useI18n } from "../i18n/useI18n.js";
 
 const LS_GRAPH_PAGE_ABOUT = "graphPageAboutOpen";
 
+const GRAPH_SEARCH_MERGE_OPTS = { includeTab: false };
+
 export default function GraphPage() {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const { t } = useI18n();
   const { getLastWorkspaceHref, activeWorkspaceId } = useWorkspaceContext();
   const [searchParams, setSearchParams] = useSearchParams();
-  const initial = searchParams.get("work_id") || "";
+  const initial = searchParams.get(TRACEABILITY_QUERY_KEYS.workId) || "";
   const [workIdInput, setWorkIdInput] = useState(initial);
-  const traceRouter = useMemo(() => readTraceabilityState(searchParams), [searchParams]);
-  const hashSel = useHashTraceabilityGraphSelection();
-  const trace = useMemo(() => mergeTraceabilityStateWithHashSelection(traceRouter, hashSel), [traceRouter, hashSel]);
+  const trace = useMemo(() => readTraceabilityState(searchParams), [searchParams]);
   const workId = trace.workId;
   const workspaceId = trace.workspaceId;
   const workspaceIdFromUrl = workspaceId.trim();
@@ -48,28 +52,8 @@ export default function GraphPage() {
   const effectiveWorkspaceId = workIdTrimmed
     ? workspaceIdFromUrl
     : workspaceIdFromUrl || String(activeWorkspaceId || "").trim();
-  const graphTargetKey = `${workIdTrimmed}|${effectiveWorkspaceId}`;
-  const [selectedTrace, setSelectedTrace] = useState(() => ({
-    targetKey: graphTargetKey,
-    nodeId: trace.nodeId,
-    edgeId: trace.edgeId,
-  }));
 
-  useEffect(() => {
-    // Sync local selection with URL/hash when scope or deep link changes (replaceState bypasses Router).
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional URL↔state sync
-    setSelectedTrace((prev) => {
-      if (prev.targetKey !== graphTargetKey) {
-        return { targetKey: graphTargetKey, nodeId: trace.nodeId, edgeId: trace.edgeId };
-      }
-      if (prev.nodeId === trace.nodeId && prev.edgeId === trace.edgeId) return prev;
-      return { ...prev, nodeId: trace.nodeId, edgeId: trace.edgeId };
-    });
-  }, [graphTargetKey, trace.nodeId, trace.edgeId]);
-
-  const selectedNodeId = selectedTrace.targetKey === graphTargetKey ? selectedTrace.nodeId : trace.nodeId;
-  const selectedEdgeId = selectedTrace.targetKey === graphTargetKey ? selectedTrace.edgeId : trace.edgeId;
-  const labMode = searchParams.get("lab") === "1";
+  const labMode = searchParams.get(GRAPH_PAGE_QUERY_KEYS.lab) === "1";
   const { compact, focus, compactLayout } = readGraphPageLayoutFlags(searchParams);
   const chromeDense = compact || focus;
 
@@ -102,7 +86,7 @@ export default function GraphPage() {
     if (next) {
       persistWorkId(next);
       const params = new URLSearchParams();
-      params.set("work_id", next);
+      params.set(TRACEABILITY_QUERY_KEYS.workId, next);
       preserveGraphPageOptionalParams(params, searchParams);
       setSearchParams(params);
     } else {
@@ -113,25 +97,37 @@ export default function GraphPage() {
     setLoadAnchor(null);
   }
 
-  const handleReconcileSelection = useCallback(
-    ({ nodeId, edgeId }) => {
-      setSelectedTrace({ targetKey: graphTargetKey, nodeId, edgeId });
-      replaceHashTraceabilitySelection({ nodeId, edgeId });
+  // Graph selection is encoded in HashRouter search params via React Router (not replaceState on
+  // the raw hash). Functional updates avoid stale closures on rapid clicks. If profiling shows
+  // excess re-renders, debounce only setSearchParams while keeping panel selection local.
+  const handleReconcileSelection = useCallback(({ nodeId, edgeId }) => {
+    setSearchParams(
+      (prev) => mergeTraceabilityParams(prev, { nodeId, edgeId }, GRAPH_SEARCH_MERGE_OPTS),
+      { replace: true },
+    );
+  }, [setSearchParams]);
+
+  const handleSelectNode = useCallback(
+    (nodeId) => {
+      const next = String(nodeId || "").trim();
+      setSearchParams(
+        (prev) => mergeTraceabilityParams(prev, { nodeId: next, edgeId: "" }, GRAPH_SEARCH_MERGE_OPTS),
+        { replace: true },
+      );
     },
-    [graphTargetKey],
+    [setSearchParams],
   );
 
-  function handleSelectNode(nodeId) {
-    const next = String(nodeId || "").trim();
-    setSelectedTrace({ targetKey: graphTargetKey, nodeId: next, edgeId: "" });
-    replaceHashTraceabilitySelection({ nodeId: next, edgeId: "" });
-  }
-
-  function handleSelectEdge(edgeId) {
-    const next = String(edgeId || "").trim();
-    setSelectedTrace({ targetKey: graphTargetKey, nodeId: "", edgeId: next });
-    replaceHashTraceabilitySelection({ nodeId: "", edgeId: next });
-  }
+  const handleSelectEdge = useCallback(
+    (edgeId) => {
+      const next = String(edgeId || "").trim();
+      setSearchParams(
+        (prev) => mergeTraceabilityParams(prev, { nodeId: "", edgeId: next }, GRAPH_SEARCH_MERGE_OPTS),
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   return (
     <Box
@@ -160,7 +156,7 @@ export default function GraphPage() {
           mb: 0.5,
         }}
       >
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.9)" }}>{t("graph.toolbar.title")}</Typography>
+        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>{t("graph.toolbar.title")}</Typography>
         <Box sx={{ flex: 1, minWidth: 8 }} />
         <Tooltip title={t("graph.toolbar.loadTooltip")} placement="bottom">
           <CursorIconButton
@@ -198,13 +194,13 @@ export default function GraphPage() {
               p: 1.5,
               minWidth: 280,
               maxWidth: 420,
-              backgroundColor: "#1a1a1a",
-              border: "1px solid rgba(255,255,255,0.08)",
+              backgroundColor: tk.surface.panel,
+              border: `1px solid ${tk.border.default}`,
             },
           },
         }}
       >
-        <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.45)", mb: 1 }}>{t("graph.popover.hint")}</Typography>
+        <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, mb: 1 }}>{t("graph.popover.hint")}</Typography>
         <Box component="form" onSubmit={applyWorkId} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <TextField
             label={t("reader.workIdLabel")}
@@ -214,7 +210,7 @@ export default function GraphPage() {
             fullWidth
             sx={{
               "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-              "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+              "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: tk.text.secondary },
             }}
           />
           <Box sx={{ display: "flex", gap: 0.75, justifyContent: "flex-end" }}>
@@ -257,9 +253,9 @@ export default function GraphPage() {
         <GraphWorkspacePanel
           workId={workId}
           workspaceId={effectiveWorkspaceId}
-          selectedNodeId={selectedNodeId}
+          selectedNodeId={trace.nodeId}
           onSelectNode={handleSelectNode}
-          selectedEdgeId={selectedEdgeId}
+          selectedEdgeId={trace.edgeId}
           onSelectEdge={handleSelectEdge}
           onReconcileSelection={handleReconcileSelection}
           mode="standalone"

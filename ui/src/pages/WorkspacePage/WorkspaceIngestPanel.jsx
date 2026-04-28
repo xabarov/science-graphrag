@@ -1,7 +1,4 @@
 import React, { useCallback, useState } from "react";
-import FolderZipOutlinedIcon from "@mui/icons-material/FolderZipOutlined";
-import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
-import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 import Accordion from "@mui/material/Accordion";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import AccordionSummary from "@mui/material/AccordionSummary";
@@ -11,6 +8,11 @@ import LinearProgress from "@mui/material/LinearProgress";
 import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
+
+import FolderZipOutlinedIcon from "@mui/icons-material/FolderZipOutlined";
+import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined";
 
 import { CursorIconButton, CursorSmallButton } from "../../components/common/index.js";
 import IngestProgressCard from "../../components/ingestion/IngestProgressCard.jsx";
@@ -47,6 +49,8 @@ export default function WorkspaceIngestPanel({
   onAddWork,
   variant = "default",
 }) {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const { t } = useI18n();
   const [dragOver, setDragOver] = useState(false);
   const compact = variant === "popover";
@@ -105,17 +109,17 @@ export default function WorkspaceIngestPanel({
           mb: compact ? 1.25 : 2,
           p: compact ? 1 : 1.5,
           borderRadius: "6px",
-          border: dragOver ? "1px dashed rgba(129,140,248,0.65)" : "1px solid rgba(255,255,255,0.1)",
-          backgroundColor: dragOver ? "rgba(99,102,241,0.08)" : "rgba(255,255,255,0.02)",
+          border: dragOver ? `1px dashed ${tk.accent.emphasisHoverBorder}` : `1px solid ${tk.border.default}`,
+          backgroundColor: dragOver ? tk.accent.softBg : tk.surface.subtle,
         }}
       >
-        <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: "rgba(255,255,255,0.45)", mb: 0.75 }}>
+        <Typography sx={{ fontSize: "0.68rem", fontWeight: 600, color: tk.text.muted, mb: 0.75 }}>
           {t("workspace.upload.title")}
         </Typography>
-        <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", mb: 1, lineHeight: 1.45 }}>
+        <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 1, lineHeight: 1.45 }}>
           {t("workspace.upload.desc")}
         </Typography>
-        <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.35)", mb: 1 }}>
+        <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, mb: 1 }}>
           {t("workspace.upload.dropHint")}
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, alignItems: "center" }}>
@@ -169,10 +173,10 @@ export default function WorkspaceIngestPanel({
         {ingestJob ? (
           isParentBatch ? (
             <Box sx={{ mt: 1.5 }}>
-              <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", fontFamily: "monospace" }}>
+              <Typography sx={{ fontSize: "0.72rem", color: tk.text.secondary, fontFamily: "monospace" }}>
                 {t("workspace.upload.jobLine", { id: String(ingestJob.job_id), status: String(ingestJob.status) })}
               </Typography>
-              <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.65)", mt: 0.5 }}>
+              <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mt: 0.5 }}>
                 {ingestJob.message || t("workspace.upload.dash")}
               </Typography>
               {childJobs.length ? (
@@ -196,7 +200,7 @@ export default function WorkspaceIngestPanel({
                           );
                     return (
                       <Box key={String(cj.job_id)}>
-                        <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.5)", mb: 0.35 }}>
+                        <Typography sx={{ fontSize: "0.68rem", color: tk.text.secondary, mb: 0.35 }}>
                           {String(cj.filename || t("workspace.upload.dash"))} · {String(cj.status || "—")}
                         </Typography>
                         <LinearProgress
@@ -205,8 +209,8 @@ export default function WorkspaceIngestPanel({
                           sx={{
                             height: 3,
                             borderRadius: 2,
-                            backgroundColor: "rgba(255,255,255,0.06)",
-                            "& .MuiLinearProgress-bar": { backgroundColor: "rgba(99,102,241,0.75)" },
+                            backgroundColor: tk.control.chipMutedBg,
+                            "& .MuiLinearProgress-bar": { backgroundColor: tk.accent.fg },
                           }}
                         />
                       </Box>
@@ -220,17 +224,17 @@ export default function WorkspaceIngestPanel({
                   disableGutters
                   sx={{
                     mt: 1,
-                    backgroundColor: "#141414",
-                    border: "1px solid rgba(255,255,255,0.08)",
+                    backgroundColor: tk.surface.sidebar,
+                    border: `1px solid ${tk.border.default}`,
                     borderRadius: "6px",
                     "&:before": { display: "none" },
                   }}
                 >
-                  <AccordionSummary sx={{ fontSize: "0.72rem", minHeight: 32 }}>
+                  <AccordionSummary sx={{ fontSize: "0.72rem", minHeight: 32, color: tk.text.primary }}>
                     {t("workspace.ingest.detailsLogs")}
                   </AccordionSummary>
                   <AccordionDetails sx={{ pt: 0 }}>
-                    <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)", mb: 0.75 }}>
+                    <Typography sx={{ fontSize: "0.65rem", color: tk.text.faint, mb: 0.75 }}>
                       {t("workspace.ingest.logsTailHint")}
                     </Typography>
                     <Box
@@ -239,11 +243,11 @@ export default function WorkspaceIngestPanel({
                         maxHeight: 140,
                         overflow: "auto",
                         fontSize: "0.65rem",
-                        color: "rgba(255,255,255,0.45)",
-                        backgroundColor: "#0a0a0a",
+                        color: tk.text.secondary,
+                        backgroundColor: tk.surface.code,
                         p: 1,
                         borderRadius: "4px",
-                        border: "1px solid rgba(255,255,255,0.08)",
+                        border: `1px solid ${tk.border.default}`,
                       }}
                     >
                       {ingestJob.logs}
@@ -264,13 +268,15 @@ export default function WorkspaceIngestPanel({
         sx={{
           mb: compact ? 0 : 2,
           maxWidth: compact ? "none" : 560,
-          backgroundColor: "#141414",
-          border: "1px solid rgba(255,255,255,0.08)",
+          backgroundColor: tk.surface.sidebar,
+          border: `1px solid ${tk.border.default}`,
           borderRadius: "6px",
           "&:before": { display: "none" },
         }}
       >
-        <AccordionSummary sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>{t("workspace.advanced.accordion")}</AccordionSummary>
+        <AccordionSummary sx={{ fontSize: "0.8125rem", fontWeight: 600, color: tk.text.primary }}>
+          {t("workspace.advanced.accordion")}
+        </AccordionSummary>
         <AccordionDetails sx={{ pt: 0 }}>
           <Box component="form" onSubmit={onAddWork} sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "flex-start" }}>
             <TextField
@@ -283,7 +289,7 @@ export default function WorkspaceIngestPanel({
                 minWidth: 200,
                 flex: "1 1 180px",
                 "& .MuiInputBase-input": { fontSize: "0.8125rem" },
-                "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)" },
+                "& .MuiInputLabel-root": { fontSize: "0.8125rem", color: tk.text.secondary },
               }}
             />
             <CursorSmallButton type="submit" disabled={addBusy || !addWorkInput.trim()}>

@@ -1,7 +1,9 @@
 import React, { useCallback, useState } from "react";
-import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import Popover from "@mui/material/Popover";
 import Tooltip from "@mui/material/Tooltip";
+import { useTheme } from "@mui/material/styles";
+
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 
 import { CursorIconButton } from "../../components/common/index.js";
 
@@ -40,6 +42,8 @@ export default function WorkspaceIngestMenu({
   menuButtonAria,
   menuButtonTooltip,
 }) {
+  const theme = useTheme();
+  const tk = theme.appTokens;
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -60,9 +64,9 @@ export default function WorkspaceIngestMenu({
             aria-expanded={open}
             onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{
-              border: "1px solid rgba(99,102,241,0.35)",
-              backgroundColor: "rgba(99,102,241,0.12)",
-              "&:hover": { backgroundColor: "rgba(99,102,241,0.2)" },
+              border: `1px solid ${tk.accent.softBorder}`,
+              backgroundColor: tk.accent.chipReadyBg,
+              "&:hover": { backgroundColor: tk.accent.emphasisHoverBg },
             }}
           >
             <AddOutlinedIcon sx={{ fontSize: "1.1rem" }} />
@@ -84,8 +88,8 @@ export default function WorkspaceIngestMenu({
               maxHeight: "min(85dvh, 640px)",
               overflow: "auto",
               p: 1.25,
-              backgroundColor: "#1a1a1a",
-              border: "1px solid rgba(255,255,255,0.08)",
+              backgroundColor: tk.surface.panel,
+              border: `1px solid ${tk.border.default}`,
               borderRadius: "6px",
             },
           },

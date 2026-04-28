@@ -37,6 +37,19 @@ def _client() -> TestClient:
     return client
 
 
+def test_public_setup_hints_endpoint() -> None:
+    """Public setup hints do not require admin auth."""
+
+    client = _client()
+    res = client.get("/v1/public/setup-hints")
+    assert res.status_code == 200
+    body = res.json()
+    assert "needs_initial_setup" in body
+    assert "llm_api_key_configured" in body
+    assert "vl_api_key_configured" in body
+    assert body["needs_initial_setup"] == (not body["llm_api_key_configured"])
+
+
 def test_health_endpoint() -> None:
     """Health endpoint returns service-ready payload."""
 
@@ -74,10 +87,14 @@ def test_settings_schema_endpoint_smoke() -> None:
     res = client.get("/v1/settings/schema")
     assert res.status_code == 200
     payload = res.json()
-    assert int(payload["version"]) >= 5
-    assert payload["sections"][0]["id"] == "llm"
+    assert int(payload["version"]) >= 8
+    assert payload["sections"][0]["id"] == "general"
+    gen = next(s for s in payload["sections"] if s["id"] == "general")
+    assert gen["fields"][0]["id"] == "openalex_mailto"
     llm = next(s for s in payload["sections"] if s["id"] == "llm")
     llm_field_ids = {f["id"] for f in llm["fields"]}
+    assert "vl_model" in llm_field_ids
+    assert "vl_base_url" in llm_field_ids
     for fid in (
         "llm_distributed_quota_enabled",
         "llm_distributed_quota_key_prefix",
@@ -89,6 +106,10 @@ def test_settings_schema_endpoint_smoke() -> None:
     assert "ingestion" in section_ids
     ingest = next(s for s in payload["sections"] if s["id"] == "ingestion")
     assert ingest["fields"][0]["id"] == "max_file_size_mb"
+    storage = next(s for s in payload["sections"] if s["id"] == "storage")
+    storage_ids = {f["id"] for f in storage["fields"]}
+    assert "neo4j_uri" in storage_ids
+    assert "database_url" in storage_ids
 
 
 def test_settings_snapshot_endpoint_smoke() -> None:
@@ -102,6 +123,9 @@ def test_settings_snapshot_endpoint_smoke() -> None:
     assert "status" in payload["llm"]
     assert "effective" in payload["llm"]
     assert "ingestion" in payload
+    assert "general" in payload
+    assert "effective" in payload["general"]
+    assert "resolved_openalex_mailto" in payload["general"]["effective"]
     assert "advanced_controls" in payload["llm"]
     assert "recommended_advanced" in payload["llm"]
     assert "llm_concurrency_default" in payload["llm"]["advanced_controls"]
@@ -115,9 +139,21 @@ def test_settings_snapshot_endpoint_smoke() -> None:
         assert fid in ac
     assert payload["ingestion"]["effective"]["resolved_max_file_size_mb"] >= 1
     assert "diagnostics" in payload and "app_version" in payload["diagnostics"]
+    assert "storage" in payload
+    assert payload["storage"]["status"]["requires_process_restart"] is False
     assert "security" in payload and "settings_auth_required" in payload["security"]
     assert "has_saved_secret" in payload["llm"]["status"]
     assert "secret_source" in payload["llm"]["status"]
+    st = payload["llm"]["status"]
+    assert "needs_initial_setup" in st
+    assert st.get("setup_status") in ("ready", "needs_api_key")
+    assert "uses_env_defaults" in st
+    assert "legacy_override_detected" in st
+    assert "canonical_api_key_env_set" in st
+    assert "legacy_extraction_key_env_set" in st
+    assert "vl_api_key_explicit_env" in st
+    assert "resolved_vl_model" in payload["llm"]["effective"]
+    assert "resolved_vl_base_url" in payload["llm"]["effective"]
 
 
 def test_settings_service_llm_snapshot_env_secret_only(tmp_path: Path) -> None:
@@ -166,6 +202,74 @@ def test_settings_ingestion_patch_smoke(tmp_path: Path, monkeypatch: Any) -> Non
     body = patch_res.json()
     assert body["ingestion"]["max_file_size_mb"] == 96
     assert body["ingestion"]["effective"]["resolved_max_file_size_mb"] == 96
+
+
+def test_settings_general_patch_smoke(tmp_path: Path, monkeypatch: Any) -> None:
+    """Settings API persists OpenAlex mailto in runtime_settings.json."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.config import Settings
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+
+    client = _client()
+    patch_res = client.patch(
+        "/v1/settings/general",
+        json={"openalex_mailto": "openalex-ui-test@example.com"},
+    )
+    assert patch_res.status_code == 200
+    body = patch_res.json()
+    assert body["general"]["openalex_mailto"] == "openalex-ui-test@example.com"
+    assert (
+        body["general"]["effective"]["resolved_openalex_mailto"] == "openalex-ui-test@example.com"
+    )
+    assert body["general"]["status"]["source"] == "server_managed"
+
+    base = Settings(openalex_mailto="env-fallback@example.com")
+    runtime = service.build_runtime_settings(base)
+    assert runtime.openalex_mailto == "openalex-ui-test@example.com"
+
+
+def test_settings_storage_patch_smoke(tmp_path: Path, monkeypatch: Any) -> None:
+    """PATCH /v1/settings/storage persists Neo4j URI and sets restart hint."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.config import Settings
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+
+    client = _client()
+    patch_res = client.patch(
+        "/v1/settings/storage",
+        json={"neo4j_uri": "bolt://patched-from-api:7687"},
+    )
+    assert patch_res.status_code == 200
+    body = patch_res.json()
+    assert (
+        body["storage"]["neo4j"]["fields"]["neo4j_uri"]["effective"]
+        == "bolt://patched-from-api:7687"
+    )
+    assert body["storage"]["status"]["requires_process_restart"] is True
+
+    base = Settings(neo4j_uri="bolt://env-only:7687")
+    runtime = service.build_runtime_settings(base)
+    assert runtime.neo4j_uri == "bolt://patched-from-api:7687"
 
 
 def test_settings_llm_patch_and_delete_secret_smoke(tmp_path: Path, monkeypatch: Any) -> None:

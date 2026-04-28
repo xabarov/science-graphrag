@@ -70,7 +70,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
             "max_tokens": self.settings.vl_max_tokens,
         }
 
-        key = self.settings.vl_api_key or ""
+        key = (self.settings.resolved_vl_api_key or "").strip()
         with llm_pool_slot("vl_pdf", self.settings):
             data, usage = post_chat_completions_json(
                 base_url=self.settings.vl_base_url,
@@ -94,7 +94,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         ``on_page_progress(pages_done, page_total)`` runs before each VL HTTP call (pages from
         prior batches only) and again after each batch completes.
         """
-        if not self.settings.vl_api_key:
+        if not self.settings.resolved_vl_api_key:
             raise ValueError("VL API key is not configured")
 
         all_pages = self._pdf_pages(path)

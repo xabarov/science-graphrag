@@ -463,7 +463,7 @@ def config_check_cmd(
     strict: bool = typer.Option(
         True,
         "--strict/--no-strict",
-        help="Exit 1 if extraction_llm_api_key is unset (recommended before long ingest).",
+        help="Exit 1 if no LLM API key is configured (SCIENCE_GRAPHRAG_API_KEY or extraction key; recommended before long ingest).",
     ),
     embeddings_preflight: bool = typer.Option(
         False,
@@ -483,10 +483,14 @@ def config_check_cmd(
     def _line(label: str, value: str) -> None:
         typer.echo(f"[config-check] {label:40} {value}")
 
+    canon_ok = bool((s.api_key or "").strip())
     ex_ok = bool(s.extraction_llm_api_key)
-    vl_ok = bool(s.vl_api_key)
+    vl_explicit = bool((s.vl_api_key or "").strip())
+    vl_effective = bool(s.resolved_vl_api_key)
+    _line("SCIENCE_GRAPHRAG_API_KEY", "SET" if canon_ok else "UNSET")
     _line("extraction_llm_api_key", "SET" if ex_ok else "UNSET")
-    _line("vl_api_key", "SET" if vl_ok else "UNSET")
+    _line("vl_api_key (explicit env)", "SET" if vl_explicit else "UNSET")
+    _line("vl_api_key (effective for VL)", "SET" if vl_effective else "UNSET")
     if s.openrouter_embedding_model:
         _line(
             "embeddings channel",
@@ -530,7 +534,11 @@ def config_check_cmd(
         _line("s3_secret_access_key", "SET" if (s.s3_secret_access_key or "").strip() else "UNSET")
         _line("s3_use_ssl", str(bool(s.s3_use_ssl)))
     if strict and not ex_ok:
-        typer.echo("[config-check] FAILED: extraction_llm_api_key UNSET", err=True)
+        typer.echo(
+            "[config-check] FAILED: no LLM API key (set SCIENCE_GRAPHRAG_API_KEY or "
+            "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY)",
+            err=True,
+        )
         raise typer.Exit(code=1)
     if embeddings_preflight:
         from science_graphrag.embeddings.preflight import probe_embeddings

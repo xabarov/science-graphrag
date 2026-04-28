@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { SHELL_NAVIGATION_INTENT_EVENT } from "../../components/layout/shellNavigationEvents.js";
 import { getScienceDesiredDistance } from "../../components/graph/physics/desiredLinkDistance.js";
 import { getNodeCluster } from "../../components/graph/physics/structuralCommunities.js";
 import { detectScienceHybridCommunities } from "../../components/graph/physics/scienceHybridCommunities.js";
@@ -57,9 +58,31 @@ export function useScienceGraphForceSimulation(
   const isSimStableRef = useRef(isSimulationStable);
   isSimStableRef.current = isSimulationStable;
   const prevRepulsionRef = useRef(repulsionStrength);
+  const [pausedForShellNavigation, setPausedForShellNavigation] = useState(false);
 
   useEffect(() => {
-    if (!enabled || nodes.length === 0) {
+    setPausedForShellNavigation(false);
+  }, [enabled, simulationSignature]);
+
+  useEffect(() => {
+    if (!enabled) return undefined;
+    const handleShellNavigationIntent = () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      isSimStableRef.current = true;
+      setIsSimulationStable(true);
+      setPausedForShellNavigation(true);
+    };
+    window.addEventListener(SHELL_NAVIGATION_INTENT_EVENT, handleShellNavigationIntent);
+    return () => {
+      window.removeEventListener(SHELL_NAVIGATION_INTENT_EVENT, handleShellNavigationIntent);
+    };
+  }, [enabled, setIsSimulationStable]);
+
+  useEffect(() => {
+    if (!enabled || pausedForShellNavigation || nodes.length === 0) {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
@@ -424,6 +447,7 @@ export function useScienceGraphForceSimulation(
     // eslint-disable-next-line react-hooks/exhaustive-deps -- simulation uses setNodes(prev=>...); full `nodes` would restart every frame
   }, [
     enabled,
+    pausedForShellNavigation,
     simulationSignature,
     links,
     repulsionStrength,

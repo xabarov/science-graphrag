@@ -45,6 +45,12 @@ export default {
   "home.card.admin.openAdmin": "Open admin",
   "home.card.admin.benchmarks": "Benchmarks",
 
+  "home.setup.eyebrow": "LLM setup",
+  "home.setup.title": "Add your API key for full extraction",
+  "home.setup.description":
+    "The stack runs without it, but document extraction, PDF→Markdown (VL), and the research agent need an OpenAI-compatible key (e.g. OpenRouter). Configure it once in Settings — defaults match your server environment.",
+  "home.setup.openSettings": "Open LLM settings",
+
   "home.recentWorks.title": "Recent works",
   "home.recentWorks.empty":
     "No recent works yet. Open Workspaces and add a paper to build a continue flow.",
@@ -166,7 +172,7 @@ export default {
   "settings.snapshot.ingestion.label": "Ingestion",
   "settings.snapshot.ingestion.description": "PDF, front-matter, references, and extraction pipeline tuning.",
   "settings.snapshot.storage.label": "Storage & Integrations",
-  "settings.snapshot.storage.description": "Neo4j, Qdrant, Postgres, OpenAlex, and external integration settings.",
+  "settings.snapshot.storage.description": "Neo4j, Qdrant, Postgres, Redis, S3, and local data paths.",
   "settings.snapshot.benchmark.label": "Benchmark",
   "settings.snapshot.benchmark.description": "Teacher/student defaults and benchmark-specific execution knobs.",
   "settings.snapshot.security.label": "Security & Access",

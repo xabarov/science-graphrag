@@ -151,6 +151,7 @@ def resolve_openrouter_embedding_settings(
     Precedence: CLI overrides > ``Settings`` fields only (canonical ``SCIENCE_GRAPHRAG_*`` env).
 
     - API key: CLI > ``benchmark_teacher_llm_api_key`` > ``extraction_llm_api_key``
+      (``extraction_llm_api_key`` includes ``SCIENCE_GRAPHRAG_API_KEY`` merge)
     - Base URL: CLI > ``benchmark_teacher_llm_base_url`` > ``extraction_llm_base_url`` >
       default ``https://openrouter.ai/api/v1``
     - Model: CLI > ``openrouter_embedding_model`` > default ``baai/bge-m3``
@@ -179,7 +180,7 @@ def resolve_openrouter_embedding_settings(
         raise RuntimeError(
             "OpenRouter embedding API key not configured "
             "(set --api-key, SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY, "
-            "or SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY in Settings / environment)."
+            "SCIENCE_GRAPHRAG_API_KEY, or SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY in Settings / environment)."
         )
 
     root = cache_root or Path("eval/dual_validate/embeddings_cache")

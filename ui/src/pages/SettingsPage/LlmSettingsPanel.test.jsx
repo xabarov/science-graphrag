@@ -34,10 +34,14 @@ function renderPanel() {
       secret_source: "server_managed",
       masked_key: "sk-***",
     },
+    vl_model: "",
+    vl_base_url: "",
     effective: {
       resolved_timeout_seconds: 120,
       resolved_model: "openai/gpt-4o-mini",
       resolved_base_url: "https://openrouter.ai/api/v1",
+      resolved_vl_model: "qwen/qwen3-vl-235b-a22b-instruct",
+      resolved_vl_base_url: "https://openrouter.ai/api/v1",
     },
     advanced_controls: {
       llm_distributed_quota_enabled: { effective: false, persisted: false },
@@ -71,8 +75,13 @@ function renderPanel() {
 describe("LlmSettingsPanel distributed quota UX", () => {
   it("shows operator blurb when advanced section is expanded", () => {
     renderPanel();
-    const toggles = screen.getAllByRole("switch");
-    fireEvent.click(toggles[0]);
+    fireEvent.click(screen.getByText(/Show advanced/i));
     expect(screen.getByText(/Requires a reachable Redis/i)).toBeTruthy();
+  });
+
+  it("does not block save when distributed quota key prefix is non-numeric", () => {
+    renderPanel();
+    expect(screen.queryByText(/Enter valid numbers for all advanced numeric fields/i)).toBeNull();
+    expect(screen.queryByText(/Advanced numeric fields cannot be empty/i)).toBeNull();
   });
 });
