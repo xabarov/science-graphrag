@@ -41,7 +41,7 @@ export function useAgentStream({
   }, [onEvent, onFinalAnswer, onError, onStart, onFinish, onMalformedFrame]);
 
   const stream = useCallback(
-    async ({ question, maxToolCalls = 8, answerClassHint = null, threadId = null, historyDigest = null }) => {
+    async ({ question, maxToolCalls = 8, threadId = null, historyDigest = null }) => {
       if (!String(question || "").trim()) return;
 
       abortRef.current?.abort?.();
@@ -65,7 +65,6 @@ export function useAgentStream({
             max_tool_calls: maxToolCalls,
             thread_id: threadId || null,
             history_digest: historyDigest || null,
-            answer_class_hint: answerClassHint || null,
           }),
           signal: controller.signal,
         });

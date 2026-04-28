@@ -6,24 +6,31 @@ SciGraph — scholarly GraphRAG-система для работы с научн
 
 ## Что доступно сейчас
 
-- Ingestion pipeline для `pdf` / `md` / `txt` через CLI `science-graphrag`.
-- Локальный стек на `PostgreSQL`, `Neo4j`, `Qdrant`, `Redis`, `Phoenix`.
-- API и UI для workspace, reader, graph, chat/evidence сценариев.
-- VL-first PDF pipeline: при настроенных `SCIENCE_GRAPHRAG_VL_*` PDF сначала превращается в Markdown, иначе используется `pypdf` fallback.
-- Бенчмарки и регрессионные suite для ingestion, graph, retrieval, claims и agent scenarios.
+- Ingestion pipeline для `pdf` / `md` / `txt` через CLI `science-graphrag`: одиночный документ, corpus-wide прогон с timeout, resume и progress JSONL (см. [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md)).
+- Локальный стек: `PostgreSQL`, `Neo4j`, `Qdrant`, `Redis`, `Phoenix`, фоновые задачи через Dramatiq worker.
+- **Workspaces:** загрузка в workspace, фоновый ingest и опрос `GET /v1/ingest/jobs/{job_id}`, merge и dedup-кандидаты, **граф workspace** (`GET /v1/workspaces/{workspace_id}/graph`, expand, claims-режимы) рядом с графом одной работы.
+- **Works / retrieval:** `GET /v1/works`, детали работы, чанки, `POST /v1/query`; **work graph** с контрактом авторства для reader UI (`view=reader` vs сырой граф) — [docs/architecture/work-graph-reader-authorship.md](docs/architecture/work-graph-reader-authorship.md), QA: [docs/runbooks/work-graph-authorship-qa.md](docs/runbooks/work-graph-authorship-qa.md).
+- UI: workspace, reader, интерактивный graph (в т.ч. в контексте workspace), Ask/чат с evidence и трассировкой, Claims (через `VITE_CLAIMS_UI_ENABLED`), синхронизация Ask-сессий; при настроенном admin-доступе — UI для прогона бенчмарков на `/v1` benchmark routes.
+- **Research chat:** streaming-агент на `/v1`, экспериментальный LangGraph spike на `/v2`; каталог тулов и контракты — [docs/architecture/agent-chat-tools.md](docs/architecture/agent-chat-tools.md).
+- **Chunking:** переключение движка (`SCIENCE_GRAPHRAG_CHUNKING_ENGINE`, Chonkie vs legacy) — [docs/runbooks/chonkie-chunking.md](docs/runbooks/chonkie-chunking.md).
+- VL-first PDF: при `SCIENCE_GRAPHRAG_VL_*` PDF сначала в Markdown, иначе fallback на `pypdf`.
+- **Benchmark program:** семейства от layer1 / graph / relations / layer2 до retrieval (в т.ч. judge, multihop), claims, dedup, contradictions, concept-topic, references resolution, agent tools, сравнение прогонов (`science-graphrag-benchmark-compare`). Входная точка по семействам и метрикам: [docs/benchmarks/benchmark-program-overview.md](docs/benchmarks/benchmark-program-overview.md), статус волн: [docs/runbooks/benchmark-program-status.md](docs/runbooks/benchmark-program-status.md).
 
-Подробнее про продуктовый контекст: [docs/roadmap.md](docs/roadmap.md), [docs/idea.md](docs/idea.md).
+Продукт и план: [docs/roadmap.md](docs/roadmap.md), [docs/idea.md](docs/idea.md); волны Wave A–L и UX: [docs/runbooks/roadmap-next-waves.md](docs/runbooks/roadmap-next-waves.md).
 
 ## Быстрые ссылки
 
-- [docs/README.md](docs/README.md) - индекс документации.
-- [docs/architecture/README.md](docs/architecture/README.md) - архитектурный обзор.
-- [docs/architecture/agent-chat-tools.md](docs/architecture/agent-chat-tools.md) — каталог инструментов чат-агента (контракты, ссылки на код, планы `tool_search` и compaction).
-- [docs/runbooks/deploy.md](docs/runbooks/deploy.md) - запуск стека и operational notes.
-- [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md) - corpus ingest, timeout, resume, troubleshooting.
-- [docs/roadmap.md](docs/roadmap.md) - roadmap и фазы проекта.
-- [docs/adr/README.md](docs/adr/README.md) - каталог архитектурных решений.
-- [docs/benchmarks/README.md](docs/benchmarks/README.md) - benchmark/eval documentation.
+- [docs/README.md](docs/README.md) — индекс документации.
+- [docs/runbooks/roadmap-next-waves.md](docs/runbooks/roadmap-next-waves.md) — волны работ (benchmark gate → pilot → CI / retrieval / UI / ontology).
+- [docs/architecture/README.md](docs/architecture/README.md) — архитектурный обзор.
+- [docs/architecture/agent-chat-tools.md](docs/architecture/agent-chat-tools.md) — каталог инструментов чат-агента.
+- [docs/architecture/work-graph-reader-authorship.md](docs/architecture/work-graph-reader-authorship.md) — work graph: reader vs raw, авторство.
+- [docs/runbooks/deploy.md](docs/runbooks/deploy.md) — запуск стека и operational notes.
+- [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md) — corpus ingest, timeout, resume, troubleshooting.
+- [docs/benchmarks/benchmark-program-overview.md](docs/benchmarks/benchmark-program-overview.md) — карта семейств бенчмарков и метрик.
+- [docs/roadmap.md](docs/roadmap.md) — roadmap и фазы.
+- [docs/adr/README.md](docs/adr/README.md) — ADR.
+- [docs/benchmarks/README.md](docs/benchmarks/README.md) — eval и бенчмарки.
 
 ## Быстрый старт
 
@@ -58,6 +65,14 @@ python -m venv .venv
 ```bash
 .venv/bin/science-graphrag config-check
 ```
+
+Перед долгим прогоном с эмбеддингами через OpenRouter можно сделать один probe-запрос:
+
+```bash
+.venv/bin/science-graphrag config-check --embeddings-preflight
+```
+
+(Эквивалент для `ingest-corpus`: флаг `--embeddings-preflight` на самой команде — см. [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md).)
 
 ### 2. Поднимите локальный стек
 
@@ -100,13 +115,22 @@ make dev-up
 
 ```bash
 make help
+make quality          # backend: isort/black check + pylint (как CI lint gate)
 make prod-up
 make prod-down
+make prod-build
+make prod-logs
+make prod-ps
+make prod-restart
 make dev-up
 make dev-down
+make dev-build
 make dev-logs
+make dev-ps
+make dev-restart
 make dev-recreate-api
 make dev-ui-restart
+make dev-ui-modules-reset   # если node_modules в dev volume «сломались»
 ```
 
 ## Настройка окружения
@@ -117,7 +141,9 @@ make dev-ui-restart
 |--------|---------------------------|
 | Обязательно проверить | `SCIENCE_GRAPHRAG_OPENALEX_MAILTO`, storage/connectivity переменные, путь к blobs/artifacts при нестандартном окружении |
 | Часто нужно для реальной работы | `SCIENCE_GRAPHRAG_EXTRACTION_LLM_*`, `SCIENCE_GRAPHRAG_VL_*` |
-| Опционально | **Embeddings:** `SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_MODEL` / `_DIM` / `_CACHE_ROOT` (OpenRouter), либо локально `SCIENCE_GRAPHRAG_EMBEDDING_MODEL` (sentence-transformers). Phoenix, agent runtime, claims, chunking — см. `.env.example`. |
+| Опционально | **Embeddings:** `SCIENCE_GRAPHRAG_OPENROUTER_EMBEDDING_MODEL` / `_DIM` / `_CACHE_ROOT` (OpenRouter), либо локально `SCIENCE_GRAPHRAG_EMBEDDING_MODEL` (sentence-transformers; extras `pip install -e ".[embed]"`). Phoenix, agent runtime, claims — см. `.env.example`. |
+| Chunking | `SCIENCE_GRAPHRAG_CHUNKING_ENGINE` и параметры Chonkie vs legacy — [docs/runbooks/chonkie-chunking.md](docs/runbooks/chonkie-chunking.md) |
+| Агент / LangGraph (локальные эксперименты) | extras `pip install -e ".[agent]"` — см. `pyproject.toml` optional-dependencies |
 | Только для UI | `ui/.env.local`, прежде всего `VITE_API_BASE_URL` если UI открыт не через тот же origin |
 
 ### Storage и connectivity
@@ -191,29 +217,34 @@ make dev-ui-restart
 
 Дополнительно:
 
-- `GET /docs` - FastAPI docs
+- `GET /docs` — Swagger UI
+- `GET /v1/workspaces` — список workspace (пустой список допустим после чистого старта)
 - `GET /v1/works/{work_id}`
+- `GET /v1/works/{work_id}/graph?view=reader` — граф схлопнутого авторства для UI
 - `GET /v1/works/{work_id}/chunks`
 - `POST /v1/query`
+- `GET /metrics` — Prometheus, только если `SCIENCE_GRAPHRAG_METRICS_ENABLED=true`
 
 ### Benchmarks и eval
 
-Основные benchmark entrypoints регистрируются через `pyproject.toml`, например:
+CLI-раннеры регистрируются в `[project.scripts]` в `pyproject.toml`. Помимо базовых:
 
-- `science-graphrag-layer1-benchmark`
-- `science-graphrag-graph-benchmark`
-- `science-graphrag-retrieval-benchmark`
-- `science-graphrag-claims-benchmark`
-- `science-graphrag-agent-benchmark`
+- `science-graphrag-layer1-benchmark`, `science-graphrag-graph-benchmark`, `science-graphrag-relations-benchmark`, `science-graphrag-layer2-benchmark`
+- `science-graphrag-retrieval-benchmark`, `science-graphrag-retrieval-judge-benchmark`, `science-graphrag-retrieval-multihop-benchmark`, `science-graphrag-retrieval-hybrid-ablation`
+- `science-graphrag-claims-benchmark`, `science-graphrag-claims-paraphrase-benchmark`, `science-graphrag-concept-topic-benchmark`
+- `science-graphrag-entity-dedup-benchmark`, `science-graphrag-dedup-v1-benchmark`, `science-graphrag-contradictions-benchmark`
+- `science-graphrag-references-resolution-benchmark`
+- `science-graphrag-agent-benchmark`, `science-graphrag-agent-judge-benchmark`, `science-graphrag-chat-agent-roadmap`
+- `science-graphrag-benchmark-compare` — сравнение двух JSON-отчётов
 
-Практический обзор и режимы запуска: [eval/README.md](eval/README.md), [docs/benchmarks/README.md](docs/benchmarks/README.md).
+Полный перечень и семейства: [docs/benchmarks/benchmark-program-overview.md](docs/benchmarks/benchmark-program-overview.md). Практика запуска: [eval/README.md](eval/README.md), [docs/benchmarks/README.md](docs/benchmarks/README.md), агрегат метрик: `scripts/aggregate_benchmark_metrics.py` / `scripts/refresh_benchmark_metrics.sh` (см. eval README).
 
 ## Обзор репозитория
 
 | Путь | Назначение |
 |------|------------|
-| `science_graphrag/` | Основной Python-пакет: ingestion, storage, API, worker, agent runtime, CLI |
-| `ui/` | Vite + React UI: workspace, reader, graph, chat, admin surfaces |
+| `science_graphrag/` | Python-пакет: ingestion, storage, API, worker, agent runtime (в т.ч. LangGraph), CLI |
+| `ui/` | Vite + React: workspace, reader, graph (work + workspace), Ask/chat, admin/benchmark surfaces |
 | `docs/` | Индекс документации, операционные заметки в `docs/runbooks/`, архитектура, ADR, specs, benchmarks |
 | `eval/` | Benchmark runners, metrics, reports |
 | `tests/` | Pytest и fixture-based regression coverage |
@@ -233,6 +264,10 @@ make dev-ui-restart
 - [docs/architecture/README.md](docs/architecture/README.md)
 - [docs/architecture/phase-1-backbone.md](docs/architecture/phase-1-backbone.md)
 - [docs/architecture/chunking-strategy.md](docs/architecture/chunking-strategy.md)
+- [docs/architecture/agent-chat-tools.md](docs/architecture/agent-chat-tools.md)
+- [docs/architecture/agent-tools-best-practices.md](docs/architecture/agent-tools-best-practices.md)
+- [docs/architecture/work-graph-reader-authorship.md](docs/architecture/work-graph-reader-authorship.md)
+- [docs/specs/frontend-ui-api-contracts-v1.md](docs/specs/frontend-ui-api-contracts-v1.md)
 - [docs/adr/README.md](docs/adr/README.md)
 - [docs/adr/001-phase1-stack.md](docs/adr/001-phase1-stack.md)
 
@@ -248,6 +283,8 @@ make dev-ui-restart
 
 - [eval/README.md](eval/README.md)
 - [docs/benchmarks/README.md](docs/benchmarks/README.md)
+- [docs/benchmarks/benchmark-program-overview.md](docs/benchmarks/benchmark-program-overview.md)
+- [docs/runbooks/benchmark-program-status.md](docs/runbooks/benchmark-program-status.md)
 - [docs/runbooks/benchmark-driven-dev-loop.md](docs/runbooks/benchmark-driven-dev-loop.md)
 - [docs/runbooks/benchmark-decision-gate.md](docs/runbooks/benchmark-decision-gate.md)
 
@@ -266,6 +303,7 @@ make dev-ui-restart
 3. Чем prod-like отличается от dev? — подсказка под **Dev stack**.
 4. Где UI, где API, где runbook по ingest? — **Точки входа** после старта, [docs/runbooks/ingest-corpus.md](docs/runbooks/ingest-corpus.md).
 5. Где архитектурный обзор и roadmap? — **Навигация по документации** и [docs/roadmap.md](docs/roadmap.md).
+6. Где карта бенчмарков и статус программы? — [docs/benchmarks/benchmark-program-overview.md](docs/benchmarks/benchmark-program-overview.md), [docs/runbooks/benchmark-program-status.md](docs/runbooks/benchmark-program-status.md).
 
 Проверка ссылок в этом файле (локальные пути из markdown) выполняется скриптом из корня репозитория:
 

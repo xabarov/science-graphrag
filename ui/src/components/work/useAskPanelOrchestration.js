@@ -79,7 +79,6 @@ export function useAskPanelOrchestration({
   const [serverSync] = useState(() => readAskServerSyncPref());
   const [agentToolTrace, setAgentToolTrace] = useState([]);
   const [streamEvents, setStreamEvents] = useState([]);
-  const [answerClassHint, setAnswerClassHint] = useState("");
   const [pendingUserQuery, setPendingUserQuery] = useState("");
   /** While a run is in flight: scope + session the submit belongs to (survives sidebar switches). */
   const [streamingTarget, setStreamingTarget] = useState(null);
@@ -358,7 +357,6 @@ export function useAskPanelOrchestration({
           query: q,
           threadId: submitSid || null,
           historyDigest,
-          answerClassHint: String(answerClassHint || "").trim() || null,
         });
         const queryMode =
           locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : turnWorkId ? "scoped" : "global";
@@ -533,7 +531,6 @@ export function useAskPanelOrchestration({
       submit,
       workId,
       activeSessionId,
-      answerClassHint,
       locked,
       inWorkspace,
       corpusWorkspaceOnly,
@@ -752,8 +749,6 @@ export function useAskPanelOrchestration({
     activeSessionId,
     agentToolTrace,
     streamEvents,
-    answerClassHint,
-    setAnswerClassHint,
     pendingUserQuery,
     streamingTarget,
     inWorkspace,

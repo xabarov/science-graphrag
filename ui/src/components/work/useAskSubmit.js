@@ -95,7 +95,7 @@ export function useAskSubmit({
   }, [workspaceId]);
 
   const submit = useCallback(
-    async ({ query, threadId = null, historyDigest = null, answerClassHint = null }) => {
+    async ({ query, threadId = null, historyDigest = null }) => {
       if (!String(query || "").trim()) return null;
 
       if (useStreamingAgent) {
@@ -107,7 +107,6 @@ export function useAskSubmit({
           maxToolCalls: 8,
           threadId,
           historyDigest,
-          answerClassHint,
         });
         const normalized = lastStreamNormalizedRef.current;
         return {
@@ -132,7 +131,6 @@ export function useAskSubmit({
             max_tool_calls: 8,
             thread_id: threadId || null,
             history_digest: historyDigest || null,
-            answer_class_hint: answerClassHint || null,
           },
           { signal: controller.signal },
         );

@@ -36,7 +36,7 @@ describe("useAskSubmit", () => {
     lastStreamPayload = null;
   });
 
-  it("passes threadId, historyDigest, and answerClassHint to streamAgent", async () => {
+  it("passes threadId and historyDigest to streamAgent", async () => {
     const { useAskSubmit } = await import("./useAskSubmit.js");
     const { useAgentStream } = await import("../../hooks/useAgentStream.js");
 
@@ -54,7 +54,6 @@ describe("useAskSubmit", () => {
         query: "hello",
         threadId: "sess-1",
         historyDigest: [{ user: "u", assistant: "a" }],
-        answerClassHint: "inventory",
       });
     });
 
@@ -63,7 +62,6 @@ describe("useAskSubmit", () => {
       question: "hello",
       threadId: "sess-1",
       historyDigest: [{ user: "u", assistant: "a" }],
-      answerClassHint: "inventory",
     });
     expect(onResult).toHaveBeenCalled();
     const norm = onResult.mock.calls[0][0];

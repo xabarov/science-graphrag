@@ -132,8 +132,6 @@ export default function AskPanel({
             resolvedWork={o.workDetailsForChip}
             corpusWorkspaceOnly={o.corpusWorkspaceOnly}
             standaloneMode={o.standaloneMode}
-            answerClassHint={o.answerClassHint}
-            onAnswerClassHintChange={o.setAnswerClassHint}
             streamingHint={o.streamingHint}
           />
         </Box>

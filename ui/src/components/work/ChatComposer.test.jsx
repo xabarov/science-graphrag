@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { ThemeProvider } from "@mui/material/styles";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
 import { buildAppTheme } from "../../theme/buildAppTheme.js";
@@ -14,14 +14,13 @@ afterEach(() => {
 });
 
 describe("ChatComposer", () => {
-  it("opens answer mode menu from toolbar icon and applies selection", () => {
-    const onAnswerClassHintChange = vi.fn();
+  it("disables send when query is empty", () => {
     render(
       <MemoryRouter>
         <ThemeProvider theme={theme}>
           <ChatComposer
-            t={(key, vars) => (vars?.label ? `${key}:${vars.label}` : key)}
-            query="test"
+            t={(key) => key}
+            query=""
             onQueryChange={() => {}}
             loading={false}
             onSubmit={(e) => e.preventDefault()}
@@ -36,16 +35,13 @@ describe("ChatComposer", () => {
             resolvedWork={null}
             corpusWorkspaceOnly={false}
             standaloneMode
-            answerClassHint=""
-            onAnswerClassHintChange={onAnswerClassHintChange}
           />
         </ThemeProvider>
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "chat.answerMode.openMenuAria" }));
-    fireEvent.click(screen.getByRole("menuitem", { name: "chat.answerMode.inventory" }));
-
-    expect(onAnswerClassHintChange).toHaveBeenCalledWith("inventory");
+    const send = screen.getByRole("button", { name: "chat.composer.sendAria" });
+    expect(send).toBeInstanceOf(HTMLButtonElement);
+    expect(send.disabled).toBe(true);
   });
 });

@@ -1,30 +1,14 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
-import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { CursorIconAction } from "../common/index.js";
 import { ChatContextPicker } from "./ChatContextPicker.jsx";
-
-const ANSWER_CLASS_HINT_OPTIONS = [
-  { value: "", labelKey: "chat.answerMode.auto" },
-  { value: "inventory", labelKey: "chat.answerMode.inventory" },
-  { value: "fact_lookup", labelKey: "chat.answerMode.fact_lookup" },
-  { value: "grounded_explanation", labelKey: "chat.answerMode.grounded_explanation" },
-  { value: "relation_tracing", labelKey: "chat.answerMode.relation_tracing" },
-  { value: "quote_extraction", labelKey: "chat.answerMode.quote_extraction" },
-  { value: "ideation", labelKey: "chat.answerMode.ideation" },
-  { value: "bibliography_export", labelKey: "chat.answerMode.bibliography_export" },
-  { value: "synthesis", labelKey: "chat.answerMode.synthesis" },
-];
 
 /**
  * Bottom composer (GPT-like): bordered input + context icon + send arrow-up.
@@ -47,8 +31,6 @@ const ANSWER_CLASS_HINT_OPTIONS = [
  *   resolvedWork?: Record<string, unknown> | null,
  *   corpusWorkspaceOnly?: boolean,
  *   standaloneMode?: boolean,
- *   answerClassHint?: string,
- *   onAnswerClassHintChange?: (v: string) => void,
  *   streamingHint?: string,
  * }} props
  */
@@ -70,12 +52,9 @@ export function ChatComposer({
   resolvedWork = null,
   corpusWorkspaceOnly = false,
   standaloneMode = false,
-  answerClassHint = "",
-  onAnswerClassHintChange,
   streamingHint = "",
 }) {
   const tk = useTheme().appTokens;
-  const [modeAnchorEl, setModeAnchorEl] = useState(null);
 
   const inputSx = useMemo(
     () => ({
@@ -96,13 +75,6 @@ export function ChatComposer({
     },
     [loading, query],
   );
-
-  const selectedAnswerMode = useMemo(
-    () => ANSWER_CLASS_HINT_OPTIONS.find((option) => option.value === String(answerClassHint || "").trim()) || ANSWER_CLASS_HINT_OPTIONS[0],
-    [answerClassHint],
-  );
-  const selectedAnswerModeLabel = t(selectedAnswerMode.labelKey);
-  const answerModeMenuOpen = Boolean(modeAnchorEl);
 
   const composerShellSx = useMemo(
     () => ({
@@ -183,90 +155,7 @@ export function ChatComposer({
             pt: 0.15,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.65, flexWrap: "wrap", minWidth: 0, flex: "1 1 240px" }}>
-            <CursorIconAction
-              title={t("chat.answerMode.openMenuAria")}
-              aria-label={t("chat.answerMode.openMenuAria")}
-              onClick={(e) => setModeAnchorEl(e.currentTarget)}
-              sx={
-                selectedAnswerMode.value
-                  ? {
-                      color: tk.accent.fg,
-                      borderColor: tk.accent.softBorder,
-                      backgroundColor: tk.accent.chipReadyBg,
-                      "&:hover": {
-                        backgroundColor: tk.accent.emphasisHoverBg,
-                        borderColor: tk.accent.emphasisHoverBorder,
-                        color: tk.accent.fg,
-                      },
-                    }
-                  : null
-              }
-            >
-              <AutoAwesomeOutlinedIcon sx={{ fontSize: "1rem" }} />
-            </CursorIconAction>
-            <Typography
-              sx={{
-                fontSize: "0.72rem",
-                color: selectedAnswerMode.value ? tk.accent.fg : tk.text.secondary,
-                minWidth: 0,
-                maxWidth: "min(260px, 50vw)",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              title={t("chat.answerMode.currentLabel", { label: selectedAnswerModeLabel })}
-            >
-              {selectedAnswerModeLabel}
-            </Typography>
-            <Menu
-              anchorEl={modeAnchorEl}
-              open={answerModeMenuOpen}
-              onClose={() => setModeAnchorEl(null)}
-              anchorOrigin={{ vertical: "top", horizontal: "left" }}
-              transformOrigin={{ vertical: "bottom", horizontal: "left" }}
-              PaperProps={{
-                sx: {
-                  mt: -0.75,
-                  minWidth: 240,
-                  borderRadius: "6px",
-                  border: `1px solid ${tk.border.default}`,
-                  backgroundColor: tk.surface.panel,
-                  boxShadow: "none",
-                  backgroundImage: "none",
-                },
-              }}
-              MenuListProps={{ "aria-label": t("chat.answerMode.label") }}
-            >
-              {ANSWER_CLASS_HINT_OPTIONS.map((option) => {
-                const selected = option.value === selectedAnswerMode.value;
-                return (
-                  <MenuItem
-                    key={option.value || "auto"}
-                    selected={selected}
-                    onClick={() => {
-                      onAnswerClassHintChange?.(option.value);
-                      setModeAnchorEl(null);
-                    }}
-                    sx={{
-                      fontSize: "0.8125rem",
-                      minHeight: 34,
-                      color: selected ? tk.text.primary : tk.text.secondary,
-                      "&.Mui-selected": {
-                        backgroundColor: tk.accent.chipReadyBg,
-                      },
-                      "&.Mui-selected:hover": {
-                        backgroundColor: tk.accent.emphasisHoverBg,
-                      },
-                    }}
-                  >
-                    {t(option.labelKey)}
-                  </MenuItem>
-                );
-              })}
-            </Menu>
-            <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, flex: "0 1 auto" }}>{t("chat.composer.enterHint")}</Typography>
-          </Box>
+          <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, flex: "1 1 auto", minWidth: 0 }}>{t("chat.composer.enterHint")}</Typography>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.35 }}>
             {inWorkspace && !locked ? (
               <IconButton
