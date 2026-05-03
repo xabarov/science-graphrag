@@ -3,8 +3,9 @@ Date (runs): 2026-05-03
 Model: mistralai/mistral-small-3.2-24b-instruct (OpenRouter)
 
 Code:
-- Baseline JSONs recorded at git commit ea8f52f363bb39171f99e09e131cdd97a50212ed (pre iteration-v2 prompt edit).
-- Iteration v2: added "Alignment with benchmark gold" block in science_graphrag/ingestion/llm/prompts/claims.py (SYSTEM_BENCHMARK only).
+- Baseline paraphrase JSONs were run at commit ea8f52f363bb39171f99e09e131cdd97a50212ed (before the v2 prompt edit on disk).
+- Frozen release commit for prompt v2 + artifacts + retrieval mock fix: 14540bd5d26e6af1a51332c98aa28c2dabdf6bb5.
+- Iteration v2: "Alignment with benchmark gold" block in science_graphrag/ingestion/llm/prompts/claims.py (SYSTEM_BENCHMARK only).
 - Retrieval canned runner fix: eval/retrieval/runner.py mock answer_fn accepts settings/workspace_id/top_k (matches answer_query).
 
 Claims paraphrase JSON:
