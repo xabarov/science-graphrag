@@ -205,6 +205,71 @@ The image must work as a decorative hero next to real HTML slide text (text live
 
     return [
         ImageJob(
+            slug="habr-rag-vs-graphrag",
+            filename_base="habr-rag-vs-graphrag",
+            prompt=(
+                """
+Create a clean editorial 16:9 illustration for a Habr article section titled "Why GraphRAG, not just RAG" — it must read as a clear visual contrast between two retrieval paradigms.
+
+The composition is split into two visually distinct halves separated by a soft vertical divider or gradient transition (no hard line, no text divider).
+
+LEFT HALF — vector RAG paradigm:
+- a stack of similar-looking text snippet cards floating freely without connecting structure
+- subtle repetition: cards look almost identical in shape and texture, suggesting "similar but disconnected fragments"
+- cool gray-blue palette with restrained shadows
+- mood: flat, neutral, slightly monotonous, scattered
+
+RIGHT HALF — GraphRAG paradigm:
+- a sculptural knowledge graph: 5-8 larger paper-card nodes connected by confident edges with clear hierarchy
+- one or two highlighted edges suggesting an ordered chain or lineage
+- warm terracotta accent on key nodes; deeper structural depth
+- mood: structured, ordered, intentional, alive
+
+Both halves share the same warm off-white background with subtle paper texture so it reads as one composition.
+
+Hard constraints:
+- absolutely NO readable paragraphs, fake metrics, fake UI, or chart labels
+- NO slide title inside the image
+- if any micro-labels appear, at most 2-3 tiny English words across the whole image like "fragments" / "graph" / "lineage"
+- no neon sci-fi, no glossy 3D, no startup dashboard look, no holograms
+- avoid a textbook-thin connector style: edges on the right should feel painterly and confident, not wireframe
+"""
+                + "\n\n"
+                + base_suffix
+            ).strip(),
+        ),
+        ImageJob(
+            slug="habr-honest-evaluation",
+            filename_base="habr-honest-evaluation",
+            prompt=(
+                """
+Create a clean academic 16:9 editorial illustration for a Habr article section about "honest evaluation programs" in NLP / GraphRAG benchmarks.
+
+Concept to convey through abstract metaphor (no text): a system separates real, measurable results from convenient, self-confirming, or imitated results — the visual must feel rigorous, calm, and trustworthy.
+
+Pick one of these visual languages and execute it well (do not mix all of them):
+- A translucent filter or sieve through which a stream of abstract particles passes; some particles glow warm (live, real) and others fade to muted gray (canned, mock, synthetic), with a clear separation behind the filter
+- Two adjacent glass measurement vessels or calipers: one calibrated and clear, the other slightly suspect / cloudy, and a quiet decisive boundary between them
+- A scientific notebook with a stylized check / cross motif and a soft magnifying lens hovering over a small structured cluster of paper fragments
+
+Use restrained editorial palette:
+- warm off-white background, dark graphite text-zones (no actual text)
+- muted terracotta accent for "live / real / trusted"
+- cool gray-blue secondary accent for "canned / mock / suspect"
+- one small bright accent of confident green or amber where the truth survives the filter
+
+Hard constraints:
+- absolutely NO readable text anywhere, NO fake numbers, NO fake bar charts, NO axis labels
+- NO slide title inside the image
+- if any micro-labels appear, at most 2-3 tiny English words like "live" / "mock" (optional, prefer none)
+- no neon, no glossy 3D, no startup dashboards, no chrome reflections
+- the result should feel like an editorial scientific illustration in a magazine, not a tech product mockup
+"""
+                + "\n\n"
+                + base_suffix
+            ).strip(),
+        ),
+        ImageJob(
             slug="slide-02-plan-motif",
             filename_base="slide-02-plan-motif",
             prompt=(
