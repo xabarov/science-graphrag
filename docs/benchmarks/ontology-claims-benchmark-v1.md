@@ -95,3 +95,46 @@ Aligned with [`ontology-wave-h-backlog.md`](../specs/ontology-wave-h-backlog.md)
 - Scoring: `eval/claims/metrics.py` — `score_claims_extraction`.
 - Runner: `eval/claims/runner.py`.
 - Unit tests: `tests/test_claims_benchmark.py`.
+
+---
+
+## Appendix A — BT6 claims paraphrase: frozen protocol (Habr / advisory)
+
+This appendix is the **single source of truth** for how paraphrase numbers in articles and reports must be interpreted. It complements the extraction family above: BT6 uses the **same fixtures root** but different CLI and scoring when `expected_claims[].match_mode` is set.
+
+### Splits: do not mix pilot and holdout
+
+| Tier id | Case ids | Role |
+|---------|----------|------|
+| `claims_pilot_v2` | See [`tests/fixtures/benchmarks/claims/case_tiers.json`](../../tests/fixtures/benchmarks/claims/case_tiers.json) | Primary **pilot** pack for paraphrase rows (broader coverage). |
+| `claims_holdout_v1` | `holdout_*` cases only | **Holdout** — kept out of prompt-tuning loops in fixture design; report separately from pilot. |
+
+**Rule:** Never average pilot and holdout into one headline F1. Publish both, or pick one split and state which.
+
+### Runner and extractor
+
+- CLI: `science-graphrag-claims-paraphrase-benchmark` → [`eval/claims/paraphrase_runner.py`](../../eval/claims/paraphrase_runner.py).
+- Default `--extractor production` uses the same LLM path as ingestion (`extract_claims_llm`, benchmark mode).
+- Each case runs **plain** article text and optionally **distractor-augmented** text; metrics compare precision drop (see below).
+
+### Match definition (embedding vs text)
+
+Implemented in [`eval/claims/metrics.py`](../../eval/claims/metrics.py) — `score_claims_paraphrase_extraction` / `_row_matched_paraphrase`:
+
+| `expected_claims[].match_mode` | Match rule |
+|--------------------------------|------------|
+| `embedding_sim` | Cosine similarity between embeddings of gold `claim_text_normalized` and candidate prediction strings; pass if ≥ threshold (**default 0.75**, overridable via `min_embedding_sim` on row or gold). Uses OpenRouter embedding settings from `Settings` when any row needs embeddings. |
+| `rouge_l` | ROUGE-L F1 between normalized gold text and candidates; pass if ≥ **default 0.35** (`min_claim_rouge_l` / `min_rouge_l` optional). |
+| `exact` | Normalized substring-style overlap via shared text normalization (same spirit as v1 text match). |
+| (no per-row mode) | Falls back to `claim_id` match and/or top-level `claim_match_mode` (`claim_id` vs `claim_id_or_normalized_text`) like v1. |
+
+**Claim-level recall** = fraction of `expected_claims` rows that match any predicted claim under the row’s mode. **Precision** = fraction of predictions that match at least one gold row. With distractors, **`precision_drop_with_distractors`** must stay within `max_precision_drop_with_distractors` (default **0.15**). Gate: `claim_recall >= min_claim_recall` (gold default often **0.55**) and distractor drop constraint.
+
+### Retrieval benchmark (separate family)
+
+If the article cites retrieval quality, use the **retrieval** contract only — do not mix retrieval metrics with claims paraphrase in one table. Spec: [`retrieval-eval-v1.md`](retrieval-eval-v1.md), tiers in [`tests/fixtures/benchmarks/retrieval/case_tiers.json`](../../tests/fixtures/benchmarks/retrieval/case_tiers.json). Typical CLI: `science-graphrag-retrieval-benchmark` (see [`eval/README.md`](../../eval/README.md)).
+
+### Optional Tier-2 experiments (same article cycle)
+
+- **`tool_search` ablation:** rule-based shortlist in [`science_graphrag/agent/tool_search.py`](../../science_graphrag/agent/tool_search.py) — tunable behavior includes low-signal cutoff (`top_score < 1.5` → full tool list) and score band `threshold = top_score - 1.5`. Compare **one** downstream signal (e.g. `science-graphrag-agent-benchmark` pass rate or latency from suite JSON) before/after a single constant change; do not sweep many knobs in one narrative.
+- **Retrieval A/B:** fixed `--tier` (e.g. `live_corpus_mini` or `merge_safe_contract` with `--mock-answer`) and **one** scalar from the suite JSON (e.g. contract pass rate or a documented hit metric from the runner) before/after a single retrieval tweak.

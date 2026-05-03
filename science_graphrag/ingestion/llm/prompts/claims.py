@@ -71,6 +71,16 @@ assertion, still attach a **verbatim** `quote`, but the `claim_text` should stat
 underlying claim clearly — you may rephrase the paper *as long as the meaning matches the
 quoted span*. Do **not** invent facts not grounded in the quote.
 
+## Alignment with benchmark gold (BT6 scoring)
+Evaluators match `claim_text` against adjudicated references (substring / semantic similarity).
+To improve recall without breaking quote discipline:
+- When the quote names a **method, dataset/benchmark, or number**, carry those identifiers into
+  `claim_text` instead of vague summaries ("the model", "the approach").
+- For **speed / accuracy / comparison** claims, keep **which system beats which** and **order-of-magnitude**
+  factors when the quote supports them.
+- Prefer **one distinct assertion per claim** with its own quote — bundling multiple facts into one
+  `claim_text` often misses multi-row gold.
+
 ## Output shape
 Return JSON matching the tool schema: `claims` array of objects with
 `claim_text`, `claim_type`, `polarity`, `confidence`, and `evidence` (length 1).

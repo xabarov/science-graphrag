@@ -1,0 +1,497 @@
+{
+  "splits": [
+    {
+      "split": "pilot",
+      "input": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/habr-window-2026-05-iter-v2-pilot.json",
+      "n_cases": 15,
+      "macro_mean_paraphrase": {
+        "claim_recall": 0.33888888888888885,
+        "claim_precision": 0.2057331757796154,
+        "claim_f1": 0.2560332820521082
+      },
+      "macro_mean_soft_text_substring_calibration": {
+        "claim_recall": 0.17555555555555555,
+        "claim_precision": 0.07466329966329967,
+        "claim_f1": 0.10476873967420963,
+        "note": "Per-case: gold ``claim_text_normalized`` vs prediction text blobs — substring hit OR token-recall ≥ 0.35 (ignore UUID vs semantic claim_id mismatch). Not equivalent to BT6 embedding_sim."
+      },
+      "recall_case_buckets": {
+        "recall_partial": 14,
+        "recall_zero": 1
+      },
+      "top_missing_claim_ids": [
+        [
+          "cascade_rcnn_quality_paradox_negative",
+          1
+        ],
+        [
+          "centernet_triplet_keypoints",
+          1
+        ],
+        [
+          "centernet_center_pooling_filter",
+          1
+        ],
+        [
+          "centernet_cornernet_false_pairs_negative",
+          1
+        ],
+        [
+          "cornernet_hourglass_backbone",
+          1
+        ],
+        [
+          "cornernet_anchor_design_drawbacks_negative",
+          1
+        ],
+        [
+          "detr_bipartite_matching_no_nms",
+          1
+        ],
+        [
+          "detr_small_obj_slow_train_negative",
+          1
+        ],
+        [
+          "efficientdet_bifpn_weighted",
+          1
+        ],
+        [
+          "efficientdet_compound_scaling",
+          1
+        ],
+        [
+          "efficientdet_single_dim_scaling_negative",
+          1
+        ],
+        [
+          "efficientdet_throughput_tradeoff_negative",
+          1
+        ]
+      ],
+      "per_case": [
+        {
+          "case_id": "corpus_cascade_rcnn_v2",
+          "claim_recall": 0.6666666666666666,
+          "claim_precision": 0.3,
+          "claim_f1": 0.41379310344827586,
+          "soft_text_match_recall": 0.3333333333333333,
+          "soft_text_match_precision": 0.1,
+          "soft_text_match_f1": 0.15384615384615383,
+          "missing_claim_ids": [
+            "cascade_rcnn_quality_paradox_negative"
+          ],
+          "matched_claim_ids": [
+            "cascade_rcnn_iou_progression",
+            "cascade_rcnn_ap_gain_2_4"
+          ]
+        },
+        {
+          "case_id": "corpus_centernet_v2",
+          "claim_recall": 0.25,
+          "claim_precision": 0.125,
+          "claim_f1": 0.16666666666666666,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "centernet_triplet_keypoints",
+            "centernet_center_pooling_filter",
+            "centernet_cornernet_false_pairs_negative"
+          ],
+          "matched_claim_ids": [
+            "centernet_47_ap_coco"
+          ]
+        },
+        {
+          "case_id": "corpus_cornernet_v2",
+          "claim_recall": 0.3333333333333333,
+          "claim_precision": 0.09090909090909091,
+          "claim_f1": 0.14285714285714288,
+          "soft_text_match_recall": 0.3333333333333333,
+          "soft_text_match_precision": 0.18181818181818182,
+          "soft_text_match_f1": 0.23529411764705885,
+          "missing_claim_ids": [
+            "cornernet_hourglass_backbone",
+            "cornernet_anchor_design_drawbacks_negative"
+          ],
+          "matched_claim_ids": [
+            "cornernet_paired_keypoints"
+          ]
+        },
+        {
+          "case_id": "corpus_detr_v2",
+          "claim_recall": 0.5,
+          "claim_precision": 0.23529411764705882,
+          "claim_f1": 0.31999999999999995,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "detr_bipartite_matching_no_nms",
+            "detr_small_obj_slow_train_negative"
+          ],
+          "matched_claim_ids": [
+            "detr_set_prediction_pipeline",
+            "detr_match_faster_rcnn_large_obj"
+          ]
+        },
+        {
+          "case_id": "corpus_efficientdet_v2",
+          "claim_recall": 0.2,
+          "claim_precision": 0.8181818181818182,
+          "claim_f1": 0.32142857142857145,
+          "soft_text_match_recall": 0.2,
+          "soft_text_match_precision": 0.09090909090909091,
+          "soft_text_match_f1": 0.12500000000000003,
+          "missing_claim_ids": [
+            "efficientdet_bifpn_weighted",
+            "efficientdet_compound_scaling",
+            "efficientdet_single_dim_scaling_negative",
+            "efficientdet_throughput_tradeoff_negative"
+          ],
+          "matched_claim_ids": [
+            "efficientdet_d7_55_ap_efficient"
+          ]
+        },
+        {
+          "case_id": "corpus_fast_rcnn_v2",
+          "claim_recall": 0.5,
+          "claim_precision": 0.2631578947368421,
+          "claim_f1": 0.3448275862068966,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "fast_rcnn_roi_pooling_shared_features",
+            "fast_rcnn_rcnn_redundancy_negative"
+          ],
+          "matched_claim_ids": [
+            "fast_rcnn_single_stage_multitask",
+            "fast_rcnn_9x_train_speedup"
+          ]
+        },
+        {
+          "case_id": "corpus_faster_rcnn_v2",
+          "claim_recall": 0.0,
+          "claim_precision": 0.0,
+          "claim_f1": 0.0,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "faster_rcnn_rpn_shared_features",
+            "faster_rcnn_speed_5fps_sota",
+            "faster_rcnn_anchor_boxes",
+            "faster_rcnn_selective_search_bottleneck"
+          ],
+          "matched_claim_ids": []
+        },
+        {
+          "case_id": "corpus_fcos_v2",
+          "claim_recall": 0.25,
+          "claim_precision": 0.07142857142857142,
+          "claim_f1": 0.11111111111111112,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "fcos_centerness_branch",
+            "fcos_surpass_retinanet_no_anchors",
+            "fcos_anchor_hyperparameter_burden_negative"
+          ],
+          "matched_claim_ids": [
+            "fcos_per_pixel_prediction"
+          ]
+        },
+        {
+          "case_id": "corpus_fpn_v2",
+          "claim_recall": 0.5,
+          "claim_precision": 0.17647058823529413,
+          "claim_f1": 0.2608695652173913,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "fpn_lateral_connections_role",
+            "fpn_single_scale_small_objects_negative"
+          ],
+          "matched_claim_ids": [
+            "fpn_topdown_lateral_pyramid",
+            "fpn_faster_rcnn_ap_gain"
+          ]
+        },
+        {
+          "case_id": "corpus_mask_rcnn_v2",
+          "claim_recall": 0.4,
+          "claim_precision": 0.3333333333333333,
+          "claim_f1": 0.3636363636363636,
+          "soft_text_match_recall": 0.2,
+          "soft_text_match_precision": 0.13333333333333333,
+          "soft_text_match_f1": 0.16,
+          "missing_claim_ids": [
+            "mask_rcnn_decoupled_per_class_sigmoid",
+            "mask_rcnn_softmax_mask_competition_negative",
+            "mask_rcnn_pretraining_dependency_negative"
+          ],
+          "matched_claim_ids": [
+            "mask_rcnn_parallel_mask_branch",
+            "mask_rcnn_roialign_quantization_fix"
+          ]
+        },
+        {
+          "case_id": "corpus_rcnn_v2",
+          "claim_recall": 0.25,
+          "claim_precision": 0.06666666666666667,
+          "claim_f1": 0.10526315789473685,
+          "soft_text_match_recall": 0.5,
+          "soft_text_match_precision": 0.26666666666666666,
+          "soft_text_match_f1": 0.3478260869565218,
+          "missing_claim_ids": [
+            "rcnn_region_proposals_with_cnn_features",
+            "rcnn_pretrain_finetune_recipe",
+            "rcnn_inference_2k_proposals_slow_negative"
+          ],
+          "matched_claim_ids": [
+            "rcnn_voc_30pct_relative_gain"
+          ]
+        },
+        {
+          "case_id": "corpus_retinanet_focal_v2",
+          "claim_recall": 0.2,
+          "claim_precision": 0.1,
+          "claim_f1": 0.13333333333333333,
+          "soft_text_match_recall": 0.2,
+          "soft_text_match_precision": 0.1,
+          "soft_text_match_f1": 0.13333333333333333,
+          "missing_claim_ids": [
+            "retinanet_hard_mining_insufficient",
+            "retinanet_resnet101_fpn_ap",
+            "retinanet_imbalance_root_cause",
+            "retinanet_alpha_balanced_alone_negative"
+          ],
+          "matched_claim_ids": [
+            "retinanet_focal_loss_definition"
+          ]
+        },
+        {
+          "case_id": "corpus_ssd_v2",
+          "claim_recall": 0.5,
+          "claim_precision": 0.25,
+          "claim_f1": 0.3333333333333333,
+          "soft_text_match_recall": 0.5,
+          "soft_text_match_precision": 0.125,
+          "soft_text_match_f1": 0.2,
+          "missing_claim_ids": [
+            "ssd_multiple_feature_maps",
+            "ssd_yolo_localization_negative"
+          ],
+          "matched_claim_ids": [
+            "ssd_default_boxes_multiscale",
+            "ssd_300_voc_speed"
+          ]
+        },
+        {
+          "case_id": "corpus_yolov1_v2",
+          "claim_recall": 0.3333333333333333,
+          "claim_precision": 0.2,
+          "claim_f1": 0.25,
+          "soft_text_match_recall": 0.16666666666666666,
+          "soft_text_match_precision": 0.06666666666666667,
+          "soft_text_match_f1": 0.09523809523809522,
+          "missing_claim_ids": [
+            "yolov1_unified_pipeline",
+            "yolov1_grid_based_detection",
+            "yolov1_artwork_generalization",
+            "yolov1_two_stage_higher_acc_negative"
+          ],
+          "matched_claim_ids": [
+            "yolov1_speed_45_155_fps",
+            "yolov1_localization_error_negative"
+          ]
+        },
+        {
+          "case_id": "corpus_yolov2_v2",
+          "claim_recall": 0.2,
+          "claim_precision": 0.05555555555555555,
+          "claim_f1": 0.08695652173913045,
+          "soft_text_match_recall": 0.2,
+          "soft_text_match_precision": 0.05555555555555555,
+          "soft_text_match_f1": 0.08695652173913045,
+          "missing_claim_ids": [
+            "yolov2_dimension_priors_kmeans",
+            "yolov2_yolo9000_joint_training",
+            "yolov2_handpicked_anchors_negative",
+            "yolov2_yolov1_coarse_grid_negative"
+          ],
+          "matched_claim_ids": [
+            "yolov2_batchnorm_dropout_replace"
+          ]
+        }
+      ]
+    },
+    {
+      "split": "holdout",
+      "input": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/habr-window-2026-05-iter-v2-holdout.json",
+      "n_cases": 5,
+      "macro_mean_paraphrase": {
+        "claim_recall": 0.3,
+        "claim_precision": 0.21050420168067227,
+        "claim_f1": 0.24740740740740744
+      },
+      "macro_mean_soft_text_substring_calibration": {
+        "claim_recall": 0.09,
+        "claim_precision": 0.06890756302521009,
+        "claim_f1": 0.0780539397144368,
+        "note": "Per-case: gold ``claim_text_normalized`` vs prediction text blobs — substring hit OR token-recall ≥ 0.35 (ignore UUID vs semantic claim_id mismatch). Not equivalent to BT6 embedding_sim."
+      },
+      "recall_case_buckets": {
+        "recall_partial": 4,
+        "recall_zero": 1
+      },
+      "top_missing_claim_ids": [
+        [
+          "atss_adaptive_sample_selection",
+          1
+        ],
+        [
+          "atss_retinanet_matches_fcos",
+          1
+        ],
+        [
+          "atss_arch_alone_no_advantage_negative",
+          1
+        ],
+        [
+          "deformable_detr_10x_faster_convergence",
+          1
+        ],
+        [
+          "deformable_detr_multiscale_efficient",
+          1
+        ],
+        [
+          "deformable_detr_global_attention_negative",
+          1
+        ],
+        [
+          "dino_three_components",
+          1
+        ],
+        [
+          "dino_swinl_63ap",
+          1
+        ],
+        [
+          "dino_detr_scaling_overcomes_classical",
+          1
+        ],
+        [
+          "dino_earlier_detr_slow_small_obj_negative",
+          1
+        ],
+        [
+          "dino_classical_pipelines_scaling_negative",
+          1
+        ],
+        [
+          "yolov3_speed_vs_retinanet",
+          1
+        ]
+      ],
+      "per_case": [
+        {
+          "case_id": "holdout_atss_v1",
+          "claim_recall": 0.25,
+          "claim_precision": 0.07142857142857142,
+          "claim_f1": 0.11111111111111112,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "atss_adaptive_sample_selection",
+            "atss_retinanet_matches_fcos",
+            "atss_arch_alone_no_advantage_negative"
+          ],
+          "matched_claim_ids": [
+            "atss_essential_difference_finding"
+          ]
+        },
+        {
+          "case_id": "holdout_deformable_detr_v1",
+          "claim_recall": 0.25,
+          "claim_precision": 0.5882352941176471,
+          "claim_f1": 0.3508771929824561,
+          "soft_text_match_recall": 0.25,
+          "soft_text_match_precision": 0.058823529411764705,
+          "soft_text_match_f1": 0.09523809523809523,
+          "missing_claim_ids": [
+            "deformable_detr_10x_faster_convergence",
+            "deformable_detr_multiscale_efficient",
+            "deformable_detr_global_attention_negative"
+          ],
+          "matched_claim_ids": [
+            "deformable_detr_attention_modules"
+          ]
+        },
+        {
+          "case_id": "holdout_dino_v1",
+          "claim_recall": 0.0,
+          "claim_precision": 0.0,
+          "claim_f1": 0.0,
+          "soft_text_match_recall": 0.2,
+          "soft_text_match_precision": 0.2857142857142857,
+          "soft_text_match_f1": 0.23529411764705882,
+          "missing_claim_ids": [
+            "dino_three_components",
+            "dino_swinl_63ap",
+            "dino_detr_scaling_overcomes_classical",
+            "dino_earlier_detr_slow_small_obj_negative",
+            "dino_classical_pipelines_scaling_negative"
+          ],
+          "matched_claim_ids": []
+        },
+        {
+          "case_id": "holdout_yolov3_v1",
+          "claim_recall": 0.75,
+          "claim_precision": 0.14285714285714285,
+          "claim_f1": 0.24,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "yolov3_speed_vs_retinanet"
+          ],
+          "matched_claim_ids": [
+            "yolov3_three_scale_predictions",
+            "yolov3_logistic_per_class",
+            "yolov3_strict_iou_underperform_negative"
+          ]
+        },
+        {
+          "case_id": "holdout_yolox_v1",
+          "claim_recall": 0.25,
+          "claim_precision": 0.25,
+          "claim_f1": 0.25,
+          "soft_text_match_recall": 0.0,
+          "soft_text_match_precision": 0.0,
+          "soft_text_match_f1": 0.0,
+          "missing_claim_ids": [
+            "yolox_decoupled_head",
+            "yolox_l_50ap_v100_speed",
+            "yolox_coupled_head_conflict_negative"
+          ],
+          "matched_claim_ids": [
+            "yolox_anchor_free_simota"
+          ]
+        }
+      ]
+    }
+  ],
+  "taxonomy_notes": {
+    "recall_full": "All gold claims matched under BT6 paraphrase rules.",
+    "recall_partial": "Some gold claims missed (see missing_claim_ids per case).",
+    "recall_zero": "No gold claims matched.",
+    "top_missing_claim_ids": "Aggregated missing claim_id strings across cases in split."
+  }
+}

@@ -67,12 +67,16 @@ def _canned_answer_fn(case_path: Path) -> Callable[..., GroundedAnswer]:
     def inner(
         _question: str,
         *,
-        _settings,
+        settings=None,
+        _stores=None,
         work_id=None,
-        _workspace_id=None,
-        _top_k=5,
+        workspace_id=None,
+        top_k=5,
         mode: str = "vector",
-    ) -> GroundedAnswer:  # noqa: ARG001
+        retrieval_mode=None,
+    ) -> GroundedAnswer:
+        # Signature mirrors ``answer_query``; mock ignores optional knobs.
+        _ = (settings, _stores, workspace_id, top_k, retrieval_mode)
         citations = [
             {"chunk_fingerprint": fp, "rank": i + 1, "excerpt": "stub"} for i, fp in enumerate(fps)
         ]

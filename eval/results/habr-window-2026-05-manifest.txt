@@ -1,0 +1,31 @@
+Habr experiment window — artifact pin (May 2026)
+Date (runs): 2026-05-03
+Model: mistralai/mistral-small-3.2-24b-instruct (OpenRouter)
+
+Code:
+- Baseline JSONs recorded at git commit ea8f52f363bb39171f99e09e131cdd97a50212ed (pre iteration-v2 prompt edit).
+- Iteration v2: added "Alignment with benchmark gold" block in science_graphrag/ingestion/llm/prompts/claims.py (SYSTEM_BENCHMARK only).
+- Retrieval canned runner fix: eval/retrieval/runner.py mock answer_fn accepts settings/workspace_id/top_k (matches answer_query).
+
+Claims paraphrase JSON:
+- eval/results/habr-window-2026-05-baseline-holdout.json
+- eval/results/habr-window-2026-05-baseline-pilot.json
+- eval/results/habr-window-2026-05-iter-v2-holdout.json
+- eval/results/habr-window-2026-05-iter-v2-pilot.json
+
+Diagnostics (iteration v2 suites):
+- eval/results/habr-window-2026-05-diagnostics.json
+- eval/results/habr-window-2026-05-diagnostics.md
+
+Failure analysis:
+- eval/results/habr-window-2026-05-failure-analysis.md
+
+Retrieval (optional tier-2 slice, merge_safe_contract, canned):
+- eval/results/habr-window-2026-05-retrieval-merge-safe-mock.json  (summary.all_passed=true, case_count=3)
+
+Macro-F1 (mean per-case F1 from precision/recall in each case report):
+- Holdout: baseline ~0.187, iteration v2 ~0.190
+- Pilot:   baseline ~0.217, iteration v2 ~0.224
+
+Benchmark contract doc:
+- docs/benchmarks/ontology-claims-benchmark-v1.md — Appendix A (BT6 protocol)
