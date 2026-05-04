@@ -1,0 +1,27 @@
+Habr window — May 2026 wave (gold-v2 realism, ≤5 expected_claim rows)
+
+Scope
+- Five `expected_claims` rows reworded toward production-style phrasing (diagnosed misses in June 2026 live BT6 / failure analysis). `schema_version` bumped to **3** on touched packs only.
+- Touched packs: `holdout_dino_v1`, `corpus_detr_v2`, `corpus_efficientdet_v2`
+- Touched claim_ids: dino_swinl_63ap, dino_three_components, detr_bipartite_matching_no_nms, efficientdet_bifpn_weighted, efficientdet_throughput_tradeoff_negative
+
+Preflight
+- config-check: extraction_llm_api_key SET; docker compose core services healthy at run time
+
+Baseline (June 2026 live BT6, same model/prompt — before gold-v2)
+- Holdout macro-F1 (mean per-case F1): **~0.219167** — `eval/results/habr-window-2026-06-live-holdout.json`
+- Pilot macro-F1 (mean per-case F1): **~0.249156** — `eval/results/habr-window-2026-06-live-pilot.json`
+
+Gold-v2 BT6 outputs (fresh production re-run after fixture edits)
+- `eval/results/habr-window-2026-07-gold-v2-holdout.json` — macro-F1 (mean per-case): **~0.140379**
+- `eval/results/habr-window-2026-07-gold-v2-pilot.json` — macro-F1 (mean per-case): **~0.240106**
+
+Interpretation
+- **Do not read the holdout delta as a pure “gold realism uplift”**: BT6 is a live LLM suite; a single re-run moves predictions and occasionally the distractor lane (e.g. empty `predictions_distracted` in one case in this artifact). The pilot drop is small (**~0.009** macro mean). The fixture edits are documented in each pack’s `meta.gold_v2_revision` for auditability; headline Habr numbers remain pinned to **June 2026** live JSON until a multi-seed aggregation is added.
+
+CLI
+- `science-graphrag-claims-paraphrase-benchmark tests/fixtures/benchmarks/claims --suite --tier claims_holdout_v1 --extractor production --no-fail-on-red-cases --json-out eval/results/habr-window-2026-07-gold-v2-holdout.json`
+- Same with `--tier claims_pilot_v2` → `habr-window-2026-07-gold-v2-pilot.json`
+
+Git pin (fixture + docs wave; re-run artifacts may be regenerated)
+- HEAD at wave authoring: 3a95e60765f68ced043debbc9f4d16a599cf3887

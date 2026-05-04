@@ -1,0 +1,33 @@
+Habr window — June 2026 axis (post-process dedupe on BT6 predictions)
+
+Scope
+- Post-process dedupe: token Jaccard >= 0.92 on predictions before BT6 scoring.
+- Implementation: eval/claims/prediction_postprocess.py; production extraction path wires the same step in eval/claims/paraphrase_runner.py (extract_claims_production_path).
+
+Offline re-score (May v2 suite JSON -> June dedupe-scored JSON)
+- Outputs: eval/results/habr-window-2026-06-dedupe-holdout.json, eval/results/habr-window-2026-06-dedupe-pilot.json (rescored_offline: true).
+- macro_f1_mean_per_case (from suite summary): holdout ~0.190398, pilot ~0.223605.
+
+tool_search
+- Score band is `Settings.agent_tool_search_score_band` (env `SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_SCORE_BAND`, default **1.35**; use **1.5** for legacy-style A/B).
+- Live `agent_tools_mini` A/B: paired JSON **`eval/results/habr-window-2026-06-agent-tools-mini-band-1.5-live.json`** vs **`…-band-1.35-live.json`** (2026-05-03). Summary: both `all_passed=false`, **1/10** cases passed each; `latency_p95_ms` **123205** (band 1.5) vs **84621** (band 1.35). Requires Docker **Qdrant + Phoenix** (+ core DB/redis/minio), `PHOENIX_COLLECTOR_ENDPOINT=http://127.0.0.1:16006/v1/traces` for host CLI, and raised `SCIENCE_GRAPHRAG_AGENT_STEP_TIMEOUT_SECONDS` (600 used). Details: `eval/results/habr-window-2026-06-tier-b-tool-search.txt`.
+
+BT6 CLI
+- claims paraphrase benchmark: --no-fail-on-red-cases to avoid non-zero exit on red cases while iterating.
+
+Production BT6 re-run (June 2026, dedupe in live path)
+- CLI: `science-graphrag-claims-paraphrase-benchmark tests/fixtures/benchmarks/claims --suite --tier … --extractor production --no-fail-on-red-cases`
+- Outputs: `eval/results/habr-window-2026-06-live-holdout.json`, `eval/results/habr-window-2026-06-live-pilot.json` (+ `.md` summaries).
+- macro_f1_mean_per_case (mean per-case F1 from precision/recall in each case): holdout **~0.219167**, pilot **~0.249156** (new LLM calls; not the same randomness as May 2026 JSONs).
+
+Offline re-score note
+- `habr-window-2026-06-dedupe-*.json` re-scores **frozen May v2 predictions** (isolates dedupe effect only). Live JSONs above include dedupe **and** fresh model output.
+
+Retrieval (Tier B2 smoke, mock)
+- `eval/results/habr-window-2026-06-retrieval-merge-safe-mock.json` — `merge_safe_contract` suite, `--mock-answer`, exit 0.
+
+Retrieval (Tier B live mini, pilot corpus on stack)
+- `eval/results/habr-window-2026-06-retrieval-live-corpus-mini.json` — `--tier live_corpus_mini` (3 кейса: corpus-wide + YOLOv1-scoped), **all_passed=true**, exit 0; требуются заингестированный пилотный корпус, Neo4j, Qdrant (без `--mock-answer`).
+
+Git pin (live BT6 + manifest edit)
+- HEAD: 3a95e60765f68ced043debbc9f4d16a599cf3887

@@ -165,4 +165,4 @@ def test_all_gold_files_parse() -> None:
     for gold_path in FIXTURES.glob("*/gold.json"):
         data = json.loads(gold_path.read_text(encoding="utf-8"))
         sv = data.get("schema_version")
-        assert sv in (1, 2), f"{gold_path}: unsupported schema_version {sv!r}"
+        assert sv in (1, 2, 3), f"{gold_path}: unsupported schema_version {sv!r}"

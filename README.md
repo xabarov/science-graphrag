@@ -92,6 +92,7 @@ docker compose -f docker-compose.dev.yml up -d --build
 | Чат-агент и инструменты | [docs/architecture/agent-chat-tools.md](docs/architecture/agent-chat-tools.md) |
 | Бенчмарки и eval | [docs/benchmarks/README.md](docs/benchmarks/README.md) · [eval/README.md](eval/README.md) |
 | Roadmap | [docs/roadmap.md](docs/roadmap.md) |
+| Планирование (инженерные треки) | [docs/analysis/README.md](docs/analysis/README.md) |
 
 **Исходники:** `science_graphrag/` (backend, CLI, ingestion), `ui/` (интерфейс), `eval/` и `tests/` — качество и регрессии.
 

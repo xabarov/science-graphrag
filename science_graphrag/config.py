@@ -548,6 +548,15 @@ class Settings(BaseSettings):
             "when enabled, single-agent ReAct also binds a per-turn shortlist (see tool_search)."
         ),
     )
+    agent_tool_search_score_band: float = Field(
+        default=1.35,
+        ge=0.25,
+        le=5.0,
+        description=(
+            "Rule-based tool shortlist: keep tools with score >= top_score - band "
+            "(see science_graphrag.agent.tool_search). Habr Jun 2026 default 1.35 vs legacy ~1.5."
+        ),
+    )
     agent_tool_history_compact_enabled: bool = Field(
         default=False,
         description=(

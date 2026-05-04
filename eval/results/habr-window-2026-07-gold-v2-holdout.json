@@ -1,0 +1,2553 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 5,
+    "case_ids": [
+      "holdout_atss_v1",
+      "holdout_deformable_detr_v1",
+      "holdout_dino_v1",
+      "holdout_yolov3_v1",
+      "holdout_yolox_v1"
+    ],
+    "all_passed": false,
+    "claims_paraphrase_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "holdout_atss_v1",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 0.25,
+        "claim_precision": 0.14285714285714285,
+        "claim_precision_distracted": 0.0,
+        "precision_drop_with_distractors": 0.14285714285714285,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 14,
+        "predicted_count_distracted": 0,
+        "matched_claim_ids": [
+          "atss_essential_difference_finding"
+        ],
+        "missing_claim_ids": [
+          "atss_adaptive_sample_selection",
+          "atss_retinanet_matches_fcos",
+          "atss_arch_alone_no_advantage_negative"
+        ],
+        "min_claim_recall": 0.22
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "8a919e29-8839-52a5-a690-2655b0681335",
+          "claim_text": "The essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.",
+          "claim_text_normalized": "the essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "dfb533cb-f82c-5d47-a831-eb6748631ba6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "d23de0d9-b513-5279-bfee-2634a25fe0e1",
+          "claim_text": "State-of-the-art AP of 50.7% is achieved by applying ATSS without introducing any overhead.",
+          "claim_text_normalized": "state-of-the-art ap of 50.7% is achieved by applying atss without introducing any overhead.",
+          "claim_type": "performance",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "86c6c458-19dc-55bb-b7bd-95dcf5db744f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "d8f32b6a-d1f9-5beb-9dff-65d2fdfbb6e8",
+          "claim_text": "The code for ATSS is available at https://github.com/sfzhang15/ATSS.",
+          "claim_text_normalized": "the code for atss is available at https://github.com/sfzhang15/atss.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "9bb23fe6-8cc6-57a2-8115-97141749fb0c",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The code is available at https://github.com/sfzhang15/ATSS",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "d8fb27b8-2938-55d1-8c6d-735a6f7bdc18",
+          "claim_text": "Object detection has been dominated by anchor-based detectors for several years.",
+          "claim_text_normalized": "object detection has been dominated by anchor-based detectors for several years.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "db8d8d3b-441e-572b-b66a-6a59a26e96b3",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Object detection has been dominated by anchor-based detectors for several years",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "1a62f8b4-7f76-58d6-b343-dad468eb44b7",
+          "claim_text": "Anchor-based detectors first tile a large number of preset anchors on the image.",
+          "claim_text_normalized": "anchor-based detectors first tile a large number of preset anchors on the image.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "07e7d594-8d26-5453-8977-c0fee81982e5",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Both of them first tile a large number of preset anchors on the image",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "09e123d1-4b99-56b6-9efe-ab973679591c",
+          "claim_text": "RetinaNet tiles several anchor boxes per location, while FCOS tiles one anchor point per location.",
+          "claim_text_normalized": "retinanet tiles several anchor boxes per location, while fcos tiles one anchor point per location.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "2bb9ede6-1f8b-56e9-a0e7-e78ab63381e3",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "RetinaNet tiles several anchor boxes per location, while FCOS tiles one anchor point per location",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "88985136-501e-5c6c-8d43-0df923d27e98",
+          "claim_text": "RetinaNet regresses the object bounding box from the preset anchor box.",
+          "claim_text_normalized": "retinanet regresses the object bounding box from the preset anchor box.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "b14a75bc-10ec-5c82-9f82-1f4b29cc205f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "RetinaNet regresses the object bounding box from the preset anchor box",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "715e4133-f9b1-5fe8-b1e7-fa44b567a181",
+          "claim_text": "FCOS locates the object from the anchor point.",
+          "claim_text_normalized": "fcos locates the object from the anchor point.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "d1ba350d-6b81-584a-a1a9-99fdd7aba99a",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "FCOS locates the object from the anchor point",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "0d38dbc5-45a3-5ce0-b17e-1ff85a2a15a8",
+          "claim_text": "The anchor-free FCOS achieves better performance than the anchor-based RetinaNet.",
+          "claim_text_normalized": "the anchor-free fcos achieves better performance than the anchor-based retinanet.",
+          "claim_type": "performance",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "fefb6dd2-8cd0-5276-a4b2-fca3fc3b7a11",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "the anchor-free FCOS achieves much better performance than the anchor-based RetinaNet",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "d8b3e303-a096-5b46-9fc4-40669d07d111",
+          "claim_text": "The essential difference between anchor-based and anchor-free methods is the definition of positive and negative training samples.",
+          "claim_text_normalized": "the essential difference between anchor-based and anchor-free methods is the definition of positive and negative training samples.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "44d16a6d-8b72-5207-adf0-b3ba94ef3bcb",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "the essential difference between these two kind of methods is the definition of positive and negative training samples",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "5aa07e92-b158-5576-b742-7a91d364c0f8",
+          "claim_text": "ATSS bridges the gap between anchor-based and anchor-free detectors.",
+          "claim_text_normalized": "atss bridges the gap between anchor-based and anchor-free detectors.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "7571d6dd-92af-5764-9fe0-ecaf4fc0dc73",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "It bridges the gap between anchor-based and anchor-free detectors",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "67545d23-a421-5d72-8816-05cafaa7c302",
+          "claim_text": "Tiling multiple anchors per location on the image to detect objects is a useless operation.",
+          "claim_text_normalized": "tiling multiple anchors per location on the image to detect objects is a useless operation.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "311798ae-00e2-519f-8d2e-7252c54ecb28",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "tiling multiple anchors per location on the image to detect objects is a useless operation",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "f6e84983-2374-53db-8fac-bc8556798e22",
+          "claim_text": "The main contributions of this work include demonstrating that tiling multiple anchors per location is unnecessary.",
+          "claim_text_normalized": "the main contributions of this work include demonstrating that tiling multiple anchors per location is unnecessary.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "970fcf5f-de2f-5a28-ba12-3d270b4247bd",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Demonstrating that tiling multiple anchors per location on the image to detect objects is a useless operation",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "53c36e08-77de-509b-8c77-3a05814b1790",
+          "claim_text": "The main contributions of this work include achieving state-of-the-art performance on MS COCO.",
+          "claim_text_normalized": "the main contributions of this work include achieving state-of-the-art performance on ms coco.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "02f3d2ef-f873-5789-a560-11eba468bc65",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Achieving state-of-the-art performance on MS COCO without introducing any additional overhead",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "predictions_distracted": [],
+      "wall_clock_seconds": 153.994,
+      "extractor": "extract_claims_production_path",
+      "oracle_predictions": false,
+      "runtime_mode": "live",
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics_plain": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 14,
+        "dropped_claim_count_quote_rejected": 14,
+        "evidence_quote_strict_count": 7,
+        "evidence_quote_strict_normalized_count": 1,
+        "evidence_quote_fuzzy_count": 6,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"The essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.\", \"claim_type\": \"methodology\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples\", \"section_path\": null}]}, {\"claim_text\": \"Adaptive Training Sample Selection (ATSS) significantly improves the performance of anchor-based and anchor-free detectors.\", \"claim_type\": \"methodology\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples according to statistical characteristics of object. It significantly improves the performance of anchor-based and anchor-free detectors\", \"section_path\": null}]}, {\"claim_text\": \"Tiling multiple anchors per location on the image to detect objects is not necessary.\", \"claim_type\": \"methodology\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"a conclusion can be drawn that tiling multiple anchors per location on the image to detect objects is not necessary\", \"section_path\": null}]}, {\"claim_text\": \"State-of-the-art AP of 50.7% is achieved by applying ATSS without introducing any overhead.\", \"claim_type\": \"performance\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead\", \"section_path\": null}]}, {\"claim_text\": \"The code for ATSS is available at https://github.com/sfzhang15/ATSS.\", \"claim_type\": \"implementation\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The code is",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      },
+      "extraction_diagnostics_distracted": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 0,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 0,
+        "llm_error_message": "InstructorRetryException: <failed_attempts>\n\n<generation number=\"1\">\n<exception>\n    1 validation error for MaybeClaimsLLMResponseBenchmark\n  Invalid JSON: EOF while parsing a string at line 1 column 34118 [type=json_invalid, input_value='{\"result\": {\"claims\": [{...\", \"evidence\": [{\"chunk', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.12/v/json_invalid\n</exception>\n<completion>\n    ChatCompletion(id='gen-1777841260-8mqzkUkDTDI7BsHUv58B', choices=[Choice(finish_reason='tool_calls', index=0, logprobs=None, message=ChatCompletionMessage(content=None, refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=[ChatCompletionMessageFunctionToolCall(id='4SqTcU9fc', function=Function(arguments='{\"result\": {\"claims\": [{\"claim_text\": \"The essential difference between anchor-based and anchor-free detection is how to define positive and negative training samples.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"the essential difference between anchor-based and anchor-free detection is actually how to define positive and negative training samples, which leads to the performance gap between them.\", \"section_path\": null}]}, {\"claim_text\": \"ATSS improves the performance of anchor-based and anchor-free detectors and bridges the gap between them.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"we propose an Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples according to statistical characteristics of object. It significantly improves the performance of anchor-based and anchor-free detectors and bridges the gap between them.\", \"section_path\": null}]}, {\"claim_text\": \"Tiling multiple anchors per location on the image to detect objects is not necessary.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"a conclusion can be drawn that tiling multiple anchors per location on the image to detect objects is not necessary.\", \"section_path\": null}]}, {\"claim_text\": \"State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead.\", \"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead.\", \"section_path\": null}]}, {\"claim_text\": \"The code for ATSS is available at https://github.com/sfzhang15/ATSS.\", \"claim_type\": \"resource\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The code is available at https://github.com/sfzhang15/ATSS.\", \"section_path\": null}]}, {\"claim_text\": \"Object detection has been dominated by anchor-based detectors for several years.\", \"claim_type\": \"trend\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Object detection has been dominated by anchor-based detectors for several years.\", \"section_path\": null}]}, {\"claim_text\": \"Anchor-free detectors have become popular due to the proposal of FPN and Focal Loss.\", \"claim_type\": \"trend\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Recently, anchor-free detectors have become popular due to the proposal of FPN and Focal Loss.\", \"section_path\": null}]}, {\"claim_text\": \"Anchor-based detectors can be divided into one-stage methods and two-stage methods.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"anchor-based detectors, which can be generally divided into one-stage methods and two-stage methods.\", \"section_path\": null}]}, {\"claim_text\": \"Two-stage methods have more accurate results than one-stage methods.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Because two-stage methods refine anchors several times more than one-stage methods, the former one has more accurate results while the latter one has higher computational efficiency.\", \"section_path\": null}]}, {\"claim_text\": \"State-of-the-art results on common detection benchmarks are held by anchor-based detectors.\", \"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"State-of-the-art results on common detection benchmarks are still held by anchor-based detectors.\", \"section_path\": null}]}, {\"claim_text\": \"Anchor-free detectors eliminate hyperparameters related to anchors and have achieved similar performance with anchor-based detectors.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"These anchor-free detectors are able to eliminate those hyperparameters related to anchors and have achieved similar performance with anchor-based detectors, making them more potential in terms of generalization ability.\", \"section_path\": null}]}, {\"claim_text\": \"Keypoint-based methods follow the standard keypoint estimation pipeline.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Keypoint-based methods follow the standard keypoint estimation pipeline that is different from anchor-based detectors.\", \"section_path\": null}]}, {\"claim_text\": \"Center-based detectors treat points as preset samples instead of anchor boxes.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"However, center-based detectors are similar to anchor-based detectors, which treat points as preset samples instead of anchor boxes.\", \"section_path\": null}]}, {\"claim_text\": \"RetinaNet tiles several anchor boxes per location, while FCOS tiles one anchor point per location.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"(1) The number of anchors tiled per location. RetinaNet tiles several anchor boxes per location, while FCOS tiles one anchor point per location.\", \"section_path\": null}]}, {\"claim_text\": \"RetinaNet uses IoU for positives and negatives, while FCOS uses spatial and scale constraints to select samples.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"(2) The definition of positive and negative samples. RetinaNet resorts to the Intersection over Union (IoU) for positives and negatives, while FCOS utilizes spatial and scale constraints to select samples.\", \"section_path\": null}]}, {\"claim_text\": \"RetinaNet regresses the object bounding box from the preset anchor box, while FCOS locates the object from the anchor point.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"(3) The regression starting status. RetinaNet regresses the object bounding box from the preset anchor box, while FCOS locates the object from the anchor point.\", \"section_path\": null}]}, {\"claim_text\": \"The anchor-free FCOS achieves much better performance than the anchor-based RetinaNet.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As reported in [56], the anchor-free FCOS achieves much better performance than the anchor-based RetinaNet, it is worth studying which of these three differences are essential factors for the performance gap.\", \"section_path\": null}]}, {\"claim_text\": \"The essential difference between anchor-based and anchor-free methods is the definition of positive and negative training samples.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"It can be concluded from experiment results that the essential difference between these two kind of methods is the definition of positive and negative training samples, which results in the performance gap between them.\", \"section_path\": null}]}, {\"claim_text\": \"ATSS automatically selects positive and negative samples based on object characteristics.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Inspired by that, we propose a new Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples based on object characteristics.\", \"section_path\": null}]}, {\"claim_text\": \"Extensive experiments on the MS COCO dataset support the analysis and conclusions.\", \"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Extensive experiments on the MS COCO [34] dataset support our analysis and conclusions.\", \"section_path\": null}]}, {\"claim_text\": \"The main contributions of this work include indicating the essential difference between anchor-based and anchor-free detectors, proposing ATSS, demonstrating the uselessness of tiling multiple anchors per location, and achieving state-of-the-art performance on MS COCO without additional overhead.\", \"claim_type\": \"contribution\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The main contributions of this work can be summarized as: • Indicating the essential difference between anchor-based and anchor-free detectors is actually how to define positive and negative training samples. • Proposing an adaptive training sample selection to automatically select positive and negative training samples according to statistical characteristics of object. • Demonstrating that tiling multiple anchors per location on the image to detect objects is a useless operation. • Achieving state-of-the-art performance on MS COCO without introducing any additional overhead.\", \"section_path\": null}]}, {\"claim_text\": \"Current CNN-based object detection consists of anchor-based and anchor-free detectors.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Current CNN-based object detection consists of anchor-based and anchor-free detectors.\", \"section_path\": null}]}, {\"claim_text\": \"Two-stage anchor-based detectors are still dominant on standard detection benchmarks.\", \"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Nowadays, state-of-the-art results are still held by two-stage anchor-based methods on standard detection benchmarks.\", \"section_path\": null}]}, {\"claim_text\": \"One-stage anchor-based methods can achieve very close performance with two-stage anchor-based methods at a faster inference speed.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"At present, one-stage anchor-based methods can achieve very close performance with two-stage anchor-based methods at a faster inference speed.\", \"section_path\": null}]}, {\"claim_text\": \"Keypoint-based methods first locate several pre-defined or self-learned keypoints and then generate bounding boxes to detect objects.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects.\", \"section_path\": null}]}, {\"claim_text\": \"Center-based methods regard the center of the object as foreground to define positives and then predict the distances from positives to the four sides of the object bounding box for detection.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"This kind of anchor-free method regards the center (e.g., the center point or part) of object as foreground to define positives, and then predicts the distances from positives to the four sides of the object bounding box for detection.\", \"section_path\": null}]}, {\"claim_text\": \"RetinaNet utilizes IoU to divide the anchor boxes from different pyramid levels into positives and negatives.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As shown in Figure 1(a), RetinaNet utilizes IoU to divide the anchor boxes from different pyramid levels into positives and negatives.\", \"section_path\": null}]}, {\"claim_text\": \"FCOS uses spatial and scale constraints to divide the anchor points from different pyramid levels.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As shown in Figure 1(b), FCOS uses spatial and scale constraints to divide the anchor points from different pyramid levels.\", \"section_path\": null}]}, {\"claim_text\": \"Using the spatial and scale constraint strategy instead of the IoU strategy improves the AP performance from 37.0% to 37.8% for RetinaNet.\", \"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As listed in the first column of Table 2 for RetinaNet (#A=1), using the spatial and scale constraint strategy instead of the IoU strategy improves the AP performance from 37.0% to 37.8%.\", \"section_path\": null}]}, {\"claim_text\": \"Using the IoU strategy to select positive samples decreases the AP performance from 37.8% to 36.9% for FCOS.\", \"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As for FCOS, if it uses the IoU strategy to select positive samples, the AP performance decreases from 37.8% to 36.9% as listed in the second column of Table 2.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"RetinaNet regresses from the anchor box with four offsets between the anchor box and the object box.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"RetinaNet regresses from the anchor box with four offsets between the anchor box and the object box as shown in Figure 2(b)\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"FCOS regresses from the anchor point with four distances to the bound of object.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"FCOS regresses from the anchor point with four distances to the bound of object as shown in Figure 2(c).\", \"section_path\": null}]}, {\"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"When RetinaNet and FCOS adopt the same sample selection strategy, there is no obvious difference in final performance, no matter regressing starting from a point or a box.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"However, as shown in the first and second rows of Table 2, when RetinaNet and FCOS adopt the same sample selection strategy to have consistent positive/negative samples, there is no obvious difference in final performance, no matter regressing starting from a point or a box, i.e., 37.0% vs. 36.9% and 37.8% vs. 37.8%.\", \"section_path\": null}]}, {\"claim_type\": \"conclusion\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"The essential difference between one-stage anchor-based detectors and center-based anchor-free detectors is how to define positive and negative training samples.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"According to these experiments conducted in a fair way, we indicate that the essential difference between one-stage anchor-based detectors and center-based anchor-free detectors is actually how to define positive and negative training samples, which is important for current object detection and deserves further study.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"ATSS automatically divides positive and negative samples according to statistical characteristics of object almost without any hyperparameter.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"To this end, we propose the ATSS method that automatically divides positive and negative samples according to statistical characteristics of object almost without any hyperparameter.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"ATSS selects k anchor boxes whose centers are closest to the center of the ground-truth box based on L2 distance.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"For each ground-truth box g on the image, we first find out its candidate positive samples. As described in Line 3 to 6, on each pyramid level, we select k anchor boxes whose center are closest to the center of g based on L2 distance.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"ATSS computes the IoU threshold for a ground-truth box as the sum of the mean and standard deviation of the IoU between candidate positive samples and the ground-truth box.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"With these statistics, the IoU threshold for this ground-truth g is obtained as tg = mg + vg in Line 10.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"ATSS limits the positive samples’ center to the ground-truth box.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Notably, we also limit the positive samples’ center to the ground-truth box as shown in Line 12.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"If an anchor box is assigned to multiple ground-truth boxes, the one with the highest IoU will be selected.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Besides, if an anchor box is assigned to multiple ground-truth boxes, the one with the highest IoU will be selected.\", \"section_path\": null}]}, {\"claim_type\": \"motivation\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Selecting candidates based on the center distance between anchor box and object is better for detection quality.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Selecting candidates based on the center distance between anchor box and object. For RetinaNet, the IoU is larger when the center of anchor box is closer to the center of object. For FCOS, the closer anchor point to the center of object will produce higher-quality detections. Thus, the closer anchor to the center of object is the better candidate.\", \"section_path\": null}]}, {\"claim_type\": \"motivation\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Using the sum of mean and standard deviation as the IoU threshold adapts to the suitability of preset anchors for each object.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Using the sum of mean and standard deviation as the IoU threshold. The IoU mean mg of an object is a measure of the suitability of the preset anchors for this object. A high mg indicates it has high-quality candidates and the IoU threshold is supposed to be high. A low mg indicates that most of its candidates are low-quality and the IoU threshold should be low.\", \"section_path\": null}]}, {\"claim_type\": \"motivation\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Limiting the positive samples’ center to the object box is conducive to training.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Limiting the positive samples’ center to object. The anchor with a center outside object is a poor candidate and will be predicted by the features outside the object, which is not conducive to training and should be excluded.\", \"section_path\": null}]}, {\"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"State-of-the-art AP 50.7% is achieved by applying the newly introduced ATSS without introducing any overhead.\", \"section_path\": null}]}, {\"claim_type\": \"resource\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"The code for ATSS is available at https://github.com/sfzhang15/ATSS.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The code is available at https://github.com/sfzhang15/ATSS.\", \"section_path\": null}]}, {\"claim_type\": \"trend\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Object detection has been dominated by anchor-based detectors for several years.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Object detection has been dominated by anchor-based detectors for several years.\", \"section_path\": null}]}, {\"claim_type\": \"trend\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Anchor-free detectors have become popular due to the proposal of FPN and Focal Loss.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Recently, anchor-free detectors have become popular due to the proposal of FPN and Focal Loss.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Anchor-based detectors can be divided into one-stage methods and two-stage methods.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"anchor-based detectors, which can be generally divided into one-stage methods and two-stage methods.\", \"section_path\": null}]}, {\"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Two-stage methods have more accurate results than one-stage methods.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Because two-stage methods refine anchors several times more than one-stage methods, the former one has more accurate results while the latter one has higher computational efficiency.\", \"section_path\": null}]}, {\"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"State-of-the-art results on common detection benchmarks are held by anchor-based detectors.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"State-of-the-art results on common detection benchmarks are still held by anchor-based detectors.\", \"section_path\": null}]}, {\"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Anchor-free detectors eliminate hyperparameters related to anchors and have achieved similar performance with anchor-based detectors.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"These anchor-free detectors are able to eliminate those hyperparameters related to anchors and have achieved similar performance with anchor-based detectors, making them more potential in terms of generalization ability.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Keypoint-based methods follow the standard keypoint estimation pipeline.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Keypoint-based methods follow the standard keypoint estimation pipeline that is different from anchor-based detectors.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Center-based detectors treat points as preset samples instead of anchor boxes.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"However, center-based detectors are similar to anchor-based detectors, which treat points as preset samples instead of anchor boxes.\", \"section_path\": null}]}, {\"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"RetinaNet tiles several anchor boxes per location, while FCOS tiles one anchor point per location.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"(1) The number of anchors tiled per location. RetinaNet tiles several anchor boxes per location, while FCOS tiles one anchor point per location.\", \"section_path\": null}]}, {\"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"RetinaNet uses IoU for positives and negatives, while FCOS uses spatial and scale constraints to select samples.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"(2) The definition of positive and negative samples. RetinaNet resorts to the Intersection over Union (IoU) for positives and negatives, while FCOS utilizes spatial and scale constraints to select samples.\", \"section_path\": null}]}, {\"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"RetinaNet regresses the object bounding box from the preset anchor box, while FCOS locates the object from the anchor point.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"(3) The regression starting status. RetinaNet regresses the object bounding box from the preset anchor box, while FCOS locates the object from the anchor point.\", \"section_path\": null}]}, {\"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"The anchor-free FCOS achieves much better performance than the anchor-based RetinaNet.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As reported in [56], the anchor-free FCOS achieves much better performance than the anchor-based RetinaNet, it is worth studying which of these three differences are essential factors for the performance gap.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"The essential difference between anchor-based and anchor-free methods is the definition of positive and negative training samples.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"It can be concluded from experiment results that the essential difference between these two kind of methods is the definition of positive and negative training samples, which results in the performance gap between them.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"ATSS automatically selects positive and negative samples based on object characteristics.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Inspired by that, we propose a new Adaptive Training Sample Selection (ATSS) to automatically select positive and negative samples based on object characteristics.\", \"section_path\": null}]}, {\"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Extensive experiments on the MS COCO dataset support the analysis and conclusions.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Extensive experiments on the MS COCO [34] dataset support our analysis and conclusions.\", \"section_path\": null}]}, {\"claim_type\": \"contribution\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"The main contributions of this work include indicating the essential difference between anchor-based and anchor-free detectors, proposing ATSS, demonstrating the uselessness of tiling multiple anchors per location, and achieving state-of-the-art performance on MS COCO without additional overhead.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The main contributions of this work can be summarized as: • Indicating the essential difference between anchor-based and anchor-free detectors is actually how to define positive and negative training samples. • Proposing an adaptive training sample selection to automatically select positive and negative training samples according to statistical characteristics of object. • Demonstrating that tiling multiple anchors per location on the image to detect objects is a useless operation. • Achieving state-of-the-art performance on MS COCO without introducing any additional overhead.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Current CNN-based object detection consists of anchor-based and anchor-free detectors.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Current CNN-based object detection consists of anchor-based and anchor-free detectors.\", \"section_path\": null}]}, {\"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Two-stage anchor-based detectors are still dominant on standard detection benchmarks.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Nowadays, state-of-the-art results are still held by two-stage anchor-based methods on standard detection benchmarks.\", \"section_path\": null}]}, {\"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"One-stage anchor-based methods can achieve very close performance with two-stage anchor-based methods at a faster inference speed.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"At present, one-stage anchor-based methods can achieve very close performance with two-stage anchor-based methods at a faster inference speed.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Keypoint-based methods first locate several pre-defined or self-learned keypoints and then generate bounding boxes to detect objects.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then generates bounding boxes to detect objects.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Center-based methods regard the center of the object as foreground to define positives and then predict the distances from positives to the four sides of the object bounding box for detection.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"This kind of anchor-free method regards the center (e.g., the center point or part) of object as foreground to define positives, and then predicts the distances from positives to the four sides of the object bounding box for detection.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"RetinaNet utilizes IoU to divide the anchor boxes from different pyramid levels into positives and negatives.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As shown in Figure 1(a), RetinaNet utilizes IoU to divide the anchor boxes from different pyramid levels into positives and negatives.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"FCOS uses spatial and scale constraints to divide the anchor points from different pyramid levels.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As shown in Figure 1(b), FCOS uses spatial and scale constraints to divide the anchor points from different pyramid levels.\", \"section_path\": null}]}, {\"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Using the spatial and scale constraint strategy instead of the IoU strategy improves the AP performance from 37.0% to 37.8% for RetinaNet.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As listed in the first column of Table 2 for RetinaNet (#A=1), using the spatial and scale constraint strategy instead of the IoU strategy improves the AP performance from 37.0% to 37.8%.\", \"section_path\": null}]}, {\"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"Using the IoU strategy to select positive samples decreases the AP performance from 37.8% to 36.9% for FCOS.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As for FCOS, if it uses the IoU strategy to select positive samples, the AP performance decreases from 37.8% to 36.9% as listed in the second column of Table 2.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"RetinaNet regresses from the anchor box with four offsets between the anchor box and the object box.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"RetinaNet regresses from the anchor box with four offsets between the anchor box and the object box as shown in Figure 2(b)\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"FCOS regresses from the anchor point with four distances to the bound of object.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"FCOS regresses from the anchor point with four distances to the bound of object as shown in Figure 2(c).\", \"section_path\": null}]}, {\"claim_type\": \"result\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"When RetinaNet and FCOS adopt the same sample selection strategy, there is no obvious difference in final performance, no matter regressing starting from a point or a box.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"However, as shown in the first and second rows of Table 2, when RetinaNet and FCOS adopt the same sample selection strategy to have consistent positive/negative samples, there is no obvious difference in final performance, no matter regressing starting from a point or a box, i.e., 37.0% vs. 36.9% and 37.8% vs. 37.8%.\", \"section_path\": null}]}, {\"claim_type\": \"conclusion\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"The essential difference between one-stage anchor-based detectors and center-based anchor-free detectors is how to define positive and negative training samples.\", \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"According to these experiments conducted in a fair way, we indicate that the essential difference between one-stage anchor-based detectors and center-based anchor-free detectors is actually how to define positive and negative training samples, which is important for current object detection and deserves further study.\", \"section_path\": null}]}, {\"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"claim_text\": \"ATSS automatically divides positive and negative samples according to statistical characteristics of object almost without any hyperparameter.\", \"evidence\": [{\"chunk', name='MaybeClaimsLLMResponseBenchmark'), type='function', index=0)], reasoning=None), native_finish_reason='length')], created=1777841260, model='mistralai/mistral-small-3.2-24b-instruct-2506', object='chat.completion', service_tier=None, system_fingerprint=None, usage=CompletionUsage(completion_tokens=8200, prompt_tokens=7426, total_tokens=15626, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=None, audio_tokens=0, reasoning_tokens=0, rejected_prediction_tokens=None), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)), provider='Mistral')\n</completion>\n</generation>\n\n<generation number=\"2\">\n<exception>\n    LLM provider returned error: {'message': 'ConnectionError: {\"error\":{\"message\":\"Unterminated string starting at: line 1 column 34089 (char 34088)\",\"type\":\"BadRequestError\",\"param\":null,\"code\":400}}', 'code': 502} (mode: Mode.TOOLS)\n</exception>\n<completion>\n    ChatCompletion(id=None, choices=None, created=None, model=None, object=None, service_tier=None, system_fingerprint=None, usage=None, error={'message': 'ConnectionError: {\"error\":{\"message\":\"Unterminated string starting at: line 1 column 34089 (char 34088)\",\"type\":\"BadRequestError\",\"param\":null,\"code\":400}}', 'code': 502})\n</completion>\n</generation>\n\n<generation number=\"3\">\n<exception>\n    Instructor does not support multiple tool calls, use List[Model] instead\n</exception>\n<completion>\n    ChatCompletion(id='gen-1777841341-1g777zCJ5NZKrsVRxyay', choices=[Choice(finish_reason=None, index=0, logprobs=None, message=ChatCompletionMessage(content=None, refusal=None, role='assistant', annotations=None, audio=None, function_call=None, tool_calls=None, reasoning=None), native_finish_reason=None)], created=1777841341, model='mistralai/mistral-small-3.2-24b-instruct-2506', object='chat.completion', service_tier=None, system_fingerprint=None, usage=None, provider='Venice')\n</completion>\n</generation>\n\n</failed_attempts>\n\n<last_exception>\n    Instructor does not support multiple tool calls, use List[Model] instead\n</last_exception>",
+        "llm_raw_response_preview": null,
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "holdout_deformable_detr_v1",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": false,
+        "claim_recall": 0.25,
+        "claim_precision": 0.47058823529411764,
+        "claim_precision_distracted": 0.5882352941176471,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 17,
+        "predicted_count_distracted": 17,
+        "matched_claim_ids": [
+          "deformable_detr_attention_modules"
+        ],
+        "missing_claim_ids": [
+          "deformable_detr_10x_faster_convergence",
+          "deformable_detr_multiscale_efficient",
+          "deformable_detr_global_attention_negative"
+        ],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "b204e079-6cd1-5ffd-b50b-aa9fbc9a5c5c",
+          "claim_text": "Deformable DETR achieves better performance than DETR, especially on small objects, with 10 times fewer training epochs.",
+          "claim_text_normalized": "deformable detr achieves better performance than detr, especially on small objects, with 10 times fewer training epochs.",
+          "claim_type": "comparison",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "154ae043-a82e-5d64-a099-2aaa5f6d6843",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Deformable DETR can achieve better performance than DETR (especially on small objects) with 10x less training epochs.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "c25a20fd-d9d7-54ee-94e9-de2ec0d58da8",
+          "claim_text": "Deformable DETR utilizes multi-scale deformable attention modules to replace Transformer attention modules processing feature maps.",
+          "claim_text_normalized": "deformable detr utilizes multi-scale deformable attention modules to replace transformer attention modules processing feature maps.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "40d4c92f-534c-52b2-a535-536214319882",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In Deformable DETR, we utilize (multi-scale) deformable attention modules to replace the Transformer attention modules processing feature maps, as shown in Fig. 1.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "7dadb0be-361e-5f2b-9532-edfb747849c4",
+          "claim_text": "Deformable DETR opens up possibilities for exploiting variants of end-to-end object detectors due to its fast convergence and computational efficiency.",
+          "claim_text_normalized": "deformable detr opens up possibilities for exploiting variants of end-to-end object detectors due to its fast convergence and computational efficiency.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "5113be06-e574-59f0-962d-0315a163a2e6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Deformable DETR opens up possibilities for us to exploit variants of end-to-end object detectors, thanks to its fast convergence, and computational and memory efficiency.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "e691dad7-2a13-5b20-85d7-8d247427909d",
+          "claim_text": "Deformable DETR uses an iterative bounding box refinement mechanism to improve detection performance.",
+          "claim_text_normalized": "deformable detr uses an iterative bounding box refinement mechanism to improve detection performance.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "f63c8efb-b268-5b94-ac77-bea737601d61",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We establish a simple and effective iterative bounding box refinement mechanism to improve the detection performance.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "1593683c-bcff-5866-a538-0093dd3a39f9",
+          "claim_text": "Deformable DETR can be extended to a two-stage variant where region proposals are generated by a variant of Deformable DETR and fed into the decoder for further refinement.",
+          "claim_text_normalized": "deformable detr can be extended to a two-stage variant where region proposals are generated by a variant of deformable detr and fed into the decoder for further refinement.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "4dc9ea5f-fcf8-55a2-96d6-bedb14da2365",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Inspired by two-stage object detectors, we explore a variant of Deformable DETR for generating region proposals as the first stage. The generated region proposals will be fed into the decoder as object queries for further refinement, forming a two-stage Deformable DETR.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "5a8eb221-e884-53c6-93bd-782d17e0978e",
+          "claim_text": "Deformable DETR addresses the issues of slow convergence and high complexity of DETR.",
+          "claim_text_normalized": "deformable detr addresses the issues of slow convergence and high complexity of detr.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "6856f1b0-b5ed-52ad-b70f-597d6465a57d",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Deformable DETR opens up possibilities for us to exploit variants of end-to-end object detectors, thanks to its fast convergence, and computational and memory efficiency.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "63761eef-d967-5a6d-bf77-172dca8b6ded",
+          "claim_text": "Deformable DETR's deformable attention module attends to a small set of key sampling points around a reference point.",
+          "claim_text_normalized": "deformable detr's deformable attention module attends to a small set of key sampling points around a reference point.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "ae87f6ec-db15-5935-b3e4-601574acf168",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Inspired by deformable convolution (Dai et al., 2017; Zhu et al., 2019b), the deformable attention module only attends to a small set of key sampling points around a reference point, regardless of the spatial size of the feature maps, as shown in Fig. 2.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "940b63b8-760c-50d7-bc1e-10a5f27de920",
+          "claim_text": "Deformable DETR's multi-scale deformable attention module can be perceived as an efficient variant of Transformer attention with a pre-filtering mechanism introduced by the deformable sampling locations.",
+          "claim_text_normalized": "deformable detr's multi-scale deformable attention module can be perceived as an efficient variant of transformer attention with a pre-filtering mechanism introduced by the deformable sampling locations.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "4c07202a-fbbd-5b3a-9b00-94f121a4eaa6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The proposed (multi-scale) deformable attention module can also be perceived as an efficient variant of Transformer attention, where a pre-filtering mechanism is introduced by the deformable sampling locations.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "fad5a501-1dab-592a-b8a3-08d4b5e561fa",
+          "claim_text": "Deformable DETR's deformable attention module is designed for processing convolutional feature maps as key elements.",
+          "claim_text_normalized": "deformable detr's deformable attention module is designed for processing convolutional feature maps as key elements.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "9cb45fc8-99c4-51ea-9920-95d9e948ad4a",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The deformable attention module is designed for processing convolutional feature maps as key elements.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "455a472b-aba9-5360-b456-df382c728bc6",
+          "claim_text": "Deformable DETR's deformable attention module uses bilinear interpolation for fractional coordinates.",
+          "claim_text_normalized": "deformable detr's deformable attention module uses bilinear interpolation for fractional coordinates.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "97e28d9c-7d9c-54a3-aaa1-9b82dd46c8b8",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "As pq + ∆pmqk is fractional, bilinear interpolation is applied as in Dai et al. (2017) in computing x(pq+∆pmqk).",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "66c00980-08fd-5fa5-970f-277680dba40e",
+          "claim_text": "Deformable DETR's deformable attention module uses a learnable linear projection to predict the relative offsets of the bounding box with respect to the reference point.",
+          "claim_text_normalized": "deformable detr's deformable attention module uses a learnable linear projection to predict the relative offsets of the bounding box with respect to the reference point.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "f3cb2740-be28-53a8-b3c8-0b4ded06c7c6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Because the multi-scale deformable attention module extracts image features around the reference point, we let the detection head predict the bounding box as relative offsets w.r.t. the reference point to further reduce the optimization difficulty.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "b592260f-1357-5bba-ab18-195b07db997e",
+          "claim_text": "Deformable DETR's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point.",
+          "claim_text_normalized": "deformable detr's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "f2aef0ba-de11-58f6-971c-79cbec14e1af",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Because the multi-scale deformable attention module extracts image features around the reference point, we let the detection head predict the bounding box as relative offsets w.r.t. the reference point to further reduce the optimization difficulty.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "98e7ddc8-b332-5e20-b69f-026f209c3c10",
+          "claim_text": "Deformable DETR's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to reduce optimization difficulty.",
+          "claim_text_normalized": "deformable detr's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to reduce optimization difficulty.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "93f7e7e7-f581-5f87-8cb8-7f5a473d0be3",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Because the multi-scale deformable attention module extracts image features around the reference point, we let the detection head predict the bounding box as relative offsets w.r.t. the reference point to further reduce the optimization difficulty.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "9a04f24c-1fc2-5c5a-8b89-64331243fb17",
+          "claim_text": "Deformable DETR's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to accelerate training convergence.",
+          "claim_text_normalized": "deformable detr's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to accelerate training convergence.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "6c9cc682-2dce-598a-add4-efcc02429b7b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Because the multi-scale deformable attention module extracts image features around the reference point, we let the detection head predict the bounding box as relative offsets w.r.t. the reference point to further reduce the optimization difficulty. The reference point is used as the initial guess of the box center. The detection head predicts the relative offsets w.r.t. the reference point. Check Appendix A.3 for the details. In this way, the learned decoder attention will 7",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "1e6d7958-d310-58a0-9161-1f2797a8e0b2",
+          "claim_text": "Deformable DETR's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to reduce optimization difficulty and accelerate training convergence.",
+          "claim_text_normalized": "deformable detr's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to reduce optimization difficulty and accelerate training convergence.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "d838713b-c2ae-5e6d-8987-5aa8b8615bba",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Because the multi-scale deformable attention module extracts image features around the reference point, we let the detection head predict the bounding box as relative offsets w.r.t. the reference point to further reduce the optimization difficulty. The reference point is used as the initial guess of the box center. The detection head predicts the relative offsets w.r.t. the reference point. Check Appendix A.3 for the details. In this way, the learned decoder attention will 7",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "477e6372-c5b2-551e-830b-e4ac291738c1",
+          "claim_text": "Deformable DETR's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to reduce optimization difficulty, accelerate training convergence, and improve detection performance.",
+          "claim_text_normalized": "deformable detr's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to reduce optimization difficulty, accelerate training convergence, and improve detection performance.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "ff7e27e0-de75-5ea9-a6aa-21efd1c049bd",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Because the multi-scale deformable attention module extracts image features around the reference point, we let the detection head predict the bounding box as relative offsets w.r.t. the reference point to further reduce the optimization difficulty. The reference point is used as the initial guess of the box center. The detection head predicts the relative offsets w.r.t. the reference point. Check Appendix A.3 for the details. In this way, the learned decoder attention will 7",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "63ed9ddb-9b10-5456-9b81-7f3f9ec87df6",
+          "claim_text": "Deformable DETR's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to reduce optimization difficulty, accelerate training convergence, and improve detection performance, especially on small objects.",
+          "claim_text_normalized": "deformable detr's deformable attention module uses a detection head to predict the bounding box as relative offsets with respect to the reference point to reduce optimization difficulty, accelerate training convergence, and improve detection performance, especially on small objects.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "36376dab-05f7-5ab0-9470-4cab0f7acce4",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Because the multi-scale deformable attention module extracts image features around the reference point, we let the detection head predict the bounding box as relative offsets w.r.t. the reference point to further reduce the optimization difficulty. The reference point is used as the initial guess of the box center. The detection head predicts the relative offsets w.r.t. the reference point. Check Appendix A.3 for the details. In this way, the learned decoder attention will 7",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "d39e4d2b-bb28-5e93-817c-b03528e47e2c",
+          "claim_text": "Deformable DETR achieves better performance than DETR, especially on small objects, with 10x fewer training epochs.",
+          "claim_text_normalized": "deformable detr achieves better performance than detr, especially on small objects, with 10x fewer training epochs.",
+          "claim_type": "comparison",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "8bf566b2-21b8-5ddf-868e-e747e9586681",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Deformable DETR can achieve better performance than DETR (especially on small objects) with 10x less training epochs.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "c25a20fd-d9d7-54ee-94e9-de2ec0d58da8",
+          "claim_text": "Deformable DETR utilizes multi-scale deformable attention modules to replace Transformer attention modules processing feature maps.",
+          "claim_text_normalized": "deformable detr utilizes multi-scale deformable attention modules to replace transformer attention modules processing feature maps.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "40d4c92f-534c-52b2-a535-536214319882",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In Deformable DETR, we utilize (multi-scale) deformable attention modules to replace the Transformer attention modules processing feature maps, as shown in Fig. 1.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "7dadb0be-361e-5f2b-9532-edfb747849c4",
+          "claim_text": "Deformable DETR opens up possibilities for exploiting variants of end-to-end object detectors due to its fast convergence and computational efficiency.",
+          "claim_text_normalized": "deformable detr opens up possibilities for exploiting variants of end-to-end object detectors due to its fast convergence and computational efficiency.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "5113be06-e574-59f0-962d-0315a163a2e6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Deformable DETR opens up possibilities for us to exploit variants of end-to-end object detectors, thanks to its fast convergence, and computational and memory efficiency.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "e691dad7-2a13-5b20-85d7-8d247427909d",
+          "claim_text": "Deformable DETR uses an iterative bounding box refinement mechanism to improve detection performance.",
+          "claim_text_normalized": "deformable detr uses an iterative bounding box refinement mechanism to improve detection performance.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "f63c8efb-b268-5b94-ac77-bea737601d61",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We establish a simple and effective iterative bounding box refinement mechanism to improve the detection performance.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "1593683c-bcff-5866-a538-0093dd3a39f9",
+          "claim_text": "Deformable DETR can be extended to a two-stage variant where region proposals are generated by a variant of Deformable DETR and fed into the decoder for further refinement.",
+          "claim_text_normalized": "deformable detr can be extended to a two-stage variant where region proposals are generated by a variant of deformable detr and fed into the decoder for further refinement.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "4dc9ea5f-fcf8-55a2-96d6-bedb14da2365",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Inspired by two-stage object detectors, we explore a variant of Deformable DETR for generating region proposals as the first stage. The generated region proposals will be fed into the decoder as object queries for further refinement, forming a two-stage Deformable DETR.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "8a6f7010-bb7b-5dda-9186-e0bf387eb93b",
+          "claim_text": "Deformable DETR is evaluated on the COCO benchmark.",
+          "claim_text_normalized": "deformable detr is evaluated on the coco benchmark.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "9dd10c34-461a-5edb-bcd0-202d3610f027",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Extensive experiments on the COCO benchmark demonstrate the effectiveness of our approach.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "06d6beaa-6a26-587f-8e97-17b762b34f8d",
+          "claim_text": "Deformable DETR addresses the issues of slow convergence and high complexity in DETR.",
+          "claim_text_normalized": "deformable detr addresses the issues of slow convergence and high complexity in detr.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "0635e3b1-5bc0-5a95-9dcc-dba4b232ef67",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Deformable DETR opens up possibilities for us to exploit variants of end-to-end object detectors, thanks to its fast convergence, and computational and memory efficiency.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "3d7b5ac2-a8c7-565d-b40d-ae8aea648a9d",
+          "claim_text": "Deformable DETR is designed to process convolutional feature maps as key elements.",
+          "claim_text_normalized": "deformable detr is designed to process convolutional feature maps as key elements.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "62928211-7f51-55ad-8d20-355776bb93b2",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The deformable attention module is designed for processing convolutional feature maps as key elements.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "5e835d86-bfec-5240-b739-7da1a1b3126c",
+          "claim_text": "Deformable DETR uses a multi-scale deformable attention module that can be applied to multi-scale feature maps.",
+          "claim_text_normalized": "deformable detr uses a multi-scale deformable attention module that can be applied to multi-scale feature maps.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "96fbe4ae-0eed-5718-9bda-ccc1eb227a59",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Our proposed deformable attention module can be naturally extended for multi-scale feature maps.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "b01d1ecd-c361-5a15-9067-e28e21e2255e",
+          "claim_text": "Deformable DETR uses a deformable attention module that samples a small set of key sampling points around a reference point.",
+          "claim_text_normalized": "deformable detr uses a deformable attention module that samples a small set of key sampling points around a reference point.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "fd85d2d8-736a-56f7-88c0-8ef615e77e6e",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Inspired by deformable convolution (Dai et al., 2017; Zhu et al., 2019b), the deformable attention module only attends to a small set of key sampling points around a reference point, regardless of the spatial size of the feature maps, as shown in Fig. 2.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "38583a11-1ffa-52d9-a81b-1a4a8a8b84bb",
+          "claim_text": "Deformable DETR uses a deformable attention module that can be perceived as an efficient variant of Transformer attention with a pre-filtering mechanism introduced by the deformable sampling locations.",
+          "claim_text_normalized": "deformable detr uses a deformable attention module that can be perceived as an efficient variant of transformer attention with a pre-filtering mechanism introduced by the deformable sampling locations.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "ee78d4ff-136b-5822-8e02-d771abb21bb8",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The proposed (multi-scale) deformable attention module can also be perceived as an efficient variant of Transformer attention, where a pre-filtering mechanism is introduced by the deformable sampling locations.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "42ee990e-5605-558c-b320-f178d4fbe4bb",
+          "claim_text": "Deformable DETR uses a deformable attention module that is equivalent to Transformer attention when the sampling points traverse all possible locations.",
+          "claim_text_normalized": "deformable detr uses a deformable attention module that is equivalent to transformer attention when the sampling points traverse all possible locations.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "b27f7663-6c2e-5967-bed2-421c0f042adc",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "When the sampling points traverse all possible locations, the proposed attention module is equivalent to Transformer attention.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "94f31348-e4d2-5deb-9798-4af1c7ff5750",
+          "claim_text": "Deformable DETR uses a deformable attention module that predicts the relative offsets with respect to the reference point for bounding box prediction.",
+          "claim_text_normalized": "deformable detr uses a deformable attention module that predicts the relative offsets with respect to the reference point for bounding box prediction.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "f0b1920d-a6a0-5cd9-b91d-a1e844fc6285",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Because the multi-scale deformable attention module extracts image features around the reference point, we let the detection head predict the bounding box as relative offsets w.r.t. the reference point to further reduce the optimization difficulty.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "02a6ee6c-ef8f-57ec-8514-5b3e5d089792",
+          "claim_text": "Deformable DETR uses a deformable attention module that looks over multiple sampling points from multi-scale inputs.",
+          "claim_text_normalized": "deformable detr uses a deformable attention module that looks over multiple sampling points from multi-scale inputs.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "09e23014-4e37-5636-afdd-2d4a2f1639a9",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "However, our multi-scale deformable attention looks over multiple sampling points from multi-scale inputs.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "243fc2f1-4d7b-550a-8601-d0b3218b0902",
+          "claim_text": "Deformable DETR uses a deformable attention module that can be applied to the cross-attention and self-attention modules in the decoder.",
+          "claim_text_normalized": "deformable detr uses a deformable attention module that can be applied to the cross-attention and self-attention modules in the decoder.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "c2dd5828-dca8-52ce-ad75-6ea7ef93c82b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "There are cross-attention and self-attention modules in the decoder. The query elements for both types of attention modules are of object queries.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "1dc0e281-8878-5873-ae73-82b2b79afb33",
+          "claim_text": "Deformable DETR uses a deformable attention module that can be applied to the cross-attention modules in the decoder where the key elements are of the output feature maps from the encoder.",
+          "claim_text_normalized": "deformable detr uses a deformable attention module that can be applied to the cross-attention modules in the decoder where the key elements are of the output feature maps from the encoder.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "dc701a69-c2df-5fe9-88a2-4c4390047a65",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In the cross-attention modules, object queries extract features from the feature maps, where the key elements are of the output feature maps from the encoder.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "65466e7c-f968-5b71-af81-dbb04fa4514a",
+          "claim_text": "Deformable DETR uses a deformable attention module that can be applied to the self-attention modules in the decoder where the key elements are of the object queries.",
+          "claim_text_normalized": "deformable detr uses a deformable attention module that can be applied to the self-attention modules in the decoder where the key elements are of the object queries.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "a5899182-1839-5a29-8987-b960ab395489",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In the self-attention modules, object queries interact with each other, where the key elements are of the object queries.",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 59.121,
+      "extractor": "extract_claims_production_path",
+      "oracle_predictions": false,
+      "runtime_mode": "live",
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics_plain": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 11,
+        "dropped_claim_count_quote_rejected": 11,
+        "evidence_quote_strict_count": 9,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 8,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"Deformable DETR achieves better performance than DETR, especially on small objects, with 10 times fewer training epochs.\", \"claim_type\": \"comparison\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Deformable DETR can achieve better performance than DETR (especially on small objects) with 10x less training epochs.\", \"section_path\": null}]}, {\"claim_text\": \"Deformable DETR utilizes multi-scale deformable attention modules to replace Transformer attention modules processing feature maps.\", \"claim_type\": \"mechanism\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"In Deformable DETR, we utilize (multi-scale) deformable attention modules to replace the Transformer attention modules processing feature maps, as shown in Fig. 1.\", \"section_path\": null}]}, {\"claim_text\": \"Deformable DETR can naturally aggregate multi-scale feature maps via attention mechanism without the help of FPN.\", \"claim_type\": \"mechanism\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Our proposed multi-scale deformable attention module can naturally aggregate multi-scale feature maps via attention mechanism, without the help of these feature pyramid networks.\", \"section_path\": null}]}, {\"claim_text\": \"Deformable DETR opens up possibilities for exploiting variants of end-to-end object detectors due to its fast convergence and computational efficiency.\", \"claim_type\": \"mechanism\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Deformable DETR opens up possibilities for us to exploit variants of end-to-end object detectors, thanks to its fast convergence, and computational and memory efficiency.\", \"section_path\": null}]}, {\"claim_text\": \"Deformable DETR uses an iterative bounding box refinement mechanism to improve detection performance.\"",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      },
+      "extraction_diagnostics_distracted": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 11,
+        "dropped_claim_count_quote_rejected": 11,
+        "evidence_quote_strict_count": 12,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 5,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"Deformable DETR achieves better performance than DETR, especially on small objects, with 10x fewer training epochs.\", \"claim_type\": \"comparison\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Deformable DETR can achieve better performance than DETR (especially on small objects) with 10x less training epochs.\", \"section_path\": null}]}, {\"claim_text\": \"Deformable DETR utilizes multi-scale deformable attention modules to replace Transformer attention modules processing feature maps.\", \"claim_type\": \"mechanism\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"In Deformable DETR, we utilize (multi-scale) deformable attention modules to replace the Transformer attention modules processing feature maps, as shown in Fig. 1.\", \"section_path\": null}]}, {\"claim_text\": \"Deformable DETR can naturally aggregate multi-scale feature maps via attention mechanism without the help of FPN.\", \"claim_type\": \"mechanism\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Our proposed multi-scale deformable attention module can naturally aggregate multi-scale feature maps via attention mechanism, without the help of these feature pyramid networks.\", \"section_path\": null}]}, {\"claim_text\": \"Deformable DETR opens up possibilities for exploiting variants of end-to-end object detectors due to its fast convergence and computational efficiency.\", \"claim_type\": \"mechanism\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Deformable DETR opens up possibilities for us to exploit variants of end-to-end object detectors, thanks to its fast convergence, and computational and memory efficiency.\", \"section_path\": null}]}, {\"claim_text\": \"Deformable DETR uses an iterative bounding box refinement mechanism to improve detection performance.\", \"cl",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "holdout_dino_v1",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": false,
+        "claim_recall": 0.0,
+        "claim_precision": 0.0,
+        "claim_precision_distracted": 0.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 5,
+        "predicted_count_plain": 18,
+        "predicted_count_distracted": 2,
+        "matched_claim_ids": [],
+        "missing_claim_ids": [
+          "dino_three_components",
+          "dino_swinl_63ap",
+          "dino_detr_scaling_overcomes_classical",
+          "dino_earlier_detr_slow_small_obj_negative",
+          "dino_classical_pipelines_scaling_negative"
+        ],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "a7d55791-9645-5814-9889-9cf2e2e69ecd",
+          "claim_text": "DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) after pre-training on the Objects 365 dataset with a SwinL backbone.",
+          "claim_text_normalized": "dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) after pre-training on the objects 365 dataset with a swinl backbone.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "6d05949a-eb28-5d90-b32c-1bf45f43b998",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Without bells and whistles, after pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "907ab286-2b16-5014-886e-9fe60e0d5957",
+          "claim_text": "DINO significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.",
+          "claim_text_normalized": "dino significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "a9caa13e-eea3-58a4-9161-d3fa7dd7b656",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "cb9e1136-8273-5721-8cde-3211322cf8b9",
+          "claim_text": "DINO uses a contrastive way for denoising training to improve performance and efficiency.",
+          "claim_text_normalized": "dino uses a contrastive way for denoising training to improve performance and efficiency.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "1a46a9ce-5bc8-5ed4-9278-604361f16a56",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "DINO improves over previous DETR-like models in performance and efficiency by using a contrastive way for denoising training, a mixed query selection method for anchor initialization, and a look forward twice scheme for box prediction.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "a9f99cdc-0980-5df6-960a-0fb41c248989",
+          "claim_text": "DINO employs a mixed query selection method for anchor initialization.",
+          "claim_text_normalized": "dino employs a mixed query selection method for anchor initialization.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "07a1c472-d7db-5e81-8864-b1a454dd9b25",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "DINO improves over previous DETR-like models in performance and efficiency by using a contrastive way for denoising training, a mixed query selection method for anchor initialization, and a look forward twice scheme for box prediction.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "c3e43225-15e0-5812-9be6-e31145a97be7",
+          "claim_text": "DINO utilizes a look forward twice scheme for box prediction.",
+          "claim_text_normalized": "dino utilizes a look forward twice scheme for box prediction.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e7052bbb-f412-5868-8526-de61c41f4576",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "DINO improves over previous DETR-like models in performance and efficiency by using a contrastive way for denoising training, a mixed query selection method for anchor initialization, and a look forward twice scheme for box prediction.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "4a1a3b30-fe4d-5160-8d6e-9ac1cb45e802",
+          "claim_text": "DINO scales well in both model size and data size.",
+          "claim_text_normalized": "dino scales well in both model size and data size.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "834adf2b-a6a0-5758-9dc2-00c4d0ab5e86",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "DINO scales well in both model size and data size.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "668c67a4-6c4b-5eaa-bd8b-96d750245c17",
+          "claim_text": "DINO reduces the model size to 1/15 compared to SwinV2-G.",
+          "claim_text_normalized": "dino reduces the model size to 1/15 compared to swinv2-g.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "eedd86a4-f44a-5c14-9dc8-d57bf43de1a1",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Compared to other models on the leaderboard [1], we reduce the model size to 1/15 compared to SwinV2-G [22].",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "e1f28e12-fbfd-52e9-b74f-f2709f11bc10",
+          "claim_text": "DINO achieves 49.4AP in 12 epochs with ResNet-50 and multi-scale features, significantly outperforming the previous best DETR-like models.",
+          "claim_text_normalized": "dino achieves 49.4ap in 12 epochs with resnet-50 and multi-scale features, significantly outperforming the previous best detr-like models.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "c86fa443-1d72-5003-a691-f4a68fc250ff",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "As a result, DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs with ResNet-50 and multi-scale features, significantly outperforming the previous best DETR-like models.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "a22cfc3a-6b1e-5483-8578-1b9435417aab",
+          "claim_text": "DINO trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5AP.",
+          "claim_text_normalized": "dino trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5ap.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "a919fb3d-cf38-5836-908a-7cca968d22e1",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In particular, DINO trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5AP.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "1a030411-39d2-5024-a683-dc01b97dfff1",
+          "claim_text": "DINO is the first end-to-end Transformer detector to outperform state-of-the-art models on the COCO leaderboard.",
+          "claim_text_normalized": "dino is the first end-to-end transformer detector to outperform state-of-the-art models on the coco leaderboard.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "7e21d626-7c8f-51c7-beb0-8aded232a412",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "To the best of our knowledge, this is the first time that an end-to-end Transformer detector outperforms state-of-the-art (SOTA) models on the COCO leaderboard [1].",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "45b3bff0-e221-5c8c-b82e-c80daf5fc55a",
+          "claim_text": "DINO contains a backbone, a multi-layer Transformer encoder, a multi-layer Transformer decoder, and multiple prediction heads.",
+          "claim_text_normalized": "dino contains a backbone, a multi-layer transformer encoder, a multi-layer transformer decoder, and multiple prediction heads.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "98c194ab-3121-5962-951e-0624ff9b4ffc",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "As a DETR-like model, DINO contains a backbone, a multi-layer Transformer encoder, a multi-layer Transformer decoder, and multiple prediction heads.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "aef50740-d7b0-5c60-adb7-8eda13ffb1f3",
+          "claim_text": "DINO formulates queries in the decoder as dynamic anchor boxes and refines them step-by-step across decoder layers.",
+          "claim_text_normalized": "dino formulates queries in the decoder as dynamic anchor boxes and refines them step-by-step across decoder layers.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "7fe3047a-d83e-563b-a619-f14d7d7a3542",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Following DAB-DETR [21], we formulate queries in decoder as dynamic anchor boxes and refine them step-by-step across decoder layers.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "24303ec2-3969-54e6-9b15-10e7c4356398",
+          "claim_text": "DINO adds ground truth labels and boxes with noises into the Transformer decoder layers to help stabilize bipartite matching during training.",
+          "claim_text_normalized": "dino adds ground truth labels and boxes with noises into the transformer decoder layers to help stabilize bipartite matching during training.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "a1945ead-e6d4-5020-b536-e773604734f2",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Following DN-DETR [17], we add ground truth labels and boxes with noises into the Transformer decoder layers to help stabilize bipartite matching during training.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "bc2c5930-f907-599f-a84a-0d500025d140",
+          "claim_text": "DINO proposes a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+          "claim_text_normalized": "dino proposes a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "cec3a7fb-f8b9-56c3-a6fb-509df2c71110",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "First, to improve the one-to-one matching, we propose a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "04ac1a2a-6a24-5e1e-9825-35c675f0619b",
+          "claim_text": "DINO proposes a mixed query selection method to better initialize the queries.",
+          "claim_text_normalized": "dino proposes a mixed query selection method to better initialize the queries.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "aa6ac3b5-f32d-57e5-807b-4c866d87eab7",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Second, the dynamic anchor box formulation of queries links DETR-like models with classical two-stage models. Hence we propose a mixed query selection method, which helps better initialize the queries.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "941eaa96-1ab0-5fa3-9e46-7c72a627e115",
+          "claim_text": "DINO proposes a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+          "claim_text_normalized": "dino proposes a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "20e433ab-946a-56b5-800d-025f733baacc",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Third, to leverage the refined box information from later layers to help optimize the parameters of their adjacent early layers, we propose a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "8dce34d1-cdcb-5c95-9e83-95dfa4277fbc",
+          "claim_text": "DINO achieves 51.3AP in 24 epochs with ResNet-50 and multi-scale features, significantly outperforming the previous best DETR-like models.",
+          "claim_text_normalized": "dino achieves 51.3ap in 24 epochs with resnet-50 and multi-scale features, significantly outperforming the previous best detr-like models.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "ed474b32-493d-52b7-82d7-b0e620be5d46",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "As a result, DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs with ResNet-50 and multi-scale features, significantly outperforming the previous best DETR-like models.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "052cefb5-3dd1-5fc6-9cd8-f87e63118b47",
+          "claim_text": "DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks.",
+          "claim_text_normalized": "dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) benchmarks.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "27d75e20-2047-510d-94ee-b19a27eaad6b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "After pre-training on the Objects 365 [33] data set with a SwinL [23] backbone, DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks, as shown in Table 3.",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "a7d55791-9645-5814-9889-9cf2e2e69ecd",
+          "claim_text": "DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) after pre-training on the Objects 365 dataset with a SwinL backbone.",
+          "claim_text_normalized": "dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) after pre-training on the objects 365 dataset with a swinl backbone.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.95,
+          "evidence": [
+            {
+              "evidence_id": "6d05949a-eb28-5d90-b32c-1bf45f43b998",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Without bells and whistles, after pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "907ab286-2b16-5014-886e-9fe60e0d5957",
+          "claim_text": "DINO significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.",
+          "claim_text_normalized": "dino significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.95,
+          "evidence": [
+            {
+              "evidence_id": "a9caa13e-eea3-58a4-9161-d3fa7dd7b656",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results.",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 69.199,
+      "extractor": "extract_claims_production_path",
+      "oracle_predictions": false,
+      "runtime_mode": "live",
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics_plain": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 9,
+        "dropped_claim_count_quote_rejected": 9,
+        "evidence_quote_strict_count": 12,
+        "evidence_quote_strict_normalized_count": 1,
+        "evidence_quote_fuzzy_count": 6,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features, yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model.\", \"section_path\": null}]}, {\"claim_text\": \"DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) after pre-training on the Objects 365 dataset with a SwinL backbone.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Without bells and whistles, after pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).\", \"section_path\": null}]}, {\"claim_text\": \"DINO significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results.\", \"section_path\": null}]}, {\"claim_text\": \"DINO uses a contrastive way for denoising training to improve performance and efficiency.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"DINO improves over previous DETR-like models in performance and efficiency by using a contrastive way for denoising training, a mixed query selection method for anchor initialization, and a look forward twice scheme for box predi",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      },
+      "extraction_diagnostics_distracted": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 18,
+        "dropped_claim_count_quote_rejected": 18,
+        "evidence_quote_strict_count": 10,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.95, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features, yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model.\", \"section_path\": null}]}, {\"claim_text\": \"DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) after pre-training on the Objects 365 dataset with a SwinL backbone.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.95, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Without bells and whistles, after pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).\", \"section_path\": null}]}, {\"claim_text\": \"DINO significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.95, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results.\", \"section_path\": null}]}, {\"claim_text\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs with ResNet-50 and multi-scale features, significantly outperforming the previous best DETR-like models.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.95, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"As shown in Fig. 1, DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs with ResNet-50 and multi-scale features, yielding a significant improvemen",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "holdout_yolov3_v1",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": false,
+        "claim_recall": 0.5,
+        "claim_precision": 0.12,
+        "claim_precision_distracted": 0.21739130434782608,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 25,
+        "predicted_count_distracted": 23,
+        "matched_claim_ids": [
+          "yolov3_three_scale_predictions",
+          "yolov3_strict_iou_underperform_negative"
+        ],
+        "missing_claim_ids": [
+          "yolov3_logistic_per_class",
+          "yolov3_speed_vs_retinanet"
+        ],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "e7274a3d-ea2d-542f-a266-da6b1797eace",
+          "claim_text": "YOLOv 3 runs in 22 ms at 28.2 mAP at 320 x 320 resolution.",
+          "claim_text_normalized": "yolov 3 runs in 22 ms at 28.2 map at 320 x 320 resolution.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "833dbc1f-c4de-575b-8532-4ff83f6c5686",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "At 320 x 320 YOLOv 3 runs in 22 ms at 28.2 mAP",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "ab14a04d-1cd8-5df2-b522-f276e64f0edc",
+          "claim_text": "YOLOv 3 is as accurate as SSD but three times faster.",
+          "claim_text_normalized": "yolov 3 is as accurate as ssd but three times faster.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "c7c86a39-c856-5421-8ebc-6f32e2b4435d",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "as accurate as SSD but three times faster",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "c543a732-bee9-5e04-807b-4a07280ecd11",
+          "claim_text": "YOLOv 3 achieves 57.9 AP 50 in 51 ms on a Titan X.",
+          "claim_text_normalized": "yolov 3 achieves 57.9 ap 50 in 51 ms on a titan x.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "4873a960-2a44-5e98-ad38-8d37eacfe2c3",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "It achieves 57.9 AP 50 in 51 ms on a Titan X",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "2bbfe911-38ce-57c2-9e8e-f8943f0a60e0",
+          "claim_text": "RetinaNet achieves 57.5 AP 50 in 198 ms on a Titan X.",
+          "claim_text_normalized": "retinanet achieves 57.5 ap 50 in 198 ms on a titan x.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "dc12460f-4d76-577b-a13b-b95363b46c8f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "57.5 AP 50 in 198 ms by RetinaNet",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "e264d852-9f6e-55a9-9190-d34e967792b6",
+          "claim_text": "YOLOv 3 uses dimension clusters as anchor boxes for bounding box prediction.",
+          "claim_text_normalized": "yolov 3 uses dimension clusters as anchor boxes for bounding box prediction.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "4aa46f4c-2ec2-5078-90cb-e12e037192d8",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Following YOLO 9000 our system predicts bounding boxes using dimension clusters as anchor boxes",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "c38a8e8b-ec48-55b5-819f-4eb90618ff89",
+          "claim_text": "YOLOv 3 predicts 4 coordinates for each bounding box: tx, ty, tw, th.",
+          "claim_text_normalized": "yolov 3 predicts 4 coordinates for each bounding box: tx, ty, tw, th.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "1e891cc9-54c0-5e8c-b147-38fd374aebbe",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The network predicts 4 coordinates for each bounding box, tx, ty, tw, th",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "f7a3d6ea-ff74-5f33-9c0c-340e6bebf25f",
+          "claim_text": "YOLOv 3 uses sum of squared error loss for training bounding box coordinates.",
+          "claim_text_normalized": "yolov 3 uses sum of squared error loss for training bounding box coordinates.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "1807a76b-0780-591d-b157-538209e0a99d",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "During training we use sum of squared error loss",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "198267c5-ba79-5a3d-9952-d3f684f05dfd",
+          "claim_text": "YOLOv 3 uses logistic regression for objectness score prediction.",
+          "claim_text_normalized": "yolov 3 uses logistic regression for objectness score prediction.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "4c56eb81-54a7-530b-94f5-31356520eac2",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOv 3 predicts an objectness score for each bounding box using logistic regression",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "eb840424-f7fb-5fe7-840b-9f5eb3ff39ee",
+          "claim_text": "YOLOv 3 uses a threshold of 0.5 for objectness score prediction.",
+          "claim_text_normalized": "yolov 3 uses a threshold of 0.5 for objectness score prediction.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "92196ff4-faab-5762-8a6f-e9eba91c064b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We use the threshold of.5",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "813fdf2d-2443-5672-a62b-93e9f8665343",
+          "claim_text": "YOLOv 3 uses binary cross-entropy loss for class predictions.",
+          "claim_text_normalized": "yolov 3 uses binary cross-entropy loss for class predictions.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "40237bb5-af07-5ce4-b50e-8965ffb65da1",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "During training we use binary cross-entropy loss for the class predictions",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "a294dfe6-cde1-5d12-ad03-27848da2f19e",
+          "claim_text": "YOLOv 3 predicts boxes at 3 different scales.",
+          "claim_text_normalized": "yolov 3 predicts boxes at 3 different scales.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "34daf970-42d8-5e12-a699-ca8248d27457",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOv 3 predicts boxes at 3 different scales",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "27686ce9-6d8d-5c58-a6da-ffb80b5a25ee",
+          "claim_text": "YOLOv 3 uses Darknet-53 as its feature extractor.",
+          "claim_text_normalized": "yolov 3 uses darknet-53 as its feature extractor.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "98f84e44-ef14-55f9-a152-341e89d2438f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We use a new network for performing feature extraction. Our new network is a hybrid approach between the network used in YOLOv 2, Darknet-19, and that newfangled residual network stuff. Our network uses successive 3 x 3 and 1 x 1 convolutional layers but now has some shortcut connections as well and is significantly larger. It has 53 convolutional layers so we call it.... wait for it..... Darknet-53!",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "f15b2fa4-977e-5cb6-b2e3-addfcff76b28",
+          "claim_text": "Darknet-53 has 53 convolutional layers.",
+          "claim_text_normalized": "darknet-53 has 53 convolutional layers.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "516613fa-45a6-5e00-b5c3-de1fb0cfd551",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "It has 53 convolutional layers so we call it.... wait for it..... Darknet-53!",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "db9a57b9-816f-5e01-aec2-f7c98454616d",
+          "claim_text": "Darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed.",
+          "claim_text_normalized": "darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "98e4dd27-d71d-58d7-93cf-49e01fe90b05",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Thus Darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "45d6c27a-475f-5c0f-83ba-bab138c551ce",
+          "claim_text": "Darknet-53 is better than ResNet-101 and 1.5x faster.",
+          "claim_text_normalized": "darknet-53 is better than resnet-101 and 1.5x faster.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "c35ff4c3-5f1d-56fc-aa57-3eb6928212ba",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Darknet-53 is better than ResNet-101 and 1.5x faster",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "79e23bcc-ea96-572d-bc13-5bcd93505d27",
+          "claim_text": "Darknet-53 has similar performance to ResNet-152 and is 2x faster.",
+          "claim_text_normalized": "darknet-53 has similar performance to resnet-152 and is 2x faster.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "4958b432-ce22-50b3-98e0-3f4f2b480319",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Darknet-53 has similar perfor- mance to ResNet-152 and is 2x faster",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "1600d308-5f53-5911-a2a7-7e24d1a4b3c8",
+          "claim_text": "Darknet-53 achieves the highest measured floating point operations per second.",
+          "claim_text_normalized": "darknet-53 achieves the highest measured floating point operations per second.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "54cc7e4d-3b7a-51a6-939e-7bb18de5ce28",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Darknet-53 also achieves the highest measured floating point operations per second",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "977a4f4f-03f4-51a5-9787-564106963fe5",
+          "claim_text": "YOLOv 3 is on par with SSD variants but is 3x faster.",
+          "claim_text_normalized": "yolov 3 is on par with ssd variants but is 3x faster.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "069c7a81-5ce7-5da5-b1f2-b35fccda6e3e",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In terms of COCOs weird average mean AP metric it is on par with the SSD variants but is 3x faster",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "7b2555b7-832d-54b4-b44f-cbaeca0a6c49",
+          "claim_text": "YOLOv 3 is much better than SSD variants and comparable to state-of-the-art models on the AP 50 metric.",
+          "claim_text_normalized": "yolov 3 is much better than ssd variants and comparable to state-of-the-art models on the ap 50 metric.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "f7db4aad-8590-5c36-8b08-6621252e04a1",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOv 3 is much better than SSD variants and comparable to state-of-the-art models on the AP 50 metric",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "6e9b796c-e9d2-5d64-84ff-c98ba63a5404",
+          "claim_text": "YOLOv 3 is almost on par with RetinaNet and far above the SSD variants on the AP 50 metric.",
+          "claim_text_normalized": "yolov 3 is almost on par with retinanet and far above the ssd variants on the ap 50 metric.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "599c249d-1422-577a-bdee-1631d6b7b78f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "It is almost on par with RetinaNet and far above the SSD variants",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "790f5ab4-317f-500f-bfd2-2fc8b4dd2c77",
+          "claim_text": "YOLOv 3 has relatively high APS performance but worse performance on medium and larger size objects.",
+          "claim_text_normalized": "yolov 3 has relatively high aps performance but worse performance on medium and larger size objects.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "787f12e3-1146-56ff-98cc-d485e37b89cc",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "With the new multi-scale predictions we see YOLOv 3 has relatively high APS performance. However, it has comparatively worse performance on medium and larger size objects",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "bd7b6937-bcaf-54d2-8811-0c03fb7ab2f0",
+          "claim_text": "YOLOv 3 is faster and better than other detection systems on the AP 50 metric.",
+          "claim_text_normalized": "yolov 3 is faster and better than other detection systems on the ap 50 metric.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "8754afc8-0e50-58d8-bae2-e8a10ede6c16",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "When we plot accuracy vs speed on the AP 50 metric (see figure 5) we see YOLOv 3 has significant benefits over other detection systems. Namely, it’s faster and better",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "67988c3c-e04c-5ccd-9b54-38f29309b577",
+          "claim_text": "YOLOv 3 may already be robust to the problem focal loss is trying to solve.",
+          "claim_text_normalized": "yolov 3 may already be robust to the problem focal loss is trying to solve.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "6d9d1f37-c63f-5f67-8fed-ec5392610fb6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOv 3 may already be robust to the problem focal loss is trying to solve because it has sep- arate objectness predictions and conditional class predic- tions",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "32ff4419-8e89-588f-b1e0-6852caf1691c",
+          "claim_text": "YOLOv 3 is a good detector that is fast and accurate.",
+          "claim_text_normalized": "yolov 3 is a good detector that is fast and accurate.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "323960d7-b40a-5fee-819b-2b14b258d77f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOv 3 is a good detector. It’s fast, it’s accurate",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "2157b7bc-a54a-5ef6-b9e3-4da917d9f26e",
+          "claim_text": "YOLOv 3 is very good on the old detection metric of 0.5 IOU.",
+          "claim_text_normalized": "yolov 3 is very good on the old detection metric of 0.5 iou.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "271bbb31-fd1d-5c81-aed5-7db3f8665cfb",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "But it’s very good on the old detection metric of .5 IOU",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "d4088bc5-1ae6-5ea5-8364-18d494c80ba2",
+          "claim_text": "YOLOv3 runs at 22 ms with 28.2 mAP at 320x320 resolution.",
+          "claim_text_normalized": "yolov3 runs at 22 ms with 28.2 map at 320x320 resolution.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "be62d6ee-fc90-547a-a5f6-95dd7864f744",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "At 320 x 320 YOLOv 3 runs in 22 ms at 28.2 mAP",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "af75b738-8c92-5226-9e4a-942ab3d1487a",
+          "claim_text": "YOLOv3 is as accurate as SSD but three times faster.",
+          "claim_text_normalized": "yolov3 is as accurate as ssd but three times faster.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "b1cf2e4d-0b70-5a57-b999-69e2cafd14f4",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "as accurate as SSD but three times faster",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "82442d36-6d41-5aff-af02-160748bd55eb",
+          "claim_text": "YOLOv3 achieves 57.9 AP50 in 51 ms on a Titan X.",
+          "claim_text_normalized": "yolov3 achieves 57.9 ap50 in 51 ms on a titan x.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "0eb56064-307f-5891-a8f5-190a060c66c3",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "It achieves 57.9 AP 50 in 51 ms on a Titan X",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "4e30a4ab-002a-5fac-938d-f444718ded78",
+          "claim_text": "YOLOv3 uses dimension clusters as anchor boxes for bounding box prediction.",
+          "claim_text_normalized": "yolov3 uses dimension clusters as anchor boxes for bounding box prediction.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "d6b8ef48-2a0b-56c6-bb37-c14fa902f555",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Following YOLO 9000 our system predicts bounding boxes using dimension clusters as anchor boxes",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "caeeae1a-3b44-5d76-8fa7-8f752d883201",
+          "claim_text": "YOLOv3 predicts bounding box coordinates using a sigmoid function.",
+          "claim_text_normalized": "yolov3 predicts bounding box coordinates using a sigmoid function.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "da7f6a76-55a4-5e10-b28c-077c0ec18f77",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We predict the center coordinates of the box relative to the location of filter application using a sigmoid function",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "675afa0c-c8f2-5709-b07b-2933c5170c8c",
+          "claim_text": "YOLOv3 uses logistic regression for objectness score prediction.",
+          "claim_text_normalized": "yolov3 uses logistic regression for objectness score prediction.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "8ddbd6d3-d694-5b9f-891a-95ad578e2ab7",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOv 3 predicts an objectness score for each bounding box using logistic regression",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "60a8f1f4-96c9-56b9-9423-591e1377c038",
+          "claim_text": "YOLOv3 uses independent logistic classifiers for class prediction.",
+          "claim_text_normalized": "yolov3 uses independent logistic classifiers for class prediction.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "06c59544-1674-5eee-9a00-b758f9ea033d",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We do not use a softmax as we have found it is unnecessary for good performance, instead we simply use independent logistic classifiers",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "5b0cfadd-6121-557c-80c1-67b1b23af750",
+          "claim_text": "YOLOv3 uses Darknet-53 as its feature extractor.",
+          "claim_text_normalized": "yolov3 uses darknet-53 as its feature extractor.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "2bdec78a-bc26-5239-8955-5b6505cb4641",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We use a new network for performing feature extraction. Our new network is a hybrid approach between the network used in YOLOv 2, Darknet-19, and that newfangled residual network stuff. Our network uses successive 3 x 3 and 1 x 1 convolutional layers but now has some shortcut connections as well and is significantly larger. It has 53 convolutional layers so we call it.... wait for it..... Darknet-53!",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "db9a57b9-816f-5e01-aec2-f7c98454616d",
+          "claim_text": "Darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed.",
+          "claim_text_normalized": "darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "0a21b6b1-e7c3-5e10-9e87-8d868fc813ed",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Darknet-53 performs on par with state-of-the-art classifiers but with fewer floating point operations and more speed",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "9a674251-9d17-52e3-803f-d50b602108df",
+          "claim_text": "YOLOv3 is on par with SSD variants but 3 times faster in terms of COCO's average mean AP metric.",
+          "claim_text_normalized": "yolov3 is on par with ssd variants but 3 times faster in terms of coco's average mean ap metric.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "8a12ae88-b815-531b-8a31-a1b48a7bf1f6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In terms of COCOs weird average mean AP metric it is on par with the SSD variants but is 3x faster",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "7910c435-0fac-5f6e-82bf-85cc6b0d8449",
+          "claim_text": "YOLOv3 is very strong on the AP50 metric, almost on par with RetinaNet and far above the SSD variants.",
+          "claim_text_normalized": "yolov3 is very strong on the ap50 metric, almost on par with retinanet and far above the ssd variants.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "0ce23a59-8b61-5c8f-ac60-494aec38db47",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "However, when we look at the “old” detection metric of mAP at IOU = .5 (or AP 50 in the chart) YOLOv 3 is very strong. It is almost on par with RetinaNet and far above the SSD variants",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "405aad57-6cd1-5162-85c8-413f4f263fb0",
+          "claim_text": "YOLOv3 has relatively high APS performance but worse performance on medium and larger size objects.",
+          "claim_text_normalized": "yolov3 has relatively high aps performance but worse performance on medium and larger size objects.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "d237bcdb-f361-5dc7-b515-c0627e8cf978",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "With the new multi-scale predictions we see YOLOv 3 has relatively high APS performance. However, it has comparatively worse performance on medium and larger size objects",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "44d2e625-c5f4-5b25-b9c0-897da3140892",
+          "claim_text": "YOLOv3 is faster and better than other detection systems on the AP50 metric.",
+          "claim_text_normalized": "yolov3 is faster and better than other detection systems on the ap50 metric.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "743bacdd-9360-58d5-b1f4-58b547d0d045",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "When we plot accuracy vs speed on the AP 50 metric (see figure 5) we see YOLOv 3 has significant benefits over other detection systems. Namely, it’s faster and better",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "8d4a28a2-6ecc-57a5-a11a-fa1762234ac3",
+          "claim_text": "YOLOv3 uses a sum of squared error loss for training bounding box coordinates.",
+          "claim_text_normalized": "yolov3 uses a sum of squared error loss for training bounding box coordinates.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "f5d95381-762b-5cf2-a189-fad9a76e43d3",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "During training we use sum of squared error loss",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "538183ce-6e2b-5c37-ae4a-56b54442c76d",
+          "claim_text": "YOLOv3 uses binary cross-entropy loss for class predictions.",
+          "claim_text_normalized": "yolov3 uses binary cross-entropy loss for class predictions.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "11bd5419-07cd-56da-ae26-b9d2969c9cea",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Dur- ing training we use binary cross-entropy loss for the class predictions",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "a4b91694-edd8-5806-ab50-c4427898b27f",
+          "claim_text": "YOLOv3 uses multi-scale training and data augmentation.",
+          "claim_text_normalized": "yolov3 uses multi-scale training and data augmentation.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "74df2b33-57c5-5360-b7b4-85e5a596965f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We still train on full images with no hard negative mining or any of that stuff. We use multi-scale training, lots of data augmentation, batch normalization, all the standard stuff",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "1b21f282-d857-5f99-9a36-f2602bd847a2",
+          "claim_text": "YOLOv3 uses the Darknet neural network framework for training and testing.",
+          "claim_text_normalized": "yolov3 uses the darknet neural network framework for training and testing.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "78f78ece-374e-5a28-a5e1-4ec430396a91",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We use the Darknet neural network framework for training and testing",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "ae421f37-712a-5928-95c7-e201c5538daa",
+          "claim_text": "YOLOv3 is a good detector that is fast and accurate.",
+          "claim_text_normalized": "yolov3 is a good detector that is fast and accurate.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "5978056a-de26-5d63-99d1-4953e3ace189",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOv 3 is a good detector. It’s fast, it’s accurate",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "bc733d60-5c79-513e-b28d-7872fa29e30c",
+          "claim_text": "YOLOv3 struggles with small objects but has improved performance with the new multi-scale predictions.",
+          "claim_text_normalized": "yolov3 struggles with small objects but has improved performance with the new multi-scale predictions.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "fef83a37-69d9-50c7-b5b5-fd0eafcc8d13",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In the past YOLO struggled with small objects. How- ever, now we see a reversal in that trend. With the new multi-scale predictions we see YOLOv 3 has relatively high APS performance",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "64dc2d3a-3797-55f6-b446-019e7aaedbbc",
+          "claim_text": "YOLOv3 uses k-means clustering to determine bounding box priors.",
+          "claim_text_normalized": "yolov3 uses k-means clustering to determine bounding box priors.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e90bf348-bb71-5347-8d5f-fd2380dbbcb4",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We still use k-means clustering to determine our bound- ing box priors",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "c794e04e-cb2d-5447-84a0-f2197ff78d07",
+          "claim_text": "YOLOv3 uses 9 clusters and 3 scales for bounding box prediction.",
+          "claim_text_normalized": "yolov3 uses 9 clusters and 3 scales for bounding box prediction.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "843f8f30-4d63-5121-a1ac-a7abb58a1ad6",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We just sort of chose 9 clusters and 3 scales arbitrarily and then divide up the clusters evenly across scales",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "aa77a8de-5169-5bb7-aa04-179ba089d16f",
+          "claim_text": "YOLOv3 uses a hybrid approach of 3x3 and 1x1 convolutional layers with shortcut connections for feature extraction.",
+          "claim_text_normalized": "yolov3 uses a hybrid approach of 3x3 and 1x1 convolutional layers with shortcut connections for feature extraction.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "026553aa-0af8-5fe8-9825-49935202fe25",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Our network uses successive 3 x 3 and 1 x 1 convolutional layers but now has some shortcut connections as well and is significantly larger",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "554981a0-2e6b-51ad-9c23-e9a92de81136",
+          "claim_text": "YOLOv3 achieves 33.0 mAP on COCO at 608x608 resolution.",
+          "claim_text_normalized": "yolov3 achieves 33.0 map on coco at 608x608 resolution.",
+          "claim_type": "performance",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e660d290-ba29-51f6-999a-9e5e015a976b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOv 3 608 x 608 Darknet-53 33.0 57.9 34.4 18.3 35.4 41.9",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 46.385,
+      "extractor": "extract_claims_production_path",
+      "oracle_predictions": false,
+      "runtime_mode": "live",
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics_plain": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 3,
+        "dropped_claim_count_quote_rejected": 3,
+        "evidence_quote_strict_count": 23,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 2,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"YOLOv 3 runs in 22 ms at 28.2 mAP at 320 x 320 resolution.\", \"claim_type\": \"performance\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"At 320 x 320 YOLOv 3 runs in 22 ms at 28.2 mAP\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv 3 is as accurate as SSD but three times faster.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"as accurate as SSD but three times faster\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv 3 achieves 57.9 AP 50 in 51 ms on a Titan X.\", \"claim_type\": \"performance\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"It achieves 57.9 AP 50 in 51 ms on a Titan X\", \"section_path\": null}]}, {\"claim_text\": \"RetinaNet achieves 57.5 AP 50 in 198 ms on a Titan X.\", \"claim_type\": \"performance\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"57.5 AP 50 in 198 ms by RetinaNet\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv 3 is 3.8 times faster than RetinaNet.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"similar performance but 3.8 x faster\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv 3 uses dimension clusters as anchor boxes for bounding box prediction.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Following YOLO 9000 our system predicts bounding boxes using dimension clusters as anchor boxes\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv 3 predicts 4 coordinates for each bounding box: tx, ty, tw, th.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The network predicts 4 coordinates for each boundi",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      },
+      "extraction_diagnostics_distracted": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 3,
+        "dropped_claim_count_quote_rejected": 3,
+        "evidence_quote_strict_count": 25,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"YOLOv3 runs at 22 ms with 28.2 mAP at 320x320 resolution.\", \"claim_type\": \"performance\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"At 320 x 320 YOLOv 3 runs in 22 ms at 28.2 mAP\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv3 is as accurate as SSD but three times faster.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"as accurate as SSD but three times faster\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv3 achieves 57.9 AP50 in 51 ms on a Titan X.\", \"claim_type\": \"performance\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"It achieves 57.9 AP 50 in 51 ms on a Titan X\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv3 is 3.8 times faster than RetinaNet while achieving similar performance.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"similar performance but 3.8 x faster\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv3 uses dimension clusters as anchor boxes for bounding box prediction.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Following YOLO 9000 our system predicts bounding boxes using dimension clusters as anchor boxes\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv3 predicts bounding box coordinates using a sigmoid function.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"We predict the center coordinates of the box relative to the location of filter application using a sigmoid function\", \"section_path\": null}]}, {\"claim_text\": \"YOLOv3 uses logistic regression for objectness score prediction.\", \"claim_type\": \"method\", \"polarity\": \"neutral\", \"confidence\": 0.9,",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "holdout_yolox_v1",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": false,
+        "claim_recall": 0.0,
+        "claim_precision": 0.0,
+        "claim_precision_distracted": 0.0,
+        "precision_drop_with_distractors": 0.0,
+        "max_precision_drop_with_distractors": 0.15,
+        "paraphrase_scoring": true,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 4,
+        "predicted_count_plain": 13,
+        "predicted_count_distracted": 7,
+        "matched_claim_ids": [],
+        "missing_claim_ids": [
+          "yolox_decoupled_head",
+          "yolox_anchor_free_simota",
+          "yolox_l_50ap_v100_speed",
+          "yolox_coupled_head_conflict_negative"
+        ],
+        "min_claim_recall": 0.55
+      },
+      "predictions_plain": [
+        {
+          "claim_id": "fff5de6f-35a0-5ed4-99c6-50702d78e9d0",
+          "claim_text": "YOLOX achieves 25.3% AP on COCO with YOLO-Nano, surpassing NanoDet by 1.8% AP.",
+          "claim_text_normalized": "yolox achieves 25.3% ap on coco with yolo-nano, surpassing nanodet by 1.8% ap.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "839426fd-37c4-5187-a8e0-720892005e0d",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "For YOLO-Nano with only 0.91M parameters and 1.08G FLOPs, we get 25.3% AP on COCO, surpassing NanoDet by 1.8% AP;",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "aec607ac-803e-5c1e-b435-d0ab658beab5",
+          "claim_text": "YOLOX won the 1st Place on Streaming Perception Challenge using a single YOLOX-L model.",
+          "claim_text_normalized": "yolox won the 1st place on streaming perception challenge using a single yolox-l model.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "2a8a44ce-814c-5036-a24b-63e0ebd03b84",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Further, we won the 1st Place on Streaming Perception Challenge (Workshop on Autonomous Driving at CVPR 2021) using a single YOLOX-L model.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "661afbd6-51d2-5064-9375-b9040deea72c",
+          "claim_text": "YOLOX-DarkNet53 achieves 47.4% AP on COCO.",
+          "claim_text_normalized": "yolox-darknet53 achieves 47.4% ap on coco.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "cb7be394-17d7-5129-be7d-77ac1a9733d2",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOX-DarkNet53 Darknet-53 640 90.1 47.4 67.3 52.1 27.5 51.5 60.9",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "ca9be208-8f29-57c2-b6e7-49f8cfd03f80",
+          "claim_text": "YOLOX-M achieves 46.4% AP on COCO.",
+          "claim_text_normalized": "yolox-m achieves 46.4% ap on coco.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "12aff480-5b65-56e8-a95f-dbe7d5625a1c",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOX-M Modified CSP v5 640 81.3 46.4 65.4 50.6 26.3 51.0 59.9",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "cd8ef669-25c7-5cfd-91a6-ab8eeef93d56",
+          "claim_text": "YOLOX-L achieves 50.0% AP on COCO.",
+          "claim_text_normalized": "yolox-l achieves 50.0% ap on coco.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e2bfb0b1-0f38-549d-a024-d30ee02a20c7",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOX-L Modified CSP v5 640 69.0 50.0 68.5 54.5 29.8 54.5 64.4",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "5d02b608-0ca0-58f6-99bb-82b0a40328ac",
+          "claim_text": "YOLOX-X achieves 51.2% AP on COCO.",
+          "claim_text_normalized": "yolox-x achieves 51.2% ap on coco.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "3ec7cb6e-f635-5f76-8c45-e329fcfc5c5f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOX-X Modified CSP v5 640 57.8 51.2 69.6 55.7 31.2 56.1 66.1",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "022550d3-da28-5f95-80af-c7f7e50a95cd",
+          "claim_text": "YOLOX employs strong data augmentation techniques like Mosaic and MixUp.",
+          "claim_text_normalized": "yolox employs strong data augmentation techniques like mosaic and mixup.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "cb231e31-cc71-5c2d-9b27-ba6e85c981d7",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We add Mosaic and MixUp into our augmentation strategies to boost YOLOX’s performance.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "537cb176-c391-5bf2-8e12-658b874bc455",
+          "claim_text": "YOLOX adopts an anchor-free mechanism to simplify the detector.",
+          "claim_text_normalized": "yolox adopts an anchor-free mechanism to simplify the detector.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e1cad43c-9645-5b43-a530-6f9784f6e99a",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Switching YOLO to an anchor-free manner is quite simple.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "6a1fd3da-f419-5674-94c1-4fb3a3b8c088",
+          "claim_text": "YOLOX uses SimOTA for advanced label assignment.",
+          "claim_text_normalized": "yolox uses simota for advanced label assignment.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "625c015a-1db2-5084-9906-f05a1278b0ef",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "SimOTA not only reduces the training time but also avoids additional solver hyperparameters in Sinkhorn-Knopp algorithm.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "fd6308df-cd91-5353-acd7-6fde2fc42d50",
+          "claim_text": "YOLOX can be implemented end-to-end but with a slight decrease in performance.",
+          "claim_text_normalized": "yolox can be implemented end-to-end but with a slight decrease in performance.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "b770dbe9-b883-54b1-9f06-978f156133ac",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We thus leave it as an optional module which is not involved in our final models.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "987b9015-0f6c-5f16-8755-cc8e0278c768",
+          "claim_text": "YOLOX uses modified CSPNet and PAN head from YOLOv5.",
+          "claim_text_normalized": "yolox uses modified cspnet and pan head from yolov5.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "c206df6a-59b0-5962-bdf4-6a03d8188d03",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "To give a fair comparison, we adopt the exact YOLOv5’s backbone including modified CSPNet [31], SiLU activation, and the PAN [19] head.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "5649993b-dd9a-505a-828a-70ebc34ffc38",
+          "claim_text": "YOLOX adjusts data augmentation strategies based on model size.",
+          "claim_text_normalized": "yolox adjusts data augmentation strategies based on model size.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "9bddd028-3092-5c16-b479-30fdc9dc2d78",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "However, we found that the suitable augmentation strategy varies across different size of models.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "307c1a72-08ce-5a9b-86be-45dba89b0590",
+          "claim_text": "YOLOX achieves a better trade-off between speed and accuracy than other counterparts across all model sizes.",
+          "claim_text_normalized": "yolox achieves a better trade-off between speed and accuracy than other counterparts across all model sizes.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e2d49b4e-6b32-50fa-bb13-1040e1187fdb",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Equipped with some recent advanced detection techniques, i.e., decoupled head, anchor-free, and advanced label assigning strategy, YOLOX achieves a better trade-off between speed and accuracy than other counterparts across all model sizes.",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "predictions_distracted": [
+        {
+          "claim_id": "fff5de6f-35a0-5ed4-99c6-50702d78e9d0",
+          "claim_text": "YOLOX achieves 25.3% AP on COCO with YOLO-Nano, surpassing NanoDet by 1.8% AP.",
+          "claim_text_normalized": "yolox achieves 25.3% ap on coco with yolo-nano, surpassing nanodet by 1.8% ap.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "839426fd-37c4-5187-a8e0-720892005e0d",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "For YOLO-Nano with only 0.91M parameters and 1.08G FLOPs, we get 25.3% AP on COCO, surpassing NanoDet by 1.8% AP;",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "aec607ac-803e-5c1e-b435-d0ab658beab5",
+          "claim_text": "YOLOX won the 1st Place on Streaming Perception Challenge using a single YOLOX-L model.",
+          "claim_text_normalized": "yolox won the 1st place on streaming perception challenge using a single yolox-l model.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "2a8a44ce-814c-5036-a24b-63e0ebd03b84",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Further, we won the 1st Place on Streaming Perception Challenge (Workshop on Autonomous Driving at CVPR 2021) using a single YOLOX-L model.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "661afbd6-51d2-5064-9375-b9040deea72c",
+          "claim_text": "YOLOX-DarkNet53 achieves 47.4% AP on COCO.",
+          "claim_text_normalized": "yolox-darknet53 achieves 47.4% ap on coco.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "cb7be394-17d7-5129-be7d-77ac1a9733d2",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOX-DarkNet53 Darknet-53 640 90.1 47.4 67.3 52.1 27.5 51.5 60.9",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "022550d3-da28-5f95-80af-c7f7e50a95cd",
+          "claim_text": "YOLOX employs strong data augmentation techniques like Mosaic and MixUp.",
+          "claim_text_normalized": "yolox employs strong data augmentation techniques like mosaic and mixup.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "cb231e31-cc71-5c2d-9b27-ba6e85c981d7",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We add Mosaic and MixUp into our augmentation strategies to boost YOLOX’s performance.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "6a1fd3da-f419-5674-94c1-4fb3a3b8c088",
+          "claim_text": "YOLOX uses SimOTA for advanced label assignment.",
+          "claim_text_normalized": "yolox uses simota for advanced label assignment.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "625c015a-1db2-5084-9906-f05a1278b0ef",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "SimOTA not only reduces the training time but also avoids additional solver hyperparameters in Sinkhorn-Knopp algorithm.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "dedead4c-a53b-521d-9226-fe14c07c1c0a",
+          "claim_text": "YOLOX can be implemented in an end-to-end manner but with a slight decrease in performance and inference speed.",
+          "claim_text_normalized": "yolox can be implemented in an end-to-end manner but with a slight decrease in performance and inference speed.",
+          "claim_type": "method",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "032ef5b4-a87d-5df7-90d7-ce28c8dae51f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We thus leave it as an optional module which is not involved in our final models.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "bd27f774-a101-5ea7-9745-e16352a20102",
+          "claim_text": "YOLOX-DarkNet53 achieves 47.4% AP on COCO with 640 resolution and 90.1 FPS.",
+          "claim_text_normalized": "yolox-darknet53 achieves 47.4% ap on coco with 640 resolution and 90.1 fps.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e54982a1-7ef1-5b2b-9ac0-e131d19409f9",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "YOLOX-DarkNet53 Darknet-53 640 90.1 47.4 67.3 52.1 27.5 51.5 60.9",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 60.978,
+      "extractor": "extract_claims_production_path",
+      "oracle_predictions": false,
+      "runtime_mode": "live",
+      "distractor_augmented": true,
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics_plain": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 15,
+        "dropped_claim_count_quote_rejected": 15,
+        "evidence_quote_strict_count": 2,
+        "evidence_quote_strict_normalized_count": 4,
+        "evidence_quote_fuzzy_count": 7,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"YOLOX achieves 25.3% AP on COCO with YOLO-Nano, surpassing NanoDet by 1.8% AP.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"For YOLO-Nano with only 0.91M parameters and 1.08G FLOPs, we get 25.3% AP on COCO, surpassing NanoDet by 1.8% AP;\", \"section_path\": null}]}, {\"claim_text\": \"YOLOX boosts YOLOv3 to 47.3% AP on COCO, outperforming the current best practice by 3.0% AP.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"for YOLOv3, one of the most widely used detectors in industry, we boost it to 47.3% AP on COCO, outperforming the current best practice by 3.0% AP;\", \"section_path\": null}]}, {\"claim_text\": \"YOLOX-L achieves 50.0% AP on COCO, exceeding YOLOv5-L by 1.8% AP.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"for YOLOX-L with roughly the same amount of parameters as YOLOv4-CSP, YOLOv5-L, we achieve 50.0% AP on COCO at a speed of 68.9 FPS on Tesla V100, exceeding YOLOv5-L by 1.8% AP.\", \"section_path\": null}]}, {\"claim_text\": \"YOLOX won the 1st Place on Streaming Perception Challenge using a single YOLOX-L model.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Further, we won the 1st Place on Streaming Perception Challenge (Workshop on Autonomous Driving at CVPR 2021) using a single YOLOX-L model.\", \"section_path\": null}]}, {\"claim_text\": \"YOLOX-Tiny and YOLOX-Nano outperform YOLOv4-Tiny and NanoDet by 10% AP and 1.8% AP, respectively.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"YOLOX-Tiny and YOLOX-Nano (only 0.91M Parameters and 1.08G FLOPs) outperform the corresponding counterparts YOLOv4-Tiny and Nan",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      },
+      "extraction_diagnostics_distracted": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 21,
+        "dropped_claim_count_quote_rejected": 21,
+        "evidence_quote_strict_count": 1,
+        "evidence_quote_strict_normalized_count": 2,
+        "evidence_quote_fuzzy_count": 4,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 28,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"YOLOX achieves 25.3% AP on COCO with YOLO-Nano, surpassing NanoDet by 1.8% AP.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"For YOLO-Nano with only 0.91M parameters and 1.08G FLOPs, we get 25.3% AP on COCO, surpassing NanoDet by 1.8% AP;\", \"section_path\": null}]}, {\"claim_text\": \"YOLOX boosts YOLOv3 to 47.3% AP on COCO, outperforming the current best practice by 3.0% AP.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"for YOLOv3, one of the most widely used detectors in industry, we boost it to 47.3% AP on COCO, outperforming the current best practice by 3.0% AP;\", \"section_path\": null}]}, {\"claim_text\": \"YOLOX-L achieves 50.0% AP on COCO, exceeding YOLOv5-L by 1.8% AP.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"for YOLOX-L with roughly the same amount of parameters as YOLOv4-CSP, YOLOv5-L, we achieve 50.0% AP on COCO at a speed of 68.9 FPS on Tesla V100, exceeding YOLOv5-L by 1.8% AP.\", \"section_path\": null}]}, {\"claim_text\": \"YOLOX won the 1st Place on Streaming Perception Challenge using a single YOLOX-L model.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"Further, we won the 1st Place on Streaming Perception Challenge (Workshop on Autonomous Driving at CVPR 2021) using a single YOLOX-L model.\", \"section_path\": null}]}, {\"claim_text\": \"YOLOX-Tiny and YOLOX-Nano outperform YOLOv4-Tiny and NanoDet by 10% AP and 1.8% AP, respectively.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"YOLOX-Tiny and YOLOX-Nano (only 0.91M Parameters and 1.08G FLOPs) outperform the corresponding counterparts YOLOv4-Tiny and Nan",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    }
+  ]
+}

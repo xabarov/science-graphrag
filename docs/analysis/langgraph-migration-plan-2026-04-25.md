@@ -258,7 +258,7 @@ def build_chat_model(settings: Settings, *, temperature: float = 0.0, max_tokens
 
 ### 3.5 Phoenix / OpenInference разметка
 
-Используем готовые helpers из [`science_graphrag/observability/phoenix_tracer.py`](../../science_graphrag/observability/phoenix_tracer.py) (см. [phoenix-tracing-coverage-2026-04-25.md §5.2 Wave X2](phoenix-tracing-coverage-2026-04-25.md#52-wave-x2--%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%82%D0%B8%D1%82%D1%8C-retrieval-agent-ir)). Дерево спанов целевое:
+Используем готовые helpers из [`science_graphrag/observability/phoenix_tracer.py`](../../science_graphrag/observability/phoenix_tracer.py) (см. [_archive/phoenix-tracing-coverage-2026-04-25.md §5.2 Wave X2](_archive/phoenix-tracing-coverage-2026-04-25.md#52-wave-x2--%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%82%D0%B8%D1%82%D1%8C-retrieval-agent-ir)). Дерево спанов целевое:
 
 ```
 agent.query                                       [CHAIN]   session.id=ask_session_id, user.id=workspace_id
@@ -651,7 +651,7 @@ Y2/Y3 и Y4/Y5 могут идти параллельно, если хватае
 
 ### 8.1 Интерфейсы с волнами
 
-- **Wave X-Phoenix (`phoenix-tracing-coverage-2026-04-25.md`)**: Y2.5 + Y3.2 закрывают пункты X2.1, X2.2, X2.7 «по факту» через auto-instrumentation; X2.3 (RETRIEVER в `idea_search`) и X2.4 (EMBEDDING) лучше делать **внутри Y2.1** при переписывании tool — чтобы не возвращаться. Wave X1 (fix ingest-tracing) и Wave Y независимы.
+- **Wave X-Phoenix (`_archive/phoenix-tracing-coverage-2026-04-25.md`)**: Y2.5 + Y3.2 закрывают пункты X2.1, X2.2, X2.7 «по факту» через auto-instrumentation; X2.3 (RETRIEVER в `idea_search`) и X2.4 (EMBEDDING) лучше делать **внутри Y2.1** при переписывании tool — чтобы не возвращаться. Wave X1 (fix ingest-tracing) и Wave Y независимы.
 - **Wave R (Agent retrieval + tool-use benchmarks)**: Wave Y — это **техническая реализация** ADR 016, которое было принято в Wave R. После Y4 advisory benchmark `agent_tools_v1` → `agent_tools_v2` (через promotion review, см. [`benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md)).
 - **Wave V (SSE для ingest)**: тот же `sse-starlette` + nginx-конфиг (`proxy_buffering off`, `proxy_read_timeout 1h`) переиспользуется для `/v2/agent/query` SSE. Если Wave V уже в проде — Y3.1 ставится «бесплатно» с уже отлаженным каналом.
 - **Wave U/V (Redis/Dramatiq для ingest)**: агент не использует фоновую обработку (всё synchronous per-request), но если позже понадобится «long-running agent jobs» (research mode с десятками шагов и LLM-рассуждениями) — переиспользуем pattern Dramatiq + Redis. **Рисков пересечения нет.**

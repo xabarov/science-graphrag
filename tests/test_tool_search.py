@@ -227,6 +227,31 @@ def test_shortlist_tools_for_single_agent_includes_paper_quote_search_for_eviden
     assert meta.get("reason") == "rules"
 
 
+def test_shortlist_rules_meta_includes_score_band_from_settings() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    tools = build_retrieval_tools(stores, Settings(agent_rule_tool_search_enabled=True))
+    settings = Settings(
+        agent_rule_tool_search_enabled=True,
+        agent_tool_search_score_band=2.5,
+    )
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="how many papers in this workspace",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        answer_class="inventory",
+    )
+    assert meta.get("reason") == "rules"
+    assert meta.get("score_band") == 2.5
+    assert len(out) >= 3
+
+
 def test_shortlist_tools_for_single_agent_disabled_returns_full() -> None:
     from science_graphrag.agent.tools import build_tool_registry
 

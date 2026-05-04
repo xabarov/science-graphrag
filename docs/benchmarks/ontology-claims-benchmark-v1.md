@@ -22,7 +22,7 @@ tests/fixtures/benchmarks/claims/
 
 | Field | Type | Meaning |
 |-------|------|---------|
-| `schema_version` | int | Must be `1` for this doc. |
+| `schema_version` | int | Monotonic int; repo fixtures use **1–3** (BT6 gold edits bump to `3` with provenance in `meta.gold_v2_revision`). |
 | `description` | string | Human provenance / adjudication note. |
 | `benchmark_suite_tier` | string | `claims_mini` \| `claims_merge_contract` (see tiers below). |
 | `source_layer1_fixture` | string | Optional traceability, e.g. `yolov1` → `tests/fixtures/benchmarks/layer1/yolov1/`. |
@@ -116,6 +116,8 @@ This appendix is the **single source of truth** for how paraphrase numbers in ar
 - CLI: `science-graphrag-claims-paraphrase-benchmark` → [`eval/claims/paraphrase_runner.py`](../../eval/claims/paraphrase_runner.py).
 - Default `--extractor production` uses the same LLM path as ingestion (`extract_claims_llm`, benchmark mode).
 - Each case runs **plain** article text and optionally **distractor-augmented** text; metrics compare precision drop (see below).
+- **Suite exit code:** the benchmark exits with code **1** when any case fails red gates; use **`--no-fail-on-red-cases`** to keep exit **0** during local iteration or CI smoke runs.
+- **Production BT6 path:** predictions flow through **near-duplicate dedupe** on the token-Jaccard rule (same post-processing as scoring) before BT6 metrics — see [`eval/claims/prediction_postprocess.py`](../../eval/claims/prediction_postprocess.py) and `extract_claims_production_path` in [`eval/claims/paraphrase_runner.py`](../../eval/claims/paraphrase_runner.py).
 
 ### Match definition (embedding vs text)
 
@@ -136,5 +138,5 @@ If the article cites retrieval quality, use the **retrieval** contract only — 
 
 ### Optional Tier-2 experiments (same article cycle)
 
-- **`tool_search` ablation:** rule-based shortlist in [`science_graphrag/agent/tool_search.py`](../../science_graphrag/agent/tool_search.py) — tunable behavior includes low-signal cutoff (`top_score < 1.5` → full tool list) and score band `threshold = top_score - 1.5`. Compare **one** downstream signal (e.g. `science-graphrag-agent-benchmark` pass rate or latency from suite JSON) before/after a single constant change; do not sweep many knobs in one narrative.
+- **`tool_search` ablation:** rule-based shortlist in [`science_graphrag/agent/tool_search.py`](../../science_graphrag/agent/tool_search.py) — low-signal cutoff (`top_score < 1.5` → full tool list) and score band `threshold = top_score - band` where **`SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_SCORE_BAND`** (default **1.35**, legacy-style **1.5**) maps to [`Settings.agent_tool_search_score_band`](../../science_graphrag/config.py). Compare **one** downstream signal (e.g. `science-graphrag-agent-benchmark` pass rate or `latency_p95_ms` from suite JSON) before/after a single env-only change; do not sweep many knobs in one narrative.
 - **Retrieval A/B:** fixed `--tier` (e.g. `live_corpus_mini` or `merge_safe_contract` with `--mock-answer`) and **one** scalar from the suite JSON (e.g. contract pass rate or a documented hit metric from the runner) before/after a single retrieval tweak.

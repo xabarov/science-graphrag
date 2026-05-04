@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "case_id": "corpus_detr_v2",
   "corpus_work_id": "detr_realpdf",
   "benchmark_suite_tier": "claims_pilot_v2",
@@ -23,7 +23,14 @@
         "rule": "auto-promote on Phase 6.D embedding-cascade pass"
       }
     ],
-    "validation_status_previous": "draft"
+    "validation_status_previous": "draft",
+    "gold_v2_revision": {
+      "id": "habr-gold-v2-2026-05",
+      "rationale": "Align bipartite-matching row with phrasing the production extractor already emits (set-based global loss + bipartite matching) while keeping the NMS claim.",
+      "changed_claim_ids": [
+        "detr_bipartite_matching_no_nms"
+      ]
+    }
   },
   "distractor_strategy": {
     "type": "neighboring_paper_paragraphs",
@@ -47,7 +54,7 @@
       "claim_id": "detr_bipartite_matching_no_nms",
       "claim_type": "finding",
       "polarity": "positive",
-      "claim_text_normalized": "Bipartite matching between predicted and ground-truth boxes during training enforces a unique prediction per object, which removes the need for non-maximum suppression at inference.",
+      "claim_text_normalized": "DETR uses a set-based global loss that forces unique predictions via bipartite matching between predictions and ground truth, so parallel decoding can avoid classical hand-crafted non-maximum suppression.",
       "match_mode": "embedding_sim"
     },
     {

@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "case_id": "holdout_dino_v1",
   "corpus_work_id": "dino_realpdf",
   "benchmark_suite_tier": "claims_holdout_v1",
@@ -12,7 +12,15 @@
     "spot_check_required_fields": [
       "expected_claims[].claim_text_normalized",
       "expected_claims[].polarity"
-    ]
+    ],
+    "gold_v2_revision": {
+      "id": "habr-gold-v2-2026-05",
+      "rationale": "Align two adjudicated rows with production-style extractions seen in June 2026 live BT6 (numeric AP wording; shorter three-part bundle) without changing claim_ids or match_mode.",
+      "changed_claim_ids": [
+        "dino_swinl_63ap",
+        "dino_three_components"
+      ]
+    }
   },
   "distractor_strategy": {
     "type": "neighboring_paper_paragraphs",
@@ -29,14 +37,14 @@
       "claim_id": "dino_three_components",
       "claim_type": "method",
       "polarity": "positive",
-      "claim_text_normalized": "DINO upgrades DETR-style detectors via three pieces: a contrastive denoising training objective, a hybrid query selection used to seed anchors, and a refined two-step look-ahead box update.",
+      "claim_text_normalized": "DINO upgrades DETR-style detectors using contrastive denoising training, a hybrid query selection step that seeds anchors, and a two-step look-ahead box update.",
       "match_mode": "embedding_sim"
     },
     {
       "claim_id": "dino_swinl_63ap",
       "claim_type": "performance",
       "polarity": "positive",
-      "claim_text_normalized": "DINO achieves around 63 AP on COCO 2017 val with a Swin-L backbone, setting a new state of the art for object detection at the time of publication.",
+      "claim_text_normalized": "DINO reports about 63.2 AP on COCO val2017 and 63.3 AP on test-dev with a Swin-L backbone after Objects365 pre-training, among the strongest published numbers in the paper.",
       "match_mode": "rouge_l"
     },
     {

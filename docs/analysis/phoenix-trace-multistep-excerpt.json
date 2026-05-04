@@ -1,0 +1,16 @@
+{
+  "_comment": "Illustrative excerpt for Habr article §6/§7 — structure mirrors OTLP spans exported to Phoenix for one multistep agent turn (names match runtime conventions; timings are rounded placeholders, not a captured production trace).",
+  "trace_id": "example-multistep-detr-lineage",
+  "service_name": "science-graphrag-agent",
+  "spans": [
+    {"name": "agent.graph_react.turn", "kind": "INTERNAL", "latency_ms": 24180},
+    {"name": "llm.chat_completion", "kind": "CLIENT", "latency_ms": 4200},
+    {"name": "tool.idea_search", "kind": "CLIENT", "latency_ms": 890},
+    {"name": "llm.chat_completion", "kind": "CLIENT", "latency_ms": 5100},
+    {"name": "tool.paper_quote_search", "kind": "CLIENT", "latency_ms": 120},
+    {"name": "llm.chat_completion", "kind": "CLIENT", "latency_ms": 3800},
+    {"name": "tool.cypher_query", "kind": "CLIENT", "latency_ms": 45},
+    {"name": "llm.chat_completion", "kind": "CLIENT", "latency_ms": 6200},
+    {"name": "tool.final_answer", "kind": "INTERNAL", "latency_ms": 180}
+  ]
+}

@@ -7,6 +7,7 @@
 | Документ | Описание |
 |----------|----------|
 | [../README.md](../README.md) | Краткий PRD: пользователи, MVP-сценарии, non-goals |
+| [analysis/README.md](analysis/README.md) | **Hub планирования:** недельные указатели (BT/trust, backlog, snapshot), индекс всех `docs/analysis/*.md`, закрытые планы |
 | [roadmap.md](roadmap.md) | Roadmap фаз 0–7, архитектура верхнего уровня, риски |
 | [runbooks/benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md) | Короткий benchmark-цикл (CLI, compare, UI `/benchmark`) |
 | [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Волны Wave A–H (benchmark gate → pilot → CI/retrieval/UI/ontology) и I–L (workspace UX + smart dedup) |

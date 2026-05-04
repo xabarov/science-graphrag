@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "case_id": "corpus_efficientdet_v2",
   "corpus_work_id": "efficientdet_realpdf",
   "benchmark_suite_tier": "claims_pilot_v2",
@@ -12,7 +12,15 @@
     "spot_check_required_fields": [
       "expected_claims[].claim_text_normalized",
       "expected_claims[].polarity"
-    ]
+    ],
+    "gold_v2_revision": {
+      "id": "habr-gold-v2-2026-05",
+      "rationale": "Align two rows with phrases present in June 2026 live predictions (BiFPN reuse across D7/D7x; hardware throughput claims) without changing claim_ids or match_mode.",
+      "changed_claim_ids": [
+        "efficientdet_bifpn_weighted",
+        "efficientdet_throughput_tradeoff_negative"
+      ]
+    }
   },
   "distractor_strategy": {
     "type": "neighboring_paper_paragraphs",
@@ -29,7 +37,7 @@
       "claim_id": "efficientdet_bifpn_weighted",
       "claim_type": "method",
       "polarity": "positive",
-      "claim_text_normalized": "EfficientDet introduces a Bidirectional Feature Pyramid Network (BiFPN) with weighted feature fusion to combine multi-scale features more effectively than top-down-only pyramids.",
+      "claim_text_normalized": "D7 and D7x EfficientDet configurations reuse the same BiFPN module and detection head while trading off input resolution, backbone size, and how many pyramid levels are used up to P8.",
       "match_mode": "embedding_sim"
     },
     {
@@ -57,7 +65,7 @@
       "claim_id": "efficientdet_throughput_tradeoff_negative",
       "claim_type": "limitation",
       "polarity": "negative",
-      "claim_text_normalized": "EfficientDet trades raw GPU latency for parameter and FLOP efficiency, which can disadvantage it on hardware tuned for high-throughput inference of larger but simpler architectures.",
+      "claim_text_normalized": "The EfficientDet paper reports large GPU and CPU speedups versus prior detectors on comparable hardware, so measured throughput can look competitive even when the family optimizes primarily for parameters and FLOPs.",
       "match_mode": "embedding_sim"
     }
   ],

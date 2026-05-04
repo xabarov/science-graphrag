@@ -23,6 +23,9 @@ _ACTIVE_WS_ID_RE = re.compile(
     re.DOTALL | re.IGNORECASE,
 )
 
+# Low-signal gate: below this top score, use full tool catalog (unchanged across Habr Jun 2026 ablation).
+_RULE_TOOL_SEARCH_LOW_SIGNAL_FLOOR = 1.5
+
 
 def strip_tool_search_context_wrappers(text: str) -> str:
     """Strip CH4 memory/digest XML blocks so scoring uses the user's question only."""
@@ -227,10 +230,11 @@ def shortlist_tools_for_specialist(
         return tools, {"reason": "fallback_full", "matched": []}
 
     top_score = scored[0][0]
-    if top_score < 1.5:
+    if top_score < _RULE_TOOL_SEARCH_LOW_SIGNAL_FLOOR:
         return tools, {"reason": "low_signal", "top_score": top_score}
 
-    threshold = max(0.0, top_score - 1.5)
+    score_band = float(settings.agent_tool_search_score_band)
+    threshold = max(0.0, top_score - score_band)
     picked = [t for s, t in scored if s >= threshold and s > 0]
     if for_single_agent:
         _ensure_final_answer_in_picked(picked, tools)
@@ -256,7 +260,12 @@ def shortlist_tools_for_specialist(
 
     _sort_picked_like_registry_order(picked, tools)
     names = [getattr(t, "name", "") for t in picked]
-    meta_out: dict[str, Any] = {"reason": "rules", "matched": names, "top_score": top_score}
+    meta_out: dict[str, Any] = {
+        "reason": "rules",
+        "matched": names,
+        "top_score": top_score,
+        "score_band": score_band,
+    }
     if for_single_agent:
         meta_out["single_agent"] = True
     return picked, meta_out

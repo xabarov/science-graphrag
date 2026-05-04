@@ -1,6 +1,6 @@
 # Инструменты чат-агента — каталог, контракты и карта кода
 
-Документ описывает **инструменты LangChain**, доступные research chat-агенту в режиме по умолчанию: что модель получает на границе с провайдером, как тулзы собираются в Python, где лежит логика, и как ожидается развиваться каталог (`tool_search`, компактация контекста).
+Документ описывает **инструменты LangChain**, доступные research chat-агенту в режиме по умолчанию: что модель получает на границе с провайдером, как тулзы собираются в Python, где лежит логика. **Rule-based `tool_search` v1** (shortlist схем тулов) уже включён при `SCIENCE_GRAPHRAG_AGENT_RULE_TOOL_SEARCH_ENABLED`; дальнейшее развитие каталога — LLM-discovery, расширение манифеста, компактация контекста (см. §3 и slim roadmap).
 
 **Связанные материалы:** [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md), [`docs/analysis/chat-agent-system-roadmap-2026-04-26.md`](../analysis/chat-agent-system-roadmap-2026-04-26.md), [`science_graphrag/agent/prompts/research_chat_system.py`](../../science_graphrag/agent/prompts/research_chat_system.py), статический манифест для rule-based отбора: [`science_graphrag/agent/tool_manifest.py`](../../science_graphrag/agent/tool_manifest.py).
 

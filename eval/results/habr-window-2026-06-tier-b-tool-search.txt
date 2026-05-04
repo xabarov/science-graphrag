@@ -1,0 +1,24 @@
+Habr window — June 2026: tool_search Tier B (live A/B, paired JSON)
+
+Prerequisites (this session)
+- `docker compose up -d neo4j postgres qdrant redis minio phoenix` from repo root (Qdrant + Phoenix were required: without Qdrant → store init `Connection refused`; without Phoenix → OTLP spam / slow retries to :16006).
+- For CLI runs from the host, set **`PHOENIX_COLLECTOR_ENDPOINT=http://127.0.0.1:16006/v1/traces`** if your `.env` points OTLP at Phoenix on that port.
+- **`SCIENCE_GRAPHRAG_AGENT_STEP_TIMEOUT_SECONDS=600`** recommended for `agent_tools_mini` live (default 120s can hit `AgentGraphDeadlineExceeded` on slow tool+LLM turns).
+
+Configuration knob
+- `SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_SCORE_BAND` → `Settings.agent_tool_search_score_band` (default **1.35**; **1.5** = legacy-style wider band).
+
+Commands run (2026-05-03, same machine, same model)
+1) `SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_SCORE_BAND=1.5 SCIENCE_GRAPHRAG_AGENT_STEP_TIMEOUT_SECONDS=600 PHOENIX_COLLECTOR_ENDPOINT=http://127.0.0.1:16006/v1/traces .venv/bin/science-graphrag-agent-benchmark tests/fixtures/benchmarks/agent_tools_v1 --suite --tier agent_tools_mini --json-out eval/results/habr-window-2026-06-agent-tools-mini-band-1.5-live.json`
+2) `SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_SCORE_BAND=1.35 … --json-out eval/results/habr-window-2026-06-agent-tools-mini-band-1.35-live.json`
+
+Measured (from suite `summary` + per-case `metrics.passed`)
+| Band | all_passed | cases passed / 10 | latency_p95_ms |
+|------|------------|-------------------|----------------|
+| 1.5  | false      | 1                 | 123205         |
+| 1.35 | false      | 1                 | 84621          |
+
+Interpretation: on this single paired run, **p95 latency improved** with the narrower band (1.35); formal pass rate stayed **1/10** for both (gold strictness dominates). Re-run for statistical stability if needed.
+
+Mock (no LLM) — not comparable for tool_search
+- `eval/results/habr-window-2026-06-agent-tools-mini-mock.json` — stub trace only.

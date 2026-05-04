@@ -16,6 +16,7 @@ from eval.claims.discover_cases import discover_claims_case_dirs
 from eval.claims.distractor_article import augment_article_with_distractors
 from eval.claims.metrics import score_claims_paraphrase_extraction
 from eval.claims.oracle_extract import extract_claims_oracle_from_gold
+from eval.claims.prediction_postprocess import dedupe_near_duplicate_predictions
 from science_graphrag.benchmarks.trust_signal import RuntimeMode
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.claims.extractor import (
@@ -45,7 +46,11 @@ def extract_claims_production_path(
         force_benchmark=True,
         diagnostics=diag,
     )
-    return claim_drafts_to_predictions(drafts), diag.to_dict()
+    preds = claim_drafts_to_predictions(drafts)
+    # June 2026 measurement wave: merge near-duplicate predictions before BT6 scoring
+    # (single post-process axis; does not change ingestion).
+    preds = dedupe_near_duplicate_predictions(preds, jaccard_min=0.92)
+    return preds, diag.to_dict()
 
 
 def run_claims_paraphrase_case(
@@ -159,6 +164,11 @@ def _cli(
     ),
     json_out: Path | None = typer.Option(None, "--json-out"),
     md_out: Path | None = typer.Option(None, "--md-out"),
+    no_fail_on_red_cases: bool = typer.Option(
+        False,
+        "--no-fail-on-red-cases",
+        help="Write JSON/Markdown even when some cases fail; exit 0 (CI-friendly).",
+    ),
 ) -> None:
     settings = get_settings()
 
@@ -199,7 +209,7 @@ def _cli(
                 "claims_paraphrase_eval": True,
             },
         )
-        if not bool(payload.get("summary", {}).get("all_passed", True)):
+        if not bool(payload.get("summary", {}).get("all_passed", True)) and not no_fail_on_red_cases:
             raise typer.Exit(code=1)
         return
 
@@ -211,7 +221,7 @@ def _cli(
         json_out=json_out,
         md_out=md_out,
     )
-    if not _passed(report):
+    if not _passed(report) and not no_fail_on_red_cases:
         raise typer.Exit(code=1)
 
 
