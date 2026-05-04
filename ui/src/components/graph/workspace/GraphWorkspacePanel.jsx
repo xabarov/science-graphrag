@@ -17,6 +17,7 @@ import GraphVisualization from "../shell/GraphVisualization.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "../shell/graphShellStates.jsx";
 import { firstMatchingNodeIdInOrder } from "../model/graphNodeSearch.js";
 import { LS_GRAPH_STANDALONE_DETAIL_MIN_PX, readGraphDetailColumnPxStored } from "../model/graphDetailColumnWidth.js";
+import GraphWorkspaceOnboarding from "./GraphWorkspaceOnboarding.jsx";
 import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
 import GraphWorkspaceLayerCountsFooter from "./GraphWorkspaceLayerCountsFooter.jsx";
 import { useGraphWorkspaceData } from "./hooks/useGraphWorkspaceData.js";
@@ -280,6 +281,7 @@ export default function GraphWorkspacePanel({
             dense={Boolean(compactLayout || focusLayout)}
             leadingSlot={standalone && standaloneToolbarLeading ? standaloneToolbarLeading : null}
           />
+          {standalone && effectiveVizMode === "canvas" ? <GraphWorkspaceOnboarding t={t} /> : null}
           {!standalone ? <GraphViewModeSwitch mode={vizMode} onChange={setVizMode} compact={compactLayout} /> : null}
           {projectedGraph.warnings.length > 0 ? (
             <Alert severity="info" sx={{ mb: 1 }}>

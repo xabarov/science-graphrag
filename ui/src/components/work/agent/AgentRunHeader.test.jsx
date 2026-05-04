@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { ThemeProvider } from "@mui/material/styles";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { buildAppTheme } from "../../../theme/buildAppTheme.js";
@@ -56,6 +56,7 @@ describe("AgentRunHeader", () => {
 
   it("shows token total when run finished and totalTokens set", () => {
     renderHeader("done", { totalTokens: 12840 });
+    fireEvent.click(screen.getByRole("button", { name: "chat.run.headerDetailsExpandAria" }));
     expect(screen.getByText("chat.run.tokensTotal")).toBeTruthy();
   });
 

@@ -7,6 +7,7 @@ import { ChatMessageThread } from "./ChatMessageThread.jsx";
 import { ChatSessionSidebar } from "./ChatSessionSidebar.jsx";
 import { AskPanelChrome } from "./AskPanelChrome.jsx";
 import { useAskPanelOrchestration } from "./useAskPanelOrchestration.js";
+import { useChatDetailLevel } from "./useChatDetailLevel.js";
 
 /** Ask / chat workspace — composition shell; logic in `useAskPanelOrchestration`. */
 export default function AskPanel({
@@ -20,6 +21,7 @@ export default function AskPanel({
   fillAvailableHeight = false,
 }) {
   const { confirm } = useFeedback();
+  const { detailLevel, toggleDetailLevel } = useChatDetailLevel();
   const o = useAskPanelOrchestration({
     scopedWorkId,
     initialWorkId,
@@ -86,9 +88,12 @@ export default function AskPanel({
             error={o.error}
             onClearChatClick={showPageChrome ? undefined : () => void o.onClearChat()}
             clearChatDisabled={o.isLoading}
+            detailLevel={detailLevel}
+            onToggleDetailLevel={toggleDetailLevel}
           />
           <ChatMessageThread
             t={o.t}
+            chatDetailLevel={detailLevel}
             scopeKey={o.scopeKey}
             activeSessionId={o.activeSessionId}
             streamingTarget={o.streamingTarget}

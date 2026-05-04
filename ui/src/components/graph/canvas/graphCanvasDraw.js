@@ -48,10 +48,10 @@ export const EDGE_LABEL_MEGA_DENSE_MIN_EDGES = 4000;
 export const EDGE_LABEL_ADAPTIVE_MIN_SCALE = 0.32;
 
 /** When node count exceeds this or scale is below {@link NODE_LABEL_ADAPTIVE_MIN_SCALE}, community-mode node labels are gated. */
-export const NODE_LABEL_ADAPTIVE_MAX_NODES = 56;
+export const NODE_LABEL_ADAPTIVE_MAX_NODES = 48;
 
 /** Below this scale, community-mode hides most node labels (selected/hovered/search hits still show). */
-export const NODE_LABEL_ADAPTIVE_MIN_SCALE = 0.34;
+export const NODE_LABEL_ADAPTIVE_MIN_SCALE = 0.36;
 
 /**
  * Unified policy for whether to paint a node's canvas label box.
@@ -206,11 +206,12 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}, drawO
       workspaceMembership: node.workspaceMembership,
       nodeKind: node.nodeKind,
       searchDim: Boolean(sm.searchDim),
+      focusDim: Boolean(sm.focusDim),
       appearance,
     });
     let fillStyle = style.fill;
     let strokeStyle = style.stroke;
-    const skipCommunityFill = Boolean(sm.selected || sm.hovered || sm.searchDim);
+    const skipCommunityFill = Boolean(sm.selected || sm.hovered || sm.searchDim || sm.focusDim);
     if (colorBy === "community" && nodeCommunityMap && communityColorStyleMap && !skipCommunityFill) {
       const cid = nodeCommunityMap.get(sid);
       if (cid != null) {

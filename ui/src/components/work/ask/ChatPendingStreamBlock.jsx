@@ -5,7 +5,6 @@ import { AskAnswerPanel } from "./AskAnswerPanel.jsx";
 import { AgentAssistantTurnShell } from "../agent/AgentAssistantTurnShell.jsx";
 import { AgentRunHeader } from "../agent/AgentRunHeader.jsx";
 import { AgentLiveStatus } from "../agent/AgentLiveStatus.jsx";
-import { deriveHeaderProgressHint } from "../agent/agentRunViewModel.js";
 import ChatUserBubble from "./ChatUserBubble.jsx";
 
 /**
@@ -13,6 +12,7 @@ import ChatUserBubble from "./ChatUserBubble.jsx";
  */
 export default function ChatPendingStreamBlock({
   t,
+  chatDetailLevel = "simple",
   pendingUserQuery,
   liveNormalized,
   locked,
@@ -47,6 +47,7 @@ export default function ChatPendingStreamBlock({
                 onToggleRetrievalJson={onToggleRetrievalJson}
                 streamEvents={streamEvents}
                 isRunActive={isLoading}
+                chatDetailLevel={chatDetailLevel}
               />
             </AgentAssistantTurnShell>
           ) : isLoading ? (
@@ -57,7 +58,8 @@ export default function ChatPendingStreamBlock({
                 answerClass={null}
                 citationCount={0}
                 durationMs={null}
-                progressHint={deriveHeaderProgressHint(t, streamEvents, true)}
+                progressHint=""
+                defaultDetailsOpen={chatDetailLevel === "detailed"}
               />
               <AgentLiveStatus t={t} streamEvents={streamEvents} isActive embedded />
             </AgentAssistantTurnShell>

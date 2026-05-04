@@ -329,6 +329,19 @@ export function collectSafeExplanationLines(t, events, maxLines = 6) {
  * @param {boolean} isRunActive
  * @returns {LiveStatusPresentation}
  */
+/**
+ * After a completed run, suppress the post-run headline when it only repeats
+ * the redundant "answer ready" line already implied by the answer section below.
+ *
+ * @param {unknown[]} streamEvents
+ * @returns {boolean}
+ */
+export function shouldSuppressPostRunStreamSummary(streamEvents) {
+  const ev = pickLastMeaningfulStreamEvent(streamEvents);
+  if (!ev || typeof ev !== "object") return false;
+  return String(/** @type {{ type?: string }} */ (ev).type || "") === "answer_synthesis_finished";
+}
+
 export function buildLiveStatusPresentation(t, streamEvents, isRunActive) {
   const list = Array.isArray(streamEvents) ? streamEvents : [];
   const meaningful = pickLastMeaningfulStreamEvent(list);

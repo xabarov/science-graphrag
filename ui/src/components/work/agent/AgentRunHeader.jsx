@@ -1,7 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import Collapse from "@mui/material/Collapse";
+import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 /**
  * @param {{
@@ -12,6 +16,7 @@ import Typography from "@mui/material/Typography";
  *   durationMs?: number | null,
  *   totalTokens?: number | null,
  *   progressHint?: string,
+ *   defaultDetailsOpen?: boolean,
  * }} props
  */
 export function AgentRunHeader({
@@ -22,7 +27,15 @@ export function AgentRunHeader({
   durationMs = null,
   totalTokens = null,
   progressHint = "",
+  defaultDetailsOpen = false,
 }) {
+  const tk = useTheme().appTokens;
+  const [detailsOpen, setDetailsOpen] = useState(defaultDetailsOpen);
+
+  useEffect(() => {
+    setDetailsOpen(defaultDetailsOpen);
+  }, [defaultDetailsOpen]);
+
   const stateKey =
     runState === "running"
       ? "chat.run.state.running"
@@ -64,66 +77,106 @@ export function AgentRunHeader({
       ? t("chat.run.tokensTotal", { n: String(Math.round(Number(totalTokens))) })
       : null;
 
+  const showDetailsToggle = runState !== "running";
+  const cls = answerClass != null ? String(answerClass).trim() : "";
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 1,
-        mb: 1.25,
-        rowGap: 0.75,
-      }}
-    >
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, minWidth: 0 }}>
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)" }}>
-          {t("chat.run.assistantLabel")}
-        </Typography>
-        <Chip
-          size="small"
-          label={t(stateKey)}
-          sx={{
-            height: 22,
-            fontSize: "0.7rem",
-            color: stateColor,
-            backgroundColor: stateBg,
-            border: "1px solid rgba(255,255,255,0.1)",
-          }}
-        />
-        {answerClass ? (
+    <Box sx={{ mb: 1.25 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
+          rowGap: 0.75,
+        }}
+      >
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: "rgba(255,255,255,0.88)" }}>
+            {t("chat.run.assistantLabel")}
+          </Typography>
           <Chip
             size="small"
-            label={t("chat.run.answerClassChip", { cls: String(answerClass) })}
+            label={t(stateKey)}
             sx={{
               height: 22,
-              fontSize: "0.68rem",
-              color: "rgba(255,255,255,0.55)",
-              backgroundColor: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              maxWidth: "100%",
+              fontSize: "0.7rem",
+              color: stateColor,
+              backgroundColor: stateBg,
+              border: "1px solid rgba(255,255,255,0.1)",
             }}
           />
-        ) : null}
+        </Box>
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.5, justifyContent: "flex-end" }}>
+          {runState === "running" && progressHint ? (
+            <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)", maxWidth: 420 }} noWrap title={progressHint}>
+              {progressHint}
+            </Typography>
+          ) : null}
+          {dur ? (
+            <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>{dur}</Typography>
+          ) : null}
+          {showDetailsToggle ? (
+            <IconButton
+              type="button"
+              size="small"
+              aria-expanded={detailsOpen}
+              aria-label={detailsOpen ? t("chat.run.headerDetailsCollapseAria") : t("chat.run.headerDetailsExpandAria")}
+              title={t("chat.run.headerDetailsToggle")}
+              onClick={() => setDetailsOpen((v) => !v)}
+              sx={{
+                color: tk.text.muted,
+                p: 0.35,
+                "&:hover": { backgroundColor: tk.control.navItemHoverBg },
+              }}
+            >
+              <ExpandMoreIcon
+                sx={{
+                  fontSize: "1.15rem",
+                  transform: detailsOpen ? "rotate(180deg)" : "none",
+                  transition: "transform 0.15s ease",
+                }}
+              />
+            </IconButton>
+          ) : null}
+        </Box>
       </Box>
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, justifyContent: "flex-end" }}>
-        {runState === "running" && progressHint ? (
-          <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)", maxWidth: 420 }} noWrap title={progressHint}>
-            {progressHint}
-          </Typography>
-        ) : null}
-        {dur ? (
-          <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>{dur}</Typography>
-        ) : null}
-        {runState !== "running" && tok ? (
-          <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>{tok}</Typography>
-        ) : null}
-        {runState !== "running" ? (
+
+      <Collapse in={detailsOpen && showDetailsToggle} timeout="auto" unmountOnExit>
+        <Box
+          sx={{
+            mt: 0.75,
+            pt: 0.75,
+            borderTop: `1px solid ${tk.border.default}`,
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 1,
+            alignItems: "center",
+          }}
+        >
+          {cls ? (
+            <Chip
+              size="small"
+              label={t("chat.run.answerClassChip", { cls })}
+              sx={{
+                height: 22,
+                fontSize: "0.68rem",
+                color: "rgba(255,255,255,0.55)",
+                backgroundColor: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                maxWidth: "100%",
+              }}
+            />
+          ) : null}
+          {tok ? (
+            <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>{tok}</Typography>
+          ) : null}
           <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.38)" }}>
             {t("chat.run.citationsCount", { n: String(citationCount) })}
           </Typography>
-        ) : null}
-      </Box>
+        </Box>
+      </Collapse>
     </Box>
   );
 }

@@ -47,7 +47,7 @@ export default {
   "chat.thread.meta.answerClass": "Answer class",
 
   "chat.clear.openAria": "Clear chat and start a new session",
-  "chat.clear.button": "Clear",
+  "chat.clear.button": "New session",
   "chat.clear.dialogTitle": "Start a new conversation?",
   "chat.clear.dialogBody":
     "The current thread will be cleared from the active chat. A new session with empty agent memory will be created (with server sync, a new server thread).",
@@ -72,6 +72,12 @@ export default {
   "chat.context.manualWorkIdHint": "Or paste a known work_id if you have it from a link or citation.",
   "chat.context.manualWorkIdPlaceholder": "work_id…",
   "chat.context.manualApply": "Use this id",
+  "chat.context.cancel": "Cancel",
+
+  "chat.evidenceSummary.citationsOnly": "{{n}} citation(s)",
+  "chat.evidenceSummary.citationsAndTrace": "{{citations}} citation(s) · {{steps}} trace step(s)",
+  "chat.evidenceSummary.noCitations": "Assistant reply (no citations)",
+  "chat.evidenceSummary.noCitationsWithTrace": "Assistant reply (no citations) · {{steps}} trace step(s)",
 
   "chat.composer.placeholder": "Message…",
   "chat.composer.send": "Send",
@@ -80,6 +86,12 @@ export default {
   "chat.composer.openStandalone": "Open standalone chat",
   "chat.composer.openStandaloneAria": "Open standalone chat",
   "chat.composer.enterHint": "Enter to send · Shift+Enter for newline",
+  "chat.composer.clearChatAria": "Clear chat",
+  "chat.composer.clearChatTitle": "Clear conversation and start a new session",
+
+  "chat.chrome.detailToggleAria": "Toggle answer detail level",
+  "chat.chrome.detailModeSimple": "Simple view is on. Click to expand tokens and header metrics.",
+  "chat.chrome.detailModeDetailed": "Detailed view is on. Click for a compact header.",
 
   "chat.thread.empty": "Start a conversation — the reply will appear here.",
   "chat.thread.emptyTitle": "Ask the research agent",
@@ -141,6 +153,9 @@ export default {
   "chat.run.durationMs": "{{ms}} ms",
   "chat.run.tokensTotal": "{{n}} tokens",
   "chat.run.citationsCount": "{{n}} citations",
+  "chat.run.headerDetailsToggle": "Run details",
+  "chat.run.headerDetailsExpandAria": "Show tokens, answer class, and citation count",
+  "chat.run.headerDetailsCollapseAria": "Hide tokens, answer class, and citation count",
   "chat.run.eventsCount": "{{n}} events",
   "chat.run.progressWorking": "Working on your question…",
   "chat.run.productStep.searching_literature": "Searching relevant works…",
@@ -197,6 +212,7 @@ export default {
   "chat.run.openPhoenix": "Open trace in Phoenix",
   "chat.run.openPhoenixAria": "Open this run's trace in Phoenix UI (new tab)",
   "chat.run.specialistRunsTitle": "Specialist runs",
+  "chat.run.specialistCompactSummary": "{{count}} events",
   "chat.run.specialistExpandAria": "Expand specialist run details",
   "chat.run.specialistCollapseAria": "Collapse specialist run details",
   "chat.run.specialistRunLabel": "{{from}} → {{to}} · {{count}} events",

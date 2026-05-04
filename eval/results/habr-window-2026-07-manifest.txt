@@ -25,3 +25,8 @@ CLI
 
 Git pin (fixture + docs wave; re-run artifacts may be regenerated)
 - HEAD at wave authoring: 3a95e60765f68ced043debbc9f4d16a599cf3887
+
+Multimodel BT6 re-run (holdout table in Habr §6 / export)
+- Directory: `eval/results/multimodel-2026-07/` — per-model JSON under `<slug>/`; merged `summary.json`, enriched `summary-for-report.json`.
+- Holdout (5 cases): mean R / mean P / mean per-case F1 — Mistral **0.250 / 0.164 / 0.156**; DeepSeek **0.350 / 0.194 / 0.218**; Kimi **0.250 / 0.095 / 0.128**; кейсов с нулевым per-case F1 **1/5** для каждой модели.
+- Runner: `.venv/bin/python scripts/run_multimodel_benchmark.py --models '<m1>,<m2>,<m3>' --out-dir eval/results/multimodel-2026-07` (claims tiers use `--no-fail-on-red-cases` inside the script). Partial Mistral completion + merge: `scripts/finalize_multimodel_2026_07_summary.py`.

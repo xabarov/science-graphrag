@@ -8,7 +8,7 @@
 
 **Benchmark contract (claims paraphrase / BT6):** [`docs/benchmarks/ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md) — Appendix A
 
-**Pinned artifacts:** `eval/results/habr-window-2026-05-manifest.txt`, `eval/results/habr-window-2026-06-manifest.txt`
+**Pinned artifacts:** `eval/results/habr-window-2026-05-manifest.txt`, `eval/results/habr-window-2026-06-manifest.txt`, `eval/results/habr-window-2026-07-manifest.txt` (gold-v2 + multimodel / RCA pointers)
 
 **Raised:** 2026-07-01
 
@@ -23,7 +23,7 @@
 | Failure analysis (2–3 cases) | **Done** | `eval/results/habr-window-2026-05-failure-analysis.md` + compact table in article §4.1 / §6. |
 | Article checklist: frozen snapshot | **Done** | Manifests + git pin in `habr-window-2026-06-manifest.txt`. |
 | `tool_search` ablation (narrow) | **Partial** | June A/B on `agent_tools_mini` (bands 1.35 vs 1.5) logged in `eval/results/habr-window-2026-06-tier-b-tool-search.txt` — useful as **negative / honest** signal (both 1/10 pass, latency differs); not a “win” narrative without deeper diagnosis. |
-| Multimodel stability | **Addressed** | Historical multimodel slice kept; article adds explicit **disclaimer** vs macro-by-case headline (§6). |
+| Multimodel stability | **Addressed** | §6 table pinned to `eval/results/multimodel-2026-07/` (2026-07 re-run); disclaimer vs TL;DR headline (June live macro-F1) unchanged. |
 | Retrieval: one tight benchmark | **Done** | `live_corpus_mini` 3/3 + `merge_safe_contract` mock in June manifest. |
 
 ---
@@ -46,7 +46,7 @@
 ## 3. How this relates to `docs/analysis/` and the rest of the backlog
 
 - **`docs/analysis/README.md`** lists long-lived product tracks (agent chat, graph UX, ingest, ontology roadmaps). The Habr line is **not** a substitute for those docs; it is a **short publication + measurement spine** so article numbers stay tied to `eval/results/` and Appendix A.
-- **Ontology / trust audits** (`ontology-benchmarks-trust-audit-2026-04-25.md`, `ontology-benchmarks-roadmap-2026-04-24.md`) own BT1–BT12 breadth; this plan only guards **what goes into the Habr draft** (live-only headlines, no pilot/holdout mixing).
+- **Ontology / benchmarks (engineering)** — [`ontology-extraction-benchmarks-plan.md`](ontology-extraction-benchmarks-plan.md) + trust-audit; this Habr plan only guards **what goes into the Habr draft** (live-only headlines, no pilot/holdout mixing).
 - **`docs/report/habr-article-2026-04-29.md`** should remain the single reader-facing narrative; new waves add rows to manifests + **minimal** deltas in §4.1 / TL;DR.
 
 ---
@@ -57,11 +57,11 @@ Prioritized for **credibility** and **reader memory** (not feature sprawl).
 
 1. **Gold realism wave (alternative to another prompt tweak)** — **Done (May 2026 wave).** Five `expected_claims` rows across `holdout_dino_v1`, `corpus_detr_v2`, `corpus_efficientdet_v2`; `schema_version: 3` + `meta.gold_v2_revision`; artifacts `eval/results/habr-window-2026-07-gold-v2-*.json` + `habr-window-2026-07-manifest.txt`; article §4.1 documents variance caveat (headline stays June live).
 
-2. **Optional: multimodel re-run on *current* benchmark prompt** — **Open.**  
-   Removes the last “apples vs oranges” objection for readers who skim tables only. Cost: 3× holdout LLM calls; keep historical JSON for comparison if desired.
+2. **Optional: multimodel re-run on *current* benchmark prompt** — **Done.**  
+   Artifacts: `eval/results/multimodel-2026-07/` (Layer1/L2 + claims pilot/holdout × 3 models); article §6 + export updated to those numbers; `summary.json` / `summary-for-report.json` in same folder.
 
-3. **`tool_search` → root cause, not only A/B** — **Open.**  
-   June numbers show the shortlist is fragile on `agent_tools_mini`. One short subsection: *why* cases fail (wrong tool in shortlist vs model misuse vs timeout) using one trace id from Phoenix — stronger than a second env sweep.
+3. **`tool_search` → root cause, not only A/B** — **Done.**  
+   RCA markdown + классификация провалов по сохранённому `tool_trace` (без нового LLM); черновик Habr §7.4 ссылается на материалы в репозитории без путей к файлам в тексте для Хабра. Детали и имена файлов — только во внутренних артефактах / манифесте.
 
 4. **Statistical honesty on n=5 holdout** — **Done.**  
    Paragraph + numeric range from `habr-window-2026-06-live-holdout.json` in article §6 after «Принцип 3».
@@ -98,3 +98,5 @@ Prioritized for **credibility** and **reader memory** (not feature sprawl).
 | Paraphrase diagnostics script | `scripts/report_claims_paraphrase_diagnostics.py` |
 | Post-process dedupe | `eval/claims/prediction_postprocess.py` |
 | June tool_search note | `eval/results/habr-window-2026-06-tier-b-tool-search.txt` |
+| July 2026 tool_search RCA | `eval/results/habr-window-2026-07-tool-search-rca.md` |
+| July 2026 multimodel re-run | `eval/results/multimodel-2026-07/` |

@@ -89,6 +89,7 @@ export function getScienceGraphLegendNodeChipSx(nodeType, opts = {}) {
  *   workspaceMembership?: string,
  *   nodeKind?: string,
  *   searchDim?: boolean,
+ *   focusDim?: boolean,
  *   appearance?: "light" | "dark",
  * }} [opts]
  * @returns {{ fill: string, stroke: string, lineWidth: number, strokeDash?: number[] }}
@@ -108,7 +109,7 @@ export function getScienceGraphNodeStyle(nodeType, opts = {}) {
       lineWidth: 1.5,
       strokeDash: [6, 3],
     };
-    if (opts.searchDim && !opts.selected && !opts.hovered) {
+    if ((opts.searchDim || opts.focusDim) && !opts.selected && !opts.hovered) {
       return {
         ...base,
         fill: "rgba(99, 102, 241, 0.05)",
@@ -150,7 +151,7 @@ export function getScienceGraphNodeStyle(nodeType, opts = {}) {
       lineWidth: 1.75,
     };
   }
-  if (opts.searchDim) {
+  if (opts.searchDim || opts.focusDim) {
     return {
       fill: ext ? dim(dim(fillBase)) : dimFill,
       stroke: dimStroke,

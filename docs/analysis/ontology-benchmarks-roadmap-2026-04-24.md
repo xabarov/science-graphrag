@@ -1,7 +1,9 @@
 # Карта развития: онтология, индексы, бенчмарки и retrieval — Wave M–T
 
+> **Точка входа (с 2026-05):** еженедельные приоритеты и ссылки по оси онтология / извлечение / бенчмарки — в [`ontology-extraction-benchmarks-plan.md`](ontology-extraction-benchmarks-plan.md). Этот файл — **длинная справочная инвентаризация** Wave M–T (в т.ч. §7.x); актуальная очередь BT — в [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md). Не дублируйте таблицы отсюда в новые планы.
+
 **Дата:** 2026-04-24 (история ниже до 2026-04-25; trust-audit вынесен в отдельный документ)
-**Статус:** **large reference** (Wave M–T inventory + §1 status board). Для **актуальной** серии BT / `trust_signal` / gate — читайте [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) и [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) §10 (не загружайте этот файл целиком в контекст агента без нужды).
+**Статус:** **large reference** (Wave M–T inventory + §1 status board). Для **актуальной** серии BT / `trust_signal` / gate — читайте [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md) и [`ontology-extraction-benchmarks-plan.md`](ontology-extraction-benchmarks-plan.md); [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) §10 — только исторический лог (не единственный backlog).
 **Связь:** продолжение [_archive/workspace-experience-gap-2026-04-24.md](_archive/workspace-experience-gap-2026-04-24.md) [HISTORICAL] (Wave I–L) и [runbooks/roadmap-next-waves.md](../runbooks/roadmap-next-waves.md) (Wave A–H).
 **Цель:** дать **единый план** на следующий горизонт — продуктовая разработка фич **в связке** с расширением и ужесточением бенчмарков, чтобы любое движение онтологии / retrieval / графа сопровождалось измеримой регрессионной защитой.
 

@@ -61,7 +61,10 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
         />,
       ),
     );
-    expect(html).toContain("All papers in workspace");
+    expect(html).not.toContain("All papers in workspace");
+    expect(html).not.toMatch(/Search (&amp;|&) node types/);
+    expect(html).not.toMatch(/Side panels (&amp;|&) stats/);
+    expect(html).toContain("Graph toolbar: filters, search, panels, and workspace stats");
     expect(html).toContain("Nodes ·");
     expect(html).not.toContain("Scope:");
     expect(html).not.toContain("Depth");
@@ -69,6 +72,31 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
     expect(html).toContain("Legend");
     expect(html).toContain("Diagnostics");
     expect(html).toContain("3 works");
+  });
+
+  it("shows stacked zone labels when not in canvas mode (flow)", () => {
+    const html = renderToString(
+      withProviders(
+        <WorkspaceGraphToolbar
+          workspaceId="ws-1"
+          stats={{ works_count: 1, authors_count: 2, external_citations: 3 }}
+          visibility={defaultVisibility}
+          onVisibilityChange={() => {}}
+          canvasMode={false}
+          labMode={false}
+          detailsVisible
+          legendOpen
+          diagnosticsOpen={false}
+          onToggleDetails={() => {}}
+          onToggleLegend={() => {}}
+          onToggleDiagnostics={() => {}}
+        />,
+      ),
+    );
+    expect(html).toContain("All papers in workspace");
+    expect(html).toMatch(/Search (&amp;|&) node types/);
+    expect(html).toMatch(/Side panels (&amp;|&) stats/);
+    expect(html).toContain("Inspector");
   });
 
   it("omits diagnostics chip when labMode", () => {

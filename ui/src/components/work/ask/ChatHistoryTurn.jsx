@@ -19,6 +19,7 @@ export default function ChatHistoryTurn({
   entry,
   tk,
   t,
+  chatDetailLevel = "simple",
   locked,
   inWorkspace,
   workId,
@@ -68,6 +69,7 @@ export default function ChatHistoryTurn({
                 onToggleRetrievalJson={() => {}}
                 streamEvents={Array.isArray(entry.details?.stream_events) ? entry.details.stream_events : []}
                 isRunActive={false}
+                chatDetailLevel={chatDetailLevel}
               />
             </AgentAssistantTurnShell>
           ) : (

@@ -47,6 +47,7 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 | 2026-05-04 | **P0 graph perf + physics policy:** Baseline doc [`p0-graph-canvas-perf-baseline-2026-05.md`](../analysis/p0-graph-canvas-perf-baseline-2026-05.md); `graphPerf` localStorage + `graphPerfInstrumentation.js`; telemetry payload sizes; `graphUiLimits` perf warnings (i18n) + community/LOD thresholds (`simConstants`, `graphCanvasDraw` mega-dense edge labels, `useScienceGraphForceSimulation` + `detectCommunitiesForUi`); `useGraphPhysicsPolicy` JSDoc inventory + combined vitest. |
 | 2026-05-04 | **P2 + P1 reconciliation / polish wave:** `useWorkspaceBootstrap`, `useIngestDedupAutoOpen`, `WorkspacePageEmptyState`; `WorkspaceContextChip` split → `WorkspaceContextWorkspaceMenu.jsx` + `WorkspaceContextWorkspaceRow.jsx`; `useWorkspacePageCore` slimmer (~381 LOC); `GraphWorkspaceLayerCountsFooter` (compact metrics when layers align); canvas dense **all** edge-label hint + session dismiss + quick switches; node context menu (fit/center/copy id) + on-canvas edge-type legend; `WorkspaceGraphToolbar` **`dense`** + hidden workspace subtitle row when dense; `GraphWorkspacePanel` skips empty title block; `GraphPage` / `WorkspaceLayout` tighter vertical chrome; Reader RX2 — `ReaderSectionToc`, `buildReaderSectionPathList`, language banner, `CopyIdButton` on reader surfaces; ingest stage keys `workspace.ingest.stage.*`; `IngestConflictReviewCard` optional `activeIngestJobId` line; `benchmarkScorecardModel.js` (`normalizeBenchmarkMetricsPayload`) + vitest; inspector chip/panel i18n (`graph.wsToolbar.viewChipDetails`, `graph.detailPanel.title`); updated LOC audit in backlog verification row below. |
 | 2026-05-04 | **Backlog plan (P1/P2 from Queue):** reader graph DRY — JSDoc cross-links to `authorship_collapse` + `useGraphWorkspaceData` note (no client membership re-derive); **backend** `POST /v1/agent/query` retired with **410 Gone** + `Link` v2 (see `science_graphrag/api/agent.py`); benchmark Analysis — `extractNormalizedScorecardForRun`, secondary/diagnostic sections + run id list, `BenchmarkScorecardMetricSections.jsx`; `WorkspaceLayout` side column flex-fill; ingest — `ShimmerLabel` on active `IngestStageRow`, job-level ETA in `WorkspaceIngestProgressStrip` when API sends `remaining_duration_ms` (and aliases); `IngestConflictReviewCard` prev/next + conflict id; graph standalone dense — load/about merged into `WorkspaceGraphToolbar` `leadingSlot`; `GraphWorkspacePanel` traceability/empty graph i18n. |
+| 2026-05-04 | **P1 graph canvas split (labels wave, closure):** `useCanvasLabelMode`, `useGraphAdjacency`, `GraphCanvasLabelsControl`, `GraphCanvasDenseLabelHint`, `graphCanvasMvpFrame.js`, viewport/zoom extras; `GraphCanvasMvp.jsx` trimmed to under 600 LOC (`graphCanvasMvpConstants.js`, `graphCanvasMvpStorage.js`, `GraphCanvasEmptyState.jsx`, vitest `graphCanvasMvpStorage.test.js`); `GraphCanvasViewToolbar.jsx` remains a composed shell (\~300 LOC; original \<220 target superseded by preserved sections). |
 
 ## Queue
 
@@ -56,7 +57,7 @@ Priorities: **P0** = user-visible risk or scaling ceiling; **P1** = maintainabil
 
 Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor-backend.md`](./refactor-backend.md); do not track duplicate narratives here.
 
-**Open queue:** empty as of 2026-05-04 (prior P1/P2 batch closed in archive row «Backlog plan (P1/P2 from Queue)»). Further structural debt → add a new scoped item below.
+**Open queue:** at least one P1 item below (ChatMessageThread split). Further structural debt → add a new scoped item.
 
 ---
 
@@ -68,19 +69,14 @@ _No open items._
 
 ### P1 — Module size and coupling
 
-### [OPEN] Split `GraphCanvasMvp.jsx` and `GraphCanvasViewToolbar.jsx` (canvas labels wave)
-- **Area:** `ui/src/components/graph/canvas/`
-- **Issue:** unified canvas-label wave (mode + 1-hop neighbors + popover) pushed [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx) to ~790 LOC and [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx) to ~430 LOC; both are well above the 400-line / mixed-responsibility heuristic. The MVP file mixes: localStorage state for label mode + neighbors + repulsion + dense hint, adjacency memo and active-for-label set, force-layout wiring, paint orchestration, context-menu, force-restart/unpin handlers, and JSX for toolbar/alert/menu/canvas. The toolbar mixes the labels popover (RadioGroup + Switch + Reset + descriptions), color toggle, repulsion slider, and view buttons.
-- **Proposal:**
-  - Extract canvas-label state into `useCanvasLabelMode.js` (state + LS read/write + migration + `activeForLabelSet` builder taking adjacency + selected/hovered).
-  - Extract `useGraphAdjacency.js` for `Map<string, Set<string>>` from `graph.edges`.
-  - Move the labels popover (button + `Popover` + radios + neighbors switch + reset) into `GraphCanvasLabelsControl.jsx`; toolbar becomes a layout shell rendering color/labels/view sections from sibling controls.
-  - Move dense-label `Alert` block into `GraphCanvasDenseLabelHint.jsx` (props: `mode`, `dismissed`, `onSwitch*`, `onDismiss`).
-- **Acceptance:**
-  - `GraphCanvasMvp.jsx` < 600 LOC and limited to wiring + paint orchestration + force handlers.
-  - `GraphCanvasViewToolbar.jsx` < 220 LOC and only composes section controls.
-  - `useCanvasLabelMode.js`, `useGraphAdjacency.js` covered by unit tests; existing `graphCanvasDraw.test.js` keeps passing without changes.
-- **Raised:** 2026-05-04 (canvas-labels unification wave; see plan `unified-canvas-label-mode_d5d624ec`).
+### [OPEN] Extract scroll / empty state from ChatMessageThread
+- **Area:** `ui/src/components/work/ask/ChatMessageThread.jsx`
+- **Issue:** File is a structural hotspot (~287 LOC); new thread features risk inflating a monolith and complicating tests.
+- **Proposal:** Move scroll behavior to `useChatThreadScroll` and/or split `empty state` and `jump-to-bottom` into small presentational components; keep `ChatMessageThread` as a thin shell.
+- **Acceptance:** `ChatMessageThread.jsx` stays under ~350 LOC and has a single obvious responsibility; scroll/empty covered by focused unit tests or existing thread tests.
+- **Raised:** 2026-05-04 (Ask chat UI/UX plan phase E)
+
+Former canvas-label split tracked in Completed row «P1 graph canvas split (labels wave, closure)» (2026-05-04).
 
 Optional future split: [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) only when new tabs/flows land (~381 LOC after extractions).
 

@@ -44,6 +44,10 @@ import GraphViewChips from "../toolbar/GraphViewChips.jsx";
  *   dense?: boolean,
  *   leadingSlot?: import("react").ReactNode,
  * }} props
+ *
+ * `dense` — компактные отступы панели с родителя (compact/focus layout страницы).
+ * Одна горизонтальная полоса (без секционных подписей зон) также включается при **canvasMode**,
+ * даже если `dense` false (обычный workspace + canvas).
  */
 export default function WorkspaceGraphToolbar({
   workspaceId = "",
@@ -75,6 +79,8 @@ export default function WorkspaceGraphToolbar({
   const ctxWork = String(contextWorkId || "").trim();
   const filtersEnabled = Boolean(wid);
   const nodesMenuEnabled = filtersEnabled || Boolean(ctxWork);
+  /** Single wrapped row: no stacked zone labels; used when canvas or parent dense layout. */
+  const useCompactToolbarRow = dense || canvasMode;
 
   const statsFragments = useMemo(() => {
     if (!stats || typeof stats !== "object" || !filtersEnabled) return [];
@@ -124,147 +130,221 @@ export default function WorkspaceGraphToolbar({
     [tk],
   );
 
+  const statsTypographySx = useMemo(
+    () => ({
+      fontSize: "0.72rem",
+      color: tk.text.muted,
+      ml: { xs: 0, sm: 1 },
+      flexShrink: 0,
+      width: { xs: "100%", sm: "auto" },
+      textAlign: "left",
+    }),
+    [tk.text.muted],
+  );
+
   const localFindFieldSx = useMemo(() => {
     const field = outlinedAppTextFieldSx(tk);
     return {
       minWidth: 160,
-      flex: "1 1 180px",
-      maxWidth: 360,
+      flex: "1 1 200px",
+      maxWidth: 520,
       ...field,
       "& .MuiOutlinedInput-root": { ...field["& .MuiOutlinedInput-root"], fontSize: "0.8125rem" },
       "& .MuiOutlinedInput-input": { color: tk.text.primary },
     };
   }, [tk]);
 
+  const dividerSx = useMemo(
+    () => ({ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }),
+    [tk.border.default],
+  );
+
+  const viewChipsProps = useMemo(
+    () => ({
+      detailsVisible,
+      legendOpen,
+      diagnosticsOpen,
+      onToggleDetails,
+      onToggleLegend,
+      onToggleDiagnostics,
+      showLegendChip: true,
+      showDiagnosticsChip: !labMode,
+      t,
+    }),
+    [
+      detailsVisible,
+      diagnosticsOpen,
+      labMode,
+      legendOpen,
+      onToggleDetails,
+      onToggleDiagnostics,
+      onToggleLegend,
+      t,
+    ],
+  );
+
+  const statsBlock =
+    statsFragments.length > 0 ? (
+      <Typography component="span" sx={statsTypographySx}>
+        {statsFragments.map((frag, i) => (
+          <React.Fragment key={frag.key}>
+            {i > 0 ? " · " : null}
+            <Tooltip title={frag.tip}>
+              <Box component="span" sx={{ cursor: "default" }}>
+                {frag.text}
+              </Box>
+            </Tooltip>
+          </React.Fragment>
+        ))}
+      </Typography>
+    ) : null;
+
+  const institutionsBlock =
+    ctxWork && onToggleWorkGraphIncludeInstitutions ? (
+      <>
+        <Divider orientation="vertical" flexItem sx={dividerSx} />
+        <Tooltip title={t("graph.wsToolbar.chipInstitutionsTooltip")}>
+          <Chip
+            size="small"
+            variant="outlined"
+            icon={<BusinessOutlinedIcon sx={{ fontSize: "1rem !important" }} />}
+            label={t("graph.wsToolbar.chipInstitutions")}
+            onClick={onToggleWorkGraphIncludeInstitutions}
+            aria-pressed={workGraphIncludeInstitutions}
+            aria-label={t("graph.wsToolbar.chipInstitutionsAria")}
+            sx={institutionChipSx(workGraphIncludeInstitutions)}
+          />
+        </Tooltip>
+      </>
+    ) : null;
+
+  const panelsRow = (
+    <>
+      <GraphViewChips {...viewChipsProps} />
+      {institutionsBlock}
+      {statsBlock}
+    </>
+  );
+
   return (
     <Box
       sx={{
-        mb: dense ? 0.75 : 1.5,
-        p: dense ? 0.5 : 1,
+        mb: useCompactToolbarRow ? 0.75 : 1.5,
+        p: useCompactToolbarRow ? 0.5 : 1,
         borderRadius: 1,
         border: `1px solid ${tk.border.default}`,
         backgroundColor: tk.surface.panelAlt,
       }}
     >
-      {filtersEnabled && !dense ? (
+      {filtersEnabled && !useCompactToolbarRow ? (
         <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, width: "100%", mb: 0.75 }}>
           {t("graph.wsToolbar.title")}
         </Typography>
       ) : null}
-      <Stack direction="row" flexWrap="wrap" alignItems="center" gap={dense ? 0.5 : 1} useFlexGap>
-        {leadingSlot ? (
-          <>
-            {leadingSlot}
-            <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
-          </>
-        ) : null}
-        {nodesMenuEnabled ? (
-          <>
-            <GraphNodesVisibilityMenu visibility={visibility} onChange={onVisibilityChange} t={t} />
-            {canvasMode && onLocalFindChange ? (
-              <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
-            ) : null}
-          </>
-        ) : null}
-
-        {canvasMode && onLocalFindChange ? (
-          <>
-            <TextField
-              size="small"
-              variant="outlined"
-              value={localFindQuery}
-              onChange={onLocalFindChange}
-              placeholder={t("graph.localFind.placeholder")}
-              inputProps={{ "aria-label": t("graph.localFind.aria") }}
-              sx={localFindFieldSx}
-              InputProps={{
-                endAdornment: localFindQuery && onLocalFindClear ? (
-                  <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      aria-label={t("graph.localFind.clearAria")}
-                      onClick={onLocalFindClear}
-                      edge="end"
-                      sx={{ color: tk.text.muted }}
-                    >
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  </InputAdornment>
-                ) : null,
-              }}
-            />
-            {onFocusFirstMatch ? (
-              <Tooltip title={t("graph.localFind.focusFirstTooltip")}>
-                <span>
-                  <CursorIconButton
-                    type="button"
-                    aria-label={t("graph.localFind.focusFirst")}
-                    onClick={onFocusFirstMatch}
-                    disabled={localFindFocusDisabled}
-                  >
-                    <MyLocationOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                  </CursorIconButton>
-                </span>
-              </Tooltip>
-            ) : null}
-          </>
-        ) : null}
-
-        {nodesMenuEnabled || canvasMode ? (
-          <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
-        ) : null}
-        <GraphViewChips
-          detailsVisible={detailsVisible}
-          legendOpen={legendOpen}
-          diagnosticsOpen={diagnosticsOpen}
-          onToggleDetails={onToggleDetails}
-          onToggleLegend={onToggleLegend}
-          onToggleDiagnostics={onToggleDiagnostics}
-          showLegendChip
-          showDiagnosticsChip={!labMode}
-          t={t}
-        />
-        {ctxWork && onToggleWorkGraphIncludeInstitutions ? (
-          <>
-            <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
-            <Tooltip title={t("graph.wsToolbar.chipInstitutionsTooltip")}>
-              <Chip
-                size="small"
-                variant="outlined"
-                icon={<BusinessOutlinedIcon sx={{ fontSize: "1rem !important" }} />}
-                label={t("graph.wsToolbar.chipInstitutions")}
-                onClick={onToggleWorkGraphIncludeInstitutions}
-                aria-pressed={workGraphIncludeInstitutions}
-                aria-label={t("graph.wsToolbar.chipInstitutionsAria")}
-                sx={institutionChipSx(workGraphIncludeInstitutions)}
-              />
-            </Tooltip>
-          </>
-        ) : null}
-
-        {statsFragments.length > 0 ? (
+      <Stack spacing={useCompactToolbarRow ? 0 : 1} useFlexGap>
+        {!useCompactToolbarRow ? (
           <Typography
-            component="span"
             sx={{
-              fontSize: "0.72rem",
-              color: tk.text.muted,
-              ml: { xs: 0, md: "auto" },
-              flexShrink: 0,
-              width: { xs: "100%", md: "auto" },
-              textAlign: { xs: "left", md: "right" },
+              fontSize: "0.62rem",
+              color: tk.text.faint,
+              fontWeight: 600,
+              letterSpacing: "0.04em",
+              width: "100%",
             }}
           >
-            {statsFragments.map((frag, i) => (
-              <React.Fragment key={frag.key}>
-                {i > 0 ? " · " : null}
-                <Tooltip title={frag.tip}>
-                  <Box component="span" sx={{ cursor: "default" }}>
-                    {frag.text}
-                  </Box>
-                </Tooltip>
-              </React.Fragment>
-            ))}
+            {t("graph.wsToolbar.zoneFilter")}
           </Typography>
+        ) : null}
+        <Stack
+          direction="row"
+          flexWrap="wrap"
+          alignItems="center"
+          gap={useCompactToolbarRow ? 0.5 : 1}
+          useFlexGap
+          aria-label={useCompactToolbarRow ? t("graph.wsToolbar.compactToolbarAria") : undefined}
+        >
+          {leadingSlot ? (
+            <>
+              {leadingSlot}
+              <Divider orientation="vertical" flexItem sx={dividerSx} />
+            </>
+          ) : null}
+          {nodesMenuEnabled ? (
+            <>
+              <GraphNodesVisibilityMenu visibility={visibility} onChange={onVisibilityChange} t={t} />
+              {canvasMode && onLocalFindChange ? <Divider orientation="vertical" flexItem sx={dividerSx} /> : null}
+            </>
+          ) : null}
+
+          {canvasMode && onLocalFindChange ? (
+            <>
+              <TextField
+                size="small"
+                variant="outlined"
+                value={localFindQuery}
+                onChange={onLocalFindChange}
+                placeholder={t("graph.localFind.placeholder")}
+                inputProps={{ "aria-label": t("graph.localFind.aria") }}
+                sx={localFindFieldSx}
+                InputProps={{
+                  endAdornment: localFindQuery && onLocalFindClear ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        aria-label={t("graph.localFind.clearAria")}
+                        onClick={onLocalFindClear}
+                        edge="end"
+                        sx={{ color: tk.text.muted }}
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
+                }}
+              />
+              {onFocusFirstMatch ? (
+                <Tooltip title={t("graph.localFind.focusFirstTooltip")}>
+                  <span>
+                    <CursorIconButton
+                      type="button"
+                      aria-label={t("graph.localFind.focusFirst")}
+                      onClick={onFocusFirstMatch}
+                      disabled={localFindFocusDisabled}
+                    >
+                      <MyLocationOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                    </CursorIconButton>
+                  </span>
+                </Tooltip>
+              ) : null}
+            </>
+          ) : null}
+
+          {useCompactToolbarRow ? (
+            <>
+              {nodesMenuEnabled || canvasMode ? <Divider orientation="vertical" flexItem sx={dividerSx} /> : null}
+              {panelsRow}
+            </>
+          ) : null}
+        </Stack>
+
+        {!useCompactToolbarRow ? (
+          <>
+            <Typography
+              sx={{
+                fontSize: "0.62rem",
+                color: tk.text.faint,
+                fontWeight: 600,
+                letterSpacing: "0.04em",
+                width: "100%",
+                mt: 0.25,
+              }}
+            >
+              {t("graph.wsToolbar.zonePanels")}
+            </Typography>
+            <Stack direction="row" flexWrap="wrap" alignItems="center" gap={1} useFlexGap>
+              {panelsRow}
+            </Stack>
+          </>
         ) : null}
       </Stack>
     </Box>

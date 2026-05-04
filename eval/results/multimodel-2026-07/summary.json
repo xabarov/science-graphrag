@@ -1,0 +1,49 @@
+{
+  "models": [
+    "mistralai/mistral-small-3.2-24b-instruct",
+    "deepseek/deepseek-v3.2",
+    "moonshotai/kimi-k2.6"
+  ],
+  "rows": [
+    {
+      "model": "mistralai/mistral-small-3.2-24b-instruct",
+      "slug": "mistralai_mistral-small-3.2-24b-instruct",
+      "layer1_returncode": null,
+      "layer2_returncode": null,
+      "claims_pilot_returncode": null,
+      "claims_holdout_returncode": null,
+      "layer1_failed_count": 6,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "layer2_failed_count": 6,
+      "claims_pilot_mean_recall": 0.41000000000000003,
+      "claims_holdout_mean_recall": 0.25
+    },
+    {
+      "model": "deepseek/deepseek-v3.2",
+      "slug": "deepseek_deepseek-v3.2",
+      "layer1_returncode": null,
+      "layer2_returncode": null,
+      "claims_pilot_returncode": null,
+      "claims_holdout_returncode": null,
+      "layer1_failed_count": 6,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "layer2_failed_count": 8,
+      "claims_pilot_mean_recall": 0.43333333333333335,
+      "claims_holdout_mean_recall": 0.35
+    },
+    {
+      "model": "moonshotai/kimi-k2.6",
+      "slug": "moonshotai_kimi-k2.6",
+      "layer1_returncode": null,
+      "layer2_returncode": null,
+      "claims_pilot_returncode": null,
+      "claims_holdout_returncode": null,
+      "layer1_failed_count": 11,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "layer2_failed_count": 10,
+      "claims_pilot_mean_recall": 0.33888888888888885,
+      "claims_holdout_mean_recall": 0.25
+    }
+  ],
+  "note": "Merged via scripts/finalize_multimodel_2026_07_summary.py from on-disk JSONs."
+}

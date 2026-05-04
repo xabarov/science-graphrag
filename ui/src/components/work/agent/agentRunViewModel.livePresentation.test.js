@@ -8,6 +8,7 @@ import {
   formatStreamEventOneLine,
   liveStreamKindForType,
   mapToolNameToUserLabel,
+  shouldSuppressPostRunStreamSummary,
 } from "./agentRunViewModel.js";
 
 function t(key, vars = {}) {
@@ -146,5 +147,20 @@ describe("deriveHeaderProgressHint", () => {
     const events = [{ type: "tool_call", step: 1, tool: "idea_search", args_summary: {} }];
     const hint = deriveHeaderProgressHint(t, events, true);
     expect(hint).toBe("Working…");
+  });
+});
+
+describe("shouldSuppressPostRunStreamSummary", () => {
+  it("is true when the last meaningful event is answer_synthesis_finished", () => {
+    expect(
+      shouldSuppressPostRunStreamSummary([
+        { type: "product_step", code: "searching_literature" },
+        { type: "answer_synthesis_finished" },
+      ]),
+    ).toBe(true);
+  });
+
+  it("is false when the run ends on another meaningful type", () => {
+    expect(shouldSuppressPostRunStreamSummary([{ type: "product_step", code: "searching_literature" }])).toBe(false);
   });
 });

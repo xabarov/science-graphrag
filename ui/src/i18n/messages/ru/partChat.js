@@ -47,7 +47,7 @@ export default {
   "chat.thread.meta.answerClass": "Класс ответа",
 
   "chat.clear.openAria": "Очистить чат и начать новую сессию",
-  "chat.clear.button": "Очистить",
+  "chat.clear.button": "Новая сессия",
   "chat.clear.dialogTitle": "Начать новый диалог?",
   "chat.clear.dialogBody":
     "Текущая переписка будет убрана из активного чата. Будет создана новая сессия с пустой памятью агента (при синхронизации с сервером — новый thread на сервере).",
@@ -72,6 +72,12 @@ export default {
   "chat.context.manualWorkIdHint": "Или вставьте известный work_id из ссылки или цитаты.",
   "chat.context.manualWorkIdPlaceholder": "work_id…",
   "chat.context.manualApply": "Использовать этот id",
+  "chat.context.cancel": "Отмена",
+
+  "chat.evidenceSummary.citationsOnly": "Цитат: {{n}}",
+  "chat.evidenceSummary.citationsAndTrace": "Цитат: {{citations}} · шагов трассы: {{steps}}",
+  "chat.evidenceSummary.noCitations": "Ответ ассистента (без цитат)",
+  "chat.evidenceSummary.noCitationsWithTrace": "Ответ ассистента без цитат · шагов трассы: {{steps}}",
 
   "chat.composer.placeholder": "Сообщение…",
   "chat.composer.send": "Отправить",
@@ -80,6 +86,12 @@ export default {
   "chat.composer.openStandalone": "Открыть чат отдельно",
   "chat.composer.openStandaloneAria": "Открыть чат в отдельном окне",
   "chat.composer.enterHint": "Enter — отправить · Shift+Enter — новая строка",
+  "chat.composer.clearChatAria": "Очистить чат",
+  "chat.composer.clearChatTitle": "Очистить переписку и начать новую сессию",
+
+  "chat.chrome.detailToggleAria": "Переключить уровень детализации ответа",
+  "chat.chrome.detailModeSimple": "Сейчас: обычный вид. Нажмите, чтобы показать токены и подробности в шапке ответа.",
+  "chat.chrome.detailModeDetailed": "Сейчас: подробный вид. Нажмите, чтобы скрыть токены и оставить краткую шапку.",
 
   "chat.thread.empty": "Начните диалог — ответ появится здесь.",
   "chat.thread.emptyTitle": "Спросите исследовательского агента",
@@ -141,6 +153,9 @@ export default {
   "chat.run.durationMs": "{{ms}} мс",
   "chat.run.tokensTotal": "Токенов: {{n}}",
   "chat.run.citationsCount": "Цитат: {{n}}",
+  "chat.run.headerDetailsToggle": "Подробности запуска",
+  "chat.run.headerDetailsExpandAria": "Показать токены, класс ответа и число цитат",
+  "chat.run.headerDetailsCollapseAria": "Скрыть токены, класс ответа и число цитат",
   "chat.run.eventsCount": "Событий: {{n}}",
   "chat.run.progressWorking": "Обрабатываю вопрос…",
   "chat.run.productStep.searching_literature": "Ищу релевантные работы…",
@@ -197,6 +212,7 @@ export default {
   "chat.run.openPhoenix": "Открыть трейс в Phoenix",
   "chat.run.openPhoenixAria": "Открыть трейс этого запуска в Phoenix (новая вкладка)",
   "chat.run.specialistRunsTitle": "Запуски специалистов",
+  "chat.run.specialistCompactSummary": "{{count}} событий",
   "chat.run.specialistExpandAria": "Развернуть детали запуска специалиста",
   "chat.run.specialistCollapseAria": "Свернуть детали запуска специалиста",
   "chat.run.specialistRunLabel": "{{from}} → {{to}} · событий: {{count}}",

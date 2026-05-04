@@ -10,6 +10,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 
 | Question | Source |
 |----------|--------|
+| **Ontology · extraction · benchmarks (one entry)** | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
 | Benchmark trust, BT1–BT12, advisory families | [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md) (§0 snapshot + §5); [`../benchmarks/`](../benchmarks/) |
 | Structural debt, `[OPEN]` items | [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md), [`../backlog/refactor-frontend.md`](../backlog/refactor-frontend.md) |
 | What already shipped (compressed) | [`completed-work-snapshot.md`](./completed-work-snapshot.md) |
@@ -24,6 +25,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 
 | Theme | Canonical doc |
 |-------|----------------|
+| Ontology · extraction · benchmarks | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
 | Master track table & principles | [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) |
 | Agent chat (product + architecture) | [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) — rule-based **`tool_search` v1** is shipped (`science_graphrag/agent/tool_search.py`); LLM-based discovery / richer manifests remain future work |
 | Agent chat UI | [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) |
@@ -63,7 +65,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 
 | Doc | Role |
 |-----|------|
-| [`ontology-benchmarks-roadmap-2026-04-24.md`](./ontology-benchmarks-roadmap-2026-04-24.md) | Wave M–T inventory (large); **live BT plan:** trust-audit doc above |
+| [`ontology-benchmarks-roadmap-2026-04-24.md`](./ontology-benchmarks-roadmap-2026-04-24.md) | Wave M–T **deep inventory** (large); **start here:** [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md); live BT queue: trust-audit |
 | [`corpus-gold-pack-v1-2026-04-25.md`](./corpus-gold-pack-v1-2026-04-25.md) | Gold pack layout + layers (Phase 0–6 complete); phase execution log: [`_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md`](./_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md) |
 | [`dedup-ingest-parity-matrix-2026-04-26.md`](./dedup-ingest-parity-matrix-2026-04-26.md) | Dedup queues matrix (scan vs ingest) |
 
@@ -105,8 +107,9 @@ Stable URLs and backlinks may still point at these root paths — open the link,
 | `README.md` | This index |
 | `completed-work-snapshot.md` | Shipped / closed summary |
 | `master-roadmap-and-refactor-plan-2026-04-25.md` | Master tracks |
+| `ontology-extraction-benchmarks-plan.md` | **Entry point** ontology / extraction / benchmarks |
 | `ontology-benchmarks-trust-audit-2026-04-25.md` | **Live** BT / trust queue |
-| `ontology-benchmarks-roadmap-2026-04-24.md` | Reference inventory |
+| `ontology-benchmarks-roadmap-2026-04-24.md` | Reference inventory (Wave M–T tables) |
 | `habr-article-narrative-and-measurement-plan-2026-07.md` | Publication spine |
 | `chat-agent-system-roadmap-2026-04-26.md` | Agent chat canon |
 | `agent-chat-frontend-ui-plan-2026-04-26.md` | Agent UI |

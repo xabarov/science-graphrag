@@ -25,10 +25,14 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _load_rmb() -> Any:
+    # Register in sys.modules before exec_module: @dataclass needs a resolvable
+    # __module__ for string-annotation / KW_ONLY handling in Python 3.12+.
     path = _REPO_ROOT / "scripts" / "run_multimodel_benchmark.py"
-    spec = importlib.util.spec_from_file_location("_rmb", path)
+    name = "run_multimodel_benchmark"
+    spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
     assert spec.loader is not None
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 

@@ -56,7 +56,7 @@ export default function AskTab({ workId }) {
       {traceSummary.length > 0 ? (
         <Box
           sx={{
-            mb: 2,
+            mb: 1.25,
             p: 1.25,
             borderRadius: "6px",
             border: `1px solid ${tk.border.default}`,

@@ -71,11 +71,47 @@ describe("AskAnswerPanel", () => {
               { type: "specialist_selected", from: "a", to: "b" },
             ]}
             isRunActive={false}
+            chatDetailLevel="detailed"
           />
         </ThemeProvider>
       </MemoryRouter>,
     );
     expect(screen.getByText("chat.run.specialistRunsTitle")).toBeTruthy();
+  });
+
+  it("shows compact specialist line in simple mode when specialist_selected is present", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "A",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[
+              { type: "intent_classified", answer_class: "inventory", source: "h" },
+              { type: "specialist_selected", from: "a", to: "b" },
+            ]}
+            isRunActive={false}
+            chatDetailLevel="simple"
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("chat.run.specialistCompactSummary")).toBeTruthy();
+    expect(screen.queryByText("chat.run.specialistRunsTitle")).toBeNull();
   });
 
   it("shows degraded info alert when graph_context has degraded", () => {
@@ -207,6 +243,36 @@ describe("AskAnswerPanel", () => {
       </MemoryRouter>,
     );
     expect(screen.getByTestId("post-run-stream-summary").textContent).toContain("Searching works");
+  });
+
+  it("omits post-run summary when the last meaningful stream event is answer_synthesis_finished", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "Final",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[{ type: "answer_synthesis_finished" }]}
+            isRunActive={false}
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("post-run-stream-summary")).toBeNull();
   });
 
   it("does not show server session memory excerpt in the answer panel", () => {

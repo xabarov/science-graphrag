@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
+import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import Box from "@mui/material/Box";
@@ -32,6 +33,8 @@ import { ChatContextPicker } from "./ChatContextPicker.jsx";
  *   corpusWorkspaceOnly?: boolean,
  *   standaloneMode?: boolean,
  *   streamingHint?: string,
+ *   onClearChatClick?: () => void,
+ *   clearChatDisabled?: boolean,
  * }} props
  */
 export function ChatComposer({
@@ -53,6 +56,8 @@ export function ChatComposer({
   corpusWorkspaceOnly = false,
   standaloneMode = false,
   streamingHint = "",
+  onClearChatClick,
+  clearChatDisabled = false,
 }) {
   const tk = useTheme().appTokens;
 
@@ -89,6 +94,9 @@ export function ChatComposer({
       "&:focus-within": {
         borderColor: tk.accent.softBorder,
         backgroundColor: tk.surface.panelAlt,
+      },
+      "&:focus-within .composer-enter-hint": {
+        color: `${tk.text.secondary}`,
       },
     }),
     [tk],
@@ -155,7 +163,18 @@ export function ChatComposer({
             pt: 0.15,
           }}
         >
-          <Typography sx={{ fontSize: "0.68rem", color: tk.text.faint, flex: "1 1 auto", minWidth: 0 }}>{t("chat.composer.enterHint")}</Typography>
+          <Typography
+            className="composer-enter-hint"
+            sx={{
+              fontSize: "0.68rem",
+              color: tk.text.muted,
+              flex: "1 1 auto",
+              minWidth: 0,
+              transition: "color 0.15s ease",
+            }}
+          >
+            {t("chat.composer.enterHint")}
+          </Typography>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 0.35 }}>
             {inWorkspace && !locked ? (
               <IconButton
@@ -173,6 +192,24 @@ export function ChatComposer({
                 }}
               >
                 <OpenInNewOutlinedIcon sx={{ fontSize: "1rem" }} />
+              </IconButton>
+            ) : null}
+            {onClearChatClick ? (
+              <IconButton
+                type="button"
+                onClick={onClearChatClick}
+                disabled={clearChatDisabled}
+                aria-label={t("chat.composer.clearChatAria")}
+                title={t("chat.composer.clearChatTitle")}
+                size="small"
+                sx={{
+                  color: tk.text.muted,
+                  border: `1px solid ${tk.border.default}`,
+                  borderRadius: "6px",
+                  "&:hover": { backgroundColor: tk.control.navItemHoverBg },
+                }}
+              >
+                <DeleteSweepOutlinedIcon sx={{ fontSize: "1rem" }} />
               </IconButton>
             ) : null}
             <IconButton

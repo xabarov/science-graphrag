@@ -19,12 +19,14 @@ import {
   deriveHeaderProgressHint,
   deriveRunState,
   shouldShowSubagentRail,
+  shouldSuppressPostRunStreamSummary,
 } from "../agent/agentRunViewModel.js";
 import { AgentRunHeader } from "../agent/AgentRunHeader.jsx";
 import { AgentLiveStatus } from "../agent/AgentLiveStatus.jsx";
 import { AgentSubagentRail } from "../agent/AgentSubagentRail.jsx";
 import MarkdownView from "../markdown/MarkdownView.jsx";
 import { CitationBodyExpandable } from "./CitationBodyExpandable.jsx";
+import { formatEvidenceSummaryForDisplay } from "./evidenceSummaryFormat.js";
 import { extractTokenCountsFromRunMetadata } from "./runMetadataUsage.js";
 
 function formatAgentWarning(t, code) {
@@ -50,6 +52,7 @@ function formatAgentWarning(t, code) {
  *   onToggleRetrievalJson: () => void,
  *   streamEvents?: unknown[],
  *   isRunActive?: boolean,
+ *   chatDetailLevel?: "simple" | "detailed",
  * }} props
  */
 export function AskAnswerPanel({
@@ -66,6 +69,7 @@ export function AskAnswerPanel({
   onToggleRetrievalJson,
   streamEvents = [],
   isRunActive = false,
+  chatDetailLevel = "simple",
 }) {
   void locked;
   void workId;
@@ -89,6 +93,11 @@ export function AskAnswerPanel({
     (Array.isArray(normalized?.graph_context?.degraded) && normalized.graph_context.degraded.length > 0);
   const wsForTrace = String(workspaceId || "").trim();
   const { totalTokens: headerTotalTokens } = extractTokenCountsFromRunMetadata(normalized.run_metadata);
+  const evidenceSummaryDisplay = normalized.evidence_summary
+    ? formatEvidenceSummaryForDisplay(t, normalized.evidence_summary)
+    : "";
+
+  const showSubagentRail = retrievalMode === "agent" && shouldShowSubagentRail(streamEvents);
 
   function citationTraceExtras(chunkFingerprint, sectionPath, citationIndex) {
     const base = { chunkFingerprint, section: sectionPath, citation: citationIndex };
@@ -104,11 +113,16 @@ export function AskAnswerPanel({
         citationCount={citations.length}
         durationMs={normalized.duration_ms}
         totalTokens={headerTotalTokens}
-        progressHint={deriveHeaderProgressHint(t, streamEvents, isRunActive)}
+        progressHint={isRunActive ? "" : deriveHeaderProgressHint(t, streamEvents, isRunActive)}
+        defaultDetailsOpen={chatDetailLevel === "detailed"}
       />
 
-      {retrievalMode === "agent" && shouldShowSubagentRail(streamEvents) ? (
-        <AgentSubagentRail t={t} streamEvents={streamEvents} />
+      {isRunActive && showSubagentRail ? (
+        <AgentSubagentRail
+          t={t}
+          streamEvents={streamEvents}
+          compact={chatDetailLevel === "simple"}
+        />
       ) : null}
 
       {isRunActive ? <AgentLiveStatus t={t} streamEvents={streamEvents} isActive embedded /> : null}
@@ -158,23 +172,10 @@ export function AskAnswerPanel({
             {t("chat.typed.evidenceSummaryLabel")}
           </Typography>
           <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary, whiteSpace: "pre-wrap" }}>
-            {String(normalized.evidence_summary)}
+            {evidenceSummaryDisplay}
           </Typography>
         </Box>
       ) : null}
-
-      {!isRunActive && Array.isArray(streamEvents) && streamEvents.length > 0 ? (() => {
-        const postRun = buildLiveStatusPresentation(t, streamEvents, false);
-        if (!postRun.headline) return null;
-        return (
-          <Typography
-            data-testid="post-run-stream-summary"
-            sx={{ fontSize: "0.75rem", color: tk.text.muted, mb: 1, lineHeight: 1.45 }}
-          >
-            {postRun.headline}
-          </Typography>
-        );
-      })() : null}
 
       {!isRunActive ? (
         <>
@@ -183,6 +184,8 @@ export function AskAnswerPanel({
           </Typography>
           {answerText ? (
             <Box
+              aria-live="polite"
+              aria-atomic="true"
               sx={{
                 mb: 1.25,
                 "& .reader-markdown": {
@@ -222,6 +225,28 @@ export function AskAnswerPanel({
             <MarkdownView markdown={answerText} data-testid="ask-answer-markdown" />
           </Box>
         </>
+      ) : null}
+
+      {!isRunActive && Array.isArray(streamEvents) && streamEvents.length > 0 ? (() => {
+        if (shouldSuppressPostRunStreamSummary(streamEvents)) return null;
+        const postRun = buildLiveStatusPresentation(t, streamEvents, false);
+        if (!postRun.headline) return null;
+        return (
+          <Typography
+            data-testid="post-run-stream-summary"
+            sx={{ fontSize: "0.75rem", color: tk.text.muted, mb: 1, lineHeight: 1.45 }}
+          >
+            {postRun.headline}
+          </Typography>
+        );
+      })() : null}
+
+      {!isRunActive && showSubagentRail ? (
+        <AgentSubagentRail
+          t={t}
+          streamEvents={streamEvents}
+          compact={chatDetailLevel === "simple"}
+        />
       ) : null}
 
       {!isRunActive ? (

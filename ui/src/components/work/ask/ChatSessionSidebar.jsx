@@ -34,7 +34,7 @@ export function ChatSessionSidebar({
   const tk = useTheme().appTokens;
   const rootSx = useMemo(
     () => ({
-      width: { xs: "100%", md: 260 },
+      width: { xs: "100%", md: 220 },
       flexShrink: 0,
       minHeight: 0,
       height: { md: "100%" },
@@ -53,7 +53,7 @@ export function ChatSessionSidebar({
     <Box sx={rootSx}>
       <Box
         sx={{
-          p: 1.1,
+          p: { xs: 0.75, sm: 0.9, md: 1.1 },
           borderBottom: `1px solid ${tk.border.default}`,
           display: "flex",
           alignItems: "center",
@@ -69,7 +69,7 @@ export function ChatSessionSidebar({
       </Box>
       <List dense disablePadding sx={{ flex: 1, overflowY: "auto", py: 0.5, minHeight: 0 }}>
         {sessionList.length === 0 ? (
-          <Box sx={{ px: 1.5, py: 2 }}>
+          <Box sx={{ px: { xs: 1, md: 1.5 }, py: { xs: 1.25, md: 2 } }}>
             <Typography sx={{ fontSize: "0.75rem", color: tk.text.faint }}>{t("chat.sidebar.empty")}</Typography>
           </Box>
         ) : (
@@ -109,9 +109,9 @@ export function ChatSessionSidebar({
                 onClick={() => onActiveSessionChange(s.id)}
                 sx={{
                   alignItems: "flex-start",
-                  py: 1,
-                  px: 1.15,
-                  pr: onDeleteSessionRequest ? 5 : 1.15,
+                  py: { xs: 0.65, md: 1 },
+                  px: { xs: 0.75, sm: 0.95, md: 1.15 },
+                  pr: onDeleteSessionRequest ? 5 : { xs: 0.75, sm: 0.95, md: 1.15 },
                   "&.Mui-selected": { backgroundColor: tk.accent.softBg },
                   "&.Mui-selected:hover": { backgroundColor: tk.accent.emphasisHoverBg },
                   "&:hover": { backgroundColor: tk.control.navItemHoverBg },

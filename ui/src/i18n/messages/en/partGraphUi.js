@@ -2,6 +2,10 @@
 export const partGraphUi = {
   "graphShell.loading": "Loading graph…",
 
+  "graph.onboarding.title": "Graph tips",
+  "graph.onboarding.body":
+    "Use the Nodes menu to show or hide types, the search box to focus matches, and canvas Preset (Overview/Reading) for label density. Repulsion slider adjusts force spacing.",
+
   "graph.workspacePanel.emptyHint":
     "Pick a paper or open the workspace graph (workspace_id query parameter).",
 
@@ -39,6 +43,17 @@ export const partGraphUi = {
   "graph.canvas.edgeLegendTitle": "Edge types",
 
   "graph.detailPanel.title": "Inspect selection",
+
+  "graph.wsToolbar.zoneFilter": "Search & node types",
+  "graph.wsToolbar.zonePanels": "Side panels & stats",
+  "graph.wsToolbar.compactToolbarAria": "Graph toolbar: filters, search, panels, and workspace stats",
+  "graph.wsToolbar.nodeTypeTag.Work": "Papers",
+  "graph.wsToolbar.nodeTypeTag.Author": "Authors",
+  "graph.wsToolbar.nodeTypeTag.Method": "Methods",
+  "graph.wsToolbar.nodeTypeTag.Dataset": "Data",
+  "graph.wsToolbar.nodeTypeTag.Venue": "Venues",
+  "graph.wsToolbar.nodeTypeTag.Institution": "Orgs",
+  "graph.wsToolbar.nodeTypeTag.Claim": "Claims",
 
   "graph.wsToolbar.nodesMenuButtonLabel": "Nodes · {{typesOn}}/{{typesTotal}}{{extras}}",
   "graph.wsToolbar.nodesMenuButtonTooltip":
@@ -305,6 +320,12 @@ export const partGraphUi = {
   "graph.canvas.toolbarSectionColor": "Color",
   "graph.canvas.toolbarSectionLabels": "Labels",
   "graph.canvas.toolbarSectionView": "View",
+  "graph.canvas.toolbarSectionPreset": "Preset",
+  "graph.canvas.presetAria": "Label visibility preset",
+  "graph.canvas.presetOverview": "Overview",
+  "graph.canvas.presetReading": "Reading",
+  "graph.canvas.presetOverviewTooltip": "Show labels on hover and for selection neighborhood — less clutter",
+  "graph.canvas.presetReadingTooltip": "Automatic labels when zoomed in; hides noise when zoomed out",
   "graph.canvas.toolbarCommunityFillHint": "Fill = cluster",
   "graph.canvas.toolbarCommunityModeBadge": "Clusters",
   "graph.canvas.toolbarCommunityModeBadgeTooltip":

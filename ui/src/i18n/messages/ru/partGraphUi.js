@@ -2,6 +2,10 @@
 export const partGraphUi = {
   "graphShell.loading": "Загрузка графа…",
 
+  "graph.onboarding.title": "Подсказки по графу",
+  "graph.onboarding.body":
+    "Меню «Узлы» включает типы сущностей, строка поиска помогает найти узлы на холсте, пресеты «Обзор»/«Чтение» задают плотность подписей. Ползунок отталкивания меняет разрежение симуляции.",
+
   "graph.workspacePanel.emptyHint":
     "Выберите статью или откройте граф рабочей области (параметр workspace_id).",
 
@@ -39,6 +43,17 @@ export const partGraphUi = {
   "graph.canvas.edgeLegendTitle": "Типы рёбер",
 
   "graph.detailPanel.title": "Просмотр выбора",
+
+  "graph.wsToolbar.zoneFilter": "Поиск и типы узлов",
+  "graph.wsToolbar.zonePanels": "Панели и статистика",
+  "graph.wsToolbar.compactToolbarAria": "Панель графа: фильтры, поиск, панели и статистика области",
+  "graph.wsToolbar.nodeTypeTag.Work": "Работы",
+  "graph.wsToolbar.nodeTypeTag.Author": "Авторы",
+  "graph.wsToolbar.nodeTypeTag.Method": "Методы",
+  "graph.wsToolbar.nodeTypeTag.Dataset": "Данные",
+  "graph.wsToolbar.nodeTypeTag.Venue": "Площадки",
+  "graph.wsToolbar.nodeTypeTag.Institution": "Орг.",
+  "graph.wsToolbar.nodeTypeTag.Claim": "Утв.",
 
   "graph.wsToolbar.nodesMenuButtonLabel": "Узлы · {{typesOn}}/{{typesTotal}}{{extras}}",
   "graph.wsToolbar.nodesMenuButtonTooltip":
@@ -306,6 +321,14 @@ export const partGraphUi = {
   "graph.canvas.toolbarSectionColor": "Цвет",
   "graph.canvas.toolbarSectionLabels": "Подписи",
   "graph.canvas.toolbarSectionView": "Вид",
+  "graph.canvas.toolbarSectionPreset": "Пресет",
+  "graph.canvas.presetAria": "Пресет видимости подписей",
+  "graph.canvas.presetOverview": "Обзор",
+  "graph.canvas.presetReading": "Чтение",
+  "graph.canvas.presetOverviewTooltip":
+    "Подписи при наведении и для окрестности выбора — меньше перегруза",
+  "graph.canvas.presetReadingTooltip":
+    "Автоматические подписи при крупном масштабе; при отдалении скрывает лишнее",
   "graph.canvas.toolbarCommunityFillHint": "Заливка = кластер",
   "graph.canvas.toolbarCommunityModeBadge": "Кластеры",
   "graph.canvas.toolbarCommunityModeBadgeTooltip":

@@ -15,6 +15,7 @@ import { SCROLL_BOTTOM_THRESHOLD_PX, extractTurnMetadata } from "./chatThreadMet
 /**
  * @param {{
  *   t: (key: string, vars?: Record<string, string>) => string,
+ *   chatDetailLevel?: "simple" | "detailed",
  *   scopeKey: string,
  *   activeSessionId: string | null,
  *   streamingTarget: { scopeKey: string, sessionId: string } | null,
@@ -48,6 +49,7 @@ import { SCROLL_BOTTOM_THRESHOLD_PX, extractTurnMetadata } from "./chatThreadMet
  */
 export function ChatMessageThread({
   t,
+  chatDetailLevel = "simple",
   scopeKey,
   activeSessionId,
   streamingTarget,
@@ -214,6 +216,7 @@ export function ChatMessageThread({
           entry={entry}
           tk={tk}
           t={t}
+          chatDetailLevel={chatDetailLevel}
           locked={locked}
           inWorkspace={inWorkspace}
           workId={workId}
@@ -231,6 +234,7 @@ export function ChatMessageThread({
       {pendingUserQuery && streamForThisChat ? (
         <ChatPendingStreamBlock
           t={t}
+          chatDetailLevel={chatDetailLevel}
           pendingUserQuery={pendingUserQuery}
           liveNormalized={liveNormalized}
           locked={locked}

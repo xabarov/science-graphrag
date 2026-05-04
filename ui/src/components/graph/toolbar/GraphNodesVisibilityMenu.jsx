@@ -60,10 +60,24 @@ export default function GraphNodesVisibilityMenu({ visibility, onChange, t }) {
     return domainOn + extOn;
   }, [typeSet, visibility?.showExternalWorks]);
 
+  const activeTypeTags = useMemo(() => {
+    const parts = [];
+    for (const k of GRAPH_VISIBILITY_DOMAIN_TYPES) {
+      if (typeSet.has(k)) parts.push(t(`graph.wsToolbar.nodeTypeTag.${k}`));
+    }
+    if (visibility?.showExternalWorks) parts.push(t("graph.wsToolbar.nodesExtraExtShort"));
+    return parts;
+  }, [t, typeSet, visibility?.showExternalWorks]);
+
+  const extras =
+    activeTypeTags.length > 0
+      ? ` · ${activeTypeTags.slice(0, 5).join(" · ")}${activeTypeTags.length > 5 ? "…" : ""}`
+      : "";
+
   const summary = t("graph.wsToolbar.nodesMenuButtonLabel", {
     typesOn: String(typesOnCount),
     typesTotal: String(MENU_TYPE_TOTAL),
-    extras: "",
+    extras,
   });
 
   return (
@@ -98,8 +112,8 @@ export default function GraphNodesVisibilityMenu({ visibility, onChange, t }) {
         open={open}
         anchorEl={anchor}
         onClose={handleClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
         slotProps={{
           paper: {
             sx: {
@@ -107,6 +121,8 @@ export default function GraphNodesVisibilityMenu({ visibility, onChange, t }) {
               p: 1.25,
               minWidth: 300,
               maxWidth: 400,
+              maxHeight: "min(70vh, 520px)",
+              overflow: "auto",
               backgroundColor: tk.surface.panel,
               border: `1px solid ${tk.border.default}`,
             },
@@ -123,7 +139,7 @@ export default function GraphNodesVisibilityMenu({ visibility, onChange, t }) {
         <Typography sx={{ fontSize: "0.72rem", fontWeight: 600, color: tk.text.secondary, mb: 0.75 }}>
           {t("graph.wsToolbar.nodesSectionTypes")}
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25, pb: 0.5 }}>
           {GRAPH_VISIBILITY_DOMAIN_TYPES.map((nodeType) => {
             const TypeIcon = DOMAIN_TYPE_ICONS[nodeType];
             const checked = typeSet.has(nodeType);
