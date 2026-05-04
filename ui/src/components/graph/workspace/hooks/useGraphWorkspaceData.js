@@ -127,6 +127,7 @@ export function useGraphWorkspaceData(workspaceId, workId) {
         let raw;
         if (w) {
           setNeighborCache(new Set());
+          // Reader authorship collapse + workspace scope are server-side; client uses normalized payload as-is.
           const res = await getWorkGraph(w, {
             view: "reader",
             includeClaims: true,

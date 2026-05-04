@@ -36,11 +36,12 @@ export default function ReaderChunkListPanel({ chunks, chunksOpen, setChunksOpen
       </Box>
       <Collapse in={chunksOpen}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-          {orderedItems.map((ch) => {
+          {orderedItems.map((ch, idx) => {
             const highlighted = isChunkHighlighted(ch);
             const preview = truncateWithEllipsis(ch?.text || "", READER_CHUNK_PREVIEW_MAX_CHARS);
             return (
               <Box
+                id={`reader-chunk-${idx}`}
                 key={`${ch.chunk_fingerprint}-${ch.order}`}
                 sx={{
                   p: 1.5,

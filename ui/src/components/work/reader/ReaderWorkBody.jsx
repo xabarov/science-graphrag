@@ -8,12 +8,15 @@ import { useTheme } from "@mui/material/styles";
 import { workPdfUrl } from "../../../services/researchApi.js";
 import { describeTraceabilityState } from "../traceability/traceabilityState.js";
 import { useI18n } from "../../../i18n/useI18n.js";
+import { CopyIdButton } from "../../common/index.js";
 import ReaderChunkListPanel from "./ReaderChunkListPanel.jsx";
 import ReaderMarkdownSourcePanel from "./ReaderMarkdownSourcePanel.jsx";
 import ReaderPdfModeToggle from "./ReaderPdfModeToggle.jsx";
 import ReaderTraceContextBanner from "./ReaderTraceContextBanner.jsx";
 import ReaderWorkClaimsSection from "./ReaderWorkClaimsSection.jsx";
 import ReaderWorkDetailCard from "./ReaderWorkDetailCard.jsx";
+import ReaderSectionToc from "./ReaderSectionToc.jsx";
+import { buildReaderSectionPathList } from "./readerFormatters.js";
 import { useReaderChunksState } from "./useReaderChunksState.js";
 import { useReaderWorkData } from "./useReaderWorkData.js";
 
@@ -142,6 +145,12 @@ export default function ReaderWorkBody({
   const showTraceBanner = traceSummary.length > 0;
   const showChunksPanel = Boolean(chunks) && !loading && hasEffectiveChunks;
 
+  const sectionPaths = useMemo(() => buildReaderSectionPathList(orderedItems), [orderedItems]);
+  const languageBanner =
+    detail && typeof detail === "object"
+      ? String(detail.language || detail.primary_language || detail.locale || "").trim()
+      : "";
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
       {loading ? (
@@ -163,6 +172,31 @@ export default function ReaderWorkBody({
       ) : null}
 
       {detailCard}
+
+      {detail && !loading ? (
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1, mb: languageBanner ? 1 : 1.5 }}>
+          <CopyIdButton
+            id={workId}
+            tooltipCopy={t("readerBody.copyWorkId")}
+            tooltipCopied={t("readerBody.copied")}
+            aria-label={t("readerBody.copyWorkIdAria")}
+          />
+        </Box>
+      ) : null}
+
+      {languageBanner ? (
+        <Alert severity="info" sx={{ mb: 2, fontSize: "0.8125rem", py: 0.5 }}>
+          {t("readerBody.languageBanner", { lang: languageBanner })}
+        </Alert>
+      ) : null}
+
+      {sectionPaths.length > 0 ? (
+        <ReaderSectionToc
+          sections={sectionPaths}
+          orderedItems={orderedItems}
+          onOpenChunks={() => setChunksOpen(true)}
+        />
+      ) : null}
 
       {detail && !loading && pdfAvailable ? (
         <ReaderPdfModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />

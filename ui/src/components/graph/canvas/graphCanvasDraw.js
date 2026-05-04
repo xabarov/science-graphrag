@@ -54,7 +54,12 @@ export const NODE_LABEL_ADAPTIVE_MAX_NODES = 56;
 export const NODE_LABEL_ADAPTIVE_MIN_SCALE = 0.34;
 
 /**
- * Whether to draw a node's canvas label box in community color mode under density / search rules.
+ * Unified policy for whether to paint a node's canvas label box.
+ * The same three-mode contract as edges: "all" shows every label, "interaction" shows only the
+ * active-for-label set (selected, hovered, optional 1-hop neighbors), and "adaptive" shows every
+ * label when zoom is at or above {@link NODE_LABEL_ADAPTIVE_MIN_SCALE}, otherwise behaves like
+ * "interaction" (zoomed-out overview). Search overrides every mode: only matched nodes' labels appear,
+ * with hovered/selected still highlighted in interaction.
  *
  * @param {{
  *   colorBy?: "type" | "community",
@@ -64,28 +69,40 @@ export const NODE_LABEL_ADAPTIVE_MIN_SCALE = 0.34;
  *   searchMatchSet?: Set<string> | null,
  *   nodeId?: string,
  *   styleEntry?: { selected?: boolean, hovered?: boolean, searchDim?: boolean },
+ *   mode?: "all" | "interaction" | "adaptive",
+ *   activeForLabelSet?: Set<string> | null,
  * }} opts
  * @returns {boolean}
  */
 export function shouldDrawCanvasNodeLabel(opts) {
-  const colorBy = opts.colorBy === "community" ? "community" : "type";
-  if (colorBy !== "community") return true;
   const id = String(opts.nodeId ?? "");
   const sm = opts.styleEntry || {};
-  if (sm.selected || sm.hovered) return true;
-
-  const scale = opts.transform && Number.isFinite(Number(opts.transform.scale)) ? Number(opts.transform.scale) : 1;
-  const n = typeof opts.nodeCount === "number" && Number.isFinite(opts.nodeCount) ? opts.nodeCount : 0;
-  const dense = n > NODE_LABEL_ADAPTIVE_MAX_NODES || scale < NODE_LABEL_ADAPTIVE_MIN_SCALE;
+  const mode = opts.mode === "interaction" || opts.mode === "adaptive" ? opts.mode : "all";
+  const activeSet = opts.activeForLabelSet instanceof Set ? opts.activeForLabelSet : null;
   const searchActive = Boolean(opts.searchActive);
-  const set = opts.searchMatchSet instanceof Set ? opts.searchMatchSet : null;
+  const searchSet = opts.searchMatchSet instanceof Set ? opts.searchMatchSet : null;
+  const isActiveForLabel = Boolean(sm.selected || sm.hovered || (activeSet && activeSet.has(id)));
 
   if (searchActive) {
-    const inSearch = set ? set.has(id) : false;
+    const inSearch = searchSet ? searchSet.has(id) : false;
     if (sm.searchDim || !inSearch) return false;
+    if (mode === "interaction") return isActiveForLabel;
     return true;
   }
-  if (dense) return false;
+
+  if (mode === "all") return true;
+  if (mode === "interaction") return isActiveForLabel;
+
+  const scale = opts.transform && Number.isFinite(Number(opts.transform.scale)) ? Number(opts.transform.scale) : 1;
+  // "Adaptive" for node labels: use **zoom (scale) only** to decide between "all" vs
+  // "interaction-like". If we also OR in `nodeCount > NODE_LABEL_ADAPTIVE_MAX_NODES`, then any
+  // graph with 57+ nodes stays interaction-only at every zoom level and strong zoom-in never
+  // reveals labels — which contradicts the product expectation for Auto.
+  // When zoomed out (scale below threshold), the canvas is visually dense; gate to active only.
+  // When zoomed in (scale at/above threshold), show every node label; off-screen labels are
+  // clipped by the canvas anyway.
+  const zoomedOut = scale < NODE_LABEL_ADAPTIVE_MIN_SCALE;
+  if (zoomedOut) return isActiveForLabel;
   return true;
 }
 
@@ -227,13 +244,14 @@ export function drawNodes(ctx, nodes, positions, transform, styleMap = {}, drawO
  * @typedef {{
  *   resolveEdgeLabel?: (edge: object) => string,
  *   resolveNodeCanvasLabel?: (node: object) => string | null | undefined,
- *   edgeLabelMode?: "all" | "interaction" | "adaptive",
+ *   canvasLabelMode?: "all" | "interaction" | "adaptive",
  *   edgeCountForAdaptive?: number,
  *   appearance?: "light" | "dark",
  *   colorBy?: "type" | "community",
  *   nodeCountForAdaptive?: number,
  *   searchActive?: boolean,
  *   searchMatchSet?: Set<string> | null,
+ *   activeForLabelSet?: Set<string> | null,
  * }} DrawLabelOptions
  */
 
@@ -261,9 +279,10 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
   const { scale, tx, ty } = transform;
   const resolveEdge = typeof drawOptions.resolveEdgeLabel === "function" ? drawOptions.resolveEdgeLabel : null;
   const resolveNode = typeof drawOptions.resolveNodeCanvasLabel === "function" ? drawOptions.resolveNodeCanvasLabel : null;
-  const edgeLabelMode = drawOptions.edgeLabelMode === "interaction" || drawOptions.edgeLabelMode === "adaptive"
-    ? drawOptions.edgeLabelMode
-    : "all";
+  const canvasLabelMode =
+    drawOptions.canvasLabelMode === "interaction" || drawOptions.canvasLabelMode === "adaptive"
+      ? drawOptions.canvasLabelMode
+      : "all";
   const edgeList = Array.isArray(edges) ? edges : [...edges];
   const edgeCountForAdaptive =
     typeof drawOptions.edgeCountForAdaptive === "number" && Number.isFinite(drawOptions.edgeCountForAdaptive)
@@ -276,6 +295,8 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
       : (Array.isArray(nodes) ? nodes.length : [...nodes].length);
   const searchActive = Boolean(drawOptions.searchActive);
   const searchMatchSet = drawOptions.searchMatchSet instanceof Set ? drawOptions.searchMatchSet : null;
+  const activeForLabelSet =
+    drawOptions.activeForLabelSet instanceof Set ? drawOptions.activeForLabelSet : null;
   ctx.font = EDGE_LABEL_FONT;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -286,7 +307,15 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
     const p0 = worldToScreen(p0w.x, p0w.y, scale, tx, ty);
     const p1 = worldToScreen(p1w.x, p1w.y, scale, tx, ty);
     const edgeId = String(edge.id || "");
-    if (!shouldDrawCanvasEdgeLabel(edgeLabelMode, styleMap[edgeId] || {}, transform, edgeCountForAdaptive)) {
+    const baseStyle = styleMap[edgeId] || {};
+    // Treat an edge connecting two label-active nodes (e.g. selected node + 1-hop neighbor) as
+    // active-for-label so the relationship label shows alongside the highlighted endpoints.
+    const neighborActive =
+      activeForLabelSet
+        ? activeForLabelSet.has(String(edge.source)) && activeForLabelSet.has(String(edge.target))
+        : false;
+    const edgeStyleForLabel = neighborActive ? { ...baseStyle, active: true } : baseStyle;
+    if (!shouldDrawCanvasEdgeLabel(canvasLabelMode, edgeStyleForLabel, transform, edgeCountForAdaptive)) {
       continue;
     }
     const elabel = resolveEdge ? resolveEdge(edge) : edgeTypeCanvasLabelFromEdge(edge);
@@ -296,7 +325,7 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
     const metrics = ctx.measureText(elabel);
     const bw = metrics.width + 8;
     const bh = 16;
-    const active = Boolean(styleMap[String(edge.id || "")]?.active);
+    const active = Boolean(baseStyle.active);
     ctx.fillStyle = active ? edgeBoxActive : edgeBoxIdle;
     ctx.fillRect(midX - bw / 2, midY - bh / 2, bw, bh);
     ctx.strokeStyle = active ? edgeStrokeActive : edgeStrokeIdle;
@@ -322,6 +351,8 @@ export function drawLabels(ctx, nodes, edges, positions, transform, styleMap = {
         searchMatchSet,
         nodeId: sid,
         styleEntry: sm,
+        mode: canvasLabelMode,
+        activeForLabelSet,
       })
     ) {
       continue;
@@ -365,6 +396,10 @@ export function hitTestNode(worldX, worldY, nodeMap, positions) {
 /**
  * Pick topmost node at canvas CSS pixel (lx, ly): node disc + label box (matches drawNodes/drawLabels).
  *
+ * The label hit target is gated by the same {@link shouldDrawCanvasNodeLabel} policy used by
+ * {@link drawLabels} so that pointer hits cannot land on phantom hitboxes for labels that the
+ * renderer never drew (e.g. interaction mode without hover/selection/neighbors).
+ *
  * @param {number} lx
  * @param {number} ly
  * @param {Iterable<object>} nodes
@@ -378,6 +413,8 @@ export function hitTestNode(worldX, worldY, nodeMap, positions) {
  *   searchMatchSet?: Set<string> | null,
  *   selectedNodeId?: string,
  *   hoveredNodeId?: string,
+ *   mode?: "all" | "interaction" | "adaptive",
+ *   activeForLabelSet?: Set<string> | null,
  * }} [nodeLabelHitOpts]
  * @returns {string} node id or ""
  */
@@ -394,6 +431,12 @@ export function hitTestNodeScreen(lx, ly, nodes, positions, transform, resolveNo
   const searchMatchSet = nodeLabelHitOpts.searchMatchSet instanceof Set ? nodeLabelHitOpts.searchMatchSet : null;
   const selectedNodeId = nodeLabelHitOpts.selectedNodeId != null ? String(nodeLabelHitOpts.selectedNodeId) : "";
   const hoveredNodeId = nodeLabelHitOpts.hoveredNodeId != null ? String(nodeLabelHitOpts.hoveredNodeId) : "";
+  const mode =
+    nodeLabelHitOpts.mode === "interaction" || nodeLabelHitOpts.mode === "adaptive"
+      ? nodeLabelHitOpts.mode
+      : "all";
+  const activeForLabelSet =
+    nodeLabelHitOpts.activeForLabelSet instanceof Set ? nodeLabelHitOpts.activeForLabelSet : null;
   for (let i = list.length - 1; i >= 0; i -= 1) {
     const node = list[i];
     const pw = positions.get(node.id);
@@ -417,6 +460,8 @@ export function hitTestNodeScreen(lx, ly, nodes, positions, transform, resolveNo
         searchMatchSet,
         nodeId: sid,
         styleEntry,
+        mode,
+        activeForLabelSet,
       })
     ) {
       continue;

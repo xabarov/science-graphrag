@@ -41,6 +41,8 @@ import GraphViewChips from "../toolbar/GraphViewChips.jsx";
  *   labMode?: boolean,
  *   workGraphIncludeInstitutions?: boolean,
  *   onToggleWorkGraphIncludeInstitutions?: () => void,
+ *   dense?: boolean,
+ *   leadingSlot?: import("react").ReactNode,
  * }} props
  */
 export default function WorkspaceGraphToolbar({
@@ -64,6 +66,8 @@ export default function WorkspaceGraphToolbar({
   labMode = false,
   workGraphIncludeInstitutions = false,
   onToggleWorkGraphIncludeInstitutions,
+  dense = false,
+  leadingSlot = null,
 }) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
@@ -135,19 +139,25 @@ export default function WorkspaceGraphToolbar({
   return (
     <Box
       sx={{
-        mb: 1.5,
-        p: 1,
+        mb: dense ? 0.75 : 1.5,
+        p: dense ? 0.5 : 1,
         borderRadius: 1,
         border: `1px solid ${tk.border.default}`,
         backgroundColor: tk.surface.panelAlt,
       }}
     >
-      {filtersEnabled ? (
+      {filtersEnabled && !dense ? (
         <Typography sx={{ fontSize: "0.68rem", color: tk.text.muted, width: "100%", mb: 0.75 }}>
           {t("graph.wsToolbar.title")}
         </Typography>
       ) : null}
-      <Stack direction="row" flexWrap="wrap" alignItems="center" gap={1} useFlexGap>
+      <Stack direction="row" flexWrap="wrap" alignItems="center" gap={dense ? 0.5 : 1} useFlexGap>
+        {leadingSlot ? (
+          <>
+            {leadingSlot}
+            <Divider orientation="vertical" flexItem sx={{ borderColor: tk.border.default, alignSelf: "stretch", minHeight: 28 }} />
+          </>
+        ) : null}
         {nodesMenuEnabled ? (
           <>
             <GraphNodesVisibilityMenu visibility={visibility} onChange={onVisibilityChange} t={t} />

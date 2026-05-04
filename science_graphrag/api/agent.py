@@ -1,62 +1,24 @@
+"""Legacy agent HTTP route (removed); retained only to return HTTP 410 + successor link."""
+
 from __future__ import annotations
 
-from time import perf_counter
-from typing import Any
-
-from fastapi import APIRouter, Depends, Response
-from pydantic import BaseModel, Field
-
-from science_graphrag.agent.runtime import build_agent
-from science_graphrag.api.deps import StoreRegistry, get_stores
-from science_graphrag.config import Settings, get_settings
+from fastapi import APIRouter, status
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
-
-class AgentQueryRequest(BaseModel):
-    question: str = Field(..., min_length=1)
-    workspace_id: str | None = None
-    max_tool_calls: int | None = Field(default=None, ge=1, le=30)
+_GONE_DETAIL = "POST /v1/agent/query was removed. Use POST /v2/agent/query (see Link header)."
 
 
-class AgentQueryResponse(BaseModel):
-    answer: str
-    citations: list[dict[str, Any]]
-    tool_trace: list[dict[str, Any]]
-    duration_ms: int
-    run_metadata: dict[str, Any]
+@router.post("/agent/query")
+def post_agent_query_removed() -> JSONResponse:
+    """Legacy route removed; use ``POST /v2/agent/query`` (``agent_v2``)."""
 
-
-@router.post("/agent/query", response_model=AgentQueryResponse)
-def post_agent_query(
-    body: AgentQueryRequest,
-    response: Response,
-    settings: Settings = Depends(get_settings),
-    stores: StoreRegistry = Depends(get_stores),
-) -> AgentQueryResponse:
-    response.headers["Deprecation"] = "true"
-    response.headers["Sunset"] = "2026-07-01"
-    response.headers["Link"] = '</v2/agent/query>; rel="successor-version"'
-    started = perf_counter()
-    agent = build_agent(
-        settings=settings,
-        stores=stores,
-    )
-    out = agent.run(
-        question=body.question,
-        workspace_id=(body.workspace_id or "").strip() or None,
-        max_tool_calls=body.max_tool_calls or settings.agent_max_tool_calls,
-    )
-    duration_ms = int((perf_counter() - started) * 1000)
-    return AgentQueryResponse(
-        answer=out.answer,
-        citations=out.citations,
-        tool_trace=list(out.tool_trace),
-        duration_ms=duration_ms,
-        run_metadata={
-            "agent_runtime": settings.agent_runtime,
-            "agent_max_tool_calls": body.max_tool_calls or settings.agent_max_tool_calls,
-            "extraction_llm_model": settings.extraction_llm_model,
-            "extraction_llm_base_url": settings.extraction_llm_base_url,
+    return JSONResponse(
+        status_code=status.HTTP_410_GONE,
+        content={
+            "detail": _GONE_DETAIL,
+            "replacement": "/v2/agent/query",
         },
+        headers={"Link": '</v2/agent/query>; rel="successor-version"'},
     )

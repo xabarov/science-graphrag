@@ -1,94 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import Accordion from "@mui/material/Accordion";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import AccordionSummary from "@mui/material/AccordionSummary";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
-import Checkbox from "@mui/material/Checkbox";
-import FormControl from "@mui/material/FormControl";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
-import Switch from "@mui/material/Switch";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
-import { siMinio, siNeo4j, siPostgresql, siQdrant, siRedis } from "simple-icons";
 
 import { CursorPrimaryButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import { outlinedAppTextFieldSx, settingsAlertMutedSx, settingsCardSx } from "../../theme/settingsFormSx.js";
-
-import BrandSvgIcon from "./BrandSvgIcon.jsx";
-
-function strEff(storage, path) {
-  const [a, b, c] = path.split(".");
-  try {
-    const v = storage?.[a]?.fields?.[b]?.[c];
-    if (v === null || v === undefined) return "";
-    return String(v).trim();
-  } catch {
-    return "";
-  }
-}
-
-function boolEff(storage, path) {
-  const [a, b, c] = path.split(".");
-  try {
-    return Boolean(storage?.[a]?.fields?.[b]?.[c]);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * @param {{
- *   defaultExpanded?: boolean;
- *   summaryStart: React.ReactNode;
- *   title: string;
- *   subtitle: string;
- *   accordionSx: object;
- *   tk: import("../../theme/appTokensTypes.js").AppTokens;
- *   children: React.ReactNode;
- * }} props
- */
-function StorageSectionAccordion({ defaultExpanded = true, summaryStart, title, subtitle, accordionSx, tk, children }) {
-  return (
-    <Accordion
-      defaultExpanded={defaultExpanded}
-      disableGutters
-      elevation={0}
-      sx={{
-        ...accordionSx,
-        "&:before": { display: "none" },
-        "&.Mui-expanded": { margin: 0 },
-      }}
-    >
-      <AccordionSummary
-        expandIcon={<ExpandMoreIcon sx={{ color: tk.text.muted }} />}
-        sx={{
-          minHeight: 48,
-          px: 1.5,
-          "& .MuiAccordionSummary-content": {
-            alignItems: "center",
-            gap: 1.25,
-            marginY: 1,
-          },
-        }}
-      >
-        <Box sx={{ color: tk.text.secondary, display: "flex", alignItems: "center" }}>{summaryStart}</Box>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25, minWidth: 0 }}>
-          <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{title}</Typography>
-          <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, lineHeight: 1.45 }}>{subtitle}</Typography>
-        </Box>
-      </AccordionSummary>
-      <AccordionDetails sx={{ px: 2, pb: 2, pt: 0, display: "flex", flexDirection: "column" }}>{children}</AccordionDetails>
-    </Accordion>
-  );
-}
+import StorageBackendSections from "./StorageBackendSections.jsx";
+import { boolEff, strEff } from "./storageSettingsHelpers.js";
 
 export default function StorageSettingsPanel({ storage, saving, saveError, onSave, onDirtyChange }) {
   const { t } = useI18n();
@@ -305,305 +225,60 @@ export default function StorageSettingsPanel({ storage, saving, saveError, onSav
         </Alert>
       ) : null}
 
-      <StorageSectionAccordion
-        defaultExpanded
-        accordionSx={storageAccordionSx}
+      <StorageBackendSections
         tk={tk}
-        summaryStart={<BrandSvgIcon icon={siMinio} />}
-        title={t("settings.storage.s3.title")}
-        subtitle={t("settings.storage.s3.subtitle")}
-      >
-        <Typography sx={{ marginBottom: 1, fontSize: "0.75rem", color: tk.text.muted }}>
-          {t("settings.storage.s3.envHint", {
-            keys: "SCIENCE_GRAPHRAG_S3_ENDPOINT_URL, SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID, SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY, SCIENCE_GRAPHRAG_S3_BUCKET, …",
-          })}
-        </Typography>
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.endpoint")}
-          value={s3EndpointUrl}
-          onChange={(e) => setS3EndpointUrl(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.bucket")}
-          value={s3Bucket}
-          onChange={(e) => setS3Bucket(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <FormControlLabel
-          control={<Switch checked={s3UseSsl} onChange={(e) => setS3UseSsl(e.target.checked)} />}
-          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.s3.useSsl")}</Typography>}
-        />
-        <FormControl margin="normal" fullWidth size="small" sx={fieldSx}>
-          <InputLabel id="s3-addressing-style">{t("settings.storage.s3.addressingStyle")}</InputLabel>
-          <Select
-            labelId="s3-addressing-style"
-            label={t("settings.storage.s3.addressingStyle")}
-            value={s3AddressingStyle}
-            onChange={(e) => setS3AddressingStyle(e.target.value)}
-          >
-            <MenuItem value="path">path</MenuItem>
-            <MenuItem value="virtual">virtual</MenuItem>
-          </Select>
-        </FormControl>
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.artifactPrefix")}
-          value={s3ArtifactKeyPrefix}
-          onChange={(e) => setS3ArtifactKeyPrefix(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.accessKeyId")}
-          value={s3AccessKeyId}
-          onChange={(e) => setS3AccessKeyId(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          type="password"
-          label={t("settings.storage.s3.secretKey")}
-          helperText={storage?.s3?.fields?.s3_secret_access_key?.masked || ""}
-          value={s3SecretAccessKey}
-          onChange={(e) => setS3SecretAccessKey(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              checked={clearS3Secret}
-              onChange={(e) => {
-                setClearS3Secret(e.target.checked);
-                if (e.target.checked) setS3SecretAccessKey("");
-              }}
-            />
-          }
-          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.secret.clearUseEnv")}</Typography>}
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.benchmarkPrefix")}
-          value={s3BenchmarkRunsKeyPrefix}
-          onChange={(e) => setS3BenchmarkRunsKeyPrefix(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.s3.diagnosticsPrefix")}
-          value={s3DiagnosticsKeyPrefix}
-          onChange={(e) => setS3DiagnosticsKeyPrefix(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-      </StorageSectionAccordion>
-
-      <StorageSectionAccordion
-        defaultExpanded
-        accordionSx={storageAccordionSx}
-        tk={tk}
-        summaryStart={<BrandSvgIcon icon={siNeo4j} />}
-        title={t("settings.storage.neo4j.title")}
-        subtitle={t("settings.storage.neo4j.subtitle")}
-      >
-        <Typography sx={{ marginBottom: 1, fontSize: "0.75rem", color: tk.text.muted }}>
-          {t("settings.storage.envHint", { keys: "SCIENCE_GRAPHRAG_NEO4J_URI, …" })}
-        </Typography>
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.neo4j.uri")}
-          value={neo4jUri}
-          onChange={(e) => setNeo4jUri(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.neo4j.user")}
-          value={neo4jUser}
-          onChange={(e) => setNeo4jUser(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          type="password"
-          label={t("settings.storage.neo4j.password")}
-          helperText={storage?.neo4j?.fields?.neo4j_password?.masked ? `(${storage.neo4j.fields.neo4j_password.masked})` : ""}
-          value={neo4jPassword}
-          onChange={(e) => setNeo4jPassword(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              checked={clearNeo4jPassword}
-              onChange={(e) => {
-                setClearNeo4jPassword(e.target.checked);
-                if (e.target.checked) setNeo4jPassword("");
-              }}
-            />
-          }
-          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.secret.clearUseEnv")}</Typography>}
-        />
-      </StorageSectionAccordion>
-
-      <StorageSectionAccordion
-        defaultExpanded
-        accordionSx={storageAccordionSx}
-        tk={tk}
-        summaryStart={<BrandSvgIcon icon={siQdrant} />}
-        title={t("settings.storage.qdrant.title")}
-        subtitle={t("settings.storage.qdrant.subtitle")}
-      >
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.qdrant.url")}
-          value={qdrantUrl}
-          onChange={(e) => setQdrantUrl(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.qdrant.chunks")}
-          value={qdrantCollection}
-          onChange={(e) => setQdrantCollection(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.qdrant.claims")}
-          value={qdrantClaimsCollection}
-          onChange={(e) => setQdrantClaimsCollection(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.qdrant.workEmb")}
-          value={qdrantWorkEmbCollection}
-          onChange={(e) => setQdrantWorkEmbCollection(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.qdrant.authorEmb")}
-          value={qdrantAuthorEmbCollection}
-          onChange={(e) => setQdrantAuthorEmbCollection(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-      </StorageSectionAccordion>
-
-      <StorageSectionAccordion
-        defaultExpanded
-        accordionSx={storageAccordionSx}
-        tk={tk}
-        summaryStart={<BrandSvgIcon icon={siPostgresql} />}
-        title={t("settings.storage.postgres.title")}
-        subtitle={t("settings.storage.postgres.subtitle")}
-      >
-        <TextField
-          margin="normal"
-          fullWidth
-          type="password"
-          label={t("settings.storage.postgres.databaseUrl")}
-          helperText={storage?.postgres?.fields?.database_url?.masked || ""}
-          value={databaseUrl}
-          onChange={(e) => setDatabaseUrl(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              checked={clearDatabaseUrl}
-              onChange={(e) => {
-                setClearDatabaseUrl(e.target.checked);
-                if (e.target.checked) setDatabaseUrl("");
-              }}
-            />
-          }
-          label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("settings.storage.secret.clearUseEnv")}</Typography>}
-        />
-      </StorageSectionAccordion>
-
-      <StorageSectionAccordion
-        defaultExpanded
-        accordionSx={storageAccordionSx}
-        tk={tk}
-        summaryStart={<BrandSvgIcon icon={siRedis} />}
-        title={t("settings.storage.redis.title")}
-        subtitle={t("settings.storage.redis.subtitle")}
-      >
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.redis.url")}
-          value={redisUrl}
-          onChange={(e) => setRedisUrl(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-      </StorageSectionAccordion>
-
-      <StorageSectionAccordion
-        defaultExpanded
-        accordionSx={storageAccordionSx}
-        tk={tk}
-        summaryStart={<FolderOutlinedIcon sx={{ fontSize: 22 }} />}
-        title={t("settings.storage.paths.title")}
-        subtitle={t("settings.storage.paths.subtitle")}
-      >
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.paths.blobRoot")}
-          value={blobRoot}
-          onChange={(e) => setBlobRoot(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-        <TextField
-          margin="normal"
-          fullWidth
-          label={t("settings.storage.paths.artifactRoot")}
-          value={artifactRoot}
-          onChange={(e) => setArtifactRoot(e.target.value)}
-          sx={fieldSx}
-          size="small"
-        />
-      </StorageSectionAccordion>
+        fieldSx={fieldSx}
+        storageAccordionSx={storageAccordionSx}
+        storage={storage}
+        neo4jUri={neo4jUri}
+        setNeo4jUri={setNeo4jUri}
+        neo4jUser={neo4jUser}
+        setNeo4jUser={setNeo4jUser}
+        neo4jPassword={neo4jPassword}
+        setNeo4jPassword={setNeo4jPassword}
+        clearNeo4jPassword={clearNeo4jPassword}
+        setClearNeo4jPassword={setClearNeo4jPassword}
+        qdrantUrl={qdrantUrl}
+        setQdrantUrl={setQdrantUrl}
+        qdrantCollection={qdrantCollection}
+        setQdrantCollection={setQdrantCollection}
+        qdrantClaimsCollection={qdrantClaimsCollection}
+        setQdrantClaimsCollection={setQdrantClaimsCollection}
+        qdrantWorkEmbCollection={qdrantWorkEmbCollection}
+        setQdrantWorkEmbCollection={setQdrantWorkEmbCollection}
+        qdrantAuthorEmbCollection={qdrantAuthorEmbCollection}
+        setQdrantAuthorEmbCollection={setQdrantAuthorEmbCollection}
+        databaseUrl={databaseUrl}
+        setDatabaseUrl={setDatabaseUrl}
+        clearDatabaseUrl={clearDatabaseUrl}
+        setClearDatabaseUrl={setClearDatabaseUrl}
+        redisUrl={redisUrl}
+        setRedisUrl={setRedisUrl}
+        blobRoot={blobRoot}
+        setBlobRoot={setBlobRoot}
+        artifactRoot={artifactRoot}
+        setArtifactRoot={setArtifactRoot}
+        s3EndpointUrl={s3EndpointUrl}
+        setS3EndpointUrl={setS3EndpointUrl}
+        s3Bucket={s3Bucket}
+        setS3Bucket={setS3Bucket}
+        s3UseSsl={s3UseSsl}
+        setS3UseSsl={setS3UseSsl}
+        s3AddressingStyle={s3AddressingStyle}
+        setS3AddressingStyle={setS3AddressingStyle}
+        s3ArtifactKeyPrefix={s3ArtifactKeyPrefix}
+        setS3ArtifactKeyPrefix={setS3ArtifactKeyPrefix}
+        s3AccessKeyId={s3AccessKeyId}
+        setS3AccessKeyId={setS3AccessKeyId}
+        s3SecretAccessKey={s3SecretAccessKey}
+        setS3SecretAccessKey={setS3SecretAccessKey}
+        clearS3Secret={clearS3Secret}
+        setClearS3Secret={setClearS3Secret}
+        s3BenchmarkRunsKeyPrefix={s3BenchmarkRunsKeyPrefix}
+        setS3BenchmarkRunsKeyPrefix={setS3BenchmarkRunsKeyPrefix}
+        s3DiagnosticsKeyPrefix={s3DiagnosticsKeyPrefix}
+        setS3DiagnosticsKeyPrefix={setS3DiagnosticsKeyPrefix}
+      />
 
       <Box>
         <CursorPrimaryButton type="submit" disabled={saving || !dirty}>

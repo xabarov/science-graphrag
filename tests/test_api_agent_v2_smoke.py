@@ -206,30 +206,11 @@ def test_v2_deferred_topic_shortcuts_sse_without_graph(monkeypatch) -> None:
     assert finals[0]["run_metadata"]["shortcut"] == "deferred_topic_clarification"
 
 
-def test_v1_has_deprecation_header(monkeypatch) -> None:
-    from science_graphrag.api import agent as agent_api
-
-    class _FakeOut:
-        answer = "ok"
-        citations = []
-        tool_trace = []
-
-    class _FakeAgent:
-        def run(self, **_kwargs):
-            return _FakeOut()
-
-    monkeypatch.setattr(agent_api, "build_agent", lambda **_kwargs: _FakeAgent())
+def test_v1_returns_gone_with_successor_link() -> None:
     test_app = _build_test_app()
     client = TestClient(test_app)
-    client.app.dependency_overrides[get_settings] = lambda: Settings()
-    client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
-    try:
-        resp = client.post("/v1/agent/query", json={"question": "test"})
-    finally:
-        client.app.dependency_overrides.pop(get_settings, None)
-        client.app.dependency_overrides.pop(get_stores, None)
-
-    assert resp.status_code == 200, resp.text
-    assert resp.headers.get("Deprecation") == "true"
-    assert resp.headers.get("Sunset") == "2026-07-01"
+    resp = client.post("/v1/agent/query", json={"question": "test"})
+    assert resp.status_code == 410, resp.text
     assert resp.headers.get("Link") == '</v2/agent/query>; rel="successor-version"'
+    body = resp.json()
+    assert body.get("replacement") == "/v2/agent/query"

@@ -2,12 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Chip from "@mui/material/Chip";
 import { useTheme } from "@mui/material/styles";
 import { InlineNotice, useFeedback } from "../components/feedback/index.js";
 
-import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
-import PostAddOutlinedIcon from "@mui/icons-material/PostAddOutlined";
 import RestoreOutlinedIcon from "@mui/icons-material/RestoreOutlined";
 
 import { CursorIconAction } from "../components/common/index.js";
@@ -15,7 +12,7 @@ import PageHeader from "../components/layout/PageHeader.jsx";
 import { mainShellContentSx } from "../components/layout/mainShellContentSx.js";
 import { useI18n } from "../i18n/useI18n.js";
 import { formatResearchApiError, getWorks } from "../services/researchApi.js";
-import { buildWorkspacePath, persistWorkId } from "./WorkspacePage/utils/workContext.js";
+import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { rememberRecentWork } from "./HomePage/homeState.js";
 import { useCorpusEntryState } from "./HomePage/useCorpusEntryState.js";
 import {
@@ -31,6 +28,7 @@ import IndexedWorksBrowser from "./WorkspacesPage/IndexedWorksBrowser.jsx";
 import WorkspaceActionBar from "./WorkspacesPage/WorkspaceActionBar.jsx";
 import WorkspaceCollectionPanel from "./WorkspacesPage/WorkspaceCollectionPanel.jsx";
 import WorkspaceRecentPanel from "./WorkspacesPage/WorkspaceRecentPanel.jsx";
+import WorkspacesWorkRow from "./WorkspacesPage/WorkspacesWorkRow.jsx";
 
 const PAGE_SIZE = 40;
 
@@ -260,96 +258,6 @@ export default function WorkspacesPage() {
   const canLoadMore = !loading && items.length < total;
   const tw = targetWorkspaceId;
 
-  function renderWorkRow(w) {
-    const wsUrl = tw ? buildWorkspacePath(w.work_id, "overview", { workspaceId: tw }) : buildWorkspacePath(w.work_id);
-    if (viewDensity === "compact") {
-      return (
-        <Box
-          key={w.work_id}
-          sx={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            gap: 1,
-            py: 1,
-            px: 1.25,
-            borderRadius: "6px",
-            border: `1px solid ${tk.border.default}`,
-            backgroundColor: tk.surface.panel,
-          }}
-        >
-          <Box sx={{ flex: "1 1 200px", minWidth: 0 }}>
-            <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }} noWrap>
-              {w.title || t("workspaces.row.noTitle")}
-            </Typography>
-            <Typography sx={{ fontSize: "0.7rem", color: tk.text.muted }} noWrap>
-              {w.year != null ? `${w.year} · ` : ""}
-              {w.work_id}
-            </Typography>
-          </Box>
-          <CursorIconAction
-            component={Link}
-            to={wsUrl}
-            title={t("workspaces.row.workspace")}
-            onClick={() => onOpenWorkspace(w.work_id)}
-          >
-            <HubOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-          </CursorIconAction>
-          <CursorIconAction
-            type="button"
-            title={t("workspaces.row.addToTarget")}
-            onClick={() => handleAddPaperToTarget(w.work_id)}
-            disabled={!tw}
-          >
-            <PostAddOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-          </CursorIconAction>
-        </Box>
-      );
-    }
-    return (
-      <Box
-        key={w.work_id}
-        sx={{
-          p: 1.75,
-          borderRadius: "6px",
-          border: `1px solid ${tk.border.default}`,
-          backgroundColor: tk.surface.panel,
-        }}
-      >
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>
-          {w.title || t("workspaces.row.noTitle")}
-        </Typography>
-        <Typography sx={{ fontSize: "0.75rem", color: tk.text.secondary, mt: 0.5 }}>
-          {w.year != null ? `${w.year} · ` : ""}
-          {w.work_id}
-        </Typography>
-        <Box sx={{ mt: 0.9, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-          {w.has_semantic_layer ? (
-            <Chip label={t("workspaces.chip.semanticReady")} size="small" sx={{ height: 22, fontSize: "0.6875rem" }} />
-          ) : null}
-        </Box>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.25, alignItems: "center" }}>
-          <CursorIconAction
-            component={Link}
-            to={wsUrl}
-            title={t("workspaces.row.openInWs")}
-            onClick={() => onOpenWorkspace(w.work_id)}
-          >
-            <HubOutlinedIcon sx={{ fontSize: "1.1rem" }} />
-          </CursorIconAction>
-          <CursorIconAction
-            type="button"
-            title={t("workspaces.row.addToTargetWs")}
-            onClick={() => handleAddPaperToTarget(w.work_id)}
-            disabled={!tw}
-          >
-            <PostAddOutlinedIcon sx={{ fontSize: "1.1rem" }} />
-          </CursorIconAction>
-        </Box>
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2 }, ...mainShellContentSx, maxWidth: "100%" }}>
       <input id="workspace-import-input" type="file" accept="application/json" hidden onChange={onImportWorkspaces} />
@@ -421,7 +329,18 @@ export default function WorkspacesPage() {
         onYearMinChange={setYearMin}
         onYearMaxChange={setYearMax}
         sortedItems={sortedItems}
-        renderWorkRow={renderWorkRow}
+        renderWorkRow={(w) => (
+          <WorkspacesWorkRow
+            key={w.work_id}
+            w={w}
+            targetWorkspaceId={tw}
+            tk={tk}
+            t={t}
+            viewDensity={viewDensity}
+            onOpenWorkspace={onOpenWorkspace}
+            onAddPaperToTarget={handleAddPaperToTarget}
+          />
+        )}
       />
     </Box>
   );

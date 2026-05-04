@@ -7,7 +7,7 @@ import { useTheme } from "@mui/material/styles";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 
-import { CursorIconAction } from "../../../components/common/index.js";
+import { CopyIdButton, CursorIconAction } from "../../../components/common/index.js";
 import ReaderClaimsPanel from "../../../components/work/reader/ReaderClaimsPanel.jsx";
 import ReaderWorkBody from "../../../components/work/reader/ReaderWorkBody.jsx";
 import { GRAPH_PATH } from "../../../routes/paths.js";
@@ -51,6 +51,12 @@ export default function ReaderTab({ workId }) {
         >
           <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
         </CursorIconAction>
+        <CopyIdButton
+          id={workId}
+          tooltipCopy={t("readerBody.copyWorkId")}
+          tooltipCopied={t("readerBody.copied")}
+          aria-label={t("readerBody.copyWorkIdAria")}
+        />
       </Box>
       <ReaderClaimsPanel workId={workId} />
       <ReaderWorkBody

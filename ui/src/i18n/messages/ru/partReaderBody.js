@@ -1,6 +1,12 @@
 /** @type {Record<string, string>} */
 export default {
   "readerBody.loading": "Загрузка…",
+  "readerBody.sectionTocTitle": "Разделы извлечённого текста",
+  "readerBody.languageBanner": "Язык документа: {{lang}}",
+  "readerBody.copyWorkId": "Копировать work id",
+  "readerBody.copyWorkIdAria": "Скопировать work id в буфер",
+  "readerBody.copied": "Скопировано",
+
   "readerBody.noTitle": "(без названия)",
   "readerBody.extractedTitle": "Извлечённый текст (чтение)",
   "readerBody.extractedHint":

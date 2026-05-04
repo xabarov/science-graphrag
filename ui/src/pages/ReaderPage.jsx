@@ -15,7 +15,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 
-import { CursorIconAction } from "../components/common/index.js";
+import { CopyIdButton, CursorIconAction } from "../components/common/index.js";
 import { isExplicitAdminMode } from "../components/layout/adminVisibility.js";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import { useI18n } from "../i18n/useI18n.js";
@@ -158,6 +158,12 @@ export default function ReaderPage() {
           >
             <AccountTreeIcon sx={{ fontSize: "1.1rem" }} />
           </CursorIconAction>
+          <CopyIdButton
+            id={workId}
+            tooltipCopy={t("readerBody.copyWorkId")}
+            tooltipCopied={t("readerBody.copied")}
+            aria-label={t("readerBody.copyWorkIdAria")}
+          />
         </Box>
       ) : null}
 

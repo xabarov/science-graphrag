@@ -57,6 +57,8 @@ export default {
     "Выберите рабочую область в меню выше или создайте новую, чтобы прикрепить статьи.",
   "workspace.summary.dialogTitle": "Сводка по рабочей области",
   "workspace.summary.empty": "Сводки пока нет.",
+  "workspace.summary.agentPrompt":
+    "Кратко суммируй эту рабочую область: темы, методы, наборы данных и ключевые выводы.",
   "workspace.idea.dialogTitle": "Помощник гипотез и противоречий",
   "workspace.dialog.close": "Закрыть",
 
@@ -75,6 +77,17 @@ export default {
   "workspace.upload.dash": "—",
   "workspace.ingest.progressLabel": "Общий прогресс: {{pct}}%",
   "workspace.ingest.stageUnknown": "стадия",
+  "workspace.ingest.stage.parse_pdf": "Разбор PDF / vision",
+  "workspace.ingest.stage.extract_meta": "Метаданные",
+  "workspace.ingest.stage.enrich_openalex": "Обогащение (OpenAlex)",
+  "workspace.ingest.stage.enrich_ror": "Обогащение (ROR)",
+  "workspace.ingest.stage.resolve_references": "Ссылки",
+  "workspace.ingest.stage.write_graph": "Запись в граф",
+  "workspace.ingest.stage.chunk": "Чанкинг",
+  "workspace.ingest.stage.extract_claims": "Утверждения (claims)",
+  "workspace.ingest.stage.embed": "Эмбеддинги",
+  "workspace.ingest.stage.attach_workspace": "Привязка к области",
+  "workspace.ingest.stage.vl_extract": "Vision-извлечение",
   "workspace.ingest.stageEtaSeconds": "~{{sec}} с",
   "workspace.ingest.detailsLogs": "Подробности / логи",
   "workspace.ingest.logsTailHint":
@@ -101,6 +114,7 @@ export default {
   "workspace.strip.ingestProgressTip": "Идёт загрузка / индексация",
   "workspace.strip.ingestProgressTwoScalesHint":
     "Процент — взвешенный прогресс всего пайплайна (технические стадии). Четыре сегмента ниже — продуктовые фазы (документ → граф → поиск → финал), а не доля страниц PDF.",
+  "workspace.strip.ingestRemainingEta": "~{{sec}} с осталось (оценка)",
   "workspace.strip.ingestStarting": "Запуск загрузки…",
   "workspace.strip.ingestFailed": "Ошибка индексации",
   "workspace.strip.ingestPhase.preparing_document": "Подготовка документа",
@@ -132,7 +146,11 @@ export default {
   "workspace.ingestDedup.keepSeparate": "Оставить раздельно",
   "workspace.ingestDedup.skip": "Пропустить",
   "workspace.ingestDedup.dismiss": "Скрыть",
+  "workspace.ingestDedup.jobContext": "Связано с активным заданием ingest {{id}} (разрешите конфликт для продолжения).",
   "workspace.ingestDedup.loadingTitles": "Загрузка…",
+  "workspace.ingestDedup.prev": "Назад",
+  "workspace.ingestDedup.next": "Далее",
+  "workspace.ingestDedup.conflictId": "Конфликт {{id}}",
 
   "workspace.ingestAuthorDedup.title": "Возможные дубликаты авторов после загрузки",
   "workspace.ingestAuthorDedup.subtitle": "{{current}} из {{total}} · схожесть {{score}}",

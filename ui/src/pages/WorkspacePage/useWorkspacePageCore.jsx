@@ -1,19 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import Box from "@mui/material/Box";
-import Alert from "@mui/material/Alert";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTheme } from "@mui/material/styles";
 
-import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
-
-import { CursorIconAction, CursorPrimaryButton } from "../../components/common/index.js";
 import { useFeedback } from "../../components/feedback/index.js";
-import { formatResearchApiError, postAgentQuery, postIdeaAssist } from "../../services/researchApi.js";
+import { formatResearchApiError } from "../../services/researchApi.js";
 import {
-  getActiveWorkspaceId,
   setActiveWorkspaceId,
-  listWorkspaces,
   getWorkspace,
   createWorkspace,
   addWorkToWorkspace,
@@ -21,18 +13,19 @@ import {
   startWorkspaceDocumentIngest,
   startWorkspaceBatchIngest,
   getWorkspaceGraphStats,
-  getWorkspaceAuthorDedupConflicts,
-  getWorkspaceSmartDedupConflicts,
-  listEntityDedupConflicts,
 } from "../../utils/workspaceStore.js";
 import { isAdminModeEnabled } from "../../components/layout/adminVisibility.js";
-import { legacyWorkspaceTabRedirectTarget } from "../../components/work/traceability/traceabilityState.js";
 import { persistWorkId, resolveSelectedWorkId } from "./utils/workContext.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import useJobStream from "../../hooks/useJobStream.js";
 import { useWorkspacePapersModel } from "./useWorkspacePapersModel.js";
-
-const INGEST_JOB_STORAGE_PREFIX = "science-graphrag:workspaceIngestJob:";
+import { useWorkspaceIdeaAssist } from "./useWorkspaceIdeaAssist.js";
+import { useWorkspaceLegacyRedirect } from "./useWorkspaceLegacyRedirect.js";
+import { useWorkspaceSummary } from "./useWorkspaceSummary.js";
+import { setPersistedIngestJobId } from "./workspaceIngestStorage.js";
+import { useWorkspaceBootstrap } from "./useWorkspaceBootstrap.js";
+import { useIngestDedupAutoOpen } from "./useIngestDedupAutoOpen.js";
+import WorkspacePageEmptyState from "./WorkspacePageEmptyState.jsx";
 
 export function useWorkspacePageCore() {
   const theme = useTheme();
@@ -43,10 +36,7 @@ export function useWorkspacePageCore() {
   const workspaceIdFromUrl = (searchParams.get("workspace_id") || "").trim();
   const workIdFromUrl = (searchParams.get("work_id") || "").trim();
 
-  useEffect(() => {
-    const target = legacyWorkspaceTabRedirectTarget(searchParams);
-    if (target) navigate(target, { replace: true });
-  }, [navigate, searchParams]);
+  useWorkspaceLegacyRedirect(searchParams, navigate);
 
   const [workspaceMeta, setWorkspaceMeta] = useState({ id: "", name: "", work_ids: [] });
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
@@ -66,14 +56,37 @@ export function useWorkspacePageCore() {
   const [ingestDedupPanelOpen, setIngestDedupPanelOpen] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [graphStats, setGraphStats] = useState(null);
-  const [summaryOpen, setSummaryOpen] = useState(false);
-  const [summaryBusy, setSummaryBusy] = useState(false);
-  const [summaryText, setSummaryText] = useState("");
-  const [ideaOpen, setIdeaOpen] = useState(false);
-  const [ideaBusy, setIdeaBusy] = useState(false);
-  const [ideaError, setIdeaError] = useState("");
-  const [ideaResult, setIdeaResult] = useState({ hypotheses: [], contradictions: [], toolTrace: [] });
   const canUseIdeaAssist = useMemo(() => isAdminModeEnabled(), []);
+
+  const {
+    summaryOpen,
+    setSummaryOpen,
+    summaryBusy,
+    summaryText,
+    handleSummarizeWorkspace,
+  } = useWorkspaceSummary(workspaceMeta.id, t);
+
+  const {
+    ideaOpen,
+    setIdeaOpen,
+    ideaBusy,
+    ideaError,
+    ideaResult,
+    handleGenerateHypotheses,
+  } = useWorkspaceIdeaAssist(workspaceMeta.id, canUseIdeaAssist);
+
+  useWorkspaceBootstrap({
+    workspaceIdFromUrl,
+    workIdFromUrl,
+    workspaceLoadNonce,
+    setSearchParams,
+    setWorkspaceMeta,
+    setWorkspaceLoading,
+    setWorkspaceError,
+    setWorkspaceErrorIsServer,
+    setIngestJobId,
+    t,
+  });
 
   const refreshWorkspaceMeta = useCallback(async () => {
     const id = workspaceMeta.id;
@@ -85,86 +98,6 @@ export function useWorkspacePageCore() {
       /* ignore */
     }
   }, [workspaceMeta.id]);
-
-  const setPersistedIngestJobId = useCallback((workspaceId, jobId) => {
-    const ws = String(workspaceId || "").trim();
-    if (!ws) return;
-    const key = `${INGEST_JOB_STORAGE_PREFIX}${ws}`;
-    try {
-      const jid = String(jobId || "").trim();
-      if (jid) window.sessionStorage.setItem(key, jid);
-      else window.sessionStorage.removeItem(key);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const readPersistedIngestJobId = useCallback((workspaceId) => {
-    const ws = String(workspaceId || "").trim();
-    if (!ws) return "";
-    try {
-      return String(window.sessionStorage.getItem(`${INGEST_JOB_STORAGE_PREFIX}${ws}`) || "").trim();
-    } catch {
-      return "";
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setWorkspaceLoading(true);
-      setWorkspaceError(null);
-      setWorkspaceErrorIsServer(false);
-      try {
-        const list = await listWorkspaces();
-        if (cancelled) return;
-        let activeId = workspaceIdFromUrl || getActiveWorkspaceId();
-        if (!activeId && list.length) activeId = list[0].id;
-        if (!activeId) {
-          setWorkspaceMeta({ id: "", name: "", work_ids: [] });
-          return;
-        }
-        setActiveWorkspaceId(activeId);
-        const ws = await getWorkspace(activeId);
-        if (cancelled) return;
-        if (!ws) {
-          setWorkspaceError(t("workspace.err.notFound"));
-          setWorkspaceMeta({ id: "", name: "", work_ids: [] });
-          return;
-        }
-        setWorkspaceMeta(ws);
-        const restoredJobId = readPersistedIngestJobId(ws.id);
-        if (restoredJobId) setIngestJobId(restoredJobId);
-        const nextParams = new URLSearchParams();
-        nextParams.set("workspace_id", ws.id);
-        const ids = Array.isArray(ws.work_ids) ? ws.work_ids : [];
-        if (ids.length === 1) {
-          nextParams.set("work_id", ids[0]);
-        } else if (workIdFromUrl && ids.includes(workIdFromUrl)) {
-          nextParams.set("work_id", workIdFromUrl);
-        }
-        setSearchParams(nextParams, { replace: true });
-      } catch (e) {
-        if (!cancelled) {
-          const status = e?.response?.status;
-          const server = typeof status === "number" && status >= 500;
-          setWorkspaceErrorIsServer(server);
-          const base = formatResearchApiError(e);
-          const suffix = server ? ` ${t("workspace.err.serverHintInline")}` : "";
-          setWorkspaceError(`${base}${suffix}`.trim());
-        }
-      } finally {
-        if (!cancelled) setWorkspaceLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [workspaceIdFromUrl, workIdFromUrl, workspaceLoadNonce, setSearchParams, t, readPersistedIngestJobId]);
-
-  const retryWorkspaceLoad = useCallback(() => {
-    setWorkspaceLoadNonce((n) => n + 1);
-  }, []);
 
   useEffect(() => {
     const id = String(workspaceMeta.id || "").trim();
@@ -186,43 +119,7 @@ export function useWorkspacePageCore() {
     };
   }, [workspaceMeta.id, workspaceMeta.work_ids]);
 
-  useEffect(() => {
-    const id = String(workspaceMeta.id || "").trim();
-    if (!id) {
-      setIngestDedupPanelOpen(false);
-      return undefined;
-    }
-    let cancelled = false;
-    (async () => {
-      try {
-        const entityTypes = ["institution", "venue", "method", "dataset"];
-        const [wdata, adata, ...edatas] = await Promise.all([
-          getWorkspaceSmartDedupConflicts(id, { status: "pending", origin: "ingest", limit: 1 }),
-          getWorkspaceAuthorDedupConflicts(id, { status: "pending", origin: "ingest", limit: 1 }),
-          ...entityTypes.map((entityType) =>
-            listEntityDedupConflicts({
-              entityType,
-              workspaceId: id,
-              origin: "ingest",
-              status: "pending",
-              limit: 1,
-            }),
-          ),
-        ]);
-        const hasWork = Array.isArray(wdata?.items) && wdata.items.length > 0;
-        const hasAuthor = Array.isArray(adata?.items) && adata.items.length > 0;
-        const hasEntity = edatas.some((d) => Array.isArray(d?.items) && d.items.length > 0);
-        if (!cancelled && (hasWork || hasAuthor || hasEntity)) {
-          setIngestDedupPanelOpen(true);
-        }
-      } catch {
-        /* ignore */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [workspaceMeta.id]);
+  useIngestDedupAutoOpen(workspaceMeta.id, setIngestDedupPanelOpen);
 
   const effectiveWorkIds = useMemo(() => {
     const fromWs = Array.isArray(workspaceMeta.work_ids) ? workspaceMeta.work_ids : [];
@@ -272,7 +169,7 @@ export function useWorkspacePageCore() {
         setIngestJobId("");
         setIngestJob(null);
       },
-      [refreshWorkspaceMeta, setPersistedIngestJobId, workspaceMeta.id],
+      [refreshWorkspaceMeta, workspaceMeta.id],
     ),
     onError: useCallback(
       (err, failCount) => {
@@ -301,43 +198,18 @@ export function useWorkspacePageCore() {
     }
   }, [setSearchParams]);
 
-  const emptyState = useMemo(() => {
-    const tokens = theme.appTokens;
-    return (
-      <Box sx={{ maxWidth: 560, mt: 2 }}>
-        <Alert
-          severity="info"
-          sx={{
-            fontSize: "0.8125rem",
-            mb: 2,
-            bgcolor: tokens.accent.softBg,
-            color: tokens.text.primary,
-            "& .MuiAlert-icon": { color: tokens.accent.fg },
-          }}
-        >
-          {t("workspace.empty.alert")}
-        </Alert>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, alignItems: "center", mb: emptyCreateErr ? 1 : 0 }}>
-          <CursorPrimaryButton type="button" disabled={emptyCreateBusy} onClick={() => void handleEmptyCreateWorkspace()}>
-            {t("workspace.empty.createWorkspace")}
-          </CursorPrimaryButton>
-          <CursorIconAction component={Link} to="/workspaces" title={t("workspace.empty.workspaces")}>
-            <FolderOpenOutlinedIcon sx={{ fontSize: "1.1rem" }} />
-          </CursorIconAction>
-          <Box component="span" sx={{ display: "inline-flex" }}>
-            <CursorIconAction component={Link} to="/home" title={t("workspace.empty.about")}>
-              <HomeOutlinedIcon sx={{ fontSize: "1.1rem" }} />
-            </CursorIconAction>
-          </Box>
-        </Box>
-        {emptyCreateErr ? (
-          <Alert severity="error" sx={{ fontSize: "0.8125rem", mt: 1 }}>
-            {emptyCreateErr}
-          </Alert>
-        ) : null}
-      </Box>
-    );
-  }, [t, emptyCreateBusy, emptyCreateErr, handleEmptyCreateWorkspace, theme]);
+  const emptyState = useMemo(
+    () => (
+      <WorkspacePageEmptyState
+        t={t}
+        theme={theme}
+        emptyCreateBusy={emptyCreateBusy}
+        emptyCreateErr={emptyCreateErr}
+        onCreateWorkspace={handleEmptyCreateWorkspace}
+      />
+    ),
+    [t, theme, emptyCreateBusy, emptyCreateErr, handleEmptyCreateWorkspace],
+  );
 
   async function handleAddWork(e) {
     e?.preventDefault?.();
@@ -461,50 +333,9 @@ export function useWorkspacePageCore() {
   const onCardActivate =
     workspaceMeta.id && effectiveWorkIds.length > 1 ? (wid) => setWorkFocusInUrl(wid) : undefined;
 
-  async function handleSummarizeWorkspace() {
-    if (!workspaceMeta.id) return;
-    setSummaryBusy(true);
-    try {
-      const res = await postAgentQuery({
-        question: "Briefly summarize this workspace: topics, methods, datasets, and key findings.",
-        workspace_id: workspaceMeta.id,
-        max_tool_calls: 8,
-      });
-      setSummaryText(String(res?.data?.answer || ""));
-      setSummaryOpen(true);
-    } catch (err) {
-      setSummaryText(formatResearchApiError(err));
-      setSummaryOpen(true);
-    } finally {
-      setSummaryBusy(false);
-    }
-  }
-
-  async function handleGenerateHypotheses() {
-    if (!workspaceMeta.id || !canUseIdeaAssist) return;
-    setIdeaBusy(true);
-    setIdeaError("");
-    try {
-      const res = await postIdeaAssist({
-        workspace_id: workspaceMeta.id,
-        mode: "both",
-        max_candidates: 3,
-      });
-      const data = res?.data || {};
-      setIdeaResult({
-        hypotheses: Array.isArray(data.hypotheses) ? data.hypotheses : [],
-        contradictions: Array.isArray(data.contradictions) ? data.contradictions : [],
-        toolTrace: Array.isArray(data.tool_trace) ? data.tool_trace : [],
-      });
-      setIdeaOpen(true);
-    } catch (err) {
-      setIdeaResult({ hypotheses: [], contradictions: [], toolTrace: [] });
-      setIdeaError(formatResearchApiError(err));
-      setIdeaOpen(true);
-    } finally {
-      setIdeaBusy(false);
-    }
-  }
+  const retryWorkspaceLoad = useCallback(() => {
+    setWorkspaceLoadNonce((n) => n + 1);
+  }, []);
 
   return {
     t,

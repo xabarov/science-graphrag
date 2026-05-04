@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CropFreeIcon from "@mui/icons-material/CropFree";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
 import { useTheme } from "@mui/material/styles";
 
 import GraphCanvasViewToolbar from "./GraphCanvasViewToolbar.jsx";
@@ -9,7 +16,14 @@ import { computeFitTransformForNodeSubset } from "./graphCanvasCamera.js";
 import { computeWorldLayout, screenToWorld, worldRadiusForNodeCount } from "./graphCanvasTransform.js";
 import { localizeAggregatorTitle, localizeEdgeType } from "../model/graphLocalize.js";
 import { drawCommunityHulls } from "./graphCanvasDrawCommunityHulls.js";
-import { drawEdges, drawLabels, drawNodes } from "./graphCanvasDraw.js";
+import {
+  drawEdges,
+  drawLabels,
+  drawNodes,
+  EDGE_LABEL_MEGA_DENSE_MIN_EDGES,
+  NODE_LABEL_ADAPTIVE_MAX_NODES,
+  hitTestNodeScreen,
+} from "./graphCanvasDraw.js";
 import { getGraphLayoutSignature } from "../flow/graphFlowAdapter.js";
 import { buildSimulationState } from "../model/graphSimulationAdapter.js";
 import { useGraphPhysicsPointerBridge } from "./GraphPhysicsPointerBridgeContext.jsx";
@@ -27,11 +41,17 @@ const MIN_CANVAS_HEIGHT = 280;
 const MIN_FIT_SCALE = 0.11;
 const FORCE_RESTART_JITTER_WORLD = 56;
 const LS_GRAPH_CANVAS_REPULSION = "graphCanvasRepulsionPercent";
-const LS_GRAPH_CANVAS_EDGE_LABEL_MODE = "graphCanvasEdgeLabelMode";
+const LS_GRAPH_CANVAS_LABEL_MODE = "graphCanvasLabelMode";
+const LS_GRAPH_CANVAS_LABEL_HOVER_NEIGHBORS = "graphCanvasLabelHoverNeighbors";
+// Legacy key kept for one-shot migration: previously stored only the edge label mode, now used as
+// fallback when the new unified key is missing so existing users do not lose their toggle choice.
+const LS_GRAPH_CANVAS_LABEL_MODE_LEGACY = "graphCanvasEdgeLabelMode";
+const LS_GRAPH_DENSE_LABEL_HINT_DISMISSED = "graphDenseLabelHintDismissed";
 const MIN_SCALE = 0.06;
 const MAX_SCALE = 8;
 
 const EMPTY_COMMUNITY_MAP = new Map();
+const EMPTY_NODE_ID_SET = /** @type {Set<string>} */ (new Set());
 
 /*
  * Force-layout interaction contract (canvas MVP):
@@ -43,15 +63,30 @@ const EMPTY_COMMUNITY_MAP = new Map();
  */
 
 /** @returns {"all" | "interaction" | "adaptive"} */
-function readEdgeLabelModeStored() {
+function readCanvasLabelModeStored() {
   if (typeof window === "undefined") return "adaptive";
   try {
-    const v = window.localStorage.getItem(LS_GRAPH_CANVAS_EDGE_LABEL_MODE);
+    const v = window.localStorage.getItem(LS_GRAPH_CANVAS_LABEL_MODE);
     if (v === "all" || v === "interaction" || v === "adaptive") return v;
+    const legacy = window.localStorage.getItem(LS_GRAPH_CANVAS_LABEL_MODE_LEGACY);
+    if (legacy === "all" || legacy === "interaction" || legacy === "adaptive") return legacy;
   } catch {
     /* ignore */
   }
   return "adaptive";
+}
+
+/** @returns {boolean} */
+function readHoverNeighborsLabelsStored() {
+  if (typeof window === "undefined") return true;
+  try {
+    const v = window.localStorage.getItem(LS_GRAPH_CANVAS_LABEL_HOVER_NEIGHBORS);
+    if (v === "0") return false;
+    if (v === "1") return true;
+  } catch {
+    /* ignore */
+  }
+  return true;
 }
 
 function clampFitTransform(fit) {
@@ -122,7 +157,8 @@ export default function GraphCanvasMvp({
   const [simLinks, setSimLinks] = useState([]);
   const [isSimulationStable, setIsSimulationStable] = useState(false);
   const [repulsionPercent, setRepulsionPercent] = useState(() => readRepulsionPercentStored());
-  const [edgeLabelMode, setEdgeLabelMode] = useState(() => readEdgeLabelModeStored());
+  const [canvasLabelMode, setCanvasLabelMode] = useState(() => readCanvasLabelModeStored());
+  const [hoverNeighborsLabels, setHoverNeighborsLabels] = useState(() => readHoverNeighborsLabelsStored());
   const [forceSimRunNonce, setForceSimRunNonce] = useState(0);
   const [physicsReheatNonce, setPhysicsReheatNonce] = useState(0);
   const [pinnedNodeCount, setPinnedNodeCount] = useState(0);
@@ -139,6 +175,31 @@ export default function GraphCanvasMvp({
   const repulsionStrength = useMemo(() => percentToRepulsion(repulsionPercent), [repulsionPercent]);
   const layoutWorldRadius = useMemo(() => worldRadiusForNodeCount(graph.nodes.length), [graph.nodes.length]);
   const nodeById = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
+
+  // Undirected 1-hop adjacency for the current topology. Recomputed only when graph.edges changes
+  // (O(E)); per-frame neighborhood lookups for label highlighting are then O(deg(node)).
+  const adjacencyMap = useMemo(() => {
+    /** @type {Map<string, Set<string>>} */
+    const map = new Map();
+    for (const edge of graph.edges) {
+      const s = String(edge.source);
+      const t = String(edge.target);
+      if (!s || !t) continue;
+      let aSet = map.get(s);
+      if (!aSet) {
+        aSet = new Set();
+        map.set(s, aSet);
+      }
+      let bSet = map.get(t);
+      if (!bSet) {
+        bSet = new Set();
+        map.set(t, bSet);
+      }
+      aSet.add(t);
+      bSet.add(s);
+    }
+    return map;
+  }, [graph.edges]);
   const searchTrim = useMemo(() => ((searchQuery != null && String(searchQuery).trim()) || ""), [searchQuery]);
   const searchActive = searchTrim.length > 0;
   const searchMatchSet = useMemo(() => {
@@ -194,6 +255,14 @@ export default function GraphCanvasMvp({
     handleToolbarResetZoom,
   } = viewport;
 
+  const [denseHintDismissed, setDenseHintDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.sessionStorage.getItem(LS_GRAPH_DENSE_LABEL_HINT_DISMISSED) === "1";
+    } catch {
+      return false;
+    }
+  });
   const onNodeClick = useCallback(
     (nodeId) => {
       const clickedNode = nodeById.get(nodeId);
@@ -212,6 +281,13 @@ export default function GraphCanvasMvp({
   const invokeCanvasRedraw = useCallback(() => {
     invokeCanvasRedrawRef.current();
   }, []);
+
+  // Hit-test reads the live label-active set via this ref to break the cycle:
+  //   useGraphCanvasInput → hoveredNodeId → activeForLabelSet → hit-test gating.
+  // Updated in a useEffect once activeForLabelSet for the current frame is computed below; the
+  // 1-frame lag only affects whether a label hitbox is clickable on the very first hover-into
+  // frame, which is acceptable.
+  const activeForLabelSetRef = useRef(/** @type {Set<string>} */ (new Set()));
 
   const input = useGraphCanvasInput({
     canvasRef,
@@ -241,9 +317,116 @@ export default function GraphCanvasMvp({
     selectedNodeId,
     searchActive,
     searchMatchSet,
+    canvasLabelMode,
+    activeForLabelSetRef,
     simNodesRef,
     invokeCanvasRedraw,
   });
+
+  // Compute the set of node ids whose labels should be highlighted under "interaction" / dense
+  // "adaptive" gating: the explicit selection, the current hover (if no selection), and optionally
+  // their direct 1-hop neighbors. Returning a stable empty Set when nothing is active keeps drawLabels
+  // and hit-test on a single fast path.
+  const activeForLabelSet = useMemo(() => {
+    const seeds = [];
+    if (selectedNodeId) seeds.push(String(selectedNodeId));
+    if (input.hoveredNodeId && input.hoveredNodeId !== selectedNodeId) {
+      seeds.push(String(input.hoveredNodeId));
+    }
+    if (seeds.length === 0) return EMPTY_NODE_ID_SET;
+    const out = new Set(seeds);
+    if (hoverNeighborsLabels) {
+      for (const seed of seeds) {
+        const ns = adjacencyMap.get(seed);
+        if (!ns) continue;
+        for (const id of ns) out.add(id);
+      }
+    }
+    return out;
+  }, [adjacencyMap, hoverNeighborsLabels, input.hoveredNodeId, selectedNodeId]);
+
+  // Keep the ref in sync so hit-test callbacks always see the freshest active-for-label set.
+  useEffect(() => {
+    activeForLabelSetRef.current = activeForLabelSet;
+  }, [activeForLabelSet]);
+
+  const [contextMenu, setContextMenu] = useState(/** @type {null | { mouseX: number, mouseY: number, nodeId: string }} */ (null));
+
+  const handleCanvasContextMenu = useCallback(
+    (ev) => {
+      ev.preventDefault();
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const lx = ev.clientX - rect.left;
+      const ly = ev.clientY - rect.top;
+      const posMap = getPositionsForFrame();
+      const nodeId =
+        hitTestNodeScreen(lx, ly, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
+          colorBy: graphColorBy,
+          nodeCount: graph.nodes.length,
+          searchActive,
+          searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
+          selectedNodeId,
+          hoveredNodeId: input.hoveredNodeId,
+          mode: canvasLabelMode,
+          activeForLabelSet,
+        }) || "";
+      if (!nodeId) return;
+      setContextMenu({ mouseX: ev.clientX, mouseY: ev.clientY, nodeId });
+    },
+    [
+      activeForLabelSet,
+      canvasLabelMode,
+      getPositionsForFrame,
+      graph.nodes,
+      graphColorBy,
+      resolveNodeCanvasLabel,
+      searchActive,
+      searchMatchSet,
+      selectedNodeId,
+      input.hoveredNodeId,
+      transformRef,
+    ],
+  );
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), []);
+
+  const runFitNodeSubset = useCallback(
+    (nodeId) => {
+      const nid = String(nodeId || "").trim();
+      if (!nid || graph.nodes.length === 0) return;
+      const { w, h } = getViewportDims();
+      const positions = getPositionsForFrame();
+      const nextRaw = computeFitTransformForNodeSubset(positions, [nid], w, h, NODE_RADIUS, FIT_PADDING);
+      if (!nextRaw) return;
+      const next = clampFitTransform(nextRaw);
+      transformRef.current = next;
+      setTransform(next);
+    },
+    [getPositionsForFrame, getViewportDims, graph.nodes.length, setTransform, transformRef],
+  );
+
+  const showDenseLabelHint =
+    canvasLabelMode === "all"
+    && !denseHintDismissed
+    && (
+      graph.edges.length >= EDGE_LABEL_MEGA_DENSE_MIN_EDGES
+      || graph.nodes.length > NODE_LABEL_ADAPTIVE_MAX_NODES
+    );
+
+  const edgeLegendTypes = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    for (const e of graph.edges) {
+      const t = e?.type != null ? String(e.type) : "";
+      if (!t || seen.has(t)) continue;
+      seen.add(t);
+      out.push(t);
+      if (out.length >= 8) break;
+    }
+    return out;
+  }, [graph.edges]);
 
   const paintGraphCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -292,21 +475,23 @@ export default function GraphCanvasMvp({
     drawLabels(ctx, graph.nodes, graph.edges, positions, transformRef.current, { ...nodeStyleMap, ...edgeStyleMap }, {
       resolveEdgeLabel,
       resolveNodeCanvasLabel,
-      edgeLabelMode,
+      canvasLabelMode,
       edgeCountForAdaptive: graph.edges.length,
       appearance,
       colorBy: graphColorBy,
       nodeCountForAdaptive: graph.nodes.length,
       searchActive,
       searchMatchSet,
+      activeForLabelSet,
     });
   }, [
+    activeForLabelSet,
     appearance,
     canvasBg,
     communityColorStyleMap,
     communityRanks,
     formatCommunityHullLabel,
-    edgeLabelMode,
+    canvasLabelMode,
     graphColorBy,
     graphCommunityHulls,
     nodeCommunityMap,
@@ -377,11 +562,22 @@ export default function GraphCanvasMvp({
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(LS_GRAPH_CANVAS_EDGE_LABEL_MODE, edgeLabelMode);
+      window.localStorage.setItem(LS_GRAPH_CANVAS_LABEL_MODE, canvasLabelMode);
     } catch {
       /* ignore */
     }
-  }, [edgeLabelMode]);
+  }, [canvasLabelMode]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        LS_GRAPH_CANVAS_LABEL_HOVER_NEIGHBORS,
+        hoverNeighborsLabels ? "1" : "0",
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [hoverNeighborsLabels]);
 
   useEffect(() => {
     const el = canvasRef.current;
@@ -473,8 +669,10 @@ export default function GraphCanvasMvp({
         onGraphColorByChange={onGraphColorByChange || (() => {})}
         graphCommunityHulls={graphCommunityHulls}
         onGraphCommunityHullsChange={onGraphCommunityHullsChange || (() => {})}
-        edgeLabelMode={edgeLabelMode}
-        onEdgeLabelModeChange={setEdgeLabelMode}
+        canvasLabelMode={canvasLabelMode}
+        onCanvasLabelModeChange={setCanvasLabelMode}
+        hoverNeighborsLabels={hoverNeighborsLabels}
+        onHoverNeighborsLabelsChange={setHoverNeighborsLabels}
         onFit={() => applyFit("auto")}
         onResetZoom={handleToolbarResetZoom}
         onCenterSelection={handleCenter}
@@ -483,6 +681,74 @@ export default function GraphCanvasMvp({
         onUnpinAll={handleUnpinAll}
         unpinDisabled={pinnedNodeCount === 0}
       />
+      {showDenseLabelHint ? (
+        <Alert
+          severity="info"
+          variant="outlined"
+          onClose={() => {
+            setDenseHintDismissed(true);
+            try {
+              window.sessionStorage.setItem(LS_GRAPH_DENSE_LABEL_HINT_DISMISSED, "1");
+            } catch {
+              /* ignore */
+            }
+          }}
+          sx={{ flexShrink: 0, my: 0.5, fontSize: "0.75rem", py: 0.25 }}
+        >
+          {t("graph.canvasLabels.denseHint")}{" "}
+          <Button size="small" sx={{ ml: 0.5, minWidth: 0 }} onClick={() => setCanvasLabelMode("adaptive")}>
+            {t("graph.canvasLabels.switchAdaptive")}
+          </Button>
+          <Button size="small" sx={{ ml: 0.5, minWidth: 0 }} onClick={() => setCanvasLabelMode("interaction")}>
+            {t("graph.canvasLabels.switchInteraction")}
+          </Button>
+        </Alert>
+      ) : null}
+      <Menu
+        open={Boolean(contextMenu)}
+        onClose={closeContextMenu}
+        anchorReference="anchorPosition"
+        anchorPosition={contextMenu ? { top: contextMenu.mouseY, left: contextMenu.mouseX } : undefined}
+      >
+        <MenuItem
+          onClick={() => {
+            const nid = contextMenu?.nodeId;
+            closeContextMenu();
+            if (!nid) return;
+            onSelectNode?.(nid);
+            runFitNodeSubset(nid);
+          }}
+        >
+          <CropFreeIcon fontSize="small" sx={{ mr: 1 }} />
+          {t("graph.canvas.contextFit")}
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            const nid = contextMenu?.nodeId;
+            closeContextMenu();
+            if (!nid) return;
+            centerViewportOnNode(nid);
+          }}
+        >
+          <MyLocationIcon fontSize="small" sx={{ mr: 1 }} />
+          {t("graph.canvas.contextCenter")}
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            const nid = contextMenu?.nodeId;
+            closeContextMenu();
+            if (!nid) return;
+            try {
+              void navigator.clipboard?.writeText?.(nid);
+            } catch {
+              /* ignore */
+            }
+          }}
+        >
+          <ContentCopyIcon fontSize="small" sx={{ mr: 1 }} />
+          {t("graph.canvas.contextCopyId")}
+        </MenuItem>
+      </Menu>
       <Box ref={canvasHostRef} sx={{ flex: 1, minHeight: MIN_CANVAS_HEIGHT, position: "relative" }}>
         <canvas
           ref={canvasRef}
@@ -492,8 +758,33 @@ export default function GraphCanvasMvp({
           onPointerUp={input.handlePointerUp}
           onPointerCancel={input.handlePointerUp}
           onDoubleClick={handleCanvasDoubleClick}
+          onContextMenu={handleCanvasContextMenu}
           style={{ display: "block", width: "100%", height: "100%", cursor: input.canvasCursor, touchAction: "none", verticalAlign: "top" }}
         />
+        {edgeLegendTypes.length > 0 ? (
+          <Box
+            sx={{
+              position: "absolute",
+              left: 8,
+              bottom: 8,
+              maxWidth: "min(240px, 42%)",
+              p: 0.75,
+              borderRadius: "6px",
+              border: `1px solid ${tk.border.default}`,
+              backgroundColor: tk.surface.panel,
+              pointerEvents: "none",
+            }}
+          >
+            <Typography sx={{ fontSize: "0.62rem", fontWeight: 600, color: tk.text.muted, mb: 0.25 }}>
+              {t("graph.canvas.edgeLegendTitle")}
+            </Typography>
+            {edgeLegendTypes.map((tp) => (
+              <Typography key={tp} sx={{ fontSize: "0.62rem", color: tk.text.secondary, lineHeight: 1.35 }} noWrap>
+                {localizeEdgeType({ type: tp, raw: {} }, t)}
+              </Typography>
+            ))}
+          </Box>
+        ) : null}
       </Box>
     </Box>
   );

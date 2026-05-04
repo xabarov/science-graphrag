@@ -2,10 +2,23 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildCombinedMarkdownFromChunks,
+  buildReaderSectionPathList,
   isChunkFocused,
   sortChunksByOrder,
   truncateWithEllipsis,
 } from "./readerFormatters.js";
+
+describe("buildReaderSectionPathList", () => {
+  it("returns unique section paths in order", () => {
+    expect(
+      buildReaderSectionPathList([
+        { section_path: "Intro" },
+        { section_path: "Methods" },
+        { section_path: "Intro" },
+      ]),
+    ).toEqual(["Intro", "Methods"]);
+  });
+});
 
 describe("sortChunksByOrder", () => {
   it("returns empty array for non-array input", () => {

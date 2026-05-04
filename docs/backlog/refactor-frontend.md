@@ -43,8 +43,10 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 | 2026-04-29 | **Graph folder layout:** `ui/src/components/graph/` split into `canvas/` (MVP + canvas hooks + `canvas/physics/`), `flow/`, `workspace/`, `shell/`, `model/` (adapters, view state, limits, telemetry, localize); cross-imports and `docs/` path references updated; `toolbar/` and `hooks/useGraphSelectionReconcile.js` unchanged. |
 | 2026-04-29 | **Work UI layout:** `ui/src/components/work/` split into `traceability/`, `shared/`, `markdown/`, `agent/`, `reader/`, `ask/`, `evidence/`, `hypothesis/`; pages + `routing/index.js` + graph imports updated; vitest + ESLint green. |
 | 2026-05-04 | **Backlog audit:** `components/work/` and `components/graph/` match the layout above; remaining hotspots are oversized leaf modules (see Queue — P1 module splits) and product UX items below. `WorkspaceContextChip` already includes searchable workspace list (filter by name/id); earlier backlog text implying «no search» was stale. |
-| 2026-05-05 | **Backlog code verification:** Queue P1 LOC counts match `wc -l` on current tree (`GraphDetailPanel` 895, `LlmSettingsPanel` 737, `StorageSettingsPanel` 615, `useWorkspacePageCore` 550, `ChatMessageThread` 544, `GraphCanvasMvp` 499, `WorkspaceContextChip` 449). `POST /v1/agent/query` is still called from [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) (`handleSummarizeWorkspace`). Non-streaming ask in [`useAskSubmit.js`](../../ui/src/components/work/ask/useAskSubmit.js) uses **`postAgentQueryV2`** (`/v2/agent/query`), not v1. [`ui/src/api/agent.js`](../../ui/src/api/agent.js) re-exports v1 and has **no** in-repo imports — dead shim candidate. |
+| 2026-05-05 | **Backlog code verification (superseded 2026-05-04):** earlier LOC snapshot; current hotspots — `wc -l`: `GraphDetailPanel` ~222, `LlmSettingsPanel` ~284, `StorageSettingsPanel` ~290, `useWorkspacePageCore` ~381, `ChatMessageThread` ~287, `WorkspacesPage` ~347, `WorkspaceContextChip` ~269, `WorkspaceContextStrip` ~256. Summary uses [`useWorkspaceSummary.js`](../../ui/src/pages/WorkspacePage/useWorkspaceSummary.js) + **`postAgentQueryV2`**; `ui/src/api/agent.js` removed. |
 | 2026-05-04 | **P0 graph perf + physics policy:** Baseline doc [`p0-graph-canvas-perf-baseline-2026-05.md`](../analysis/p0-graph-canvas-perf-baseline-2026-05.md); `graphPerf` localStorage + `graphPerfInstrumentation.js`; telemetry payload sizes; `graphUiLimits` perf warnings (i18n) + community/LOD thresholds (`simConstants`, `graphCanvasDraw` mega-dense edge labels, `useScienceGraphForceSimulation` + `detectCommunitiesForUi`); `useGraphPhysicsPolicy` JSDoc inventory + combined vitest. |
+| 2026-05-04 | **P2 + P1 reconciliation / polish wave:** `useWorkspaceBootstrap`, `useIngestDedupAutoOpen`, `WorkspacePageEmptyState`; `WorkspaceContextChip` split → `WorkspaceContextWorkspaceMenu.jsx` + `WorkspaceContextWorkspaceRow.jsx`; `useWorkspacePageCore` slimmer (~381 LOC); `GraphWorkspaceLayerCountsFooter` (compact metrics when layers align); canvas dense **all** edge-label hint + session dismiss + quick switches; node context menu (fit/center/copy id) + on-canvas edge-type legend; `WorkspaceGraphToolbar` **`dense`** + hidden workspace subtitle row when dense; `GraphWorkspacePanel` skips empty title block; `GraphPage` / `WorkspaceLayout` tighter vertical chrome; Reader RX2 — `ReaderSectionToc`, `buildReaderSectionPathList`, language banner, `CopyIdButton` on reader surfaces; ingest stage keys `workspace.ingest.stage.*`; `IngestConflictReviewCard` optional `activeIngestJobId` line; `benchmarkScorecardModel.js` (`normalizeBenchmarkMetricsPayload`) + vitest; inspector chip/panel i18n (`graph.wsToolbar.viewChipDetails`, `graph.detailPanel.title`); updated LOC audit in backlog verification row below. |
+| 2026-05-04 | **Backlog plan (P1/P2 from Queue):** reader graph DRY — JSDoc cross-links to `authorship_collapse` + `useGraphWorkspaceData` note (no client membership re-derive); **backend** `POST /v1/agent/query` retired with **410 Gone** + `Link` v2 (see `science_graphrag/api/agent.py`); benchmark Analysis — `extractNormalizedScorecardForRun`, secondary/diagnostic sections + run id list, `BenchmarkScorecardMetricSections.jsx`; `WorkspaceLayout` side column flex-fill; ingest — `ShimmerLabel` on active `IngestStageRow`, job-level ETA in `WorkspaceIngestProgressStrip` when API sends `remaining_duration_ms` (and aliases); `IngestConflictReviewCard` prev/next + conflict id; graph standalone dense — load/about merged into `WorkspaceGraphToolbar` `leadingSlot`; `GraphWorkspacePanel` traceability/empty graph i18n. |
 
 ## Queue
 
@@ -54,135 +56,36 @@ Priorities: **P0** = user-visible risk or scaling ceiling; **P1** = maintainabil
 
 Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor-backend.md`](./refactor-backend.md); do not track duplicate narratives here.
 
+**Open queue:** empty as of 2026-05-04 (prior P1/P2 batch closed in archive row «Backlog plan (P1/P2 from Queue)»). Further structural debt → add a new scoped item below.
+
 ---
 
 ### P0 — Scaling and reliability
 
-#### [DONE] Workspace graph — canvas perf for very large payloads (10k+ edges)
-- **Area:** [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx), [`GraphFlowView.jsx`](../../ui/src/components/graph/flow/GraphFlowView.jsx), [`graphUiLimits.js`](../../ui/src/components/graph/model/graphUiLimits.js), optional virtualization / level-of-detail
-- **Issue:** Workspace graph API can return the full 1-hop union; dense workspaces stress layout + draw; `capGraphForUi` caps display but parse/normalization still grow with payload.
-- **Proposal:** Profile a high–edge-count workspace snapshot; progressive disclosure, Web Worker normalization, or server subset if product requires.
-- **Acceptance:** Documented threshold + measured interaction budget on a reference workspace; no silent tab freeze on load.
-- **Raised:** 2026-04-27
-- **Note (2026-05-04):** Baseline + client mitigations in [`p0-graph-canvas-perf-baseline-2026-05.md`](../analysis/p0-graph-canvas-perf-baseline-2026-05.md); fill perf table from DevTools on a real dense workspace. Further work (Web Worker, server subset) only if profile demands.
-
-#### [DONE] Graph canvas — physics vs pointer policy (follow-up)
-- **Area:** [`ui/src/hooks/graph/useGraphPhysicsPolicy.js`](../../ui/src/hooks/graph/useGraphPhysicsPolicy.js), [`useScienceGraphForceSimulation.js`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx), [`GraphPhysicsPointerBridgeContext.jsx`](../../ui/src/components/graph/canvas/GraphPhysicsPointerBridgeContext.jsx), [`useGraphCanvasViewport.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasViewport.js)
-- **Issue:** Pause reasons for force simulation were historically split across rAF, window events, and hit-test timing; easy to regress clicks or drawer navigation when changing the integrator.
-- **Proposal:** Extend vitest when adding new pause sources (e.g. modals); consider splitting `GraphCanvasMvp` further (draw loop vs chrome) if it grows again.
-- **Acceptance:** Integration-pause reasons flow through `useGraphPhysicsPolicy` (or documented successor); vitest covers pointer session vs `integrationBlocked`; shell + canvas smoke stay green.
-- **Raised:** 2026-04-29
-- **Note (2026-05-04):** JSDoc inventory + combined shell/canvas vitest; shell smoke unchanged. Optional `GraphCanvasMvp` split deferred (file size stable).
+_No open items._
 
 ---
 
 ### P1 — Module size and coupling
 
-#### [OPEN] Graph shell — split `GraphDetailPanel`
-- **Area:** [`ui/src/components/graph/shell/GraphDetailPanel.jsx`](../../ui/src/components/graph/shell/GraphDetailPanel.jsx) (~895 LOC)
-- **Issue:** Single file holds claim/aggregator/work formatting, accordions, and markdown previews — hard to test and risky to change.
-- **Proposal:** Extract claim block, work/entity sections, and property formatters into `shell/detail/` (or `model/` + presentational components); keep `graphLocalize` usage centralized.
-- **Acceptance:** No single file in that subtree > ~400 LOC without team agreement; vitest/graph smoke green.
-- **Raised:** 2026-05-04
+### [OPEN] Split `GraphCanvasMvp.jsx` and `GraphCanvasViewToolbar.jsx` (canvas labels wave)
+- **Area:** `ui/src/components/graph/canvas/`
+- **Issue:** unified canvas-label wave (mode + 1-hop neighbors + popover) pushed [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx) to ~790 LOC and [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx) to ~430 LOC; both are well above the 400-line / mixed-responsibility heuristic. The MVP file mixes: localStorage state for label mode + neighbors + repulsion + dense hint, adjacency memo and active-for-label set, force-layout wiring, paint orchestration, context-menu, force-restart/unpin handlers, and JSX for toolbar/alert/menu/canvas. The toolbar mixes the labels popover (RadioGroup + Switch + Reset + descriptions), color toggle, repulsion slider, and view buttons.
+- **Proposal:**
+  - Extract canvas-label state into `useCanvasLabelMode.js` (state + LS read/write + migration + `activeForLabelSet` builder taking adjacency + selected/hovered).
+  - Extract `useGraphAdjacency.js` for `Map<string, Set<string>>` from `graph.edges`.
+  - Move the labels popover (button + `Popover` + radios + neighbors switch + reset) into `GraphCanvasLabelsControl.jsx`; toolbar becomes a layout shell rendering color/labels/view sections from sibling controls.
+  - Move dense-label `Alert` block into `GraphCanvasDenseLabelHint.jsx` (props: `mode`, `dismissed`, `onSwitch*`, `onDismiss`).
+- **Acceptance:**
+  - `GraphCanvasMvp.jsx` < 600 LOC and limited to wiring + paint orchestration + force handlers.
+  - `GraphCanvasViewToolbar.jsx` < 220 LOC and only composes section controls.
+  - `useCanvasLabelMode.js`, `useGraphAdjacency.js` covered by unit tests; existing `graphCanvasDraw.test.js` keeps passing without changes.
+- **Raised:** 2026-05-04 (canvas-labels unification wave; see plan `unified-canvas-label-mode_d5d624ec`).
 
-#### [OPEN] Settings — split LLM and storage panels
-- **Area:** [`LlmSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/LlmSettingsPanel.jsx) (~737 LOC), [`StorageSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/StorageSettingsPanel.jsx) (~615 LOC)
-- **Issue:** Large single components mix sections (providers, keys, advanced toggles, diagnostics).
-- **Proposal:** Section components + shared settings row primitives (reuse `settingsFormSx` patterns).
-- **Acceptance:** Same UX; `npm run lint` / focused tests green; main panels stay thin orchestrators.
-- **Raised:** 2026-05-04
-
-#### [OPEN] Workspace page — thin `useWorkspacePageCore` + related wiring
-- **Area:** [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) (~550 LOC), consumers in [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx)
-- **Issue:** Core hook mixes load effects, ingest/dedup coordination, tab routing, and empty-state flows.
-- **Proposal:** Extract `useWorkspaceLoad`, `useWorkspaceIngestBridge`, or similar; document public surface.
-- **Acceptance:** Hook responsibilities one screen-width summary each; no behavioral change.
-- **Raised:** 2026-05-04
-
-#### [OPEN] Ask UI — split `ChatMessageThread`
-- **Area:** [`ui/src/components/work/ask/ChatMessageThread.jsx`](../../ui/src/components/work/ask/ChatMessageThread.jsx) (~544 LOC)
-- **Issue:** Thread rendering, grouping, and tool blocks in one component complicate ask-feature work.
-- **Proposal:** Extract message group row, tool-call rendering, and empty/loading states.
-- **Acceptance:** Component tests still pass; optional story-sized subcomponents.
-- **Raised:** 2026-05-04
-
-#### [OPEN] Workspaces landing — split `WorkspacesPage` / `WorkspaceContextStrip`
-- **Area:** [`WorkspacesPage.jsx`](../../ui/src/pages/WorkspacesPage.jsx) (~428 LOC), [`WorkspaceContextStrip.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceContextStrip.jsx) (~411 LOC)
-- **Issue:** Page-level shells combine layout, hero/actions, and list/browser regions in few files (above typical ~400 LOC page budget).
-- **Proposal:** Align with existing [`pages/WorkspacesPage/`](../../ui/src/pages/WorkspacesPage/) subfolder — extract strips, panels, and empty states; mirror patterns from `WorkspacePage/`.
-- **Acceptance:** Smaller top-level page files; behavior unchanged; `npm run lint` / smoke tests green.
-- **Raised:** 2026-05-05
-
-#### [OPEN] Graph reader DRY — slim `authorSemanticProjection` after server parity
-- **Area:** [`authorSemanticProjection.js`](../../ui/src/components/graph/model/authorSemanticProjection.js), [`useGraphWorkspaceData.js`](../../ui/src/components/graph/workspace/hooks/useGraphWorkspaceData.js), graph visibility / external-work filters
-- **Issue:** Client mirrors server reader authorship semantics; risks drift vs `collapse_authorship_for_reader_view`.
-- **Proposal:** After backend phases in [`docs/analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](../analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md), delete redundant projection branches; optional `workspace_id` on work graph for membership filters when API supports it.
-- **Acceptance:** `authorSemanticProjection.js` documented as presentation-only or removed; vitest/graph smoke green.
-- **Raised:** 2026-04-28
-
-#### [OPEN] useAgentStream — abort reason taxonomy
-- **Progress (2026-04-27):** callbacks stabilized via `useRef` + `useEffect`; `stream` stable when callback identities change. **Remaining:** distinguish `AbortError` causes (navigation vs new submit) for consumers.
-- **Area:** [`ui/src/hooks/useAgentStream.js`](../../ui/src/hooks/useAgentStream.js)
-- **Proposal:** Optional `abortReason` or suppress `onError` on expected user abort; document contract in hook header; unit test for abort vs fatal error.
-- **Acceptance:** Test covers abort path; no spurious «stream ended without final answer» on intentional cancel.
-- **Raised:** 2026-04-27
-
-#### [OPEN] Agent query — deprecate `POST /v1/agent/query` (Wave Y6)
-- **Area:** [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) (`handleSummarizeWorkspace` → [`postAgentQuery`](../../ui/src/services/research/agent.js)), [`research/agent.js`](../../ui/src/services/research/agent.js), optional delete of unused [`ui/src/api/agent.js`](../../ui/src/api/agent.js); `science_graphrag/api` routes
-- **Issue:** Chat/streaming uses `/v2/agent/query`; **v1 remains** for workspace summary (sync JSON). [`useAskSubmit`](../../ui/src/components/work/ask/useAskSubmit.js) non-streaming path already calls **`postAgentQueryV2`**, not v1. The `api/agent.js` shim re-exports v1 and appears unused in-repo.
-- **Proposal:** Migrate `handleSummarizeWorkspace` to `postAgentQueryV2` (sync) or a dedicated summary endpoint; remove `api/agent.js` after grep confirms no consumers; then retire `/v1/agent/query` on the server when safe.
-- **Acceptance:** Summary + ask flows work; OpenAPI/tests/docs updated; v1 callsites gone from `ui/`.
-- **Raised:** 2026-04-27; **updated:** 2026-05-05 (callsite audit)
+Optional future split: [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) only when new tabs/flows land (~381 LOC after extractions).
 
 ---
 
 ### P2 — Product UX and polish
 
-#### [OPEN] Benchmark panel — experiment-centric product surface
-- **Area:** `ui/src/pages/BenchmarkPage/`, `ui/src/services/benchmarkApi.js`
-- **Issue:** Surface mixes launcher, trust, history, compare, cases, workbench — harder to read as experiment → variant → analysis.
-- **Proposal:** See `docs/analysis/benchmark-panel-research-redesign-plan-2026-04-27.md`; optional backend run-group API; API-normalized scorecards (redesign doc §9.4).
-- **Acceptance:** Launch/compare/read metrics without trust-first navigation friction.
-- **Progress (2026-04-28):** Analysis defaults, Run Lab, More tools — **still open:** run-group API, scorecard normalization, split `useRunTab` if it grows.
-- **Raised:** 2026-04-27
-
-#### [OPEN] Workspace shell — layout affordance and chip decomposition
-- **Area:** [`DashboardLayout`](../../ui/src/components/layout/DashboardLayout/), [`WorkspaceContextChip.jsx`](../../ui/src/components/layout/WorkspaceContextChip.jsx) (~449 LOC), [`WorkspaceLayout.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceLayout.jsx)
-- **Issue:** Popover search/sort **exist**; chip trigger still dense (id tooltip + long row list); main column can feel empty below the card grid on large viewports.
-- **Proposal:** (1) Extract list/popover from `WorkspaceContextChip` into `WorkspaceSwitcher` subcomponents (reduce file size, clarify props). (2) Optional second-row content or flex-fill so ingest/conflict cards anchor the column when active.
-- **Acceptance:** Before/after screenshots at 1440×900; `npm run lint` green.
-- **Raised:** 2026-04-26; **updated:** 2026-05-04 (removed stale «no search» claim)
-
-#### [OPEN] Ingest job UI — polish (post–`IngestProgressCard`)
-- **Area:** [`IngestProgressCard.jsx`](../../ui/src/components/ingestion/IngestProgressCard.jsx), [`IngestStageRow.jsx`](../../ui/src/components/ingestion/IngestStageRow.jsx), [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx), i18n `partWorkspacePage`
-- **Issue:** Card + determinate progress + stage rows **shipped**; stage **names** still often raw backend keys (`vl_extract`, …) unless mapped; optional shimmer / aggregate ETA from remaining `expected_duration_ms` per [`workspace-ux-redesign-2026-04-25.md`](../analysis/workspace-ux-redesign-2026-04-25.md) §3.2.
-- **Proposal:** `t("workspace.ingest.stage.<key>")` registry with fallback to raw; optional active-stage shimmer; ETA line when backend sends durations (WX2-BE synergy).
-- **Acceptance:** RU locale shows human-readable stage labels for known keys; logs stay under Details accordion.
-- **Raised:** 2026-04-25; **updated:** 2026-05-04 (merged former WX2-FE / WX4 follow-ups into this single item)
-
-#### [OPEN] Ingest conflict UI — osint-grade resolver (entity types + inline job)
-- **Area:** [`IngestConflictReviewCard.jsx`](../../ui/src/components/dedup/IngestConflictReviewCard.jsx), [`EntityConflictReviewCard.jsx`](../../ui/src/components/dedup/EntityConflictReviewCard.jsx) (both mounted from [`WorkspacePage.jsx`](../../ui/src/pages/WorkspacePage/WorkspacePage.jsx)), [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx), ingest job types
-- **Issue:** Cards cover work/entity pair flows; no full osint-style `ConflictResolver` branching; limited coupling to active ingest stream.
-- **Proposal:** After backend parity (see backend backlog): unified conflict model; optional drawer during job. Reference: `osint-gr` ConflictResolver UX.
-- **Acceptance:** Component or e2e on state transitions; i18n for new fields.
-- **Raised:** 2026-04-26
-
-#### [OPEN] Graph canvas — Neo4j Browser–grade UX (optional)
-- **Area:** `GraphCanvasMvp.jsx` / hooks
-- **Proposal:** Small PRs: (1) node context menu — Fit / Center / Copy id; (2) compact edge-type legend on canvas aligned with `GraphTypeLegend`.
-- **Acceptance:** Per item; `npm run lint` / `npm run test` in `ui/`.
-- **Raised:** 2026-04-26
-
-#### [OPEN] Wave EF-Reader — RX2 reading affordances (TOC, language banner, copy-id)
-- **Area:** [`ReaderWorkDetailCard.jsx`](../../ui/src/components/work/reader/ReaderWorkDetailCard.jsx), [`ReaderPage.jsx`](../../ui/src/pages/ReaderPage.jsx), [`ReaderTab.jsx`](../../ui/src/pages/WorkspacePage/tabs/ReaderTab.jsx)
-- **Issue:** TOC, language banner, copy `work_id` — see [`reader-ux-and-translation-roadmap-2026-04-25.md`](../analysis/reader-ux-and-translation-roadmap-2026-04-25.md) §1.4–§1.6.
-- **Proposal:** `ReaderToc` from `section_path`; shared layout between standalone reader and workspace tab.
-- **Acceptance:** Lint/test/build green; laptop layout without horizontal scroll.
-- **Raised:** 2026-04-26
-
-#### [OPEN] i18n — residual hardcoded copy audit
-- **Area:** spot-check [`HypothesisPanel.jsx`](../../ui/src/components/work/hypothesis/HypothesisPanel.jsx), [`IngestionSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/IngestionSettingsPanel.jsx), dialogs under `WorkspacePage/`; **confirmed EN-only:** workspace summary prompt string inside [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) (`handleSummarizeWorkspace`, passed to `postAgentQuery`)
-- **Issue:** Prior passes fixed many literals; occasional EN-only strings may remain.
-- **Proposal:** Grep + align with [`docs/specs/ui-i18n-guidelines.md`](../specs/ui-i18n-guidelines.md); localize summary prompt or derive from `t()` when touching Y6 migration above.
-- **Acceptance:** No user-visible literals in scoped files; `npm run lint` green.
-- **Raised:** 2026-04-25; **updated:** 2026-05-05 (summarize prompt called out)
+_No open items._ Follow-ups only if product revisits: unified ingest conflict **API** + drawer (backend backlog); optional dedicated **run-group** REST if orchestrator exposes it; repeat i18n grep after large UI additions per [`docs/specs/ui-i18n-guidelines.md`](../specs/ui-i18n-guidelines.md).

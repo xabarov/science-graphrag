@@ -38,6 +38,11 @@ export default function useGraphCanvasInput({
   selectedNodeId = "",
   searchActive = false,
   searchMatchSet = null,
+  canvasLabelMode = "adaptive",
+  // Ref-based to avoid a render cycle: the active-for-label set is computed downstream of the
+  // hovered node id this hook produces; reading via ref inside hit-test callbacks gives us the
+  // freshest set per frame without forcing a second render of hit-test handlers.
+  activeForLabelSetRef = null,
   simNodesRef,
   invokeCanvasRedraw,
 }) {
@@ -75,6 +80,8 @@ export default function useGraphCanvasInput({
             searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
             selectedNodeId,
             hoveredNodeId,
+            mode: canvasLabelMode,
+            activeForLabelSet: activeForLabelSetRef?.current ?? null,
           }) || "";
         if (nodeId) {
           setHoveredNodeId((prev) => (prev === nodeId ? prev : nodeId));
@@ -89,6 +96,8 @@ export default function useGraphCanvasInput({
       });
     },
     [
+      activeForLabelSetRef,
+      canvasLabelMode,
       canvasRef,
       getPositionsForFrame,
       graph.edges,
@@ -122,6 +131,8 @@ export default function useGraphCanvasInput({
           searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
           selectedNodeId,
           hoveredNodeId,
+          mode: canvasLabelMode,
+          activeForLabelSet: activeForLabelSetRef?.current ?? null,
         });
         if (nodeId) {
           if (layoutMode === "circle" && onCanvasLayoutModeChange) flushSync(() => onCanvasLayoutModeChange("force"));
@@ -138,6 +149,8 @@ export default function useGraphCanvasInput({
       dragRef.current = { active: true, moved: false, startX: x, startY: y, startTx: tx, startTy: ty, pointerId: ev.pointerId };
     },
     [
+      activeForLabelSetRef,
+      canvasLabelMode,
       canvasRef,
       draggedNodePositionRef,
       getPositionsForFrame,
@@ -274,6 +287,8 @@ export default function useGraphCanvasInput({
             searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
             selectedNodeId,
             hoveredNodeId,
+            mode: canvasLabelMode,
+            activeForLabelSet: activeForLabelSetRef?.current ?? null,
           });
           if (nodeId) {
             queueMicrotask(() => onNodeClick?.(nodeId));
@@ -293,7 +308,9 @@ export default function useGraphCanvasInput({
       }
     },
     [
+      activeForLabelSetRef,
       bumpPhysicsReheat,
+      canvasLabelMode,
       canvasRef,
       draggedNodePositionRef,
       fixedNodesRef,

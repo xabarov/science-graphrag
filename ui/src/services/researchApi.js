@@ -13,7 +13,7 @@ export {
   patchAskSession,
   deleteAskSession,
 } from "./research/askSessions.js";
-export { postAgentQuery, postAgentQueryV2 } from "./research/agent.js";
+export { postAgentQueryV2 } from "./research/agent.js";
 export { postIdeaAssist } from "./research/ideaAssist.js";
 export {
   getWorks,

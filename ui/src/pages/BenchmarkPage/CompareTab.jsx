@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
 import { CursorButton, CursorPrimaryButton } from "../../components/common/index.js";
+import { useI18n } from "../../i18n/useI18n.js";
 import CompareDeltaTable from "./CompareDeltaTable.jsx";
 import CompareTabSummarySection from "./CompareTabSummarySection.jsx";
 import { useCompareTab } from "./useCompareTab.js";
@@ -42,26 +43,26 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
     unchangedFiltered,
   } = useCompareTab({ initialBaselineId, initialCurrentId });
 
+  const { t } = useI18n();
   const tk = useTheme().appTokens;
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography sx={{ fontWeight: 600, mb: 2 }}>Compare runs</Typography>
+      <Typography sx={{ fontWeight: 600, mb: 2 }}>{t("benchmarkPage.compareTab.title")}</Typography>
       <Typography sx={{ color: tk.text.muted, fontSize: "0.8125rem", mb: 2 }}>
-        Baseline is the reference (older) run; Current is the candidate (newer). Only cases with status ok and metrics
-        are compared. Benchmark family must match between runs.
+        {t("benchmarkPage.compareTab.intro")}
       </Typography>
 
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, alignItems: "center", mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 280 }}>
-          <InputLabel id="cmp-base">Baseline run</InputLabel>
+          <InputLabel id="cmp-base">{t("benchmarkPage.compareTab.baselineRun")}</InputLabel>
           <Select
             labelId="cmp-base"
-            label="Baseline run"
+            label={t("benchmarkPage.compareTab.baselineRun")}
             value={baselineId}
             onChange={(e) => setBaselineId(e.target.value)}
           >
             <MenuItem value="">
-              <em>Select</em>
+              <em>{t("benchmarkPage.compareTab.selectPlaceholder")}</em>
             </MenuItem>
             {items.map((r) => (
               <MenuItem key={r.run_id} value={r.run_id}>
@@ -71,15 +72,15 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
           </Select>
         </FormControl>
         <FormControl size="small" sx={{ minWidth: 280 }}>
-          <InputLabel id="cmp-cur">Current run</InputLabel>
+          <InputLabel id="cmp-cur">{t("benchmarkPage.compareTab.currentRun")}</InputLabel>
           <Select
             labelId="cmp-cur"
-            label="Current run"
+            label={t("benchmarkPage.compareTab.currentRun")}
             value={currentId}
             onChange={(e) => setCurrentId(e.target.value)}
           >
             <MenuItem value="">
-              <em>Select</em>
+              <em>{t("benchmarkPage.compareTab.selectPlaceholder")}</em>
             </MenuItem>
             {items.map((r) => (
               <MenuItem key={`c-${r.run_id}`} value={r.run_id}>
@@ -89,9 +90,9 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
           </Select>
         </FormControl>
         <CursorPrimaryButton onClick={runCompare} disabled={loading || !baselineId || !currentId}>
-          {loading ? "Comparing…" : "Compare"}
+          {loading ? t("benchmarkPage.compareTab.comparing") : t("benchmarkPage.compareTab.compare")}
         </CursorPrimaryButton>
-        <CursorButton onClick={() => refreshRuns().catch(() => {})}>Refresh list</CursorButton>
+        <CursorButton onClick={() => refreshRuns().catch(() => {})}>{t("benchmarkPage.compareTab.refreshList")}</CursorButton>
       </Box>
 
       {error ? (
@@ -104,7 +105,7 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
 
       {metaDelta && Object.keys(metaDelta).length > 0 ? (
         <Box sx={{ mb: 2 }}>
-          <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Run metadata delta</Typography>
+          <Typography sx={{ fontWeight: 600, mb: 0.5 }}>{t("benchmarkPage.compareTab.metadataDelta")}</Typography>
           <Box
             component="pre"
             sx={{
@@ -135,14 +136,14 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
         >
           <TextField
             size="small"
-            label="Filter case_id"
+            label={t("benchmarkPage.compareTab.filterCase")}
             value={caseFilter}
             onChange={(e) => setCaseFilter(e.target.value)}
             sx={{ minWidth: 200 }}
           />
           <TextField
             size="small"
-            label="Filter metric"
+            label={t("benchmarkPage.compareTab.filterMetric")}
             value={metricFilter}
             onChange={(e) => setMetricFilter(e.target.value)}
             sx={{ minWidth: 200 }}
@@ -156,11 +157,11 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
                 sx={{ color: tk.text.muted }}
               />
             }
-            label={<Typography sx={{ fontSize: "0.8125rem" }}>Show unchanged rows</Typography>}
+            label={<Typography sx={{ fontSize: "0.8125rem" }}>{t("benchmarkPage.compareTab.showUnchanged")}</Typography>}
           />
-          <CursorButton onClick={exportCompareJson}>Export JSON</CursorButton>
+          <CursorButton onClick={exportCompareJson}>{t("benchmarkPage.compareTab.exportJson")}</CursorButton>
           <CursorButton onClick={exportCompareMarkdown} disabled={!result.markdown}>
-            Export Markdown
+            {t("benchmarkPage.compareTab.exportMarkdown")}
           </CursorButton>
         </Box>
       ) : null}
@@ -168,14 +169,14 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
       {result ? (
         <>
           <CompareDeltaTable
-            title="Regressions"
+            title={t("benchmarkPage.compareTab.tableRegressions")}
             rows={regressionsFiltered}
             onOpenCase={onOpenWorkbench}
             currentRunId={result.current_run_id}
             baselineRunId={baselineId}
           />
           <CompareDeltaTable
-            title="Improvements"
+            title={t("benchmarkPage.compareTab.tableImprovements")}
             rows={improvementsFiltered}
             onOpenCase={onOpenWorkbench}
             currentRunId={result.current_run_id}
@@ -183,7 +184,7 @@ export default function CompareTab({ onOpenWorkbench, initialBaselineId, initial
           />
           {showUnchanged ? (
             <CompareDeltaTable
-              title="Unchanged"
+              title={t("benchmarkPage.compareTab.tableUnchanged")}
               rows={unchangedFiltered}
               onOpenCase={onOpenWorkbench}
               currentRunId={result.current_run_id}

@@ -14,11 +14,31 @@ export const partGraphUi = {
   "graph.workspacePanel.ariaToggleDiagnostics": "Toggle diagnostics",
   "graph.workspacePanel.tooltipDiagnosticsHide": "Hide diagnostics JSON",
   "graph.workspacePanel.tooltipDiagnosticsShow": "Show diagnostics JSON",
+  "graph.workspacePanel.traceabilityBanner": "Opened from traceability context: {{detail}}",
+  "graph.workspacePanel.emptyGraphResponse": "This response has no nodes yet.",
 
   "graph.layerCounts.server": "Server: {{n}} nodes · {{e}} edges",
   "graph.layerCounts.projected": "Projected: {{n}} · {{e}}",
-  "graph.layerCounts.visible": "Visible (Nodes menu): {{n}} · {{e}}",
-  "graph.layerCounts.display": "On screen (UI cap): {{n}} · {{e}}",
+  "graph.layerCounts.visible": "Visible after filters (Nodes menu): {{n}} · {{e}}",
+  "graph.layerCounts.display": "Rendered on canvas: {{n}} · {{e}}",
+  "graph.layerCounts.compactSame": "Graph: {{n}} nodes · {{e}} edges (layers aligned)",
+  "graph.layerCounts.expandLayersTooltip": "Show full layer breakdown",
+  "graph.layerCounts.expandLayersAria": "Expand layer breakdown",
+  "graph.layerCounts.expandLayers": "Show layer breakdown",
+  "graph.layerCounts.collapseLayers": "Hide layer breakdown",
+
+  "graph.canvasLabels.denseHint":
+    "Showing every label on this dense graph causes heavy overlap. Switch to Auto or On hover for readability.",
+  "graph.canvasLabels.denseHintDismiss": "Dismiss",
+  "graph.canvasLabels.switchAdaptive": "Use Auto",
+  "graph.canvasLabels.switchInteraction": "Use On hover",
+
+  "graph.canvas.contextFit": "Fit selection",
+  "graph.canvas.contextCenter": "Center on node",
+  "graph.canvas.contextCopyId": "Copy node id",
+  "graph.canvas.edgeLegendTitle": "Edge types",
+
+  "graph.detailPanel.title": "Inspect selection",
 
   "graph.wsToolbar.nodesMenuButtonLabel": "Nodes · {{typesOn}}/{{typesTotal}}{{extras}}",
   "graph.wsToolbar.nodesMenuButtonTooltip":
@@ -74,7 +94,7 @@ export const partGraphUi = {
   "graph.wsToolbar.statsWorksTooltip": "Internal works in the workspace",
   "graph.wsToolbar.statsAuthorsTooltip": "Distinct authors in the workspace",
   "graph.wsToolbar.statsExtCitesTooltip": "Citations from internal works to external works",
-  "graph.wsToolbar.viewChipDetails": "Details",
+  "graph.wsToolbar.viewChipDetails": "Inspector",
   "graph.wsToolbar.viewChipLegend": "Legend",
   "graph.wsToolbar.viewChipDiagnostics": "Diagnostics",
   "graph.wsToolbar.chipInstitutions": "Institutions",
@@ -165,7 +185,6 @@ export const partGraphUi = {
   "graph.contractSubtitle.expandWork": "Paper graph · expanded bucket",
   "graph.contractSubtitle.expandWorkspace": "Workspace graph · expanded bucket",
 
-  "graph.detailPanel.title": "Details",
   "graph.detailPanel.relationship": "Relationship",
   "graph.detailPanel.openSource": "Open source",
   "graph.detailPanel.openTarget": "Open target",
@@ -264,14 +283,24 @@ export const partGraphUi = {
   "graph.canvas.repulsionTooltip": "Repulsion strength (force simulation spacing)",
   "graph.canvas.repulsionAria": "Force layout repulsion strength",
 
-  "graph.canvas.edgeLabels.modeAria": "Edge label visibility on canvas",
-  "graph.canvas.edgeLabels.all": "All",
-  "graph.canvas.edgeLabels.interaction": "Hover",
-  "graph.canvas.edgeLabels.adaptive": "Auto",
-  "graph.canvas.edgeLabels.tooltipAll": "Show labels on every edge",
-  "graph.canvas.edgeLabels.tooltipInteraction": "Show edge labels only when hovering or the edge is selected",
-  "graph.canvas.edgeLabels.tooltipAdaptive":
-    "Show all labels when zoomed in with few edges; otherwise only on hover or when selected",
+  "graph.canvasLabels.buttonAria": "Graph labels (nodes and edges)",
+  "graph.canvasLabels.buttonTooltip": "Graph labels: {{mode}}",
+  "graph.canvasLabels.popoverTitle": "Labels on canvas",
+  "graph.canvasLabels.popoverDescription":
+    "How to show labels for nodes and edges. Active mode applies to both layers at once.",
+  "graph.canvasLabels.modeAria": "Canvas label visibility mode",
+  "graph.canvasLabels.modeAll": "All",
+  "graph.canvasLabels.modeInteraction": "Hover",
+  "graph.canvasLabels.modeAdaptive": "Auto",
+  "graph.canvasLabels.tooltipAll": "Show labels for every node and edge.",
+  "graph.canvasLabels.tooltipInteraction":
+    "Show labels only for the selected/hovered node or edge (and its 1-hop neighbors when enabled).",
+  "graph.canvasLabels.tooltipAdaptive":
+    "Show all labels when zoomed in with few elements; collapse to hover-only when the view is dense.",
+  "graph.canvasLabels.neighborsToggle": "Neighbor labels on hover",
+  "graph.canvasLabels.neighborsTooltip":
+    "Also show labels for direct (1-hop) neighbors of the selected/hovered node. Used in Hover and Auto modes.",
+  "graph.canvasLabels.reset": "Reset",
 
   "graph.canvas.toolbarSectionColor": "Color",
   "graph.canvas.toolbarSectionLabels": "Labels",

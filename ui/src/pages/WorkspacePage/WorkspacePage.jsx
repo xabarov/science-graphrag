@@ -145,6 +145,7 @@ export default function WorkspacePage() {
                 workspaceId={vm.workspaceMeta.id}
                 onDismiss={vm.dismissIngestDedupPanel}
                 onMerged={vm.refreshWorkspaceMeta}
+                activeIngestJobId={vm.ingestJobId}
               />
               <AuthorConflictReviewCard
                 workspaceId={vm.workspaceMeta.id}

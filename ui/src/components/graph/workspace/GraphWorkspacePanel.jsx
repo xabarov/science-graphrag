@@ -18,6 +18,7 @@ import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "../
 import { firstMatchingNodeIdInOrder } from "../model/graphNodeSearch.js";
 import { LS_GRAPH_STANDALONE_DETAIL_MIN_PX, readGraphDetailColumnPxStored } from "../model/graphDetailColumnWidth.js";
 import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
+import GraphWorkspaceLayerCountsFooter from "./GraphWorkspaceLayerCountsFooter.jsx";
 import { useGraphWorkspaceData } from "./hooks/useGraphWorkspaceData.js";
 import { useGraphSelectionReconcile } from "../hooks/useGraphSelectionReconcile.js";
 import { useGraphWorkspaceProjection } from "./hooks/useGraphWorkspaceProjection.js";
@@ -89,6 +90,7 @@ export default function GraphWorkspacePanel({
   labMode = false,
   focusLayout = false,
   compactLayout = false,
+  standaloneToolbarLeading = null,
 }) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
@@ -243,10 +245,12 @@ export default function GraphWorkspacePanel({
 
   return (
     <Box sx={standalone ? { flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" } : {}}>
-      <Box sx={{ mb: standalone ? 1 : 2 }}>
-        <Typography sx={{ fontWeight: 600, color: tk.text.primary }}>{title}</Typography>
-        {subtitle ? <Box sx={{ mt: 0.5 }}>{subtitle}</Box> : null}
-      </Box>
+      {title || subtitle ? (
+        <Box sx={{ mb: standalone ? 1 : 2 }}>
+          {title ? <Typography sx={{ fontWeight: 600, color: tk.text.primary }}>{title}</Typography> : null}
+          {subtitle ? <Box sx={{ mt: 0.5 }}>{subtitle}</Box> : null}
+        </Box>
+      ) : null}
       {!hasDataTarget ? <GraphMissingWorkInline message={t("graph.workspacePanel.emptyHint")} /> : null}
       {loading ? <GraphLoadingInline /> : null}
       {error ? <GraphErrorAlert>{error}</GraphErrorAlert> : null}
@@ -273,6 +277,8 @@ export default function GraphWorkspacePanel({
             labMode={labMode}
             workGraphIncludeInstitutions={Boolean(includeInstitutions)}
             onToggleWorkGraphIncludeInstitutions={() => setIncludeInstitutions((v) => !v)}
+            dense={Boolean(compactLayout || focusLayout)}
+            leadingSlot={standalone && standaloneToolbarLeading ? standaloneToolbarLeading : null}
           />
           {!standalone ? <GraphViewModeSwitch mode={vizMode} onChange={setVizMode} compact={compactLayout} /> : null}
           {projectedGraph.warnings.length > 0 ? (
@@ -361,22 +367,24 @@ export default function GraphWorkspacePanel({
               onWidthChange={setDetailMinPx}
             />
           </Box>
-          <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1, columnGap: 1.5, rowGap: 0.5 }}>
-            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>
-              {t("graph.layerCounts.server", { n: String(graph.nodeCount), e: String(graph.edgeCount) })}
-            </Typography>
-            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>
-              {t("graph.layerCounts.projected", { n: String(projectedGraph.nodeCount), e: String(projectedGraph.edgeCount) })}
-            </Typography>
-            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>
-              {t("graph.layerCounts.visible", { n: String(visibleGraph.nodeCount), e: String(visibleGraph.edgeCount) })}
-            </Typography>
-            <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted }}>
-              {t("graph.layerCounts.display", { n: String(displayGraph.nodeCount), e: String(displayGraph.edgeCount) })}
-            </Typography>
-          </Box>
-          {traceSummary.length > 0 ? <Alert severity="info" sx={{ mt: 1 }}>Opened from traceability context: {traceSummary.join(" · ")}</Alert> : null}
-          {projectedGraph.nodeCount === 0 ? <Alert severity="info" sx={{ mt: 1 }}>This response has no nodes yet.</Alert> : null}
+          <GraphWorkspaceLayerCountsFooter
+            t={t}
+            tk={tk}
+            graph={graph}
+            projectedGraph={projectedGraph}
+            visibleGraph={visibleGraph}
+            displayGraph={displayGraph}
+          />
+          {traceSummary.length > 0 ? (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              {t("graph.workspacePanel.traceabilityBanner", { detail: traceSummary.join(" · ") })}
+            </Alert>
+          ) : null}
+          {projectedGraph.nodeCount === 0 ? (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              {t("graph.workspacePanel.emptyGraphResponse")}
+            </Alert>
+          ) : null}
           <Box sx={{ mt: 1 }}>
             <GraphDebugInspector
               visible={labMode || diagnosticsOpen}

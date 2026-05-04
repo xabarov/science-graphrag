@@ -57,6 +57,8 @@ export default {
     "Choose a workspace from the menu above or create a new one to attach papers.",
   "workspace.summary.dialogTitle": "Workspace summary",
   "workspace.summary.empty": "No summary yet.",
+  "workspace.summary.agentPrompt":
+    "Briefly summarize this workspace: topics, methods, datasets, and key findings.",
   "workspace.idea.dialogTitle": "Hypothesis / contradiction assist",
   "workspace.dialog.close": "Close",
 
@@ -74,6 +76,17 @@ export default {
   "workspace.upload.dash": "—",
   "workspace.ingest.progressLabel": "Overall progress: {{pct}}%",
   "workspace.ingest.stageUnknown": "stage",
+  "workspace.ingest.stage.parse_pdf": "Parse PDF / vision",
+  "workspace.ingest.stage.extract_meta": "Extract metadata",
+  "workspace.ingest.stage.enrich_openalex": "Enrich (OpenAlex)",
+  "workspace.ingest.stage.enrich_ror": "Enrich (ROR)",
+  "workspace.ingest.stage.resolve_references": "Resolve references",
+  "workspace.ingest.stage.write_graph": "Write graph",
+  "workspace.ingest.stage.chunk": "Chunk text",
+  "workspace.ingest.stage.extract_claims": "Extract claims",
+  "workspace.ingest.stage.embed": "Embed chunks",
+  "workspace.ingest.stage.attach_workspace": "Attach to workspace",
+  "workspace.ingest.stage.vl_extract": "Vision extraction",
   "workspace.ingest.stageEtaSeconds": "~{{sec}}s",
   "workspace.ingest.detailsLogs": "Details / logs",
   "workspace.ingest.logsTailHint":
@@ -100,6 +113,7 @@ export default {
   "workspace.strip.ingestProgressTip": "Ingest in progress",
   "workspace.strip.ingestProgressTwoScalesHint":
     "The percentage is weighted pipeline progress (all technical stages). The four segments below are product phases (document → graph → search → finalize), not page-level PDF progress.",
+  "workspace.strip.ingestRemainingEta": "~{{sec}}s remaining (estimate)",
   "workspace.strip.ingestStarting": "Starting upload…",
   "workspace.strip.ingestFailed": "Ingest failed",
   "workspace.strip.ingestPhase.preparing_document": "Preparing document",
@@ -131,7 +145,11 @@ export default {
   "workspace.ingestDedup.keepSeparate": "Keep separate",
   "workspace.ingestDedup.skip": "Skip",
   "workspace.ingestDedup.dismiss": "Dismiss",
+  "workspace.ingestDedup.jobContext": "Linked to active ingest job {{id}} (resolve to continue the pipeline).",
   "workspace.ingestDedup.loadingTitles": "Loading…",
+  "workspace.ingestDedup.prev": "Previous",
+  "workspace.ingestDedup.next": "Next",
+  "workspace.ingestDedup.conflictId": "Conflict {{id}}",
 
   "workspace.ingestAuthorDedup.title": "Possible duplicate authors after upload",
   "workspace.ingestAuthorDedup.subtitle": "{{current}} of {{total}} · similarity {{score}}",

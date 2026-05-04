@@ -2,6 +2,7 @@ import React from "react";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
+import { ShimmerLabel } from "../work/shared/ShimmerLabel.jsx";
 import { useI18n } from "../../i18n/useI18n.js";
 
 /**
@@ -12,7 +13,10 @@ import { useI18n } from "../../i18n/useI18n.js";
  */
 export default function IngestStageRow({ stage, active }) {
   const { t } = useI18n();
-  const name = String(stage?.stage || stage?.name || "").trim() || t("workspace.ingest.stageUnknown");
+  const rawStage = String(stage?.stage || stage?.name || "").trim();
+  const labelKey = rawStage ? `workspace.ingest.stage.${rawStage}` : "";
+  const tr = labelKey ? t(labelKey) : "";
+  const name = labelKey && tr !== labelKey ? tr : rawStage || t("workspace.ingest.stageUnknown");
   const status = String(stage?.status || "").toLowerCase();
   const metrics = stage?.metrics && typeof stage.metrics === "object" ? stage.metrics : {};
   const detail =
@@ -43,9 +47,15 @@ export default function IngestStageRow({ stage, active }) {
           border: active ? "1px solid rgba(129,140,248,0.35)" : "1px solid transparent",
         }}
       >
-        <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.85)", flex: 1, fontFamily: "monospace" }}>
-          {name}
-        </Typography>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          {active ? (
+            <ShimmerLabel component="span" sx={{ fontSize: "0.72rem", fontFamily: "monospace" }}>
+              {name}
+            </ShimmerLabel>
+          ) : (
+            <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.85)", fontFamily: "monospace" }}>{name}</Typography>
+          )}
+        </Box>
         <Typography sx={{ fontSize: "0.68rem", color: "rgba(255,255,255,0.45)", textTransform: "uppercase" }}>
           {status || "—"}
         </Typography>

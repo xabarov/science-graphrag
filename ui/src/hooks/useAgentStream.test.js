@@ -122,7 +122,7 @@ describe("useAgentStream", () => {
     expect(onError).toHaveBeenCalledWith(expect.stringContaining("not valid JSON"));
   });
 
-  it("returns silently on AbortError", async () => {
+  it("returns silently on AbortError without abort intent (legacy)", async () => {
     const err = new Error("aborted");
     err.name = "AbortError";
     globalThis.fetch.mockRejectedValueOnce(err);
@@ -138,6 +138,112 @@ describe("useAgentStream", () => {
       await result.current.stream({ question: "q" });
     });
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  it("calls onAbort with user_cancel when abort() triggers AbortError", async () => {
+    globalThis.fetch.mockImplementation((_url, opts) => {
+      return new Promise((_resolve, reject) => {
+        opts.signal.addEventListener("abort", () => {
+          const e = new Error("aborted");
+          e.name = "AbortError";
+          reject(e);
+        });
+      });
+    });
+    const onAbort = vi.fn();
+    const onError = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onAbort,
+        onError,
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      const p = result.current.stream({ question: "q" });
+      result.current.abort();
+      await p;
+    });
+    expect(onAbort).toHaveBeenCalledWith({ reason: "user_cancel" });
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it("calls onAbort with replaced_by_new_request when a second stream aborts the first", async () => {
+    let n = 0;
+    globalThis.fetch.mockImplementation((_url, opts) => {
+      n += 1;
+      if (n === 1) {
+        return new Promise((_resolve, reject) => {
+          opts.signal.addEventListener("abort", () => {
+            const e = new Error("aborted");
+            e.name = "AbortError";
+            reject(e);
+          });
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => "application/json" },
+        text: async () =>
+          '{"answer":"ok","citations":[],"tool_trace":[],"duration_ms":1,"run_metadata":{},"warnings":[]}',
+      });
+    });
+    const onAbort = vi.fn();
+    const onError = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onAbort,
+        onError,
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      const p1 = result.current.stream({ question: "first" });
+      await result.current.stream({ question: "second" });
+      await p1;
+    });
+    expect(onAbort).toHaveBeenCalledWith({ reason: "replaced_by_new_request" });
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it("calls onFinish only once when first stream is superseded by second", async () => {
+    let n = 0;
+    globalThis.fetch.mockImplementation((_url, opts) => {
+      n += 1;
+      if (n === 1) {
+        return new Promise((_resolve, reject) => {
+          opts.signal.addEventListener("abort", () => {
+            const e = new Error("aborted");
+            e.name = "AbortError";
+            reject(e);
+          });
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        headers: { get: () => "application/json" },
+        text: async () =>
+          '{"answer":"done","citations":[],"tool_trace":[],"duration_ms":1,"run_metadata":{},"warnings":[]}',
+      });
+    });
+    const onFinish = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+        onError: vi.fn(),
+        onFinish,
+      }),
+    );
+    await act(async () => {
+      const p1 = result.current.stream({ question: "first" });
+      await result.current.stream({ question: "second" });
+      await p1;
+    });
+    expect(onFinish).toHaveBeenCalledTimes(1);
+    expect(result.current.isStreaming).toBe(false);
   });
 
   it("keeps stream identity when callback props change", () => {

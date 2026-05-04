@@ -3,21 +3,32 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { buildApiUrl } from "../services/apiClient.js";
 import { flushAgentSseEventBuffer } from "../services/agent/agentStreamParse.js";
 
+/** @typedef {'user_cancel' | 'replaced_by_new_request'} AgentStreamAbortReason */
+
 /**
  * Streams POST /v2/agent/query (SSE). Callback props are read from refs so ``stream`` stays
  * stable when parent re-renders and only ``workspaceId`` should recreate the fetch function.
+ *
+ * **Abort contract:** When the browser raises `AbortError`, the hook distinguishes:
+ * - **`user_cancel`** — consumer called ``abort()`` (intentional cancel).
+ * - **`replaced_by_new_request`** — a new ``stream()`` started and aborted the previous fetch.
+ * For these, **`onError` is not invoked** for the abort itself; use optional **`onAbort({ reason })`**
+ * if you need telemetry or UI. Network and parse failures still go to **`onError`**.
  */
 export function useAgentStream({
   workspaceId = "",
   onEvent,
   onFinalAnswer,
   onError,
+  onAbort,
   onStart,
   onFinish,
   onMalformedFrame,
 }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef(null);
+  /** Why the in-flight fetch was aborted (set immediately before `abort()`). */
+  const abortIntentRef = useRef(/** @type {AgentStreamAbortReason | null} */ (null));
   /** True after any `onFinalAnswer` delivery for the current stream (SSE or JSON). */
   const sawFinalAnswerRef = useRef(false);
 
@@ -25,6 +36,7 @@ export function useAgentStream({
     onEvent,
     onFinalAnswer,
     onError,
+    onAbort,
     onStart,
     onFinish,
     onMalformedFrame,
@@ -34,17 +46,21 @@ export function useAgentStream({
       onEvent,
       onFinalAnswer,
       onError,
+      onAbort,
       onStart,
       onFinish,
       onMalformedFrame,
     };
-  }, [onEvent, onFinalAnswer, onError, onStart, onFinish, onMalformedFrame]);
+  }, [onEvent, onFinalAnswer, onError, onAbort, onStart, onFinish, onMalformedFrame]);
 
   const stream = useCallback(
     async ({ question, maxToolCalls = 8, threadId = null, historyDigest = null }) => {
       if (!String(question || "").trim()) return;
 
-      abortRef.current?.abort?.();
+      if (abortRef.current) {
+        abortIntentRef.current = "replaced_by_new_request";
+        abortRef.current.abort();
+      }
       const controller = new AbortController();
       abortRef.current = controller;
 
@@ -131,20 +147,33 @@ export function useAgentStream({
           cbRef.current.onError?.("Stream ended before a final answer was received.");
         }
       } catch (err) {
-        if (err?.name === "AbortError") return;
+        if (err?.name === "AbortError") {
+          const intent = abortIntentRef.current;
+          abortIntentRef.current = null;
+          if (intent === "user_cancel" || intent === "replaced_by_new_request") {
+            cbRef.current.onAbort?.({ reason: intent });
+          }
+          return;
+        }
         cbRef.current.onError?.(String(err?.message || err));
       } finally {
-        if (abortRef.current === controller) {
+        const ownsAbortSlot = abortRef.current === controller;
+        if (ownsAbortSlot) {
           abortRef.current = null;
         }
-        setIsStreaming(false);
-        cbRef.current.onFinish?.();
+        abortIntentRef.current = null;
+        // A newer `stream()` may have replaced `abortRef`; do not clear loading / onFinish for superseded runs.
+        if (ownsAbortSlot) {
+          setIsStreaming(false);
+          cbRef.current.onFinish?.();
+        }
       }
     },
     [workspaceId],
   );
 
   const abort = useCallback(() => {
+    abortIntentRef.current = "user_cancel";
     abortRef.current?.abort?.();
   }, []);
 

@@ -143,11 +143,12 @@ describe("hitTestNodeScreen", () => {
     expect(hitTestNodeScreen(lx, ly + 8, nodes, positions, transform, null)).toBe("n1");
   });
 
-  it("skips label hit target in community dense mode unless selected", () => {
+  it("skips label hit target in community adaptive zoomed-out view unless selected", () => {
     const nodes = [{ id: "n1", label: "Short" }];
     const positions = new Map([["n1", { x: 0, y: 0 }]]);
     const lx = 0;
     const ly = 12 + 4 + 10;
+    const zoomedOutTransform = { scale: 0.1, tx: 0, ty: 0 };
     const denseOpts = {
       colorBy: "community",
       nodeCount: NODE_LABEL_ADAPTIVE_MAX_NODES + 5,
@@ -155,16 +156,65 @@ describe("hitTestNodeScreen", () => {
       searchMatchSet: null,
       selectedNodeId: "",
       hoveredNodeId: "",
+      mode: "adaptive",
     };
-    expect(hitTestNodeScreen(lx, ly, nodes, positions, transform, null, denseOpts)).toBe("");
-    expect(hitTestNodeScreen(lx, ly, nodes, positions, transform, null, { ...denseOpts, selectedNodeId: "n1" })).toBe("n1");
+    expect(hitTestNodeScreen(lx, ly, nodes, positions, zoomedOutTransform, null, denseOpts)).toBe("");
+    expect(
+      hitTestNodeScreen(lx, ly, nodes, positions, zoomedOutTransform, null, { ...denseOpts, selectedNodeId: "n1" }),
+    ).toBe("n1");
+  });
+
+  it("type+interaction: label hit only fires for selected/hovered/neighbor", () => {
+    const nodes = [
+      { id: "n1", label: "Short" },
+      { id: "n2", label: "Other" },
+    ];
+    const positions = new Map([
+      ["n1", { x: 0, y: 0 }],
+      ["n2", { x: 200, y: 0 }],
+    ]);
+    const lxN1 = 0;
+    const lyN1 = 12 + 4 + 10;
+    const baseOpts = {
+      colorBy: "type",
+      nodeCount: 2,
+      searchActive: false,
+      searchMatchSet: null,
+      selectedNodeId: "",
+      hoveredNodeId: "",
+      mode: "interaction",
+    };
+    expect(hitTestNodeScreen(lxN1, lyN1, nodes, positions, transform, null, baseOpts)).toBe("");
+    expect(
+      hitTestNodeScreen(lxN1, lyN1, nodes, positions, transform, null, { ...baseOpts, selectedNodeId: "n1" }),
+    ).toBe("n1");
+    expect(
+      hitTestNodeScreen(lxN1, lyN1, nodes, positions, transform, null, {
+        ...baseOpts,
+        activeForLabelSet: new Set(["n1"]),
+      }),
+    ).toBe("n1");
+  });
+
+  it("type+all keeps label hit available even when not selected", () => {
+    const nodes = [{ id: "n1", label: "Short" }];
+    const positions = new Map([["n1", { x: 0, y: 0 }]]);
+    const lx = 0;
+    const ly = 12 + 4 + 10;
+    expect(
+      hitTestNodeScreen(lx, ly, nodes, positions, transform, null, {
+        colorBy: "type",
+        nodeCount: 1,
+        mode: "all",
+      }),
+    ).toBe("n1");
   });
 });
 
 describe("shouldDrawCanvasNodeLabel", () => {
   const t = { scale: 1 };
 
-  it("always draws in type mode", () => {
+  it("mode=all always draws (type)", () => {
     expect(
       shouldDrawCanvasNodeLabel({
         colorBy: "type",
@@ -172,11 +222,133 @@ describe("shouldDrawCanvasNodeLabel", () => {
         nodeCount: 999,
         nodeId: "a",
         styleEntry: {},
+        mode: "all",
       }),
     ).toBe(true);
   });
 
-  it("community sparse view draws all", () => {
+  it("mode=all overrides community density (user explicitly asked for all)", () => {
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "community",
+        transform: { scale: 0.1 },
+        nodeCount: NODE_LABEL_ADAPTIVE_MAX_NODES + 5,
+        nodeId: "a",
+        styleEntry: {},
+        mode: "all",
+      }),
+    ).toBe(true);
+  });
+
+  it("mode default (no mode) falls back to all", () => {
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: t,
+        nodeCount: 10,
+        nodeId: "a",
+        styleEntry: {},
+      }),
+    ).toBe(true);
+  });
+
+  it("type + interaction hides unless selected/hovered/active-for-label", () => {
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: t,
+        nodeCount: 50,
+        nodeId: "a",
+        styleEntry: {},
+        mode: "interaction",
+      }),
+    ).toBe(false);
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: t,
+        nodeCount: 50,
+        nodeId: "a",
+        styleEntry: { selected: true },
+        mode: "interaction",
+      }),
+    ).toBe(true);
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: t,
+        nodeCount: 50,
+        nodeId: "a",
+        styleEntry: { hovered: true },
+        mode: "interaction",
+      }),
+    ).toBe(true);
+  });
+
+  it("type + interaction + activeForLabelSet promotes 1-hop neighbor", () => {
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: t,
+        nodeCount: 50,
+        nodeId: "neighbor",
+        styleEntry: {},
+        mode: "interaction",
+        activeForLabelSet: new Set(["neighbor"]),
+      }),
+    ).toBe(true);
+  });
+
+  it("type + adaptive collapses to interaction when zoomed out (small scale)", () => {
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: { scale: 0.1 },
+        nodeCount: NODE_LABEL_ADAPTIVE_MAX_NODES + 1,
+        nodeId: "a",
+        styleEntry: {},
+        mode: "adaptive",
+      }),
+    ).toBe(false);
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: { scale: 0.1 },
+        nodeCount: NODE_LABEL_ADAPTIVE_MAX_NODES + 1,
+        nodeId: "a",
+        styleEntry: { hovered: true },
+        mode: "adaptive",
+      }),
+    ).toBe(true);
+  });
+
+  it("type + adaptive shows all labels when zoomed in even for large graphs", () => {
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: { scale: 1 },
+        nodeCount: 200,
+        nodeId: "a",
+        styleEntry: {},
+        mode: "adaptive",
+      }),
+    ).toBe(true);
+  });
+
+  it("type + adaptive shows all when sparse", () => {
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: t,
+        nodeCount: 10,
+        nodeId: "a",
+        styleEntry: {},
+        mode: "adaptive",
+      }),
+    ).toBe(true);
+  });
+
+  it("community + adaptive sparse view draws all", () => {
     expect(
       shouldDrawCanvasNodeLabel({
         colorBy: "community",
@@ -184,11 +356,12 @@ describe("shouldDrawCanvasNodeLabel", () => {
         nodeCount: 10,
         nodeId: "a",
         styleEntry: {},
+        mode: "adaptive",
       }),
     ).toBe(true);
   });
 
-  it("community dense hides unless selected or hovered", () => {
+  it("community + adaptive hides inactive when zoomed out; hovered always draws", () => {
     expect(
       shouldDrawCanvasNodeLabel({
         colorBy: "community",
@@ -196,6 +369,7 @@ describe("shouldDrawCanvasNodeLabel", () => {
         nodeCount: 10,
         nodeId: "a",
         styleEntry: {},
+        mode: "adaptive",
       }),
     ).toBe(false);
     expect(
@@ -205,32 +379,73 @@ describe("shouldDrawCanvasNodeLabel", () => {
         nodeCount: NODE_LABEL_ADAPTIVE_MAX_NODES + 1,
         nodeId: "a",
         styleEntry: { hovered: true },
+        mode: "adaptive",
+      }),
+    ).toBe(true);
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "community",
+        transform: { scale: 1 },
+        nodeCount: NODE_LABEL_ADAPTIVE_MAX_NODES + 1,
+        nodeId: "a",
+        styleEntry: {},
+        mode: "adaptive",
       }),
     ).toBe(true);
   });
 
-  it("community search shows only matches", () => {
+  it("search active overrides every mode and shows only matches", () => {
     const set = new Set(["a"]);
     expect(
       shouldDrawCanvasNodeLabel({
-        colorBy: "community",
+        colorBy: "type",
         transform: { scale: 1 },
         nodeCount: 10,
         searchActive: true,
         searchMatchSet: set,
         nodeId: "b",
         styleEntry: { searchDim: true },
+        mode: "all",
       }),
     ).toBe(false);
     expect(
       shouldDrawCanvasNodeLabel({
-        colorBy: "community",
+        colorBy: "type",
         transform: { scale: 1 },
         nodeCount: 10,
         searchActive: true,
         searchMatchSet: set,
         nodeId: "a",
         styleEntry: {},
+        mode: "all",
+      }),
+    ).toBe(true);
+  });
+
+  it("search active + interaction still requires hover/selection on the match", () => {
+    const set = new Set(["a"]);
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: { scale: 1 },
+        nodeCount: 10,
+        searchActive: true,
+        searchMatchSet: set,
+        nodeId: "a",
+        styleEntry: {},
+        mode: "interaction",
+      }),
+    ).toBe(false);
+    expect(
+      shouldDrawCanvasNodeLabel({
+        colorBy: "type",
+        transform: { scale: 1 },
+        nodeCount: 10,
+        searchActive: true,
+        searchMatchSet: set,
+        nodeId: "a",
+        styleEntry: { selected: true },
+        mode: "interaction",
       }),
     ).toBe(true);
   });

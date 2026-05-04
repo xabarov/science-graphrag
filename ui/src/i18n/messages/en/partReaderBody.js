@@ -1,6 +1,12 @@
 /** @type {Record<string, string>} */
 export default {
   "readerBody.loading": "Loading…",
+  "readerBody.sectionTocTitle": "Sections in extracted text",
+  "readerBody.languageBanner": "Detected language: {{lang}}",
+  "readerBody.copyWorkId": "Copy work id",
+  "readerBody.copyWorkIdAria": "Copy work id to clipboard",
+  "readerBody.copied": "Copied",
+
   "readerBody.noTitle": "(no title)",
   "readerBody.extractedTitle": "Extracted text (reading view)",
   "readerBody.extractedHint":

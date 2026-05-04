@@ -14,11 +14,31 @@ export const partGraphUi = {
   "graph.workspacePanel.ariaToggleDiagnostics": "Показать или скрыть диагностику",
   "graph.workspacePanel.tooltipDiagnosticsHide": "Скрыть JSON диагностики",
   "graph.workspacePanel.tooltipDiagnosticsShow": "Показать JSON диагностики",
+  "graph.workspacePanel.traceabilityBanner": "Контекст traceability: {{detail}}",
+  "graph.workspacePanel.emptyGraphResponse": "В ответе пока нет узлов.",
 
   "graph.layerCounts.server": "Сервер: {{n}} узл. · {{e}} рёбер",
   "graph.layerCounts.projected": "Проекция: {{n}} · {{e}}",
-  "graph.layerCounts.visible": "Видимо (меню «Узлы»): {{n}} · {{e}}",
-  "graph.layerCounts.display": "На экране (лимит UI): {{n}} · {{e}}",
+  "graph.layerCounts.visible": "После фильтров (меню «Узлы»): {{n}} · {{e}}",
+  "graph.layerCounts.display": "Отрисовка на canvas: {{n}} · {{e}}",
+  "graph.layerCounts.compactSame": "Граф: {{n}} узл. · {{e}} рёбер (слои совпадают)",
+  "graph.layerCounts.expandLayersTooltip": "Показать полную разбивку по слоям",
+  "graph.layerCounts.expandLayersAria": "Развернуть разбивку по слоям",
+  "graph.layerCounts.expandLayers": "Показать разбивку по слоям",
+  "graph.layerCounts.collapseLayers": "Скрыть разбивку по слоям",
+
+  "graph.canvasLabels.denseHint":
+    "В режиме «Все» подписи на плотном графе сильно перекрываются. Переключитесь на «Авто» или «Наведение» для читаемости.",
+  "graph.canvasLabels.denseHintDismiss": "Скрыть",
+  "graph.canvasLabels.switchAdaptive": "Авто",
+  "graph.canvasLabels.switchInteraction": "Наведение",
+
+  "graph.canvas.contextFit": "Вписать выделение",
+  "graph.canvas.contextCenter": "Центрировать узел",
+  "graph.canvas.contextCopyId": "Копировать id узла",
+  "graph.canvas.edgeLegendTitle": "Типы рёбер",
+
+  "graph.detailPanel.title": "Просмотр выбора",
 
   "graph.wsToolbar.nodesMenuButtonLabel": "Узлы · {{typesOn}}/{{typesTotal}}{{extras}}",
   "graph.wsToolbar.nodesMenuButtonTooltip":
@@ -75,7 +95,7 @@ export const partGraphUi = {
   "graph.wsToolbar.statsWorksTooltip": "Внутренние работы в области",
   "graph.wsToolbar.statsAuthorsTooltip": "Различных авторов в области",
   "graph.wsToolbar.statsExtCitesTooltip": "Цитирования из внутренних работ во внешние",
-  "graph.wsToolbar.viewChipDetails": "Детали",
+  "graph.wsToolbar.viewChipDetails": "Инспектор",
   "graph.wsToolbar.viewChipLegend": "Легенда",
   "graph.wsToolbar.viewChipDiagnostics": "Диагностика",
   "graph.wsToolbar.chipInstitutions": "Организации",
@@ -166,7 +186,6 @@ export const partGraphUi = {
   "graph.contractSubtitle.expandWork": "Граф статьи · развёрнутая группа",
   "graph.contractSubtitle.expandWorkspace": "Граф области · развёрнутая группа",
 
-  "graph.detailPanel.title": "Детали",
   "graph.detailPanel.relationship": "Связь",
   "graph.detailPanel.openSource": "Открыть источник",
   "graph.detailPanel.openTarget": "Открыть цель",
@@ -265,14 +284,24 @@ export const partGraphUi = {
   "graph.canvas.repulsionTooltip": "Сила отталкивания (разрежение симуляции)",
   "graph.canvas.repulsionAria": "Сила отталкивания раскладки",
 
-  "graph.canvas.edgeLabels.modeAria": "Подписи рёбер на холсте",
-  "graph.canvas.edgeLabels.all": "Все",
-  "graph.canvas.edgeLabels.interaction": "Наведение",
-  "graph.canvas.edgeLabels.adaptive": "Авто",
-  "graph.canvas.edgeLabels.tooltipAll": "Подпись у каждого ребра",
-  "graph.canvas.edgeLabels.tooltipInteraction": "Подпись только при наведении или если ребро выбрано",
-  "graph.canvas.edgeLabels.tooltipAdaptive":
-    "При крупном масштабе и малом числе рёбер — все подписи; иначе только при наведении или выборе",
+  "graph.canvasLabels.buttonAria": "Подписи графа (узлы и связи)",
+  "graph.canvasLabels.buttonTooltip": "Подписи графа: {{mode}}",
+  "graph.canvasLabels.popoverTitle": "Подписи на холсте",
+  "graph.canvasLabels.popoverDescription":
+    "Как показывать подписи у узлов и рёбер. Выбранный режим действует на оба слоя одновременно.",
+  "graph.canvasLabels.modeAria": "Видимость подписей на холсте",
+  "graph.canvasLabels.modeAll": "Все",
+  "graph.canvasLabels.modeInteraction": "Наведение",
+  "graph.canvasLabels.modeAdaptive": "Авто",
+  "graph.canvasLabels.tooltipAll": "Показывать подписи у всех узлов и связей.",
+  "graph.canvasLabels.tooltipInteraction":
+    "Подписи только у выбранного и наведённого (и при включении — у их прямых соседей).",
+  "graph.canvasLabels.tooltipAdaptive":
+    "При крупном масштабе и малом числе элементов — все подписи; иначе только при наведении/выборе.",
+  "graph.canvasLabels.neighborsToggle": "Подписи соседей при наведении",
+  "graph.canvasLabels.neighborsTooltip":
+    "Дополнительно показывать подписи у прямых (1-hop) соседей выбранного/наведённого узла. Действует в режимах «Наведение» и «Авто».",
+  "graph.canvasLabels.reset": "Сбросить",
 
   "graph.canvas.toolbarSectionColor": "Цвет",
   "graph.canvas.toolbarSectionLabels": "Подписи",

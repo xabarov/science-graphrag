@@ -65,7 +65,7 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
     expect(html).toContain("Nodes ·");
     expect(html).not.toContain("Scope:");
     expect(html).not.toContain("Depth");
-    expect(html).toContain("Details");
+    expect(html).toContain("Inspector");
     expect(html).toContain("Legend");
     expect(html).toContain("Diagnostics");
     expect(html).toContain("3 works");
@@ -100,7 +100,7 @@ describe("WorkspaceGraphToolbar render (SSR smoke)", () => {
         />,
       ),
     );
-    expect(html).toContain("Details");
+    expect(html).toContain("Inspector");
     expect(html).not.toContain("Workspace graph");
   });
 

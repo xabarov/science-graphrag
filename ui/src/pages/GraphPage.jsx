@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 import Collapse from "@mui/material/Collapse";
 import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
@@ -73,6 +74,10 @@ export default function GraphPage() {
   }, [workId]);
 
   useEffect(() => {
+    if (chromeDense) setAboutOpen(false);
+  }, [chromeDense]);
+
+  useEffect(() => {
     try {
       window.localStorage.setItem(LS_GRAPH_PAGE_ABOUT, aboutOpen ? "1" : "0");
     } catch {
@@ -138,48 +143,50 @@ export default function GraphPage() {
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        px: 1,
-        pt: 0.75,
-        pb: 0.5,
+        px: chromeDense ? 0.75 : 1,
+        pt: chromeDense ? 0.25 : 0.75,
+        pb: chromeDense ? 0.25 : 0.5,
         width: "100%",
         maxWidth: "100%",
         boxSizing: "border-box",
       }}
     >
-      <Box
-        sx={{
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          gap: 0.75,
-          flexWrap: "wrap",
-          mb: 0.5,
-        }}
-      >
-        <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>{t("graph.toolbar.title")}</Typography>
-        <Box sx={{ flex: 1, minWidth: 8 }} />
-        <Tooltip title={t("graph.toolbar.loadTooltip")} placement="bottom">
-          <CursorIconButton
-            aria-label={t("graph.toolbar.loadAria")}
-            aria-haspopup="true"
-            aria-expanded={Boolean(loadAnchor)}
-            onClick={(ev) => setLoadAnchor(ev.currentTarget)}
-          >
-            <VpnKeyOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-          </CursorIconButton>
-        </Tooltip>
-        <Tooltip title={t("graph.toolbar.aboutTooltip")} placement="bottom">
-          <CursorIconButton
-            type="button"
-            onClick={() => setAboutOpen((v) => !v)}
-            aria-expanded={aboutOpen}
-            aria-controls="graph-page-about"
-            aria-label={t("graph.toolbar.aboutAria")}
-          >
-            <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-          </CursorIconButton>
-        </Tooltip>
-      </Box>
+      {!chromeDense ? (
+        <Box
+          sx={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 0.75,
+            flexWrap: "wrap",
+            mb: 0.5,
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", color: tk.text.primary }}>{t("graph.toolbar.title")}</Typography>
+          <Box sx={{ flex: 1, minWidth: 8 }} />
+          <Tooltip title={t("graph.toolbar.loadTooltip")} placement="bottom">
+            <CursorIconButton
+              aria-label={t("graph.toolbar.loadAria")}
+              aria-haspopup="true"
+              aria-expanded={Boolean(loadAnchor)}
+              onClick={(ev) => setLoadAnchor(ev.currentTarget)}
+            >
+              <VpnKeyOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </CursorIconButton>
+          </Tooltip>
+          <Tooltip title={t("graph.toolbar.aboutTooltip")} placement="bottom">
+            <CursorIconButton
+              type="button"
+              onClick={() => setAboutOpen((v) => !v)}
+              aria-expanded={aboutOpen}
+              aria-controls="graph-page-about"
+              aria-label={t("graph.toolbar.aboutAria")}
+            >
+              <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </CursorIconButton>
+          </Tooltip>
+        </Box>
+      ) : null}
 
       <Popover
         open={Boolean(loadAnchor)}
@@ -264,6 +271,33 @@ export default function GraphPage() {
           labMode={labMode}
           title=""
           subtitle={null}
+          standaloneToolbarLeading={
+            chromeDense ? (
+              <Stack direction="row" alignItems="center" gap={0.25}>
+                <Tooltip title={t("graph.toolbar.loadTooltip")} placement="bottom">
+                  <CursorIconButton
+                    aria-label={t("graph.toolbar.loadAria")}
+                    aria-haspopup="true"
+                    aria-expanded={Boolean(loadAnchor)}
+                    onClick={(ev) => setLoadAnchor(ev.currentTarget)}
+                  >
+                    <VpnKeyOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                  </CursorIconButton>
+                </Tooltip>
+                <Tooltip title={t("graph.toolbar.aboutTooltip")} placement="bottom">
+                  <CursorIconButton
+                    type="button"
+                    onClick={() => setAboutOpen((v) => !v)}
+                    aria-expanded={aboutOpen}
+                    aria-controls="graph-page-about"
+                    aria-label={t("graph.toolbar.aboutAria")}
+                  >
+                    <InfoOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                  </CursorIconButton>
+                </Tooltip>
+              </Stack>
+            ) : null
+          }
           traceContext={{
             chunkFingerprint: trace.chunkFingerprint,
             section: trace.section,

@@ -71,6 +71,9 @@ export default {
     "В этом срезе группа запусков остаётся видимой внутри Analysis: какие эксперименты вошли и какие варианты сейчас сравниваются.",
   "benchmarkPage.analysis.group.experiments": "Эксперименты в группе",
   "benchmarkPage.analysis.group.variants": "Варианты в группе",
+  "benchmarkPage.analysis.group.runIds": "Идентификаторы прогонов в наборе",
+  "benchmarkPage.analysis.scorecard.secondaryTitle": "Вторичные метрики",
+  "benchmarkPage.analysis.scorecard.diagnosticTitle": "Диагностика",
   "benchmarkPage.analysis.deltaTitle": "Сводка дельт по эксперименту",
   "benchmarkPage.analysis.deltaBody":
     "Когда для выбранного эксперимента есть baseline и current variant, Analysis переиспользует pairwise compare для regressions, improvements и missing cases.",
@@ -259,4 +262,23 @@ export default {
   "benchmarkPage.trustDrillIn.colPassed": "Результат",
   "benchmarkPage.trustDrillIn.passedYes": "Да",
   "benchmarkPage.trustDrillIn.passedNo": "Нет",
+
+  "benchmarkPage.compareTab.title": "Сравнение прогонов",
+  "benchmarkPage.compareTab.intro":
+    "Baseline — опорный (старый) прогон, Current — кандидат (новый). Сравниваются только кейсы со статусом ok и метриками. Семейство бенчмарка у обоих прогонов должно совпадать.",
+  "benchmarkPage.compareTab.baselineRun": "Прогон baseline",
+  "benchmarkPage.compareTab.currentRun": "Прогон current",
+  "benchmarkPage.compareTab.selectPlaceholder": "Выберите",
+  "benchmarkPage.compareTab.comparing": "Сравнение…",
+  "benchmarkPage.compareTab.compare": "Сравнить",
+  "benchmarkPage.compareTab.refreshList": "Обновить список",
+  "benchmarkPage.compareTab.metadataDelta": "Дельта метаданных прогона",
+  "benchmarkPage.compareTab.filterCase": "Фильтр case_id",
+  "benchmarkPage.compareTab.filterMetric": "Фильтр метрики",
+  "benchmarkPage.compareTab.showUnchanged": "Показывать без изменений",
+  "benchmarkPage.compareTab.exportJson": "Экспорт JSON",
+  "benchmarkPage.compareTab.exportMarkdown": "Экспорт Markdown",
+  "benchmarkPage.compareTab.tableRegressions": "Регрессии",
+  "benchmarkPage.compareTab.tableImprovements": "Улучшения",
+  "benchmarkPage.compareTab.tableUnchanged": "Без изменений",
 };

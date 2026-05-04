@@ -8,6 +8,7 @@ import { CursorButton, CursorPrimaryButton } from "../../components/common/index
 import { useI18n } from "../../i18n/useI18n.js";
 
 import BenchmarkVariantMatrix from "./BenchmarkVariantMatrix.jsx";
+import BenchmarkScorecardMetricSections from "./BenchmarkScorecardMetricSections.jsx";
 import CompareDeltaTable from "./CompareDeltaTable.jsx";
 import CompareTabSummarySection from "./CompareTabSummarySection.jsx";
 import { buildTradeoffCards, summarizeTradeoffDirection } from "./benchmarkTradeoffModel.js";
@@ -196,6 +197,17 @@ export default function BenchmarkAnalysisOverview({
                   />
                 ))}
               </Box>
+              {selectedCell?.scorecard &&
+              (Object.keys(selectedCell.scorecard.secondary || {}).length > 0 ||
+                Object.keys(selectedCell.scorecard.diagnostic || {}).length > 0) ? (
+                <BenchmarkScorecardMetricSections
+                  titleSecondary={t("benchmarkPage.analysis.scorecard.secondaryTitle")}
+                  titleDiagnostic={t("benchmarkPage.analysis.scorecard.diagnosticTitle")}
+                  secondary={selectedCell.scorecard.secondary}
+                  diagnostic={selectedCell.scorecard.diagnostic}
+                  tk={tk}
+                />
+              ) : null}
             </>
           ) : null}
         </Box>
@@ -219,6 +231,11 @@ export default function BenchmarkAnalysisOverview({
             />
             <SummaryStat label={t("benchmarkPage.analysis.group.variants")} value={session.variantIds.join(", ")} />
           </Box>
+          {session.runIds?.length ? (
+            <Box sx={{ mt: 1 }}>
+              <SummaryStat label={t("benchmarkPage.analysis.group.runIds")} value={session.runIds.join(", ")} />
+            </Box>
+          ) : null}
         </Box>
       </Box>
 

@@ -67,6 +67,9 @@ export default {
     "This slice keeps grouped execution visible inside Analysis: what experiments were included and which variants are currently compared.",
   "benchmarkPage.analysis.group.experiments": "Experiments in group",
   "benchmarkPage.analysis.group.variants": "Variants in group",
+  "benchmarkPage.analysis.group.runIds": "Run ids in set",
+  "benchmarkPage.analysis.scorecard.secondaryTitle": "Secondary metrics",
+  "benchmarkPage.analysis.scorecard.diagnosticTitle": "Diagnostic metrics",
   "benchmarkPage.analysis.deltaTitle": "Per-experiment delta summary",
   "benchmarkPage.analysis.deltaBody":
     "When a baseline and current variant exist for the selected experiment, Analysis reuses pairwise compare to summarize regressions, improvements, and missing cases.",
@@ -252,4 +255,23 @@ export default {
   "benchmarkPage.trustDrillIn.colPassed": "Passed",
   "benchmarkPage.trustDrillIn.passedYes": "Yes",
   "benchmarkPage.trustDrillIn.passedNo": "No",
+
+  "benchmarkPage.compareTab.title": "Compare runs",
+  "benchmarkPage.compareTab.intro":
+    "Baseline is the reference (older) run; Current is the candidate (newer). Only cases with status ok and metrics are compared. Benchmark family must match between runs.",
+  "benchmarkPage.compareTab.baselineRun": "Baseline run",
+  "benchmarkPage.compareTab.currentRun": "Current run",
+  "benchmarkPage.compareTab.selectPlaceholder": "Select",
+  "benchmarkPage.compareTab.comparing": "Comparing…",
+  "benchmarkPage.compareTab.compare": "Compare",
+  "benchmarkPage.compareTab.refreshList": "Refresh list",
+  "benchmarkPage.compareTab.metadataDelta": "Run metadata delta",
+  "benchmarkPage.compareTab.filterCase": "Filter case_id",
+  "benchmarkPage.compareTab.filterMetric": "Filter metric",
+  "benchmarkPage.compareTab.showUnchanged": "Show unchanged rows",
+  "benchmarkPage.compareTab.exportJson": "Export JSON",
+  "benchmarkPage.compareTab.exportMarkdown": "Export Markdown",
+  "benchmarkPage.compareTab.tableRegressions": "Regressions",
+  "benchmarkPage.compareTab.tableImprovements": "Improvements",
+  "benchmarkPage.compareTab.tableUnchanged": "Unchanged",
 };

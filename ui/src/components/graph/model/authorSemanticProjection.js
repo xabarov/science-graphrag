@@ -1,8 +1,12 @@
 /**
  * Workspace graph helpers: author-related aggregator detection and expand URL collection.
  *
- * Reader authorship collapse (GR9) runs on the server for workspace payloads (Phase 4).
- * {@link projectAuthorSemanticGraph} is a pass-through for normalized graphs.
+ * **Reader / authorship parity:** Collapse of duplicate authorship semantics for the reader view
+ * (`collapse_authorship_for_reader_view` in `science_graphrag/api/graph_reader_projection/authorship_collapse.py`,
+ * tests in `tests/api/test_collapse_authorship_reader_view.py`) is applied on the server when building
+ * workspace and work+workspace graph payloads. The `useGraphWorkspaceData` hook consumes normalized API
+ * output only; {@link projectAuthorSemanticGraph} stays an identity pass-through so the client does not
+ * mirror membership semantics that would drift from the backend contract.
  */
 
 /** Aggregator kinds that represent author/authorship neighborhoods on a Work. */

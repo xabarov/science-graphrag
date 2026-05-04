@@ -17,6 +17,24 @@ export function sortChunksByOrder(items) {
 }
 
 /**
+ * Unique `section_path` values in chunk order (for table-of-contents style nav).
+ * @param {Array<Record<string, unknown>>} orderedItems
+ * @returns {string[]}
+ */
+export function buildReaderSectionPathList(orderedItems) {
+  if (!Array.isArray(orderedItems)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const ch of orderedItems) {
+    const s = ch?.section_path != null ? String(ch.section_path).trim() : "";
+    if (!s || seen.has(s)) continue;
+    seen.add(s);
+    out.push(s);
+  }
+  return out;
+}
+
+/**
  * OCR/VL chunking can leak whole-document markdown wrappers into chunk text:
  * the first chunk may start with ```markdown and a later chunk may end with ```.
  * Strip only those edge wrappers so the combined reader body renders as prose,

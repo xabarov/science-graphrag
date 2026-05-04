@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -14,9 +16,10 @@ import { decideWorkspaceSmartDedupConflict, getWorkspaceSmartDedupConflicts } fr
  *   workspaceId: string,
  *   onDismiss: () => void,
  *   onMerged: () => void | Promise<void>,
+ *   activeIngestJobId?: string,
  * }} props
  */
-export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMerged }) {
+export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMerged, activeIngestJobId = "" }) {
   const { t } = useI18n();
   const [items, setItems] = useState([]);
   const [idx, setIdx] = useState(0);
@@ -44,6 +47,10 @@ export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMer
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useEffect(() => {
+    setIdx((i) => Math.min(i, Math.max(0, items.length - 1)));
+  }, [items.length]);
 
   const safeIdx = items.length ? Math.min(idx, items.length - 1) : 0;
   const cur = items.length ? items[safeIdx] : null;
@@ -119,11 +126,50 @@ export default function IngestConflictReviewCard({ workspaceId, onDismiss, onMer
       </Typography>
       <Typography sx={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.5)", mb: 1.25 }}>
         {t("workspace.ingestDedup.subtitle", {
-          current: String(idx + 1),
+          current: String(safeIdx + 1),
           total: String(items.length),
           score,
         })}
       </Typography>
+      {items.length > 1 ? (
+        <Box sx={{ display: "flex", gap: 0.5, mb: 1, alignItems: "center", flexWrap: "wrap" }}>
+          <CursorSmallButton
+            type="button"
+            disabled={busy || safeIdx <= 0}
+            onClick={() => setIdx((i) => Math.max(0, i - 1))}
+            aria-label={t("workspace.ingestDedup.prev")}
+          >
+            <ChevronLeftIcon sx={{ fontSize: "1.05rem", mr: 0.25, verticalAlign: "middle" }} />
+            {t("workspace.ingestDedup.prev")}
+          </CursorSmallButton>
+          <CursorSmallButton
+            type="button"
+            disabled={busy || safeIdx >= items.length - 1}
+            onClick={() => setIdx((i) => Math.min(items.length - 1, i + 1))}
+            aria-label={t("workspace.ingestDedup.next")}
+          >
+            {t("workspace.ingestDedup.next")}
+            <ChevronRightIcon sx={{ fontSize: "1.05rem", ml: 0.25, verticalAlign: "middle" }} />
+          </CursorSmallButton>
+        </Box>
+      ) : null}
+      {cur?.id ? (
+        <Typography
+          sx={{
+            fontSize: "0.65rem",
+            color: "rgba(255,255,255,0.38)",
+            mb: activeIngestJobId ? 0.5 : 1,
+            fontFamily: "ui-monospace, monospace",
+          }}
+        >
+          {t("workspace.ingestDedup.conflictId", { id: String(cur.id) })}
+        </Typography>
+      ) : null}
+      {activeIngestJobId ? (
+        <Typography sx={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.38)", mb: 1 }}>
+          {t("workspace.ingestDedup.jobContext", { id: activeIngestJobId })}
+        </Typography>
+      ) : null}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.25 }}>
         <Box sx={{ p: 1, borderRadius: "6px", border: "1px solid rgba(255,255,255,0.1)", backgroundColor: "#141414" }}>
           <Typography sx={{ fontSize: "0.65rem", color: "rgba(129,140,248,0.95)", mb: 0.5 }}>{t("workspace.ingestDedup.workA")}</Typography>
