@@ -26,6 +26,13 @@ export const BARNES_HUT_THETA = 0.5;
 export const PHYSICS_REACT_COMMIT_INTERVAL = 1;
 
 export const USE_COMMUNITY_DETECTION = true;
+
+/**
+ * Above these counts, skip expensive hybrid community detection in the force integrator and in
+ * {@link detectCommunitiesForUi} (main-thread budget for very dense workspaces).
+ */
+export const COMMUNITY_DETECTION_MAX_NODES = 6000;
+export const COMMUNITY_DETECTION_MAX_LINKS = 14000;
 /**
  * Centroid community pull (see communityCentroidAttraction.js): magnitude = dist * this * cooling.
  * Tuned for the O(n) centroid model (replaces legacy pairwise same-cluster springs).

@@ -156,4 +156,8 @@ export default {
   "workspace.ingestEntityDedup.skip": "Пропустить",
   "workspace.ingestEntityDedup.dismiss": "Скрыть",
   "workspace.ingestEntityDedup.loadingLabels": "Загрузка…",
+
+  "workspace.graph.warn.large_payload_performance":
+    "Большой граф (узлов: {{nodes}}, рёбер: {{edges}}). Интерфейс может отвечать медленнее — сузьте фильтры типов или воспользуйтесь локальным поиском.",
+  "workspace.graph.normalizedPayload": "Данные графа нормализованы для отображения.",
 };

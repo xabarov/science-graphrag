@@ -12,6 +12,8 @@ import {
   BARNES_HUT_THETA,
   CANVAS_MARGIN,
   CLUSTER_ATTRACTION_STRENGTH,
+  COMMUNITY_DETECTION_MAX_LINKS,
+  COMMUNITY_DETECTION_MAX_NODES,
   COOLING_DECAY_RATE,
   COOLING_INITIAL_TEMPERATURE,
   COOLING_MIN_TEMPERATURE,
@@ -113,7 +115,12 @@ export function useScienceGraphForceSimulation(
       iterationCountRef.current = 0;
       isSimStableRef.current = false;
       setIsSimulationStable(false);
-      if (USE_COMMUNITY_DETECTION && nodes.length > 5) {
+      const communityEligible =
+        USE_COMMUNITY_DETECTION &&
+        nodes.length > 5 &&
+        nodes.length <= COMMUNITY_DETECTION_MAX_NODES &&
+        links.length <= COMMUNITY_DETECTION_MAX_LINKS;
+      if (communityEligible) {
         communitiesRef.current = detectScienceHybridCommunities(nodes, links);
       } else {
         communitiesRef.current = null;

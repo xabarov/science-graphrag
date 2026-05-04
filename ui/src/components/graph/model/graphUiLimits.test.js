@@ -2,9 +2,21 @@ import { describe, expect, it } from "vitest";
 
 import { deriveInspectorDetail } from "./graphInspectorModel.js";
 import { normalizeGraphPayload } from "./graphViewState.js";
-import { capGraphForUi } from "./graphUiLimits.js";
+import {
+  capGraphForUi,
+  GRAPH_CAP_WARNING_LARGE_PAYLOAD,
+  WORKSPACE_GRAPH_PERF_WARN_EDGE_COUNT,
+  WORKSPACE_GRAPH_PERF_WARN_NODE_COUNT,
+} from "./graphUiLimits.js";
 
 describe("graphUiLimits", () => {
+  it("returns empty graph shape when input is null without warnings", () => {
+    const { displayGraph, capWarnings } = capGraphForUi(null);
+    expect(displayGraph.nodes).toEqual([]);
+    expect(displayGraph.edges).toEqual([]);
+    expect(capWarnings).toHaveLength(0);
+  });
+
   it("returns same graph reference and no warnings", () => {
     const graph = {
       nodes: [{ id: "a" }, { id: "b" }],
@@ -35,6 +47,27 @@ describe("graphUiLimits", () => {
     const { displayGraph, capWarnings } = capGraphForUi(graph);
     expect(displayGraph.edges).toHaveLength(700);
     expect(capWarnings).toHaveLength(0);
+  });
+
+  it("adds performance warning at node warn threshold without truncating", () => {
+    const nodes = Array.from({ length: WORKSPACE_GRAPH_PERF_WARN_NODE_COUNT }, (_, i) => ({ id: `n${i}` }));
+    const graph = { nodes, edges: [] };
+    const { displayGraph, capWarnings } = capGraphForUi(graph);
+    expect(displayGraph.nodes).toHaveLength(WORKSPACE_GRAPH_PERF_WARN_NODE_COUNT);
+    expect(capWarnings).toContain(GRAPH_CAP_WARNING_LARGE_PAYLOAD);
+  });
+
+  it("adds performance warning at edge warn threshold without truncating", () => {
+    const nodes = [{ id: "a" }, { id: "b" }];
+    const edges = Array.from({ length: WORKSPACE_GRAPH_PERF_WARN_EDGE_COUNT }, (_, i) => ({
+      id: `e${i}`,
+      source: "a",
+      target: "b",
+    }));
+    const graph = { nodes, edges };
+    const { displayGraph, capWarnings } = capGraphForUi(graph);
+    expect(displayGraph.edges).toHaveLength(WORKSPACE_GRAPH_PERF_WARN_EDGE_COUNT);
+    expect(capWarnings).toContain(GRAPH_CAP_WARNING_LARGE_PAYLOAD);
   });
 
   it("keeps connected author-work pair in full graph", () => {

@@ -155,4 +155,8 @@ export default {
   "workspace.ingestEntityDedup.skip": "Skip",
   "workspace.ingestEntityDedup.dismiss": "Dismiss",
   "workspace.ingestEntityDedup.loadingLabels": "Loading…",
+
+  "workspace.graph.warn.large_payload_performance":
+    "Large graph ({{nodes}} nodes, {{edges}} edges). Interaction may feel slower — narrow visibility filters or use local search.",
+  "workspace.graph.normalizedPayload": "Graph data was normalized for display.",
 };

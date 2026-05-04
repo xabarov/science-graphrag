@@ -7,6 +7,7 @@ import {
   hitTestClosestEdgeId,
   hitTestNode,
   hitTestNodeScreen,
+  EDGE_LABEL_MEGA_DENSE_MIN_EDGES,
   NODE_LABEL_ADAPTIVE_MAX_NODES,
   shouldDrawCanvasEdgeLabel,
   shouldDrawCanvasNodeLabel,
@@ -260,5 +261,14 @@ describe("shouldDrawCanvasEdgeLabel", () => {
   it("adaptive hides inactive when scale is low", () => {
     expect(shouldDrawCanvasEdgeLabel("adaptive", { active: false }, { scale: 0.1 }, 5)).toBe(false);
     expect(shouldDrawCanvasEdgeLabel("adaptive", { active: true }, { scale: 0.1 }, 5)).toBe(true);
+  });
+
+  it("mega-dense edge counts gate adaptive labels to interaction-like behavior", () => {
+    expect(
+      shouldDrawCanvasEdgeLabel("adaptive", { active: false }, { scale: 1 }, EDGE_LABEL_MEGA_DENSE_MIN_EDGES),
+    ).toBe(false);
+    expect(
+      shouldDrawCanvasEdgeLabel("adaptive", { active: true }, { scale: 1 }, EDGE_LABEL_MEGA_DENSE_MIN_EDGES),
+    ).toBe(true);
   });
 });

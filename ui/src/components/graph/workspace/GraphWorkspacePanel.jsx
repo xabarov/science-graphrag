@@ -21,6 +21,7 @@ import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
 import { useGraphWorkspaceData } from "./hooks/useGraphWorkspaceData.js";
 import { useGraphSelectionReconcile } from "../hooks/useGraphSelectionReconcile.js";
 import { useGraphWorkspaceProjection } from "./hooks/useGraphWorkspaceProjection.js";
+import { GRAPH_CAP_WARNING_LARGE_PAYLOAD } from "../model/graphUiLimits.js";
 import { detectCommunitiesForUi } from "../canvas/physics/structuralCommunities.js";
 
 const LS_GRAPH_CANVAS_LAYOUT_MODE = "graphCanvasLayoutMode";
@@ -274,8 +275,19 @@ export default function GraphWorkspacePanel({
             onToggleWorkGraphIncludeInstitutions={() => setIncludeInstitutions((v) => !v)}
           />
           {!standalone ? <GraphViewModeSwitch mode={vizMode} onChange={setVizMode} compact={compactLayout} /> : null}
-          {projectedGraph.warnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Graph data was normalized</Alert> : null}
-          {capWarnings.length > 0 ? <Alert severity="info" sx={{ mb: 1 }}>Large graph - UI cap is active</Alert> : null}
+          {projectedGraph.warnings.length > 0 ? (
+            <Alert severity="info" sx={{ mb: 1 }}>
+              {t("workspace.graph.normalizedPayload")}
+            </Alert>
+          ) : null}
+          {capWarnings.includes(GRAPH_CAP_WARNING_LARGE_PAYLOAD) ? (
+            <Alert severity="warning" sx={{ mb: 1 }}>
+              {t("workspace.graph.warn.large_payload_performance", {
+                nodes: displayGraphNodes?.length ?? 0,
+                edges: displayGraphEdges?.length ?? 0,
+              })}
+            </Alert>
+          ) : null}
           <Collapse in={legendOpen}>
             <GraphTypeLegend graph={displayGraph} colorBy={graphColorBy} nodeCommunityMap={nodeCommunityMap} />
           </Collapse>

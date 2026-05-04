@@ -4,6 +4,7 @@
  */
 
 import { detectScienceHybridCommunities } from "./scienceHybridCommunities.js";
+import { COMMUNITY_DETECTION_MAX_LINKS, COMMUNITY_DETECTION_MAX_NODES } from "./simConstants.js";
 
 /** Edge types used for thematic LPA inside {@link detectCommunitiesForUi}. */
 export const LPA_TOPIC_EDGE_TYPES = new Set(["USES_METHOD", "EVALUATED_ON", "CITES", "PUBLISHED_IN"]);
@@ -41,6 +42,14 @@ export function detectCommunitiesForUi(nodes, links, options = {}) {
       : DEFAULT_LPA_SPLIT_RATIO;
 
   if (!Array.isArray(nodes) || nodes.length === 0) return new Map();
+
+  const linkArr = Array.isArray(links) ? links : [];
+  if (nodes.length > COMMUNITY_DETECTION_MAX_NODES || linkArr.length > COMMUNITY_DETECTION_MAX_LINKS) {
+    /** @type {Map<string, string>} */
+    const cheap = new Map();
+    nodes.forEach((n) => cheap.set(String(n.id), `type:${String(n.type || "Node")}`));
+    return cheap;
+  }
 
   const hybrid = detectScienceHybridCommunities(nodes, links);
   const topicLinks = filterTopicLinksForLpa(links);

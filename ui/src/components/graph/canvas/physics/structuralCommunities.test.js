@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { detectScienceHybridCommunities } from "./scienceHybridCommunities.js";
+import { COMMUNITY_DETECTION_MAX_NODES } from "./simConstants.js";
 import {
   detectCommunitiesForUi,
   filterTopicLinksForLpa,
@@ -34,6 +35,16 @@ describe("detectCommunitiesForUi", () => {
     const ui = detectCommunitiesForUi(nodes, links);
     expect(ui.get("w1")).toBe(hybrid.get("w1"));
     expect(ui.get("a1")).toBe(hybrid.get("a1"));
+  });
+
+  it("falls back to cheap type-key communities above graph size limits", () => {
+    const nodes = Array.from({ length: COMMUNITY_DETECTION_MAX_NODES + 1 }, (_, i) => ({
+      id: `n${i}`,
+      type: "Work",
+    }));
+    const ui = detectCommunitiesForUi(nodes, []);
+    expect(ui.size).toBe(nodes.length);
+    expect(ui.get("n0")).toBe("type:Work");
   });
 
   it("can split ws-internal bucket when LPA disagreement exceeds ratio", () => {

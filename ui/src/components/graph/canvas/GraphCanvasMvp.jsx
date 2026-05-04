@@ -39,6 +39,7 @@ const EMPTY_COMMUNITY_MAP = new Map();
  *   If the physics integrator mutates those positions between pointerdown and pointerup, the released click can miss
  *   the intended node; integration is therefore paused for primary pointer sessions on the canvas (see useGraphPhysicsPolicy).
  * - Shell drawer navigation dispatches a short navigation-intent pause so the router can commit before rAF-heavy work resumes.
+ * - Add new integration pause reasons only in useGraphPhysicsPolicy (see hook JSDoc), not ad hoc rAF toggles here.
  */
 
 /** @returns {"all" | "interaction" | "adaptive"} */

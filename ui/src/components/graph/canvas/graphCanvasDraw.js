@@ -39,6 +39,11 @@ const NODE_LABEL_HIT_PADDING_Y = 8;
  */
 export const EDGE_LABEL_ADAPTIVE_MAX_EDGES = 72;
 
+/**
+ * Above this edge count, adaptive mode behaves like "interaction" for mid-edge labels (paint cost).
+ */
+export const EDGE_LABEL_MEGA_DENSE_MIN_EDGES = 4000;
+
 /** Below this screen scale (1 = 1px per world unit before pan), adaptive mode treats the view as zoomed out. */
 export const EDGE_LABEL_ADAPTIVE_MIN_SCALE = 0.32;
 
@@ -97,9 +102,10 @@ export function shouldDrawCanvasEdgeLabel(mode, edgeStyle, transform, edgeCount)
   const active = Boolean(edgeStyle?.active);
   if (mode === "all") return true;
   if (mode === "interaction") return active;
+  const nEdges = Number(edgeCount);
+  if (nEdges >= EDGE_LABEL_MEGA_DENSE_MIN_EDGES) return active;
   const dense =
-    Number(edgeCount) > EDGE_LABEL_ADAPTIVE_MAX_EDGES ||
-    (transform && Number(transform.scale) < EDGE_LABEL_ADAPTIVE_MIN_SCALE);
+    nEdges > EDGE_LABEL_ADAPTIVE_MAX_EDGES || (transform && Number(transform.scale) < EDGE_LABEL_ADAPTIVE_MIN_SCALE);
   if (dense) return active;
   return true;
 }

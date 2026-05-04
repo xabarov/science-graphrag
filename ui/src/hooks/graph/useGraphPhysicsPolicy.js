@@ -9,9 +9,24 @@ import {
 const SHELL_NAVIGATION_RESUME_MS = 250;
 
 /**
- * Decides when force-layout physics may run its rAF integrator.
- * - Shell navigation intent briefly pauses integration so HashRouter can commit.
- * - Primary canvas pointer sessions pause integration so hit-tests stay aligned with the finger.
+ * Single gate for pausing the force-layout rAF integrator (`integrationBlocked`).
+ *
+ * **Pause sources (canonical — add new ones here, not ad hoc in canvas hooks):**
+ *
+ * 1. **Shell navigation intent** — `SHELL_NAVIGATION_INTENT_EVENT` in `components/layout/shellNavigationEvents.js`.
+ *    Dispatched from the drawer before route changes (`Drawer.jsx` → `dispatchShellNavigationIntent`).
+ *    Pause duration: {@link SHELL_NAVIGATION_RESUME_MS} ms so HashRouter can commit without competing rAF.
+ *
+ * 2. **Canvas pointer session** — `GRAPH_CANVAS_POINTER_DOWN_EVENT` / `GRAPH_CANVAS_POINTER_UP_EVENT` in
+ *    `components/graph/canvas/graphCanvasPointerEvents.js` on `pointerEventTarget`
+ *    (from `GraphPhysicsPointerBridgeProvider`).
+ *    Keeps sim node positions stable between pointerdown and pointerup so hit-tests match drawn nodes.
+ *
+ * **Not wired automatically:** modal dialogs and overlays. If a modal opens above the graph and needs the same
+ * stability guarantee, dispatch `dispatchShellNavigationIntent` (or add a dedicated shared event and subscribe here).
+ *
+ * Invariant: when `integrationBlocked` is true, `useScienceGraphForceSimulation` cancels the current rAF
+ * and does not schedule the next tick.
  *
  * @param {object} opts
  * @param {boolean} opts.enabled When false, listeners detach and pause flags clear.
@@ -26,7 +41,10 @@ export function useGraphPhysicsPolicy({ enabled, simulationSignature, animationF
   const [shellPaused, setShellPaused] = useState(false);
   const [canvasPaused, setCanvasPaused] = useState(false);
 
-  const canvasTarget = useMemo(() => pointerEventTarget ?? (typeof window !== "undefined" ? window : null), [pointerEventTarget]);
+  const canvasTarget = useMemo(
+    () => pointerEventTarget ?? (typeof window !== "undefined" ? window : null),
+    [pointerEventTarget],
+  );
 
   const cancelIntegrationFrame = useCallback(() => {
     const id = animationFrameRef.current;

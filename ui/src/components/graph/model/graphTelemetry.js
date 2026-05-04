@@ -2,6 +2,9 @@
  * Opt-in graph diagnostics: set localStorage `science-graphrag:graphTelemetry=1`
  * or run a dev build (import.meta.env.DEV) to log classification events for
  * fetch vs topology vs layout / React Flow.
+ *
+ * Main-thread stage timing: set `science-graphrag:graphPerf=1` and use the Performance panel
+ * (see `graphPerfInstrumentation.js`).
  */
 
 const LS_GRAPH_TELEMETRY = "science-graphrag:graphTelemetry";

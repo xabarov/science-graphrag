@@ -1,11 +1,13 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { projectAuthorSemanticGraph } from "../../model/authorSemanticProjection.js";
 import { applyGraphVisibilityFilter } from "../../model/graphVisibilityFilter.js";
 import { deriveInspectorDetail } from "../../model/graphInspectorModel.js";
 import { localizeEdgeType } from "../../model/graphLocalize.js";
 import { filterNodeIdsBySearchSubstring } from "../../model/graphNodeSearch.js";
+import { measureGraphStage } from "../../model/graphPerfInstrumentation.js";
 import { capGraphForUi } from "../../model/graphUiLimits.js";
+import { graphTelemetryEmit, isGraphTelemetryEnabled } from "../../model/graphTelemetry.js";
 import {
   normalizeGraphEdgeId,
   normalizeGraphNodeId,
@@ -33,9 +35,20 @@ export function useGraphWorkspaceProjection({
 }) {
   const edgeTypeLabel = useCallback((e) => localizeEdgeType(e, t), [t]);
 
-  const projectedGraph = useMemo(() => projectAuthorSemanticGraph(graph), [graph]);
+  useEffect(() => {
+    if (!isGraphTelemetryEnabled()) return;
+    const nodes = Array.isArray(graph?.nodes) ? graph.nodes : [];
+    const edges = Array.isArray(graph?.edges) ? graph.edges : [];
+    graphTelemetryEmit("graph.workspace.payload", { nodes: nodes.length, edges: edges.length });
+  }, [graph]);
+
+  const projectedGraph = useMemo(
+    () => measureGraphStage("graph.projectAuthorSemantic", () => projectAuthorSemanticGraph(graph)),
+    [graph],
+  );
   const { graph: visibleGraph, stats: visibilityStats } = useMemo(
-    () => applyGraphVisibilityFilter(projectedGraph, graphVisibility),
+    () =>
+      measureGraphStage("graph.visibilityFilter", () => applyGraphVisibilityFilter(projectedGraph, graphVisibility)),
     [projectedGraph, graphVisibility],
   );
   const projectedResolvedNodeId = useMemo(
@@ -57,11 +70,15 @@ export function useGraphWorkspaceProjection({
     return resolveSelectedNodeId(visibleGraph, "");
   }, [visibleGraph, projectedGraph, projectedResolvedNodeId, resolvedSelectedEdgeId]);
   const { displayGraph, capWarnings } = useMemo(
-    () => capGraphForUi(visibleGraph, resolvedSelectedNodeId),
+    () =>
+      measureGraphStage("graph.capForUi", () => capGraphForUi(visibleGraph, resolvedSelectedNodeId)),
     [visibleGraph, resolvedSelectedNodeId],
   );
   const inspector = useMemo(
-    () => deriveInspectorDetail(projectedGraph, projectedResolvedNodeId, resolvedSelectedEdgeId, { edgeTypeLabel }),
+    () =>
+      measureGraphStage("graph.inspectorDetail", () =>
+        deriveInspectorDetail(projectedGraph, projectedResolvedNodeId, resolvedSelectedEdgeId, { edgeTypeLabel }),
+      ),
     [projectedGraph, edgeTypeLabel, projectedResolvedNodeId, resolvedSelectedEdgeId],
   );
   const nodeSearchMatchIds = useMemo(

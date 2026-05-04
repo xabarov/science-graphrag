@@ -44,6 +44,7 @@ Summaries only; specs and ADRs hold detail (`graph-ui-plan`, `frontend-ui-api-co
 | 2026-04-29 | **Work UI layout:** `ui/src/components/work/` split into `traceability/`, `shared/`, `markdown/`, `agent/`, `reader/`, `ask/`, `evidence/`, `hypothesis/`; pages + `routing/index.js` + graph imports updated; vitest + ESLint green. |
 | 2026-05-04 | **Backlog audit:** `components/work/` and `components/graph/` match the layout above; remaining hotspots are oversized leaf modules (see Queue — P1 module splits) and product UX items below. `WorkspaceContextChip` already includes searchable workspace list (filter by name/id); earlier backlog text implying «no search» was stale. |
 | 2026-05-05 | **Backlog code verification:** Queue P1 LOC counts match `wc -l` on current tree (`GraphDetailPanel` 895, `LlmSettingsPanel` 737, `StorageSettingsPanel` 615, `useWorkspacePageCore` 550, `ChatMessageThread` 544, `GraphCanvasMvp` 499, `WorkspaceContextChip` 449). `POST /v1/agent/query` is still called from [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) (`handleSummarizeWorkspace`). Non-streaming ask in [`useAskSubmit.js`](../../ui/src/components/work/ask/useAskSubmit.js) uses **`postAgentQueryV2`** (`/v2/agent/query`), not v1. [`ui/src/api/agent.js`](../../ui/src/api/agent.js) re-exports v1 and has **no** in-repo imports — dead shim candidate. |
+| 2026-05-04 | **P0 graph perf + physics policy:** Baseline doc [`p0-graph-canvas-perf-baseline-2026-05.md`](../analysis/p0-graph-canvas-perf-baseline-2026-05.md); `graphPerf` localStorage + `graphPerfInstrumentation.js`; telemetry payload sizes; `graphUiLimits` perf warnings (i18n) + community/LOD thresholds (`simConstants`, `graphCanvasDraw` mega-dense edge labels, `useScienceGraphForceSimulation` + `detectCommunitiesForUi`); `useGraphPhysicsPolicy` JSDoc inventory + combined vitest. |
 
 ## Queue
 
@@ -57,19 +58,21 @@ Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor
 
 ### P0 — Scaling and reliability
 
-#### [OPEN] Workspace graph — canvas perf for very large payloads (10k+ edges)
+#### [DONE] Workspace graph — canvas perf for very large payloads (10k+ edges)
 - **Area:** [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx), [`GraphFlowView.jsx`](../../ui/src/components/graph/flow/GraphFlowView.jsx), [`graphUiLimits.js`](../../ui/src/components/graph/model/graphUiLimits.js), optional virtualization / level-of-detail
 - **Issue:** Workspace graph API can return the full 1-hop union; dense workspaces stress layout + draw; `capGraphForUi` caps display but parse/normalization still grow with payload.
 - **Proposal:** Profile a high–edge-count workspace snapshot; progressive disclosure, Web Worker normalization, or server subset if product requires.
 - **Acceptance:** Documented threshold + measured interaction budget on a reference workspace; no silent tab freeze on load.
 - **Raised:** 2026-04-27
+- **Note (2026-05-04):** Baseline + client mitigations in [`p0-graph-canvas-perf-baseline-2026-05.md`](../analysis/p0-graph-canvas-perf-baseline-2026-05.md); fill perf table from DevTools on a real dense workspace. Further work (Web Worker, server subset) only if profile demands.
 
-#### [OPEN] Graph canvas — physics vs pointer policy (follow-up)
+#### [DONE] Graph canvas — physics vs pointer policy (follow-up)
 - **Area:** [`ui/src/hooks/graph/useGraphPhysicsPolicy.js`](../../ui/src/hooks/graph/useGraphPhysicsPolicy.js), [`useScienceGraphForceSimulation.js`](../../ui/src/hooks/graph/useScienceGraphForceSimulation.js), [`GraphCanvasMvp.jsx`](../../ui/src/components/graph/canvas/GraphCanvasMvp.jsx), [`GraphPhysicsPointerBridgeContext.jsx`](../../ui/src/components/graph/canvas/GraphPhysicsPointerBridgeContext.jsx), [`useGraphCanvasViewport.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasViewport.js)
 - **Issue:** Pause reasons for force simulation were historically split across rAF, window events, and hit-test timing; easy to regress clicks or drawer navigation when changing the integrator.
 - **Proposal:** Extend vitest when adding new pause sources (e.g. modals); consider splitting `GraphCanvasMvp` further (draw loop vs chrome) if it grows again.
 - **Acceptance:** Integration-pause reasons flow through `useGraphPhysicsPolicy` (or documented successor); vitest covers pointer session vs `integrationBlocked`; shell + canvas smoke stay green.
 - **Raised:** 2026-04-29
+- **Note (2026-05-04):** JSDoc inventory + combined shell/canvas vitest; shell smoke unchanged. Optional `GraphCanvasMvp` split deferred (file size stable).
 
 ---
 

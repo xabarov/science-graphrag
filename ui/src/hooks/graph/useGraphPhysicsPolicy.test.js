@@ -86,6 +86,48 @@ describe("useGraphPhysicsPolicy", () => {
     vi.useRealTimers();
   });
 
+  it("keeps integrationBlocked true while canvas session active even after shell resume", async () => {
+    vi.useFakeTimers();
+    const bus = new EventTarget();
+    const animationFrameRef = { current: null };
+    const { result } = renderHook(() =>
+      useGraphPhysicsPolicy({
+        enabled: true,
+        simulationSignature: "sig",
+        animationFrameRef,
+        pointerEventTarget: bus,
+      }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent(SHELL_NAVIGATION_INTENT_EVENT));
+    });
+    expect(result.current.integrationBlocked).toBe(true);
+
+    act(() => {
+      bus.dispatchEvent(new CustomEvent(GRAPH_CANVAS_POINTER_DOWN_EVENT));
+    });
+    expect(result.current.integrationBlocked).toBe(true);
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+    expect(result.current.integrationBlocked).toBe(true);
+
+    act(() => {
+      bus.dispatchEvent(new CustomEvent(GRAPH_CANVAS_POINTER_UP_EVENT));
+    });
+    await act(async () => {
+      vi.runAllTimers();
+    });
+    expect(result.current.integrationBlocked).toBe(false);
+    vi.useRealTimers();
+  });
+
   it("clears shell pause when simulationSignature changes", async () => {
     const bus = new EventTarget();
     const animationFrameRef = { current: null };
