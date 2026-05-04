@@ -14,6 +14,7 @@ from science_graphrag.agent.chat_envelope import (
 )
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
+from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
 from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadline
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
@@ -114,16 +115,45 @@ def _salvage_answer_from_last_graph_tool(messages: list[Any], *, max_chars: int 
     return ""
 
 
+_MIN_DRAFT_ASSISTANT_CHARS = 200
+
+
+def _salvage_substantial_ai_visible_content(messages: list[Any]) -> str:
+    """Use long ``AIMessage.content`` left alongside ``tool_calls`` (no completed ``final_answer``)."""
+    if has_completed_final_answer_tool(messages):
+        return ""
+    for msg in reversed(messages):
+        if not isinstance(msg, AIMessage):
+            continue
+        tcs = getattr(msg, "tool_calls", None) or []
+        if not tcs:
+            continue
+        text = str(msg.content or "").strip()
+        if len(text) < _MIN_DRAFT_ASSISTANT_CHARS:
+            continue
+        if text.startswith("{") and text.endswith("}"):
+            try:
+                json.loads(text)
+            except Exception:  # noqa: BLE001
+                pass
+            else:
+                continue
+        return text[:20_000]
+    return ""
+
+
 def extract_langgraph_answer(
     messages: list[Any],
-) -> tuple[str, list[dict[str, Any]] | None, bool]:
+) -> tuple[str, list[dict[str, Any]] | None, bool, bool]:
     # pylint: disable=too-many-locals,too-many-branches
     """Prefer ``final_answer`` tool JSON over a bare assistant string.
 
-    Returns ``(answer, citations_or_none, graph_tool_salvage_used)``. ``citations_or_none`` is
-    ``None`` when citations should come from graph state; otherwise it replaces envelope
-    citations from the ``final_answer`` payload. The third flag is True when ``answer`` was built
-    from the latest ``cypher_query`` / ``edge_search`` tool JSON (no bare AI / final_answer text).
+    Returns ``(answer, citations_or_none, graph_tool_salvage_used, draft_content_salvage)``.
+    ``citations_or_none`` is ``None`` when citations should come from graph state; otherwise it
+    replaces envelope citations from the ``final_answer`` payload. ``graph_tool_salvage_used`` is
+    True when ``answer`` was built from ``cypher_query`` / ``edge_search`` JSON. The fourth flag is
+    True when ``answer`` was taken from substantial visible ``AIMessage.content`` while tool calls
+    were still present (no completed ``final_answer``).
     """
     fallback_tool_args: tuple[str, list[dict[str, Any]] | None] | None = None
     for i in range(len(messages) - 1, -1, -1):
@@ -169,29 +199,35 @@ def extract_langgraph_answer(
                 if isinstance(ans, str) and ans.strip():
                     cites = data.get("citations")
                     if isinstance(cites, list):
-                        return ans.strip(), [c for c in cites if isinstance(c, dict)], False
-                    return ans.strip(), [], False
+                        return ans.strip(), [c for c in cites if isinstance(c, dict)], False, False
+                    return ans.strip(), [], False, False
     if fallback_tool_args is not None:
         ans0, cites0 = fallback_tool_args
-        return ans0, cites0, False
+        return ans0, cites0, False, False
     for msg in reversed(messages):
         if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
             text = str(msg.content or "").strip()
             if text:
-                return text, None, False
+                return text, None, False, False
     salvaged = _salvage_answer_from_last_graph_tool(messages)
     if salvaged.strip():
-        return salvaged.strip(), None, True
-    return "", None, False
+        return salvaged.strip(), None, True, False
+    draft = _salvage_substantial_ai_visible_content(messages)
+    if draft.strip():
+        return draft.strip(), None, False, True
+    return "", None, False, False
 
 
 def resolve_langgraph_answer_with_salvage(
     final_state: dict[str, Any],
-) -> tuple[str, list[dict[str, Any]], bool, bool]:
-    """Apply ``extract_langgraph_answer`` then ``salvage_markdown_from_quote_candidates``."""
+) -> tuple[str, list[dict[str, Any]], bool, bool, bool]:
+    """Apply ``extract_langgraph_answer`` then ``salvage_markdown_from_quote_candidates``.
+
+    Returns ``(answer, citations, graph_salvage, quote_salvage, draft_salvage)``.
+    """
 
     messages = list(final_state.get("messages", []))
-    answer, fa_citations, graph_salvage = extract_langgraph_answer(messages)
+    answer, fa_citations, graph_salvage, draft_salvage = extract_langgraph_answer(messages)
     quote_salvage = False
     if not (answer or "").strip():
         salv = salvage_markdown_from_quote_candidates(final_state)
@@ -201,7 +237,7 @@ def resolve_langgraph_answer_with_salvage(
     citations = list(final_state.get("citations", []))
     if fa_citations is not None:
         citations = list(fa_citations)
-    return answer, citations, graph_salvage, quote_salvage
+    return answer, citations, graph_salvage, quote_salvage, draft_salvage
 
 
 def salvage_markdown_from_quote_candidates(state: dict[str, Any]) -> str:
@@ -464,14 +500,16 @@ class RetrievalAgent:
         messages = list(final_state.get("messages", []))
         llm_usage = aggregate_agent_llm_usage(messages)
         trace = collect_tool_trace(final_state)
-        answer, citations, graph_salvage, quote_salvage = resolve_langgraph_answer_with_salvage(
-            final_state
+        answer, citations, graph_salvage, quote_salvage, draft_salvage = (
+            resolve_langgraph_answer_with_salvage(final_state)
         )
         extra_warn_list: list[str] = []
         if graph_salvage:
             extra_warn_list.append("answer_salvaged_from_graph_tool")
         if quote_salvage:
             extra_warn_list.append("answer_salvaged_from_quote_candidates")
+        if draft_salvage:
+            extra_warn_list.append("answer_salvaged_from_assistant_draft")
         extra_warn: list[str] | None = extra_warn_list or None
         if graph_salvage:
             add_span_event(
@@ -481,6 +519,11 @@ class RetrievalAgent:
         if quote_salvage:
             add_span_event(
                 "agent.quote_candidate_answer_salvage",
+                {"answer_chars": len(answer or "")},
+            )
+        if draft_salvage:
+            add_span_event(
+                "agent.assistant_draft_answer_salvage",
                 {"answer_chars": len(answer or "")},
             )
         envelope = build_chat_envelope(

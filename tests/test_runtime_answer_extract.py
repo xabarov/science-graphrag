@@ -26,10 +26,11 @@ def test_extract_prefers_final_answer_tool_payload() -> None:
             tool_call_id="c1",
         ),
     ]
-    answer, cites, salvage = extract_langgraph_answer(msgs)
+    answer, cites, graph_sv, draft_sv = extract_langgraph_answer(msgs)
     assert answer == "Structured reply"
     assert cites == [{"work_id": "w1"}]
-    assert salvage is False
+    assert graph_sv is False
+    assert draft_sv is False
 
 
 def test_extract_uses_final_answer_tool_args_when_tool_message_missing() -> None:
@@ -46,10 +47,11 @@ def test_extract_uses_final_answer_tool_args_when_tool_message_missing() -> None
             ],
         ),
     ]
-    answer, cites, salvage = extract_langgraph_answer(msgs)
+    answer, cites, graph_sv, draft_sv = extract_langgraph_answer(msgs)
     assert answer == "Structured reply from args"
     assert cites == []
-    assert salvage is False
+    assert graph_sv is False
+    assert draft_sv is False
 
 
 def test_extract_falls_back_to_plain_assistant() -> None:
@@ -57,10 +59,11 @@ def test_extract_falls_back_to_plain_assistant() -> None:
         HumanMessage(content="q"),
         AIMessage(content="Plain reply without tools"),
     ]
-    answer, cites, salvage = extract_langgraph_answer(msgs)
+    answer, cites, graph_sv, draft_sv = extract_langgraph_answer(msgs)
     assert answer == "Plain reply without tools"
     assert cites is None
-    assert salvage is False
+    assert graph_sv is False
+    assert draft_sv is False
 
 
 def test_extract_salvages_from_cypher_error_payload() -> None:
@@ -78,8 +81,9 @@ def test_extract_salvages_from_cypher_error_payload() -> None:
             name="cypher_query",
         ),
     ]
-    answer, cites, salvage = extract_langgraph_answer(msgs)
-    assert salvage is True
+    answer, cites, graph_sv, draft_sv = extract_langgraph_answer(msgs)
+    assert graph_sv is True
+    assert draft_sv is False
     assert "Cypher error" in answer
     assert "Label X not allowed" in answer
     assert cites is None
@@ -100,10 +104,30 @@ def test_extract_salvages_from_cypher_tool_when_no_bare_ai() -> None:
             name="cypher_query",
         ),
     ]
-    answer, cites, salvage = extract_langgraph_answer(msgs)
-    assert salvage is True
+    answer, cites, graph_sv, draft_sv = extract_langgraph_answer(msgs)
+    assert graph_sv is True
+    assert draft_sv is False
     assert "Cypher returned" in answer
     assert cites is None
+
+
+def test_extract_salvages_long_visible_ai_content_with_tool_calls() -> None:
+    long_body = "x" * 220
+    msgs = [
+        HumanMessage(content="q"),
+        AIMessage(
+            content=long_body,
+            tool_calls=[
+                {"name": "find_works", "id": "a", "args": {"query": "y"}, "type": "tool_call"},
+            ],
+        ),
+        ToolMessage(content="{}", tool_call_id="a", name="find_works"),
+    ]
+    answer, cites, graph_sv, draft_sv = extract_langgraph_answer(msgs)
+    assert answer == long_body
+    assert cites is None
+    assert graph_sv is False
+    assert draft_sv is True
 
 
 def test_salvage_markdown_from_quote_candidates() -> None:

@@ -510,7 +510,7 @@ class Settings(BaseSettings):
             "``langgraph_supervisor_v1`` (legacy multi-specialist), or ``retrieval_v1`` (legacy non-graph harness)."
         ),
     )
-    agent_max_tool_calls: int = Field(default=8, ge=1, le=30)
+    agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
     agent_semantic_query_fast_route: bool = Field(
         default=False,
         description=(
@@ -521,12 +521,12 @@ class Settings(BaseSettings):
         ),
     )
     agent_step_timeout_seconds: float = Field(
-        default=120.0,
+        default=240.0,
         ge=1.0,
         le=900.0,
         description=(
             "Wall-clock seconds for one full LangGraph agent turn (sync invoke or SSE stream "
-            "collection). Not per-node; see runbook. Default 120s allows multi-tool research turns."
+            "collection). Not per-node; see runbook. Default 240s allows multi-tool research turns."
         ),
     )
     agent_supervisor_recursion_limit: int = Field(default=32, ge=4, le=128)

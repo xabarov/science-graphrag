@@ -68,6 +68,37 @@ def test_no_workspace_warning_when_missing_workspace() -> None:
     assert "no_workspace" in (env.get("warnings") or [])
 
 
+def test_quote_extraction_hint_ignored_when_question_not_quote_style() -> None:
+    """API hint ``quote_extraction`` must not force quote warnings on generic architecture Q&A."""
+
+    state: AgentState = {
+        "messages": [],
+        "workspace_id": "w1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 5,
+        "metadata": {"raw_user_question": "Compare DETR and YOLO architecture"},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [{"tool": "paper_quote_search", "row_count": 0}]
+    env = build_chat_envelope(
+        state=state,
+        answer="",
+        citations=[],
+        tool_trace=trace,  # type: ignore[arg-type]
+        answer_class_hint="quote_extraction",
+    )
+    assert env.get("answer_class") == "grounded_explanation"
+    assert "no_quote_found" not in (env.get("warnings") or [])
+
+
 def test_no_quote_found_for_quote_class_without_payload() -> None:
     state: AgentState = {
         "messages": [],
@@ -423,6 +454,38 @@ def test_build_chat_envelope_graph_salvage_skips_agent_finished_without_final_an
         extra_warnings=["answer_salvaged_from_graph_tool"],
     )
     assert "answer_salvaged_from_graph_tool" in (env.get("warnings") or [])
+    assert "agent_finished_without_final_answer_tool" not in (env.get("warnings") or [])
+
+
+def test_build_chat_envelope_draft_salvage_skips_agent_finished_without_final_answer() -> None:
+    state: AgentState = {
+        "messages": [HumanMessage(content="q")],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 0,
+        "metadata": {"raw_user_question": "q", "turn_policy": {"tool_policy": "allow_tools"}},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [
+        {"step": 1, "tool": "idea_search", "args_summary": {}, "row_count": 1},
+    ]
+    env = build_chat_envelope(
+        state=state,
+        answer="Long draft text salvaged from assistant content.",
+        citations=[],
+        tool_trace=trace,  # type: ignore[arg-type]
+        answer_class_hint=None,
+        extra_warnings=["answer_salvaged_from_assistant_draft"],
+    )
+    assert "answer_salvaged_from_assistant_draft" in (env.get("warnings") or [])
     assert "agent_finished_without_final_answer_tool" not in (env.get("warnings") or [])
 
 

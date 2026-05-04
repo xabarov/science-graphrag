@@ -39,17 +39,30 @@ def _last_user_question(state: AgentState | dict[str, Any]) -> str:
     return ""
 
 
-def heuristic_answer_class(question: str, hint: str | None) -> str:
-    if hint and hint in ANSWER_CLASSES:
-        return hint
+def question_suggests_quote_style_intent(question: str) -> bool:
+    """True when the user text clearly asks for quotes / verbatim evidence (not auxiliary tool use)."""
+
     q = (question or "").lower()
-    if any(x in q for x in ("гост", "gost", "bibliograph", "список литературы", "literature list")):
-        return "bibliography_export"
+    if any(x in q for x in ("цитат", "quote", "passage", "snippet", "где написано")):
+        return True
     if "evidence" in q and any(
         x in q for x in ("trade-off", "tradeoff", "trade-offs", "verbatim", "passage", "snippet")
     ):
-        return "quote_extraction"
-    if any(x in q for x in ("цитат", "quote", "passage", "snippet", "где написано")):
+        return True
+    return False
+
+
+def heuristic_answer_class(question: str, hint: str | None) -> str:
+    if hint and hint in ANSWER_CLASSES:
+        if hint == "quote_extraction" and not question_suggests_quote_style_intent(question):
+            # Optional API hint must not force quote-style envelopes on generic Q&A.
+            hint = None
+        else:
+            return hint
+    q = (question or "").lower()
+    if any(x in q for x in ("гост", "gost", "bibliograph", "список литературы", "literature list")):
+        return "bibliography_export"
+    if question_suggests_quote_style_intent(question):
         return "quote_extraction"
     if any(
         x in q
@@ -257,13 +270,17 @@ def build_chat_envelope(
         typed: dict[str, Any] = {}
     else:
         heur = heuristic_answer_class(question, answer_class_hint)
-        if from_trace == "quote_extraction" and heur in (
+        if from_trace == "quote_extraction" and not question_suggests_quote_style_intent(question):
+            # ``paper_quote_search`` in the trace is often auxiliary; do not treat the turn as
+            # quote-style when the question does not ask for quotes — avoids ``no_quote_found`` on
+            # architecture comparisons and similar Q&A.
+            answer_class = heur
+        elif from_trace == "quote_extraction" and heur in (
             "grounded_explanation",
             "synthesis",
             "fact_lookup",
         ):
-            # ``paper_quote_search`` in the trace is often auxiliary evidence for broad Q&A, not a
-            # quote-only task — avoid false ``no_quote_found`` when the user did not ask for quotes.
+            # Same downgrade when heuristic already avoided ``quote_extraction`` despite a hint.
             answer_class = heur
         elif from_trace:
             answer_class = from_trace
@@ -304,9 +321,9 @@ def build_chat_envelope(
     if not answer_stripped:
         warnings.append("no_final_answer")
     last_exec = last_executed_catalog_tool_name(tool_trace)
-    graph_salvage = "answer_salvaged_from_graph_tool" in (
-        list(extra_warnings or []) if extra_warnings else []
-    )
+    extra_warn_list = list(extra_warnings or []) if extra_warnings else []
+    graph_salvage = "answer_salvaged_from_graph_tool" in extra_warn_list
+    draft_salvage = "answer_salvaged_from_assistant_draft" in extra_warn_list
     if (
         tool_policy == "allow_tools"
         and answer_stripped
@@ -314,6 +331,7 @@ def build_chat_envelope(
         and last_exec != "final_answer"
         and product_path == "tool_assisted"
         and not graph_salvage
+        and not draft_salvage
     ):
         warnings.append("agent_finished_without_final_answer_tool")
     if (

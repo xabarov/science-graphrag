@@ -25,13 +25,29 @@ FINAL_ANSWER_NUDGE_TEXT = (
     "do not call other research tools unless you must fix a factual gap."
 )
 
+FINAL_ANSWER_NUDGE_TEXT_SECOND = (
+    "Second reminder: the turn is incomplete without a successful ``final_answer`` tool call. "
+    "Call ``final_answer`` once with a complete markdown ``answer`` summarizing evidence you "
+    "already gathered; do not add more catalog research unless you must fix a factual error."
+)
+
 
 def final_answer_nudge_state_update(state: AgentState) -> dict[str, Any]:
-    """Append the standard reminder and mark ``final_answer_nudge_used`` (P0 contract)."""
+    """Append reminder text and bump ``metadata.final_answer_nudge_count`` (max two per turn)."""
     meta = dict(state.get("metadata") or {})
+    raw_prev = meta.get("final_answer_nudge_count")
+    if isinstance(raw_prev, int) and raw_prev >= 0:
+        n_before = raw_prev
+    elif meta.get("final_answer_nudge_used"):
+        n_before = 1  # legacy: one nudge already occurred without persisted count
+    else:
+        n_before = 0
+    next_count = n_before + 1
+    meta["final_answer_nudge_count"] = next_count
     meta["final_answer_nudge_used"] = True
+    text = FINAL_ANSWER_NUDGE_TEXT if next_count == 1 else FINAL_ANSWER_NUDGE_TEXT_SECOND
     return {
-        "messages": [HumanMessage(content=FINAL_ANSWER_NUDGE_TEXT)],
+        "messages": [HumanMessage(content=text)],
         "metadata": meta,
     }
 
@@ -66,9 +82,13 @@ def route_react_chat_to_tools(
 
     Routing rules:
     - ``budget_remaining >= 0``: allow the pending tool batch (includes the last slot at 0).
-    - ``budget_remaining < 0``: allow at most one more batch if it is ``final_answer`` only.
+    - ``budget_remaining == -1``: allow **one** extra pending batch of **any** tools so
+      ``ToolMessage`` rows always follow an ``AIMessage`` that declared ``tool_calls`` (recovery
+      after the last budgeted batch).
+    - ``budget_remaining < -1``: allow a batch only if every call is ``final_answer`` (terminal
+      recovery).
     - If the model returns text without ``tool_calls`` but catalog tools already ran without a
-      terminal ``final_answer``, route once to ``final_answer_nudge`` (see P0 contract).
+      terminal ``final_answer``, route to ``final_answer_nudge`` (up to two per turn; see policy).
     """
     messages = state.get("messages") or []
     if not messages:
@@ -81,6 +101,8 @@ def route_react_chat_to_tools(
         return END
     budget = int(state.get("budget_remaining", 0))
     if budget >= 0:
+        return "tools"
+    if budget == -1:
         return "tools"
     if tool_calls_batch_is_only_final_answer(tool_calls):
         return "tools"

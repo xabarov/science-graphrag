@@ -826,8 +826,8 @@ async def _stream_agent(
                 )
                 salvaged = False
                 if latest_full_state is not None:
-                    state_answer, resolved_cites, _g, _q = resolve_langgraph_answer_with_salvage(
-                        latest_full_state
+                    state_answer, resolved_cites, _g, _q, _d = (
+                        resolve_langgraph_answer_with_salvage(latest_full_state)
                     )
                     if (state_answer or "").strip():
                         salvaged = True
@@ -863,6 +863,7 @@ async def _stream_agent(
             trace_for_run: list[Any] = []
             graph_salvage_stream = False
             quote_salvage_stream = False
+            draft_salvage_stream = False
             if latest_full_state is not None:
                 trace_for_run = collect_tool_trace(latest_full_state)  # type: ignore[arg-type]
                 (
@@ -870,6 +871,7 @@ async def _stream_agent(
                     citations,
                     graph_salvage_stream,
                     quote_salvage_stream,
+                    draft_salvage_stream,
                 ) = resolve_langgraph_answer_with_salvage(latest_full_state)
             trace_list: list[dict[str, Any]] = [dict(t) for t in trace_for_run]
 
@@ -887,6 +889,8 @@ async def _stream_agent(
                     extra_stream_warnings.append("answer_salvaged_from_graph_tool")
                 if quote_salvage_stream:
                     extra_stream_warnings.append("answer_salvaged_from_quote_candidates")
+                if draft_salvage_stream:
+                    extra_stream_warnings.append("answer_salvaged_from_assistant_draft")
                 if salvaged_after_deadline:
                     extra_stream_warnings.extend(
                         [

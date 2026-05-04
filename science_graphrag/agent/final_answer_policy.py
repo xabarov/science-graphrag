@@ -10,6 +10,8 @@ from langchain_core.messages import AIMessage, ToolMessage
 from science_graphrag.agent.graph.tracing import collect_tool_trace
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 
+_MAX_FINAL_ANSWER_BARE_TEXT_NUDGES = 2
+
 # Tools excluded when determining the "last meaningful catalog step" (routing / session noise).
 TRACE_META_TOOLS_LAST = frozenset(
     {
@@ -77,15 +79,29 @@ def _tool_policy_is_allow_tools(meta: dict[str, Any]) -> bool:
     return pol == "allow_tools"
 
 
-def needs_final_answer_nudge(state: dict[str, Any]) -> bool:
-    """Whether to insert a one-shot reminder before ending the single-agent ReAct turn.
+def effective_final_answer_nudge_count(meta: dict[str, Any]) -> int:
+    """How many bare-text nudges are already accounted for (supports legacy ``nudge_used`` only)."""
+    raw = meta.get("final_answer_nudge_count")
+    if isinstance(raw, int) and raw >= 0:
+        return raw
+    return 1 if meta.get("final_answer_nudge_used") else 0
 
-    When the last model message has no ``tool_calls`` but ``collect_tool_trace`` shows a catalog
-    tool whose last non-meta step is not ``final_answer``, route to ``final_answer_nudge`` instead
-    of ``END`` (once per turn via ``metadata.final_answer_nudge_used``).
+
+def needs_final_answer_nudge(state: dict[str, Any]) -> bool:
+    """Whether to insert a reminder before ending the single-agent ReAct turn.
+
+    When the last model message has no ``tool_calls`` and there is no **completed**
+    ``final_answer`` tool (JSON ``answer`` non-empty), route to ``final_answer_nudge`` instead of
+    ``END`` (at most ``_MAX_FINAL_ANSWER_BARE_TEXT_NUDGES`` per turn).
+
+    Do **not** key off ``last_executed_catalog_tool_name == "final_answer"``: ``collect_tool_trace``
+    records ``final_answer`` from ``AIMessage.tool_calls`` even when the matching ``ToolMessage`` is
+    missing or the payload is empty, which would otherwise suppress a needed second nudge.
     """
     meta = state.get("metadata") or {}
-    if not isinstance(meta, dict) or meta.get("final_answer_nudge_used"):
+    if not isinstance(meta, dict):
+        return False
+    if effective_final_answer_nudge_count(meta) >= _MAX_FINAL_ANSWER_BARE_TEXT_NUDGES:
         return False
     if not _tool_policy_is_allow_tools(meta):
         return False
@@ -93,13 +109,16 @@ def needs_final_answer_nudge(state: dict[str, Any]) -> bool:
     last = messages[-1] if messages else None
     if not isinstance(last, AIMessage) or getattr(last, "tool_calls", None):
         return False
+    if has_completed_final_answer_tool(messages):
+        return False
     trace = collect_tool_trace(state)  # type: ignore[arg-type]
     last_tool = last_executed_catalog_tool_name(trace)
-    return bool(last_tool and last_tool != "final_answer")
+    return bool(last_tool)
 
 
 __all__ = [
     "TRACE_META_TOOLS_LAST",
+    "effective_final_answer_nudge_count",
     "has_completed_final_answer_tool",
     "last_executed_catalog_tool_name",
     "needs_final_answer_nudge",

@@ -236,5 +236,7 @@ export default {
   "chat.warnings.partial_after_deadline": "Ответ восстановлен после дедлайна — проверьте цитаты и при необходимости уточните вопрос.",
   "chat.warnings.answer_salvaged_from_quote_candidates":
     "Текст ответа собран из кандидатов цитат: вызов final_answer был пустым или отсутствовал. Проверьте выдержки в Reader/evidence.",
+  "chat.warnings.answer_salvaged_from_assistant_draft":
+    "Текст взят из видимого черновика модели при одновременных вызовах инструментов: final_answer отсутствует. По возможности ожидайте обычный ход с final_answer.",
   "chat.warnings.agent_response_budget_cutoff": "Ассистент не запускал следующий шаг модели: почти исчерпан лимит времени на ход.",
 };

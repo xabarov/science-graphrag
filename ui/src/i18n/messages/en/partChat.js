@@ -236,5 +236,7 @@ export default {
   "chat.warnings.partial_after_deadline": "Answer was salvaged after a deadline — verify citations and follow up if needed.",
   "chat.warnings.answer_salvaged_from_quote_candidates":
     "Answer text was assembled from quote candidates because ``final_answer`` was missing or empty — verify passages in Reader/evidence.",
+  "chat.warnings.answer_salvaged_from_assistant_draft":
+    "Answer was taken from the model’s visible draft text alongside tool calls because ``final_answer`` was missing — prefer a normal ``final_answer`` turn when possible.",
   "chat.warnings.agent_response_budget_cutoff": "The assistant skipped a further model step because the per-turn time budget was almost exhausted.",
 };

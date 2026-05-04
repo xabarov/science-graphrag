@@ -84,7 +84,8 @@ def test_route_react_chat_to_tools_negative_only_final_answer() -> None:
     assert route_react_chat_to_tools(state) == "tools"
 
 
-def test_route_react_chat_to_tools_negative_blocks_other_tools() -> None:
+def test_route_react_chat_to_tools_negative_minus_one_allows_grace_batch() -> None:
+    """One extra tool batch at budget -1 so pending non-final tool_calls still execute."""
     state = {
         "messages": [
             AIMessage(
@@ -95,6 +96,21 @@ def test_route_react_chat_to_tools_negative_blocks_other_tools() -> None:
             ),
         ],
         "budget_remaining": -1,
+    }
+    assert route_react_chat_to_tools(state) == "tools"
+
+
+def test_route_react_chat_to_tools_negative_blocks_non_final_below_minus_one() -> None:
+    state = {
+        "messages": [
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {"name": "idea_search", "args": {"query": "q"}, "id": "d", "type": "tool_call"}
+                ],
+            ),
+        ],
+        "budget_remaining": -2,
     }
     assert route_react_chat_to_tools(state) == END
 
@@ -130,7 +146,8 @@ def test_route_react_chat_to_tools_final_answer_nudge_after_catalog_tools() -> N
     assert route_react_chat_to_tools(state) == "final_answer_nudge"
 
 
-def test_route_react_chat_to_tools_nudge_suppressed_after_flag() -> None:
+def test_route_react_chat_to_tools_second_nudge_after_legacy_used_flag() -> None:
+    """Legacy ``final_answer_nudge_used`` without count still allows one more nudge (cap=2)."""
     state = {
         "messages": [
             HumanMessage(content="q"),
@@ -148,6 +165,33 @@ def test_route_react_chat_to_tools_nudge_suppressed_after_flag() -> None:
         "metadata": {
             "raw_user_question": "q",
             "turn_policy": {"tool_policy": "allow_tools"},
+            "final_answer_nudge_used": True,
+        },
+        "routing_log": [],
+        "thread_id": None,
+    }
+    assert route_react_chat_to_tools(state) == "final_answer_nudge"
+
+
+def test_route_react_chat_to_tools_nudge_suppressed_after_two_nudges() -> None:
+    state = {
+        "messages": [
+            HumanMessage(content="q"),
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {"name": "find_works", "args": {"query": "x"}, "id": "a", "type": "tool_call"},
+                ],
+            ),
+            ToolMessage(content="{}", tool_call_id="a", name="find_works"),
+            AIMessage(content="Still no tools after two nudges."),
+        ],
+        "budget_remaining": 3,
+        "workspace_id": "ws1",
+        "metadata": {
+            "raw_user_question": "q",
+            "turn_policy": {"tool_policy": "allow_tools"},
+            "final_answer_nudge_count": 2,
             "final_answer_nudge_used": True,
         },
         "routing_log": [],
