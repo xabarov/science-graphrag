@@ -1,22 +1,29 @@
 {
   "schema_version": 1,
   "decision_gate": {
-    "decision": "GO",
-    "reason": "all_nightly_passed",
+    "decision": "NO-GO",
+    "reason": "reference_ok_nightly_has_residual_failures_document_in_gate_report;claims_paraphrase_core_bar_not_met:pilot,holdout",
     "criteria": {
       "reference_all_passed": true,
-      "layer1_nightly_failed_count": 0,
-      "layer2_nightly_failed_count": 0,
+      "layer1_nightly_failed_count": 4,
+      "layer2_nightly_failed_count": 6,
+      "claims_paraphrase_pilot_artifact_missing": false,
+      "claims_paraphrase_holdout_artifact_missing": false,
+      "claims_paraphrase_pilot_all_passed": false,
+      "claims_paraphrase_holdout_all_passed": false,
+      "claims_paraphrase_pilot_meets_bt6_core_bar": false,
+      "claims_paraphrase_holdout_meets_bt6_core_bar": false,
       "claims_production_artifact_missing": false,
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
+      "claims_core_uses_paraphrase_pilot_holdout": true,
       "advisory_phantom_count": 2,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
         "strict_pilot_mock"
       ],
-      "advisory_individual_failures": [],
-      "hard_block_individual_failures": []
+      "hard_block_individual_failures": [],
+      "advisory_individual_failure_count": 15
     }
   },
   "trust_aggregate_per_family": {
@@ -52,6 +59,11 @@
       "phantom_member_count": 0,
       "phantom_members": [],
       "mixed_validation_status_member_count": 1
+    },
+    "chat_agent_family": {
+      "phantom_member_count": 0,
+      "phantom_members": [],
+      "mixed_validation_status_member_count": 0
     },
     "contradictions_family": {
       "phantom_member_count": 0,

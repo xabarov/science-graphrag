@@ -6,7 +6,7 @@
 
 **This document ties together:**
 
-- chat runtime direction: [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md)
+- chat runtime direction: [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md)
 - current live harness and baseline workspace: [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md)
 - Phoenix observability contract: [`phoenix-tracing-coverage-2026-04-25.md`](./phoenix-tracing-coverage-2026-04-25.md)
 - large OD workspace audit and missing claims facts: [`od-corpus-claims-methods-trust-audit-2026-04-27.md`](./od-corpus-claims-methods-trust-audit-2026-04-27.md)
@@ -23,7 +23,7 @@
 
 ## 1. Why this document exists
 
-The slim [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) fixes the **current** single-graph runtime and future tracks (`tool_search`, context compaction). **Research use cases / answer-class vocabulary** for scenarios still follow the product sections of the archived full roadmap and `docs/specs/agent-chat-v1.md`. What is still missing here is a single execution plan for the **object-detection proving ground**:
+The slim [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md) fixes the **current** single-graph runtime and future tracks (`tool_search`, context compaction). **Research use cases / answer-class vocabulary** for scenarios still follow the product sections of the archived full roadmap and `docs/specs/agent-chat-v1.md`. What is still missing here is a single execution plan for the **object-detection proving ground**:
 
 1. how to restore the OD workspace to a state where evidence-heavy chat use cases are meaningful;
 2. how to define a curated set of **10-15 trusted agent scenarios**;
@@ -471,7 +471,7 @@ This plan is succeeding when all of the following are true:
 1. Treat [`od-corpus-claims-methods-trust-audit-2026-04-27.md`](./od-corpus-claims-methods-trust-audit-2026-04-27.md) as the factual starting point for restoring the rich OD workspace.
 2. Keep the roadmap harness + OD live flow documented in [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md) as the seed, but extend it from “baseline trace capture” to “two-lane OD scenario program”.
 3. Do **not** expand contradiction-heavy or claim-semantic chat cases until claims and claim vectors are restored.
-4. Author the first scenario set against the answer classes already defined in [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md), rather than inventing a new taxonomy.
+4. Author the first scenario set against the answer classes already defined in [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md), rather than inventing a new taxonomy.
 5. Use Phoenix review as a formal part of the eval loop, not only as debugging support.
 
 ---

@@ -16,8 +16,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 | What already shipped (compressed) | [`completed-work-snapshot.md`](./completed-work-snapshot.md) |
 | Gate numbers / trust baseline artifact | [`eval/results/benchmark-trust-baseline.json`](../../eval/results/benchmark-trust-baseline.json) |
 | Track map + file-conflict rules | [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) **§1–§2, §5, §9** |
-
-**Agents:** prefer **snapshot + trust-audit §0/§5 + backlog OPEN** over loading the full master or §10.
+| **Agent · tools · context memory** | [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md) — `tool_search` v1, compaction; eval/Phoenix: trust-audit + [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md) |
 
 ---
 
@@ -27,7 +26,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 |-------|----------------|
 | Ontology · extraction · benchmarks | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
 | Master track table & principles | [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) |
-| Agent chat (product + architecture) | [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) — rule-based **`tool_search` v1** is shipped (`science_graphrag/agent/tool_search.py`); LLM-based discovery / richer manifests remain future work |
+| Agent runtime · tools · context compaction | [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md) — rule-based **`tool_search` v1** shipped (`science_graphrag/agent/tool_search.py`); LLM shortlist + lazy schemas / L4 compaction — roadmap |
 | Agent chat UI | [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md) |
 | Agent eval / harness / Phoenix audit | [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md) |
 | Agent prod flags / rollout | [`agent-chat-prod-rollout-2026-04-27.md`](./agent-chat-prod-rollout-2026-04-27.md) |
@@ -111,7 +110,7 @@ Stable URLs and backlinks may still point at these root paths — open the link,
 | `ontology-benchmarks-trust-audit-2026-04-25.md` | **Live** BT / trust queue |
 | `ontology-benchmarks-roadmap-2026-04-24.md` | Reference inventory (Wave M–T tables) |
 | `habr-article-narrative-and-measurement-plan-2026-07.md` | Publication spine |
-| `chat-agent-system-roadmap-2026-04-26.md` | Agent chat canon |
+| `agent-runtime-tools-context-roadmap-2026-05-04.md` | Agent · tools · context roadmap |
 | `agent-chat-frontend-ui-plan-2026-04-26.md` | Agent UI |
 | `agent-chat-frontend-verification-gaps-next-wave.md` | Stub → archive |
 | `agent-chat-tools-and-trace-audit-master-2026-04-28.md` | Eval / trace audit |

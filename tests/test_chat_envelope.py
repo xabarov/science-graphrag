@@ -502,3 +502,74 @@ def test_heuristic_answer_class_hint_overrides_question() -> None:
         "workspace support with evidence?"
     )
     assert heuristic_answer_class(q, "inventory") == "inventory"
+
+
+def test_quote_trace_downgrades_to_heuristic_for_broad_question() -> None:
+    """``paper_quote_search`` in trace must not force ``quote_explanation`` for generic comparisons."""
+
+    state: AgentState = {
+        "messages": [HumanMessage(content="Compare DETR and YOLO")],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 5,
+        "metadata": {"raw_user_question": "Compare DETR and YOLO"},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    trace = [
+        {"tool": "paper_quote_search", "row_count": 2},
+        {"tool": "final_answer", "row_count": 1},
+    ]
+    env = build_chat_envelope(
+        state=state,
+        answer="ok",
+        citations=[],
+        tool_trace=trace,  # type: ignore[arg-type]
+        answer_class_hint=None,
+    )
+    assert env.get("answer_class") == "grounded_explanation"
+
+
+def test_collect_typed_payloads_reads_tool_messages_when_specialist_empty() -> None:
+    import json
+
+    from langchain_core.messages import ToolMessage
+
+    from science_graphrag.agent.chat_envelope import collect_typed_payloads
+
+    state: AgentState = {
+        "messages": [
+            ToolMessage(
+                content=json.dumps(
+                    {
+                        "row_count": 1,
+                        "quote_candidates": [{"work_id": "w1", "quote_text": "excerpt"}],
+                    }
+                ),
+                tool_call_id="c1",
+                name="paper_quote_search",
+            ),
+        ],
+        "workspace_id": "ws1",
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 5,
+        "metadata": {"raw_user_question": "q"},
+        "specialist_results": {},
+        "current_specialist": None,
+        "routing_log": [],
+        "debug_events": [],
+        "thread_id": None,
+        "session_summary": "",
+        "answer_class": None,
+        "history_digest": [],
+    }
+    out = collect_typed_payloads(state)
+    assert len(out.get("quote_candidates") or []) == 1

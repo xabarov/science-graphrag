@@ -101,11 +101,18 @@ def _bibliography_payload_acceptable(bib: dict[str, Any]) -> bool:
 
 def collect_typed_payloads(state: AgentState | dict[str, Any]) -> dict[str, Any]:
     """Scan specialist tool JSON payloads for typed blocks."""
+    specialist_results = state.get("specialist_results") or {}
+    if not specialist_results:
+        from science_graphrag.agent.tool_message_payloads import (  # noqa: PLC0415
+            typed_payloads_from_tool_messages,
+        )
+
+        return typed_payloads_from_tool_messages(list(state.get("messages") or []))
+
     inventory: dict[str, Any] = {}
     quote_candidates: list[dict[str, Any]] = []
     bibliography: dict[str, Any] | None = None
     relation_trace: dict[str, Any] = {}
-    specialist_results = state.get("specialist_results") or {}
     for _spec, payloads in specialist_results.items():
         for payload in payloads or []:
             if not isinstance(payload, dict):
@@ -249,7 +256,19 @@ def build_chat_envelope(
         answer_class = suggested if suggested in ANSWER_CLASSES else "chat"
         typed: dict[str, Any] = {}
     else:
-        answer_class = from_trace or heuristic_answer_class(question, answer_class_hint)
+        heur = heuristic_answer_class(question, answer_class_hint)
+        if from_trace == "quote_extraction" and heur in (
+            "grounded_explanation",
+            "synthesis",
+            "fact_lookup",
+        ):
+            # ``paper_quote_search`` in the trace is often auxiliary evidence for broad Q&A, not a
+            # quote-only task — avoid false ``no_quote_found`` when the user did not ask for quotes.
+            answer_class = heur
+        elif from_trace:
+            answer_class = from_trace
+        else:
+            answer_class = heur
         typed = collect_typed_payloads(state)
     answer_stripped = (answer or "").strip()
     if not answer_stripped:

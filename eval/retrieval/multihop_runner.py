@@ -16,7 +16,11 @@ from eval.bench_common import (
     run_single_case_json_outputs,
     run_suite_cli_flow,
 )
-from eval.retrieval.stack_health import check_api_health, write_skip_artifact
+from eval.retrieval.stack_health import (
+    check_api_health,
+    check_neo4j_bolt_health,
+    write_skip_artifact,
+)
 from eval.retrieval.work_id_resolve import is_uuid_like, resolve_work_id_from_layer1_slug
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedder
@@ -120,7 +124,7 @@ def discover_multihop_cases(fixtures_root: Path, *, tier: str) -> list[Path]:
                 gmeta = {}
             if not isinstance(gmeta, dict):
                 gmeta = {}
-            if str(gmeta.get("expected_path_kind") or "") == "unordered_set":
+            if str(gmeta.get("expected_path_kind") or "") == "unordered_set" and not has_q_json:
                 continue
             if not has_q_json and str(gmeta.get("expected_path_kind") or "") != "ordered_chain":
                 continue
@@ -388,7 +392,7 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     allow_skip_on_infra: bool = typer.Option(
         False,
         "--allow-skip-on-infra",
-        help="If API /health fails, write multihop-skipped-*.json and exit 0 (CI-friendly).",
+        help="If API /health or Neo4j bolt fails, write multihop-skipped-*.json and exit 0 (CI-friendly).",
     ),
     json_out: Path | None = typer.Option(None, "--json-out"),
     md_out: Path | None = typer.Option(None, "--md-out"),
@@ -410,19 +414,23 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
 
     if suite:
         ok, detail = check_api_health(api_base_url)
-        if not ok:
+        neo_ok, neo_detail = check_neo4j_bolt_health(settings)
+        if not ok or not neo_ok:
             skip_path = write_skip_artifact(
                 _REPO_ROOT,
                 stem="multihop-skipped",
                 payload={
-                    "reason": "api_health_failed",
-                    "detail": detail,
+                    "reason": "api_or_neo4j_health_failed",
+                    "api_ok": ok,
+                    "api_detail": detail,
+                    "neo4j_ok": neo_ok,
+                    "neo4j_detail": neo_detail,
                     "api_base_url": api_base_url,
                     "tier": tier,
                 },
             )
             typer.echo(
-                f"Multihop suite skipped: API not healthy ({detail}). Wrote {skip_path}",
+                f"Multihop suite skipped: api_ok={ok} neo4j_ok={neo_ok}. Wrote {skip_path}",
                 err=True,
             )
             raise typer.Exit(0 if allow_skip_on_infra else 2)

@@ -49,8 +49,14 @@ If configured `redis` but effective `memory`, Redis was unreachable at startup â
 - Event: `agent.response_budget_precheck_cutoff` when cooperative cutoff skips a new LLM hop (supervisor specialists and single-agent ReAct).
 - `tool_trace` synthetic step `coordinator_gate` includes `duration_ms` from coordinator classification when measured.
 
+### `final_answer` contract (single-agent ReAct)
+
+- The `final_answer` tool **rejects** an empty `answer` at validation time; the model must call again with non-empty markdown.
+- If a `ToolMessage` for `final_answer` still has an empty or invalid JSON `answer` (edge cases), the graph takes **at most one** extra LLM hop before stopping; attribute `agent.final_answer_invalid_payload` is emitted on repair attempts.
+- The API applies the same **quote-candidate answer salvage** after LangGraph extraction for both **sync JSON** and **SSE** (parity with `resolve_langgraph_answer_with_salvage` in `science_graphrag.agent.runtime`).
+
 ## Rollout notes
 
 See [`docs/analysis/agent-chat-prod-rollout-2026-04-27.md`](../analysis/agent-chat-prod-rollout-2026-04-27.md) for classifier / semantic fast-route / legacy runtime.
 
-**Architecture / future work:** [`docs/analysis/chat-agent-system-roadmap-2026-04-26.md`](../analysis/chat-agent-system-roadmap-2026-04-26.md) (slim canonical: simplified graph, `tool_search`, context compaction).
+**Architecture / future work:** [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) (slim canonical: simplified graph, `tool_search`, context compaction).

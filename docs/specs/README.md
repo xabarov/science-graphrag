@@ -35,4 +35,4 @@
 | Документ | Стадия |
 |----------|--------|
 | [agent-chat-v1.md](agent-chat-v1.md) | `POST /v2/agent/query` — envelope + SSE vocabulary (волны CH* в спеке — метки поставки, не отдельные продукты) |
-| [Анализ: slim roadmap](../analysis/chat-agent-system-roadmap-2026-04-26.md) | Продуктовый канон: упрощённый LangGraph-чат; **rule-based `tool_search` v1** в коде (`science_graphrag/agent/tool_search.py`); compaction / session memory — по roadmap; [полный архив](../analysis/_archive/chat-agent-system-roadmap-full-2026-04-26.md) |
+| [Анализ: slim roadmap](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) | Продуктовый канон: упрощённый LangGraph-чат; **rule-based `tool_search` v1** в коде (`science_graphrag/agent/tool_search.py`); compaction / session memory — по roadmap; [полный архив](../analysis/_archive/chat-agent-system-roadmap-full-2026-04-26.md) |

@@ -16,7 +16,6 @@ from eval.bench_common import benchmark_run_metadata
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.llm.extractor import SyncInstructorExtractor
 
-
 JUDGE_PROMPT_PATH = Path(__file__).with_name("judge_prompt_v1.md")
 JUDGE_SCHEMA_VERSION = "retrieval_judge_v1"
 
@@ -56,7 +55,9 @@ def _judge_llm_settings(settings: Settings) -> tuple[str, str, str | None]:
         os.environ.get("RETRIEVAL_JUDGE_LLM_BASE_URL", "").strip().rstrip("/")
         or settings.extraction_llm_base_url
     )
-    api_key = os.environ.get("RETRIEVAL_JUDGE_LLM_API_KEY", "").strip() or settings.extraction_llm_api_key
+    api_key = (
+        os.environ.get("RETRIEVAL_JUDGE_LLM_API_KEY", "").strip() or settings.extraction_llm_api_key
+    )
     return model, base, api_key
 
 
@@ -162,7 +163,9 @@ def run_judge_on_retrieval_json(
             },
         )
 
-    weighted_vals = [float(r["weighted_score"]) for r in reports if r.get("weighted_score") is not None]
+    weighted_vals = [
+        float(r["weighted_score"]) for r in reports if r.get("weighted_score") is not None
+    ]
     mean_w = sum(weighted_vals) / len(weighted_vals) if weighted_vals else None
     j_model, _, _ = _judge_llm_settings(settings)
     judge_warnings: list[str] = []
@@ -248,7 +251,9 @@ def _cli(
     if case_tier:
         allowlist = _case_ids_for_tier(fx, case_tier)
         if not allowlist:
-            typer.echo(f"Unknown or empty case tier {case_tier!r} under {fx / 'case_tiers.json'}", err=True)
+            typer.echo(
+                f"Unknown or empty case tier {case_tier!r} under {fx / 'case_tiers.json'}", err=True
+            )
             raise typer.Exit(code=1)
     payload = run_judge_on_retrieval_json(
         retrieval_json,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from langchain_core.tools import BaseTool, tool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
@@ -35,6 +35,14 @@ class FinalAnswerArgs(BaseModel):
             "no corpus tools ran or the reply is explicitly non-factual."
         ),
     )
+
+    @field_validator("answer", mode="before")
+    @classmethod
+    def _answer_non_empty_after_strip(cls, value: object) -> str:
+        text = str(value or "").strip()
+        if not text:
+            raise ValueError("final_answer.answer must be non-empty markdown")
+        return text
 
 
 def _make_final_answer_tool() -> BaseTool:

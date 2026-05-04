@@ -29,7 +29,7 @@ from science_graphrag.agent.runtime import (
     aggregate_agent_llm_usage,
     build_agent,
     current_otel_trace_id_hex,
-    extract_langgraph_answer,
+    resolve_langgraph_answer_with_salvage,
 )
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.api.deps import StoreRegistry, get_stores
@@ -826,13 +826,13 @@ async def _stream_agent(
                 )
                 salvaged = False
                 if latest_full_state is not None:
-                    msgs = list(latest_full_state.get("messages") or [])
-                    state_answer, fa_citations, _graph_salv = extract_langgraph_answer(msgs)
+                    state_answer, resolved_cites, _g, _q = resolve_langgraph_answer_with_salvage(
+                        latest_full_state
+                    )
                     if (state_answer or "").strip():
                         salvaged = True
                         final_answer = str(state_answer).strip()
-                        if fa_citations is not None:
-                            citations = list(fa_citations)
+                        citations = list(resolved_cites)
                 if not salvaged:
                     yield {
                         "data": json.dumps(
@@ -862,15 +862,15 @@ async def _stream_agent(
 
             trace_for_run: list[Any] = []
             graph_salvage_stream = False
+            quote_salvage_stream = False
             if latest_full_state is not None:
                 trace_for_run = collect_tool_trace(latest_full_state)  # type: ignore[arg-type]
-                state_answer, fa_citations, graph_salvage_stream = extract_langgraph_answer(
-                    list(latest_full_state.get("messages") or [])
-                )
-                if state_answer:
-                    final_answer = state_answer
-                if fa_citations is not None:
-                    citations = fa_citations
+                (
+                    final_answer,
+                    citations,
+                    graph_salvage_stream,
+                    quote_salvage_stream,
+                ) = resolve_langgraph_answer_with_salvage(latest_full_state)
             trace_list: list[dict[str, Any]] = [dict(t) for t in trace_for_run]
 
             envelope: dict[str, Any] = {}
@@ -885,6 +885,8 @@ async def _stream_agent(
                 extra_stream_warnings: list[str] = []
                 if graph_salvage_stream:
                     extra_stream_warnings.append("answer_salvaged_from_graph_tool")
+                if quote_salvage_stream:
+                    extra_stream_warnings.append("answer_salvaged_from_quote_candidates")
                 if salvaged_after_deadline:
                     extra_stream_warnings.extend(
                         [

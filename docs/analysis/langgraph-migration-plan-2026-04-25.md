@@ -18,7 +18,7 @@
 | [`_archive/reference-extraction-llm-agent-tools.md`](_archive/reference-extraction-llm-agent-tools.md) | [HISTORICAL] Описание H2 spike: `ToolCallingAgent` + 6 кастомных tools |
 | [`phoenix-tracing-coverage-2026-04-25.md`](phoenix-tracing-coverage-2026-04-25.md) | Wave X-Phoenix: разметка agent-trace (X2.1–X2.8) |
 | [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) | §7.7 Wave R + claims/semantic LLM-блоки, к которым придут multi-agent сценарии |
-| [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) | **Продуктовый канон research chat:** упрощённый supervisor+nodes граф; будущие `tool_search` и compaction — см. slim doc (полный старый текст в `_archive/chat-agent-system-roadmap-full-2026-04-26.md`) |
+| [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md) | **Продуктовый канон research chat:** упрощённый supervisor+nodes граф; `tool_search` и compaction; архив CH-волн: [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md) |
 | [`../runbooks/roadmap-next-waves.md`](../runbooks/roadmap-next-waves.md) | Сводный список волн (после принятия — добавить Wave Y) |
 
 ---

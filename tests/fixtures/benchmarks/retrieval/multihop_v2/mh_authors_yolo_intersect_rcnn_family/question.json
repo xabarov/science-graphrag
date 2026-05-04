@@ -1,0 +1,10 @@
+{
+  "center_work_id": "yolov1",
+  "expected_neighbor_work_ids": ["yolov3_realpdf", "yolov2_realpdf"],
+  "depth": 2,
+  "neighbor_limit": 300,
+  "min_precision": 0.017,
+  "min_recall": 0.33,
+  "query_hint": "Which authors are co-authors on papers from both the YOLO family and the R-CNN family?",
+  "graph_view": "raw"
+}

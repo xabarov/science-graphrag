@@ -4,7 +4,7 @@
 
 **Канон по архитектуре API тулов:** [`docs/architecture/agent-chat-tools.md`](../architecture/agent-chat-tools.md), [`docs/architecture/agent-tools-best-practices.md`](../architecture/agent-tools-best-practices.md), [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md).
 
-**Slim-roadmap агента (multi-turn, UI, не дублируется здесь):** [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md).
+**Slim-roadmap агента (multi-turn, UI, не дублируется здесь):** [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md).
 
 ---
 

@@ -238,7 +238,13 @@ def run_retrieval_case(
     )
     elapsed = perf_counter() - started
     catalog = _load_workspace_catalog(root)
-    metrics = score_retrieval_answer(ga, gold, workspace_catalog=catalog)
+    metrics = score_retrieval_answer(
+        ga,
+        gold,
+        workspace_catalog=catalog,
+        settings=s,
+        repo=_REPO_ROOT,
+    )
     return _retrieval_case_report_payload(root, question, ga, metrics, elapsed)
 
 

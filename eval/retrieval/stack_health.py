@@ -26,6 +26,29 @@ def check_api_health(api_base_url: str, *, timeout: float = 5.0) -> tuple[bool, 
         return False, str(exc)
 
 
+def check_neo4j_bolt_health(settings: Any, *, timeout: float = 5.0) -> tuple[bool, str]:
+    """Return (ok, detail) after a lightweight Neo4j bolt connectivity check (BT3)."""
+
+    uri = str(getattr(settings, "neo4j_uri", "") or "").strip()
+    user = str(getattr(settings, "neo4j_user", "") or "").strip()
+    password = str(getattr(settings, "neo4j_password", "") or "")
+    if not uri or not user:
+        return False, "neo4j_settings_incomplete"
+    try:
+        from neo4j import GraphDatabase
+    except ImportError:
+        return False, "neo4j_driver_missing"
+    try:
+        driver = GraphDatabase.driver(uri, auth=(user, password))
+        try:
+            driver.verify_connectivity()
+        finally:
+            driver.close()
+    except Exception as exc:  # noqa: BLE001
+        return False, str(exc)[:500]
+    return True, "ok"
+
+
 def write_skip_artifact(
     repo_root: Path,
     *,

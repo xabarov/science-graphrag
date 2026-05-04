@@ -1,8 +1,8 @@
 # Agent chat frontend UI/UX implementation plan — 2026-04-26
 
-**Status:** draft; **architecture baseline (2026-04-27):** упрощённый single-graph agent (см. slim [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md)); этот документ описывает **UI/UX** поверх существующего SSE.  
+**Status:** draft; **architecture baseline (2026-04-27):** упрощённый single-graph agent (см. slim [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md)); этот документ описывает **UI/UX** поверх существующего SSE.  
 **Scope:** `ui/` chat experience for agent turns, stream progress, subagent visibility, typed result blocks  
-**Primary context:** [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md), `docs/specs/agent-chat-v1.md`
+**Primary context:** [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md), `docs/specs/agent-chat-v1.md`
 
 **Verification:** автотесты волны 2026-04-26 закрыты; ручной SSE / §12.2 — см. stub → [`agent-chat-frontend-verification-gaps-next-wave.md`](./agent-chat-frontend-verification-gaps-next-wave.md). **Shipped UI phases (table):** [`completed-work-snapshot.md`](./completed-work-snapshot.md#agent-chat-frontend-ui).
 

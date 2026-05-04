@@ -12,6 +12,8 @@
 
 > Это секция **дописана после Phase 6 closure**, чтобы не приходилось читать весь BT0-блок ниже.
 
+**Wave 1 snapshot (2026-05-04, honest closure post bge-m3 + 32-work):** `decision_gate` при наличии обоих `current-llm-claims-paraphrase-{pilot,holdout}.json` переводит **core** claims lane на paraphrase с явным per-case баром **recall/precision ≥ 0.7** + `summary.all_passed` (см. `science_graphrag/benchmarks/decision_gate.py`); `claims_production_family` остаётся **advisory**. Пока LLM-артефакты не проходят этот бар, `decision` в `benchmark-trust-baseline.json` будет **`NO-GO`** — это ожидаемо до повторного прогона claims-paraphrase на целевом качестве (не путать с ростом `advisory_phantom_count`). BT3: `multihop_runner` делает pre-flight **API + Neo4j bolt**; при падении — skip-артефакт, основной `current-retrieval-multihop-mini.json` не затирается «пустым» прогоном. BT4: `hybrid_ablation_live` без `mrr_delta` в metrics помечается `runtime_mode="contract_verified"` (hit-only артефакт до полного BT4). BT2: см. §5 и `eval/retrieval/metrics.py` / gold `workspace_scoped_live` (rouge + обязательные citations / corpus work ids). Детальный чеклист волн — [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) §2.1.
+
 **Post–Wave 6 (2026-04-26):** часть формулировок ниже про «multihop broken / decision_gate врёт» — **исторический** снимок до закрытия BT3 slice и политики phantoms; актуальные артефакты и gate — `eval/results/benchmark-trust-baseline.json` + [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md).
 
 **Что изменилось с момента первоначального аудита (2026-04-25 утро):**

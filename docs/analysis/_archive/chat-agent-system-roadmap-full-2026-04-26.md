@@ -1,6 +1,6 @@
 # Agent chat system roadmap — 2026-04-26 (**ARCHIVED FULL COPY**)
 
-> **2026-04-27:** Живой канон перенесён в короткий [`../chat-agent-system-roadmap-2026-04-26.md`](../chat-agent-system-roadmap-2026-04-26.md) (упрощённая архитектура + явные будущие треки `tool_search` и compaction). Этот файл сохранён только как **исторический** детальный план (CH-волны, шесть specialist subgraphs, длинная taxonomy). Не обновлять как primary.
+> **2026-04-27 / 2026-05-04:** Живой канон — [`../agent-runtime-tools-context-roadmap-2026-05-04.md`](../agent-runtime-tools-context-roadmap-2026-05-04.md) (ранее короткий `chat-agent-system-roadmap-2026-04-26.md`, удалён). Этот файл сохранён только как **исторический** детальный план (CH-волны, шесть specialist subgraphs, длинная taxonomy). Не обновлять как primary.
 
 ---
 

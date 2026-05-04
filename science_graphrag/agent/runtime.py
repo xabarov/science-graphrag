@@ -185,6 +185,25 @@ def extract_langgraph_answer(
     return "", None, False
 
 
+def resolve_langgraph_answer_with_salvage(
+    final_state: dict[str, Any],
+) -> tuple[str, list[dict[str, Any]], bool, bool]:
+    """Apply ``extract_langgraph_answer`` then ``salvage_markdown_from_quote_candidates``."""
+
+    messages = list(final_state.get("messages", []))
+    answer, fa_citations, graph_salvage = extract_langgraph_answer(messages)
+    quote_salvage = False
+    if not (answer or "").strip():
+        salv = salvage_markdown_from_quote_candidates(final_state)
+        if salv:
+            answer = salv
+            quote_salvage = True
+    citations = list(final_state.get("citations", []))
+    if fa_citations is not None:
+        citations = list(fa_citations)
+    return answer, citations, graph_salvage, quote_salvage
+
+
 def salvage_markdown_from_quote_candidates(state: dict[str, Any]) -> str:
     """When ``final_answer`` is missing, surface merged quote candidates as markdown blockquotes."""
     typed = collect_typed_payloads(state)
@@ -445,16 +464,9 @@ class RetrievalAgent:
         messages = list(final_state.get("messages", []))
         llm_usage = aggregate_agent_llm_usage(messages)
         trace = collect_tool_trace(final_state)
-        answer, fa_citations, graph_salvage = extract_langgraph_answer(messages)
-        quote_salvage = False
-        if not (answer or "").strip():
-            salv = salvage_markdown_from_quote_candidates(final_state)
-            if salv:
-                answer = salv
-                quote_salvage = True
-        citations = list(final_state.get("citations", []))
-        if fa_citations is not None:
-            citations = fa_citations
+        answer, citations, graph_salvage, quote_salvage = resolve_langgraph_answer_with_salvage(
+            final_state
+        )
         extra_warn_list: list[str] = []
         if graph_salvage:
             extra_warn_list.append("answer_salvaged_from_graph_tool")

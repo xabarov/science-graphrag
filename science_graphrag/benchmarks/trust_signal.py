@@ -187,6 +187,16 @@ def detect_runtime_mode(
             ):
                 return "synthetic_gold"
 
+    if member_id == "hybrid_ablation_live" and cases:
+        has_mrr = all(
+            isinstance(c.get("metrics"), dict)
+            and (c.get("metrics") or {}).get("mrr_delta") is not None
+            for c in cases
+        )
+        if not has_mrr:
+            # Hit-only live artifact (no MRR triples) until hybrid runner emits BT4 metrics.
+            return "contract_verified"
+
     if member_id in {"merge_safe_contract_mock", "strict_pilot_mock"}:
         return "canned"
 
@@ -376,6 +386,16 @@ def summarize_family_trust(family_payload: dict[str, Any], *, family_key: str) -
     }
 
 
+def _slim_decision_gate_criteria(crit: dict[str, Any]) -> dict[str, Any]:
+    """Drop bulky per-case rows from the frozen trust snapshot (counts stay)."""
+
+    out = dict(crit)
+    rows = out.pop("advisory_individual_failures", None)
+    if isinstance(rows, list):
+        out["advisory_individual_failure_count"] = len(rows)
+    return out
+
+
 def trust_baseline_payload(full_summary: dict[str, Any]) -> dict[str, Any]:
     """Minimal frozen snapshot for ``benchmark-trust-baseline.json``.
 
@@ -397,10 +417,19 @@ def trust_baseline_payload(full_summary: dict[str, Any]) -> dict[str, Any]:
         if isinstance(block, dict):
             trust_per_family[fname] = block.get("trust_aggregate")
     dg = full_summary.get("decision_gate")
-    crit = (dg or {}).get("criteria") if isinstance(dg, dict) else {}
+    slim_dg: dict[str, Any] | None = None
+    if isinstance(dg, dict):
+        crit_in = dg.get("criteria")
+        slim_crit = _slim_decision_gate_criteria(crit_in) if isinstance(crit_in, dict) else crit_in
+        slim_dg = {
+            "decision": dg.get("decision"),
+            "reason": dg.get("reason"),
+            "criteria": slim_crit,
+        }
+    crit = (slim_dg or {}).get("criteria") if isinstance(slim_dg, dict) else {}
     return {
         "schema_version": 1,
-        "decision_gate": dg,
+        "decision_gate": slim_dg,
         "trust_aggregate_per_family": trust_per_family,
         "advisory_phantom_count": (crit or {}).get("advisory_phantom_count"),
         "advisory_phantom_families": (crit or {}).get("advisory_phantom_families"),

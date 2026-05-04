@@ -20,10 +20,10 @@
   },
   "question_file": "question.txt",
   "top_k": 12,
-  "answer_reference_text": "YOLOv1 reports 45 FPS for the base model and 155 FPS for Fast YOLO on a Titan X. YOLOv2 (YOLO9000) reports 67 FPS with 76.8 mAP at 416x416 resolution. YOLOv3 reports 22 ms inference at 320x320 (~45 FPS) on a Titan X. YOLOX reports up to 102 FPS for YOLOX-Tiny on a single V100.",
+  "answer_reference_text": "YOLOv3 runs at about 22 ms per frame at 320×320 (~45 FPS). YOLO9000 / YOLOv2 reports about 67 FPS at 416×416. YOLOv1 compares to real-time DPM at 30 Hz vs 100 Hz.",
   "answer_metric": {
     "type": "rouge_l",
-    "min_value": 0.11
+    "min_value": 0.18
   },
   "expected_citations_min_count": 2,
   "expected_citations": [

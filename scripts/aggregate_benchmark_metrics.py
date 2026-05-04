@@ -10,12 +10,14 @@ Usage (repo root):
 
 Authoritative inputs (defaults) match docs/runbooks/benchmark-decision-gate.md.
 
-Optional retrieval + hybrid/multihop ablation + claims + claims production pilot + references_resolution
-+ concept_topic graph JSON lanes are listed in ``benchmark-decision-gate.md`` §8 and summarized under
-``retrieval_family`` / ``claims_family`` / ``claims_production_family`` /
-``references_resolution_family`` / ``concept_topic_family`` / ``contradictions_family``
-when the default artifact paths exist.
-**Claims production pilot** is part of the **core** ``decision_gate`` (Wave O promotion).
+Optional retrieval + hybrid/multihop ablation + claims + claims production pilot +
+references_resolution + concept_topic graph JSON lanes are listed in
+``benchmark-decision-gate.md`` §8 and summarized under ``retrieval_family`` /
+``claims_family`` / ``claims_production_family`` / ``references_resolution_family`` /
+``concept_topic_family`` / ``contradictions_family`` when the default artifact paths exist.
+**Claims paraphrase pilot + holdout** (BT6) are the **core** ``decision_gate`` claims lane
+when both artifacts exist; the legacy **claims production** pilot remains summarized under
+``claims_production_family`` for observability (Wave 1 honest closure).
 Retrieval ``workspace_scoped`` + ``judge_pilot`` blocks remain **advisory** (Wave P).
 """
 
@@ -519,11 +521,40 @@ def _md_decision_gate_section(dg: dict[str, Any]) -> list[str]:
     lines.append(f"- **layer1 nightly failed**: {crit.get('layer1_nightly_failed_count')}")
     lines.append(f"- **layer2 nightly failed**: {crit.get('layer2_nightly_failed_count')}")
     lines.append(
+        f"- **claims_core_uses_paraphrase_pilot_holdout**: "
+        f"{crit.get('claims_core_uses_paraphrase_pilot_holdout')}"
+    )
+    lines.append(
+        f"- **claims_paraphrase_pilot_artifact_missing**: "
+        f"{crit.get('claims_paraphrase_pilot_artifact_missing')}"
+    )
+    lines.append(
+        f"- **claims_paraphrase_holdout_artifact_missing**: "
+        f"{crit.get('claims_paraphrase_holdout_artifact_missing')}"
+    )
+    lines.append(
+        f"- **claims_paraphrase_pilot_all_passed**: "
+        f"{crit.get('claims_paraphrase_pilot_all_passed')}"
+    )
+    lines.append(
+        f"- **claims_paraphrase_holdout_all_passed**: "
+        f"{crit.get('claims_paraphrase_holdout_all_passed')}"
+    )
+    lines.append(
+        f"- **claims_paraphrase_pilot_meets_bt6_core_bar**: "
+        f"{crit.get('claims_paraphrase_pilot_meets_bt6_core_bar')}"
+    )
+    lines.append(
+        f"- **claims_paraphrase_holdout_meets_bt6_core_bar**: "
+        f"{crit.get('claims_paraphrase_holdout_meets_bt6_core_bar')}"
+    )
+    lines.append(
         f"- **claims_production_artifact_missing**: {crit.get('claims_production_artifact_missing')}"
     )
     lines.append(f"- **claims_production_all_passed**: {crit.get('claims_production_all_passed')}")
     lines.append(
-        f"- **claims_production_mean_claim_recall**: {crit.get('claims_production_mean_claim_recall')}"
+        f"- **claims_production_mean_claim_recall**: "
+        f"{crit.get('claims_production_mean_claim_recall')}"
     )
     lines.append(f"- **advisory_phantom_count**: {crit.get('advisory_phantom_count')}")
     lines.append(f"- **advisory_phantom_families**: {crit.get('advisory_phantom_families')}")
@@ -674,13 +705,18 @@ def _md_claims_family_section(cf: dict[str, Any]) -> list[str]:
 
 def _md_claims_production_family_section(pf: dict[str, Any]) -> list[str]:
     lines = [
-        "## Claims production lane (core gate, Wave O)",
+        "## Claims production lane (legacy / advisory; Wave O pilot)",
         "",
-        "LLM extractor via ``science-graphrag-claims-benchmark --suite --tier claims_pilot "
-        "--extractor production``; artifact "
-        f"default: `{DEFAULT_CLAIMS_PRODUCTION_PILOT}`. "
-        "``decision_gate`` requires ``all_passed`` and mean ``claim_recall`` ≥ 0.8 when the "
-        "artifact is present; a missing artifact downgrades a would-be **GO** to **CONDITIONAL-GO**.",
+        (
+            "LLM extractor via ``science-graphrag-claims-benchmark --suite --tier claims_pilot "
+            "--extractor production``; artifact "
+            f"default: `{DEFAULT_CLAIMS_PRODUCTION_PILOT}`. "
+        ),
+        (
+            "``decision_gate`` **core** claims lane uses ``claims_paraphrase_{pilot,holdout}`` "
+            "when both artifacts exist (BT6). This block remains for drift monitoring on the "
+            "older trivial-gold pilot."
+        ),
         "",
     ]
     role = (pf.get("role") or "core") if isinstance(pf, dict) else "core"
@@ -1052,6 +1088,8 @@ def main() -> int:
     layer1 = _summarize_layer1_suite(DEFAULT_LAYER1_NIGHTLY)
     layer2 = _summarize_layer2_suite(DEFAULT_LAYER2_NIGHTLY)
     claims_prod = _summarize_case_metrics_suite(args.claims_production_json)
+    claims_paraphrase_pilot = _summarize_case_metrics_suite(args.claims_paraphrase_pilot_json)
+    claims_paraphrase_holdout = _summarize_case_metrics_suite(args.claims_paraphrase_holdout_json)
 
     deltas = {
         "layer1_nightly_vs_baseline": _compare_suite_failures(
@@ -1137,7 +1175,7 @@ def main() -> int:
             ),
         },
         "claims_production_family": {
-            "role": "core",
+            "role": "advisory",
             "claims_pilot_production": claims_prod,
         },
         "references_resolution_family": {
@@ -1191,6 +1229,8 @@ def main() -> int:
         layer1,
         layer2,
         claims_prod,
+        claims_paraphrase_pilot=claims_paraphrase_pilot,
+        claims_paraphrase_holdout=claims_paraphrase_holdout,
         trust_criteria=trust_criteria,
     )
     _strip_suite_cases_from_payload(payload)

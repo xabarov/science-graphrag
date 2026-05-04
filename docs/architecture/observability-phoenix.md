@@ -31,6 +31,7 @@ The **arize-phoenix-otel** package may still print a short startup line or banne
 - Vector search (Qdrant hits): `retrieval.qdrant.<tool_name>` (RETRIEVER)
 - Specialist ReAct LLM calls: `llm.agent.retrieval_specialist`, `llm.agent.graph_specialist` (LLM)
 - Writer LLM: `llm.agent.writer` (LLM)
+- Span event (single-agent ReAct): `agent.final_answer_invalid_payload` when a `final_answer` tool result is empty/invalid and the graph schedules a repair hop (see `docs/runbooks/agent-chat-v2.md`).
 
 **Scope:** `PHOENIX_TRACE_SCOPE=full` records everything. `extraction_llm` records allowlisted ingest CHAIN/LLM spans **and** product-agent spans whose names start with `agent.`, `llm.agent.`, or `retrieval.qdrant.` (see `science_graphrag/observability/spans/decorators.py`), so `/v2/agent/query` can still emit a non-empty `phoenix_trace_id` while noisy non-agent spans stay suppressed. The live eval harness may still force `full` for historical harness parity; regression coverage lives in `tests/observability/test_extraction_llm_scope.py`.
 

@@ -11,6 +11,7 @@
 | [`ontology-benchmarks-roadmap-2026-04-24.md`](./ontology-benchmarks-roadmap-2026-04-24.md) | **Полная** инвентаризация Wave **M–T** (таблицы, §7.x по волнам) — справочник, не еженедельный backlog |
 | [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) | Мастер-треки; **§10** — исторический лог волн, не замена живой очереди BT |
 | [`habr-article-narrative-and-measurement-plan-2026-07.md`](./habr-article-narrative-and-measurement-plan-2026-07.md) | Только **публикация Habr** и закрепление `eval/results/habr-window-*` |
+| [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md) | **Агент, инструменты, компактация контекста** (не путать с онтологией M–T) |
 | [`../runbooks/benchmark-decision-gate.md`](../runbooks/benchmark-decision-gate.md) | Правила **GO / CONDITIONAL-GO / NO-GO** |
 | [`../../eval/results/benchmark-trust-baseline.json`](../../eval/results/benchmark-trust-baseline.json) | Фактические числа gate после nightly |
 
@@ -33,6 +34,20 @@
 - **Контракт бенчмарков и BT6:** [`../benchmarks/ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md) (Appendix A).
 
 Детальные таблицы Wave M–T по фичам (индексы Neo4j, §7.4 Claims, §7.7 agent tools и т.д.) остаются в **[`ontology-benchmarks-roadmap-2026-04-24.md`](./ontology-benchmarks-roadmap-2026-04-24.md)** — при правках приоритетов не копируйте их в новые файлы; обновляйте там или в trust-audit.
+
+### 2.1 Wave 1 — Honest closure (post bge-m3 + 32-work)
+
+**Цель:** закрыть хвосты честного измерения после cutover на bge-m3 и расширенного корпуса **без** введения новых раннеров BT7–BT12 (они — Wave 2). Источник статусов по BT2/BT3/BT4/BT6 и артефактам — **[`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md) §5** и backlog.
+
+| ID | Тема | Acceptance (кратко) |
+|----|------|---------------------|
+| **W1-T1** | BT2 retrieval quality (`workspace_scoped_live`) | `answer_rouge_l ≥ 0.18` на всех кейсах; нет `missing_required_corpus_work_ids` для обязательных work (см. gold + ingest/Qdrant sanity). |
+| **W1-T2** | BT4 hybrid ablation live | 7 ночей `mrr_delta`: либо сигнал (≥ 0.05 на ≥ 5/8 кейсов) и повышение до advisory gate, либо явный режим «hit-only / fixture consistency» в `trust_signal` + фиксация в trust-audit §5 BT4. |
+| **W1-T3** | BT3 multihop CI / Neo4j | `multihop_runner` suite: health-gate **API + Neo4j** до прогона; при skip — `multihop-skipped-*.json`, **не** перезаписывать `current-retrieval-multihop-mini.json`; +2 `unordered_set` кейса с `question.json` в `multihop_v2`. |
+| **W1-T4** | BT6 core gate | `decision_gate` при наличии обоих артефактов `claims_paraphrase_{pilot,holdout}` опирается на **core bar** per-case: `claim_recall ≥ 0.7`, `claim_precision ≥ 0.7`, `metrics.passed`, `summary.all_passed`; lane `claims_production_family` — **advisory** (`legacy_overfit_anchor`). См. [`science_graphrag/benchmarks/decision_gate.py`](../../science_graphrag/benchmarks/decision_gate.py). |
+| **W1-T5** | Re-baseline | `scripts/refresh_benchmark_metrics.sh` + `--write-trust-baseline eval/results/benchmark-trust-baseline.json`; frozen baseline = `trust_baseline_payload(...)` (компактный `decision_gate` + `trust_aggregate_per_family`). **`decision` может быть `NO-GO`**, пока nightly/paraphrase не закрывают BT6 bar — это нормальное «честное» состояние, не регрессия `advisory_phantom_count`. |
+
+**Вне скоупа Wave 1:** BT7–BT12, расширение корпуса >32 work, UI для `trust_signal`, новые файлы в `docs/analysis/` кроме правок этой страницы и trust-audit §0 snapshot.
 
 ---
 
@@ -76,4 +91,5 @@
 
 | Дата | Изменение |
 |------|-----------|
-| 2026-05-04 | Введена как единая точка входа; roadmap M–T не переносился в архив (якоря ADR/runbooks). Связаны: `docs/analysis/README.md` (weekly + entry-by-theme), баннер и статус в `ontology-benchmarks-roadmap-2026-04-24.md`, «Связанные документы» в trust-audit, Track D в master-roadmap. |
+| 2026-05-04 | Введена как единая точка входа; roadmap M–T не переносился в архив (якоря ADR/runbooks). Связаны: `docs/analysis/README.md` (weekly + entry-by-theme), баннер и статус в `ontology-benchmarks-roadmap-2026-04-24.md`, «Связанные документы» в trust-audit, Track D в master-roadmap. Ось агент/tools/context — отдельно: [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md). |
+| 2026-05-04 | **§2.1 Wave 1 — Honest closure:** BT2/BT4/BT3/BT6 acceptance и ссылки на код/trust-audit; без новых analysis-файлов. |

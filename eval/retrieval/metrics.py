@@ -7,7 +7,10 @@ from pathlib import Path
 from typing import Any
 
 from eval.layer1.text_similarity import rouge_l_f1
-from eval.retrieval.work_id_resolve import expand_workspace_member_work_ids
+from eval.retrieval.work_id_resolve import (
+    expand_workspace_member_work_ids,
+    resolve_work_id_from_layer1_slug,
+)
 from science_graphrag.config import get_settings
 from science_graphrag.retrieval import GroundedAnswer
 
@@ -61,8 +64,14 @@ def score_workspace_scoped_live_answer(
     gold: dict[str, Any],
     *,
     workspace_catalog: dict[str, Any] | None = None,
+    settings: Any | None = None,
+    repo: Path | None = None,
 ) -> dict[str, Any]:
-    """Score workspace-scoped live packs (BT2): forbidden leaks, scope, citations, answer metric."""
+    """Score workspace-scoped live packs (BT2): forbidden leaks, scope, citations, answer metric.
+
+    When ``uuid_aware_mode`` is True, required ``corpus_work_id`` slugs are checked against
+    citation UUIDs via ``resolve_work_id_from_layer1_slug`` (requires ``settings`` + ``repo``).
+    """
 
     rt: dict[str, Any] = ga.retrieval_trace if isinstance(ga.retrieval_trace, dict) else {}
     citations = ga.citations if isinstance(ga.citations, list) else []
@@ -102,40 +111,39 @@ def score_workspace_scoped_live_answer(
     )
 
     if uuid_aware_scope:
-        # Trust the API to enforce workspace filtering; report checks as clean.
-        forbidden_leaks: list[str] = []
-        out_of_scope: list[str] = []
-        missing_required: list[str] = []
+        # Slug-based forbidden lists are meaningless against UUID citations; rely on API scope.
+        forbidden_leaks = []
+        out_of_scope = []
     else:
         forbidden_leaks = [w for w in cit_wids if w in forbidden_set]
         out_of_scope = []
         if member_set is not None:
             out_of_scope = [w for w in cit_wids if w not in member_set]
 
-        expected_rows = list(gold.get("expected_citations") or [])
-        missing_required = []
-        for row in expected_rows:
-            if not isinstance(row, dict):
-                continue
-            if not row.get("required"):
-                continue
-            cid = str(row.get("corpus_work_id") or "").strip()
-            if cid and cid not in cit_wids:
+    cit_set = {w for w in cit_wids}
+    missing_required: list[str] = []
+    for row in gold.get("expected_citations") or []:
+        if not isinstance(row, dict) or not row.get("required"):
+            continue
+        cid = str(row.get("corpus_work_id") or "").strip()
+        if not cid:
+            continue
+        if _is_uuid(cid):
+            if cid not in cit_set:
                 missing_required.append(cid)
+            continue
+        if uuid_aware_scope and settings is not None and repo is not None:
+            uid = resolve_work_id_from_layer1_slug(repo, cid, settings=settings)
+            if not uid or uid not in cit_set:
+                missing_required.append(cid)
+        elif uuid_aware_scope:
+            # Slug required citations cannot be verified without Neo4j resolution context.
+            missing_required.append(cid)
+        elif cid not in cit_wids:
+            missing_required.append(cid)
 
     violation_count = len(forbidden_leaks) + len(out_of_scope)
     gate = int(gold.get("forbidden_violation_gate") or 0)
-
-    if uuid_aware_scope:
-        # Fallback: parse missing_required from gold for reporting only (doesn't block scope_ok).
-        expected_rows = list(gold.get("expected_citations") or [])
-        missing_required = [
-            str(row.get("corpus_work_id") or "").strip()
-            for row in expected_rows
-            if isinstance(row, dict)
-            and row.get("required")
-            and str(row.get("corpus_work_id") or "").strip()
-        ]
 
     exp_min = gold.get("expected_citations_min_count")
     try:
@@ -175,12 +183,10 @@ def score_workspace_scoped_live_answer(
     hit_count = int(rt.get("hit_count") or 0)
     hit_ok = hit_count >= int(gold.get("min_hit_count") or 0)
 
-    # In UUID-aware mode missing_required is reported for observability but does not block scope_ok
-    # (slug→UUID resolution is not available without a corpus_id_to_uuid map).
     scope_ok = (
         trace_workspace_matches
         and violation_count <= gate
-        and (not missing_required or uuid_aware_scope)
+        and not missing_required
         and citation_count_ok
     )
 
@@ -281,6 +287,8 @@ def score_retrieval_answer(
     gold: dict[str, Any],
     *,
     workspace_catalog: dict[str, Any] | None = None,
+    settings: Any | None = None,
+    repo: Path | None = None,
 ) -> dict[str, Any]:
     """
     Compare retrieval output to ``gold.json`` for a benchmark case.
@@ -299,7 +307,13 @@ def score_retrieval_answer(
     """
 
     if _uses_workspace_scoped_live_schema(gold):
-        return score_workspace_scoped_live_answer(ga, gold, workspace_catalog=workspace_catalog)
+        return score_workspace_scoped_live_answer(
+            ga,
+            gold,
+            workspace_catalog=workspace_catalog,
+            settings=settings,
+            repo=repo,
+        )
 
     rt: dict[str, Any] = ga.retrieval_trace if isinstance(ga.retrieval_trace, dict) else {}
     citations = ga.citations if isinstance(ga.citations, list) else []

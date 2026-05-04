@@ -9,6 +9,7 @@ from pathlib import Path
 
 from science_graphrag.benchmarks.decision_gate import evaluate_decision_gate
 from science_graphrag.benchmarks.trust_signal import (
+    _consistency_warnings,
     build_trust_signal_dict,
     collect_individual_failures,
     compute_gate_trust_criteria,
@@ -20,6 +21,21 @@ from science_graphrag.benchmarks.trust_signal import (
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GOLD_ROOT = REPO_ROOT / "tests" / "fixtures" / "benchmarks"
+
+_PARAPHRASE_OK = {
+    "all_passed": True,
+    "summary": {"all_passed": True},
+    "cases": [
+        {
+            "case_id": "stub_core_ok",
+            "metrics": {
+                "passed": True,
+                "claim_recall": 0.75,
+                "claim_precision": 0.72,
+            },
+        },
+    ],
+}
 
 
 def test_detect_runtime_mode_workspace_canned() -> None:
@@ -130,6 +146,15 @@ def test_detect_runtime_mode_hybrid_synthetic() -> None:
     assert detect_runtime_mode("hybrid_ablation", block, cases) == "synthetic_gold"
 
 
+def test_detect_runtime_mode_hybrid_ablation_live_hit_only_contract_verified() -> None:
+    """BT4: hybrid live artifact may be hit-only (no MRR triples) until runner emits BT4 metrics."""
+    cases = [
+        {"case_id": "ha_anchor_free", "metrics": {"passed": True, "hit_count": 5, "hit_ok": True}},
+    ]
+    block: dict = {"run_metadata": {"extraction_llm_model": "mistralai/x"}}
+    assert detect_runtime_mode("hybrid_ablation_live", block, cases) == "contract_verified"
+
+
 def test_cross_ref_validation_status_majority(tmp_path: Path) -> None:
     root = tmp_path / "claims"
     for i, status in enumerate(
@@ -181,6 +206,8 @@ def test_decision_gate_phantom_downgrades_go_to_conditional() -> None:
         layer1,
         layer2,
         claims_prod,
+        claims_paraphrase_pilot=_PARAPHRASE_OK,
+        claims_paraphrase_holdout=_PARAPHRASE_OK,
         trust_criteria=trust,
     )
     assert dg["decision"] == "CONDITIONAL-GO"
@@ -205,6 +232,8 @@ def test_decision_gate_hard_block_individual_failures_no_go() -> None:
         layer1,
         layer2,
         claims_prod,
+        claims_paraphrase_pilot=_PARAPHRASE_OK,
+        claims_paraphrase_holdout=_PARAPHRASE_OK,
         trust_criteria=trust,
     )
     assert dg["decision"] == "NO-GO"
@@ -227,9 +256,46 @@ def test_decision_gate_clean_state_still_go() -> None:
         layer1,
         layer2,
         claims_prod,
+        claims_paraphrase_pilot=_PARAPHRASE_OK,
+        claims_paraphrase_holdout=_PARAPHRASE_OK,
         trust_criteria=trust,
     )
     assert dg["decision"] == "GO"
+
+
+def test_decision_gate_paraphrase_below_bt6_core_bar_is_no_go() -> None:
+    reference = {"all_passed": True}
+    layer1 = {"failed_count": 0}
+    layer2 = {"failed_count": 0}
+    claims_prod = {"all_passed": True, "mean_claim_recall": 1.0}
+    weak = {
+        "all_passed": True,
+        "summary": {"all_passed": True},
+        "cases": [
+            {
+                "case_id": "weak",
+                "metrics": {"passed": True, "claim_recall": 0.8, "claim_precision": 0.2},
+            },
+        ],
+    }
+    trust = {
+        "advisory_phantom_count": 0,
+        "advisory_phantom_families": [],
+        "advisory_individual_failures": [],
+        "hard_block_individual_failures": [],
+    }
+    dg = evaluate_decision_gate(
+        reference,
+        layer1,
+        layer2,
+        claims_prod,
+        claims_paraphrase_pilot=weak,
+        claims_paraphrase_holdout=_PARAPHRASE_OK,
+        trust_criteria=trust,
+    )
+    assert dg["decision"] == "NO-GO"
+    assert "claims_paraphrase_core_bar_not_met" in dg["reason"]
+    assert dg["criteria"]["claims_paraphrase_pilot_meets_bt6_core_bar"] is False
 
 
 def test_decision_gate_two_design_phantoms_still_go() -> None:
@@ -249,6 +315,8 @@ def test_decision_gate_two_design_phantoms_still_go() -> None:
         layer1,
         layer2,
         claims_prod,
+        claims_paraphrase_pilot=_PARAPHRASE_OK,
+        claims_paraphrase_holdout=_PARAPHRASE_OK,
         trust_criteria=trust,
     )
     assert dg["decision"] == "GO"
@@ -302,7 +370,7 @@ def test_aggregator_smoke_runs(tmp_path: Path) -> None:
     assert "trust_signal" in data["retrieval_family"]["workspace_scoped"]
 
 
-def test_baseline_snapshot_idempotent(tmp_path: Path) -> None:
+def test_baseline_snapshot_idempotent() -> None:
     payload = {
         "decision_gate": {
             "decision": "CONDITIONAL-GO",
@@ -321,6 +389,29 @@ def test_baseline_snapshot_idempotent(tmp_path: Path) -> None:
     assert a == b
 
 
+def test_trust_baseline_payload_replaces_advisory_rows_with_count() -> None:
+    payload = {
+        "decision_gate": {
+            "decision": "GO",
+            "reason": "all_nightly_passed",
+            "criteria": {
+                "advisory_phantom_count": 0,
+                "advisory_individual_failures": [{"case_id": "c1"}, {"case_id": "c2"}],
+            },
+        },
+        "retrieval_family": {"trust_aggregate": {}},
+        "claims_family": {"trust_aggregate": {}},
+        "claims_production_family": {"trust_aggregate": {}},
+        "references_resolution_family": {"trust_aggregate": {}},
+        "concept_topic_family": {"trust_aggregate": {}},
+        "agent_tools_family": {"trust_aggregate": {}},
+    }
+    slim = trust_baseline_payload(payload)
+    crit = (slim.get("decision_gate") or {}).get("criteria") or {}
+    assert "advisory_individual_failures" not in crit
+    assert crit.get("advisory_individual_failure_count") == 2
+
+
 def test_chat_agent_contract_runtime_mode() -> None:
     mode = detect_runtime_mode(
         "chat_agent_contract",
@@ -331,9 +422,7 @@ def test_chat_agent_contract_runtime_mode() -> None:
 
 
 def test_unknown_member_fallbacks_to_live_with_warning() -> None:
-    """A member_id not in _GOLD_SUBDIR_BY_MEMBER returns 'live' with an unknown_member_fallback_live warning."""
-    from science_graphrag.benchmarks.trust_signal import _consistency_warnings
-
+    """Unknown member_id falls back to live and emits unknown_member_fallback_live warning."""
     block: dict = {"run_metadata": {"extraction_llm_model": "some-model"}}
     cases = [{"case_id": "x", "metrics": {"passed": True}}]
     mode = detect_runtime_mode("totally_new_member_xyz", block, cases)

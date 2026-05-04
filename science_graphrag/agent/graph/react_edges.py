@@ -13,6 +13,10 @@ from science_graphrag.agent.final_answer_policy import needs_final_answer_nudge
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.config import Settings
+from science_graphrag.observability.spans.decorators import add_span_event
+
+# Stop looping after this many *bad* ``final_answer`` tool payloads (JSON empty/malformed).
+_MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS = 1
 
 # Shared with supervisor + specialist subgraphs that can call ``final_answer`` (writer only).
 FINAL_ANSWER_NUDGE_TEXT = (
@@ -189,20 +193,82 @@ def react_after_tools_decrement_budget(state: AgentState) -> dict[str, Any]:
                 break
         meta["react_prev_paper_profile_work_id"] = pp_wids[-1]
 
+    if _latest_batch_has_bad_final_answer(messages):
+        prev_hops = int(meta.get("final_answer_empty_repair_hops") or 0)
+        meta["final_answer_empty_repair_hops"] = prev_hops + 1
+        add_span_event(
+            "agent.final_answer_invalid_payload",
+            {
+                "repair_hop": int(meta["final_answer_empty_repair_hops"]),
+                "max_repair_hops": _MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS,
+            },
+        )
+
     out: dict[str, Any] = {"budget_remaining": budget - 1, "metadata": meta}
     if debug_patch:
         out["debug_events"] = debug_patch
     return out
 
 
-def route_react_tools_next(state: AgentState) -> Literal["chat", "__end__"]:
-    """After ToolNode: end the graph if any tool in the latest batch was ``final_answer``."""
-    for msg in reversed(list(state.get("messages") or [])):
-        if isinstance(msg, ToolMessage):
-            if normalize_tool_call_name(str(getattr(msg, "name", "") or "")) == "final_answer":
-                return END
-            continue
-        break
+def _iter_latest_tool_message_batch(messages: list[Any]) -> list[ToolMessage]:
+    """ToolMessages from the most recent executed batch (suffix of ``messages``)."""
+    if not messages:
+        return []
+    i = len(messages) - 1
+    while i >= 0 and isinstance(messages[i], ToolMessage):
+        i -= 1
+    chunk = messages[i + 1 :]
+    return [m for m in chunk if isinstance(m, ToolMessage)]
+
+
+def final_answer_tool_message_ok(msg: ToolMessage) -> bool | None:
+    """None if not ``final_answer``; True if JSON payload has non-empty answer; False otherwise."""
+
+    name = normalize_tool_call_name(str(getattr(msg, "name", "") or ""))
+    if name != "final_answer":
+        return None
+    raw = str(msg.content or "").strip()
+    if not raw:
+        return False
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(data, dict):
+        return False
+    ans = data.get("answer")
+    return bool(isinstance(ans, str) and ans.strip())
+
+
+def _latest_batch_has_bad_final_answer(messages: list[Any]) -> bool:
+    for msg in _iter_latest_tool_message_batch(messages):
+        ok = final_answer_tool_message_ok(msg)
+        if ok is False:
+            return True
+    return False
+
+
+def route_react_tools_next(state: AgentState) -> Literal["chat"] | Any:
+    """After ToolNode: end only when ``final_answer`` tool JSON has a non-empty ``answer``."""
+
+    messages = list(state.get("messages") or [])
+    meta = state.get("metadata") or {}
+    hops = int(meta.get("final_answer_empty_repair_hops") or 0)
+    batch = _iter_latest_tool_message_batch(messages)
+
+    finals_ok: list[bool] = []
+    for msg in batch:
+        ok = final_answer_tool_message_ok(msg)
+        if ok is not None:
+            finals_ok.append(bool(ok))
+
+    if not finals_ok:
+        return "chat"
+    if all(finals_ok):
+        return END
+
+    if hops > _MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS:
+        return END
     return "chat"
 
 

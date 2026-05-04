@@ -30,7 +30,7 @@
 
 ## Agent chat frontend UI
 
-**Plan:** [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md). **System roadmap (slim):** [`chat-agent-system-roadmap-2026-04-26.md`](./chat-agent-system-roadmap-2026-04-26.md) — упрощённая архитектура; **rule-based `tool_search` v1** shipped (`science_graphrag/agent/tool_search.py`); compaction / session memory remain phased; полный старый текст в [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md).
+**Plan:** [`agent-chat-frontend-ui-plan-2026-04-26.md`](./agent-chat-frontend-ui-plan-2026-04-26.md). **System roadmap (slim):** [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md) — упрощённая архитектура; **rule-based `tool_search` v1** shipped (`science_graphrag/agent/tool_search.py`); compaction / session memory remain phased; полный старый текст в [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md).
 
 | Phase | Status |
 |-------|--------|
