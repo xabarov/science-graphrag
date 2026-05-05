@@ -248,3 +248,20 @@ def test_initial_debug_emits_classifier_fallback_warning(monkeypatch: pytest.Mon
     assert "warning" in types
     warn = next(e for e in dev if isinstance(e, dict) and e.get("type") == "warning")
     assert warn.get("code") == "coordinator_classifier_fallback"
+
+
+def test_initial_debug_emits_intent_for_single_agent_research_runtime() -> None:
+    st = build_initial_agent_state(
+        question="One sentence summary please",
+        workspace_id="ws-1",
+        max_tool_calls=3,
+        agent_runtime="langgraph_research_v1",
+    )
+    dev = list(st.get("debug_events") or [])
+    intent = next(
+        (e for e in dev if isinstance(e, dict) and e.get("type") == "intent_classified"),
+        None,
+    )
+    assert isinstance(intent, dict)
+    assert intent.get("source") == "single_agent_research_v1"
+    assert intent.get("tool_policy") == "allow_tools"

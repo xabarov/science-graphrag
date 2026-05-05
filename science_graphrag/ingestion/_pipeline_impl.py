@@ -1,10 +1,10 @@
+"""Ingestion orchestration facade and legacy-compatible entrypoints."""
+
 from __future__ import annotations
 
-import json
 import re
-import signal
 import uuid
-from contextlib import contextmanager, nullcontext
+from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -25,13 +25,23 @@ from science_graphrag.dedup.ingest_conflict_check import (
     enqueue_work_near_duplicate_conflicts_on_ingest,
 )
 from science_graphrag.domain.models import ReferenceDraft, WorkDraft
-from science_graphrag.embeddings import resolve_embedder, resolve_embedding_model_label
+from science_graphrag.embeddings import resolve_embedding_model_label
 from science_graphrag.embeddings.errors import EmbeddingCallError, EmbeddingNonRetryableHttpError
+from science_graphrag.embeddings.preflight import probe_embeddings
 from science_graphrag.ingestion.artifact_layout import (
     canonical_article_md_rel,
     canonical_normalized_md_rel,
     strip_ingest_artifact_header,
 )
+from science_graphrag.ingestion.cache_policy import article_slug as _article_slug
+from science_graphrag.ingestion.cache_policy import canonical_article_rel as _canonical_article_rel
+from science_graphrag.ingestion.cache_policy import (
+    canonical_diagnostics_rel as _canonical_diagnostics_rel,
+)
+from science_graphrag.ingestion.cache_policy import (
+    read_cached_markdown,
+)
+from science_graphrag.ingestion.cache_policy import slug as _slug
 from science_graphrag.ingestion.checkpoint import (
     default_checkpoint,
     mark_stage_completed,
@@ -43,30 +53,44 @@ from science_graphrag.ingestion.chunking import (
     chunk_document_for_retrieval_from_settings,
     dedupe_chunks_for_embedding,
 )
-from science_graphrag.ingestion.claims.extractor import extract_claims_llm
+from science_graphrag.ingestion.claims_phase import run_extract_claims_stage
 from science_graphrag.ingestion.dedup import normalize_doi, title_fingerprint
+from science_graphrag.ingestion.document_runtime import file_timeout
 from science_graphrag.ingestion.document_slices import (
     build_references_scope_text,
     front_matter_slice,
     strip_repeated_boilerplate,
 )
+from science_graphrag.ingestion.embed_phase import run_ingest_embed_qdrant_phase
 from science_graphrag.ingestion.enrichment.openalex import (
     arxiv_id_from_openalex_ids,
     draft_from_openalex,
     fetch_work_by_doi,
 )
-from science_graphrag.ingestion.enrichment.ror import lookup_ror_id_optional
+from science_graphrag.ingestion.institution_nodes import institution_nodes_from_authorships
 from science_graphrag.ingestion.llm.semantic_extraction import extract_semantic_method_dataset
 from science_graphrag.ingestion.llm.stage_extraction import extract_stages_llm_first
 from science_graphrag.ingestion.markdown_fence import strip_whole_document_markdown_fence
 from science_graphrag.ingestion.normalize import normalize_text
+from science_graphrag.ingestion.orchestrator import BatchDeps, run_batch_ingest
 from science_graphrag.ingestion.pdf import extract_text_from_pdf
+from science_graphrag.ingestion.progress_store import (
+    append_progress,
+    default_progress_file,
+    load_progress,
+)
+from science_graphrag.ingestion.session_wiring import (
+    sql_commit_if_session as _sql_commit_if_session,
+)
 from science_graphrag.ingestion.stage_context import (
     IngestRunContext,
     IngestStage,
-    StageHandle,
     build_ingest_run_context,
     stage,
+)
+from science_graphrag.ingestion.stage_graph import (
+    build_runtime_state,
+    load_checkpoint_from_session,
 )
 from science_graphrag.ingestion.stages.metadata import merge_draft_prefer_enriched
 from science_graphrag.ingestion.vl_pdf import VLPDFProcessor
@@ -74,9 +98,7 @@ from science_graphrag.observability.phoenix_tracer import (
     OpenInferenceAttributes,
     SpanAttributes,
     chain_span,
-    embeddings_span,
     init_tracer_provider,
-    llm_span,
     set_span_attributes,
 )
 from science_graphrag.storage.db import get_engine, init_db, session_factory
@@ -86,8 +108,6 @@ from science_graphrag.storage.models_orm import (
     IngestJobRecordOrm,
 )
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_claims_store import QdrantClaimsStore
-from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
 from science_graphrag.storage.s3_artifact_store import build_artifact_store
 from science_graphrag.utils.ingest_pipeline_log_heartbeat import pipeline_log_heartbeat_run
@@ -108,11 +128,15 @@ CORPUS_SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
 
 @dataclass(slots=True)
 class IngestSource:
+    """Input source for one ingest pipeline run."""
+
     path: Path
 
 
 @dataclass(slots=True)
 class IngestResult:
+    """Minimal ingest output with document/work identifiers."""
+
     document_id: str
     work_id: str
 
@@ -181,77 +205,50 @@ def discover_corpus_files(directory: Path) -> list[Path]:
 
 
 def _default_progress_file() -> Path:
-    run_id = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    return Path("eval/results") / f"ingest-progress-{run_id}.jsonl"
+    return default_progress_file()
 
 
 def _load_progress(path: Path) -> dict[str, str]:
-    if not path.exists():
-        return {}
-    rows: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            payload = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if not isinstance(payload, dict):
-            continue
-        raw_path = payload.get("path")
-        status = payload.get("status")
-        if not isinstance(raw_path, str) or not isinstance(status, str):
-            continue
-        rows[raw_path] = status
-    return rows
+    return load_progress(path)
 
 
 def _append_progress(path: Path, entry: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    existing = path.read_text(encoding="utf-8") if path.exists() else ""
-    line = json.dumps(entry, ensure_ascii=False) + "\n"
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(existing + line, encoding="utf-8")
-    tmp.replace(path)
+    append_progress(path, entry)
 
 
-@contextmanager
 def _file_timeout(seconds: int):
-    if seconds <= 0:
-        yield
-        return
-    if not hasattr(signal, "SIGALRM"):
-        yield
-        return
+    return file_timeout(seconds)
 
-    def _handler(_sig, _frame):
-        raise TimeoutError(f"ingest_document exceeded {seconds}s")
 
-    previous = signal.signal(signal.SIGALRM, _handler)
-    signal.alarm(seconds)
+def _build_ingest_engine(settings: Settings):
+    """Compatibility wrapper for tests monkeypatching get_engine/init_db."""
+    engine = get_engine(settings.database_url)
+    init_db(engine)
+    return engine
+
+
+def _run_dedup_audit(settings: Settings) -> None:
+    """Compatibility wrapper for tests monkeypatching Neo4jGraphStore."""
+    neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
     try:
-        yield
+        violations = neo.find_work_dedup_violations()
     finally:
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, previous)
+        neo.close()
 
-
-def _slug(value: str) -> str:
-    slug = re.sub(r"[^a-zA-Z0-9]+", "-", value).strip("-").lower()
-    return slug or "document"
-
-
-def _article_slug(path: Path) -> str:
-    return _slug(path.stem)
-
-
-def _canonical_article_rel(source_path: Path) -> Path:
-    return Path("articles") / _article_slug(source_path) / "article.md"
-
-
-def _canonical_diagnostics_rel(source_path: Path) -> Path:
-    return Path("articles") / _article_slug(source_path) / "extraction_diagnostics.json"
+    logger.info("--- Work dedup audit (Neo4j) ---")
+    if not violations:
+        logger.info(
+            "OK: no duplicate Work clusters by doi / openalex_id / fingerprint / arxiv_id",
+        )
+        return
+    logger.info("Found %s duplicate cluster(s):", len(violations))
+    for item in violations:
+        logger.info(
+            "  [%s] key=%r work_ids=%s",
+            item["kind"],
+            item["dedup_key"],
+            item["work_ids"],
+        )
 
 
 def _read_cached_markdown(
@@ -261,41 +258,12 @@ def _read_cached_markdown(
     document_id: str | None = None,
     artifact_store: ArtifactStorePort | None = None,
 ) -> tuple[str, str] | None:
-    store = artifact_store or build_artifact_store(settings)
-    candidate_rels: list[Path] = []
-    if document_id:
-        candidate_rels.append(canonical_article_md_rel(document_id))
-        candidate_rels.append(canonical_normalized_md_rel(document_id))
-    candidate_rels.append(_canonical_article_rel(source_path))
-    legacy_sorted = sorted(
-        store.glob_under_entries(f"ingestion/*/{_article_slug(source_path)}/article.md"),
-        key=lambda t: t[1],
-        reverse=True,
+    return read_cached_markdown(
+        settings,
+        source_path,
+        document_id=document_id,
+        artifact_store=artifact_store,
     )
-    candidate_rels.extend(rel for rel, _ in legacy_sorted)
-    seen: set[str] = set()
-    for rel in candidate_rels:
-        key = rel.as_posix()
-        if key in seen:
-            continue
-        seen.add(key)
-        if not store.exists(rel):
-            continue
-        text = store.read_text(rel, encoding="utf-8")
-        first_line = text.splitlines()[0] if text.splitlines() else ""
-        mode = "cached-markdown"
-        mode_match = re.search(r"extraction_mode=([a-zA-Z0-9\\-]+)", first_line)
-        if mode_match:
-            mode = mode_match.group(1)
-        elif rel.name == "normalized.md":
-            mode = "cached-normalized"
-        logger.info(
-            "Reusing cached article markdown for %s from %s",
-            source_path.name,
-            store.absolute(rel),
-        )
-        return strip_ingest_artifact_header(text), mode
-    return None
 
 
 def _markdown_from_path(
@@ -471,18 +439,8 @@ def _institution_nodes_from_authorships(
     authorships,
     settings: Settings,
 ) -> list[tuple[str, str, str | None]]:
-    nodes: list[tuple[str, str, str | None]] = []
-    for authorship in authorships:
-        affiliation = next((value for value in authorship.raw_affiliations if value.strip()), None)
-        if not affiliation:
-            continue
-        clean = affiliation.strip()
-        inst_id = str(uuid.uuid5(uuid.NAMESPACE_URL, "institution:" + clean.lower()))
-        ror_id: str | None = None
-        if settings.ror_lookup_enabled:
-            ror_id = lookup_ror_id_optional(clean, settings.openalex_mailto)
-        nodes.append((inst_id, clean, ror_id))
-    return nodes
+    """Compatibility wrapper delegating to canonical institution helper."""
+    return institution_nodes_from_authorships(authorships, settings)
 
 
 def _maybe_link_openalex_arxiv_version(
@@ -560,6 +518,7 @@ def _write_extraction_diagnostics_json(
 
 
 def run_ingest_pipeline(ctx: IngestRunContext, source: IngestSource) -> IngestResult:
+    """Run ingestion pipeline in an already constructed runtime context."""
     doc_id, work_id = ingest_document(
         source.path,
         settings=ctx.settings,
@@ -588,6 +547,7 @@ def run_ingest_from_file(
     stage_event_publisher: Any | None = None,
     stage_progress_publisher: Any | None = None,
 ) -> IngestResult:
+    """Ingest one file using context-builder wiring and auto-close semantics."""
     ctx = build_ingest_run_context(
         settings=settings,
         source_path=path,
@@ -617,6 +577,7 @@ def run_ingest_from_job(
     stage_event_publisher: Any | None = None,
     stage_progress_publisher: Any | None = None,
 ) -> IngestResult:
+    """Backward-compatible job entrypoint alias for file ingest."""
     return run_ingest_from_file(
         path,
         settings=settings,
@@ -628,149 +589,6 @@ def run_ingest_from_job(
         stage_event_publisher=stage_event_publisher,
         stage_progress_publisher=stage_progress_publisher,
     )
-
-
-def _sql_commit_if_session(session: Session | None) -> None:
-    """Commit SQL work at orchestration boundaries (embed vs graph split)."""
-    if session is not None:
-        session.commit()
-
-
-def run_ingest_embed_qdrant_phase(
-    *,
-    settings: Settings,
-    document_id: str,
-    work_id: str,
-    doc_chunks: list[Any],
-    claim_rows: list[Any],
-    authorships: list[Any],
-    draft: WorkDraft,
-    ingest_workspace_ids: list[str] | None,
-    st: StageHandle,
-    reused_doc: bool,
-) -> None:
-    """Vectorize chunks + work summary and upsert Qdrant (after Neo4j is closed)."""
-
-    total_steps = 4 if (settings.claims_extraction_enabled and claim_rows) else 3
-    step = 0
-
-    def _embed_bump(detail: str) -> None:
-        nonlocal step
-        step += 1
-        st.metric("subprogress_current", step)
-        st.metric("subprogress_total", total_steps)
-        st.metric("detail_message", detail)
-        st.flush_progress()
-
-    embedder = resolve_embedder(settings)
-    chunk_texts = [c.text for c in doc_chunks]
-    embedding_model = resolve_embedding_model_label(settings)
-    _embed_bump("Embedding body chunks…")
-    with embeddings_span(
-        "ingest.embed.vectorize_chunks",
-        {
-            "embedding.model_name": embedding_model,
-            "embedding.dim": embedder.dim,
-            "embedding.input_count": len(chunk_texts),
-        },
-    ):
-        vectors = embedder.embed(chunk_texts)
-    first_author = ""
-    if authorships:
-        ordered_auth = sorted(authorships, key=lambda x: x.author_position or 0)
-        first_author = (ordered_auth[0].author_raw_name or "").strip()
-    summary_text = f"{draft.title or ''}\n{draft.abstract or ''}\n{first_author}"[:8000]
-    _embed_bump("Embedding work summary…")
-    with embeddings_span(
-        "ingest.embed.vectorize_work_summary",
-        {
-            "embedding.model_name": embedding_model,
-            "embedding.dim": embedder.dim,
-            "embedding.input_count": 1,
-        },
-    ):
-        w_summary_vec = embedder.embed([summary_text])[0]
-    qw = QdrantWorkEmbeddingStore(
-        settings.qdrant_url,
-        settings.qdrant_work_embeddings_collection,
-        vector_dim=embedder.dim,
-    )
-    _retry_call(
-        qw.upsert_work_summary,
-        work_id=work_id,
-        vector=w_summary_vec,
-        embedding_model=embedding_model,
-        workspace_ids=ingest_workspace_ids or [],
-        title=draft.title,
-        publication_year=draft.publication_year,
-        doi=draft.doi,
-        arxiv_id=draft.arxiv_id,
-        first_author_normalized=first_author,
-        embedding_kind="work_summary_v1",
-    )
-    q = QdrantChunkStore(
-        settings.qdrant_url,
-        settings.qdrant_collection,
-        vector_dim=embedder.dim,
-    )
-    removed = _retry_call(q.delete_points_by_document_id, document_id=document_id)
-    if removed and reused_doc:
-        logger.info(
-            "qdrant removed %s point(s) before re-ingest document_id=%s",
-            removed,
-            document_id,
-        )
-    _embed_bump("Upserting chunk vectors to Qdrant…")
-    with chain_span(
-        "ingest.embed.qdrant_chunks",
-        {
-            "chunks": len(doc_chunks),
-            "embedding": embedding_model,
-            "db.system": "qdrant",
-            "db.collection.name": settings.qdrant_collection,
-            "db.operation": "upsert",
-            "vector.dim": embedder.dim,
-            "vector.count": len(vectors),
-        },
-    ):
-        _retry_call(
-            q.upsert_document_chunks,
-            work_id=work_id,
-            document_id=document_id,
-            document_chunks=doc_chunks,
-            vectors=vectors,
-            embedding_model=embedding_model,
-            workspace_ids=ingest_workspace_ids or [],
-        )
-    if settings.claims_extraction_enabled and claim_rows:
-        _embed_bump("Embedding claims to Qdrant…")
-        with chain_span(
-            "ingest.embed.qdrant_claims",
-            {
-                "claims": len(claim_rows),
-                "embedding": embedding_model,
-                "db.system": "qdrant",
-                "db.collection.name": settings.qdrant_claims_collection,
-                "db.operation": "upsert",
-                "vector.dim": embedder.dim,
-                "vector.count": len(claim_rows),
-            },
-        ):
-            qc = QdrantClaimsStore(
-                settings.qdrant_url,
-                settings.qdrant_claims_collection,
-                vector_dim=embedder.dim,
-            )
-            _retry_call(qc.delete_points_by_work_id, work_id=work_id)
-            _retry_call(
-                qc.upsert_claims,
-                work_id=work_id,
-                claims=claim_rows,
-                embedder=embedder,
-                embedding_model=embedding_model,
-            )
-    st.metric("chunks", len(doc_chunks))
-    st.metric("embedding_dim", embedder.dim)
 
 
 def ingest_document(
@@ -808,513 +626,43 @@ def ingest_document(
             skip_existing_sha=skip_existing_sha,
             force_new_document=force_new_document,
         )
-    workspace_id = (ingest_workspace_ids or [None])[0]
-    root_attrs: dict[str, Any] = {
-        "document.id": doc_id,
-        "document.source_name": path.name,
-        "document.sha256": sha,
-        "document.reused_id": reused_doc,
-        "source": str(path.resolve()),
-        "metadata.source_name": path.name,
-        "metadata.extraction_llm_model": settings.extraction_llm_model,
-        "metadata.embedding_model": resolve_embedding_model_label(settings),
-        "metadata.vl_model": settings.vl_model,
-    }
-    if job_id:
-        root_attrs[OpenInferenceAttributes.SESSION_ID] = str(job_id)
-        root_attrs["metadata.job_id"] = str(job_id)
-    if parent_job_id:
-        root_attrs["metadata.parent_job_id"] = str(parent_job_id)
-    if workspace_id:
-        root_attrs[OpenInferenceAttributes.USER_ID] = str(workspace_id)
-        root_attrs["metadata.workspace_id"] = str(workspace_id)
-    _pipeline_hb_ctx = (
-        pipeline_log_heartbeat_run() if (job_id and stage_session_factory) else nullcontext()
+
+    from science_graphrag.ingestion.document_orchestrator import (
+        DocumentOrchestrationDeps,
+        run_document_orchestration,
     )
-    with chain_span("ingest_document", root_attrs), _pipeline_hb_ctx:
-        progress_emit = stage_progress_publisher
-        ckpt: dict[str, Any] = default_checkpoint()
-        if session is not None and reused_doc:
-            prev_doc = session.get(DocumentRecord, doc_id)
-            if prev_doc is not None and prev_doc.ingest_checkpoint_json:
-                ckpt = parse_checkpoint(prev_doc.ingest_checkpoint_json)
-        if session is not None and job_id:
-            trace_ctx = trace_api.get_current_span().get_span_context()
-            if trace_ctx.trace_id:
-                trace_id = format(trace_ctx.trace_id, "032x")
-                row = session.execute(
-                    select(IngestJobRecordOrm)
-                    .where(IngestJobRecordOrm.job_id == str(job_id).strip())
-                    .limit(1)
-                ).scalar_one_or_none()
-                if row is not None and not row.phoenix_trace_id:
-                    row.phoenix_trace_id = trace_id
-        with stage(
-            job_id,
-            IngestStage.PARSE_PDF,
-            session_factory=stage_session_factory,
-            publisher=stage_event_publisher,
-            progress_emit=progress_emit,
-            settings=settings,
-        ) as st:
 
-            _vl_log_hb = VlLogHeartbeatState()
-
-            def _on_vl_pages(done: int, tot: int) -> None:
-                st.metric("vl_pages_total", tot)
-                st.metric("vl_pages_processed", done)
-                st.metric("detail_message", f"PDF pages {done}/{tot}")
-                st.metric("subprogress_current", done)
-                st.metric("subprogress_total", tot)
-                st.flush_progress()
-                maybe_log_vl_page_heartbeat(logger, _vl_log_hb, pages_done=done, pages_total=tot)
-
-            def _on_vl_batches_ready(batch_count: int, page_count: int, batch_sz: int) -> None:
-                st.metric("vl_batch_total", int(batch_count))
-                st.metric("vl_batch_size", int(batch_sz))
-                if int(batch_count) == 1:
-                    st.metric("detail_message", "Waiting for vision model response")
-                st.flush_progress()
-                maybe_log_vl_parse_started(
-                    logger,
-                    _vl_log_hb,
-                    batch_count=int(batch_count),
-                    page_total=int(page_count),
-                    batch_size=int(batch_sz),
-                )
-
-            markdown_text, extraction_mode, vl_stats = _markdown_from_path(
-                path,
-                settings,
-                document_id=doc_id,
-                on_vl_page_progress=_on_vl_pages if job_id and stage_session_factory else None,
-                on_vl_batches_ready=(
-                    _on_vl_batches_ready if job_id and stage_session_factory else None
-                ),
-            )
-            set_span_attributes({"metadata.extraction_mode": extraction_mode})
-            st.metric("source_suffix", path.suffix.lower())
-            st.metric("extraction_mode", extraction_mode)
-        ingest_artifact_store = build_artifact_store(settings)
-        _artifact_path = _write_markdown_artifact(
-            settings=settings,
-            document_id=doc_id,
-            source_path=path,
-            markdown=markdown_text,
-            extraction_mode=extraction_mode,
-            artifact_store=ingest_artifact_store,
-        )
-        normalized = strip_repeated_boilerplate(
-            normalize_text(strip_whole_document_markdown_fence(markdown_text))
-        )
-        ingest_artifact_store.write_text(
-            canonical_normalized_md_rel(doc_id),
-            normalized,
-        )
-
-        front = front_matter_slice(
-            normalized,
-            max_chars=settings.front_matter_max_chars,
-        )
-        ref_scope = build_references_scope_text(
-            normalized,
-            max_chars=settings.references_scope_max_chars,
-        )
-
-        with stage(
-            job_id,
-            IngestStage.EXTRACT_META,
-            session_factory=stage_session_factory,
-            publisher=stage_event_publisher,
-            progress_emit=progress_emit,
-            settings=settings,
-        ) as st:
-            with chain_span(
-                "ingest.extract_meta.metadata_and_refs",
-                {
-                    "document.id": doc_id,
-                    "document.source_name": path.name,
-                },
-            ):
-                draft, authorships, references, ext_diag = extract_stages_llm_first(
-                    normalized,
-                    settings,
-                    markdown_source=extraction_mode,
-                    document_id=doc_id,
-                    source_name=path.name,
-                    front_matter_text=front.text,
-                    references_scope_text=ref_scope,
-                )
-            st.metric("references", len(references))
-            st.metric("authorships", len(authorships))
-        if vl_stats:
-            ext_diag.vl_pages_total = vl_stats.get("vl_pages_total")
-            ext_diag.vl_pages_processed = vl_stats.get("vl_pages_processed")
-            ext_diag.vl_batch_count = vl_stats.get("vl_batch_count")
-        _write_extraction_diagnostics_json(
-            settings=settings,
-            document_id=doc_id,
-            source_path=path,
-            diagnostics_json=ext_diag.to_json(),
-            artifact_store=ingest_artifact_store,
-        )
-
-        oa_raw: dict[str, Any] | None = None
-        with stage(
-            job_id,
-            IngestStage.ENRICH_OPENALEX,
-            session_factory=stage_session_factory,
-            publisher=stage_event_publisher,
-            progress_emit=progress_emit,
-            settings=settings,
-        ) as st:
-            with chain_span("ingest.enrich_openalex.lookup"):
-                SpanAttributes.set_input({"doi": draft.doi})
-                if draft.doi:
-                    openalex_url = f"https://api.openalex.org/works/doi:{draft.doi}"
-                    set_span_attributes(
-                        {
-                            "http.request.method": "GET",
-                            "http.url": openalex_url,
-                            "openalex.doi": draft.doi,
-                            "retry.attempts": 3,
-                        }
-                    )
-                    try:
-                        oa = _openalex_lookup_with_retry(draft.doi, settings.openalex_mailto)
-                        if oa:
-                            oa_raw = oa
-                            enriched = draft_from_openalex(oa)
-                            draft = merge_draft_prefer_enriched(draft, enriched)
-                            SpanAttributes.set_output(
-                                {
-                                    "openalex_id": oa.get("id"),
-                                    "title": (oa.get("display_name") or "")[:300],
-                                }
-                            )
-                            set_span_attributes({"openalex.found": True})
-                        else:
-                            set_span_attributes({"openalex.found": False})
-                    except Exception as exc:  # noqa: BLE001
-                        set_span_attributes({"openalex.found": False})
-                        logger.warning("OpenAlex enrichment failed for doi=%s: %s", draft.doi, exc)
-            st.metric("has_doi", int(bool(draft.doi)))
-            st.metric("enriched", int(bool(oa_raw)))
-
-        neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-        try:
-            _retry_call(neo.ensure_schema)
-            work_id = _resolve_work_id(neo, draft)
-            vid = _venue_id(draft.venue_name)
-            with stage(
-                job_id,
-                IngestStage.ENRICH_ROR,
-                session_factory=stage_session_factory,
-                publisher=stage_event_publisher,
-                progress_emit=progress_emit,
-                settings=settings,
-            ) as st:
-                inst_nodes = _institution_nodes_from_authorships(authorships, settings)
-                st.metric("institutions", len(inst_nodes))
-
-            with stage(
-                job_id,
-                IngestStage.WRITE_GRAPH,
-                session_factory=stage_session_factory,
-                publisher=stage_event_publisher,
-                progress_emit=progress_emit,
-                settings=settings,
-            ) as st:
-                if session is not None:
-                    try:
-                        n_dedup = enqueue_work_near_duplicate_conflicts_on_ingest(
-                            settings=settings,
-                            session=session,
-                            neo=neo,
-                            workspace_id=workspace_id,
-                            new_work_id=work_id,
-                            draft=draft,
-                            authorships=authorships,
-                        )
-                        st.metric("ingest_dedup_conflicts_enqueued", n_dedup)
-                    except Exception as exc:  # noqa: BLE001
-                        logger.warning("ingest_dedup_conflict_check_failed: %s", exc)
-                with chain_span(
-                    "ingest.write_graph.upsert_work_layer1",
-                    {"db.system": "neo4j", "db.operation": "merge", "writes.count": 1},
-                ):
-                    _retry_call(
-                        neo.upsert_work_layer1,
-                        work_id,
-                        draft,
-                        authorships,
-                        venue_id=vid,
-                        institution_nodes=inst_nodes,
-                    )
-                st.metric("authorships", len(authorships))
-
-                with chain_span(
-                    "ingest.write_graph.semantic",
-                    {"document.id": doc_id, "work.id": work_id},
-                ):
-                    semantic = extract_semantic_method_dataset(
-                        normalized,
-                        settings,
-                        document_id=doc_id,
-                    )
-                    _retry_call(
-                        neo.sync_work_semantic_layer,
-                        work_id,
-                        semantic,
-                        confidence_threshold=settings.semantic_graph_confidence_threshold,
-                    )
-                st.metric("semantic_claims", len(getattr(semantic, "claims", []) or []))
-
-                if session is not None:
-                    try:
-                        n_author_dedup = enqueue_author_near_duplicate_conflicts_on_ingest(
-                            settings=settings,
-                            session=session,
-                            neo=neo,
-                            workspace_id=workspace_id,
-                            new_work_id=work_id,
-                        )
-                        st.metric("ingest_author_dedup_conflicts_enqueued", n_author_dedup)
-                    except Exception as exc:  # noqa: BLE001
-                        logger.warning("ingest_author_dedup_conflict_check_failed: %s", exc)
-                    try:
-                        ent_dedup = enqueue_entity_near_duplicate_conflicts_on_ingest(
-                            session=session,
-                            neo=neo,
-                            workspace_id=workspace_id,
-                            new_work_id=work_id,
-                            settings=settings,
-                        )
-                        st.metric(
-                            "ingest_entity_dedup_conflicts_enqueued",
-                            int(
-                                sum(
-                                    int(ent_dedup.get(k, 0))
-                                    for k in ("institution", "venue", "method", "dataset")
-                                )
-                            ),
-                        )
-                        st.metric(
-                            "ingest_method_dedup_auto_merged",
-                            int(ent_dedup.get("method_ingest_auto_merged", 0)),
-                        )
-                        st.metric(
-                            "ingest_method_dedup_llm_merged",
-                            int(ent_dedup.get("method_ingest_llm_merged", 0)),
-                        )
-                    except Exception as exc:  # noqa: BLE001
-                        logger.warning("ingest_entity_dedup_conflict_check_failed: %s", exc)
-
-            with stage(
-                job_id,
-                IngestStage.RESOLVE_REFERENCES,
-                session_factory=stage_session_factory,
-                publisher=stage_event_publisher,
-                progress_emit=progress_emit,
-                settings=settings,
-            ) as st:
-                linked_refs = 0
-                total_refs = len(references)
-                seen = 0
-                for ref in references:
-                    seen += 1
-                    if not (
-                        normalize_doi(ref.doi)
-                        or _normalize_arxiv_id(ref.arxiv_id)
-                        or (
-                            _normalized_title_for_fingerprint(ref.title) is not None
-                            and ref.year is not None
-                        )
-                    ):
-                        if seen % 5 == 0 or seen == total_refs:
-                            st.metric("subprogress_current", seen)
-                            st.metric("subprogress_total", max(total_refs, 1))
-                            st.metric(
-                                "detail_message",
-                                f"References {linked_refs}/{total_refs} linked",
-                            )
-                            st.flush_progress()
-                        continue
-                    _retry_call(_persist_reference_citation, neo, work_id, ref, settings)
-                    linked_refs += 1
-                    if seen % 5 == 0 or seen == total_refs:
-                        st.metric("subprogress_current", seen)
-                        st.metric("subprogress_total", max(total_refs, 1))
-                        st.metric(
-                            "detail_message",
-                            f"References {linked_refs}/{total_refs} linked",
-                        )
-                        st.flush_progress()
-                st.metric("references_total", len(references))
-                st.metric("references_linked", linked_refs)
-
-            _retry_call(_maybe_link_openalex_arxiv_version, neo, work_id, draft, oa_raw)
-
-            with stage(
-                job_id,
-                IngestStage.CHUNK,
-                session_factory=stage_session_factory,
-                publisher=stage_event_publisher,
-                progress_emit=progress_emit,
-                settings=settings,
-            ) as st:
-                doc_chunks = dedupe_chunks_for_embedding(
-                    chunk_document_for_retrieval_from_settings(normalized, settings),
-                )
-                st.metric("chunks", len(doc_chunks))
-            claim_rows: list[Any] = []
-            with stage(
-                job_id,
-                IngestStage.EXTRACT_CLAIMS,
-                session_factory=stage_session_factory,
-                publisher=stage_event_publisher,
-                progress_emit=progress_emit,
-                settings=settings,
-            ) as st:
-                if settings.claims_extraction_enabled:
-                    chunk_dicts = [
-                        {
-                            "text": c.text,
-                            "chunk_fingerprint": c.chunk_fingerprint,
-                            "section_path": c.section_path,
-                        }
-                        for c in doc_chunks
-                    ]
-
-                    def _claims_batch_progress(idx: int, total_batches: int) -> None:
-                        st.metric("subprogress_current", idx)
-                        st.metric("subprogress_total", max(total_batches, 1))
-                        st.metric("detail_message", f"Claims LLM batch {idx}/{total_batches}")
-                        st.flush_progress()
-
-                    with chain_span(
-                        "ingest.extract_claims.llm",
-                        {"document.id": doc_id, "work.id": work_id, "chunks": len(chunk_dicts)},
-                    ):
-                        with llm_span(
-                            "llm.claims_extraction",
-                            {"document.id": doc_id, "work.id": work_id, "chunks": len(chunk_dicts)},
-                        ):
-                            claim_rows = extract_claims_llm(
-                                chunk_dicts,
-                                work_id,
-                                settings,
-                                force_benchmark=False,
-                                on_batch_progress=_claims_batch_progress,
-                            )
-                    st.metric("claims", len(claim_rows))
-                    with chain_span(
-                        "ingest.extract_claims.upsert_claims",
-                        {
-                            "db.system": "neo4j",
-                            "db.operation": "merge",
-                            "writes.count": len(claim_rows),
-                        },
-                    ):
-                        _retry_call(neo.detach_delete_claims_for_work, work_id)
-                        _retry_call(neo.upsert_claims_with_evidence, work_id, claim_rows)
-                else:
-                    st.metric("claims_extraction_enabled", 0)
-
-        finally:
-            neo.close()
-
-        mark_stage_completed(ckpt, IngestStage.EXTRACT_CLAIMS)
-
-        ingest_run: IngestionRunRecord | None = None
-        if session is not None:
-            now = datetime.now(UTC)
-            mime = f"application/{path.suffix.lower().lstrip('.') or 'octet-stream'}"
-            serialized_ckpt = serialize_checkpoint(ckpt)
-            if reused_doc:
-                existing = session.get(DocumentRecord, doc_id)
-                if existing is not None:
-                    existing.source_path = str(path.resolve())
-                    existing.mime_type = mime
-                    existing.sha256 = sha
-                    existing.work_id = work_id
-                    existing.ingest_checkpoint_json = serialized_ckpt
-            else:
-                session.add(
-                    DocumentRecord(
-                        id=doc_id,
-                        sha256=sha,
-                        source_path=str(path.resolve()),
-                        mime_type=mime,
-                        work_id=work_id,
-                        ingest_checkpoint_json=serialized_ckpt,
-                    ),
-                )
-            ingest_run = IngestionRunRecord(
-                document_id=doc_id,
-                status="running",
-                started_at=now,
-                finished_at=None,
-            )
-            session.add(ingest_run)
-            session.flush()
-            _sql_commit_if_session(session)
-
-        try:
-            with stage(
-                job_id,
-                IngestStage.EMBED,
-                session_factory=stage_session_factory,
-                publisher=stage_event_publisher,
-                progress_emit=progress_emit,
-                settings=settings,
-            ) as st:
-                run_ingest_embed_qdrant_phase(
-                    settings=settings,
-                    document_id=doc_id,
-                    work_id=work_id,
-                    doc_chunks=doc_chunks,
-                    claim_rows=claim_rows,
-                    authorships=authorships,
-                    draft=draft,
-                    ingest_workspace_ids=ingest_workspace_ids,
-                    st=st,
-                    reused_doc=reused_doc,
-                )
-        except Exception as embed_exc:
-            if session is not None:
-                retryable = True
-                if isinstance(embed_exc, EmbeddingNonRetryableHttpError):
-                    retryable = False
-                elif isinstance(embed_exc, EmbeddingCallError):
-                    retryable = embed_exc.retryable
-                mark_stage_failed(
-                    ckpt,
-                    IngestStage.EMBED,
-                    error=str(embed_exc),
-                    retryable=retryable,
-                )
-                row = session.get(DocumentRecord, doc_id)
-                if row is not None:
-                    row.ingest_checkpoint_json = serialize_checkpoint(ckpt)
-                if ingest_run is not None:
-                    ingest_run.status = "failed_retryable" if retryable else "failed_terminal"
-                    ingest_run.error_message = str(embed_exc)[:8000]
-                    ingest_run.finished_at = datetime.now(UTC)
-                _sql_commit_if_session(session)
-            raise
-        mark_stage_completed(ckpt, IngestStage.EMBED)
-        if session is not None:
-            finished = datetime.now(UTC)
-            if ingest_run is not None:
-                ingest_run.status = "completed"
-                ingest_run.finished_at = finished
-            row = session.get(DocumentRecord, doc_id)
-            if row is not None:
-                row.ingest_checkpoint_json = serialize_checkpoint(ckpt)
-            _sql_commit_if_session(session)
-
-        return doc_id, work_id
+    return run_document_orchestration(
+        path=path,
+        settings=settings,
+        session=session,
+        doc_id=doc_id,
+        sha=sha,
+        reused_doc=reused_doc,
+        ingest_workspace_ids=ingest_workspace_ids,
+        job_id=job_id,
+        parent_job_id=parent_job_id,
+        stage_session_factory=stage_session_factory,
+        stage_event_publisher=stage_event_publisher,
+        stage_progress_publisher=stage_progress_publisher,
+        deps=DocumentOrchestrationDeps(
+            markdown_from_path=_markdown_from_path,
+            write_markdown_artifact=_write_markdown_artifact,
+            write_extraction_diagnostics_json=_write_extraction_diagnostics_json,
+            openalex_lookup_with_retry=_openalex_lookup_with_retry,
+            resolve_work_id=_resolve_work_id,
+            venue_id=_venue_id,
+            persist_reference_citation=_persist_reference_citation,
+            maybe_link_openalex_arxiv_version=_maybe_link_openalex_arxiv_version,
+            normalize_arxiv_id=_normalize_arxiv_id,
+            normalized_title_for_fingerprint=_normalized_title_for_fingerprint,
+            retry_call=_retry_call,
+            sql_commit_if_session=_sql_commit_if_session,
+            build_artifact_store=build_artifact_store,
+            neo4j_store_class=Neo4jGraphStore,
+            logger=logger,
+        ),
+    )
 
 
 def run_ingest_batch_cli(
@@ -1339,183 +687,28 @@ def run_ingest_batch_cli(
     init_tracer_provider()
     s = settings or get_settings()
     if embeddings_preflight:
-        from science_graphrag.embeddings.preflight import probe_embeddings
-
         probe_embeddings(s)
-    engine = get_engine(s.database_url)
-    init_db(engine)
-    factory = session_factory(engine)
-    paths = discover_corpus_files(directory)
-    if not paths:
-        logger.warning("No ingestible files under %s", directory)
-        logger.info("No .pdf/.md/.txt files found.")
-        return []
-
+    engine = _build_ingest_engine(s)
     progress_path = progress_file or _default_progress_file()
-    progress_by_path = _load_progress(progress_path) if resume else {}
+    rows = run_batch_ingest(
+        directory,
+        deps=BatchDeps(
+            discover_corpus_files=discover_corpus_files,
+            ingest_document=ingest_document,
+            session_factory=session_factory,
+        ),
+        settings=s,
+        engine=engine,
+        progress_file=progress_path,
+        continue_on_error=continue_on_error,
+        skip_existing_sha=skip_existing_sha,
+        force_new_document=force_new_document,
+        per_file_timeout_s=per_file_timeout_s,
+        resume=resume,
+        duplicate_error_type=SkippedDuplicateIngestError,
+    )
 
-    rows: list[dict[str, Any]] = []
-    for path in paths:
-        resolved_path = str(path.resolve())
-        if resume and progress_by_path.get(resolved_path) == "ok":
-            rows.append(
-                {
-                    "path": resolved_path,
-                    "document_id": None,
-                    "work_id": None,
-                    "error": None,
-                    "skipped_duplicate": False,
-                    "status": "skip",
-                },
-            )
-            logger.info("SKIP resumed=ok path=%s", path)
-            continue
-
-        started_at = datetime.now(UTC)
-        try:
-            with factory() as db_session:
-                with _file_timeout(per_file_timeout_s):
-                    doc_id, work_id = ingest_document(
-                        path,
-                        settings=s,
-                        session=db_session,
-                        skip_existing_sha=skip_existing_sha,
-                        force_new_document=force_new_document,
-                    )
-            finished_at = datetime.now(UTC)
-            rows.append(
-                {
-                    "path": resolved_path,
-                    "document_id": doc_id,
-                    "work_id": work_id,
-                    "error": None,
-                    "skipped_duplicate": False,
-                    "status": "ok",
-                },
-            )
-            _append_progress(
-                progress_path,
-                {
-                    "path": resolved_path,
-                    "sha256": None,
-                    "status": "ok",
-                    "document_id": doc_id,
-                    "work_id": work_id,
-                    "started_at": started_at.isoformat(),
-                    "finished_at": finished_at.isoformat(),
-                    "error": None,
-                },
-            )
-            logger.info("OK path=%s document_id=%s work_id=%s", path, doc_id, work_id)
-        except TimeoutError as exc:
-            logger.exception("Ingest timeout for %s", path)
-            finished_at = datetime.now(UTC)
-            rows.append(
-                {
-                    "path": resolved_path,
-                    "document_id": None,
-                    "work_id": None,
-                    "error": str(exc),
-                    "skipped_duplicate": False,
-                    "status": "timeout",
-                },
-            )
-            _append_progress(
-                progress_path,
-                {
-                    "path": resolved_path,
-                    "sha256": None,
-                    "status": "timeout",
-                    "document_id": None,
-                    "work_id": None,
-                    "started_at": started_at.isoformat(),
-                    "finished_at": finished_at.isoformat(),
-                    "error": str(exc),
-                },
-            )
-            logger.info("FAIL_TIMEOUT path=%s error=%s", path, exc)
-            if not continue_on_error:
-                break
-        except SkippedDuplicateIngestError as dup:
-            finished_at = datetime.now(UTC)
-            rows.append(
-                {
-                    "path": resolved_path,
-                    "document_id": dup.document_id,
-                    "work_id": None,
-                    "error": None,
-                    "skipped_duplicate": True,
-                    "status": "skip",
-                },
-            )
-            _append_progress(
-                progress_path,
-                {
-                    "path": resolved_path,
-                    "sha256": dup.sha256,
-                    "status": "skip",
-                    "document_id": dup.document_id,
-                    "work_id": None,
-                    "started_at": started_at.isoformat(),
-                    "finished_at": finished_at.isoformat(),
-                    "error": None,
-                },
-            )
-            logger.info(
-                "SKIP duplicate-sha path=%s document_id=%s",
-                path,
-                dup.document_id,
-            )
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Ingest failed for %s", path)
-            finished_at = datetime.now(UTC)
-            rows.append(
-                {
-                    "path": resolved_path,
-                    "document_id": None,
-                    "work_id": None,
-                    "error": str(exc),
-                    "skipped_duplicate": False,
-                    "status": "fail",
-                },
-            )
-            _append_progress(
-                progress_path,
-                {
-                    "path": resolved_path,
-                    "sha256": None,
-                    "status": "fail",
-                    "document_id": None,
-                    "work_id": None,
-                    "started_at": started_at.isoformat(),
-                    "finished_at": finished_at.isoformat(),
-                    "error": str(exc),
-                },
-            )
-            logger.info("FAIL path=%s error=%s", path, exc)
-            if not continue_on_error:
-                break
-
-    neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
-    try:
-        violations = neo.find_work_dedup_violations()
-    finally:
-        neo.close()
-
-    logger.info("--- Work dedup audit (Neo4j) ---")
-    if not violations:
-        logger.info(
-            "OK: no duplicate Work clusters by doi / openalex_id / fingerprint / arxiv_id",
-        )
-    else:
-        logger.info("Found %s duplicate cluster(s):", len(violations))
-        for item in violations:
-            logger.info(
-                "  [%s] key=%r work_ids=%s",
-                item["kind"],
-                item["dedup_key"],
-                item["work_ids"],
-            )
+    _run_dedup_audit(s)
     return rows
 
 
@@ -1526,14 +719,12 @@ def run_ingest_cli(
     force_new_document: bool = False,
     embeddings_preflight: bool = False,
 ) -> None:
+    """CLI helper for single-file ingest."""
     init_tracer_provider()
     s = get_settings()
     if embeddings_preflight:
-        from science_graphrag.embeddings.preflight import probe_embeddings
-
         probe_embeddings(s)
-    engine = get_engine(s.database_url)
-    init_db(engine)
+    engine = _build_ingest_engine(s)
     factory = session_factory(engine)
     with factory() as session:
         try:

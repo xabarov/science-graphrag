@@ -1,0 +1,583 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-05T11:17:54.591077+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": null,
+    "suite": "full",
+    "feature_flags": {
+      "agent_runtime": null,
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": "0",
+      "agent_budget_stop_reasoning_enabled": "0"
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "redis",
+          "agent_session_memory_configured": "redis"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 1382,
+        "warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "tools": [
+          "coordinator_gate"
+        ],
+        "answer_class": "grounded_explanation"
+      }
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "thread_id": "live_check_30277fa77e47",
+        "turn2_warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "turn2_tools": [
+          "coordinator_gate",
+          "session_init"
+        ]
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "tool_call",
+          "tool_search_result",
+          "tool_result",
+          "answer_synthesis_started",
+          "context_compacted",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 8
+      }
+    }
+  ],
+  "trace_timeline": [
+    {
+      "case_id": "catalog_resolution",
+      "thread_id": null,
+      "duration_ms": 12044.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "workspace_stats",
+      "thread_id": null,
+      "duration_ms": 4850.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "grounded_quote",
+      "thread_id": null,
+      "duration_ms": 9929.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "multi_compare_bibliography",
+      "thread_id": null,
+      "duration_ms": 19869.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "format_bibliography_gost",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 8,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "graph_ego_methods",
+      "thread_id": null,
+      "duration_ms": null,
+      "tool_steps": [],
+      "phoenix_alignment": {
+        "covered": null,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "multi_evidence_speed_accuracy",
+      "thread_id": null,
+      "duration_ms": 25598.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_d19e1b3682a6"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    }
+  ],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 18,
+    "final_answer_missing_count": 1,
+    "latency_p95_ms": 19869.0,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0
+  },
+  "verdict": {
+    "status": "fail",
+    "fail_reasons": [
+      "e2e_failed",
+      "final_answer_missing_count:1"
+    ],
+    "warn_reasons": []
+  },
+  "e2e_audit": {
+    "ok": false,
+    "returncode": 1,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "full",
+      "--timeout",
+      "240.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_u466k_nq.json",
+      "--trace-audit"
+    ],
+    "stdout_tail": "\": 23.0,\n            \"score_band\": 1.35,\n            \"catalog_size\": 10,\n            \"shortlist_size\": 6,\n            \"shortlist_ratio\": 0.6,\n            \"deferred_schema_mode\": null,\n            \"deferred_schema_refs\": null,\n            \"skipped\": false\n          },\n          {\n            \"type\": \"tool_search_result\",\n            \"specialist\": \"single_agent_react\",\n            \"tools\": [\n              \"workspace_inspect\",\n              \"paper_profile\",\n              \"find_works\",\n              \"paper_quote_search\",\n              \"idea_search\",\n              \"final_answer\"\n            ],\n            \"reason\": \"rules\",\n            \"top_score\": 23.0,\n            \"score_band\": 1.35,\n            \"catalog_size\": 10,\n            \"shortlist_size\": 6,\n            \"shortlist_ratio\": 0.6,\n            \"deferred_schema_mode\": null,\n            \"deferred_schema_refs\": null,\n            \"skipped\": false\n          },\n          {\n            \"type\": \"tool_search_result\",\n            \"specialist\": \"single_agent_react\",\n            \"tools\": [\n              \"workspace_inspect\",\n              \"paper_profile\",\n              \"find_works\",\n              \"paper_quote_search\",\n              \"idea_search\",\n              \"final_answer\"\n            ],\n            \"reason\": \"rules\",\n            \"top_score\": 23.0,\n            \"score_band\": 1.35,\n            \"catalog_size\": 10,\n            \"shortlist_size\": 6,\n            \"shortlist_ratio\": 0.6,\n            \"deferred_schema_mode\": null,\n            \"deferred_schema_refs\": null,\n            \"skipped\": false\n          },\n          {\n            \"type\": \"tool_search_result\",\n            \"specialist\": \"single_agent_react\",\n            \"tools\": [\n              \"workspace_inspect\",\n              \"paper_profile\",\n              \"find_works\",\n              \"paper_quote_search\",\n              \"idea_search\",\n              \"final_answer\"\n            ],\n            \"reason\": \"rules\",\n            \"top_score\": 23.0,\n            \"score_band\": 1.35,\n            \"catalog_size\": 10,\n            \"shortlist_size\": 6,\n            \"shortlist_ratio\": 0.6,\n            \"deferred_schema_mode\": null,\n            \"deferred_schema_refs\": null,\n            \"skipped\": false\n          }\n        ]\n      },\n      \"tool_search_shortlist_ratio_avg\": null,\n      \"tool_search_deferred_schema_events\": null,\n      \"budget_stop_reasons\": [],\n      \"answer_class\": \"quote_extraction\",\n      \"citations_count\": 2,\n      \"phoenix_ui_url\": \"http://127.0.0.1:16006/projects/science-graphrag/traces/4a8d9fbda2020f54d448c357ebc37363\",\n      \"trace_audit\": {\n        \"tool_counts\": {\n          \"paper_profile\": 2,\n          \"coordinator_gate\": 1,\n          \"final_answer\": 1,\n          \"idea_search\": 1,\n          \"paper_quote_search\": 1,\n          \"workspace_inspect\": 1\n        },\n        \"consecutive_duplicate_tools\": [\n          \"paper_profile\"\n        ],\n        \"tools_called_more_than_once\": {\n          \"paper_profile\": 2\n        },\n        \"phoenix_sample_llm_agent_react_turn_hits\": 8,\n        \"phoenix_sample_channel_or_route_hits\": 38,\n        \"phoenix_sample_tool_dot_hits\": 8,\n        \"heuristic_issues\": [],\n        \"phoenix_structure_audit\": {\n          \"span_sample_size\": 100,\n          \"llm_agent_react_turn_hits\": 8,\n          \"tool_dot_span_hits\": 8,\n          \"embedding_span_hits\": 2,\n          \"retrieval_span_hits\": 2,\n          \"channel_or_route_noise_hits\": 38,\n          \"tool_dot_sample\": [\n            \"tool.paper_profile\",\n            \"tool.paper_quote_search\",\n            \"tool.paper_profile\",\n            \"tool.idea_search\",\n            \"tool.workspace_inspect\",\n            \"tool.cypher_query\",\n            \"tool.workspace_inspect\",\n            \"tool.final_answer\"\n          ],\n          \"issues\": [],\n          \"sequence_hints\": [\n            \"duplicate_tool_calls_in_trace: ['paper_profile'] — check fan-out rules.\"\n          ],\n          \"coverage\": {\n            \"covered\": 100,\n            \"missing\": []\n          }\n        }\n      }\n    }\n  ]\n}\n",
+    "stderr_tail": "note: PHOENIX_TRACE_SCOPE=extraction_llm (agent.* spans still allowed); if Phoenix is empty, check PHOENIX_COLLECTOR_ENDPOINT on the API container.\nwrote full report json: /tmp/e2e_full_report_u466k_nq.json\n\n--- summary ---\ncatalog_resolution: steps=5 final_answer=True answer_len=267 phoenix_ok=True ok=True\nworkspace_stats: steps=3 final_answer=True answer_len=115 phoenix_ok=True ok=True\ngrounded_quote: steps=4 final_answer=True answer_len=651 phoenix_ok=True ok=True\nmulti_compare_bibliography: steps=8 final_answer=True answer_len=847 phoenix_ok=True ok=True\ngraph_ego_methods: steps=0 final_answer=False answer_len=0 phoenix_ok=None ok=False\nmulti_evidence_speed_accuracy: steps=7 final_answer=True answer_len=1610 phoenix_ok=True ok=True\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_u466k_nq.json"
+  },
+  "phoenix_snapshot_path": "eval/results/trace-review-off-db_phoenix_spans.jsonl",
+  "phoenix_pull": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-off-db_phoenix_spans.jsonl",
+    "stderr_tail": ""
+  },
+  "compaction_turn_review": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-off-db_compaction_review.json",
+    "stdout_tail": "[compaction-review] merged into: eval/results/trace-review-off-db.json\n[compaction-review] json: eval/results/trace-review-off-db_compaction_review.json\n[compaction-review] md:   eval/results/trace-review-off-db_compaction_review.md\n",
+    "stderr_tail": ""
+  }
+}

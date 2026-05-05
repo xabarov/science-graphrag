@@ -14,6 +14,9 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 | When | Theme |
 |------|--------|
+| 2026-05-05 | **Wave Next (ingest stability) — partial delivery:** вынесены `ingestion/{orchestrator,progress_store,cache_policy,document_runtime}.py`; batch ingest переведён на orchestrator seam; `claims` path переведён на shared runtime envelope (`ingestion/llm/claims_runtime.py` + обновление `claims/extractor.py`); добавлены регрессионные тесты `tests/ingestion/test_progress_store_and_cache_policy.py` + прогоны `tests/ingestion`, `test_ingest_checkpoint`, `test_ingest_sha_dedup`, `test_full_ingest_integration`. |
+| 2026-05-05 | **CLI `config-check` delivered:** `science-graphrag config-check` exists in `science_graphrag/cli/main.py`, prints masked config diagnostics (`SET`/`UNSET` for keys), supports preflights, and is wired in ops docs/rules as the canonical pre-flight gate. |
+| 2026-05-05 | **LLM stage extraction split delivered:** former `ingestion/llm/stage_extraction.py` god-module was reduced to a thin compatibility facade; orchestration moved to `ingestion/llm/orchestrator.py`, transport to `ingestion/llm/executor.py`, prompts/heuristics into dedicated modules. |
 | 2026-05-04 | **Retire `POST /v1/agent/query`:** route returns **410 Gone** + JSON `replacement: /v2/agent/query` and `Link: </v2/agent/query>; rel="successor-version"` ([`science_graphrag/api/agent.py`](../../science_graphrag/api/agent.py)); smoke tests updated (`tests/test_api_agent_smoke.py`, `tests/test_api_agent_v2_smoke.py`). |
 | 2026-04-28 | **Graph work vs workspace DRY (Phases 0–5):** `collapse_authorship_for_reader_multicenter` + workspace pipeline in `workspace_graph/cypher.py`; `GRAPH_CONTRACT_VERSION=4`; workspace `include_authorship_debug`; `Authorship–AFFILIATED_WITH–Institution` → `Author–…` in collapse; UI `projectAuthorSemanticGraph` pass-through; i18n + `work_workspace_context` subtitle; spec §5b. Plan: [`docs/analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](../analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md). |
 | 2026-04-26 | **Wave 6 — benchmarks quality closure:** `decision_gate` **GO** with ≤2 design-only phantom families (`merge_safe_contract_mock`, `strict_pilot_mock`); agent LLM `ensure_messages_safe_for_generation` (OpenRouter `add_generation_prompt` fix); `agent_tools` metrics (subsequence match, ignore `route_to_specialist`); multihop_v2 pilot gold thresholds + `current-retrieval-multihop-mini.json` refresh; `eval/results/benchmark-trust-baseline.json` via `scripts/refresh_benchmark_metrics.sh`. Write-up: [`docs/analysis/_archive/wave6-benchmarks-quality-2026-04-26.md`](../analysis/_archive/wave6-benchmarks-quality-2026-04-26.md). |
@@ -241,21 +244,15 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** orchestrator file <= 180 lines, prompt/schema logic isolated, and unit tests target each submodule independently.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split `api/benchmark.py` (1027) + `api/task_store.py` (908)
+### [OPEN] Split benchmark backend hubs: `api/benchmark.py` (1249) + `api/task_store.py` (593)
 - **Area:** `science_graphrag/api/benchmark.py`, `science_graphrag/api/task_store.py`, `science_graphrag/api/benchmark_profiles.py`
-- **Issue:** Двa самых крупных hub-модуля для UI бенчмарка. `benchmark.py` — каталог фикстур, детали кейсов, сравнение, связь с `task_store`/`graph_snapshot_diff`/`eval/*`. `task_store.py` — in-memory `ThreadPoolExecutor` исполнитель + JSON guards + persist + сериализация. Сильная связность с `eval/`; рост блокирует продвижение **Wave M/P/Q/R/S** (новые семейства бенчмарков добавляются в один большой роутер).
-- **Proposal:** разнести `benchmark.py` на `api/benchmark/{router.py,catalog.py,case_detail.py,compare.py,profiles.py}`. Из `task_store.py` выделить: `runs_executor.py` (планировщик/пул), `runs_persistence.py` (snapshots, sidecar JSON, гварды), `runs_dto.py` (сериализация для API). Сохранить публичные эндпоинты.
-- **Acceptance:** ни один модуль > ≈400 строк; новые семейства бенчмарков (`workspace_scoped`, `hybrid_ablation`, `multihop_v1`, `agent_tools_*`, `idea_assist_v1`) добавляются точечно в `catalog.py` без редактирования router/persistence; тесты `test_benchmark_*` зелёные.
+- **Issue:** `task_store.py` частично разгружен (persistence вынесен в `science_graphrag/storage/benchmark_run_persistence.py`, сериализация — в `science_graphrag/api/task_benchmark_serializers.py`), но `benchmark.py` остаётся главным god-router (fixture catalog + case detail + compare + graph preview + eval integration) и продолжает расти. Глубина seam'ов низкая: добавление нового benchmark family всё ещё требует правок в центральном роутере.
+- **Proposal:** зафиксировать новый target split: (1) `api/benchmark.py` → подпакет `api/benchmark/{router,catalog,case_detail,compare,graph_preview}.py`; (2) `task_store.py` добить до orchestration-only слоя с явными adapter seams к persistence/serialization.
+- **Acceptance:** `api/benchmark.py` как входной router <= 300 LoC; новые benchmark families добавляются через `catalog` adapter без изменения compare/preview модулей; `task_store.py` не содержит JSON snapshot plumbing и не знает layout on-disk артефактов.
 - **Synergy:** **Wave M/P/Q/R/S** в `ontology-benchmarks-roadmap-2026-04-24.md` — каждое семейство не упирается в god-файл.
-- **Raised:** 2026-04-25
+- **Raised:** 2026-04-25, updated 2026-05-05
 
-### [OPEN] Split `ingestion/llm/stage_extraction.py` (849) — orchestrator vs prompts vs heuristics
-- **Area:** `science_graphrag/ingestion/llm/stage_extraction.py`, `science_graphrag/ingestion/llm/semantic_extraction.py`, `science_graphrag/ingestion/llm/extractor.py`
-- **Issue:** LLM-first путь смешивает orchestration (`ThreadPoolExecutor`), Pydantic-схемы, промпты, heuristic fallback и связку со stage-модулями metadata/authorships/references. Дубли регексов/промптов с `semantic_extraction.py`. Перепиливается каждый раз при новом extractor (claims, concept/topic — Wave N/O).
-- **Proposal:** ввести `science_graphrag/ingestion/llm/` подпакет с: `prompts/<call_name>.py` (текстовые промпты + Pydantic-схема), `executor.py` (общий вызов через instructor/LangChain, span-discipline), `orchestrator.py` (LLM + heuristics + fallback политика), `heuristics/<call_name>.py`. `semantic_extraction.py` использует тот же executor и тот же стиль `prompts/`.
-- **Acceptance:** ни один файл > ≈300 строк; новые extractor'ы (Wave N concept/topic gold→production, Wave O claims promotion) добавляются как `prompts/<name>.py` + `heuristics/<name>.py`; юнит-тесты на промпт-схемы.
-
-### [OPEN] Standardize ingestion LLM seams around structured executor
+### [PARTIAL] Standardize ingestion LLM seams around structured executor
 - **Area:** `science_graphrag/ingestion/llm/`, `science_graphrag/ingestion/claims/extractor.py`, `science_graphrag/ingestion/vl_pdf.py`, `science_graphrag/ingestion/_pipeline_impl.py`
 - **Issue:** production ingestion использует три разных паттерна LLM-вызова. Metadata/authorships/references/semantic уже идут через `SyncInstructorExtractor` + shared `run_extraction`, но claims по-прежнему вызывает `extract_maybe(...)` напрямую, держит локальные Pydantic-схемы и ad-hoc diagnostics dict; VL PDF path оправданно не использует Instructor, но дублирует transport/timeout/observability policy. В итоге retry/span/error contract и test surface отличаются между стадиями одной ingestion pipeline.
 - **Proposal:** (1) перевести claims на тот же structured seam: shared schema modules + `run_extraction(...)`/standardized executor policy + typed diagnostics; (2) ввести extractor factory/presets из `Settings` вместо ручной сборки `SyncInstructorExtractor` в каждом call-site; (3) для VL не тащить Instructor, а вынести общий low-level transport/telemetry seam для non-structured calls; (4) зафиксировать матрицу `stage -> seam` в architecture/docs и tests.
@@ -264,21 +261,23 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Raised:** 2026-04-27
 - **Synergy:** **Wave N/O** (онтология), **Wave Y2** (LangGraph tool-граф) — общий executor можно потом переключить на `langchain_core` LLM-калл без сноса orchestrator.
 - **Raised:** 2026-04-25
+- **Done in Wave Next (2026-05-05):** claims extraction runtime envelope вынесен в `science_graphrag/ingestion/llm/claims_runtime.py` (preset/budget/deadline), `claims/extractor.py` переключён на shared runtime builder; сохранена backward-совместимость тестовых monkeypatch seam.
+- **Remaining:** унификация VL transport helper и выравнивание diagnostics vocabulary между claims/metadata/semantic.
 
-### [OPEN] Settings service split (504)
+### [OPEN] Settings service split (1027)
 - **Area:** `science_graphrag/settings/service.py`, `science_graphrag/api/settings.py`
-- **Issue:** Сервис настроек смешивает работу с секретами/OpenAI client и сборку DTO для security/diagnostics snapshot.
-- **Proposal:** `settings/secrets.py` (KMS/env interaction), `settings/llm_clients.py` (OpenAI/OpenRouter clients), `settings/service.py` (DTO/CRUD), `settings/snapshots.py` (security/diagnostics).
-- **Acceptance:** ни один файл > ≈300 строк; добавление новых секций settings (Wave L work_dedup, Wave R agent caps, Wave Y2 LangChain creds) — точечная правка в `secrets.py`.
-- **Raised:** 2026-04-25
+- **Issue:** Модуль смешивает как минимум 4 ответственности: runtime overrides merge, secret-aware LLM config/test, storage/benchmark snapshot assembly, security/diagnostics output. Из-за высокой связности любое расширение settings API повышает риск скрытых регрессий.
+- **Proposal:** выделить `settings/runtime_overlay.py` (merge + validation), `settings/snapshots.py` (DTO assembly), `settings/llm_probe.py` (test connection + OpenAI/OpenRouter probes); `SettingsService` оставить как thin orchestration facade.
+- **Acceptance:** `settings/service.py` <= 350 LoC; unit-тесты покрывают каждый модуль изоляционно (overlay/snapshots/probes), а API слой проверяет только wiring.
+- **Raised:** 2026-04-25, updated 2026-05-05
 
-### [OPEN] Split `cli/main.py` (361) by command groups
+### [OPEN] Split `cli/main.py` (566) by command groups
 - **Area:** `science_graphrag/cli/main.py`
 - **Issue:** Typer-приложение фактически — оркестратор offline-операций (`neo4j-wipe`, `ingest`, `merge-work`, `repoint-qdrant-work-ids` и т.п.); по мере Wave Q/T/W будет расти.
 - **Proposal:** `cli/{ingest,neo4j,qdrant,dedup,worker}.py`, тонкий `cli/main.py` собирает Typer-app из подкоманд.
 - **Acceptance:** ни один файл > ≈200 строк; запуск `science-graphrag --help` идентичен.
 - **Synergy:** **Wave W** добавит `cli/worker.py` (запуск Dramatiq) без раздувания main.
-- **Raised:** 2026-04-25
+- **Raised:** 2026-04-25, updated 2026-05-05
 
 ### [OPEN] Targeted backend test coverage for hot modules
 - **Area:** `tests/test_ingest_jobs*`, `tests/test_retrieval*`, `tests/storage/test_neo4j_*`, `tests/agent/`
@@ -295,27 +294,58 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** No DB migration started without an operational signal captured in a pilot/ops note; file-backed path remains documented as the default.
 - **Raised:** 2026-04-19
 
-### [OPEN] CLI config-check command (`science-graphrag config-check`)
-- **Area:** `science_graphrag/cli/main.py` (или новый `science_graphrag/cli/config_check.py`)
-- **Issue:** Нет встроенного способа быстро проверить, что Settings видит правильные значения (API-ключи, URL-сервисов, feature flags) — агент и оператор вынуждены писать throwaway-питон, а smoke-check в правиле ломается при рефакторинге полей. Это повторяющийся источник зависших инgestов и потерянного времени (постмортем Wave 4, 2026-04-26).
-- **Proposal:**
-  - Добавить `science-graphrag config-check` (или подкоманду `config check`) который выводит:
-    ```
-    [config-check] extraction_llm_api_key : SET
-    [config-check] vl_api_key             : SET
-    [config-check] embeddings channel     : openrouter (model=baai/bge-m3)
-    [config-check] database_url           : postgresql+psycopg://science:***@localhost:15432/...
-    [config-check] neo4j_uri              : bolt://localhost:17687
-    [config-check] qdrant_url             : http://localhost:16333
-    [config-check] SKIP_HOST_DOTENV       : False
-    [config-check] extraction_llm_enabled : True
-    [config-check] blob_root              : ./data/blobs (exists=True)
-    ```
-  - API-ключи выводятся только как `SET` / `UNSET` (никогда не в открытую).
-  - Exit code 1 если хотя бы один обязательный ключ `UNSET` (чтобы можно было использовать как gate в CI/скриптах).
-  - Обновить smoke-check в `long-running-ops.mdc` на вызов этой команды.
-- **Acceptance:** `science-graphrag config-check` выводит полную диагностику; exit code 1 при пустом extraction_llm_api_key; правило обновлено на эту команду вместо throwaway-питона.
-- **Raised:** 2026-04-26 (постмортем Wave 4 env-var footgun).
+### [PARTIAL] Split `api/agent_v2.py` orchestration seams (995)
+- **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/runtime.py`, `science_graphrag/agent/tool_*`
+- **Issue:** `agent_v2.py` аккумулирует transport concerns (SSE/error envelope), orchestration, и mapping request/response payloads. Это снижает locality для регрессионных правок по stream lifecycle и tool-trace/compaction.
+- **Proposal:** выделить `api/agent_v2/` подпакет: `router.py` (FastAPI endpoints), `streaming.py` (SSE lifecycle + cancellation), `payloads.py` (DTO mapping), `orchestration.py` (runtime call graph). Текущий файл оставить как compatibility entrypoint.
+- **Acceptance:** каждый модуль <= 300 LoC; изменения в SSE протоколе не требуют правок в бизнес-оркестрации tool/runtime; smoke `test_api_agent_v2_smoke.py` и trace-аудит тесты проходят без контрактных изменений.
+- **Raised:** 2026-05-05
+- **Done in Roadmap pass (2026-05-05):** вынесены новые seams: `api/agent_v2_payloads.py` (payload mapping), `api/agent_v2_errors.py` (error normalization), `api/agent_v2_streaming.py` (graph chunk streaming primitives), `api/agent_v2_runtime_bridge.py` (sync runtime bridge); `agent_v2.py` переведён на эти adapters; smoke/parity тесты зелёные.
+- **Done in follow-up packaging slice (2026-05-05):** добавлен подпакет `api/agent_v2_modules/` и основные импорты в `agent_v2.py` переведены на package-path (`...agent_v2_modules.{payloads,errors,streaming,runtime_bridge}`); прежние top-level модули сохранены как compatibility shims.
+- **Remaining:** выделить отдельный thin router module и вынести основной `_stream_agent` lifecycle целиком из `agent_v2.py` (финальный шаг к `api/agent_v2/` без импортного конфликта имени).
+
+### [PARTIAL] Split ingest pipeline orchestration seams (`ingestion/_pipeline_impl.py`, 1196)
+- **Area:** `science_graphrag/ingestion/_pipeline_impl.py`, `science_graphrag/ingestion/stages/*`, `science_graphrag/ingestion/checkpoint.py`
+- **Issue:** `_pipeline_impl.py` остаётся самым крупным backend module: в одном месте смешаны corpus orchestration, cache/progress IO, timeout/retry policy, db/session wiring, dedup hooks и stage transitions. Высокая плотность условных веток усложняет безопасный change review.
+- **Proposal:** поэтапно разнести на deep modules: `ingestion/orchestrator.py` (stage graph + resume contract), `ingestion/progress_store.py` (JSONL progress/checkpoint IO), `ingestion/cache_policy.py` (markdown cache lookup/reuse), `ingestion/document_runtime.py` (per-document execution context).
+- **Acceptance:** `_pipeline_impl.py` <= 400 LoC facade; отдельные модули имеют узкие интерфейсы и покрыты unit-тестами на resume/cache/timeout ветки; новые ingest stages подключаются через декларативный stage registry без роста god-file.
+- **Raised:** 2026-05-05
+- **Done in Roadmap pass (2026-05-05):** добавлены `stage_graph.py`, `claims_phase.py`, `embed_phase.py`, `session_wiring.py`; `ingest_document` переведён на `runtime_state` + вынесенные claims/embed stage runners; `_pipeline_impl.py` сокращён до ~1196 LoC.
+- **Done in follow-up seam cleanup (2026-05-05):** `resume_ingest.py` отвязан от `_pipeline_impl.py` и импортирует embed stage напрямую из `ingestion/embed_phase.py` (уменьшен слой неявной связности через god-file).
+- **Done in facade cleanup (2026-05-05):** `ingestion/pipeline.py` переведён на прямые seam-импорты для cache/artifact/embed (`cache_policy`, `artifact_layout`, `embed_phase`) с сохранением compatibility alias `_slug/_article_slug/_read_cached_markdown/...`; уменьшена зависимость facade от `_pipeline_impl.py`.
+- **Done in orchestration extraction slice (2026-05-05):** orchestration skeleton `ingest_document` вынесен в `ingestion/document_orchestrator.py`; `_pipeline_impl.py` оставлен как compatibility entrypoint с делегированием через `DocumentOrchestrationDeps`.
+- **Done in stage-path unification slice (2026-05-05):** `ingestion/stages/{claims,embeddings}.py` переведены на canonical phase-modules (`claims_phase`, `embed_phase`) с сохранением legacy ctx-mode для тестов и совместимости.
+- **Done in resume/progress hardening slice (2026-05-05):** `resume_ingest.py` передаёт `retry_call`/`logger` в embed phase; `progress_store.append_progress` переведён на append+flush+fsync (убран full-file rewrite на каждый entry).
+- **Done in next-wave slice (2026-05-05):** `document_orchestrator.py` отвязан от `_pipeline_impl.py` (helper institutions вынесен в `ingestion/institution_nodes.py`); `stages/{claims,embeddings}` получили явные `*_legacy` + `*_phase` API, internal call-sites переведены на canonical phase-path.
+- **Remaining:** добить финальный cleanup facade-surface: сократить private re-export контракт в `ingestion/pipeline.py`, перенести оставшиеся helper-ветки из `_pipeline_impl.py` в application/adapters и довести `_pipeline_impl.py` до компактного compatibility слоя.
+
+### [OPEN] Sunset private exports in `ingestion/pipeline.py`
+- **Area:** `science_graphrag/ingestion/pipeline.py`, callers in tests/eval/scripts.
+- **Issue:** Исторический compatibility surface содержит private `_...` symbols и провоцирует coupling внешнего кода к внутренним helper-веткам.
+- **Proposal:** оставить только минимально необходимый transition-export (`_persist_reference_citation`), остальные private aliases убрать по этапам; для каждого снятого alias — migration note (куда импортировать теперь).
+- **Acceptance:** `pipeline.py` экспортирует только стабильные публичные entrypoints + документированные transition aliases; нет новых импортов private symbols из facade.
+- **Raised:** 2026-05-05
+
+### [OPEN] CI gate — `trace_regression_compare` vs committed baseline
+- **Area:** `.github/workflows/`, `scripts/live_check/trace_regression_compare.py`, `eval/results/baseline-trace-review.json`
+- **Issue:** Wave 1 adds offline regression compare and a committed baseline artifact; PRs that touch agent runtime do not yet fail CI when metrics regress vs baseline.
+- **Proposal:** Workflow on pull_request / paths filter for `science_graphrag/agent/**`, `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/tool_*`: run live optional job or candidate-only generation + compare to baseline from `main` / artifact.
+- **Acceptance:** CI fails on regression FAIL policies or schema version mismatch (exit 1 / 2); WARN policies documented (`--warn-is-pass` vs strict).
+- **Raised:** 2026-05-05 (Wave 1 trace-review toolkit)
+
+### [OPEN] Single canonical tool/run audit trail (roadmap §2.1 / §2.2)
+- **Area:** `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/graph/tracing.py`, `science_graphrag/agent/chat_envelope.py`, LangGraph messages vs `tool_trace`
+- **Issue:** Duplicate representations of the same turn facts (`messages`, `tool_trace`, typed payloads) risk drift when adding runtimes or changing message shapes.
+- **Proposal:** Define one canonical “turn facts” structure consumed by envelope + observability; narrow `chat_envelope` responsibilities per roadmap §2.2.
+- **Acceptance:** Documented contract + tests that `tool_trace` and Phoenix spans stay aligned for one reference suite.
+- **Raised:** 2026-05-05
+
+### [OPEN] Token budget loop policy (agent runtime P2)
+- **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/runtime.py`, client SSE contract
+- **Issue:** Roadmap §6.4 lists token budget / continue-stop behavior as P2; not implemented as first-class metrics in trace-review.
+- **Proposal:** Add cooperative cutoff telemetry + `trace-review-v1` metrics when product adds loop policy; extend regression gate thresholds.
+- **Acceptance:** Documented stop reasons + tests; trace-review artifacts include budget signals when enabled.
+- **Raised:** 2026-05-05
 
 ### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)
 - **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.

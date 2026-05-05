@@ -19,6 +19,8 @@ class ToolManifestEntry:
     scope: Literal["workspace", "graph", "corpus", "writer"]
     specialist: SpecialistName | None
     requires_workspace: bool
+    prompt_summary: str
+    deferred_schema_ref: str
 
 
 # Names must match LangChain @tool function names.
@@ -31,6 +33,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "workspace",
         "retrieval_agent",
         True,
+        "Workspace inventory and counts",
+        "tool://workspace_inspect",
     ),
     ToolManifestEntry(
         "workspace_graph_reltypes",
@@ -40,6 +44,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "workspace",
         "retrieval_agent",
         True,
+        "Workspace graph relationship types/schema",
+        "tool://workspace_graph_reltypes",
     ),
     ToolManifestEntry(
         "paper_profile",
@@ -49,6 +55,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "workspace",
         "retrieval_agent",
         False,
+        "Work metadata by work_id",
+        "tool://paper_profile",
     ),
     ToolManifestEntry(
         "find_works",
@@ -58,6 +66,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "corpus",
         "retrieval_agent",
         False,
+        "Find works by text/title query",
+        "tool://find_works",
     ),
     ToolManifestEntry(
         "paper_quote_search",
@@ -67,6 +77,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "corpus",
         "retrieval_agent",
         False,
+        "Semantic quote/passage retrieval",
+        "tool://paper_quote_search",
     ),
     ToolManifestEntry(
         "format_bibliography_gost",
@@ -76,6 +88,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "workspace",
         "retrieval_agent",
         True,
+        "Format bibliography in GOST",
+        "tool://format_bibliography_gost",
     ),
     ToolManifestEntry(
         "idea_search",
@@ -85,6 +99,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "corpus",
         "retrieval_agent",
         False,
+        "Semantic discovery across chunks",
+        "tool://idea_search",
     ),
     ToolManifestEntry(
         "cypher_query",
@@ -94,6 +110,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "graph",
         "graph_agent",
         False,
+        "Read-only Cypher graph queries",
+        "tool://cypher_query",
     ),
     ToolManifestEntry(
         "edge_search",
@@ -103,6 +121,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "graph",
         "graph_agent",
         False,
+        "Edge neighborhood lookup",
+        "tool://edge_search",
     ),
     ToolManifestEntry(
         "final_answer",
@@ -112,6 +132,8 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "writer",
         "writer_agent",
         False,
+        "Structured final answer output",
+        "tool://final_answer",
     ),
 )
 
@@ -119,3 +141,13 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
 def manifest_by_name() -> dict[str, ToolManifestEntry]:
     """Return tool manifest entries keyed by tool name."""
     return {e.name: e for e in TOOL_MANIFEST}
+
+
+def compact_catalog_lines(*, specialist: SpecialistName | None = None) -> list[str]:
+    """Human-readable compact catalog lines for prompts/debug artifacts."""
+    rows: list[str] = []
+    for entry in TOOL_MANIFEST:
+        if specialist is not None and entry.specialist not in (None, specialist):
+            continue
+        rows.append(f"{entry.name}: {entry.prompt_summary}")
+    return rows

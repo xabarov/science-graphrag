@@ -557,6 +557,13 @@ class Settings(BaseSettings):
             "(see science_graphrag.agent.tool_search). Habr Jun 2026 default 1.35 vs legacy ~1.5."
         ),
     )
+    agent_tool_search_deferred_schema_refs_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, tool_search debug metadata emits deferred schema refs for shortlist-picked "
+            "tools (catalog-first prompt contract, full JSON schemas only for selected tools)."
+        ),
+    )
     agent_tool_history_compact_enabled: bool = Field(
         default=False,
         description=(
@@ -631,6 +638,13 @@ class Settings(BaseSettings):
         description=(
             "Wall-clock reserve (seconds) before starting another agent LLM hop when the turn "
             "response deadline is almost exhausted (cooperative cutoff)."
+        ),
+    )
+    agent_budget_stop_reasoning_enabled: bool = Field(
+        default=True,
+        description=(
+            "Emit explicit budget stop reasons in debug_events/run_metadata when cooperative "
+            "response-budget cutoff stops another LLM hop."
         ),
     )
     agent_session_memory_backend: str = Field(

@@ -50,3 +50,8 @@ Use before release or when validating multi-worker / real LLM stacks where in-pr
 ## Related spec
 
 [`docs/specs/agent-chat-v1.md`](../../docs/specs/agent-chat-v1.md) — envelope and SSE vocabulary.
+
+## Standardized trace review
+
+Canonical **`trace-review-v1`** workflow: [`README_trace_review.md`](./README_trace_review.md) and operator SOP
+[`docs/runbooks/agent-trace-review-sop.md`](../../docs/runbooks/agent-trace-review-sop.md).

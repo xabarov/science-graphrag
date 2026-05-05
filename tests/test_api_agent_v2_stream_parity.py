@@ -89,7 +89,14 @@ class _FakeGraph:
             },
             "current_specialist": None,
             "routing_log": [{"from": "supervisor", "to": "retrieval_agent", "budget_left": 8}],
-            "debug_events": [],
+            "debug_events": [
+                {
+                    "type": "tool_search_result",
+                    "shortlist_ratio": 0.5,
+                    "deferred_schema_refs": [{"tool": "idea_search", "schema_ref": "tool://idea_search"}],
+                },
+                {"type": "budget_stop_decision", "code": "agent_response_budget_cutoff"},
+            ],
             "thread_id": state.get("thread_id"),
             "session_summary": str(state.get("session_summary") or ""),
             "answer_class": None,
@@ -338,6 +345,9 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     assert "agent_runtime" in rm
     assert "extraction_llm_model" in rm
     assert "resolved_chat_llm_model" in rm
+    assert rm.get("tool_search_shortlist_ratio_avg") == 0.5
+    assert rm.get("tool_search_deferred_schema_events") == 1
+    assert "agent_response_budget_cutoff" in (rm.get("budget_stop_reasons") or [])
 
 
 def test_sse_final_answer_uses_structured_final_answer_tool(monkeypatch) -> None:

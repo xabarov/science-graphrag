@@ -311,6 +311,22 @@ def react_chat_response_budget_cutoff(
     reserve = float(settings.agent_min_llm_hop_reserve_seconds)
     if remaining >= reserve:
         return None
+    budget_event = {
+        "type": "budget_stop_decision",
+        "code": "agent_response_budget_cutoff",
+        "decision": "stop_before_next_llm_hop",
+        "remaining_seconds": round(max(0.0, remaining), 3),
+        "min_hop_reserve_seconds": reserve,
+    }
+    debug_events = [budget_event] if settings.agent_budget_stop_reasoning_enabled else []
+    debug_events.append(
+        {
+            "type": "warning",
+            "code": "agent_response_budget_cutoff",
+            "remaining_seconds": round(max(0.0, remaining), 3),
+            "min_hop_reserve_seconds": reserve,
+        }
+    )
     return {
         "messages": [
             AIMessage(
@@ -321,12 +337,5 @@ def react_chat_response_budget_cutoff(
                 )
             )
         ],
-        "debug_events": [
-            {
-                "type": "warning",
-                "code": "agent_response_budget_cutoff",
-                "remaining_seconds": round(max(0.0, remaining), 3),
-                "min_hop_reserve_seconds": reserve,
-            }
-        ],
+        "debug_events": debug_events,
     }

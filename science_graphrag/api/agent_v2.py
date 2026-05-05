@@ -49,6 +49,41 @@ _META_TOOL_NAMES = frozenset(
 )
 
 
+def _extract_runtime_telemetry_from_debug_events(
+    debug_events: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Aggregate shortlist/budget telemetry from debug events for run_metadata."""
+    shortlist_ratios: list[float] = []
+    deferred_schema_hits = 0
+    budget_stop_reasons: list[str] = []
+    for ev in debug_events:
+        if not isinstance(ev, dict):
+            continue
+        if str(ev.get("type") or "") == "tool_search_result":
+            raw_ratio = ev.get("shortlist_ratio")
+            try:
+                shortlist_ratios.append(float(raw_ratio))
+            except (TypeError, ValueError):
+                pass
+            refs = ev.get("deferred_schema_refs")
+            if isinstance(refs, list) and refs:
+                deferred_schema_hits += 1
+        if str(ev.get("type") or "") == "budget_stop_decision":
+            reason = str(ev.get("code") or "").strip()
+            if reason:
+                budget_stop_reasons.append(reason)
+    telemetry: dict[str, Any] = {}
+    if shortlist_ratios:
+        telemetry["tool_search_shortlist_ratio_avg"] = round(
+            sum(shortlist_ratios) / len(shortlist_ratios), 4
+        )
+    if deferred_schema_hits:
+        telemetry["tool_search_deferred_schema_events"] = deferred_schema_hits
+    if budget_stop_reasons:
+        telemetry["budget_stop_reasons"] = budget_stop_reasons
+    return telemetry
+
+
 def _agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
     """LLM fields attached to agent run_metadata (extraction vs chat model split)."""
     return {
@@ -722,6 +757,8 @@ async def _stream_agent(
                                     et = ev.get("type")
                                     if et in ("tool_search_result", "intent_classified"):
                                         yield {"data": json.dumps(dict(ev))}
+                                    elif et == "budget_stop_decision":
+                                        yield {"data": json.dumps(dict(ev))}
                                     elif et == "warning" and str(ev.get("code") or "").strip():
                                         yield {"data": json.dumps(dict(ev))}
                                 prev_debug_len = len(dev)
@@ -971,6 +1008,17 @@ async def _stream_agent(
                     else []
                 ),
             }
+            debug_events_tail = (
+                (latest_full_state or {}).get("debug_events", [])[-50:]
+                if isinstance(latest_full_state, dict)
+                else []
+            )
+            if isinstance(debug_events_tail, list):
+                run_meta.update(
+                    _extract_runtime_telemetry_from_debug_events(
+                        [x for x in debug_events_tail if isinstance(x, dict)]
+                    )
+                )
             if stream_usage:
                 run_meta["usage"] = stream_usage
             if salvaged_after_deadline:

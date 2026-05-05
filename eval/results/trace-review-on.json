@@ -1,0 +1,132 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-05T11:11:57.143368+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": null,
+    "suite": "full",
+    "feature_flags": {
+      "agent_runtime": null,
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": "1",
+      "agent_budget_stop_reasoning_enabled": "1"
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "redis",
+          "agent_session_memory_configured": "redis"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 1856,
+        "warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "tools": [
+          "coordinator_gate"
+        ],
+        "answer_class": "grounded_explanation"
+      }
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "thread_id": "live_check_078fcd7da2cd",
+        "turn2_warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "turn2_tools": [
+          "coordinator_gate",
+          "session_init"
+        ]
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "tool_search_result",
+          "answer_synthesis_started",
+          "context_compacted",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 6
+      }
+    }
+  ],
+  "trace_timeline": [],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": null,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0
+  },
+  "verdict": {
+    "status": "fail",
+    "fail_reasons": [
+      "e2e_failed"
+    ],
+    "warn_reasons": []
+  },
+  "e2e_audit": {
+    "ok": false,
+    "returncode": 2,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "full",
+      "--timeout",
+      "240.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_jx30caw5.json",
+      "--trace-audit",
+      "--skip-postgres"
+    ],
+    "stdout_tail": "",
+    "stderr_tail": "usage: agent_od_workspace_e2e_audit.py [-h] [--env-file ENV_FILE]\n                                       [--base-url BASE_URL]\n                                       [--workspace-name-substring WORKSPACE_NAME_SUBSTRING]\n                                       [--min-works MIN_WORKS]\n                                       [--timeout TIMEOUT] [--skip-phoenix]\n                                       [--dry-run] [--verbose]\n                                       [--suite {default,heavy,full}]\n                                       [--trace-audit]\n                                       [--write-report WRITE_REPORT]\n                                       [--write-report-json WRITE_REPORT_JSON]\n                                       [--markdown-report MARKDOWN_REPORT]\nagent_od_workspace_e2e_audit.py: error: unrecognized arguments: --skip-postgres\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_jx30caw5.json"
+  },
+  "phoenix_snapshot_path": null,
+  "phoenix_pull": {
+    "ok": false,
+    "error": "report_parse_failed"
+  },
+  "compaction_turn_review": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-on_compaction_review.json",
+    "stdout_tail": "[compaction-review] merged into: eval/results/trace-review-on.json\n[compaction-review] json: eval/results/trace-review-on_compaction_review.json\n[compaction-review] md:   eval/results/trace-review-on_compaction_review.md\n",
+    "stderr_tail": ""
+  }
+}

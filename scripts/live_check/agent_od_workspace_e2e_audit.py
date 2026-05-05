@@ -268,6 +268,8 @@ def _run_single_query(  # pylint: disable=too-many-arguments,too-many-locals
     trace = data.get("tool_trace") or []
     if not isinstance(trace, list):
         trace = []
+    case_report["tool_trace"] = trace
+    case_report["thread_id"] = data.get("thread_id")
     names, n_steps = _tool_steps(trace)
     case_report["tool_names"] = names
     case_report["tool_steps_non_session"] = n_steps
@@ -278,6 +280,16 @@ def _run_single_query(  # pylint: disable=too-many-arguments,too-many-locals
     case_report["cypher_query_error_count"] = cypher_query_error_count(trace)
     case_report["duration_ms"] = data.get("duration_ms")
     case_report["warnings"] = data.get("warnings") or []
+    run_meta = data.get("run_metadata") if isinstance(data.get("run_metadata"), dict) else {}
+    case_report["run_metadata"] = run_meta
+    if run_meta:
+        case_report["tool_search_shortlist_ratio_avg"] = run_meta.get(
+            "tool_search_shortlist_ratio_avg"
+        )
+        case_report["tool_search_deferred_schema_events"] = run_meta.get(
+            "tool_search_deferred_schema_events"
+        )
+        case_report["budget_stop_reasons"] = run_meta.get("budget_stop_reasons") or []
     ans = str(data.get("answer") or "").strip()
     case_report["answer_len"] = len(ans)
     case_report["answer_class"] = data.get("answer_class")
@@ -337,12 +349,11 @@ HEAVY_QUESTIONS: list[tuple[str, str]] = [
     (
         "graph_ego_methods",
         (
-            "Pick one object-detection paper in this workspace (use workspace_inspect mode=papers "
-            "or find_works to get a concrete work_id). Using only read-only graph tools "
-            "(edge_search and/or cypher_query with LIMIT 40), list Method or Dataset nodes "
-            "linked to that work within 2 hops. Summarize linkage strictly from returned rows—"
-            "do not invent node ids. If the graph is empty for that work, say so explicitly. "
-            "Finish with final_answer."
+            "Pick one object-detection paper in this workspace (first call workspace_inspect "
+            "mode=papers and take one concrete work_id). Then do ONE graph lookup only with "
+            "edge_search for that work_id (do not run broad cypher). Summarize whether Method or "
+            "Dataset neighbors are present from returned rows only; if none, state graph coverage "
+            "gap explicitly. Keep it short and finish with final_answer."
         ),
     ),
     (
@@ -420,6 +431,11 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
     )
     parser.add_argument("--skip-phoenix", action="store_true", help="Do not call Phoenix REST")
     parser.add_argument(
+        "--skip-postgres",
+        action="store_true",
+        help="Backward-compatible no-op flag (kept for trace-review CLI compatibility).",
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Resolve workspace + Postgres ingest counts only (no HTTP / no LLM)",
@@ -441,6 +457,12 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
         type=Path,
         default=None,
         help="Append one JSON line per full run (suite summary + cases) for CI artifacts",
+    )
+    parser.add_argument(
+        "--write-report-json",
+        type=Path,
+        default=None,
+        help="Write full machine JSON report (same structure as stdout) for orchestrators",
     )
     parser.add_argument(
         "--markdown-report",
@@ -572,7 +594,13 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
                 overall_ok = False
             report["cases"].append(case_report)
 
-    print(json.dumps(report, indent=2, ensure_ascii=False))
+    report_json_text = json.dumps(report, indent=2, ensure_ascii=False)
+    print(report_json_text)
+
+    if args.write_report_json:
+        args.write_report_json.parent.mkdir(parents=True, exist_ok=True)
+        args.write_report_json.write_text(report_json_text + "\n", encoding="utf-8")
+        print(f"wrote full report json: {args.write_report_json}", file=sys.stderr)
 
     if args.markdown_report:
         args.markdown_report.parent.mkdir(parents=True, exist_ok=True)

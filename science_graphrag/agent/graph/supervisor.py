@@ -332,6 +332,7 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
             has_workspace=bool((state.get("workspace_id") or "").strip()),
             answer_class=effective_ac,
         )
+        ts_meta = dict(_ts_meta or {})
         llm_turn = build_chat_model(settings).bind_tools(bound_tools)
         with llm_span(
             "llm.agent.react_turn",
@@ -360,7 +361,25 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
                 pool_name="agent_chat",
                 settings=settings,
             )
-        return {"messages": [response]}
+        return {
+            "messages": [response],
+            "debug_events": [
+                {
+                    "type": "tool_search_result",
+                    "specialist": "single_agent_react",
+                    "tools": ts_meta.get("matched"),
+                    "reason": ts_meta.get("reason"),
+                    "top_score": ts_meta.get("top_score"),
+                    "score_band": ts_meta.get("score_band"),
+                    "catalog_size": ts_meta.get("catalog_size"),
+                    "shortlist_size": ts_meta.get("shortlist_size"),
+                    "shortlist_ratio": ts_meta.get("shortlist_ratio"),
+                    "deferred_schema_mode": ts_meta.get("deferred_schema_mode"),
+                    "deferred_schema_refs": ts_meta.get("deferred_schema_refs"),
+                    "skipped": bool(ts_meta.get("skipped")),
+                }
+            ],
+        }
 
     def final_answer_nudge_node(state: AgentState) -> dict:
         add_span_event("agent.final_answer_nudge", {})

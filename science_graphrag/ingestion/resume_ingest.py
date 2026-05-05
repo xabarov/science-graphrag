@@ -7,10 +7,10 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.orm import Session
+from tenacity import Retrying, stop_after_attempt, wait_exponential
 
 from science_graphrag.domain.models import WorkDraft
 from science_graphrag.embeddings.errors import EmbeddingCallError, EmbeddingNonRetryableHttpError
-from science_graphrag.ingestion._pipeline_impl import run_ingest_embed_qdrant_phase
 from science_graphrag.ingestion.artifact_layout import canonical_normalized_md_rel
 from science_graphrag.ingestion.checkpoint import (
     mark_stage_completed,
@@ -22,6 +22,7 @@ from science_graphrag.ingestion.chunking import (
     chunk_document_for_retrieval_from_settings,
     dedupe_chunks_for_embedding,
 )
+from science_graphrag.ingestion.embed_phase import run_ingest_embed_qdrant_phase
 from science_graphrag.ingestion.stage_context import IngestStage, stage
 from science_graphrag.storage.models_orm import DocumentRecord, IngestionRunRecord
 from science_graphrag.storage.s3_artifact_store import build_artifact_store
@@ -31,6 +32,15 @@ if TYPE_CHECKING:
     from science_graphrag.config import Settings
 
 log = get_logger("ingestion.resume")
+
+
+def _retry_call(func, *args, **kwargs):
+    runner = Retrying(
+        wait=wait_exponential(multiplier=1, min=1, max=8),
+        stop=stop_after_attempt(3),
+        reraise=True,
+    )
+    return runner(func, *args, **kwargs)
 
 
 def minimal_work_draft_from_normalized_markdown(normalized: str) -> WorkDraft:
@@ -124,6 +134,8 @@ def resume_document_embed_phase(
                 ingest_workspace_ids=ingest_workspace_ids,
                 st=st,
                 reused_doc=reused_doc,
+                retry_call=_retry_call,
+                logger=log,
             )
     except Exception as exc:
         retryable = True

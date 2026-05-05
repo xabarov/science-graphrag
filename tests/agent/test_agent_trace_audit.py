@@ -35,6 +35,8 @@ def test_build_phoenix_structure_audit_flags_sparse_tool_spans() -> None:
     tools = ["find_works"] * 10
     audit = build_phoenix_structure_audit(spans, tools)
     assert "phoenix_tool_spans_sparse_vs_long_tool_trace" in audit["issues"]
+    assert "coverage" in audit
+    assert audit["coverage"]["missing"] == audit["issues"]
 
 
 def test_build_phoenix_structure_audit_sequence_hint_edge_without_reltypes() -> None:

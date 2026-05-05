@@ -80,8 +80,21 @@ def build_initial_agent_state(
         }
         if thread_id:
             meta["thread_id"] = thread_id
-        initial_debug: list[dict[str, Any]] = []
         ac = answer_class_hint or heuristic_answer_class(question, None)
+        initial_debug: list[dict[str, Any]] = [
+            {
+                "type": "intent_classified",
+                "source": "single_agent_research_v1",
+                "conversation_intent": "research_task",
+                "tool_policy": "allow_tools",
+                "route_hint": "retrieval_agent",
+                "reason": "single_agent_research_runtime",
+                "confidence": 1.0,
+                "classifier": "deterministic",
+                "answer_class": ac,
+                "suggested_answer_class": ac,
+            }
+        ]
         return {
             "messages": [
                 SystemMessage(content=RESEARCH_CHAT_SYSTEM_PROMPT),

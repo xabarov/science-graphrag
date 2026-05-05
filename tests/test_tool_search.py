@@ -252,6 +252,32 @@ def test_shortlist_rules_meta_includes_score_band_from_settings() -> None:
     assert len(out) >= 3
 
 
+def test_shortlist_emits_deferred_schema_refs_when_enabled() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(
+        agent_rule_tool_search_enabled=True,
+        agent_tool_search_deferred_schema_refs_enabled=True,
+    )
+    tools = build_retrieval_tools(stores, settings)
+    _out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="how many papers in this workspace",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        answer_class="inventory",
+    )
+    assert meta.get("deferred_schema_mode") == "shortlist_only"
+    refs = meta.get("deferred_schema_refs")
+    assert isinstance(refs, list) and refs
+    assert all(isinstance(x.get("schema_ref"), str) for x in refs if isinstance(x, dict))
+
+
 def test_shortlist_tools_for_single_agent_disabled_returns_full() -> None:
     from science_graphrag.agent.tools import build_tool_registry
 

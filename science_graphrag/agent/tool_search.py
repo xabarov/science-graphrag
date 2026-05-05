@@ -7,7 +7,7 @@ from typing import Any
 
 from langchain_core.tools import BaseTool
 
-from science_graphrag.agent.tool_manifest import ToolManifestEntry, manifest_by_name
+from science_graphrag.agent.tool_manifest import ToolManifestEntry, compact_catalog_lines, manifest_by_name
 from science_graphrag.config import Settings
 
 _SESSION_MEMORY_RE = re.compile(
@@ -213,9 +213,9 @@ def shortlist_tools_for_specialist(
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Return possibly narrowed tool list and debug meta for SSE / run_metadata."""
     if not settings.agent_rule_tool_search_enabled:
-        return tools, {"skipped": True, "reason": "disabled"}
+        return tools, {"skipped": True, "reason": "disabled", "catalog_size": len(tools)}
     if specialist == "writer_agent":
-        return tools, {"skipped": True, "reason": "writer_minimal_set"}
+        return tools, {"skipped": True, "reason": "writer_minimal_set", "catalog_size": len(tools)}
 
     q = _norm_question(strip_tool_search_context_wrappers(question))
     scored = _build_scored_tools_for_shortlist(
@@ -227,11 +227,11 @@ def shortlist_tools_for_specialist(
         answer_class=answer_class,
     )
     if not scored:
-        return tools, {"reason": "fallback_full", "matched": []}
+        return tools, {"reason": "fallback_full", "matched": [], "catalog_size": len(tools)}
 
     top_score = scored[0][0]
     if top_score < _RULE_TOOL_SEARCH_LOW_SIGNAL_FLOOR:
-        return tools, {"reason": "low_signal", "top_score": top_score}
+        return tools, {"reason": "low_signal", "top_score": top_score, "catalog_size": len(tools)}
 
     score_band = float(settings.agent_tool_search_score_band)
     threshold = max(0.0, top_score - score_band)
@@ -246,16 +246,19 @@ def shortlist_tools_for_specialist(
         return tools, {
             "reason": "fallback_full",
             "matched": [getattr(x, "name", "") for x in picked],
+            "catalog_size": len(tools),
         }
     if for_single_agent and len(picked) < 5:
         return tools, {
             "reason": "fallback_full_single_agent",
             "matched": [getattr(x, "name", "") for x in picked],
+            "catalog_size": len(tools),
         }
     if specialist == "graph_agent" and len(picked) < 2:
         return tools, {
             "reason": "fallback_full",
             "matched": [getattr(x, "name", "") for x in picked],
+            "catalog_size": len(tools),
         }
 
     _sort_picked_like_registry_order(picked, tools)
@@ -268,6 +271,22 @@ def shortlist_tools_for_specialist(
     }
     if for_single_agent:
         meta_out["single_agent"] = True
+    meta_out["catalog_size"] = len(tools)
+    meta_out["shortlist_size"] = len(names)
+    meta_out["shortlist_ratio"] = round((len(names) / len(tools)), 4) if tools else 1.0
+    meta_out["catalog_preview"] = compact_catalog_lines(specialist=None if for_single_agent else specialist)[
+        :8
+    ]
+    if settings.agent_tool_search_deferred_schema_refs_enabled:
+        by_meta = manifest_by_name()
+        refs = []
+        for name in names:
+            meta = by_meta.get(name)
+            if meta is None:
+                continue
+            refs.append({"tool": name, "schema_ref": meta.deferred_schema_ref})
+        meta_out["deferred_schema_refs"] = refs
+        meta_out["deferred_schema_mode"] = "shortlist_only"
     return picked, meta_out
 
 

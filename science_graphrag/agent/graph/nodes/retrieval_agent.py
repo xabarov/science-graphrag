@@ -189,6 +189,12 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
                 "tools": meta.get("matched"),
                 "reason": meta.get("reason"),
                 "top_score": meta.get("top_score"),
+                "score_band": meta.get("score_band"),
+                "catalog_size": meta.get("catalog_size"),
+                "shortlist_size": meta.get("shortlist_size"),
+                "shortlist_ratio": meta.get("shortlist_ratio"),
+                "deferred_schema_mode": meta.get("deferred_schema_mode"),
+                "deferred_schema_refs": meta.get("deferred_schema_refs"),
                 "skipped": bool(meta.get("skipped")),
             }
         ]

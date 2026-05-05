@@ -117,10 +117,14 @@ def build_phoenix_structure_audit(
             "check prompts and edge_search docstring."
         )
     if flat.count("cypher_query") >= 2:
-        hints.append("multiple_cypher_steps: review cypher_query examples and cypher_safety alignment.")
+        hints.append(
+            "multiple_cypher_steps: review cypher_query examples and cypher_safety alignment."
+        )
     dup_tools = [t for t in set(flat) if flat.count(t) > 1 and t != "final_answer"]
     if dup_tools:
-        hints.append(f"duplicate_tool_calls_in_trace: {sorted(dup_tools)[:8]} — check fan-out rules.")
+        hints.append(
+            f"duplicate_tool_calls_in_trace: {sorted(dup_tools)[:8]} — check fan-out rules."
+        )
     return {
         "span_sample_size": len(sn),
         "llm_agent_react_turn_hits": llm_hits,
@@ -131,6 +135,11 @@ def build_phoenix_structure_audit(
         "tool_dot_sample": tool_dot[:24],
         "issues": issues,
         "sequence_hints": hints,
+        # Trace-review / timeline alignment (roadmap §6.3): heuristic gaps as ``missing`` list.
+        "coverage": {
+            "covered": len(sn),
+            "missing": issues[:],
+        },
     }
 
 

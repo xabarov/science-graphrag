@@ -2,6 +2,9 @@
 
 `science-graphrag ingest-corpus` now supports per-file timeout and resume checkpointing.
 
+Canonical execution path uses `ingestion/document_orchestrator.py` with phase modules
+(`claims_phase.py`, `embed_phase.py`) while `_pipeline_impl.py` stays as a compatibility entrypoint.
+
 After a **Qdrant embedding cutover** (drop/recreate collections at a new vector size), you must re-ingest — see [`phase0-bge-m3-qdrant-cutover.md`](phase0-bge-m3-qdrant-cutover.md).
 
 ## Recommended command
@@ -76,6 +79,8 @@ Each processed file appends one JSON line:
 {"path":"/abs/file.pdf","status":"ok|fail|timeout|skip","document_id":"...","work_id":"...","started_at":"...","finished_at":"...","error":null}
 ```
 
+Writer behavior: each row is appended as JSONL with flush+fsync. This avoids full-file rewrite on every update and makes long corpus runs more stable on interruption.
+
 Use the same `--progress-file` path with `--resume` after interruption:
 
 ```bash
@@ -84,6 +89,13 @@ Use the same `--progress-file` path with `--resume` after interruption:
   --resume \
   --progress-file eval/results/ingest-progress-wave5.jsonl
 ```
+
+### Resume semantics
+
+- `status=ok` is skipped on `--resume` (safe idempotent path).
+- `status=fail|timeout` is retried on `--resume`.
+- `status=skip` (duplicate SHA) means extraction was intentionally bypassed for that file.
+- If you need to force re-extraction for files marked `ok`, start with a new `--progress-file`.
 
 ## Troubleshooting
 

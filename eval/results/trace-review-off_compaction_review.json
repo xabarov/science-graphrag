@@ -1,0 +1,108 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-05T11:11:42.209354+00:00",
+  "thread_id": "compaction_review_226d137c4fde",
+  "turns": 3,
+  "require_compaction_after": 2,
+  "turn_reports": [
+    {
+      "thread_id": "compaction_review_226d137c4fde",
+      "answer_class": "inventory",
+      "duration_ms": 4632,
+      "warnings": [
+        "no_workspace"
+      ],
+      "tool_trace_len": 4,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 1,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 1
+    },
+    {
+      "thread_id": "compaction_review_226d137c4fde",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 1598,
+      "warnings": [
+        "no_workspace",
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 2,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 2,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 2
+    },
+    {
+      "thread_id": "compaction_review_226d137c4fde",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 1788,
+      "warnings": [
+        "no_workspace",
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 2,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 3,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 3
+    }
+  ],
+  "compaction_events": [
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest"
+      ],
+      "turn": 1,
+      "thread_id": "compaction_review_226d137c4fde"
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest"
+      ],
+      "turn": 2,
+      "thread_id": "compaction_review_226d137c4fde"
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory"
+      ],
+      "turn": 3,
+      "thread_id": "compaction_review_226d137c4fde"
+    }
+  ],
+  "verdict": {
+    "status": "pass",
+    "reasons": []
+  }
+}

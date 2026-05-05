@@ -60,3 +60,6 @@ If configured `redis` but effective `memory`, Redis was unreachable at startup â
 See [`docs/analysis/agent-chat-prod-rollout-2026-04-27.md`](../analysis/agent-chat-prod-rollout-2026-04-27.md) for classifier / semantic fast-route / legacy runtime.
 
 **Architecture / future work:** [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) (slim canonical: simplified graph, `tool_search`, context compaction).
+
+**Standard live reliability review (API/SSE + Phoenix + DB/logs):**
+[`docs/runbooks/agent-trace-review-sop.md`](./agent-trace-review-sop.md).

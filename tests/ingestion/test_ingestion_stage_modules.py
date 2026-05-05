@@ -5,8 +5,8 @@ from types import SimpleNamespace
 
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.stages.chunking import run_chunking
-from science_graphrag.ingestion.stages.claims import run_claims
-from science_graphrag.ingestion.stages.embeddings import run_embeddings
+from science_graphrag.ingestion.stages.claims import run_claims, run_claims_phase
+from science_graphrag.ingestion.stages.embeddings import run_embeddings, run_embeddings_phase
 from science_graphrag.ingestion.stages.neo4j_upsert import run_neo4j_upsert
 from science_graphrag.ingestion.stages.qdrant_upsert import run_qdrant_upsert
 from science_graphrag.ingestion.stages.semantic import run_semantic
@@ -68,6 +68,26 @@ def test_run_claims(monkeypatch) -> None:
     assert len(out) == 1
 
 
+def test_run_claims_phase_delegates(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "science_graphrag.ingestion.stages.claims.run_extract_claims_stage",
+        lambda **_kwargs: [SimpleNamespace(claim_text="phase-claim")],
+    )
+    out = run_claims_phase(
+        job_id=None,
+        stage_session_factory=None,
+        stage_event_publisher=None,
+        progress_emit=None,
+        settings=Settings(extraction_llm_enabled=False, claims_extraction_enabled=True),
+        doc_chunks=[],
+        doc_id="d1",
+        work_id="w1",
+        retry_call=lambda func, *args, **kwargs: func(*args, **kwargs),
+        neo=SimpleNamespace(),
+    )
+    assert len(out) == 1
+
+
 def test_run_semantic(monkeypatch) -> None:
     ctx = _DummyCtx()
     monkeypatch.setattr(
@@ -112,6 +132,36 @@ def test_run_embeddings(monkeypatch) -> None:
     embedder, vectors = run_embeddings(ctx, texts=["hello"])
     assert embedder.dim == 4
     assert len(vectors) == 1
+
+
+def test_run_embeddings_phase_delegates(monkeypatch) -> None:
+    called = {"ok": False}
+
+    def _fake_embed_phase(**_kwargs):
+        called["ok"] = True
+
+    monkeypatch.setattr(
+        "science_graphrag.ingestion.stages.embeddings.run_ingest_embed_qdrant_phase",
+        _fake_embed_phase,
+    )
+    run_embeddings_phase(
+        job_id=None,
+        stage_session_factory=None,
+        stage_event_publisher=None,
+        progress_emit=None,
+        settings=Settings(extraction_llm_enabled=False, claims_extraction_enabled=True),
+        document_id="d1",
+        work_id="w1",
+        doc_chunks=[],
+        claim_rows=[],
+        authorships=[],
+        draft=SimpleNamespace(),
+        ingest_workspace_ids=None,
+        reused_doc=False,
+        retry_call=lambda func, *args, **kwargs: func(*args, **kwargs),
+        logger=SimpleNamespace(info=lambda *_args, **_kwargs: None),
+    )
+    assert called["ok"] is True
 
 
 def test_run_qdrant_upsert(monkeypatch) -> None:
