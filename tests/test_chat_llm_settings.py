@@ -31,6 +31,16 @@ def test_build_chat_model_uses_effective_model() -> None:
     assert getattr(chat, "model_name", None) == "chat/model"
 
 
+def test_build_chat_model_explicit_model_override() -> None:
+    s = Settings(
+        extraction_llm_api_key="sk-test",
+        extraction_llm_model="ext/model",
+        chat_llm_model="chat/model",
+    )
+    chat = build_chat_model(s, model="notes/model")
+    assert getattr(chat, "model_name", None) == "notes/model"
+
+
 def test_settings_snapshot_resolved_chat_model(tmp_path: Path) -> None:
     service = SettingsService(
         repo_root=tmp_path,

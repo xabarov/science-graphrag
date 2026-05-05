@@ -9,10 +9,11 @@
  * - For unknown / future codes we fall back to {@link humanizeUnknownCode} which
  *   produces a readable but neutral string instead of leaking the raw token.
  *
- * Reason events that are considered routine/no-op (currently `tool_search_result`
- * with `reason=rules`) are exposed via {@link shouldHideStreamEventFromHeadline}
- * so the live headline can skip them while inspector / recent-line history keep
- * the underlying record.
+ * `tool_search_result` is internal tool-catalog plumbing — {@link shouldHideStreamEventFromHeadline}
+ * drops it from the live headline so users see intent / routing / product steps instead
+ * of e.g. «Research agent · full toolset». {@link shouldOmitFromLiveRecentList} also removes
+ * `tool_search_result` and per-row `tool_result` spam from the expandable «recent lines» list
+ * (specialist run stack / inspector still show full detail).
  */
 
 const SPECIALIST_KEYS = [
@@ -66,12 +67,6 @@ const INTENT_SOURCE_KEYS = [
  * the answer class instead of `Intent: grounded_explanation (single_agent_research_v1)`.
  */
 const REDUNDANT_INTENT_SOURCES = new Set(["single_agent_research_v1", "coordinator_gate_v0"]);
-
-/**
- * `tool_search_result` with these reasons reflect normal happy-path operation
- * (rules-based shortlist) and add no signal for the user; hide from headline.
- */
-const NOISE_TOOL_SEARCH_REASONS = new Set(["rules"]);
 
 /**
  * Convert an unknown `snake_case` / `kebab-case` / `dotted` code into a plain
@@ -207,11 +202,22 @@ export function shouldHideStreamEventFromHeadline(event) {
   if (!event || typeof event !== "object") return false;
   const ev = /** @type {Record<string, unknown>} */ (event);
   const type = String(ev.type || "");
-  if (type === "tool_search_result") {
-    const reason = String(ev.reason || "");
-    if (NOISE_TOOL_SEARCH_REASONS.has(reason)) return true;
-  }
+  if (type === "tool_search_result") return true;
   return false;
+}
+
+/**
+ * Omit noisy / redundant event types from the live card's «recent lines» list only.
+ * Keeps chips + headline focused on product-facing steps; avoids repeating every
+ * `tool_result` row count line.
+ *
+ * @param {unknown} event
+ * @returns {boolean}
+ */
+export function shouldOmitFromLiveRecentList(event) {
+  if (!event || typeof event !== "object") return false;
+  const type = String(/** @type {Record<string, unknown>} */ (event).type || "");
+  return type === "tool_result" || type === "tool_search_result";
 }
 
 export const __VOCAB_KEYS = {

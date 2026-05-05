@@ -1,0 +1,35 @@
+name: agent-sse-contract
+
+on:
+  pull_request:
+    paths:
+      - "science_graphrag/agent/**"
+      - "science_graphrag/api/agent_v2.py"
+      - "science_graphrag/api/agent_v2_modules/**"
+      - "tests/test_api_agent_v2_*.py"
+      - "tests/test_product_step_tool_coverage.py"
+      - "tests/scripts/live_check/test_trace_review_schema.py"
+
+jobs:
+  pytest-agent-stream-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package (dev + agent extras)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,agent]"
+      - name: Agent v2 SSE / product_step / trace-review schema
+        run: |
+          pytest \
+            tests/test_api_agent_v2_smoke.py \
+            tests/test_api_agent_v2_stream_parity.py \
+            tests/test_api_agent_v2_product_step_coverage.py \
+            tests/test_api_agent_v2_error_classification.py \
+            tests/test_product_step_tool_coverage.py \
+            tests/scripts/live_check/test_trace_review_schema.py \
+            tests/observability/test_agent_sse_stream_otel.py \
+            -q

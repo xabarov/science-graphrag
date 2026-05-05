@@ -13,10 +13,8 @@ from pdf2image import convert_from_path
 from PIL import Image
 
 from science_graphrag.config import Settings
-from science_graphrag.ingestion.llm.raw_openai_transport import (
-    ChatCompletionsNonJsonResponseError,
-    post_chat_completions_json,
-)
+from science_graphrag.ingestion.llm.chat_completions_client import ingest_chat_completions_json
+from science_graphrag.ingestion.llm.raw_openai_transport import ChatCompletionsNonJsonResponseError
 from science_graphrag.llm.concurrency import llm_pool_slot
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
 from science_graphrag.utils.project_logging import get_logger
@@ -99,7 +97,8 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         key = (self.settings.resolved_vl_api_key or "").strip()
         with llm_pool_slot("vl_pdf", self.settings):
             try:
-                data, usage = post_chat_completions_json(
+                data, usage = ingest_chat_completions_json(
+                    transport_role="vl_pdf",
                     base_url=self.settings.vl_base_url,
                     api_key=key,
                     json_body=payload,
@@ -119,7 +118,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         if isinstance(content, str):
             # Some providers may return JSON-encoded string content.
             candidate = content.strip()
-            if candidate.startswith("{") and "\"choices\"" in candidate:
+            if candidate.startswith("{") and '"choices"' in candidate:
                 try:
                     inner = json.loads(candidate)
                     msg2 = inner["choices"][0]["message"]

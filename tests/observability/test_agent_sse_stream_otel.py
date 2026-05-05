@@ -9,7 +9,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from science_graphrag.api.agent_v2 import _iter_graph_chunks
+from science_graphrag.api.agent_v2_modules.streaming import iter_graph_chunks
 from science_graphrag.observability import phoenix_tracer
 from science_graphrag.observability import spans as observability_spans
 from science_graphrag.observability.spans import chain_span
@@ -33,7 +33,7 @@ def test_iter_graph_chunks_sync_stream_preserves_otel_parent(monkeypatch) -> Non
 
     async def _consume() -> None:
         with chain_span("agent.query"):
-            async for _ in _iter_graph_chunks(
+            async for _ in iter_graph_chunks(
                 _GraphNoAstream(),
                 {},
                 {},

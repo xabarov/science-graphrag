@@ -52,16 +52,14 @@ export default function ChatPendingStreamBlock({
             </AgentAssistantTurnShell>
           ) : isLoading ? (
             <AgentAssistantTurnShell dense sx={{ mt: 1 }}>
-              <AgentRunHeader
+              <AgentRunHeader t={t} runState="running" progressHint="" />
+              <AgentLiveStatus
                 t={t}
-                runState="running"
-                answerClass={null}
-                citationCount={0}
-                durationMs={null}
-                progressHint=""
-                defaultDetailsOpen={chatDetailLevel === "detailed"}
+                streamEvents={streamEvents}
+                isActive
+                embedded
+                chatDetailLevel={chatDetailLevel}
               />
-              <AgentLiveStatus t={t} streamEvents={streamEvents} isActive embedded />
             </AgentAssistantTurnShell>
           ) : null}
         </Box>

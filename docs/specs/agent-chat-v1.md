@@ -50,7 +50,7 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `run_metadata` | object | Runtime flags, model ids, etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
-| `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `graph_only`, `text_only`, `no_quote_found`, `no_quote_found_after_idea_hits`, `history_digest_invalid`, `agent_turn_deadline_exceeded`, `answer_salvaged_from_graph_tool`, `agent_finished_without_final_answer_tool` (tools were used and the model returned text, but the last executed catalog tool was not `final_answer` — suppressed when `answer_salvaged_from_graph_tool` is present; `tool_trace` stays honest; use for monitoring/UI) |
+| `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `graph_only`, `text_only`, `no_quote_found`, `no_quote_found_after_idea_hits`, `history_digest_invalid`, `agent_turn_deadline_exceeded`, `agent_partial_graph_recursion_limit`, `partial_after_recursion_limit`, `answer_salvaged_from_graph_tool`, `agent_finished_without_final_answer_tool` (tools were used and the model returned text, but the last executed catalog tool was not `final_answer` — suppressed when `answer_salvaged_from_graph_tool` is present; `tool_trace` stays honest; use for monitoring/UI) |
 | `inventory` | object \| null | Papers/authors/counts when applicable |
 | `relation_trace` | object \| null | Reserved / sparse in Wave A |
 | `quote_candidates` | array \| null | Quote snippets + work/chunk ids |
@@ -84,9 +84,11 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `evidence_ready` | Before final | `citation_count` |
 | `answer_synthesis_finished` | Immediately before `final_answer` | empty payload beyond `type` |
 | `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt`, **`compaction`**: `{ "kind": "turn_digest", "kinds": string[], "trigger": "post_answer" \| "post_answer_degraded_stream", "digest_count": int, "boundary": { "status": "idle" \| "candidate", ... } }` — `kinds` may include `rolling_memory` (after enough digests) and `workspace_capsule` when a workspace-scoped capsule exists; `post_answer_degraded_stream` when the graph stream did not yield a final `values` chunk |
+| `product_step` | Whenever the agent crosses a user-visible boundary (start of turn, hand-off, before synthesis, after compaction, on each non-meta `tool_call`) | `code` (e.g. `interpreting_question`, `delegating_to_<specialist>`, `composing_answer`, `updating_session_memory`, `searching_literature`, `using_tool`), optional `tool`, optional `specialist` |
+| `agent_note` | **Optional** (off by default; gated by `agent_note_enabled`); short LLM-generated phrase emitted ≤ `agent_note_max_per_turn` times per turn after `intent_classified`, after each `specialist_selected`, and once per specialist's first `tool_result` | `kind` (`intent` \| `route` \| `tool`), `note` (≤200 chars plain prose). Costs extra LLM tokens; safe to ignore client-side |
 | `final_answer` | End | Full envelope fields + legacy `answer`, `citations`, `tool_trace` (includes `session_summary_excerpt` when `thread_id` set) |
 | `warning` | Any time | `code`, `message` (optional `reason` / `confidence` for coordinator fallback) |
-| `error` | Fatal | `detail`, `code` (legacy: `agent_runtime_error`, `agent_turn_deadline_exceeded`), optional `error_class` (stable enum the UI localizes via `chat.errors.<error_class>`: `provider_unauthorized`, `provider_forbidden`, `provider_rejected`, `provider_timeout`, `provider_unreachable`, `internal_error`), optional safe English `message` |
+| `error` | Fatal | `detail`, `code` (legacy: `agent_runtime_error`, `agent_turn_deadline_exceeded`, `agent_graph_recursion_limit`), optional `error_class` (stable enum the UI localizes via `chat.errors.<error_class>`: `provider_unauthorized`, `provider_forbidden`, `provider_rejected`, `provider_timeout`, `provider_unreachable`, `agent_turn_deadline_exceeded`, `agent_recursion_limit`, `llm_output_validation_error`, `llm_output_parse_error`, `internal_error`), optional safe English `message`. Recursion-limit error events also carry the numeric `recursion_limit`. |
 
 ### UI vocabulary contract
 
@@ -98,6 +100,27 @@ which exposes `mapSpecialistToLabel`, `mapAnswerClassToLabel`,
 and `mapErrorCodeToLabel`. Unknown codes flow through `humanizeUnknownCode` so
 unmapped values still render readably.
 
+**Live card (Ask):** the primary headline never uses `tool_search_result` (internal
+shortlist plumbing). The expandable «recent lines» strip omits `tool_search_result`
+and each `tool_result` row so users see intent / routing / `product_step` / `tool_call`
+lines without repeating «N rows» spam; full steps remain in specialist run groups /
+run inspector.
+
+**Decision / Why block:** above the headline the live card surfaces a two-line
+«Решение / Почему» (`Decision: <answer_class>` and `Why: <reason>`) derived from
+the latest `intent_classified` (or, when the intent had no `reason`, from the
+most recent `specialist_selected.reason`). The «Why» line is hidden when the
+reason is the redundant default `single_agent_research_runtime`. When
+`agent_note_enabled=true` and the run is rendered in `chat detailLevel=detailed`,
+the most recent `agent_note.note` text appears as a third italic line in this
+block.
+
+**Repeated steps:** the live card and specialist run stack collapse adjacent
+repeats of the same `tool_call` / `product_step` into a single line with a
+suffix from `chat.run.headline.repeatedSuffix` (`{{base}} (×{{count}})`). The
+group key is `tool_call:<tool>` or `product_step:<code>` (with the tool name
+appended for `using_tool`).
+
 | Field | Code domain |
 |-------|-------------|
 | `answer_class` | `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
@@ -105,10 +128,56 @@ unmapped values still render readably.
 | `tool_search_result.reason` | `rules`, `low_signal`, `fallback_full`, `fallback_full_single_agent`, `disabled`, `writer_minimal_set` |
 | `intent_classified.source` | `single_agent_research_v1`, `coordinator_gate_v0`, `coordinator_gate_<classifier>`, `heuristic`, `deterministic`, `shortcut` |
 | `specialist_selected.reason` (and `subagent_started.summary` when sourced from routing log) | `single_agent_research_runtime`, `coordinator_route_hint`, `semantic_fast_route`, `supervisor_round_cap`, `budget_exhausted`, `coordinator_classifier_fallback` |
-| `error.error_class` | `provider_unauthorized`, `provider_forbidden`, `provider_rejected`, `provider_timeout`, `provider_unreachable`, `internal_error` |
+| `product_step.code` | `interpreting_question`, `delegating_to_retrieval_agent`, `delegating_to_graph_agent`, `delegating_to_writer_agent`, `delegating_to_single_agent_react`, `delegating_to_supervisor`, `delegating_to_specialist`, `composing_answer`, `updating_session_memory`, plus tool-derived codes from `product_step_code_for_tool` (`searching_literature`, `browsing_ideas`, `gathering_evidence`, `summarizing_workspace`, `exploring_graph`, `paper_lookup`, `paper_metadata`, `finding_quotes`, `formatting_bibliography`, `final_answer`) and the catch-all `using_tool` |
+| `agent_note.kind` | `intent`, `route`, `tool` (UI shows latest note as auxiliary; never part of final answer) |
+| `error.error_class` | `provider_unauthorized`, `provider_forbidden`, `provider_rejected`, `provider_timeout`, `provider_unreachable`, `agent_turn_deadline_exceeded`, `agent_recursion_limit`, `llm_output_validation_error`, `llm_output_parse_error`, `internal_error` |
 
 Raw values still appear unchanged in `tool_trace`, `routing_log`, `debug_events`
 and Phoenix spans (consumed by inspectors and eval pipelines).
+
+## Recursion-limit handling
+
+The LangGraph agent has two structural caps that can stop a turn early. Both are
+addressed end-to-end (graph → API/SSE → UI).
+
+1. **Soft-cap inside ReAct (preventive).** `react_after_tools_decrement_budget`
+   tracks `react_total_hops`, `react_consecutive_same_batch_count`, and repeated
+   `paper_profile.work_id`. When any threshold is crossed
+   (`agent_react_max_consecutive_same_batch`, `agent_react_max_total_hops`, or
+   the second consecutive same `work_id`), it sets
+   `metadata.react_force_finalize = "<reason>"`. The next `route_react_chat_to_tools`
+   re-routes any non-`final_answer` batch to `final_answer_nudge`, and
+   `route_react_tools_next` returns `END` once the forced batch finishes — so
+   the run closes well before the hard limit.
+2. **Hard recursion limit (LangGraph).** `agent_supervisor_recursion_limit`
+   (default 64; validated at startup against `4 * agent_max_tool_calls + 8`)
+   counts every node transition. If LangGraph still raises
+   `GraphRecursionError`, both `invoke_graph_with_deadline` and
+   `iter_graph_chunks` wrap it into the domain
+   `AgentGraphRecursionLimitExceeded`. The SSE handler then mirrors the deadline
+   recovery flow:
+   - if `latest_full_state` has a salvageable assistant draft, the stream emits
+     `warning { code: "agent_partial_graph_recursion_limit", recursion_limit }`
+     followed by a normal `final_answer` whose `run_metadata` contains
+     `salvaged_after_recursion_limit: true`, `recursion_limit`, and (when
+     available) `react_total_hops` / `react_force_finalize`. The envelope adds
+     `agent_partial_graph_recursion_limit` and `partial_after_recursion_limit`
+     to `warnings`/`product_markers`;
+   - otherwise the stream emits a structured
+     `error { code: "agent_graph_recursion_limit", error_class: "agent_recursion_limit", recursion_limit }`
+     with no LangChain URL or raw message. The sync JSON path returns an
+     `AgentQueryResponseV2` carrying the same warning and
+     `run_metadata.agent_graph_recursion_limit_exceeded = true`.
+
+**Observability.** Phoenix span events:
+`agent.react_force_finalize` (soft-cap engaged, with `reason` and counters),
+`agent.graph_recursion_limit_hit` (hard limit fired, with `recursion_limit` and
+`salvage_state_present`).
+
+**UX.** UI localizes `chat.errors.agent_recursion_limit` and
+`chat.warnings.agent_partial_graph_recursion_limit` (en/ru); the existing
+warning chip layer in `AskAnswerPanel` surfaces the partial-after-limit hint
+without a new component.
 
 ## Compatibility
 

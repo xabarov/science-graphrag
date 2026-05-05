@@ -101,6 +101,21 @@ describe("buildLiveStatusPresentation", () => {
     expect(pres.showRecentToggle).toBe(true);
   });
 
+  it("omits tool_result lines from recent status (avoids row-count spam)", () => {
+    const pres = buildLiveStatusPresentation(
+      t,
+      [
+        { type: "intent_classified", answer_class: "inv", source: "h" },
+        { type: "tool_result", tool: "idea_search", row_count: 3 },
+        { type: "product_step", code: "searching_literature", tool: "idea_search" },
+      ],
+      false,
+    );
+    expect(pres.headline).toBe("Searching works…");
+    expect(pres.recentLines.some((l) => l.includes("result"))).toBe(false);
+    expect(pres.recentLines.some((l) => l.includes("Intent"))).toBe(true);
+  });
+
   it("hides recent toggle when dedup removes all secondary lines", () => {
     const pres = buildLiveStatusPresentation(
       t,

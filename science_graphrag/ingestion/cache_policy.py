@@ -1,4 +1,14 @@
-"""Ingest markdown cache path policy and lookup helpers."""
+"""Ingest markdown cache path policy and lookup helpers.
+
+Resolution order for ``read_cached_markdown``:
+
+1. Canonical document-scoped artifacts
+   (``ingestion/<document_id>/article.md`` then ``normalized.md``).
+2. Legacy slug mirror under ``articles/<slug>/article.md``.
+3. Migration-only glob ``ingestion/*/<slug>/article.md`` (newest mtime first).
+
+New writes should prefer document-scoped paths only; slug mirrors remain for backward compatibility.
+"""
 
 from __future__ import annotations
 
@@ -39,6 +49,17 @@ def canonical_diagnostics_rel(source_path: Path) -> Path:
     return Path("articles") / article_slug(source_path) / "extraction_diagnostics.json"
 
 
+def legacy_slug_ingestion_article_paths(store: ArtifactStorePort, source_path: Path) -> list[Path]:
+    """Legacy per-slug paths under arbitrary document folders (pre-document-id cache layout)."""
+    pattern = f"ingestion/*/{article_slug(source_path)}/article.md"
+    legacy_sorted = sorted(
+        store.glob_under_entries(pattern),
+        key=lambda item: item[1],
+        reverse=True,
+    )
+    return [rel for rel, _ in legacy_sorted]
+
+
 def read_cached_markdown(
     settings: Settings,
     source_path: Path,
@@ -57,12 +78,7 @@ def read_cached_markdown(
         candidate_rels.append(canonical_article_md_rel(document_id))
         candidate_rels.append(canonical_normalized_md_rel(document_id))
     candidate_rels.append(canonical_article_rel(source_path))
-    legacy_sorted = sorted(
-        store.glob_under_entries(f"ingestion/*/{article_slug(source_path)}/article.md"),
-        key=lambda item: item[1],
-        reverse=True,
-    )
-    candidate_rels.extend(rel for rel, _ in legacy_sorted)
+    candidate_rels.extend(legacy_slug_ingestion_article_paths(store, source_path))
     seen: set[str] = set()
     for rel in candidate_rels:
         key = rel.as_posix()

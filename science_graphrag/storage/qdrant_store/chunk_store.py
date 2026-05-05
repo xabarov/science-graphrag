@@ -487,6 +487,39 @@ class QdrantChunkStore:
             )
         return out, next_offset
 
+    def get_chunk_text_by_work_and_fingerprint(
+        self,
+        *,
+        work_id: str,
+        chunk_fingerprint: str,
+    ) -> str | None:
+        """Return stored chunk body text for UI citation enrichment (Ask passage panel)."""
+
+        wid = str(work_id or "").strip()
+        fp = str(chunk_fingerprint or "").strip()
+        if not wid or not fp:
+            return None
+        flt = Filter(
+            must=[
+                FieldCondition(key="work_id", match=MatchValue(value=wid)),
+                FieldCondition(key="chunk_fingerprint", match=MatchValue(value=fp)),
+            ],
+        )
+        records, _ = self._client.scroll(
+            collection_name=self._collection,
+            scroll_filter=flt,
+            limit=1,
+            with_payload=True,
+            with_vectors=False,
+        )
+        if not records:
+            return None
+        payload = records[0].payload or {}
+        text = payload.get("text")
+        if isinstance(text, str) and text.strip():
+            return text.strip()[:8000]
+        return None
+
 
 def recreate_qdrant_chunk_collection(
     *,

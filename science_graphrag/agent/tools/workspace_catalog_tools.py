@@ -2,18 +2,25 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
 from science_graphrag.agent.tools.work_graph_schema import KNOWN_WORK_NEIGHBOR_REL_TYPES
+from science_graphrag.config import get_settings
+from science_graphrag.ingestion.dedup import normalize_doi
+from science_graphrag.ingestion.enrichment.openalex import draft_from_openalex, fetch_work_by_doi
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
+
+logger = logging.getLogger(__name__)
 
 
 def workspace_or_error(
     store: Neo4jGraphStore, workspace_id: str
 ) -> tuple[dict[str, Any] | None, ToolResult | None]:
+    """Return workspace dict or a structured ``workspace_not_found`` tool error."""
     ws = store.workspace_get((workspace_id or "").strip())
     if not ws:
         return None, ToolResult(
@@ -275,6 +282,41 @@ class PaperProfileTool(BaseAgentTool):
         year_val = card.get("year")
         doi_val = card.get("doi")
         abs_val = card.get("abstract")
+
+        openalex_overlay = False
+        settings = get_settings()
+        mailto = (getattr(settings, "openalex_mailto", None) or "").strip()
+        norm_doi = normalize_doi(str(doi_val)) if doi_val else None
+        if mailto and norm_doi and (year_val is None or not str(venue_name or "").strip()):
+            try:
+                oa = fetch_work_by_doi(norm_doi, mailto)
+                if isinstance(oa, dict):
+                    draft = draft_from_openalex(oa)
+                    if year_val is None and draft.publication_year is not None:
+                        year_val = draft.publication_year
+                        openalex_overlay = True
+                    vn = str(draft.venue_name or "").strip()
+                    if vn and not str(venue_name or "").strip():
+                        venue_name = vn
+                        openalex_overlay = True
+            except Exception:
+                logger.debug(
+                    "paper_profile OpenAlex overlay skipped work_id=%s",
+                    wid,
+                    exc_info=True,
+                )
+
+        if venues:
+            venue_resolution = "graph_linked"
+        elif str(venue_name or "").strip():
+            venue_resolution = "openalex_overlay"
+        else:
+            venue_resolution = "no_venue_linked"
+
+        meta_src = "neo4j_work_card"
+        if openalex_overlay:
+            meta_src = "neo4j_work_card+openalex_overlay"
+
         payload: dict[str, Any] = {
             "work_id": wid,
             "title": title_val,
@@ -293,8 +335,8 @@ class PaperProfileTool(BaseAgentTool):
                 "venue": _field_status(venue_name),
                 "abstract": _field_status(abs_val),
             },
-            "venue_resolution": "graph_linked" if venues else "no_venue_linked",
-            "metadata_source": "neo4j_work_card",
+            "venue_resolution": venue_resolution,
+            "metadata_source": meta_src,
             "row_count": 1,
         }
         return ToolResult(payload=payload, row_count=1)

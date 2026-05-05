@@ -12,6 +12,7 @@ import {
   mapSpecialistToLabel,
   mapToolSearchReasonToLabel,
   shouldHideStreamEventFromHeadline,
+  shouldOmitFromLiveRecentList,
 } from "./agentRunVocabulary.js";
 import enMessages from "../../../i18n/messages/en/partChat.js";
 import ruMessages from "../../../i18n/messages/ru/partChat.js";
@@ -126,6 +127,28 @@ describe("mappers fall back on unknown codes", () => {
   });
 });
 
+describe("recursion-limit error/warning messages are localized", () => {
+  it("EN provides chat.errors.agent_recursion_limit", () => {
+    const out = mapErrorCodeToLabel(tEn, "agent_recursion_limit");
+    expect(out).toMatch(/hard step limit/i);
+  });
+
+  it("RU provides chat.errors.agent_recursion_limit", () => {
+    const out = mapErrorCodeToLabel(tRu, "agent_recursion_limit");
+    expect(out).toMatch(/жёстк/i);
+  });
+
+  it("EN provides chat.warnings.agent_partial_graph_recursion_limit", () => {
+    expect(enMessages["chat.warnings.agent_partial_graph_recursion_limit"]).toBeTruthy();
+    expect(enMessages["chat.warnings.partial_after_recursion_limit"]).toBeTruthy();
+  });
+
+  it("RU provides chat.warnings.agent_partial_graph_recursion_limit", () => {
+    expect(ruMessages["chat.warnings.agent_partial_graph_recursion_limit"]).toBeTruthy();
+    expect(ruMessages["chat.warnings.partial_after_recursion_limit"]).toBeTruthy();
+  });
+});
+
 describe("isRedundantIntentSource", () => {
   it("flags single_agent_research_v1 and coordinator_gate_v0", () => {
     expect(isRedundantIntentSource("single_agent_research_v1")).toBe(true);
@@ -135,20 +158,26 @@ describe("isRedundantIntentSource", () => {
 });
 
 describe("shouldHideStreamEventFromHeadline", () => {
-  it("hides tool_search_result with reason=rules", () => {
+  it("hides every tool_search_result (rules, low_signal, etc.)", () => {
     expect(
       shouldHideStreamEventFromHeadline({ type: "tool_search_result", reason: "rules", specialist: "single_agent_react" }),
     ).toBe(true);
-  });
-
-  it("does not hide tool_search_result with low_signal", () => {
     expect(
       shouldHideStreamEventFromHeadline({ type: "tool_search_result", reason: "low_signal", specialist: "x" }),
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("does not hide unrelated event types", () => {
     expect(shouldHideStreamEventFromHeadline({ type: "intent_classified" })).toBe(false);
     expect(shouldHideStreamEventFromHeadline(null)).toBe(false);
+  });
+});
+
+describe("shouldOmitFromLiveRecentList", () => {
+  it("omits tool_result and tool_search_result from live recent-lines feed", () => {
+    expect(shouldOmitFromLiveRecentList({ type: "tool_result", tool: "x" })).toBe(true);
+    expect(shouldOmitFromLiveRecentList({ type: "tool_search_result", reason: "rules" })).toBe(true);
+    expect(shouldOmitFromLiveRecentList({ type: "intent_classified" })).toBe(false);
+    expect(shouldOmitFromLiveRecentList({ type: "tool_call", tool: "idea_search" })).toBe(false);
   });
 });

@@ -21,6 +21,7 @@ import {
   mapSpecialistToLabel,
   mapToolSearchReasonToLabel,
   shouldHideStreamEventFromHeadline,
+  shouldOmitFromLiveRecentList,
 } from "./agentRunVocabulary.js";
 
 /** Product-facing stream signals only (tool_call/tool_result stay in inspector). */
@@ -37,6 +38,7 @@ const MEANINGFUL_STREAM_TYPES = new Set([
   "answer_synthesis_started",
   "answer_synthesis_finished",
   "product_step",
+  "agent_note",
 ]);
 
 /**
@@ -58,6 +60,7 @@ export const LIVE_STREAM_TAXONOMY = {
   subagent_finished: "primary",
   answer_synthesis_started: "primary",
   answer_synthesis_finished: "primary",
+  agent_note: "secondary",
   tool_call: "secondary",
   tool_result: "debug",
   error: "debug",
@@ -101,6 +104,112 @@ export function pickLastMeaningfulStreamEvent(events) {
     return ev;
   }
   return null;
+}
+
+/** Ignore headline `product_step` older than this vs newest stamped `_receivedAtMs` (live streams only). */
+export const PRODUCT_STEP_HEADLINE_STALE_MS = 8000;
+
+const HEADLINE_PRIORITY = {
+  product_step: 6,
+  answer_synthesis_finished: 5,
+  answer_synthesis_started: 5,
+  subagent_started: 4,
+  subagent_finished: 4,
+  evidence_ready: 3,
+  context_compacted: 3,
+  specialist_selected: 3,
+  intent_classified: 2,
+  warning: 1,
+  tool_call: 1,
+};
+
+/**
+ * Pick the strongest "voice" event for the live headline.
+ *
+ * Priority (high → low): active `product_step` (most recent) → `answer_synthesis_*` →
+ * `subagent_started/finished` → `evidence_ready` / `context_compacted` /
+ * `specialist_selected` → `intent_classified` → most recent `tool_call` /
+ * `warning`. Within the same priority level, the latest event wins.
+ *
+ * @param {unknown[]} events
+ * @returns {Record<string, unknown> | null}
+ */
+export function pickPrimaryHeadlineEvent(events) {
+  if (!Array.isArray(events) || events.length === 0) return null;
+  const last = events[events.length - 1];
+  const refMs =
+    last && typeof last === "object" && typeof /** @type {{ _receivedAtMs?: unknown }} */ (last)._receivedAtMs === "number"
+      ? /** @type {{ _receivedAtMs: number }} */ (last)._receivedAtMs
+      : null;
+  const useFreshness = refMs !== null;
+  /** @type {{ ev: Record<string, unknown>, prio: number, idx: number } | null} */
+  let best = null;
+  for (let i = 0; i < events.length; i += 1) {
+    const ev = events[i];
+    if (!ev || typeof ev !== "object") continue;
+    const type = String(ev.type || "");
+    if (!MEANINGFUL_STREAM_TYPES.has(type) && type !== "tool_call") continue;
+    if (shouldHideStreamEventFromHeadline(ev)) continue;
+    let prio = HEADLINE_PRIORITY[type] || 0;
+    if (
+      useFreshness &&
+      type === "product_step" &&
+      typeof /** @type {{ _receivedAtMs?: unknown }} */ (ev)._receivedAtMs === "number" &&
+      refMs - /** @type {{ _receivedAtMs: number }} */ (ev)._receivedAtMs > PRODUCT_STEP_HEADLINE_STALE_MS
+    ) {
+      prio = 0;
+    }
+    if (prio === 0) continue;
+    if (!best || prio > best.prio || (prio === best.prio && i > best.idx)) {
+      best = { ev: /** @type {Record<string, unknown>} */ (ev), prio, idx: i };
+    }
+  }
+  return best ? best.ev : null;
+}
+
+/**
+ * Single active-voice headline for the live card. Always returns a non-empty
+ * localized phrase: a product-step / synthesis / subagent line, or an
+ * "interpreting question" placeholder for early `intent_classified` events,
+ * or `chat.stream.thinking` as a final fallback when streaming is active.
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {unknown[]} events
+ * @param {boolean} isRunActive
+ * @returns {string}
+ */
+export function derivePrimaryHeadline(t, events, isRunActive) {
+  const list = Array.isArray(events) ? events : [];
+  const ev = pickPrimaryHeadlineEvent(list);
+  if (ev) {
+    const type = String(ev.type || "");
+    if (type === "intent_classified") {
+      const clsRaw = String(ev.answer_class || "");
+      const clsLabel = mapAnswerClassToLabel(t, clsRaw) || clsRaw;
+      const phrase = t("chat.run.headline.thinkingAbout", { cls: clsLabel });
+      if (phrase && phrase !== "chat.run.headline.thinkingAbout") return phrase;
+    }
+    if (type === "subagent_started") {
+      const idRaw = String(ev.subagent_id || ev.name || "");
+      const idLabel = mapSpecialistToLabel(t, idRaw) || idRaw;
+      const phrase = t("chat.run.headline.delegatedTo", { id: idLabel });
+      if (phrase && phrase !== "chat.run.headline.delegatedTo") return phrase;
+    }
+    const formatted = formatStreamEventOneLine(t, ev);
+    if (formatted) {
+      const groupKey = getEventGroupKey(ev);
+      if (groupKey) {
+        const aggregated = aggregateRepeatedEvents(list);
+        const trailing = aggregated.length > 0 ? aggregated[aggregated.length - 1] : null;
+        if (trailing && getEventGroupKey(trailing.event) === groupKey && trailing.count > 1) {
+          return formatAggregatedEventOneLine(t, trailing);
+        }
+      }
+      return formatted;
+    }
+  }
+  if (isRunActive) return t("chat.stream.thinking");
+  return "";
 }
 
 /**
@@ -236,6 +345,11 @@ export function formatStreamEventOneLine(t, event) {
     const out = t(key);
     return out === key ? humanizeUnknownCode(code) : out;
   }
+  if (type === "agent_note") {
+    const note = String(event.note || "").trim();
+    if (!note) return "";
+    return t("chat.stream.agentNote", { note });
+  }
   if (type === "error") {
     const errorClass = String(event.error_class || "");
     const code = String(event.code || "");
@@ -277,7 +391,107 @@ export function deriveProgressHint(t, streamEvents, isRunActive) {
 }
 
 /**
+ * Stable group key for aggregation: events with the same key fold into one
+ * "(×N)" line when adjacent. Returns empty string when an event must not be
+ * aggregated.
+ *
+ * @param {unknown} event
+ * @returns {string}
+ */
+export function getEventGroupKey(event) {
+  if (!event || typeof event !== "object") return "";
+  const ev = /** @type {Record<string, unknown>} */ (event);
+  const type = String(ev.type || "");
+  if (type === "tool_call") {
+    const tool = String(ev.tool || "").trim();
+    return tool ? `tool_call:${tool}` : "";
+  }
+  if (type === "product_step") {
+    const code = String(ev.code || "").trim();
+    if (!code) return "";
+    if (code === "using_tool") {
+      const tool = String(ev.tool || "").trim();
+      return tool ? `product_step:using_tool:${tool}` : "product_step:using_tool";
+    }
+    return `product_step:${code}`;
+  }
+  return "";
+}
+
+/**
+ * @typedef {{
+ *   kind: "single" | "group",
+ *   event: Record<string, unknown>,
+ *   count: number,
+ *   firstIdx: number,
+ *   lastIdx: number,
+ * }} AggregatedEvent
+ */
+
+/**
+ * Collapse adjacent repeats of the same `tool_call` / `product_step` into a
+ * single virtual event with `count`. Non-aggregatable events pass through as
+ * `{ kind: "single", count: 1 }`. The order of underlying events is preserved.
+ *
+ * @param {unknown[]} events
+ * @returns {AggregatedEvent[]}
+ */
+export function aggregateRepeatedEvents(events) {
+  if (!Array.isArray(events) || events.length === 0) return [];
+  /** @type {AggregatedEvent[]} */
+  const out = [];
+  for (let i = 0; i < events.length; i += 1) {
+    const ev = events[i];
+    if (!ev || typeof ev !== "object") continue;
+    const obj = /** @type {Record<string, unknown>} */ (ev);
+    const key = getEventGroupKey(obj);
+    if (!key) {
+      out.push({ kind: "single", event: obj, count: 1, firstIdx: i, lastIdx: i });
+      continue;
+    }
+    const last = out.length > 0 ? out[out.length - 1] : null;
+    if (last && getEventGroupKey(last.event) === key) {
+      last.kind = "group";
+      last.count += 1;
+      last.lastIdx = i;
+      continue;
+    }
+    out.push({ kind: "single", event: obj, count: 1, firstIdx: i, lastIdx: i });
+  }
+  return out;
+}
+
+/**
+ * Format an aggregated entry. Single entries delegate to
+ * `formatStreamEventOneLine`; groups append `(×N)` via the
+ * `chat.run.headline.repeatedSuffix` template.
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {AggregatedEvent} entry
+ * @returns {string}
+ */
+export function formatAggregatedEventOneLine(t, entry) {
+  if (!entry || typeof entry !== "object") return "";
+  const base = formatStreamEventOneLine(t, entry.event);
+  if (!base) return "";
+  if (entry.count <= 1) return base;
+  const ev = /** @type {Record<string, unknown>} */ (entry.event);
+  const type = ev && typeof ev === "object" ? String(ev.type || "") : "";
+  const key =
+    type === "tool_call"
+      ? "chat.run.live.toolCallRepeated"
+      : type === "product_step"
+        ? "chat.run.live.productStepRepeated"
+        : "chat.run.headline.repeatedSuffix";
+  const vars = { base, count: String(entry.count) };
+  const out = t(key, vars);
+  return out === key ? t("chat.run.headline.repeatedSuffix", vars) : out;
+}
+
+/**
  * One formatted line per event (chronological), for expandable live status.
+ * Adjacent repeats of `tool_call` / `product_step` are collapsed into a single
+ * "(×N)" line so long bursts do not flood the recent list.
  *
  * @param {(key: string, vars?: Record<string, string>) => string} t
  * @param {unknown[]} events
@@ -286,10 +500,10 @@ export function deriveProgressHint(t, streamEvents, isRunActive) {
  */
 export function collectFormattedStreamLines(t, events, limit = 24) {
   if (!Array.isArray(events) || events.length === 0) return [];
+  const aggregated = aggregateRepeatedEvents(events);
   const lines = [];
-  for (const ev of events) {
-    if (!ev || typeof ev !== "object") continue;
-    const line = formatStreamEventOneLine(t, ev);
+  for (const entry of aggregated) {
+    const line = formatAggregatedEventOneLine(t, entry);
     if (line) lines.push(line);
   }
   if (lines.length <= limit) return lines;
@@ -324,27 +538,72 @@ export function collectRecentToolNamesForChips(events, maxChips = 4) {
 }
 
 /**
+ * Compact "Decision / Why" block above the headline. Uses the latest
+ * `intent_classified` (decision = answer class) and the most informative
+ * `reason` (intent reason → routing reason). Skips redundant defaults like
+ * `single_agent_research_runtime` so the row is only shown when useful.
+ *
+ * @param {(key: string, vars?: Record<string, string>) => string} t
+ * @param {unknown[]} events
+ * @returns {{ decision: string, why: string }}
+ */
+export function deriveDecisionRationale(t, events) {
+  if (!Array.isArray(events) || events.length === 0) return { decision: "", why: "" };
+  /** @type {Record<string, unknown> | null} */
+  let lastIntent = null;
+  /** @type {Record<string, unknown> | null} */
+  let lastSpecialist = null;
+  for (const ev of events) {
+    if (!ev || typeof ev !== "object") continue;
+    const type = String(ev.type || "");
+    if (type === "intent_classified") lastIntent = /** @type {Record<string, unknown>} */ (ev);
+    else if (type === "specialist_selected") lastSpecialist = /** @type {Record<string, unknown>} */ (ev);
+  }
+  let decision = "";
+  if (lastIntent) {
+    const clsRaw = String(lastIntent.answer_class || "");
+    decision = mapAnswerClassToLabel(t, clsRaw) || (clsRaw ? humanizeUnknownCode(clsRaw) : "");
+  }
+  let why = "";
+  const rawReason = String((lastIntent && lastIntent.reason) || (lastSpecialist && lastSpecialist.reason) || "").trim();
+  if (rawReason && rawReason !== "single_agent_research_runtime") {
+    const mapped = mapRouteReasonToLabel(t, rawReason);
+    why = mapped || humanizeUnknownCode(rawReason);
+  }
+  return { decision, why };
+}
+
+/**
  * Safe, short "how it is working" lines (no raw args_summary, no debug_events).
+ *
+ * When `excludeKinds` includes `"decision"`, route-reason and intent-reason lines
+ * are skipped so the same content is not duplicated under a separate
+ * "Decision / Why" block.
  *
  * @param {(key: string, vars?: Record<string, string>) => string} t
  * @param {unknown[]} events
  * @param {number} [maxLines]
+ * @param {{ excludeKinds?: string[] }} [opts]
  * @returns {string[]}
  */
-export function collectSafeExplanationLines(t, events, maxLines = 6) {
+export function collectSafeExplanationLines(t, events, maxLines = 6, opts = {}) {
   if (!Array.isArray(events) || events.length === 0) return [];
+  const exclude = new Set((opts && Array.isArray(opts.excludeKinds) ? opts.excludeKinds : []).map(String));
+  const skipDecision = exclude.has("decision");
   /** @type {string[]} */
   const raw = [];
   for (const ev of events) {
     if (!ev || typeof ev !== "object") continue;
     const type = String(ev.type || "");
     if (type === "specialist_selected") {
+      if (skipDecision) continue;
       const reasonRaw = String(ev.reason || "").trim();
       if (reasonRaw) {
         const reason = mapRouteReasonToLabel(t, reasonRaw) || reasonRaw.slice(0, 160);
         raw.push(t("chat.run.liveExplain.routeReason", { reason }));
       }
     } else if (type === "intent_classified") {
+      if (skipDecision) continue;
       const reasonRaw = String(ev.reason || "").trim();
       if (reasonRaw) {
         const reason = mapRouteReasonToLabel(t, reasonRaw) || reasonRaw.slice(0, 160);
@@ -375,6 +634,9 @@ export function collectSafeExplanationLines(t, events, maxLines = 6) {
 /**
  * @typedef {{
  *   headline: string,
+ *   decision: string,
+ *   why: string,
+ *   latestAgentNote: string,
  *   activityChips: Array<{ tool: string, label: string }>,
  *   explanations: string[],
  *   recentLines: string[],
@@ -382,6 +644,24 @@ export function collectSafeExplanationLines(t, events, maxLines = 6) {
  *   showExplainToggle: boolean,
  * }} LiveStatusPresentation
  */
+
+/**
+ * Latest non-empty `agent_note` text from the stream, or empty string.
+ *
+ * @param {unknown[]} events
+ * @returns {string}
+ */
+export function pickLatestAgentNote(events) {
+  if (!Array.isArray(events) || events.length === 0) return "";
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const ev = events[i];
+    if (!ev || typeof ev !== "object") continue;
+    if (String(ev.type || "") !== "agent_note") continue;
+    const note = String(ev.note || "").trim();
+    if (note) return note;
+  }
+  return "";
+}
 
 /**
  * Single source of truth for the live-run card (headline, chips, explanations, recent list).
@@ -406,20 +686,28 @@ export function shouldSuppressPostRunStreamSummary(streamEvents) {
 
 export function buildLiveStatusPresentation(t, streamEvents, isRunActive) {
   const list = Array.isArray(streamEvents) ? streamEvents : [];
-  const meaningful = pickLastMeaningfulStreamEvent(list);
-  let headline = meaningful ? formatStreamEventOneLine(t, meaningful) : "";
-  if (!headline) {
-    const tc = pickLastToolCallEvent(list);
-    headline = tc ? formatStreamEventOneLine(t, tc) : "";
+  let headline = derivePrimaryHeadline(t, list, isRunActive);
+  if (!headline && !isRunActive) {
+    const meaningful = pickLastMeaningfulStreamEvent(list);
+    if (meaningful) headline = formatStreamEventOneLine(t, meaningful);
+    if (!headline) {
+      const tc = pickLastToolCallEvent(list);
+      headline = tc ? formatStreamEventOneLine(t, tc) : "";
+    }
   }
   const toolNames = isRunActive ? collectRecentToolNamesForChips(list, 4) : [];
   let activityChips = toolNames.map((tool) => ({ tool, label: mapToolNameToUserLabel(t, tool) }));
   if (headline) {
     activityChips = activityChips.filter((chip) => chip.label.trim() !== headline.trim());
   }
-  const explanations = isRunActive ? collectSafeExplanationLines(t, list, 6) : [];
+  const { decision, why } = deriveDecisionRationale(t, list);
+  const latestAgentNote = pickLatestAgentNote(list);
+  const explanations = isRunActive
+    ? collectSafeExplanationLines(t, list, 6, { excludeKinds: decision || why ? ["decision"] : [] })
+    : [];
 
-  const allLines = collectFormattedStreamLines(t, list, 32);
+  const forRecent = list.filter((e) => e && typeof e === "object" && !shouldOmitFromLiveRecentList(e));
+  const allLines = collectFormattedStreamLines(t, forRecent, 32);
   const recentLines = headline ? allLines.filter((line) => line !== headline) : allLines;
 
   const rawCount = list.filter((e) => e && typeof e === "object").length;
@@ -429,6 +717,9 @@ export function buildLiveStatusPresentation(t, streamEvents, isRunActive) {
   if (!isRunActive && !headline) {
     return {
       headline: "",
+      decision: "",
+      why: "",
+      latestAgentNote: "",
       activityChips: [],
       explanations: [],
       recentLines: [],
@@ -439,6 +730,9 @@ export function buildLiveStatusPresentation(t, streamEvents, isRunActive) {
 
   return {
     headline,
+    decision,
+    why,
+    latestAgentNote,
     activityChips,
     explanations,
     recentLines,

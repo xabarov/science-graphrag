@@ -56,6 +56,7 @@ class ExtractionDiagnostics:  # pylint: disable=too-many-instance-attributes
     authorships_extraction_seconds: float | None = None
     references_extraction_seconds: float | None = None
     fallback_reasons: list[dict[str, Any]] = field(default_factory=list)
+    # Populated from VL PDF path; keys mirror ``markdown_extraction.vl_stats`` dict.
     vl_pages_total: int | None = None
     vl_pages_processed: int | None = None
     vl_batch_count: int | None = None

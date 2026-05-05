@@ -12,6 +12,7 @@ from science_graphrag.agent.chat_envelope import (
     collect_typed_payloads,
     heuristic_answer_class,
 )
+from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
@@ -507,6 +508,17 @@ class RetrievalAgent:
         trace = collect_tool_trace(final_state)
         answer, citations, graph_salvage, quote_salvage, draft_salvage = (
             resolve_langgraph_answer_with_salvage(final_state)
+        )
+        typed_payloads = collect_typed_payloads(final_state)
+        inv = typed_payloads.get("inventory")
+        sr = final_state.get("specialist_results")
+        citations = hydrate_citations_for_ui(
+            citations,
+            quote_candidates=list(typed_payloads.get("quote_candidates") or []),
+            chunk_store=self._stores.qdrant_chunks,
+            inventory=inv if isinstance(inv, dict) else None,
+            messages=list(final_state.get("messages") or []),
+            specialist_results=sr if isinstance(sr, dict) else None,
         )
         extra_warn_list: list[str] = []
         if graph_salvage:

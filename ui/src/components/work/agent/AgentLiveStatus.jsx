@@ -1,36 +1,104 @@
-import React, { useId, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import Collapse from "@mui/material/Collapse";
 import Typography from "@mui/material/Typography";
+import { keyframes } from "@mui/system";
 import { useTheme } from "@mui/material/styles";
 import { CursorSmallButton } from "../../common/index.js";
 import { ShimmerLabel } from "../shared/ShimmerLabel.jsx";
+import { useReducedMotionGate } from "../shared/useReducedMotionGate.js";
 import { buildLiveStatusPresentation } from "./agentRunViewModel.js";
+
+const decisionGlow = keyframes`
+  0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.0); }
+  20% { box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.30); }
+  100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.0); }
+`;
+
+const decisionFadeIn = keyframes`
+  0% { opacity: 0; transform: translateY(2px); }
+  100% { opacity: 1; transform: translateY(0); }
+`;
+
+const chipPop = keyframes`
+  0% { transform: scale(0.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+`;
 
 /**
  * Compact live card for an in-flight (or just-finished) agent turn: one headline, optional
  * tool activity chips, safe explanations, and optional recent-line history.
+ *
+ * In the `simple` detail level the recent-lines collapse and "How the agent is
+ * working" reasoning panel are suppressed. When ``embedded`` (Ask/chat rail),
+ * the progress caption, decision/why rows, and tool activity chips are omitted so
+ * only the dynamic headline (and optional detailed panels / agent note) remain.
  *
  * @param {{
  *   t: (key: string, vars?: Record<string, string>) => string,
  *   streamEvents: unknown[],
  *   isActive: boolean,
  *   embedded?: boolean,
+ *   chatDetailLevel?: "simple" | "detailed",
  * }} props
  */
-export function AgentLiveStatus({ t, streamEvents = [], isActive, embedded = false }) {
+export function AgentLiveStatus({
+  t,
+  streamEvents = [],
+  isActive,
+  embedded = false,
+  chatDetailLevel = "simple",
+}) {
   const tk = useTheme().appTokens;
   const presentation = useMemo(
     () => buildLiveStatusPresentation(t, streamEvents, isActive),
     [t, streamEvents, isActive],
   );
-  const { headline, activityChips, explanations, recentLines, showRecentToggle, showExplainToggle } = presentation;
+  const {
+    headline,
+    decision,
+    why,
+    latestAgentNote,
+    activityChips: rawChips,
+    explanations,
+    recentLines,
+    showRecentToggle: rawShowRecentToggle,
+    showExplainToggle: rawShowExplainToggle,
+  } = presentation;
+
+  const isSimple = chatDetailLevel !== "detailed";
+  const minimalEmbeddedChrome = Boolean(embedded);
+  const activityChips =
+    minimalEmbeddedChrome ? [] : isSimple ? rawChips.slice(0, 2) : rawChips;
+  const showRecentToggle = !isSimple && rawShowRecentToggle;
+  const showExplainToggle = !isSimple && rawShowExplainToggle;
+  const reducedMotion = useReducedMotionGate();
+  const decisionKey = `${decision}|${why}`;
 
   const [recentOpen, setRecentOpen] = useState(false);
   const [explainOpen, setExplainOpen] = useState(false);
   const recentPanelId = useId();
   const explainPanelId = useId();
+  const autoExplainOpenedRef = useRef(false);
+
+  useEffect(() => {
+    if (!isActive) autoExplainOpenedRef.current = false;
+  }, [isActive]);
+
+  useEffect(() => {
+    if (isSimple || !isActive || !showExplainToggle) return;
+    if (autoExplainOpenedRef.current) return;
+    const evList = Array.isArray(streamEvents) ? streamEvents : [];
+    const hasIntent = evList.some(
+      (e) => e && typeof e === "object" && String(e.type) === "intent_classified",
+    );
+    if (!hasIntent) return;
+    autoExplainOpenedRef.current = true;
+    queueMicrotask(() => {
+      setExplainOpen(true);
+    });
+  }, [isSimple, isActive, showExplainToggle, streamEvents]);
 
   if (!isActive && !headline) return null;
 
@@ -51,17 +119,104 @@ export function AgentLiveStatus({ t, streamEvents = [], isActive, embedded = fal
 
   return (
     <Box sx={outerSx}>
-      <Typography variant="caption" sx={{ color: tk.text.faint, fontSize: "0.68rem", display: "block", mb: embedded ? 0.35 : 0.65 }}>
-        {t("chat.run.liveRunCardTitle")}
-      </Typography>
+      {!minimalEmbeddedChrome ? (
+        <Typography
+          variant="caption"
+          sx={{
+            color: tk.text.faint,
+            fontSize: "0.68rem",
+            display: "block",
+            mb: embedded ? 0.35 : 0.65,
+          }}
+        >
+          {t("chat.run.liveRunCardTitle")}
+        </Typography>
+      ) : null}
+
+      {!minimalEmbeddedChrome && (decision || why || (!isSimple && latestAgentNote)) ? (
+        <Box
+          key={`${decisionKey}|${latestAgentNote}`}
+          role="group"
+          aria-label={t("chat.run.decision.label")}
+          sx={{
+            mb: 0.6,
+            display: "flex",
+            flexDirection: "column",
+            gap: 0.15,
+            borderRadius: "4px",
+            ...(reducedMotion
+              ? {}
+              : {
+                  animation: `${decisionFadeIn} 0.22s ease, ${decisionGlow} 0.6s ease`,
+                }),
+          }}
+        >
+          {decision ? (
+            <Typography
+              sx={{
+                fontSize: "0.72rem",
+                color: tk.text.secondary,
+                lineHeight: 1.4,
+                wordBreak: "break-word",
+              }}
+            >
+              {t("chat.run.decision.row", { label: t("chat.run.decision.label"), value: decision })}
+            </Typography>
+          ) : null}
+          {why ? (
+            <Typography
+              sx={{
+                fontSize: "0.72rem",
+                color: tk.text.muted,
+                lineHeight: 1.4,
+                wordBreak: "break-word",
+              }}
+            >
+              {t("chat.run.decision.row", { label: t("chat.run.decision.why"), value: why })}
+            </Typography>
+          ) : null}
+          {!isSimple && latestAgentNote ? (
+            <Typography
+              data-testid="agent-note-row"
+              sx={{
+                fontSize: "0.72rem",
+                color: tk.text.muted,
+                fontStyle: "italic",
+                lineHeight: 1.4,
+                wordBreak: "break-word",
+              }}
+            >
+              {t("chat.run.decision.row", {
+                label: t("chat.run.agentNote.label"),
+                value: latestAgentNote,
+              })}
+            </Typography>
+          ) : null}
+        </Box>
+      ) : null}
 
       <Box aria-live="polite" aria-atomic="false">
         {isActive && !headline ? (
-          <ShimmerLabel component="span" sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>
+          <ShimmerLabel component="span" intensity="subtle" sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>
             {t("chat.stream.thinking")}
+          </ShimmerLabel>
+        ) : isActive && headline ? (
+          <ShimmerLabel
+            component="span"
+            intensity="strong"
+            sx={{
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              lineHeight: 1.45,
+              wordBreak: "break-word",
+              maxWidth: "100%",
+            }}
+          >
+            {headline}
           </ShimmerLabel>
         ) : (
           <Typography
+            key={headline}
             sx={{
               fontSize: "0.8125rem",
               fontWeight: 600,
@@ -69,6 +224,7 @@ export function AgentLiveStatus({ t, streamEvents = [], isActive, embedded = fal
               lineHeight: 1.45,
               wordBreak: "break-word",
               transition: "opacity 0.18s ease",
+              ...(reducedMotion ? {} : { animation: `${decisionFadeIn} 0.18s ease` }),
             }}
           >
             {headline || t("chat.stream.thinking")}
@@ -76,11 +232,30 @@ export function AgentLiveStatus({ t, streamEvents = [], isActive, embedded = fal
         )}
       </Box>
 
+      {minimalEmbeddedChrome && !isSimple && latestAgentNote ? (
+        <Typography
+          data-testid="agent-note-row"
+          sx={{
+            mt: 0.45,
+            fontSize: "0.72rem",
+            color: tk.text.muted,
+            fontStyle: "italic",
+            lineHeight: 1.4,
+            wordBreak: "break-word",
+          }}
+        >
+          {t("chat.run.decision.row", {
+            label: t("chat.run.agentNote.label"),
+            value: latestAgentNote,
+          })}
+        </Typography>
+      ) : null}
+
       {activityChips.length > 0 ? (
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.75, alignItems: "center" }}>
-          {activityChips.map(({ tool, label }) => (
+          {activityChips.map(({ tool, label }, chipIdx) => (
             <Chip
-              key={tool}
+              key={`${tool}-${chipIdx}`}
               size="small"
               label={label}
               sx={{
@@ -91,6 +266,7 @@ export function AgentLiveStatus({ t, streamEvents = [], isActive, embedded = fal
                 border: "1px solid rgba(255,255,255,0.1)",
                 maxWidth: "100%",
                 transition: "border-color 0.15s ease, background-color 0.15s ease",
+                ...(reducedMotion ? {} : { animation: `${chipPop} 0.18s ease` }),
               }}
             />
           ))}

@@ -46,6 +46,46 @@ function pickOpenrouterRefPricing(runMeta) {
   };
 }
 
+/**
+ * When the API does not return usage.cost_usd, approximate USD cost from aggregate prompt/completion
+ * tokens and OpenRouter list $/1M from run_metadata. Chat + extraction share one merged usage blob,
+ * so when both models are listed we blend their list rates (midpoint) — a deliberate underestimate
+ * for some splits and overestimate for others, but stable for UI totals.
+ *
+ * @param {Record<string, unknown>} runMeta
+ * @param {number | null} promptTokens
+ * @param {number | null} completionTokens
+ * @returns {number | null}
+ */
+export function estimateCostUsdFromOpenrouterReference(runMeta, promptTokens, completionTokens) {
+  const block = runMeta?.openrouter_reference_pricing_usd_per_1m;
+  if (!block || typeof block !== "object") return null;
+  if (promptTokens == null || completionTokens == null) return null;
+  if (promptTokens < 0 || completionTokens < 0) return null;
+
+  const pRate = (row) => {
+    if (!row || typeof row !== "object") return null;
+    const pp = toFiniteNumber(row.prompt_usd_per_1m);
+    const cc = toFiniteNumber(row.completion_usd_per_1m);
+    if (pp == null || cc == null) return null;
+    return { pp, cc };
+  };
+
+  const chat = pRate(block.chat);
+  const extraction = pRate(block.extraction);
+  const pm = promptTokens / 1e6;
+  const cm = completionTokens / 1e6;
+
+  if (chat && extraction) {
+    const avgPrompt = (chat.pp + extraction.pp) / 2;
+    const avgComp = (chat.cc + extraction.cc) / 2;
+    return pm * avgPrompt + cm * avgComp;
+  }
+  const one = chat || extraction;
+  if (!one) return null;
+  return pm * one.pp + cm * one.cc;
+}
+
 export function extractTurnMetadata(entry) {
   const details = entry?.details && typeof entry.details === "object" ? entry.details : {};
   const runMeta = details.run_metadata && typeof details.run_metadata === "object" ? details.run_metadata : {};
@@ -72,10 +112,10 @@ export function extractTurnMetadata(entry) {
   ) {
     tokensPerSecond = (totalTokens * 1000) / durationMs;
   }
-  const costUsd = pickNumber(usage.cost_usd, usage.usd_cost, runMeta.cost_usd, runMeta.usd_cost);
-  const eventsCount = Array.isArray(details.stream_events) ? details.stream_events.length : 0;
-  const citationCount = Array.isArray(details.citations) ? details.citations.length : pickNumber(entry?.citationCount) || 0;
-  const answerClass = String(details.answer_class || "").trim();
+  const reportedCostUsd = pickNumber(usage.cost_usd, usage.usd_cost, runMeta.cost_usd, runMeta.usd_cost);
+  const estimatedCostUsd = estimateCostUsdFromOpenrouterReference(runMeta, promptTokens, completionTokens);
+  const costUsd = reportedCostUsd ?? estimatedCostUsd ?? null;
+  const costUsdIsEstimated = reportedCostUsd == null && estimatedCostUsd != null;
   const { openrouterChatRefPricing, openrouterExtractionRefPricing } = pickOpenrouterRefPricing(runMeta);
   return {
     durationMs,
@@ -84,9 +124,7 @@ export function extractTurnMetadata(entry) {
     completionTokens,
     tokensPerSecond,
     costUsd,
-    eventsCount,
-    citationCount,
-    answerClass,
+    costUsdIsEstimated,
     openrouterChatRefPricing,
     openrouterExtractionRefPricing,
   };

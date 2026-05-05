@@ -120,15 +120,15 @@ describe("ChatMessageThread", () => {
       screen.getAllByLabelText(label).find((el) => el.tagName === "BUTTON" && el.getAttribute("type") === "button");
     expect(btnByAria("chat.thread.actions.retryAria")).toBeTruthy();
     expect(btnByAria("chat.thread.actions.copyAria")).toBeTruthy();
-    expect(btnByAria("chat.thread.actions.metadataAria")).toBeTruthy();
-    expect(btnByAria("chat.thread.actions.deleteAria")).toBeTruthy();
     fireEvent.click(btnByAria("chat.thread.actions.retryAria"));
     expect(onRestartFromTurn).toHaveBeenCalledWith("t1");
     fireEvent.click(btnByAria("chat.thread.actions.copyAria"));
     expect(onCopyAssistantEntry).toHaveBeenCalled();
-    fireEvent.click(btnByAria("chat.thread.actions.metadataAria"));
+    fireEvent.click(btnByAria("chat.thread.actions.moreTurnActionsAria"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "chat.thread.actions.menuMetadata" }));
     expect(screen.getByText("chat.thread.meta.title")).toBeTruthy();
-    fireEvent.click(btnByAria("chat.thread.actions.deleteAria"));
+    fireEvent.click(btnByAria("chat.thread.actions.moreTurnActionsAria"));
+    fireEvent.click(screen.getByRole("menuitem", { name: "chat.thread.actions.menuDelete" }));
     expect(await screen.findByText("chat.thread.deleteTurnDialogTitle")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "chat.sidebar.deleteConfirmButton" }));
     await waitFor(() => {

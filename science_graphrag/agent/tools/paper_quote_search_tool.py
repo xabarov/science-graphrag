@@ -153,6 +153,7 @@ class PaperQuoteSearchTool(BaseAgentTool):
                     "quote_text": text[:800],
                     "work_id": w,
                     "chunk_id": fp,
+                    **({"chunk_fingerprint": fp} if fp else {}),
                     "section": sec or None,
                 }
             )

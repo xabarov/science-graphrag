@@ -22,7 +22,7 @@ def test_sync_json_history_digest_invalid_warning(monkeypatch) -> None:
     from science_graphrag.api import agent_v2 as agent_v2_api
 
     class _FakeAgent:
-        def run(self, **_kwargs: object) -> AgentRunOutput:
+        def run(self, **_kwargs: object) -> AgentRunOutput:  # accepts client_idle_ms, etc.
             return AgentRunOutput(answer="ok", citations=[], tool_trace=[])
 
     monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_k: _FakeAgent())
@@ -59,11 +59,11 @@ def test_sync_json_history_digest_invalid_warning(monkeypatch) -> None:
 
 
 def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
     from science_graphrag.agent.chat_envelope import build_chat_envelope
     from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
     from science_graphrag.agent.graph.state import build_initial_agent_state
     from science_graphrag.agent.graph.tracing import collect_tool_trace
+    from science_graphrag.api import agent_v2 as agent_v2_api
 
     class _FakeAgent:
         def run(
@@ -75,6 +75,7 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
             answer_class_hint: str | None,
             thread_id: str | None,
             history_digest: list | None,
+            client_idle_ms: int | None = None,  # noqa: ARG002 — parity with real agent.run()
         ) -> AgentRunOutput:
             state = build_initial_agent_state(
                 question=question,
@@ -156,11 +157,11 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
 
 
 def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
     from science_graphrag.agent.chat_envelope import build_chat_envelope
     from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
     from science_graphrag.agent.graph.state import build_initial_agent_state
     from science_graphrag.agent.graph.tracing import collect_tool_trace
+    from science_graphrag.api import agent_v2 as agent_v2_api
 
     class _FakeAgent:
         def run(
@@ -172,6 +173,7 @@ def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> Non
             answer_class_hint: str | None,
             thread_id: str | None,
             history_digest: list | None,
+            client_idle_ms: int | None = None,  # noqa: ARG002 — parity with real agent.run()
         ) -> AgentRunOutput:
             state = build_initial_agent_state(
                 question=question,

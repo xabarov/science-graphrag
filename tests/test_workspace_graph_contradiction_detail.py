@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import Any
 
-import importlib
 from fastapi.testclient import TestClient
 
 from science_graphrag.api import main as api_main

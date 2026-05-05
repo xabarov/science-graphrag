@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-# pylint: disable=protected-access
-
 from unittest.mock import MagicMock
 
 import numpy as np
@@ -12,6 +10,8 @@ import pytest
 from science_graphrag.ingestion.chunking import DocumentChunk
 from science_graphrag.storage.qdrant_store.chunk_store import QdrantChunkStore
 from science_graphrag.storage.qdrant_store.work_embeddings import QdrantWorkEmbeddingStore
+
+# pylint: disable=protected-access
 
 
 def test_chunk_store_rejects_vector_batch_dim_mismatch() -> None:

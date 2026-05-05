@@ -15,7 +15,9 @@ def test_settings_or_exit_for_object_storage_cli_ok() -> None:
     assert (s.s3_access_key_id or "").strip()
 
 
-def test_settings_or_exit_for_object_storage_cli_fails_on_blank_keys(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_settings_or_exit_for_object_storage_cli_fails_on_blank_keys(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv("SCIENCE_GRAPHRAG_S3_ACCESS_KEY_ID", "")
     monkeypatch.setenv("SCIENCE_GRAPHRAG_S3_SECRET_ACCESS_KEY", "")
     _s, err = settings_or_exit_for_object_storage_cli()

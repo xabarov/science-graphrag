@@ -5,10 +5,9 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Typography from "@mui/material/Typography";
 
-import { mapAnswerClassToLabel } from "../agent/agentRunVocabulary.js";
 import { formatMetricValue } from "./chatThreadMetrics.js";
 
-export default function ChatThreadMetadataDialog({ open, onClose, tk, t, meta, maxMetaBar }) {
+export default function ChatThreadMetadataDialog({ open, onClose, tk, t, meta }) {
   return (
     <Dialog
       open={open}
@@ -24,67 +23,63 @@ export default function ChatThreadMetadataDialog({ open, onClose, tk, t, meta, m
         },
       }}
     >
-      <DialogTitle sx={{ fontSize: "0.9rem", color: tk.text.primary }}>{t("chat.thread.meta.title")}</DialogTitle>
-      <DialogContent sx={{ pt: "8px !important" }}>
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
-          {[
-            { label: t("chat.thread.meta.durationMs"), value: formatMetricValue(meta.durationMs, { unit: " ms" }), bar: meta.durationMs },
-            { label: t("chat.thread.meta.totalTokens"), value: formatMetricValue(meta.totalTokens), bar: meta.totalTokens },
-            {
-              label: t("chat.thread.meta.tokensPerSecond"),
-              value: formatMetricValue(meta.tokensPerSecond, { digits: 1 }),
-              bar: meta.tokensPerSecond,
-            },
-            { label: t("chat.thread.meta.costUsd"), value: formatMetricValue(meta.costUsd, { digits: 5 }), bar: meta.costUsd },
-          ].map((row) => (
-            <Box key={row.label} sx={{ p: 1, border: `1px solid ${tk.border.default}`, borderRadius: "6px", backgroundColor: tk.control.outlinedBg }}>
-              <Typography sx={{ fontSize: "0.69rem", color: tk.text.secondary }}>{row.label}</Typography>
-              <Typography sx={{ fontSize: "0.86rem", color: tk.text.primary, fontWeight: 600 }}>{row.value}</Typography>
-              <Box sx={{ mt: 0.6, height: 4, borderRadius: 6, backgroundColor: tk.border.default, overflow: "hidden" }}>
-                <Box
-                  sx={{
-                    width: `${Math.min(100, Math.max(0, (((row.bar ?? 0) / maxMetaBar) * 100))) || 0}%`,
-                    height: "100%",
-                    backgroundColor: "rgba(99,102,241,0.65)",
-                  }}
-                />
-              </Box>
-            </Box>
-          ))}
+      <DialogTitle sx={{ fontSize: "0.9rem", color: tk.text.primary, pb: 0 }}>
+        <Box component="div">{t("chat.thread.meta.title")}</Box>
+        <Typography component="div" sx={{ mt: 0.35, fontSize: "0.72rem", fontWeight: 400, color: tk.text.muted, lineHeight: 1.35 }}>
+          {t("chat.thread.meta.subtitle")}
+        </Typography>
+      </DialogTitle>
+      <DialogContent sx={{ pt: "10px !important" }}>
+        <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: tk.text.muted, mb: 0.75, letterSpacing: "0.02em" }}>
+          {t("chat.thread.meta.sectionPerformance")}
+        </Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, mb: 1.5 }}>
+          <Box sx={{ p: 1, border: `1px solid ${tk.border.default}`, borderRadius: "6px", backgroundColor: tk.control.outlinedBg }}>
+            <Typography sx={{ fontSize: "0.69rem", color: tk.text.secondary }}>{t("chat.thread.meta.tokensPerSecond")}</Typography>
+            <Typography sx={{ fontSize: "0.86rem", color: tk.text.primary, fontWeight: 600 }}>
+              {formatMetricValue(meta.tokensPerSecond, { digits: 1 })}
+            </Typography>
+          </Box>
+          <Box sx={{ p: 1, border: `1px solid ${tk.border.default}`, borderRadius: "6px", backgroundColor: tk.control.outlinedBg }}>
+            <Typography sx={{ fontSize: "0.69rem", color: tk.text.secondary }}>{t("chat.thread.meta.durationMs")}</Typography>
+            <Typography sx={{ fontSize: "0.86rem", color: tk.text.primary, fontWeight: 600 }}>
+              {formatMetricValue(meta.durationMs, { unit: " ms" })}
+            </Typography>
+          </Box>
         </Box>
-        <Box sx={{ mt: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.5 }}>
+
+        <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: tk.text.muted, mb: 0.75, letterSpacing: "0.02em" }}>
+          {t("chat.thread.meta.sectionTokens")}
+        </Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.5, mb: 1.5 }}>
           <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary }}>
             {t("chat.thread.meta.promptTokens")}: {formatMetricValue(meta.promptTokens)}
           </Typography>
           <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary }}>
             {t("chat.thread.meta.completionTokens")}: {formatMetricValue(meta.completionTokens)}
           </Typography>
-          <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary }}>
-            {t("chat.thread.meta.events")}: {formatMetricValue(meta.eventsCount)}
-          </Typography>
-          <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary }}>
-            {t("chat.thread.meta.citations")}: {formatMetricValue(meta.citationCount)}
+          <Typography sx={{ fontSize: "0.76rem", color: tk.text.secondary, gridColumn: "1 / -1" }}>
+            {t("chat.thread.meta.totalTokens")}: {formatMetricValue(meta.totalTokens)}
           </Typography>
         </Box>
-        <Typography sx={{ mt: 0.8, fontSize: "0.76rem", color: tk.text.secondary }}>
-          {t("chat.thread.meta.answerClass")}: {mapAnswerClassToLabel(t, meta.answerClass) || meta.answerClass || "—"}
+
+        <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: tk.text.muted, mb: 0.75, letterSpacing: "0.02em" }}>
+          {t("chat.thread.meta.sectionCostModel")}
         </Typography>
-        {meta.openrouterChatRefPricing ? (
-          <Typography sx={{ mt: 0.75, fontSize: "0.74rem", color: tk.text.muted, lineHeight: 1.4 }}>
-            {t("chat.thread.meta.openrouterListChat", {
-              model: meta.openrouterChatRefPricing.model,
-              prompt: meta.openrouterChatRefPricing.prompt,
-              completion: meta.openrouterChatRefPricing.completion,
-            })}
+        <Box sx={{ p: 1, border: `1px solid ${tk.border.default}`, borderRadius: "6px", backgroundColor: tk.control.outlinedBg, mb: 1 }}>
+          <Typography sx={{ fontSize: "0.69rem", color: tk.text.secondary }}>{t("chat.thread.meta.costUsd")}</Typography>
+          <Typography sx={{ fontSize: "0.86rem", color: tk.text.primary, fontWeight: 600 }}>
+            {formatMetricValue(meta.costUsd, { digits: 5 })}
           </Typography>
-        ) : null}
-        {meta.openrouterExtractionRefPricing ? (
-          <Typography sx={{ mt: 0.35, fontSize: "0.74rem", color: tk.text.muted, lineHeight: 1.4 }}>
-            {t("chat.thread.meta.openrouterListExtraction", {
-              model: meta.openrouterExtractionRefPricing.model,
-              prompt: meta.openrouterExtractionRefPricing.prompt,
-              completion: meta.openrouterExtractionRefPricing.completion,
-            })}
+          {meta.costUsdIsEstimated ? (
+            <Typography sx={{ fontSize: "0.65rem", color: tk.text.muted, mt: 0.35, lineHeight: 1.35 }}>
+              {t("chat.thread.meta.costUsdEstimatedHint")}
+            </Typography>
+          ) : null}
+        </Box>
+        {meta.openrouterChatRefPricing ? (
+          <Typography sx={{ fontSize: "0.74rem", color: tk.text.muted, lineHeight: 1.4, fontFamily: "monospace", wordBreak: "break-all" }}>
+            {t("chat.thread.meta.modelChat", { model: meta.openrouterChatRefPricing.model })}
           </Typography>
         ) : null}
       </DialogContent>

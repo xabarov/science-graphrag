@@ -55,8 +55,17 @@ export default {
   "askPanel.citations.title": "Цитаты",
   "askPanel.citations.none": "Для этого ответа цитаты не вернулись.",
   "askPanel.citation.line": "Цитата #{{rank}} · score {{score}} · {{work}}",
+  "askPanel.citation.rankLabel": "Цитата #{{rank}}",
+  "askPanel.citation.workIdLine": "work_id: {{id}}",
+  "askPanel.citation.tooltipArticle": "Открыть статью (чтение)",
+  "askPanel.citation.tooltipGraphWork": "Открыть граф работы",
+  "askPanel.citation.passageLabel": "Отрывок",
   "askPanel.citation.noSnippet":
-    "Текст отрывка в ответе не передан — откройте чтение или просмотр чанков по ссылкам выше.",
+    "Фрагмент не включён в ответ сервера — откройте статью кнопкой ниже.",
+  "askPanel.citation.noSnippetBulkAll":
+    "Отрывки не включены в ответ сервера — откройте статьи кнопками ниже.",
+  "askPanel.citation.noSnippetBulkPartial":
+    "Часть цитат без отрывка в ответе сервера — откройте статью для полного текста.",
   "askPanel.citation.expandShow": "Показать полностью",
   "askPanel.citation.expandHide": "Свернуть",
   "askPanel.citation.copy": "Копировать отрывок",

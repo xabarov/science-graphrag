@@ -106,6 +106,12 @@ Roadmap §4.2 (L0–L4): digest сессии, капсулы, границы п�
 
 ---
 
+## 6.4 `paper_profile` и полнота year / venue
+
+Инструмент [`PaperProfileTool`](../../science_graphrag/agent/tools/workspace_catalog_tools.py) читает карточку работы из Neo4j (`fetch_work_bibliography_card`, связанные `Venue`, авторы). Если в графе нет **года** или **venue**, но у работы есть **DOI** и задан `Settings.openalex_mailto`, выполняется одно чтение **OpenAlex** (`fetch_work_by_doi` + `draft_from_openalex`) и поля дополняются только в ответе тула (граф не мутируется). В payload это отражается как `metadata_source: neo4j_work_card+openalex_overlay`, `venue_resolution: openalex_overlay` при venue только из OpenAlex.
+
+---
+
 ## 7. История
 
 Развёрнутый старый roadmap: [`docs/analysis/_archive/chat-agent-system-roadmap-full-2026-04-26.md`](../analysis/_archive/chat-agent-system-roadmap-full-2026-04-26.md).

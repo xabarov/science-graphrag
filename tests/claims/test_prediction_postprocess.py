@@ -10,7 +10,10 @@ def test_dedupe_drops_duplicate_identical_text() -> None:
     rows = [
         {"claim_text": text, "claim_text_normalized": ""},
         {"claim_text": text, "claim_text_normalized": ""},
-        {"claim_text": "Training uses bipartite matching for assignment.", "claim_text_normalized": ""},
+        {
+            "claim_text": "Training uses bipartite matching for assignment.",
+            "claim_text_normalized": "",
+        },
     ]
     out = dedupe_near_duplicate_predictions(rows, jaccard_min=0.92)
     assert len(out) == 2

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import pytest
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.graph import END
 
 from science_graphrag.agent.graph.react_edges import (
     react_after_tools_decrement_budget,
     route_react_chat_to_tools,
+    route_react_tools_next,
     tool_calls_batch_is_only_final_answer,
 )
 
@@ -259,3 +261,166 @@ def test_react_after_tools_repeated_paper_profile_work_id_across_batches() -> No
     assert m3.get("debug_events")
     codes = {e["code"] for e in m3["debug_events"]}
     assert "repeated_paper_profile_work_id" in codes
+
+
+def test_react_after_tools_soft_cap_duplicate_tool_batch_sets_force_finalize() -> None:
+    """3-й одинаковый батч (cap=2) -> ``react_force_finalize='duplicate_tool_batch'``."""
+    tc = [{"name": "idea_search", "args": {"query": "q"}, "id": "a", "type": "tool_call"}]
+    ai = AIMessage(content="", tool_calls=tc)
+    tm = ToolMessage(content="{}", tool_call_id="a", name="idea_search")
+    m1 = react_after_tools_decrement_budget(
+        {"budget_remaining": 5, "messages": [ai, tm], "metadata": {}}
+    )
+    assert m1["metadata"].get("react_force_finalize") in (None, "")
+    m2 = react_after_tools_decrement_budget(
+        {
+            "budget_remaining": 4,
+            "messages": [ai, tm, ai, tm],
+            "metadata": m1["metadata"],
+        }
+    )
+    assert m2["metadata"].get("react_force_finalize") == "duplicate_tool_batch"
+    codes = {e.get("code") for e in (m2.get("debug_events") or [])}
+    assert "react_force_finalize" in codes
+
+
+def test_react_after_tools_soft_cap_total_hops_sets_force_finalize(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """At ``react_total_hops`` >= cap -> ``react_force_finalize='react_hops_cap'``."""
+    from science_graphrag.agent.graph import react_edges as edges_mod
+
+    class _S:
+        agent_react_max_consecutive_same_batch = 99
+        agent_react_max_total_hops = 2
+
+    monkeypatch.setattr(edges_mod, "get_settings", lambda: _S())
+
+    tc1 = [{"name": "idea_search", "args": {"query": "q1"}, "id": "a", "type": "tool_call"}]
+    tc2 = [{"name": "find_works", "args": {"query": "q2"}, "id": "b", "type": "tool_call"}]
+    ai1 = AIMessage(content="", tool_calls=tc1)
+    tm1 = ToolMessage(content="{}", tool_call_id="a", name="idea_search")
+    ai2 = AIMessage(content="", tool_calls=tc2)
+    tm2 = ToolMessage(content="{}", tool_call_id="b", name="find_works")
+
+    m1 = react_after_tools_decrement_budget(
+        {"budget_remaining": 5, "messages": [ai1, tm1], "metadata": {}}
+    )
+    assert m1["metadata"].get("react_total_hops") == 1
+    assert m1["metadata"].get("react_force_finalize") in (None, "")
+    m2 = react_after_tools_decrement_budget(
+        {
+            "budget_remaining": 4,
+            "messages": [ai1, tm1, ai2, tm2],
+            "metadata": m1["metadata"],
+        }
+    )
+    assert m2["metadata"].get("react_total_hops") == 2
+    assert m2["metadata"].get("react_force_finalize") == "react_hops_cap"
+
+
+def test_react_after_tools_final_answer_only_does_not_count_hops() -> None:
+    """``final_answer``-only batches do not bump ``react_total_hops`` or same-batch counter."""
+    tc = [
+        {
+            "name": "final_answer",
+            "args": {"answer": "done", "citations": []},
+            "id": "f",
+            "type": "tool_call",
+        }
+    ]
+    ai = AIMessage(content="", tool_calls=tc)
+    tm = ToolMessage(
+        content='{"answer": "done", "citations": []}',
+        tool_call_id="f",
+        name="final_answer",
+    )
+    out = react_after_tools_decrement_budget(
+        {"budget_remaining": 1, "messages": [ai, tm], "metadata": {}}
+    )
+    assert out["metadata"].get("react_total_hops", 0) == 0
+    assert out["metadata"].get("react_consecutive_same_batch_count", 0) == 0
+    assert out["metadata"].get("react_force_finalize") in (None, "")
+
+
+def test_route_react_chat_to_tools_force_finalize_redirects_non_final_batch() -> None:
+    """Soft-cap: non-final tool batch is redirected to ``final_answer_nudge``."""
+    state = {
+        "messages": [
+            HumanMessage(content="q"),
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {"name": "idea_search", "args": {"query": "q"}, "id": "x", "type": "tool_call"}
+                ],
+            ),
+        ],
+        "budget_remaining": 5,
+        "metadata": {"react_force_finalize": "duplicate_tool_batch"},
+    }
+    assert route_react_chat_to_tools(state) == "final_answer_nudge"
+
+
+def test_route_react_chat_to_tools_force_finalize_allows_final_answer_batch() -> None:
+    """Soft-cap: ``final_answer``-only batches still go to tools so the writer closes the turn."""
+    state = {
+        "messages": [
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "name": "final_answer",
+                        "args": {"answer": "done", "citations": []},
+                        "id": "f",
+                        "type": "tool_call",
+                    }
+                ],
+            ),
+        ],
+        "budget_remaining": 1,
+        "metadata": {"react_force_finalize": "duplicate_tool_batch"},
+    }
+    assert route_react_chat_to_tools(state) == "tools"
+
+
+def test_route_react_chat_to_tools_force_finalize_plain_text_goes_to_nudge() -> None:
+    state = {
+        "messages": [AIMessage(content="some text without tool_calls")],
+        "budget_remaining": 2,
+        "metadata": {"react_force_finalize": "react_hops_cap"},
+    }
+    assert route_react_chat_to_tools(state) == "final_answer_nudge"
+
+
+def test_route_react_tools_next_force_finalize_no_final_answer_returns_end() -> None:
+    """Soft-cap: after a ToolNode batch without ``final_answer`` we must not loop back to chat."""
+    tc = [{"name": "idea_search", "args": {"query": "q"}, "id": "a", "type": "tool_call"}]
+    ai = AIMessage(content="", tool_calls=tc)
+    tm = ToolMessage(content="{}", tool_call_id="a", name="idea_search")
+    state = {
+        "messages": [ai, tm],
+        "metadata": {"react_force_finalize": "duplicate_tool_batch"},
+    }
+    assert route_react_tools_next(state) == END
+
+
+def test_route_react_tools_next_force_finalize_final_answer_ok_returns_end() -> None:
+    tc = [
+        {
+            "name": "final_answer",
+            "args": {"answer": "done", "citations": []},
+            "id": "f",
+            "type": "tool_call",
+        }
+    ]
+    ai = AIMessage(content="", tool_calls=tc)
+    tm = ToolMessage(
+        content='{"answer": "done", "citations": []}',
+        tool_call_id="f",
+        name="final_answer",
+    )
+    state = {
+        "messages": [ai, tm],
+        "metadata": {"react_force_finalize": "react_hops_cap"},
+    }
+    assert route_react_tools_next(state) == END

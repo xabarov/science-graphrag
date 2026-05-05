@@ -137,10 +137,6 @@ export function ChatMessageThread({
   const showJump = hasThreadContent && !stickToBottom;
   const [metaEntry, setMetaEntry] = useState(null);
   const meta = useMemo(() => extractTurnMetadata(metaEntry), [metaEntry]);
-  const maxMetaBar = useMemo(() => {
-    const vals = [meta.durationMs, meta.totalTokens, meta.tokensPerSecond, meta.costUsd].map((v) => (v == null ? 0 : Math.abs(v)));
-    return Math.max(...vals, 1);
-  }, [meta]);
 
   const handleConfirmDelete = useCallback(
     async (turnId) => {
@@ -250,14 +246,7 @@ export function ChatMessageThread({
         />
       ) : null}
 
-      <ChatThreadMetadataDialog
-        open={Boolean(metaEntry)}
-        onClose={() => setMetaEntry(null)}
-        tk={tk}
-        t={t}
-        meta={meta}
-        maxMetaBar={maxMetaBar}
-      />
+      <ChatThreadMetadataDialog open={Boolean(metaEntry)} onClose={() => setMetaEntry(null)} tk={tk} t={t} meta={meta} />
 
       {showJump ? (
         <IconButton

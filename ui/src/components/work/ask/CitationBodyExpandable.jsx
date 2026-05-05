@@ -16,15 +16,22 @@ const EXPANDED_MAX_HEIGHT = "min(52vh, 420px)";
  * @param {{
  *   t: (key: string, vars?: Record<string, string>) => string,
  *   citation: Record<string, unknown>,
+ *   defaultExpanded?: boolean,
+ *   suppressMissingPlaceholder?: boolean,
  * }} props
  */
-export function CitationBodyExpandable({ t, citation }) {
+export function CitationBodyExpandable({
+  t,
+  citation,
+  defaultExpanded = true,
+  suppressMissingPlaceholder = false,
+}) {
   const tk = useTheme().appTokens;
   const fullText = useMemo(() => pickCitationBodyText(citation).trim(), [citation]);
-  const [expanded, setExpanded] = useState(false);
+  const needsToggle = fullText.length > PREVIEW_CHARS;
+  const [expanded, setExpanded] = useState(() => (needsToggle ? defaultExpanded : true));
   const [copied, setCopied] = useState(false);
 
-  const needsToggle = fullText.length > PREVIEW_CHARS;
   const truncated = useMemo(
     () => (needsToggle ? `${fullText.slice(0, PREVIEW_CHARS)}…` : fullText),
     [fullText, needsToggle],
@@ -64,18 +71,30 @@ export function CitationBodyExpandable({ t, citation }) {
   }, [fullText]);
 
   if (!fullText) {
+    if (suppressMissingPlaceholder) {
+      return null;
+    }
     return (
-      <Typography
+      <Box
         sx={{
           mt: 0.75,
-          fontSize: "0.75rem",
-          color: tk.text.faint,
-          fontStyle: "italic",
-          lineHeight: 1.5,
+          py: 1,
+          px: 1.1,
+          borderRadius: "8px",
+          border: `1px dashed ${tk.border.default}`,
+          backgroundColor: "rgba(255, 255, 255, 0.02)",
         }}
       >
-        {t("askPanel.citation.noSnippet")}
-      </Typography>
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            color: tk.text.muted,
+            lineHeight: 1.55,
+          }}
+        >
+          {t("askPanel.citation.noSnippet")}
+        </Typography>
+      </Box>
     );
   }
 
@@ -83,15 +102,29 @@ export function CitationBodyExpandable({ t, citation }) {
     <Box sx={{ mt: 0.75 }}>
       <Box
         sx={{
-          pl: 1.25,
-          pr: 0.5,
-          py: 0.85,
-          borderRadius: "6px",
+          pl: 1.35,
+          pr: 0.85,
+          py: 1,
+          borderRadius: "8px",
           border: `1px solid ${tk.border.default}`,
-          borderLeft: `3px solid rgba(129, 140, 248, 0.55)`,
+          borderLeft: `4px solid rgba(129, 140, 248, 0.65)`,
           backgroundColor: tk.surface.panelAlt,
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
         }}
       >
+        <Typography
+          component="div"
+          sx={{
+            fontSize: "0.65rem",
+            fontWeight: 600,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            color: tk.text.faint,
+            mb: 0.65,
+          }}
+        >
+          {t("askPanel.citation.passageLabel")}
+        </Typography>
         {!needsToggle ? (
           <Typography component="div" sx={passageSx}>
             {fullText}

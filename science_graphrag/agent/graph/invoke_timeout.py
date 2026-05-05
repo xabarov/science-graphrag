@@ -15,10 +15,16 @@ from concurrent.futures import TimeoutError as FuturesTimeoutError
 from time import perf_counter
 from typing import Any, Callable
 
+from langgraph.errors import GraphRecursionError
 from opentelemetry import context as otel_context
 from opentelemetry import trace as trace_api
 
-from science_graphrag.agent.graph.errors import AgentGraphDeadlineExceeded
+from science_graphrag.agent.graph.errors import (
+    AgentGraphDeadlineExceeded,
+    AgentGraphRecursionLimitExceeded,
+    resolve_recursion_limit_from_config,
+    telemetry_max_tool_calls_from_state,
+)
 from science_graphrag.config import Settings
 from science_graphrag.observability.spans.decorators import add_span_event
 
@@ -107,7 +113,23 @@ def _invoke_graph_with_attached_otel_context(
 ) -> dict[str, Any]:
     token = otel_context.attach(parent_ctx)
     try:
-        return graph.invoke(state, config=config)
+        try:
+            return graph.invoke(state, config=config)
+        except GraphRecursionError as exc:
+            recursion_limit = resolve_recursion_limit_from_config(config)
+            add_span_event(
+                "agent.graph_recursion_limit_hit",
+                {
+                    "recursion_limit": int(recursion_limit),
+                    "agent.runtime": str(state.get("metadata", {}).get("agent_runtime") or ""),
+                    "agent.max_tool_calls": telemetry_max_tool_calls_from_state(state),
+                },
+            )
+            raise AgentGraphRecursionLimitExceeded(
+                recursion_limit=recursion_limit,
+                latest_state=None,
+                message=None,
+            ) from exc
     finally:
         otel_context.detach(token)
 
@@ -122,7 +144,23 @@ def invoke_graph_with_deadline(
 ) -> dict[str, Any]:
     """Run ``graph.invoke`` in a worker thread; raise if wall time exceeds ``timeout_seconds``."""
     if timeout_seconds <= 0:
-        return graph.invoke(state, config=config)
+        try:
+            return graph.invoke(state, config=config)
+        except GraphRecursionError as exc:
+            recursion_limit = resolve_recursion_limit_from_config(config)
+            add_span_event(
+                "agent.graph_recursion_limit_hit",
+                {
+                    "recursion_limit": int(recursion_limit),
+                    "agent.runtime": str(state.get("metadata", {}).get("agent_runtime") or ""),
+                    "agent.max_tool_calls": telemetry_max_tool_calls_from_state(state),
+                },
+            )
+            raise AgentGraphRecursionLimitExceeded(
+                recursion_limit=recursion_limit,
+                latest_state=None,
+                message=None,
+            ) from exc
 
     pool = _get_agent_graph_pool(settings)
     parent_ctx = otel_context.get_current()

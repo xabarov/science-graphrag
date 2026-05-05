@@ -1,10 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
+  aggregateRepeatedEvents,
+  buildLiveStatusPresentation,
   buildSpecialistStreamGroups,
   collectFormattedStreamLines,
+  collectSafeExplanationLines,
+  deriveDecisionRationale,
+  derivePrimaryHeadline,
   deriveRunState,
+  formatAggregatedEventOneLine,
   formatStreamEventOneLine,
+  getEventGroupKey,
   pickLastMeaningfulStreamEvent,
+  pickLatestAgentNote,
+  pickPrimaryHeadlineEvent,
   shouldOfferRunInspector,
   shouldShowSubagentRail,
 } from "./agentRunViewModel.js";
@@ -18,6 +27,7 @@ const MOCK_T = {
   "chat.stream.shortlistSkipped": "[skip]",
   "chat.stream.evidenceReady": "E:{{n}}",
   "chat.stream.contextCompacted": "M",
+  "chat.stream.thinking": "Working…",
   "chat.stream.warningLine": "W:{{message}}",
   "chat.stream.warningLineWithCode": "W:{{label}}:{{message}}",
   "chat.stream.subagentStarted": "S+{{id}}",
@@ -30,6 +40,23 @@ const MOCK_T = {
   "chat.stream.errorLabel": "err",
   "chat.run.live.toolCall": "{{tool}}",
   "chat.run.live.toolCallQuery": "{{tool}}·{{q}}",
+  "chat.run.headline.thinkingAbout": "Understanding: {{cls}}…",
+  "chat.run.headline.delegatedTo": "Hand off → {{id}}…",
+  "chat.run.headline.repeatedSuffix": "{{base}} (×{{count}})",
+  "chat.run.live.toolCallRepeated": "TOOL {{base}} ×{{count}}",
+  "chat.run.live.productStepRepeated": "STEP {{base}} ×{{count}}",
+  "chat.run.decision.label": "Decision",
+  "chat.run.decision.why": "Why",
+  "chat.run.decision.row": "{{label}}: {{value}}",
+  "chat.run.agentNote.label": "Note",
+  "chat.stream.agentNote": "Note: {{note}}",
+  "chat.run.liveExplain.routeReason": "Routing: {{reason}}",
+  "chat.run.liveExplain.intentReason": "Intent {{cls}}: {{reason}}",
+  "chat.run.liveExplain.subagentSummary": "Specialist {{id}}: {{summary}}",
+  "chat.run.routeReason.semantic_fast_route": "fast semantic route",
+  "chat.run.productStep.searching_literature": "Searching works…",
+  "chat.run.productStep.composing_answer": "Composing answer…",
+  "chat.run.productStep.using_tool": "Running: {{tool}}…",
   "chat.run.answerClass.inventory": "Inventory list",
   "chat.run.intentSource.heuristic": "Heuristic",
   "chat.run.specialist.retrieval_agent": "Corpus search",
@@ -240,12 +267,17 @@ describe("formatStreamEventOneLine", () => {
     expect(formatStreamEventOneLine(t, { type: "answer_synthesis_finished" })).toBe("SYN-");
   });
 
-  it("hides tool_search_result with reason=rules from headline picker", () => {
-    const events = [
+  it("hides all tool_search_result variants from headline picker", () => {
+    const withRules = [
       { type: "intent_classified", answer_class: "inventory", source: "heuristic" },
       { type: "tool_search_result", specialist: "single_agent_react", reason: "rules" },
     ];
-    expect(pickLastMeaningfulStreamEvent(events)?.type).toBe("intent_classified");
+    expect(pickLastMeaningfulStreamEvent(withRules)?.type).toBe("intent_classified");
+    const withLowSignal = [
+      { type: "intent_classified", answer_class: "inventory", source: "heuristic" },
+      { type: "tool_search_result", specialist: "single_agent_react", reason: "low_signal" },
+    ];
+    expect(pickLastMeaningfulStreamEvent(withLowSignal)?.type).toBe("intent_classified");
   });
 });
 
@@ -303,5 +335,323 @@ describe("buildSpecialistStreamGroups", () => {
     expect(g[0].isOrphan).toBe(true);
     expect(g[1].to).toBe("ret");
     expect(g[1].events.length).toBe(2);
+  });
+});
+
+describe("aggregateRepeatedEvents", () => {
+  it("collapses 5 adjacent tool_call(idea_search) into one group with count 5", () => {
+    const events = [
+      { type: "tool_call", tool: "idea_search" },
+      { type: "tool_call", tool: "idea_search" },
+      { type: "tool_call", tool: "idea_search" },
+      { type: "tool_call", tool: "idea_search" },
+      { type: "tool_call", tool: "idea_search" },
+    ];
+    const out = aggregateRepeatedEvents(events);
+    expect(out.length).toBe(1);
+    expect(out[0].kind).toBe("group");
+    expect(out[0].count).toBe(5);
+  });
+
+  it("does not merge across a tool_result splitter", () => {
+    const events = [
+      { type: "tool_call", tool: "idea_search" },
+      { type: "tool_call", tool: "idea_search" },
+      { type: "tool_result", tool: "idea_search", row_count: 1 },
+      { type: "tool_call", tool: "idea_search" },
+    ];
+    const out = aggregateRepeatedEvents(events);
+    expect(out.length).toBe(3);
+    expect(out[0].count).toBe(2);
+    expect(out[1].kind).toBe("single");
+    expect(out[2].count).toBe(1);
+  });
+
+  it("does not merge different tools", () => {
+    const events = [
+      { type: "tool_call", tool: "idea_search" },
+      { type: "tool_call", tool: "cypher_query" },
+      { type: "tool_call", tool: "idea_search" },
+    ];
+    const out = aggregateRepeatedEvents(events);
+    expect(out.length).toBe(3);
+    expect(out.every((e) => e.kind === "single")).toBe(true);
+  });
+
+  it("collapses repeated product_step with the same code", () => {
+    const events = [
+      { type: "product_step", code: "searching_literature" },
+      { type: "product_step", code: "searching_literature" },
+      { type: "product_step", code: "searching_literature" },
+    ];
+    const out = aggregateRepeatedEvents(events);
+    expect(out.length).toBe(1);
+    expect(out[0].count).toBe(3);
+  });
+
+  it("uses tool name when grouping using_tool product_step entries", () => {
+    expect(getEventGroupKey({ type: "product_step", code: "using_tool", tool: "x" })).toBe(
+      "product_step:using_tool:x",
+    );
+  });
+});
+
+describe("formatAggregatedEventOneLine", () => {
+  it("appends ×N suffix for groups", () => {
+    const entry = {
+      kind: "group",
+      count: 4,
+      event: { type: "tool_call", tool: "idea_search", args_summary: { query: "x" } },
+      firstIdx: 0,
+      lastIdx: 3,
+    };
+    const line = formatAggregatedEventOneLine(t, entry);
+    expect(line).toContain("×4");
+    expect(line.startsWith("TOOL ")).toBe(true);
+  });
+
+  it("uses product-step repeat template for product_step groups", () => {
+    const entry = {
+      kind: "group",
+      count: 2,
+      event: { type: "product_step", code: "searching_literature" },
+      firstIdx: 0,
+      lastIdx: 1,
+    };
+    const line = formatAggregatedEventOneLine(t, entry);
+    expect(line).toContain("×2");
+    expect(line.startsWith("STEP ")).toBe(true);
+  });
+
+  it("returns plain line when count is 1", () => {
+    const entry = {
+      kind: "single",
+      count: 1,
+      event: { type: "product_step", code: "searching_literature" },
+      firstIdx: 0,
+      lastIdx: 0,
+    };
+    expect(formatAggregatedEventOneLine(t, entry)).toBe("Searching works…");
+  });
+});
+
+describe("collectFormattedStreamLines aggregation", () => {
+  it("collapses adjacent repeats in the recent list", () => {
+    const events = Array.from({ length: 6 }, () => ({ type: "tool_call", tool: "idea_search" }));
+    const lines = collectFormattedStreamLines(t, events, 24);
+    expect(lines.length).toBe(1);
+    expect(lines[0]).toContain("×6");
+  });
+});
+
+describe("derivePrimaryHeadline aggregation", () => {
+  it("appends ×N suffix when the trailing primary event repeated", () => {
+    const events = [
+      { type: "product_step", code: "searching_literature" },
+      { type: "product_step", code: "searching_literature" },
+      { type: "product_step", code: "searching_literature" },
+    ];
+    const out = derivePrimaryHeadline(t, events, true);
+    expect(out).toContain("Searching works");
+    expect(out).toContain("×3");
+    expect(out.startsWith("STEP ")).toBe(true);
+  });
+});
+
+describe("pickPrimaryHeadlineEvent", () => {
+  it("prefers product_step over later intent_classified", () => {
+    const events = [
+      { type: "product_step", code: "searching_literature" },
+      { type: "intent_classified", answer_class: "inventory", source: "heuristic" },
+    ];
+    expect(pickPrimaryHeadlineEvent(events)?.type).toBe("product_step");
+  });
+
+  it("prefers product_step over later tool_search_result", () => {
+    const events = [
+      { type: "product_step", code: "searching_literature" },
+      { type: "tool_search_result", specialist: "retrieval_agent", reason: "low_signal" },
+    ];
+    expect(pickPrimaryHeadlineEvent(events)?.type).toBe("product_step");
+  });
+
+  it("falls back to subagent_started when no product_step", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "x", source: "h" },
+      { type: "subagent_started", subagent_id: "retrieval_agent" },
+    ];
+    expect(pickPrimaryHeadlineEvent(events)?.type).toBe("subagent_started");
+  });
+
+  it("returns null when only debug events", () => {
+    expect(pickPrimaryHeadlineEvent([{ type: "tool_search_result", specialist: "x", reason: "rules" }])).toBe(null);
+  });
+
+  it("picks latest event at same priority level", () => {
+    const events = [
+      { type: "product_step", code: "searching_literature" },
+      { type: "product_step", code: "composing_answer" },
+    ];
+    expect(pickPrimaryHeadlineEvent(events)?.code).toBe("composing_answer");
+  });
+
+  it("ignores stale stamped product_step when the tail event is stamped", () => {
+    const t0 = 1_700_000_000_000;
+    const events = [
+      { type: "product_step", code: "searching_literature", _receivedAtMs: t0 },
+      {
+        type: "intent_classified",
+        answer_class: "inventory",
+        source: "heuristic",
+        _receivedAtMs: t0 + 9000,
+      },
+    ];
+    expect(pickPrimaryHeadlineEvent(events)?.type).toBe("intent_classified");
+  });
+
+  it("keeps fresh stamped product_step over later intent_classified", () => {
+    const t0 = 1_700_000_000_000;
+    const events = [
+      { type: "product_step", code: "searching_literature", _receivedAtMs: t0 },
+      {
+        type: "intent_classified",
+        answer_class: "inventory",
+        source: "heuristic",
+        _receivedAtMs: t0 + 1000,
+      },
+    ];
+    expect(pickPrimaryHeadlineEvent(events)?.type).toBe("product_step");
+  });
+});
+
+describe("deriveDecisionRationale", () => {
+  it("returns localized decision and humanized why", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "inventory", source: "heuristic", reason: "semantic_fast_route" },
+    ];
+    const out = deriveDecisionRationale(t, events);
+    expect(out.decision).toBe("Inventory list");
+    expect(out.why).toBe("fast semantic route");
+  });
+
+  it("falls back to specialist_selected reason when intent has none", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "inventory", source: "heuristic" },
+      { type: "specialist_selected", from: "sup", to: "ret", reason: "semantic_fast_route" },
+    ];
+    const out = deriveDecisionRationale(t, events);
+    expect(out.decision).toBe("Inventory list");
+    expect(out.why).toBe("fast semantic route");
+  });
+
+  it("hides why when reason is the redundant default single_agent_research_runtime", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "inventory", source: "h", reason: "single_agent_research_runtime" },
+    ];
+    const out = deriveDecisionRationale(t, events);
+    expect(out.decision).toBe("Inventory list");
+    expect(out.why).toBe("");
+  });
+
+  it("returns empty when no intent or specialist events", () => {
+    const out = deriveDecisionRationale(t, [{ type: "tool_call", tool: "x" }]);
+    expect(out).toEqual({ decision: "", why: "" });
+  });
+});
+
+describe("collectSafeExplanationLines with excludeKinds=decision", () => {
+  it("skips intent/route reason lines so decision block is not duplicated", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "inventory", source: "h", reason: "semantic_fast_route" },
+      { type: "specialist_selected", from: "sup", to: "ret", reason: "semantic_fast_route" },
+      { type: "subagent_started", subagent_id: "retrieval_agent", summary: "semantic_fast_route" },
+    ];
+    const lines = collectSafeExplanationLines(t, events, 6, { excludeKinds: ["decision"] });
+    expect(lines.some((l) => l.startsWith("Routing:"))).toBe(false);
+    expect(lines.some((l) => l.startsWith("Intent "))).toBe(false);
+    expect(lines.some((l) => l.startsWith("Specialist "))).toBe(true);
+  });
+});
+
+describe("buildLiveStatusPresentation", () => {
+  it("exposes decision and why fields", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "inventory", source: "heuristic", reason: "semantic_fast_route" },
+    ];
+    const pres = buildLiveStatusPresentation(t, events, true);
+    expect(pres.decision).toBe("Inventory list");
+    expect(pres.why).toBe("fast semantic route");
+    expect(pres.headline).toBeTruthy();
+  });
+
+  it("exposes latest agent_note text", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "inventory", source: "heuristic" },
+      { type: "agent_note", kind: "intent", note: "Will check authors first." },
+      { type: "agent_note", kind: "route", note: "Fetch graph neighbours." },
+    ];
+    const pres = buildLiveStatusPresentation(t, events, true);
+    expect(pres.latestAgentNote).toBe("Fetch graph neighbours.");
+  });
+});
+
+describe("pickLatestAgentNote", () => {
+  it("returns the last non-empty note", () => {
+    expect(
+      pickLatestAgentNote([
+        { type: "agent_note", note: "first" },
+        { type: "agent_note", note: "" },
+        { type: "agent_note", note: "second" },
+      ]),
+    ).toBe("second");
+  });
+
+  it("returns empty string when no notes are present", () => {
+    expect(pickLatestAgentNote([{ type: "tool_call", tool: "x" }])).toBe("");
+  });
+});
+
+describe("formatStreamEventOneLine agent_note", () => {
+  it("formats agent_note with localized template", () => {
+    expect(formatStreamEventOneLine(t, { type: "agent_note", kind: "intent", note: "Pick recent papers." })).toBe(
+      "Note: Pick recent papers.",
+    );
+  });
+
+  it("returns empty string when note is blank", () => {
+    expect(formatStreamEventOneLine(t, { type: "agent_note", kind: "intent", note: "" })).toBe("");
+  });
+});
+
+describe("derivePrimaryHeadline", () => {
+  it("returns localized product_step phrase", () => {
+    const events = [{ type: "product_step", code: "searching_literature" }];
+    expect(derivePrimaryHeadline(t, events, true)).toBe("Searching works…");
+  });
+
+  it("uses thinkingAbout phrase for early intent_classified", () => {
+    const events = [{ type: "intent_classified", answer_class: "inventory", source: "heuristic" }];
+    expect(derivePrimaryHeadline(t, events, true)).toBe("Understanding: Inventory list…");
+  });
+
+  it("uses delegatedTo phrase for subagent_started", () => {
+    const events = [{ type: "subagent_started", subagent_id: "retrieval_agent" }];
+    expect(derivePrimaryHeadline(t, events, true)).toBe("Hand off → Corpus search…");
+  });
+
+  it("falls back to chat.stream.thinking when only hidden events on active run", () => {
+    const events = [{ type: "tool_search_result", specialist: "x", reason: "rules" }];
+    expect(derivePrimaryHeadline(t, events, true)).toBe("Working…");
+  });
+
+  it("returns empty when not active and no events", () => {
+    expect(derivePrimaryHeadline(t, [], false)).toBe("");
+  });
+
+  it("never returns raw using_tool without a label", () => {
+    const events = [{ type: "product_step", code: "using_tool", tool: "idea_search" }];
+    const out = derivePrimaryHeadline(t, events, true);
+    expect(out).not.toBe("using_tool");
+    expect(out).toContain("Running");
   });
 });

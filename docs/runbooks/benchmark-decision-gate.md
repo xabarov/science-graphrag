@@ -228,3 +228,13 @@ UI: `GET /v1/benchmark/decision-gate-summary` (см. [`frontend-ui-api-contracts
 2. **BT4 `hybrid_ablation_live`:** если на пилотном корпусе **7 ночей подряд** `mrr_delta = 0` при честном live-прогоне — зафиксировать **negative result** и по политике мейнтейнеров перевести семейство в `fixture_consistency_only` в `aggregate_benchmark_metrics.py` *или* расширить корпус до 20+ работ и переснять сигнал (см. §10.4 п.4 roadmap).
 3. **BT5 judge pilot:** при `hard_block_individual_failures:retrieval_judge_pilot` **NO-GO** ожидаем до стабилизации ответов / порогов / embeddings; holdout (§8.3) остаётся advisory и не разблокирует merge автоматически.
 4. **ADR-021 (bge-m3):** полный cutover embeddings — отдельная сессия (re-ingest, recreate collections); запускать только после явного решения по бюджету и регрессии nightly; см. [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md) пункт bge-m3.
+
+## 12. Гигиена дубликатов Work после ingest
+
+Перед gate на пилотном корпусе полезно прогнать **read-only** отчёт по кластерам дубликатов заголовков:
+
+```bash
+.venv/bin/science-graphrag work-dedup-report
+```
+
+Команда использует `Neo4jGraphStore.find_work_dedup_violations()` (см. [`science_graphrag/cli/main.py`](../../science_graphrag/cli/main.py)). Ненулевой список кластеров — сигнал к ручному merge (`merge-work`, скрипты под конкретный аудит), а не к изменению порогов benchmark без разбора данных.

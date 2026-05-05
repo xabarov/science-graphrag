@@ -181,7 +181,11 @@ def test_needs_final_answer_nudge_false_after_completed_final_answer() -> None:
             AIMessage(
                 content="",
                 tool_calls=[
-                    {"name": "final_answer", "id": "c1", "args": {"answer": "Done", "citations": []}},
+                    {
+                        "name": "final_answer",
+                        "id": "c1",
+                        "args": {"answer": "Done", "citations": []},
+                    },
                 ],
             ),
             ToolMessage(

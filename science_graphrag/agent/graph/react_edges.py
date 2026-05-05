@@ -12,7 +12,7 @@ from langgraph.graph import END
 from science_graphrag.agent.final_answer_policy import needs_final_answer_nudge
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
-from science_graphrag.config import Settings
+from science_graphrag.config import Settings, get_settings
 from science_graphrag.observability.spans.decorators import add_span_event
 
 # Stop looping after this many *bad* ``final_answer`` tool payloads (JSON empty/malformed).
@@ -89,16 +89,25 @@ def route_react_chat_to_tools(
       recovery).
     - If the model returns text without ``tool_calls`` but catalog tools already ran without a
       terminal ``final_answer``, route to ``final_answer_nudge`` (up to two per turn; see policy).
+    - When ``metadata.react_force_finalize`` is present (soft-cap pre-empt before
+      ``recursion_limit``), force ``final_answer_nudge`` for non-final tool batches and accept
+      only ``final_answer``-only batches as ``tools``.
     """
     messages = state.get("messages") or []
     if not messages:
         return END
     last = messages[-1]
     tool_calls = getattr(last, "tool_calls", None) or []
+    meta = state.get("metadata") or {}
+    forced = bool(meta.get("react_force_finalize"))
     if not tool_calls:
-        if needs_final_answer_nudge(state):
+        if forced or needs_final_answer_nudge(state):
             return "final_answer_nudge"
         return END
+    if forced and not tool_calls_batch_is_only_final_answer(tool_calls):
+        # Soft-cap hit: drop any non-terminal batch, force the writer-style nudge so the
+        # next chat hop emits ``final_answer`` and the graph closes within the recursion budget.
+        return "final_answer_nudge"
     budget = int(state.get("budget_remaining", 0))
     if budget >= 0:
         return "tools"
@@ -155,8 +164,18 @@ def _latest_react_tool_batch_signatures(messages: list[Any]) -> list[str]:
 def react_after_tools_decrement_budget(state: AgentState) -> dict[str, Any]:
     """Decrement tool budget once per executed tool batch (after ToolNode).
 
-    When the model emits the same tool+args batch twice in a row, append a soft ``debug_events``
-    warning (does not block execution).
+    Side effects (single source of soft-cap pre-emption before hard ``recursion_limit``):
+
+    - When the model emits the same tool+args batch twice in a row, append a soft
+      ``debug_events`` warning (does not block execution).
+    - Track ``react_total_hops`` (one per executed ToolNode batch).
+    - Track ``react_consecutive_same_batch_count`` and set
+      ``metadata["react_force_finalize"] = "duplicate_tool_batch"`` once it crosses
+      ``Settings.agent_react_max_consecutive_same_batch``.
+    - On the first repeat of the same ``paper_profile.work_id``, set
+      ``react_force_finalize = "repeated_paper_profile"``.
+    - When ``react_total_hops`` >= ``Settings.agent_react_max_total_hops``, set
+      ``react_force_finalize = "react_hops_cap"``.
     """
     budget = int(state.get("budget_remaining", 0))
     meta = dict(state.get("metadata") or {})
@@ -169,15 +188,31 @@ def react_after_tools_decrement_budget(state: AgentState) -> dict[str, Any]:
         messages[idx].tool_calls if idx >= 0 and isinstance(messages[idx], AIMessage) else None
     )
 
+    settings = get_settings()
+    same_batch_cap = max(1, int(settings.agent_react_max_consecutive_same_batch))
+    total_hops_cap = max(2, int(settings.agent_react_max_total_hops))
+    is_only_final = bool(latest_ai_calls and tool_calls_batch_is_only_final_answer(latest_ai_calls))
+
     prev = meta.get("react_prev_tool_batch_sigs")
-    debug_patch: list[dict[str, Any]] = []
-    if (
+    same_as_prev = (
         isinstance(prev, list)
         and prev == batch_sigs
-        and batch_sigs
-        and latest_ai_calls
-        and not tool_calls_batch_is_only_final_answer(latest_ai_calls)
-    ):
+        and bool(batch_sigs)
+        and bool(latest_ai_calls)
+        and not is_only_final
+    )
+
+    prev_same_count = int(meta.get("react_consecutive_same_batch_count") or 0)
+    if same_as_prev:
+        same_count = prev_same_count + 1
+    elif batch_sigs and not is_only_final:
+        same_count = 1
+    else:
+        same_count = 0
+    meta["react_consecutive_same_batch_count"] = same_count
+
+    debug_patch: list[dict[str, Any]] = []
+    if same_as_prev:
         debug_patch.append(
             {
                 "type": "warning",
@@ -198,6 +233,7 @@ def react_after_tools_decrement_budget(state: AgentState) -> dict[str, Any]:
     pp_wids = _paper_profile_work_ids_from_tool_calls(
         list(latest_ai_calls) if latest_ai_calls else None
     )
+    repeated_pp_wid: str | None = None
     if pp_wids:
         for wid in pp_wids:
             if prev_pp_wid is not None and wid == prev_pp_wid:
@@ -212,6 +248,7 @@ def react_after_tools_decrement_budget(state: AgentState) -> dict[str, Any]:
                         ),
                     }
                 )
+                repeated_pp_wid = wid
                 break
         meta["react_prev_paper_profile_work_id"] = pp_wids[-1]
 
@@ -225,6 +262,46 @@ def react_after_tools_decrement_budget(state: AgentState) -> dict[str, Any]:
                 "max_repair_hops": _MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS,
             },
         )
+
+    if latest_ai_calls and not is_only_final:
+        total_hops = int(meta.get("react_total_hops") or 0) + 1
+        meta["react_total_hops"] = total_hops
+    else:
+        total_hops = int(meta.get("react_total_hops") or 0)
+
+    if not meta.get("react_force_finalize"):
+        force_reason: str | None = None
+        if same_count >= same_batch_cap:
+            force_reason = "duplicate_tool_batch"
+        elif repeated_pp_wid is not None:
+            force_reason = "repeated_paper_profile"
+        elif total_hops >= total_hops_cap:
+            force_reason = "react_hops_cap"
+        if force_reason is not None:
+            meta["react_force_finalize"] = force_reason
+            debug_patch.append(
+                {
+                    "type": "warning",
+                    "code": "react_force_finalize",
+                    "reason": force_reason,
+                    "react_total_hops": total_hops,
+                    "react_consecutive_same_batch_count": same_count,
+                    "detail": (
+                        "ReAct soft-cap engaged before recursion_limit; next route forces "
+                        "final_answer to close the turn."
+                    ),
+                }
+            )
+            add_span_event(
+                "agent.react_force_finalize",
+                {
+                    "reason": force_reason,
+                    "react_total_hops": total_hops,
+                    "react_consecutive_same_batch_count": same_count,
+                    "max_consecutive_same_batch": same_batch_cap,
+                    "max_total_hops": total_hops_cap,
+                },
+            )
 
     out: dict[str, Any] = {"budget_remaining": budget - 1, "metadata": meta}
     if debug_patch:
@@ -271,7 +348,13 @@ def _latest_batch_has_bad_final_answer(messages: list[Any]) -> bool:
 
 
 def route_react_tools_next(state: AgentState) -> Literal["chat"] | Any:
-    """After ToolNode: end only when ``final_answer`` tool JSON has a non-empty ``answer``."""
+    """After ToolNode: end only when ``final_answer`` tool JSON has a non-empty ``answer``.
+
+    When ``metadata.react_force_finalize`` is set (soft-cap), refuse another ``chat`` hop —
+    return ``END`` immediately so the graph can close before LangGraph's hard
+    ``recursion_limit`` is reached. This applies even if ``final_answer`` was not produced
+    on this batch; the API/SSE layer salvages whatever state was accumulated.
+    """
 
     messages = list(state.get("messages") or [])
     meta = state.get("metadata") or {}
@@ -284,12 +367,16 @@ def route_react_tools_next(state: AgentState) -> Literal["chat"] | Any:
         if ok is not None:
             finals_ok.append(bool(ok))
 
+    forced = bool(meta.get("react_force_finalize"))
+
     if not finals_ok:
+        if forced:
+            return END
         return "chat"
     if all(finals_ok):
         return END
 
-    if hops > _MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS:
+    if hops > _MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS or forced:
         return END
     return "chat"
 

@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import { ThemeProvider } from "@mui/material/styles";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { buildAppTheme } from "../../../theme/buildAppTheme.js";
@@ -15,15 +15,7 @@ afterEach(() => {
 function renderHeader(runState, extra = {}) {
   return render(
     <ThemeProvider theme={theme}>
-      <AgentRunHeader
-        t={(k) => k}
-        runState={runState}
-        answerClass={null}
-        citationCount={0}
-        durationMs={null}
-        progressHint=""
-        {...extra}
-      />
+      <AgentRunHeader t={(k) => k} runState={runState} progressHint="" {...extra} />
     </ThemeProvider>,
   );
 }
@@ -54,14 +46,17 @@ describe("AgentRunHeader", () => {
     expect(screen.getByText("chat.run.state.failed")).toBeTruthy();
   });
 
-  it("shows token total when run finished and totalTokens set", () => {
-    renderHeader("done", { totalTokens: 12840 });
-    fireEvent.click(screen.getByRole("button", { name: "chat.run.headerDetailsExpandAria" }));
-    expect(screen.getByText("chat.run.tokensTotal")).toBeTruthy();
+  it("shows progress hint while running when provided", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <AgentRunHeader t={(k) => k} runState="running" progressHint="Working…" />
+      </ThemeProvider>,
+    );
+    expect(screen.getByText("Working…")).toBeTruthy();
   });
 
-  it("hides token total while running", () => {
-    renderHeader("running", { totalTokens: 999 });
-    expect(screen.queryByText("chat.run.tokensTotal")).toBeNull();
+  it("does not render answer-class expand affordance", () => {
+    renderHeader("done");
+    expect(screen.queryByRole("button", { name: "chat.run.headerDetailsExpandAria" })).toBeNull();
   });
 });

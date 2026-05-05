@@ -54,12 +54,15 @@ def build_chat_model(
     max_tokens: int | None = None,
     timeout_seconds: float | None = None,
     max_retries: int | None = None,
+    model: str | None = None,
 ) -> ChatOpenAI:
     """Build ChatOpenAI client pointing to OpenRouter-compatible endpoint."""
     retries = int(settings.agent_chat_max_retries) if max_retries is None else int(max_retries)
     retries = max(0, min(2, retries))
+    override_id = (model or "").strip()
+    resolved_model = override_id or effective_chat_llm_model(settings)
     return ChatOpenAI(
-        model=effective_chat_llm_model(settings),
+        model=resolved_model,
         api_key=settings.extraction_llm_api_key,
         base_url=settings.extraction_llm_base_url,
         temperature=temperature if temperature is not None else settings.agent_chat_temperature,

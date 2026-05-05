@@ -529,7 +529,16 @@ class Settings(BaseSettings):
             "collection). Not per-node; see runbook. Default 240s allows multi-tool research turns."
         ),
     )
-    agent_supervisor_recursion_limit: int = Field(default=32, ge=4, le=128)
+    agent_supervisor_recursion_limit: int = Field(
+        default=64,
+        ge=4,
+        le=128,
+        description=(
+            "LangGraph ``invoke`` ``recursion_limit`` (counts all graph node transitions, not only "
+            "tool calls). Increase via env if runs fail with GRAPH_RECURSION_LIMIT while below "
+            "tool budget."
+        ),
+    )
     agent_supervisor_max_rounds: int = Field(
         default=10,
         ge=2,
@@ -537,6 +546,24 @@ class Settings(BaseSettings):
         description=(
             "Hard cap on supervisor routing decisions (entries in routing_log with from=supervisor) "
             "before forcing writer_agent to avoid endless specialist ping-pong."
+        ),
+    )
+    agent_react_max_consecutive_same_batch: int = Field(
+        default=2,
+        ge=1,
+        le=8,
+        description=(
+            "ReAct soft-cap: how many times the same tool+args batch may repeat before the next "
+            "route forces ``final_answer_nudge``. Pre-empts ``GraphRecursionError`` on loops."
+        ),
+    )
+    agent_react_max_total_hops: int = Field(
+        default=12,
+        ge=2,
+        le=64,
+        description=(
+            "ReAct soft-cap: total tool batches per turn after which the next route forces "
+            "``final_answer_nudge``. Pre-empts hard ``recursion_limit`` exhaustion."
         ),
     )
     agent_chat_temperature: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -606,6 +633,35 @@ class Settings(BaseSettings):
         ge=1.0,
         le=120.0,
         description="HTTP timeout for coordinator LLM classifier calls.",
+    )
+    agent_note_enabled: bool = Field(
+        default=False,
+        description=(
+            "Emit short LLM ``agent_note`` SSE events between routing decisions; "
+            "costs extra tokens. Off by default; pilot only with explicit opt-in."
+        ),
+    )
+    agent_note_max_per_turn: int = Field(
+        default=2,
+        ge=0,
+        le=6,
+        description="Hard cap of ``agent_note`` events per agent turn.",
+    )
+    agent_note_max_tokens: int = Field(
+        default=64,
+        ge=16,
+        le=256,
+        description="LLM ``max_tokens`` for a single ``agent_note`` generation.",
+    )
+    agent_note_timeout_seconds: float = Field(
+        default=2.5,
+        ge=0.5,
+        le=10.0,
+        description="Per-note timeout; on timeout the note is dropped silently.",
+    )
+    agent_note_model_id: str | None = Field(
+        default=None,
+        description="Override chat LLM model id for ``agent_note`` generation; defaults to effective chat model.",
     )
     agent_chat_max_retries: int = Field(
         default=1,
@@ -831,6 +887,30 @@ class Settings(BaseSettings):
             return raw_vl
         ex = (self.extraction_llm_api_key or "").strip()
         return ex or None
+
+    @model_validator(mode="after")
+    def validate_recursion_limit_against_tool_budget(self) -> "Settings":
+        """Catch ``recursion_limit`` set too low for the configured tool budget at startup.
+
+        LangGraph's ``recursion_limit`` counts every node transition (chat, route_*, tools,
+        after_tools), not just tool calls. Empirically each ReAct cycle consumes ~4 hops, plus
+        a few hops of envelope (entry, final_answer, writer, end). Enforce a conservative
+        lower bound ``4 * agent_max_tool_calls + 8`` so misconfigurations fail fast instead of
+        producing ``GraphRecursionError`` mid-turn.
+        """
+
+        budget = int(self.agent_max_tool_calls)
+        recursion_limit = int(self.agent_supervisor_recursion_limit)
+        min_required = 4 * budget + 8
+        if recursion_limit < min_required:
+            raise ValueError(
+                "agent_supervisor_recursion_limit too low for agent_max_tool_calls="
+                f"{budget}: got {recursion_limit}, need >= {min_required} "
+                "(approximation: 4 graph hops per ReAct cycle + 8 hops envelope). "
+                "Increase SCIENCE_GRAPHRAG_AGENT_SUPERVISOR_RECURSION_LIMIT or lower "
+                "SCIENCE_GRAPHRAG_AGENT_MAX_TOOL_CALLS."
+            )
+        return self
 
     @model_validator(mode="after")
     def validate_mandatory_s3_credentials(self) -> "Settings":

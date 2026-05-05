@@ -10,6 +10,7 @@ from langchain_core.messages import AIMessage
 
 from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.agent_v2 import router as agent_v2_router
+from science_graphrag.api.agent_v2_modules import stream_lifecycle as agent_v2_stream_lifecycle
 from science_graphrag.api.deps import get_stores
 from science_graphrag.config import Settings, get_settings
 
@@ -68,14 +69,14 @@ def test_v2_sync_json(monkeypatch) -> None:
 
 
 def test_v2_sse_stream(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
     class _FakeGraph:
         async def astream(self, _state, config=None):  # noqa: ARG002
             yield {"chat": {"messages": [AIMessage(content="Streamed final answer")]}}
 
     monkeypatch.setattr(
-        agent_v2_api, "build_retrieval_graph", lambda *_args, **_kwargs: _FakeGraph()
+        agent_v2_stream_lifecycle,
+        "build_retrieval_graph",
+        lambda *_args, **_kwargs: _FakeGraph(),
     )
     test_app = _build_test_app()
     client = TestClient(test_app)
@@ -102,8 +103,6 @@ def test_v2_sse_stream(monkeypatch) -> None:
 
 
 def test_v2_sse_stream_formats_provider_valueerror(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
     class _BrokenGraph:
         async def astream(self, _state, config=None):  # noqa: ARG002
             # Must yield once so ``astream`` is an async generator (not a plain coroutine).
@@ -111,7 +110,9 @@ def test_v2_sse_stream_formats_provider_valueerror(monkeypatch) -> None:
             raise ValueError({"message": "Provider returned error", "code": 403})
 
     monkeypatch.setattr(
-        agent_v2_api, "build_retrieval_graph", lambda *_args, **_kwargs: _BrokenGraph()
+        agent_v2_stream_lifecycle,
+        "build_retrieval_graph",
+        lambda *_args, **_kwargs: _BrokenGraph(),
     )
     test_app = _build_test_app()
     client = TestClient(test_app)
@@ -171,12 +172,10 @@ def test_v2_deferred_topic_shortcuts_sync_without_agent(monkeypatch) -> None:
 
 
 def test_v2_deferred_topic_shortcuts_sse_without_graph(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
     def _fail_build_graph(*_args, **_kwargs):
         raise AssertionError("deferred topic should not build retrieval graph")
 
-    monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", _fail_build_graph)
+    monkeypatch.setattr(agent_v2_stream_lifecycle, "build_retrieval_graph", _fail_build_graph)
     test_app = _build_test_app()
     client = TestClient(test_app)
     client.app.dependency_overrides[get_settings] = lambda: Settings()

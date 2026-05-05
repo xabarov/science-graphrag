@@ -4,7 +4,7 @@
  * not raw tool args. Complements backend SSE tests in tests/test_api_agent_v2_stream_parity.py.
  */
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import React from "react";
 import { ThemeProvider } from "@mui/material/styles";
 
@@ -36,6 +36,10 @@ function t(key, vars = {}) {
     "chat.run.toolLabel.cypher_query": "Graph query",
     "chat.run.live.toolCall": "{{tool}}",
     "chat.run.live.toolCallQuery": "{{tool}} · {{q}}",
+    "chat.run.decision.label": "Decision",
+    "chat.run.decision.why": "Why",
+    "chat.run.decision.row": "{{label}}: {{value}}",
+    "chat.run.answerClass.inventory": "Inventory listing",
   };
   let out = table[key] || key;
   Object.entries(vars).forEach(([k, v]) => {
@@ -51,7 +55,7 @@ function renderWithTheme(ui) {
 afterEach(() => cleanup());
 
 describe("AgentLiveStatus reasoning (integration)", () => {
-  it("shows collapsible explanations from intent and specialist reason when streaming", () => {
+  it("surfaces decision and why from intent / specialist reason above the headline", () => {
     renderWithTheme(
       <AgentLiveStatus
         t={t}
@@ -77,14 +81,9 @@ describe("AgentLiveStatus reasoning (integration)", () => {
 
     expect(screen.getByText("Searching works…")).toBeTruthy();
 
-    const explainBtn = screen.getByRole("button", { name: "Expand reasoning" });
-    expect(explainBtn.getAttribute("aria-expanded")).toBe("false");
-    fireEvent.click(explainBtn);
-    expect(explainBtn.getAttribute("aria-expanded")).toBe("true");
-
-    const region = screen.getByRole("region", { name: "Reasoning" });
-    expect(within(region).getByText(/Classified as catalog-style question/)).toBeTruthy();
-    expect(within(region).getByText(/Route to retrieval for grounded evidence/)).toBeTruthy();
+    const decisionGroup = screen.getByRole("group", { name: "Decision" });
+    expect(within(decisionGroup).getByText("Decision: Inventory listing")).toBeTruthy();
+    expect(within(decisionGroup).getByText(/Why: Classified as catalog-style question\./)).toBeTruthy();
   });
 
   it("shows tool activity chips from tool_call stream while active", () => {

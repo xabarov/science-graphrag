@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatResearchApiError, normalizeQueryResponse, postAgentQueryV2 } from "../../../services/researchApi.js";
 import { useAgentStream } from "../../../hooks/useAgentStream.js";
+import { withStreamEventReceiveTime } from "./withStreamEventReceiveTime.js";
 
 /**
  * Orchestrates chat submit: streaming agent only (no vector/hybrid UI path).
@@ -38,10 +39,11 @@ export function useAskSubmit({
   const { stream: streamAgent, isStreaming, abort: abortStream } = useAgentStream({
     workspaceId,
     onEvent: (event) => {
-      if (event && typeof event === "object") {
-        streamEventsCaptureRef.current = [...streamEventsCaptureRef.current, event].slice(-80);
+      const stamped = withStreamEventReceiveTime(event);
+      if (stamped && typeof stamped === "object") {
+        streamEventsCaptureRef.current = [...streamEventsCaptureRef.current, stamped].slice(-80);
       }
-      onStreamEvent?.(event);
+      onStreamEvent?.(stamped);
     },
     onFinalAnswer: (event) => {
       const trace = Array.isArray(event?.tool_trace) ? event.tool_trace : [];

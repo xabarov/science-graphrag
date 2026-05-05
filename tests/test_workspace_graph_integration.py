@@ -168,8 +168,12 @@ def test_workspace_graph_inner_only_two_works_cites_and_full_ignores_type_filter
         nb_by_id = {n["id"]: n for n in nb.get("nodes") or []}
         assert ash1 not in nb_by_id and ash2 not in nb_by_id
         assert a1 in nb_by_id and a2 in nb_by_id
-        assert "Wei Liu" in str(nb_by_id[a1].get("display_label") or nb_by_id[a1].get("label") or "")
-        assert "Jia Deng" in str(nb_by_id[a2].get("display_label") or nb_by_id[a2].get("label") or "")
+        assert "Wei Liu" in str(
+            nb_by_id[a1].get("display_label") or nb_by_id[a1].get("label") or ""
+        )
+        assert "Jia Deng" in str(
+            nb_by_id[a2].get("display_label") or nb_by_id[a2].get("label") or ""
+        )
     finally:
         if neo_store is not None:
             try:

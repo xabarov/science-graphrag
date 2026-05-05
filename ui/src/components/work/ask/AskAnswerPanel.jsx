@@ -1,12 +1,15 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
+import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
+import { Link as RouterLink } from "react-router-dom";
 
 import { GRAPH_PATH, READER_PATH } from "../../../routes/paths.js";
-import { buildStandaloneEvidencePath, buildStandaloneTracePath } from "../traceability/traceabilityState.js";
+import { buildStandaloneTracePath } from "../traceability/traceabilityState.js";
 import {
   BibliographyBlock,
   IdeaSuggestionsBlock,
@@ -26,9 +29,18 @@ import { AgentRunHeader } from "../agent/AgentRunHeader.jsx";
 import { AgentLiveStatus } from "../agent/AgentLiveStatus.jsx";
 import { AgentSubagentRail } from "../agent/AgentSubagentRail.jsx";
 import MarkdownView from "../markdown/MarkdownView.jsx";
+import { CursorIconButton } from "../../common/index.js";
 import { CitationBodyExpandable } from "./CitationBodyExpandable.jsx";
-import { formatEvidenceSummaryForDisplay } from "./evidenceSummaryFormat.js";
-import { extractTokenCountsFromRunMetadata } from "./runMetadataUsage.js";
+import { formatCitationHeadline, pickCitationWorkTitle } from "./citationDisplay.js";
+import { pickCitationBodyText } from "./citationBodyText.js";
+import { mergeQuoteCandidatesIntoCitations } from "./citationHydration.js";
+
+/**
+ * Detail-level matrix (product UX):
+ * - simple: minimal chrome — no "Answer" section title, no post-run stream headline, no post-run specialist rail.
+ * - detailed: full technical chrome — section title, post-run headline (when not suppressed), post-run rail when events exist.
+ * Streaming keeps the specialist rail in both modes so users still see live routing during the turn.
+ */
 
 function formatAgentWarning(t, code) {
   const c = String(code || "").trim();
@@ -75,6 +87,8 @@ export function AskAnswerPanel({
 }) {
   void locked;
   void workId;
+  void inWorkspace;
+  void workspaceWorkId;
   void agentToolTrace;
   void retrievalJsonOpen;
   void onToggleRetrievalJson;
@@ -83,7 +97,11 @@ export function AskAnswerPanel({
   if (!normalized) return null;
 
   const { runState } = deriveRunState({ normalized, isRunActive, streamEvents });
-  const citations = Array.isArray(normalized.citations) ? normalized.citations : [];
+  const citations = mergeQuoteCandidatesIntoCitations(
+    Array.isArray(normalized.citations) ? normalized.citations : [],
+    Array.isArray(normalized.quote_candidates) ? normalized.quote_candidates : [],
+    normalized.inventory && typeof normalized.inventory === "object" ? normalized.inventory : null,
+  );
   const answerClass = normalized.answer_class != null ? String(normalized.answer_class).trim() : "";
   /** Quote-style turns surface evidence in the answer + quote_candidates; structured citations are redundant. */
   const hideStructuredCitations = answerClass === "quote_extraction";
@@ -94,10 +112,10 @@ export function AskAnswerPanel({
     (Array.isArray(normalized?.retrieval_trace?.degraded) && normalized.retrieval_trace.degraded.length > 0) ||
     (Array.isArray(normalized?.graph_context?.degraded) && normalized.graph_context.degraded.length > 0);
   const wsForTrace = String(workspaceId || "").trim();
-  const { totalTokens: headerTotalTokens } = extractTokenCountsFromRunMetadata(normalized.run_metadata);
-  const evidenceSummaryDisplay = normalized.evidence_summary
-    ? formatEvidenceSummaryForDisplay(t, normalized.evidence_summary)
-    : "";
+
+  const missingPassageCount = citations.filter((c) => !pickCitationBodyText(c).trim()).length;
+  const allPassagesMissing = citations.length > 0 && missingPassageCount === citations.length;
+  const somePassagesMissing = missingPassageCount > 0 && missingPassageCount < citations.length;
 
   const showSubagentRail = retrievalMode === "agent" && shouldShowSubagentRail(streamEvents);
 
@@ -111,12 +129,7 @@ export function AskAnswerPanel({
       <AgentRunHeader
         t={t}
         runState={runState}
-        answerClass={normalized.answer_class}
-        citationCount={citations.length}
-        durationMs={normalized.duration_ms}
-        totalTokens={headerTotalTokens}
         progressHint={isRunActive ? "" : deriveHeaderProgressHint(t, streamEvents, isRunActive)}
-        defaultDetailsOpen={chatDetailLevel === "detailed"}
       />
 
       {isRunActive && showSubagentRail ? (
@@ -124,10 +137,19 @@ export function AskAnswerPanel({
           t={t}
           streamEvents={streamEvents}
           compact={chatDetailLevel === "simple"}
+          chatDetailLevel={chatDetailLevel}
         />
       ) : null}
 
-      {isRunActive ? <AgentLiveStatus t={t} streamEvents={streamEvents} isActive embedded /> : null}
+      {isRunActive ? (
+        <AgentLiveStatus
+          t={t}
+          streamEvents={streamEvents}
+          isActive
+          embedded
+          chatDetailLevel={chatDetailLevel}
+        />
+      ) : null}
 
       {warningsList.length > 0 ? (
         <Alert
@@ -160,30 +182,13 @@ export function AskAnswerPanel({
         </Alert>
       ) : null}
 
-      {normalized.evidence_summary ? (
-        <Box
-          sx={{
-            mb: 1.25,
-            p: 1,
-            borderRadius: "6px",
-            border: `1px solid ${tk.border.default}`,
-            backgroundColor: tk.surface.panelAlt,
-          }}
-        >
-          <Typography sx={{ fontSize: "0.7rem", fontWeight: 600, color: tk.text.muted, mb: 0.35 }}>
-            {t("chat.typed.evidenceSummaryLabel")}
-          </Typography>
-          <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary, whiteSpace: "pre-wrap" }}>
-            {evidenceSummaryDisplay}
-          </Typography>
-        </Box>
-      ) : null}
-
       {!isRunActive ? (
         <>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: tk.text.muted, mb: 0.5 }}>
-            {t("chat.run.answerSectionTitle")}
-          </Typography>
+          {chatDetailLevel === "detailed" ? (
+            <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: tk.text.muted, mb: 0.5 }}>
+              {t("chat.run.answerSectionTitle")}
+            </Typography>
+          ) : null}
           {answerText ? (
             <Box
               aria-live="polite"
@@ -209,9 +214,11 @@ export function AskAnswerPanel({
         </>
       ) : answerText ? (
         <>
-          <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: tk.text.muted, mb: 0.5 }}>
-            {t("chat.run.answerSectionTitle")}
-          </Typography>
+          {chatDetailLevel === "detailed" ? (
+            <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: tk.text.muted, mb: 0.5 }}>
+              {t("chat.run.answerSectionTitle")}
+            </Typography>
+          ) : null}
           <Box
             sx={{
               mb: 1.25,
@@ -229,7 +236,7 @@ export function AskAnswerPanel({
         </>
       ) : null}
 
-      {!isRunActive && Array.isArray(streamEvents) && streamEvents.length > 0 ? (() => {
+      {!isRunActive && chatDetailLevel === "detailed" && Array.isArray(streamEvents) && streamEvents.length > 0 ? (() => {
         if (shouldSuppressPostRunStreamSummary(streamEvents)) return null;
         const postRun = buildLiveStatusPresentation(t, streamEvents, false);
         if (!postRun.headline) return null;
@@ -243,12 +250,8 @@ export function AskAnswerPanel({
         );
       })() : null}
 
-      {!isRunActive && showSubagentRail ? (
-        <AgentSubagentRail
-          t={t}
-          streamEvents={streamEvents}
-          compact={chatDetailLevel === "simple"}
-        />
+      {!isRunActive && showSubagentRail && chatDetailLevel === "detailed" ? (
+        <AgentSubagentRail t={t} streamEvents={streamEvents} compact={false} chatDetailLevel={chatDetailLevel} />
       ) : null}
 
       {!isRunActive ? (
@@ -277,99 +280,93 @@ export function AskAnswerPanel({
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5, color: tk.text.primary }}>
             {t("askPanel.citations.title")}
           </Typography>
+          {allPassagesMissing ? (
+            <Alert severity="info" sx={{ mb: 1, fontSize: "0.75rem", backgroundColor: tk.surface.panelAlt }}>
+              {t("askPanel.citation.noSnippetBulkAll")}
+            </Alert>
+          ) : somePassagesMissing ? (
+            <Alert severity="info" sx={{ mb: 1, fontSize: "0.75rem", backgroundColor: tk.surface.panelAlt }}>
+              {t("askPanel.citation.noSnippetBulkPartial")}
+            </Alert>
+          ) : null}
           {citations.length === 0 ? (
             <Typography sx={{ fontSize: "0.8125rem", color: tk.text.secondary }}>{t("askPanel.citations.none")}</Typography>
           ) : (
             citations.map((c, i) => {
-          const wid = c.work_id != null ? String(c.work_id) : "";
-          const chunkFingerprint = c.chunk_fingerprint != null ? String(c.chunk_fingerprint) : "";
-          const sectionPath = c.section_path != null ? String(c.section_path) : "";
-          const citationIndex = String(i + 1);
-          const sameAsWorkspace = inWorkspace && wid && wid === String(workspaceWorkId).trim();
-          const rank =
-            c.rank != null && String(c.rank).trim() !== ""
-              ? String(c.rank)
-              : c.citation_index != null && String(c.citation_index).trim() !== ""
-                ? String(c.citation_index)
-                : String(i + 1);
-          const rawScore = c.score ?? c.relevance ?? c.retrieval_score ?? c.similarity;
-          const numScore = rawScore != null && String(rawScore).trim() !== "" ? Number(rawScore) : NaN;
-          const score = Number.isFinite(numScore) ? String(numScore) : t("workspace.upload.dash");
-          return (
-            <Box key={i} sx={{ mb: 1, fontSize: "0.8125rem", color: tk.text.secondary }}>
-              <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary }}>
-                {t("askPanel.citation.line", { rank, score, work: wid || t("askPanel.citation.noWork") })}
-              </Typography>
-              {chatDetailLevel === "detailed" ? (
-                <Typography
-                  data-testid={`citation-chunk-fingerprint-${i}`}
-                  sx={{ fontSize: "0.75rem", color: tk.text.muted, mt: 0.25 }}
-                >
-                  {t("askPanel.chunkLabel")} {String(c.chunk_fingerprint ?? t("workspace.upload.dash"))}
-                </Typography>
-              ) : null}
-              {wid ? (
-                <Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {sameAsWorkspace ? (
-                    <>
-                      <Link
-                        to={buildStandaloneTracePath(READER_PATH, wid, {
-                          ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
-                        })}
-                        style={{ fontSize: "0.75rem", color: tk.text.accent }}
-                      >
-                        {t("askPanel.openReader")}
-                      </Link>
-                      <Link
-                        to={buildStandaloneEvidencePath(wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
-                        style={{ fontSize: "0.75rem", color: tk.text.accent }}
-                      >
-                        {t("askPanel.openEvidence")}
-                      </Link>
-                      <Link
-                        to={buildStandaloneTracePath(GRAPH_PATH, wid, {
-                          ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
-                        })}
-                        style={{ fontSize: "0.75rem", color: tk.text.accent }}
-                      >
-                        {t("askPanel.openGraph")}
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        to={buildStandaloneTracePath(READER_PATH, wid, {
-                          ...citationTraceExtras(chunkFingerprint, sectionPath, citationIndex),
-                        })}
-                        style={{ fontSize: "0.75rem", color: tk.text.accent }}
-                      >
-                        {t("askPanel.openInWorkspace")}
-                      </Link>
-                      <Link
-                        to={buildStandaloneTracePath(READER_PATH, wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
-                        style={{ fontSize: "0.75rem", color: tk.text.muted }}
-                      >
-                        {t("askPanel.standaloneReader")}
-                      </Link>
-                      <Link
-                        to={buildStandaloneEvidencePath(wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
-                        style={{ fontSize: "0.75rem", color: tk.text.muted }}
-                      >
-                        {t("askPanel.standaloneEvidence")}
-                      </Link>
-                      <Link
-                        to={buildStandaloneTracePath(GRAPH_PATH, wid, citationTraceExtras(chunkFingerprint, sectionPath, citationIndex))}
-                        style={{ fontSize: "0.75rem", color: tk.text.muted }}
-                      >
-                        {t("askPanel.standaloneGraph")}
-                      </Link>
-                    </>
-                  )}
+              const wid = c.work_id != null ? String(c.work_id) : "";
+              const chunkFingerprint = c.chunk_fingerprint != null ? String(c.chunk_fingerprint) : "";
+              const sectionPath = c.section_path != null ? String(c.section_path) : "";
+              const citationIndex = String(i + 1);
+              const rank =
+                c.rank != null && String(c.rank).trim() !== ""
+                  ? String(c.rank)
+                  : c.citation_index != null && String(c.citation_index).trim() !== ""
+                    ? String(c.citation_index)
+                    : String(i + 1);
+              const traceExtras = citationTraceExtras(chunkFingerprint, sectionPath, citationIndex);
+              const readerUrl = buildStandaloneTracePath(READER_PATH, wid, traceExtras);
+              const graphUrl = buildStandaloneTracePath(GRAPH_PATH, wid, traceExtras);
+              const workTitle = pickCitationWorkTitle(c);
+              const hasPassage = Boolean(pickCitationBodyText(c).trim());
+              const suppressMissingPlaceholder =
+                !hasPassage && (allPassagesMissing || somePassagesMissing);
+              return (
+                <Box key={i} sx={{ mb: 1.25, fontSize: "0.8125rem", color: tk.text.secondary }}>
+                  <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, fontWeight: 600 }}>
+                    {formatCitationHeadline({
+                      rank,
+                      citation: c,
+                      chatDetailLevel,
+                      t,
+                    })}
+                  </Typography>
+                  {chatDetailLevel === "detailed" && workTitle && wid ? (
+                    <Typography
+                      sx={{ fontSize: "0.68rem", color: tk.text.faint, mt: 0.25, fontFamily: "monospace", wordBreak: "break-all" }}
+                    >
+                      {t("askPanel.citation.workIdLine", { id: wid })}
+                    </Typography>
+                  ) : null}
+                  <CitationBodyExpandable
+                    t={t}
+                    citation={c}
+                    defaultExpanded
+                    suppressMissingPlaceholder={suppressMissingPlaceholder}
+                  />
+                  {wid ? (
+                    <Box sx={{ mt: 0.65, display: "flex", alignItems: "center", gap: 0.35, flexWrap: "wrap" }}>
+                      <Tooltip title={t("askPanel.citation.tooltipArticle")}>
+                        <CursorIconButton
+                          component={RouterLink}
+                          to={readerUrl}
+                          aria-label={t("askPanel.citation.tooltipArticle")}
+                          size="small"
+                        >
+                          <ArticleOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                        </CursorIconButton>
+                      </Tooltip>
+                      <Tooltip title={t("askPanel.citation.tooltipGraphWork")}>
+                        <CursorIconButton
+                          component={RouterLink}
+                          to={graphUrl}
+                          aria-label={t("askPanel.citation.tooltipGraphWork")}
+                          size="small"
+                        >
+                          <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                        </CursorIconButton>
+                      </Tooltip>
+                    </Box>
+                  ) : null}
+                  {chatDetailLevel === "detailed" ? (
+                    <Typography
+                      data-testid={`citation-chunk-fingerprint-${i}`}
+                      sx={{ fontSize: "0.75rem", color: tk.text.muted, mt: 0.35 }}
+                    >
+                      {t("askPanel.chunkLabel")} {String(c.chunk_fingerprint ?? t("workspace.upload.dash"))}
+                    </Typography>
+                  ) : null}
                 </Box>
-              ) : null}
-              <CitationBodyExpandable t={t} citation={c} />
-            </Box>
-          );
+              );
             })
           )}
         </>

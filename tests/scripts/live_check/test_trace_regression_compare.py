@@ -38,7 +38,18 @@ def test_regression_identical_passes(tmp_path: Path) -> None:
     out_j = tmp_path / "o.json"
     out_m = tmp_path / "o.md"
     r = subprocess.run(
-        [sys.executable, str(_COMPARE), "--baseline", str(p), "--candidate", str(p), "--out-json", str(out_j), "--out-md", str(out_m)],
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(p),
+            "--candidate",
+            str(p),
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -83,7 +94,18 @@ def test_regression_missing_span_fail(tmp_path: Path) -> None:
     out_j = tmp_path / "o.json"
     out_m = tmp_path / "o.md"
     r = subprocess.run(
-        [sys.executable, str(_COMPARE), "--baseline", str(b), "--candidate", str(c), "--out-json", str(out_j), "--out-md", str(out_m)],
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
         check=False,
     )
     assert r.returncode == 1

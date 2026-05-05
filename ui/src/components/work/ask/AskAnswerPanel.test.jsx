@@ -79,7 +79,7 @@ describe("AskAnswerPanel", () => {
     expect(screen.getByText("chat.run.specialistRunsTitle")).toBeTruthy();
   });
 
-  it("shows compact specialist line in simple mode when specialist_selected is present", () => {
+  it("hides post-run specialist rail in simple mode when turn is finished", () => {
     const normalized = normalizeQueryResponse({
       answer: "A",
       citations: [],
@@ -110,7 +110,7 @@ describe("AskAnswerPanel", () => {
         </ThemeProvider>
       </MemoryRouter>,
     );
-    expect(screen.getByText("chat.run.specialistCompactSummary")).toBeTruthy();
+    expect(screen.queryByText("chat.run.specialistCompactSummary")).toBeNull();
     expect(screen.queryByText("chat.run.specialistRunsTitle")).toBeNull();
   });
 
@@ -142,6 +142,38 @@ describe("AskAnswerPanel", () => {
       </MemoryRouter>,
     );
     expect(screen.getByText("askPanel.answer.degraded")).toBeTruthy();
+  });
+
+  it("hides answer section title in simple mode when run is finished", async () => {
+    const normalized = normalizeQueryResponse({
+      answer: "## Title\n\nBody text",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+            chatDetailLevel="simple"
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByText("chat.run.answerSectionTitle")).toBeNull();
+    expect(await screen.findByTestId("ask-answer-markdown")).toBeTruthy();
   });
 
   it("hides answer section title while run is active with no answer text", () => {
@@ -238,11 +270,53 @@ describe("AskAnswerPanel", () => {
             onToggleRetrievalJson={() => {}}
             streamEvents={[{ type: "product_step", code: "searching_literature", tool: "idea_search" }]}
             isRunActive={false}
+            chatDetailLevel="detailed"
           />
         </ThemeProvider>
       </MemoryRouter>,
     );
     expect(screen.getByTestId("post-run-stream-summary").textContent).toContain("Searching works");
+  });
+
+  it("hides post-run headline in simple mode after run completes", () => {
+    const t2 = (k, vars = {}) => {
+      const m = {
+        "chat.run.productStep.searching_literature": "Searching works…",
+      };
+      let out = m[k] ?? k;
+      Object.entries(vars || {}).forEach(([kk, v]) => {
+        out = out.split(`{{${kk}}}`).join(String(v));
+      });
+      return out;
+    };
+    const normalized = normalizeQueryResponse({
+      answer: "Final",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={t2}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[{ type: "product_step", code: "searching_literature", tool: "idea_search" }]}
+            isRunActive={false}
+            chatDetailLevel="simple"
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("post-run-stream-summary")).toBeNull();
   });
 
   it("omits post-run summary when the last meaningful stream event is answer_synthesis_finished", () => {
@@ -420,13 +494,51 @@ describe("AskAnswerPanel", () => {
         </ThemeProvider>
       </MemoryRouter>,
     );
+    expect(screen.getByText(longBody)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "askPanel.citation.expandHide" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "askPanel.citation.expandHide" }));
     expect(screen.getByRole("button", { name: "askPanel.citation.expandShow" })).toBeTruthy();
-    expect(screen.queryByText(longBody)).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "askPanel.citation.expandShow" }));
+    expect(screen.getByRole("button", { name: "askPanel.citation.expandHide" })).toBeTruthy();
     expect(screen.getByText(longBody)).toBeTruthy();
   });
 
-  it("shows noSnippet when citation omits passage fields", () => {
+  it("shows partial bulk alert when only some citations omit passage text", async () => {
+    const normalized = normalizeQueryResponse({
+      answer: "ok",
+      citations: [
+        { work_id: "w-a", chunk_fingerprint: "fp-a", excerpt: "Has text" },
+        { work_id: "w-b", chunk_fingerprint: "fp-b" },
+      ],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("askPanel.citation.noSnippetBulkPartial")).toBeTruthy();
+    expect(screen.queryByText("askPanel.citation.noSnippet")).toBeNull();
+    expect(await screen.findByText(/Has text/)).toBeTruthy();
+  });
+
+  it("shows bulk no-snippet alert when citation omits passage fields", () => {
     const normalized = normalizeQueryResponse({
       answer: "ok",
       citations: [{ work_id: "w-empty", chunk_fingerprint: "fp" }],
@@ -453,7 +565,8 @@ describe("AskAnswerPanel", () => {
         </ThemeProvider>
       </MemoryRouter>,
     );
-    expect(screen.getByText("askPanel.citation.noSnippet")).toBeTruthy();
+    expect(screen.getByText("askPanel.citation.noSnippetBulkAll")).toBeTruthy();
+    expect(screen.queryByText("askPanel.citation.noSnippet")).toBeNull();
   });
 
   it("hides chunk id line in simple mode when citation has chunk_fingerprint", () => {
@@ -551,5 +664,44 @@ describe("AskAnswerPanel", () => {
     // Identity translator falls through to humanizeUnknownCode in formatAgentWarning.
     const warningAlert = alerts.find((el) => el.textContent?.includes("No workspace"));
     expect(warningAlert).toBeTruthy();
+  });
+
+  it("surfaces recursion-limit partial salvage warnings in the alert list", () => {
+    const partialMsg = "RECURSION_PARTIAL_UI_COPY";
+    const followMsg = "RECURSION_PARTIAL_FOLLOW_COPY";
+    const t = (k) => {
+      if (k === "chat.warnings.agent_partial_graph_recursion_limit") return partialMsg;
+      if (k === "chat.warnings.partial_after_recursion_limit") return followMsg;
+      return k;
+    };
+    const normalized = normalizeQueryResponse({
+      answer: "partial answer body",
+      citations: [],
+      graph_context: {},
+      retrieval_trace: {},
+      warnings: ["agent_partial_graph_recursion_limit", "partial_after_recursion_limit"],
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={t}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByText(partialMsg)).toBeTruthy();
+    expect(screen.getByText(followMsg)).toBeTruthy();
   });
 });

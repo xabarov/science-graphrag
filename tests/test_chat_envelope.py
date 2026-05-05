@@ -147,7 +147,10 @@ def test_no_quote_found_suppressed_when_citations_present() -> None:
         state=state,
         answer="Grounded answer with quote in body",
         citations=[{"work_id": "paper-1", "chunk_fingerprint": "fp1"}],
-        tool_trace=[{"tool": "paper_quote_search", "row_count": 0}, {"tool": "final_answer", "row_count": 1}],
+        tool_trace=[
+            {"tool": "paper_quote_search", "row_count": 0},
+            {"tool": "final_answer", "row_count": 1},
+        ],
         answer_class_hint="quote_extraction",
     )
     assert "no_quote_found" not in (env.get("warnings") or [])

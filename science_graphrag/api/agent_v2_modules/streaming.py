@@ -7,9 +7,40 @@ import inspect
 from collections.abc import AsyncIterator
 from typing import Any
 
+from langgraph.errors import GraphRecursionError
 from opentelemetry import context as otel_context
 
-from science_graphrag.agent.graph.errors import AgentGraphDeadlineExceeded
+from science_graphrag.agent.graph.errors import (
+    AgentGraphDeadlineExceeded,
+    AgentGraphRecursionLimitExceeded,
+    resolve_recursion_limit_from_config,
+    telemetry_max_tool_calls_from_state,
+)
+from science_graphrag.observability.spans.decorators import add_span_event
+
+
+def _wrap_recursion_error(
+    exc: GraphRecursionError,
+    *,
+    config: dict[str, Any] | None,
+    initial_state: dict[str, Any],
+    latest_state: dict[str, Any] | None,
+) -> AgentGraphRecursionLimitExceeded:
+    recursion_limit = resolve_recursion_limit_from_config(config)
+    add_span_event(
+        "agent.graph_recursion_limit_hit",
+        {
+            "recursion_limit": int(recursion_limit),
+            "agent.runtime": str((initial_state.get("metadata") or {}).get("agent_runtime") or ""),
+            "agent.max_tool_calls": telemetry_max_tool_calls_from_state(initial_state),
+            "salvage_state_present": bool(latest_state),
+        },
+    )
+    return AgentGraphRecursionLimitExceeded(
+        recursion_limit=recursion_limit,
+        latest_state=latest_state,
+        message=None,
+    )
 
 
 async def iter_graph_chunks(
@@ -19,7 +50,12 @@ async def iter_graph_chunks(
     *,
     deadline_seconds: float | None = None,
 ) -> AsyncIterator[Any]:
-    """Yield graph stream chunks (updates dict, or (mode, payload) tuples)."""
+    """Yield graph stream chunks (updates dict, or (mode, payload) tuples).
+
+    Wraps ``langgraph.errors.GraphRecursionError`` into the domain
+    ``AgentGraphRecursionLimitExceeded`` so the SSE handler can salvage a partial answer
+    (mirrors the deadline path).
+    """
     if hasattr(graph, "astream") and callable(graph.astream):
         sig = inspect.signature(graph.astream)
         kwargs: dict[str, Any] = {}
@@ -39,10 +75,25 @@ async def iter_graph_chunks(
                 raise AgentGraphDeadlineExceeded(
                     timeout_seconds=float(deadline_seconds),
                 ) from exc
+            except GraphRecursionError as exc:
+                raise _wrap_recursion_error(
+                    exc,
+                    config=config,
+                    initial_state=initial_state,
+                    latest_state=None,
+                ) from exc
             return
 
-        async for chunk in _astream_body():
-            yield chunk
+        try:
+            async for chunk in _astream_body():
+                yield chunk
+        except GraphRecursionError as exc:
+            raise _wrap_recursion_error(
+                exc,
+                config=config,
+                initial_state=initial_state,
+                latest_state=None,
+            ) from exc
         return
 
     parent_ctx = otel_context.get_current()
@@ -67,8 +118,23 @@ async def iter_graph_chunks(
             raise AgentGraphDeadlineExceeded(
                 timeout_seconds=float(deadline_seconds),
             ) from exc
+        except GraphRecursionError as exc:
+            raise _wrap_recursion_error(
+                exc,
+                config=config,
+                initial_state=initial_state,
+                latest_state=None,
+            ) from exc
     else:
-        chunks = await asyncio.to_thread(_collect_sync_chunks)
+        try:
+            chunks = await asyncio.to_thread(_collect_sync_chunks)
+        except GraphRecursionError as exc:
+            raise _wrap_recursion_error(
+                exc,
+                config=config,
+                initial_state=initial_state,
+                latest_state=None,
+            ) from exc
     for chunk in chunks:
         yield chunk
 

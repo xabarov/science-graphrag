@@ -91,6 +91,7 @@ def build_initial_agent_state(
         _deadline_s = float(st.agent_step_timeout_seconds)
         meta = {
             "agent_runtime": agent_runtime,
+            "agent_max_tool_calls": int(max_tool_calls),
             "raw_user_question": question,
             "turn_policy": {
                 "tool_policy": "allow_tools",
@@ -156,6 +157,7 @@ def build_initial_agent_state(
     coordinator_ms = int((perf_counter() - _t0) * 1000)
     meta = {
         "agent_runtime": agent_runtime,
+        "agent_max_tool_calls": int(max_tool_calls),
         "raw_user_question": question,
         "turn_policy": turn_policy.to_dict(),
         "coordinator_latency_ms": coordinator_ms,

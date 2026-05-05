@@ -56,8 +56,17 @@ export default {
   "askPanel.citations.title": "Citations",
   "askPanel.citations.none": "No supporting citations were returned for this answer.",
   "askPanel.citation.line": "Citation #{{rank}} · score {{score}} · {{work}}",
+  "askPanel.citation.rankLabel": "Citation #{{rank}}",
+  "askPanel.citation.workIdLine": "work_id: {{id}}",
+  "askPanel.citation.tooltipArticle": "Open article (reader)",
+  "askPanel.citation.tooltipGraphWork": "Open work graph",
+  "askPanel.citation.passageLabel": "Passage",
   "askPanel.citation.noSnippet":
-    "No passage text in the payload — open Reader or chunk inspection via the links above.",
+    "No passage text in the API response — open the article using the button below.",
+  "askPanel.citation.noSnippetBulkAll":
+    "No passage text in the API response for these citations — open each article below.",
+  "askPanel.citation.noSnippetBulkPartial":
+    "Some citations have no passage text in the API response — open the article for full context.",
   "askPanel.citation.expandShow": "Show full passage",
   "askPanel.citation.expandHide": "Collapse",
   "askPanel.citation.copy": "Copy passage",

@@ -10,6 +10,7 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from science_graphrag.agent.context.session_store import clear_session_store_for_tests
 from science_graphrag.api.agent_v2 import router as agent_v2_router
+from science_graphrag.api.agent_v2_modules import stream_lifecycle as agent_v2_stream_lifecycle
 from science_graphrag.api.deps import get_stores
 from science_graphrag.config import Settings, get_settings
 
@@ -93,7 +94,9 @@ class _FakeGraph:
                 {
                     "type": "tool_search_result",
                     "shortlist_ratio": 0.5,
-                    "deferred_schema_refs": [{"tool": "idea_search", "schema_ref": "tool://idea_search"}],
+                    "deferred_schema_refs": [
+                        {"tool": "idea_search", "schema_ref": "tool://idea_search"}
+                    ],
                 },
                 {"type": "budget_stop_decision", "code": "agent_response_budget_cutoff"},
             ],
@@ -255,9 +258,11 @@ def _collect_agent_sse_events(
     extra_json: dict | None = None,
 ) -> list[dict]:
     """Stream POST /v2/agent/query and return parsed ``data:`` JSON objects (integration helper)."""
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
-    monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: graph_factory())
+    monkeypatch.setattr(
+        agent_v2_stream_lifecycle,
+        "build_retrieval_graph",
+        lambda *_a, **_k: graph_factory(),
+    )
     client = TestClient(_app())
     client.app.dependency_overrides[get_settings] = lambda: Settings(agent_runtime=agent_runtime)
     client.app.dependency_overrides[get_stores] = _fake_store_registry
@@ -352,10 +357,10 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
 
 def test_sse_final_answer_uses_structured_final_answer_tool(monkeypatch) -> None:
     """SSE final event must not lose answers returned via the final_answer tool."""
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
     monkeypatch.setattr(
-        agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraphFinalAnswerToolOnly()
+        agent_v2_stream_lifecycle,
+        "build_retrieval_graph",
+        lambda *_a, **_k: _FakeGraphFinalAnswerToolOnly(),
     )
     client = TestClient(_app())
     client.app.dependency_overrides[get_settings] = lambda: Settings(
@@ -397,11 +402,13 @@ def test_sse_final_answer_uses_structured_final_answer_tool(monkeypatch) -> None
 
 
 def test_sse_context_compacted_and_session_init_with_thread(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
     try:
         clear_session_store_for_tests()
-        monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraph())
+        monkeypatch.setattr(
+            agent_v2_stream_lifecycle,
+            "build_retrieval_graph",
+            lambda *_a, **_k: _FakeGraph(),
+        )
         client = TestClient(_app())
         client.app.dependency_overrides[get_settings] = lambda: Settings(
             agent_runtime="langgraph_supervisor_v1"
@@ -454,11 +461,13 @@ def test_sse_context_compacted_and_session_init_with_thread(monkeypatch) -> None
 
 def test_sse_history_digest_invalid_warning_and_final(monkeypatch) -> None:
     """SSE emits warning after intent_classified and history_digest_invalid on final_answer."""
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
     try:
         clear_session_store_for_tests()
-        monkeypatch.setattr(agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraph())
+        monkeypatch.setattr(
+            agent_v2_stream_lifecycle,
+            "build_retrieval_graph",
+            lambda *_a, **_k: _FakeGraph(),
+        )
         client = TestClient(_app())
         client.app.dependency_overrides[get_settings] = lambda: Settings(
             agent_runtime="langgraph_supervisor_v1"
@@ -516,12 +525,12 @@ class _FakeGraphUpdatesOnly:
 
 def test_sse_context_compacted_degraded_trigger_without_values(monkeypatch) -> None:
     """``context_compacted`` uses degraded trigger when graph never yields ``values``."""
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
     try:
         clear_session_store_for_tests()
         monkeypatch.setattr(
-            agent_v2_api, "build_retrieval_graph", lambda *_a, **_k: _FakeGraphUpdatesOnly()
+            agent_v2_stream_lifecycle,
+            "build_retrieval_graph",
+            lambda *_a, **_k: _FakeGraphUpdatesOnly(),
         )
         client = TestClient(_app())
         client.app.dependency_overrides[get_settings] = lambda: Settings(

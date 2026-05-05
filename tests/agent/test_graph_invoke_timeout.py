@@ -7,8 +7,13 @@ import time
 from typing import Any
 
 import pytest
+from langgraph.errors import GraphRecursionError
 
-from science_graphrag.agent.graph.errors import AgentGraphDeadlineExceeded
+from science_graphrag.agent.graph.errors import (
+    AgentGraphDeadlineExceeded,
+    AgentGraphRecursionLimitExceeded,
+    telemetry_max_tool_calls_from_state,
+)
 from science_graphrag.agent.graph.invoke_timeout import (
     graph_invoke_completed_after_deadline_total,
     invoke_graph_with_deadline,
@@ -93,6 +98,46 @@ def test_invoke_graph_after_deadline_callback_and_counter() -> None:
     assert received[0]["timeout_seconds"] == 0.05
     assert float(received[0]["lag_seconds"]) >= 0.0
     assert graph_invoke_completed_after_deadline_total() == before + 1
+
+
+def test_telemetry_max_tool_calls_prefers_metadata_over_budget_remaining() -> None:
+    """Span ``agent.max_tool_calls`` must reflect configured budget, not remaining slots."""
+
+    state = {"budget_remaining": 3, "metadata": {"agent_max_tool_calls": 12}}
+    assert telemetry_max_tool_calls_from_state(state) == 12
+
+
+def test_invoke_graph_wraps_graph_recursion_error_into_domain_exception() -> None:
+    """``GraphRecursionError`` from the worker becomes ``AgentGraphRecursionLimitExceeded``."""
+
+    class _RecursingGraph:
+        def invoke(self, _state: dict, config: dict | None = None) -> dict:  # noqa: ARG002
+            raise GraphRecursionError("Recursion limit reached")
+
+    with pytest.raises(AgentGraphRecursionLimitExceeded) as info:
+        invoke_graph_with_deadline(
+            _RecursingGraph(),
+            {"metadata": {"agent_runtime": "langgraph_research_v1"}},
+            config={"recursion_limit": 64},
+            timeout_seconds=5.0,
+        )
+    assert info.value.recursion_limit == 64
+    assert info.value.latest_state is None
+
+
+def test_invoke_graph_zero_timeout_also_wraps_graph_recursion_error() -> None:
+    class _RecursingGraph:
+        def invoke(self, _state: dict, config: dict | None = None) -> dict:  # noqa: ARG002
+            raise GraphRecursionError("Recursion limit reached zero")
+
+    with pytest.raises(AgentGraphRecursionLimitExceeded) as info:
+        invoke_graph_with_deadline(
+            _RecursingGraph(),
+            {},
+            config={"recursion_limit": 32},
+            timeout_seconds=0.0,
+        )
+    assert info.value.recursion_limit == 32
 
 
 def test_invoke_graph_respects_agent_graph_invoke_max_workers() -> None:
