@@ -45,8 +45,12 @@ def read_cached_markdown(
     *,
     document_id: str | None = None,
     artifact_store: ArtifactStorePort | None = None,
+    bypass_cache: bool = False,
 ) -> tuple[str, str] | None:
     """Read cached markdown using ordered candidate paths."""
+    if bypass_cache:
+        return None
+
     store = artifact_store or build_artifact_store(settings)
     candidate_rels: list[Path] = []
     if document_id:
@@ -75,10 +79,13 @@ def read_cached_markdown(
             mode = mode_match.group(1)
         elif rel.name == "normalized.md":
             mode = "cached-normalized"
-        logger.info(
-            "Reusing cached article markdown for %s from %s",
-            source_path.name,
+        logger.warning(
+            "Reusing cached article markdown path=%s rel=%s source=%s document_id=%s mode=%s",
             store.absolute(rel),
+            rel.as_posix(),
+            source_path.name,
+            document_id or "—",
+            mode,
         )
         return strip_ingest_artifact_header(text), mode
     return None

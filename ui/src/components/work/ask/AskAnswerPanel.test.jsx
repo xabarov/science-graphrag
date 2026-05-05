@@ -343,8 +343,9 @@ describe("AskAnswerPanel", () => {
               agentToolTrace={[]}
               retrievalJsonOpen={false}
               onToggleRetrievalJson={() => {}}
-              streamEvents={[]}
-              isRunActive={false}
+            streamEvents={[]}
+            isRunActive={false}
+            chatDetailLevel="detailed"
             />
           </div>
         </ThemeProvider>
@@ -455,6 +456,69 @@ describe("AskAnswerPanel", () => {
     expect(screen.getByText("askPanel.citation.noSnippet")).toBeTruthy();
   });
 
+  it("hides chunk id line in simple mode when citation has chunk_fingerprint", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "ok",
+      citations: [{ work_id: "w1", chunk_fingerprint: "fp-abc", excerpt: "Short excerpt" }],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+            chatDetailLevel="simple"
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("citation-chunk-fingerprint-0")).toBeNull();
+    expect(screen.getByText(/Short excerpt/)).toBeTruthy();
+  });
+
+  it("shows chunk id line in detailed mode when citation has chunk_fingerprint", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "ok",
+      citations: [{ work_id: "w1", chunk_fingerprint: "fp-abc", excerpt: "Short excerpt" }],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+            chatDetailLevel="detailed"
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("citation-chunk-fingerprint-0").textContent).toMatch(/fp-abc/);
+  });
+
   it("renders normalized warnings", () => {
     const normalized = normalizeQueryResponse({
       answer: "ok",
@@ -484,7 +548,8 @@ describe("AskAnswerPanel", () => {
       </MemoryRouter>,
     );
     const alerts = screen.getAllByRole("alert");
-    const warningAlert = alerts.find((el) => el.textContent?.includes("no_workspace"));
+    // Identity translator falls through to humanizeUnknownCode in formatAgentWarning.
+    const warningAlert = alerts.find((el) => el.textContent?.includes("No workspace"));
     expect(warningAlert).toBeTruthy();
   });
 });

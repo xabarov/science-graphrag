@@ -404,6 +404,7 @@ class RetrievalAgent:
         answer_class_hint: str | None = None,
         thread_id: str | None = None,
         history_digest: list[dict[str, Any]] | None = None,
+        client_idle_ms: int | None = None,
     ) -> AgentRunOutput:
         tid = (thread_id or "").strip() or None
         session_id = tid or str(uuid.uuid4())
@@ -461,6 +462,7 @@ class RetrievalAgent:
                 answer_class_hint=answer_class_hint,
                 thread_id=tid,
                 history_digest=history_digest,
+                client_idle_ms=client_idle_ms,
             )
 
     def _run_langgraph(  # pylint: disable=too-many-locals
@@ -472,6 +474,7 @@ class RetrievalAgent:
         answer_class_hint: str | None = None,
         thread_id: str | None = None,
         history_digest: list[dict[str, Any]] | None = None,
+        client_idle_ms: int | None = None,
     ) -> AgentRunOutput:
         budget = max_tool_calls or self._settings.agent_max_tool_calls
         session_summary = ""
@@ -487,6 +490,8 @@ class RetrievalAgent:
             history_digest=history_digest,
             session_summary=session_summary,
             answer_class_hint=answer_class_hint,
+            client_idle_ms=client_idle_ms,
+            settings=self._settings,
         )
         assert self._graph is not None
         cfg = {"recursion_limit": self._settings.agent_supervisor_recursion_limit}

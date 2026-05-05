@@ -19,6 +19,9 @@ function t(key, vars = {}) {
       "chat.run.specialistExpand": "Show",
       "chat.run.specialistCollapse": "Hide",
       "chat.stream.intent": "Intent:{{cls}}:{{src}}",
+      "chat.stream.intentNoSource": "Intent:{{cls}}",
+      "chat.run.answerClass.inventory": "Inventory list",
+      "chat.run.intentSource.heuristic": "Heuristic",
     }[key] || key;
   Object.entries(vars).forEach(([k, v]) => {
     out = out.split(`{{${k}}}`).join(String(v));
@@ -43,7 +46,7 @@ describe("AgentSpecialistRunStack", () => {
     const expandButtons = screen.getAllByRole("button", { name: "Expand specialist run details" });
     fireEvent.click(expandButtons[0]);
     await waitFor(() => {
-      expect(screen.getByText("Intent:inventory:heuristic")).toBeTruthy();
+      expect(screen.getByText("Intent:Inventory list:Heuristic")).toBeTruthy();
     });
   });
 });

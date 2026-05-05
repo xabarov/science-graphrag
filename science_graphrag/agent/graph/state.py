@@ -9,6 +9,8 @@ from typing import Annotated, Any, TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph.message import add_messages
 
+from science_graphrag.config import Settings, get_settings
+
 
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
@@ -38,6 +40,8 @@ def build_initial_agent_state(
     history_digest: list[dict[str, Any]] | None = None,
     session_summary: str = "",
     answer_class_hint: str | None = None,
+    client_idle_ms: int | None = None,
+    settings: Settings | None = None,
 ) -> dict[str, Any]:
     """Shared initial state for LangGraph agent runs (API v2 + RetrievalAgent runtime)."""
     from science_graphrag.agent.context.session_store import (
@@ -46,26 +50,45 @@ def build_initial_agent_state(
     )
 
     workspace_capsule = None
+    discovered_tools_capsule = None
     tid_stripped = (thread_id or "").strip()
+    st = settings or get_settings()
     if tid_stripped:
         sess = get_session_for_thread(tid_stripped)
         wc = (sess.get("capsules") or {}).get("workspace")
         workspace_capsule = wc if isinstance(wc, dict) else None
+        dt = (sess.get("capsules") or {}).get("discovered_tools")
+        discovered_tools_capsule = dt if isinstance(dt, dict) else None
+
+    away_lines: list[str] | None = None
+    if (
+        tid_stripped
+        and bool(st.agent_away_summary_enabled)
+        and client_idle_ms is not None
+        and int(client_idle_ms) >= int(st.agent_away_summary_client_idle_ms_threshold)
+        and (session_summary or "").strip()
+    ):
+        mins = max(1, int(int(client_idle_ms) // 60_000))
+        away_lines = [
+            f"User returned after ~{mins} minute(s) away.",
+            "Recent thread recap is in session_memory below; prefer continuing that line of work.",
+        ]
 
     user_content = format_user_with_memory(
         question=question,
         session_summary=session_summary,
         history_digest=list(history_digest or []),
         workspace_capsule=workspace_capsule,
+        discovered_tools_capsule=discovered_tools_capsule,
+        away_recap_lines=away_lines,
         active_workspace_id=workspace_id,
     )
     rt = (agent_runtime or "").strip()
     if rt == "langgraph_research_v1":
         from science_graphrag.agent.chat_envelope import heuristic_answer_class
         from science_graphrag.agent.prompts.research_chat_system import RESEARCH_CHAT_SYSTEM_PROMPT
-        from science_graphrag.config import get_settings as _gs
 
-        _deadline_s = float(_gs().agent_step_timeout_seconds)
+        _deadline_s = float(st.agent_step_timeout_seconds)
         meta = {
             "agent_runtime": agent_runtime,
             "raw_user_question": question,
@@ -78,6 +101,10 @@ def build_initial_agent_state(
             "agent_response_deadline_perf_start": perf_counter(),
             "agent_response_deadline_seconds": _deadline_s,
         }
+        if client_idle_ms is not None:
+            meta["client_idle_ms"] = int(client_idle_ms)
+        if away_lines:
+            meta["away_recap"] = {"injected": True, "lines": away_lines}
         if thread_id:
             meta["thread_id"] = thread_id
         ac = answer_class_hint or heuristic_answer_class(question, None)
@@ -116,7 +143,6 @@ def build_initial_agent_state(
         }
 
     from science_graphrag.agent.coordination.turn_policy import classify_turn_policy
-    from science_graphrag.config import get_settings
 
     _t0 = perf_counter()
     turn_policy = classify_turn_policy(
@@ -125,7 +151,7 @@ def build_initial_agent_state(
         session_summary=session_summary,
         history_digest=list(history_digest or []),
         answer_class_hint=answer_class_hint,
-        settings=get_settings(),
+        settings=st,
     )
     coordinator_ms = int((perf_counter() - _t0) * 1000)
     meta = {
@@ -134,8 +160,12 @@ def build_initial_agent_state(
         "turn_policy": turn_policy.to_dict(),
         "coordinator_latency_ms": coordinator_ms,
         "agent_response_deadline_perf_start": perf_counter(),
-        "agent_response_deadline_seconds": float(get_settings().agent_step_timeout_seconds),
+        "agent_response_deadline_seconds": float(st.agent_step_timeout_seconds),
     }
+    if client_idle_ms is not None:
+        meta["client_idle_ms"] = int(client_idle_ms)
+    if away_lines:
+        meta["away_recap"] = {"injected": True, "lines": away_lines}
     if thread_id:
         meta["thread_id"] = thread_id
     initial_debug = [turn_policy.sse_payload()]

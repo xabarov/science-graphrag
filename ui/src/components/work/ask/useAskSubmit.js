@@ -28,6 +28,7 @@ export function useAskSubmit({
 }) {
   const [isLoading, setIsLoading] = useState(false);
   const abortRef = useRef(null);
+  const lastClientActivityMsRef = useRef(Date.now());
   /** Last normalized payload produced by streaming agent (submit returns it after stream ends). */
   const lastStreamNormalizedRef = useRef(null);
   /** Mirrors stream events for persistence (React state may lag one frame after stream ends). */
@@ -79,10 +80,12 @@ export function useAskSubmit({
     onError: (msg) => onError?.(msg),
     onStart: () => {
       setIsLoading(true);
+      lastClientActivityMsRef.current = Date.now();
       onStart?.();
     },
     onFinish: () => {
       setIsLoading(false);
+      lastClientActivityMsRef.current = Date.now();
       onFinish?.();
     },
   });
@@ -102,11 +105,13 @@ export function useAskSubmit({
         lastStreamNormalizedRef.current = null;
         streamEventsCaptureRef.current = [];
         toolTraceCaptureRef.current = [];
+        const idleMs = Math.max(0, Date.now() - (lastClientActivityMsRef.current || Date.now()));
         await streamAgent({
           question: query,
           maxToolCalls: 8,
           threadId,
           historyDigest,
+          clientIdleMs: idleMs,
         });
         const normalized = lastStreamNormalizedRef.current;
         return {
@@ -124,6 +129,7 @@ export function useAskSubmit({
       setIsLoading(true);
       onStart?.();
       try {
+        const idleMs = Math.max(0, Date.now() - (lastClientActivityMsRef.current || Date.now()));
         const res = await postAgentQueryV2(
           {
             question: query,
@@ -131,6 +137,7 @@ export function useAskSubmit({
             max_tool_calls: 8,
             thread_id: threadId || null,
             history_digest: historyDigest || null,
+            client_idle_ms: Math.round(idleMs),
           },
           { signal: controller.signal },
         );

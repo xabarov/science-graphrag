@@ -18,10 +18,16 @@ def update_session_after_turn(
     *,
     turn_digest: dict[str, Any],
     workspace_id: str | None = None,
+    discovered_tools_carryover_enabled: bool = True,
+    discovered_tools_carryover_cap: int = 24,
 ) -> str:
     """Append digest and recompute session_summary. Returns the new summary text."""
     return get_session_memory_backend().update_after_turn(
-        thread_id, turn_digest=turn_digest, workspace_id=workspace_id
+        thread_id,
+        turn_digest=turn_digest,
+        workspace_id=workspace_id,
+        discovered_tools_carryover_enabled=discovered_tools_carryover_enabled,
+        discovered_tools_carryover_cap=discovered_tools_carryover_cap,
     )
 
 
@@ -36,6 +42,8 @@ def format_user_with_memory(
     session_summary: str,
     history_digest: list[dict[str, Any]],
     workspace_capsule: dict[str, Any] | None = None,
+    discovered_tools_capsule: dict[str, Any] | None = None,
+    away_recap_lines: list[str] | None = None,
     active_workspace_id: str | None = None,
 ) -> str:
     """Build the first user message, optionally prefixing server/client memory (CH4+CH5).
@@ -44,6 +52,9 @@ def format_user_with_memory(
     tool-calling models see the UUID even before a thread workspace capsule exists.
     """
     parts: list[str] = []
+    away_lines = [str(x).strip() for x in (away_recap_lines or []) if str(x).strip()]
+    if away_lines:
+        parts.append("<away_recap>\n" + "\n".join(f"- {x}" for x in away_lines) + "\n</away_recap>")
     ss = (session_summary or "").strip()
     if ss:
         parts.append(f"<session_memory>\n{ss}\n</session_memory>")
@@ -59,6 +70,17 @@ def format_user_with_memory(
             if s:
                 lines.append(f"- {s}")
         parts.append("<workspace_capsule>\n" + "\n".join(lines) + "\n</workspace_capsule>")
+    dc = discovered_tools_capsule if isinstance(discovered_tools_capsule, dict) else None
+    rt = (
+        [str(x).strip() for x in (dc.get("recent_tools") or []) if str(x).strip()]
+        if dc
+        else []
+    )
+    if rt:
+        lines = ["Tools recently used in this thread (carry-over):"]
+        for name in rt[-16:]:
+            lines.append(f"- {name}")
+        parts.append("<discovered_tools>\n" + "\n".join(lines) + "\n</discovered_tools>")
     if history_digest:
         try:
             blob = json.dumps(history_digest, ensure_ascii=False)[:8000]

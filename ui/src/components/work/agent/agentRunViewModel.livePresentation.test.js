@@ -63,7 +63,8 @@ describe("collectSafeExplanationLines", () => {
       ],
       10,
     );
-    expect(lines.some((l) => l.includes("because"))).toBe(true);
+    // Single-word snake_case reason gets capitalized fallback ("Because"); prose is preserved.
+    expect(lines.some((l) => l.toLowerCase().includes("because"))).toBe(true);
     expect(lines.some((l) => l.includes("pick retrieval"))).toBe(true);
   });
 });

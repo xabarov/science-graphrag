@@ -124,6 +124,28 @@ def merge_cites(client: _Neo4jClient, from_work_id: str, to_work_id: str) -> Non
         session.run(q, from_id=from_work_id, to_id=to_work_id)
 
 
+def detach_delete_outgoing_cites(client: _Neo4jClient, from_work_id: str) -> int:
+    """Delete all outgoing ``(:Work)-[:CITES]->(:Work)`` edges for ``from_work_id``.
+
+    Returns the number of relationships deleted (best-effort; Neo4j summary counters).
+    """
+
+    q = """
+    MATCH (a:Work {id: $from_id})-[r:CITES]->(:Work)
+    DELETE r
+    RETURN count(r) AS deleted
+    """
+    with client.session() as session:
+        record = session.run(q, from_id=from_work_id).single()
+        if record is None:
+            return 0
+        deleted = record.get("deleted")
+        try:
+            return int(deleted or 0)
+        except Exception:  # noqa: BLE001
+            return 0
+
+
 def merge_related_version(client: _Neo4jClient, a_id: str, b_id: str) -> None:
     q = """
     MATCH (a:Work {id: $a})

@@ -11,12 +11,15 @@ import {
 
 const MOCK_T = {
   "chat.stream.intent": "Intent:{{cls}}:{{src}}",
+  "chat.stream.intentNoSource": "Intent:{{cls}}",
   "chat.stream.route": "R:{{fr}}:{{to}}",
   "chat.stream.toolSearch": "{{spec}}|{{reason}}",
+  "chat.stream.toolSearchSkipped": "{{spec}}|skip",
   "chat.stream.shortlistSkipped": "[skip]",
   "chat.stream.evidenceReady": "E:{{n}}",
-  "chat.stream.contextCompacted": "M:{{excerpt}}",
-  "chat.stream.warningLine": "W:{{code}}:{{message}}",
+  "chat.stream.contextCompacted": "M",
+  "chat.stream.warningLine": "W:{{message}}",
+  "chat.stream.warningLineWithCode": "W:{{label}}:{{message}}",
   "chat.stream.subagentStarted": "S+{{id}}",
   "chat.stream.subagentProgress": "P+{{id}}+{{summary}}",
   "chat.stream.subagentFinished": "S-{{id}}",
@@ -27,6 +30,9 @@ const MOCK_T = {
   "chat.stream.errorLabel": "err",
   "chat.run.live.toolCall": "{{tool}}",
   "chat.run.live.toolCallQuery": "{{tool}}·{{q}}",
+  "chat.run.answerClass.inventory": "Inventory list",
+  "chat.run.intentSource.heuristic": "Heuristic",
+  "chat.run.specialist.retrieval_agent": "Corpus search",
 };
 
 function t(key, vars = {}) {
@@ -166,29 +172,46 @@ describe("shouldOfferRunInspector", () => {
 });
 
 describe("formatStreamEventOneLine", () => {
-  it("formats intent_classified", () => {
+  it("formats intent_classified with localized class and visible source", () => {
     const line = formatStreamEventOneLine(t, { type: "intent_classified", answer_class: "inventory", source: "heuristic" });
-    expect(line).toBe("Intent:inventory:heuristic");
+    expect(line).toBe("Intent:Inventory list:Heuristic");
   });
 
-  it("formats specialist_selected", () => {
-    expect(formatStreamEventOneLine(t, { type: "specialist_selected", from: "a", to: "b" })).toBe("R:a:b");
+  it("hides redundant intent source from headline", () => {
+    const line = formatStreamEventOneLine(t, {
+      type: "intent_classified",
+      answer_class: "inventory",
+      source: "single_agent_research_v1",
+    });
+    expect(line).toBe("Intent:Inventory list");
   });
 
-  it("formats tool_search_result with skip", () => {
-    expect(formatStreamEventOneLine(t, { type: "tool_search_result", specialist: "s", reason: "r", skipped: true })).toBe("s|r [skip]");
+  it("formats specialist_selected with localized roles", () => {
+    expect(formatStreamEventOneLine(t, { type: "specialist_selected", from: "a", to: "b" })).toBe("R:A:B");
+  });
+
+  it("formats tool_search_result with skip via dedicated template", () => {
+    expect(
+      formatStreamEventOneLine(t, { type: "tool_search_result", specialist: "single_agent_react", reason: "r", skipped: true }),
+    ).toBe("Single agent react|skip");
+  });
+
+  it("formats tool_search_result with localized reason and humanized fallback specialist", () => {
+    expect(
+      formatStreamEventOneLine(t, { type: "tool_search_result", specialist: "retrieval_agent", reason: "low_signal" }),
+    ).toBe("Corpus search|Low signal");
   });
 
   it("formats evidence_ready", () => {
     expect(formatStreamEventOneLine(t, { type: "evidence_ready", citation_count: 2 })).toBe("E:2");
   });
 
-  it("formats context_compacted with excerpt", () => {
-    expect(formatStreamEventOneLine(t, { type: "context_compacted", session_summary_excerpt: "hello world" })).toBe("M:hello world");
+  it("formats context_compacted without raw excerpt", () => {
+    expect(formatStreamEventOneLine(t, { type: "context_compacted", session_summary_excerpt: "hello world" })).toBe("M");
   });
 
-  it("formats warning", () => {
-    expect(formatStreamEventOneLine(t, { type: "warning", code: "c", message: "msg" })).toBe("W:c:msg");
+  it("formats warning with localized message and no raw code prefix", () => {
+    expect(formatStreamEventOneLine(t, { type: "warning", code: "c", message: "msg" })).toBe("W:C:msg");
   });
 
   it("formats tool_call with query", () => {
@@ -207,14 +230,22 @@ describe("formatStreamEventOneLine", () => {
     expect(line).toContain("rows: 3");
   });
 
-  it("formats UI-5 subagent and synthesis events", () => {
-    expect(formatStreamEventOneLine(t, { type: "subagent_started", subagent_id: "retrieval" })).toBe("S+retrieval");
+  it("formats UI-5 subagent and synthesis events with localized id", () => {
+    expect(formatStreamEventOneLine(t, { type: "subagent_started", subagent_id: "retrieval_agent" })).toBe("S+Corpus search");
     expect(
       formatStreamEventOneLine(t, { type: "subagent_progress", subagent_id: "r", summary: "search_chunks" }),
-    ).toBe("P+r+search_chunks");
-    expect(formatStreamEventOneLine(t, { type: "subagent_finished", subagent_id: "r" })).toBe("S-r");
+    ).toBe("P+R+Search chunks");
+    expect(formatStreamEventOneLine(t, { type: "subagent_finished", subagent_id: "r" })).toBe("S-R");
     expect(formatStreamEventOneLine(t, { type: "answer_synthesis_started" })).toBe("SYN+");
     expect(formatStreamEventOneLine(t, { type: "answer_synthesis_finished" })).toBe("SYN-");
+  });
+
+  it("hides tool_search_result with reason=rules from headline picker", () => {
+    const events = [
+      { type: "intent_classified", answer_class: "inventory", source: "heuristic" },
+      { type: "tool_search_result", specialist: "single_agent_react", reason: "rules" },
+    ];
+    expect(pickLastMeaningfulStreamEvent(events)?.type).toBe("intent_classified");
   });
 });
 
@@ -227,7 +258,7 @@ describe("collectFormattedStreamLines", () => {
     }));
     const lines = collectFormattedStreamLines(t, events, 5);
     expect(lines.length).toBe(5);
-    expect(lines[0]).toContain("c25");
+    expect(lines[0].toLowerCase()).toContain("c25");
   });
 });
 

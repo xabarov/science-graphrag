@@ -84,6 +84,9 @@ class Neo4jGraphStoreDelegates:
     def merge_cites(self, from_work_id: str, to_work_id: str) -> None:
         works.merge_cites(self._client, from_work_id, to_work_id)
 
+    def detach_delete_outgoing_cites(self, from_work_id: str) -> int:
+        return works.detach_delete_outgoing_cites(self._client, from_work_id)
+
     def merge_related_version(self, a_id: str, b_id: str) -> None:
         works.merge_related_version(self._client, a_id, b_id)
 

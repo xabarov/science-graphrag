@@ -24,6 +24,7 @@ function t(key, vars = {}) {
       "chat.run.liveStripTitle": "Live",
       "chat.stream.thinking": "Thinking…",
       "chat.stream.intent": "Intent:{{cls}} ({{src}})",
+      "chat.stream.intentNoSource": "Intent:{{cls}}",
       "chat.stream.route": "Route:{{fr}} → {{to}}",
       "chat.run.liveExplainShow": "Explain",
       "chat.run.liveExplainHide": "Hide explain",
@@ -35,6 +36,10 @@ function t(key, vars = {}) {
       "chat.run.liveStatusExpandAria": "Expand recent",
       "chat.run.liveStatusCollapseAria": "Collapse recent",
       "chat.run.liveStatusRecentTitle": "Recent",
+      "chat.run.answerClass.inventory": "Inventory list",
+      "chat.run.intentSource.heuristic": "Heuristic",
+      "chat.run.specialist.supervisor": "Coordinator",
+      "chat.run.specialist.retrieval_agent": "Corpus search",
     }[key] || key;
   Object.entries(vars).forEach(([k, v]) => {
     out = out.split(`{{${k}}}`).join(String(v));
@@ -57,7 +62,7 @@ describe("AgentLiveStatus", () => {
         isActive={false}
       />,
     );
-    expect(screen.getByText("Intent:inventory (h)")).toBeTruthy();
+    expect(screen.getByText("Intent:Inventory list (H)")).toBeTruthy();
   });
 
   it("exposes expandable recent lines with aria when multiple events", () => {
@@ -66,7 +71,7 @@ describe("AgentLiveStatus", () => {
         t={t}
         streamEvents={[
           { type: "intent_classified", answer_class: "inventory", source: "h" },
-          { type: "specialist_selected", from: "sup", to: "retrieval", budget_left: 3 },
+          { type: "specialist_selected", from: "supervisor", to: "retrieval_agent", budget_left: 3 },
         ]}
         isActive={false}
       />,
@@ -75,9 +80,9 @@ describe("AgentLiveStatus", () => {
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
     fireEvent.click(toggle);
     expect(toggle.getAttribute("aria-expanded")).toBe("true");
-    expect(screen.getByText("Route:sup → retrieval")).toBeTruthy();
+    expect(screen.getByText("Route:Coordinator → Corpus search")).toBeTruthy();
     const region = screen.getByRole("region", { name: "Recent" });
-    expect(within(region).getByText("Intent:inventory (h)")).toBeTruthy();
-    expect(within(region).queryByText("Route:sup → retrieval")).toBeNull();
+    expect(within(region).getByText("Intent:Inventory list (H)")).toBeTruthy();
+    expect(within(region).queryByText("Route:Coordinator → Corpus search")).toBeNull();
   });
 });

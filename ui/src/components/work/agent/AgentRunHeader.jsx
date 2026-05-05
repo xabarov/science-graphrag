@@ -7,6 +7,8 @@ import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
+import { mapAnswerClassToLabel } from "./agentRunVocabulary.js";
+
 /**
  * @param {{
  *   t: (key: string, vars?: Record<string, string>) => string,
@@ -158,7 +160,7 @@ export function AgentRunHeader({
           {cls ? (
             <Chip
               size="small"
-              label={t("chat.run.answerClassChip", { cls })}
+              label={t("chat.run.answerClassChip", { cls: mapAnswerClassToLabel(t, cls) || cls })}
               sx={{
                 height: 22,
                 fontSize: "0.68rem",

@@ -677,6 +677,69 @@ class Settings(BaseSettings):
         description="CH5: digest window size (matches store cap); boundary_candidate when full.",
     )
 
+    agent_discovered_tools_carryover_enabled: bool = Field(
+        default=True,
+        description=(
+            "Persist a rolling union of tool names seen in recent turns (CH4 digests) inside "
+            "session capsules and bias rule-based tool shortlists to keep them across compaction."
+        ),
+    )
+    agent_discovered_tools_carryover_max: int = Field(
+        default=24,
+        ge=4,
+        le=64,
+        description="Hard cap for stored discovered tool names in session memory.",
+    )
+
+    agent_away_summary_enabled: bool = Field(
+        default=True,
+        description=(
+            "When true and the client reports a long idle gap, inject a short deterministic "
+            "`<away_recap>` block ahead of `<session_memory>`."
+        ),
+    )
+    agent_away_summary_client_idle_ms_threshold: int = Field(
+        default=900_000,
+        ge=60_000,
+        le=86_400_000,
+        description="Minimum client-reported idle milliseconds before away recap is injected.",
+    )
+
+    agent_allowed_tools_matrix_enabled: bool = Field(
+        default=False,
+        description=(
+            "Optional defense-in-depth filtering of bound tools by agent_runtime/specialist role "
+            "and coordinator tool_policy (see agent.tool_execution_pipeline)."
+        ),
+    )
+    agent_tool_denylist_always: list[str] = Field(
+        default_factory=list,
+        description="Strip these tool names from every bound tool surface when the matrix is enabled.",
+    )
+    agent_tool_denylist_by_mode: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description=(
+            "Per-mode denylist keyed by tool_execution_pipeline.effective_mode_key, e.g. "
+            "`supervisor:graph_agent` or `single_agent_react`."
+        ),
+    )
+    agent_tool_allowlist_by_tool_policy: dict[str, list[str]] = Field(
+        default_factory=dict,
+        description=(
+            "Optional allowlists keyed by coordinator tool_policy (`no_tools`, `clarify`, "
+            "`allow_tools`). When a key is present and non-empty, only listed tools may remain bound."
+        ),
+    )
+
+    agent_sidechain_transcripts_enabled: bool = Field(
+        default=True,
+        description="Append JSONL sidechain transcripts for specialist ReAct branches (debug/recovery).",
+    )
+    agent_sidechain_transcripts_dir: str = Field(
+        default=".agent_sidechains",
+        description="Directory (repo-relative or absolute) for JSONL sidechain logs.",
+    )
+
     gds_enabled: bool = Field(
         default=False,
         description=(

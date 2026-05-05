@@ -21,6 +21,7 @@ import {
   shouldShowSubagentRail,
   shouldSuppressPostRunStreamSummary,
 } from "../agent/agentRunViewModel.js";
+import { humanizeUnknownCode } from "../agent/agentRunVocabulary.js";
 import { AgentRunHeader } from "../agent/AgentRunHeader.jsx";
 import { AgentLiveStatus } from "../agent/AgentLiveStatus.jsx";
 import { AgentSubagentRail } from "../agent/AgentSubagentRail.jsx";
@@ -34,7 +35,8 @@ function formatAgentWarning(t, code) {
   if (!c) return "";
   const key = `chat.warnings.${c}`;
   const out = t(key);
-  return out === key ? c : out;
+  if (out && out !== key) return out;
+  return humanizeUnknownCode(c) || c;
 }
 
 /**
@@ -251,10 +253,21 @@ export function AskAnswerPanel({
 
       {!isRunActive ? (
         <>
-          <InventoryBlock t={t} inventory={normalized.inventory} />
-          <QuoteCandidatesBlock t={t} candidates={normalized.quote_candidates} />
-          <BibliographyBlock t={t} bibliography={normalized.bibliography} />
-          <RelationTraceBlock t={t} relationTrace={normalized.relation_trace} />
+          <InventoryBlock
+            t={t}
+            inventory={normalized.inventory}
+            chatDetailLevel={chatDetailLevel}
+            citationCount={citations.length}
+            hasWeakEvidence={hasWeakEvidence}
+          />
+          <QuoteCandidatesBlock
+            key={chatDetailLevel}
+            t={t}
+            candidates={normalized.quote_candidates}
+            chatDetailLevel={chatDetailLevel}
+          />
+          <BibliographyBlock t={t} bibliography={normalized.bibliography} chatDetailLevel={chatDetailLevel} />
+          <RelationTraceBlock t={t} relationTrace={normalized.relation_trace} chatDetailLevel={chatDetailLevel} />
           <IdeaSuggestionsBlock t={t} suggestions={normalized.idea_suggestions} />
         </>
       ) : null}
@@ -287,9 +300,14 @@ export function AskAnswerPanel({
               <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary }}>
                 {t("askPanel.citation.line", { rank, score, work: wid || t("askPanel.citation.noWork") })}
               </Typography>
-              <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, mt: 0.25 }}>
-                {t("askPanel.chunkLabel")} {String(c.chunk_fingerprint ?? t("workspace.upload.dash"))}
-              </Typography>
+              {chatDetailLevel === "detailed" ? (
+                <Typography
+                  data-testid={`citation-chunk-fingerprint-${i}`}
+                  sx={{ fontSize: "0.75rem", color: tk.text.muted, mt: 0.25 }}
+                >
+                  {t("askPanel.chunkLabel")} {String(c.chunk_fingerprint ?? t("workspace.upload.dash"))}
+                </Typography>
+              ) : null}
               {wid ? (
                 <Box sx={{ mt: 0.5, display: "flex", flexWrap: "wrap", gap: 1 }}>
                   {sameAsWorkspace ? (

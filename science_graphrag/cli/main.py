@@ -10,7 +10,10 @@ from sqlalchemy import desc, select
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.pipeline import run_ingest_batch_cli, run_ingest_cli
-from science_graphrag.ingestion.resume_ingest import resume_document_embed_phase
+from science_graphrag.ingestion.resume_ingest import (
+    resume_document_embed_phase,
+    resume_document_ingest_stages,
+)
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import WorkDedupMergeLog
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
@@ -75,6 +78,38 @@ def ingest_resume_embed_cmd(
     typer.echo(f"OK document_id={document_id} work_id={work_id}")
 
 
+@app.command("ingest-resume")
+def ingest_resume_cmd(
+    document_id: str = typer.Argument(..., help="documents.id (UUID) with artifacts + work_id"),
+    stages: str = typer.Option(
+        "embed",
+        "--stages",
+        help=(
+            "Comma-separated late-stage resume set. "
+            "Supported: embed, claims, references (order is normalized automatically)."
+        ),
+    ),
+) -> None:
+    """Resume selected late ingest stages (recovery after partial failures)."""
+
+    s = get_settings()
+    engine = get_engine(s.database_url)
+    init_db(engine)
+    factory = session_factory(engine)
+    with factory() as session:
+        work_id = resume_document_ingest_stages(
+            document_id=document_id.strip(),
+            stages_csv=stages,
+            settings=s,
+            session=session,
+            ingest_workspace_ids=None,
+            job_id=None,
+            stage_session_factory=None,
+            stage_event_publisher=None,
+        )
+    typer.echo(f"OK document_id={document_id} work_id={work_id}")
+
+
 @app.command("ingest")
 def ingest_cmd(
     path: Path = typer.Argument(
@@ -98,6 +133,11 @@ def ingest_cmd(
         "--embeddings-preflight/--no-embeddings-preflight",
         help="Probe embeddings API once before ingest (OpenRouter when configured).",
     ),
+    no_cache: bool = typer.Option(
+        False,
+        "--no-cache",
+        help="Bypass disk markdown cache for PDFs even when reuse_cached_markdown=true.",
+    ),
 ) -> None:
     """Run Phase 1 ingestion pipeline for one document."""
     run_ingest_cli(
@@ -105,6 +145,7 @@ def ingest_cmd(
         skip_existing_sha=skip_existing_sha,
         force_new_document=force_new_document,
         embeddings_preflight=embeddings_preflight,
+        bypass_markdown_cache=no_cache,
     )
 
 
@@ -363,6 +404,11 @@ def ingest_corpus_cmd(
         "--embeddings-preflight/--no-embeddings-preflight",
         help="Call embeddings API once before scanning files (OpenRouter channel only).",
     ),
+    no_cache: bool = typer.Option(
+        False,
+        "--no-cache",
+        help="Bypass disk markdown cache for PDFs even when reuse_cached_markdown=true.",
+    ),
 ) -> None:
     """Batch-ingest a corpus directory and print Work-level dedup audit for Neo4j."""
 
@@ -375,6 +421,7 @@ def ingest_corpus_cmd(
         resume=resume,
         progress_file=progress_file,
         embeddings_preflight=embeddings_preflight,
+        bypass_markdown_cache=no_cache,
     )
 
 

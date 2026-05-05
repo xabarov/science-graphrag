@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import json
 import time
 from typing import Any
 
 import httpx
+
+
+class ChatCompletionsNonJsonResponseError(RuntimeError):
+    """HTTP 200 but response body was not JSON (unexpected for OpenAI-compatible chat completions)."""
 
 
 def post_chat_completions_json(
@@ -36,7 +41,18 @@ def post_chat_completions_json(
             with httpx.Client(timeout=timeout_seconds) as client:
                 response = client.post(url, headers=headers, json=json_body)
                 response.raise_for_status()
-                data = response.json()
+                try:
+                    data = response.json()
+                except json.JSONDecodeError as exc:
+                    preview = ""
+                    try:
+                        preview = (response.text or "")[:800]
+                    except Exception:  # noqa: BLE001
+                        preview = ""
+                    raise ChatCompletionsNonJsonResponseError(
+                        "non-json chat completions response "
+                        f"(status={response.status_code}, preview={preview!r})"
+                    ) from exc
             usage = data.get("usage") or {}
             if not isinstance(usage, dict):
                 usage = {}

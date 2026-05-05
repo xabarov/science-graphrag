@@ -86,7 +86,29 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt`, **`compaction`**: `{ "kind": "turn_digest", "kinds": string[], "trigger": "post_answer" \| "post_answer_degraded_stream", "digest_count": int, "boundary": { "status": "idle" \| "candidate", ... } }` — `kinds` may include `rolling_memory` (after enough digests) and `workspace_capsule` when a workspace-scoped capsule exists; `post_answer_degraded_stream` when the graph stream did not yield a final `values` chunk |
 | `final_answer` | End | Full envelope fields + legacy `answer`, `citations`, `tool_trace` (includes `session_summary_excerpt` when `thread_id` set) |
 | `warning` | Any time | `code`, `message` (optional `reason` / `confidence` for coordinator fallback) |
-| `error` | Fatal | `detail`, optional `code` (e.g. `agent_runtime_error`, `agent_turn_deadline_exceeded`) |
+| `error` | Fatal | `detail`, `code` (legacy: `agent_runtime_error`, `agent_turn_deadline_exceeded`), optional `error_class` (stable enum the UI localizes via `chat.errors.<error_class>`: `provider_unauthorized`, `provider_forbidden`, `provider_rejected`, `provider_timeout`, `provider_unreachable`, `internal_error`), optional safe English `message` |
+
+### UI vocabulary contract
+
+These string identifiers travel as raw codes over the wire and are **internal**:
+the UI must localize them rather than render them verbatim. Source of truth on
+the frontend is [`ui/src/components/work/agent/agentRunVocabulary.js`](../../ui/src/components/work/agent/agentRunVocabulary.js)
+which exposes `mapSpecialistToLabel`, `mapAnswerClassToLabel`,
+`mapToolSearchReasonToLabel`, `mapRouteReasonToLabel`, `mapIntentSourceToLabel`,
+and `mapErrorCodeToLabel`. Unknown codes flow through `humanizeUnknownCode` so
+unmapped values still render readably.
+
+| Field | Code domain |
+|-------|-------------|
+| `answer_class` | `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
+| `tool_search_result.specialist` / `specialist_selected.from` / `.to` | `supervisor`, `retrieval_agent`, `graph_agent`, `writer_agent`, `single_agent_react` |
+| `tool_search_result.reason` | `rules`, `low_signal`, `fallback_full`, `fallback_full_single_agent`, `disabled`, `writer_minimal_set` |
+| `intent_classified.source` | `single_agent_research_v1`, `coordinator_gate_v0`, `coordinator_gate_<classifier>`, `heuristic`, `deterministic`, `shortcut` |
+| `specialist_selected.reason` (and `subagent_started.summary` when sourced from routing log) | `single_agent_research_runtime`, `coordinator_route_hint`, `semantic_fast_route`, `supervisor_round_cap`, `budget_exhausted`, `coordinator_classifier_fallback` |
+| `error.error_class` | `provider_unauthorized`, `provider_forbidden`, `provider_rejected`, `provider_timeout`, `provider_unreachable`, `internal_error` |
+
+Raw values still appear unchanged in `tool_trace`, `routing_log`, `debug_events`
+and Phoenix spans (consumed by inspectors and eval pipelines).
 
 ## Compatibility
 

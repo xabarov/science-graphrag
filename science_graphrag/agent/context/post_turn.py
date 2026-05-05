@@ -6,6 +6,7 @@ from typing import Any
 
 from science_graphrag.agent.context.session_store import update_session_after_turn
 from science_graphrag.agent.context.turn_digest import build_turn_digest
+from science_graphrag.config import get_settings
 
 
 def apply_turn_digest_to_thread(
@@ -27,4 +28,11 @@ def apply_turn_digest_to_thread(
         answer_class=answer_class,
         tool_trace=tool_trace,
     )
-    return update_session_after_turn(tid, turn_digest=digest, workspace_id=workspace_id)
+    st = get_settings()
+    return update_session_after_turn(
+        tid,
+        turn_digest=digest,
+        workspace_id=workspace_id,
+        discovered_tools_carryover_enabled=bool(st.agent_discovered_tools_carryover_enabled),
+        discovered_tools_carryover_cap=int(st.agent_discovered_tools_carryover_max),
+    )

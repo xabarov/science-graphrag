@@ -103,6 +103,7 @@ def run_document_orchestration(
     stage_session_factory: Any | None,
     stage_event_publisher: Any | None,
     stage_progress_publisher: Any | None,
+    bypass_markdown_cache: bool,
     deps: DocumentOrchestrationDeps,
 ) -> tuple[str, str]:
     """Execute document-level ingest stage graph and persistence."""
@@ -204,6 +205,7 @@ def run_document_orchestration(
                 on_vl_batches_ready=(
                     _on_vl_batches_ready if job_id and stage_session_factory else None
                 ),
+                bypass_markdown_cache=bypass_markdown_cache,
             )
             set_span_attributes({"metadata.extraction_mode": extraction_mode})
             st.metric("source_suffix", path.suffix.lower())
@@ -257,6 +259,20 @@ def run_document_orchestration(
             ext_diag.vl_pages_total = vl_stats.get("vl_pages_total")
             ext_diag.vl_pages_processed = vl_stats.get("vl_pages_processed")
             ext_diag.vl_batch_count = vl_stats.get("vl_batch_count")
+            fb_reason = vl_stats.get("markdown_fallback_error_type")
+            fb_msg = vl_stats.get("markdown_fallback_error_message")
+            if fb_reason or fb_msg:
+                ext_diag.fallback_reasons.append(
+                    {
+                        "stage": "parse_pdf",
+                        "kind": "vl_markdown_fallback",
+                        "from": vl_stats.get("markdown_fallback_from"),
+                        "to": vl_stats.get("markdown_fallback_to"),
+                        "transport": vl_stats.get("ingest_transport"),
+                        "error_type": fb_reason,
+                        "error_message": fb_msg,
+                    },
+                )
         deps.write_extraction_diagnostics_json(
             settings=settings,
             document_id=doc_id,

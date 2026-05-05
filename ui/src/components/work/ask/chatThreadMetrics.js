@@ -21,6 +21,31 @@ export function formatMetricValue(value, { unit = "", digits = 0 } = {}) {
   return `${n.toLocaleString(undefined, { maximumFractionDigits: digits })}${unit}`;
 }
 
+function pickOpenrouterRefPricing(runMeta) {
+  const block = runMeta.openrouter_reference_pricing_usd_per_1m;
+  if (!block || typeof block !== "object") {
+    return { openrouterChatRefPricing: null, openrouterExtractionRefPricing: null };
+  }
+
+  const fmt = (row) => {
+    if (!row || typeof row !== "object") return null;
+    const model = typeof row.model_id === "string" ? row.model_id : "";
+    const p = toFiniteNumber(row.prompt_usd_per_1m);
+    const c = toFiniteNumber(row.completion_usd_per_1m);
+    if (!model || p == null || c == null) return null;
+    return {
+      model,
+      prompt: p.toLocaleString(undefined, { maximumFractionDigits: 4 }),
+      completion: c.toLocaleString(undefined, { maximumFractionDigits: 4 }),
+    };
+  };
+
+  return {
+    openrouterChatRefPricing: fmt(block.chat),
+    openrouterExtractionRefPricing: fmt(block.extraction),
+  };
+}
+
 export function extractTurnMetadata(entry) {
   const details = entry?.details && typeof entry.details === "object" ? entry.details : {};
   const runMeta = details.run_metadata && typeof details.run_metadata === "object" ? details.run_metadata : {};
@@ -51,6 +76,7 @@ export function extractTurnMetadata(entry) {
   const eventsCount = Array.isArray(details.stream_events) ? details.stream_events.length : 0;
   const citationCount = Array.isArray(details.citations) ? details.citations.length : pickNumber(entry?.citationCount) || 0;
   const answerClass = String(details.answer_class || "").trim();
+  const { openrouterChatRefPricing, openrouterExtractionRefPricing } = pickOpenrouterRefPricing(runMeta);
   return {
     durationMs,
     totalTokens,
@@ -61,5 +87,7 @@ export function extractTurnMetadata(entry) {
     eventsCount,
     citationCount,
     answerClass,
+    openrouterChatRefPricing,
+    openrouterExtractionRefPricing,
   };
 }

@@ -16,6 +16,8 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 |------|--------|
 | 2026-05-05 | **Wave Next (ingest stability) — partial delivery:** вынесены `ingestion/{orchestrator,progress_store,cache_policy,document_runtime}.py`; batch ingest переведён на orchestrator seam; `claims` path переведён на shared runtime envelope (`ingestion/llm/claims_runtime.py` + обновление `claims/extractor.py`); добавлены регрессионные тесты `tests/ingestion/test_progress_store_and_cache_policy.py` + прогоны `tests/ingestion`, `test_ingest_checkpoint`, `test_ingest_sha_dedup`, `test_full_ingest_integration`. |
 | 2026-05-05 | **CLI `config-check` delivered:** `science-graphrag config-check` exists in `science_graphrag/cli/main.py`, prints masked config diagnostics (`SET`/`UNSET` for keys), supports preflights, and is wired in ops docs/rules as the canonical pre-flight gate. |
+| 2026-05-05 | **Wave Next+1 (ingest stability completion) — partial:** selective `ingest-resume --stages` (references/claims/embed) + Neo4j outgoing `CITES` prune before refs rebuild; `--no-cache` / `bypass_markdown_cache` plumbed through ingest + WARN-level cache hit logs; citations persistence extracted to `science_graphrag/ingestion/reference_citations.py`; `ingestion/pipeline.py` slim public facade; added `tests/ingestion/test_resume_stages_csv.py`. |
+| 2026-05-05 | **Wave Next+1 — quality/completion sweep (references + resume):** `persist_reference_citation` логирует `warning` при падении OpenAlex `fetch_work_by_doi` (продолжение без `openalex_id`); `normalized_title_for_fingerprint` учитывает буквы не только Latin-1 (NFKC+casefold+`isalnum`/`isspace` — кириллица не обнуляется); `resume_document_ingest_stages` при ошибках стадий `references`/`claims` пишет `mark_stage_failed` + commit статуса `failed_retryable`/`failed_terminal` (паритет с веткой embed) через `_persist_resume_stage_failure` / `_resume_failure_retryable`; тесты: `tests/test_citation_persist.py` (кириллица, лог OpenAlex), расширен `tests/ingestion/test_resume_stages_csv.py` (эвристика retryable). |
 | 2026-05-05 | **LLM stage extraction split delivered:** former `ingestion/llm/stage_extraction.py` god-module was reduced to a thin compatibility facade; orchestration moved to `ingestion/llm/orchestrator.py`, transport to `ingestion/llm/executor.py`, prompts/heuristics into dedicated modules. |
 | 2026-05-04 | **Retire `POST /v1/agent/query`:** route returns **410 Gone** + JSON `replacement: /v2/agent/query` and `Link: </v2/agent/query>; rel="successor-version"` ([`science_graphrag/api/agent.py`](../../science_graphrag/api/agent.py)); smoke tests updated (`tests/test_api_agent_smoke.py`, `tests/test_api_agent_v2_smoke.py`). |
 | 2026-04-28 | **Graph work vs workspace DRY (Phases 0–5):** `collapse_authorship_for_reader_multicenter` + workspace pipeline in `workspace_graph/cypher.py`; `GRAPH_CONTRACT_VERSION=4`; workspace `include_authorship_debug`; `Authorship–AFFILIATED_WITH–Institution` → `Author–…` in collapse; UI `projectAuthorSemanticGraph` pass-through; i18n + `work_workspace_context` subtitle; spec §5b. Plan: [`docs/analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](../analysis/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md). |
@@ -48,6 +50,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [OPEN] Stable error_class enum on `error` SSE — extend coverage
+- **Area:** `science_graphrag/api/agent_v2.py` (`_classify_agent_stream_error`), `docs/specs/agent-chat-v1.md`
+- **Issue:** Initial classifier covers OpenRouter-shaped `ValueError({code, message})`, generic timeouts, connection errors, and a catch-all `internal_error`. Real-world failures (LangChain validation, langgraph deadline before tool call, instructor parse failures) currently still collapse to `internal_error`.
+- **Proposal:** Walk recent traces (`eval/results/trace-review-*.json`) and add discriminator branches for the most common opaque error kinds; keep the small enum (`provider_*`, `internal_error`) and document each new code in `chat-errors.md` / spec.
+- **Acceptance:** ≥80% of `error` events from a recent live run land on a non-`internal_error` class; UI ships a localized message for each new class via `chat.errors.<error_class>`.
+- **Raised:** 2026-05-05 (readable-stream-events plan)
+
 ### [OPEN] paper_profile year/venue — OD null-rate closure (ingest + graph)
 - **Area:** `science_graphrag/ingestion/_pipeline_impl.py`, Neo4j writers / OpenAlex merge, `workspace_catalog_tools.py` (`paper_profile`)
 - **Issue:** Phase A3 acceptance («доля null на OD») not closed by tool+prompt alone; `eval/paper_profile_stats.summarize_paper_profile_payloads` can measure saved payloads but pipeline may still omit venue/year.
@@ -62,11 +71,15 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** Documented policy + integration tests for chosen fairness model; no silent over-cap beyond documented v1 lease semantics.
 - **Raised:** 2026-04-27
 
-### [OPEN] Ingest resume — claims + Neo4j selective rebuild
-- **Area:** `science_graphrag/ingestion/resume_ingest.py`, `science_graphrag/ingestion/_pipeline_impl.py`
+### [PARTIAL] Ingest resume — claims + Neo4j selective rebuild
+- **Area:** `science_graphrag/ingestion/resume_ingest.py`, `science_graphrag/storage/neo4j/writes/works.py`
 - **Issue:** `ingest-resume-embed` only repopulates chunk + work-summary vectors in Qdrant; it does not re-extract claims or refresh `CITES` titles when those stages were skipped or half-written.
 - **Proposal:** Add optional `--stages claims,references` (or separate CLI) that reuses `normalized.md` + Neo4j `work_id`, re-runs LLM stages with idempotent upserts, and aligns checkpoint keys. **Interim operator path:** `scripts/backfill_workspace_claims.py` (chunks in Qdrant → LLM claims → Neo4j + Qdrant claims collection; JSONL progress).
 - **Acceptance:** Integration test on a fixture document that forces embed failure then resumes claims+embed without duplicating layer1 Work nodes.
+- **Done in Wave Next+1 (2026-05-05):** CLI `science-graphrag ingest-resume --stages …` → `resume_document_ingest_stages`; references resume deletes outgoing `CITES` before rebuild; claims resume refreshes Qdrant claim vectors **only when embed is not part of the same resume run** (avoid double-embedding); checkpoint keys updated via `mark_stage_completed` for resumed stages.
+- **Done in follow-up (2026-05-05):** паритет checkpoint при падении **не-embed** стадий: обёртка `references`/`claims` в `resume_document_ingest_stages` вызывает `_persist_resume_stage_failure` (сериализация checkpoint, `IngestionRunRecord` `failed_retryable` / `failed_terminal`); эвристика `_resume_failure_retryable` + unit-тесты в `tests/ingestion/test_resume_stages_csv.py`.
+- **Done in follow-up (2026-05-05) — citations path:** в `reference_citations.py` — лог при ошибке OpenAlex по DOI; нормализация заголовка для fingerprint без выкидывания нелатинских букв; регрессии в `tests/test_citation_persist.py`.
+- **Remaining:** integration fixture test «embed fail → resume claims+embed without duplicate layer1 Works» (end-to-end, не покрыт юнитами выше).
 - **Raised:** 2026-04-27 (stage-safe ingest follow-up)
 
 ### [OPEN] Work dedup hygiene — drift detection after ingest
@@ -83,18 +96,22 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** `eval/results/` contains only canonical/report-facing artifacts; live chat-agent traces and OD repair snapshots no longer commit absolute local paths; aggregator reads canonical inputs through a single registry/manifest seam rather than ad-hoc filename conventions.
 - **Raised:** 2026-04-27 (artifact hygiene audit)
 
-### [OPEN] VL JSON parse error for DN-DETR.pdf (reproducible)
-- **Area:** `science_graphrag/ingestion/vl_pdf.py`, `_call_vl_api`
-- **Issue:** `DN-DETR.pdf` (13 pages, `doc_id=dff05d47`) fails VL 3/3 times with `Expecting value: line 585 column 1 (char 3212)` — `response.json()` raises, meaning OpenRouter returns a non-JSON HTTP body despite status 200. Likely: the PDF contains content (mathematical notation / special layout) causing the model to output something that breaks the chat completions JSON wrapper. Currently falls back to pypdf (61 KB article, acceptable quality for 13-page paper).
-- **Proposal:** (1) In `_call_vl_api`, catch `json.JSONDecodeError`, log `response.text[:500]` at WARNING, and raise `VLAPIError` for cleaner fallback. (2) Try smaller `vl_batch_size=4` for this PDF (may avoid the problematic page). (3) If model returns markdown-wrapped JSON (` ```json ... ``` `), strip the fences before parsing.
-- **Acceptance:** DN-DETR ingested via VL with `vl_pages_total=13`; `extraction_diagnostics.json` shows `markdown_source=vl`.
+### [PARTIAL] VL JSON parse error for DN-DETR.pdf (reproducible)
+- **Area:** `science_graphrag/ingestion/vl_pdf.py`, `science_graphrag/ingestion/llm/raw_openai_transport.py`
+- **Issue:** `DN-DETR.pdf` (13 pages, `doc_id=dff05d47`) fails VL 3/3 times with `Expecting value: line 585 column 1 (char 3212)` — OpenRouter/chat-completions wrappers occasionally return **non-JSON bodies** despite HTTP 200, which breaks `response.json()` parsing.
+- **Proposal:** (1) Normalize transport errors + raise a typed error for non-JSON bodies. (2) Harden VL response parsing (`message.content` variants, markdown fences). (3) Provide clean fallback + structured diagnostics.
+- **Acceptance:** Stable operator behavior: non-JSON VL responses do not explode with opaque tracebacks; fallback path emits structured ingest diagnostics suitable for auditing.
+- **Done in Wave Next+1 (2026-05-05):** `raw_openai_transport` raises `ChatCompletionsNonJsonResponseError` on HTTP 200 non-JSON bodies; `vl_pdf` parses `message.content` variants + strips markdown fences; markdown fallback records structured diagnostics (`markdown_fallback_*`, `ingest_transport`).
+- **Remaining:** DN-DETR acceptance case (“VL processes all pages, `markdown_source=vl`”) is still provider/model dependent — track separately if we still want 100% VL markdown for this PDF family.
 - **Raised:** 2026-04-26
 
-### [OPEN] reuse_cached_markdown cache-collision: too many fallback paths
-- **Area:** `science_graphrag/ingestion/_pipeline_impl.py` (`_read_cached_markdown`)
-- **Issue:** Cache lookup checks 4 paths in priority order: `ingestion/{doc_id}/article.md` → `ingestion/{doc_id}/normalized.md` → `articles/{slug}/article.md` → `ingestion/*/{slug}/article.md` (glob). When re-ingesting after VL failure, deleting only the first two paths causes the pipeline to silently pick up the third (canonical slug copy) or fourth (legacy slug copy), reporting `cached-normalized` and skipping VL entirely. Discovered during bulk re-index 2026-04-26: 4 papers (DN-DETR, Mask R-CNN, R-CNN, SPPNet) required 3 manual retry iterations due to this.
-- **Proposal:** (1) For force-re-ingest scenarios, add `--no-cache` / `force_reextract` flag that bypasses `_read_cached_markdown` entirely. (2) Long-term: consolidate to a single canonical path keyed by `document_id` only (drop slug-based paths as primary cache); legacy slug lookup only for migration. (3) Log at WARN (not INFO) when reusing cache, including which path was used, so silent cache hits are visible.
+### [PARTIAL] reuse_cached_markdown cache-collision: too many fallback paths
+- **Area:** `science_graphrag/ingestion/cache_policy.py`, `science_graphrag/ingestion/orchestrator.py`, `science_graphrag/cli/main.py`
+- **Issue:** legacy markdown cache lookups can silently reuse unexpected on-disk artifacts (slug-based copies / multiple roots), causing `cached-normalized` skips when operators expect a forced re-extract.
+- **Proposal:** (1) explicit operator bypass for cache reuse; (2) louder logging for cache hits; (3) long-term: single canonical cache keying by `document_id` only.
 - **Acceptance:** Re-ingest of any document with `--no-cache` always runs VL/pypdf regardless of what's on disk; no `cached-normalized` in diagnostics after explicit force-re-ingest.
+- **Done in Wave Next+1 (2026-05-05):** `--no-cache` on `ingest` / `ingest-corpus` forces `bypass_markdown_cache`; cache hits log at WARNING with rel path + document_id + mode.
+- **Remaining:** consolidate legacy slug-based cache paths (migration-only), reduce ambiguous fallbacks beyond operator bypass.
 - **Raised:** 2026-04-26
 
 ### [OPEN] VL OCR truncation for long PDFs (>16 pages)
@@ -262,7 +279,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Synergy:** **Wave N/O** (онтология), **Wave Y2** (LangGraph tool-граф) — общий executor можно потом переключить на `langchain_core` LLM-калл без сноса orchestrator.
 - **Raised:** 2026-04-25
 - **Done in Wave Next (2026-05-05):** claims extraction runtime envelope вынесен в `science_graphrag/ingestion/llm/claims_runtime.py` (preset/budget/deadline), `claims/extractor.py` переключён на shared runtime builder; сохранена backward-совместимость тестовых monkeypatch seam.
-- **Remaining:** унификация VL transport helper и выравнивание diagnostics vocabulary между claims/metadata/semantic.
+- **Remaining:** единый low-level transport helper для non-structured calls (VL) + финальное выравнивание diagnostics keys в ingest report.
 
 ### [OPEN] Settings service split (1027)
 - **Area:** `science_graphrag/settings/service.py`, `science_graphrag/api/settings.py`
@@ -304,22 +321,24 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Done in follow-up packaging slice (2026-05-05):** добавлен подпакет `api/agent_v2_modules/` и основные импорты в `agent_v2.py` переведены на package-path (`...agent_v2_modules.{payloads,errors,streaming,runtime_bridge}`); прежние top-level модули сохранены как compatibility shims.
 - **Remaining:** выделить отдельный thin router module и вынести основной `_stream_agent` lifecycle целиком из `agent_v2.py` (финальный шаг к `api/agent_v2/` без импортного конфликта имени).
 
-### [PARTIAL] Split ingest pipeline orchestration seams (`ingestion/_pipeline_impl.py`, 1196)
+### [PARTIAL] Split ingest pipeline orchestration seams (`ingestion/_pipeline_impl.py`)
 - **Area:** `science_graphrag/ingestion/_pipeline_impl.py`, `science_graphrag/ingestion/stages/*`, `science_graphrag/ingestion/checkpoint.py`
-- **Issue:** `_pipeline_impl.py` остаётся самым крупным backend module: в одном месте смешаны corpus orchestration, cache/progress IO, timeout/retry policy, db/session wiring, dedup hooks и stage transitions. Высокая плотность условных веток усложняет безопасный change review.
+- **Issue:** `_pipeline_impl.py` исторически был god-module; основная оркестрация перенесена в `document_orchestrator.py` + phase modules, но файл всё ещё несёт CLI/corpus entrypoints и artifact writer hooks.
 - **Proposal:** поэтапно разнести на deep modules: `ingestion/orchestrator.py` (stage graph + resume contract), `ingestion/progress_store.py` (JSONL progress/checkpoint IO), `ingestion/cache_policy.py` (markdown cache lookup/reuse), `ingestion/document_runtime.py` (per-document execution context).
 - **Acceptance:** `_pipeline_impl.py` <= 400 LoC facade; отдельные модули имеют узкие интерфейсы и покрыты unit-тестами на resume/cache/timeout ветки; новые ingest stages подключаются через декларативный stage registry без роста god-file.
 - **Raised:** 2026-05-05
 - **Done in Roadmap pass (2026-05-05):** добавлены `stage_graph.py`, `claims_phase.py`, `embed_phase.py`, `session_wiring.py`; `ingest_document` переведён на `runtime_state` + вынесенные claims/embed stage runners; `_pipeline_impl.py` сокращён до ~1196 LoC.
 - **Done in follow-up seam cleanup (2026-05-05):** `resume_ingest.py` отвязан от `_pipeline_impl.py` и импортирует embed stage напрямую из `ingestion/embed_phase.py` (уменьшен слой неявной связности через god-file).
-- **Done in facade cleanup (2026-05-05):** `ingestion/pipeline.py` переведён на прямые seam-импорты для cache/artifact/embed (`cache_policy`, `artifact_layout`, `embed_phase`) с сохранением compatibility alias `_slug/_article_slug/_read_cached_markdown/...`; уменьшена зависимость facade от `_pipeline_impl.py`.
+- **Done in facade cleanup (2026-05-05):** `ingestion/pipeline.py` ужат до публичного facade поверх `_pipeline_impl` + отдельных seam-модулей; private alias surface снят (см. `[DONE] Sunset private exports…` ниже).
 - **Done in orchestration extraction slice (2026-05-05):** orchestration skeleton `ingest_document` вынесен в `ingestion/document_orchestrator.py`; `_pipeline_impl.py` оставлен как compatibility entrypoint с делегированием через `DocumentOrchestrationDeps`.
 - **Done in stage-path unification slice (2026-05-05):** `ingestion/stages/{claims,embeddings}.py` переведены на canonical phase-modules (`claims_phase`, `embed_phase`) с сохранением legacy ctx-mode для тестов и совместимости.
 - **Done in resume/progress hardening slice (2026-05-05):** `resume_ingest.py` передаёт `retry_call`/`logger` в embed phase; `progress_store.append_progress` переведён на append+flush+fsync (убран full-file rewrite на каждый entry).
 - **Done in next-wave slice (2026-05-05):** `document_orchestrator.py` отвязан от `_pipeline_impl.py` (helper institutions вынесен в `ingestion/institution_nodes.py`); `stages/{claims,embeddings}` получили явные `*_legacy` + `*_phase` API, internal call-sites переведены на canonical phase-path.
-- **Remaining:** добить финальный cleanup facade-surface: сократить private re-export контракт в `ingestion/pipeline.py`, перенести оставшиеся helper-ветки из `_pipeline_impl.py` в application/adapters и довести `_pipeline_impl.py` до компактного compatibility слоя.
+- **Done in Wave Next+1 (2026-05-05):** `_pipeline_impl.py` сжат до compatibility CLI/entrypoint слоя; вынесено `reference_citations.py` + `markdown_extraction.py`.
+- **Remaining:** stage registry/декларативный граф (если решим убрать оставшиеся условные ветки в orchestrator) + финальная миграция тестов/скриптов с legacy import paths.
 
-### [OPEN] Sunset private exports in `ingestion/pipeline.py`
+### [DONE] Sunset private exports in `ingestion/pipeline.py`
+- **Done:** 2026-05-05 (Wave Next+1) — `ingestion/pipeline.py` экспортирует публичные entrypoints + `persist_reference_citation`/`_persist_reference_citation`; massive private re-exports removed.
 - **Area:** `science_graphrag/ingestion/pipeline.py`, callers in tests/eval/scripts.
 - **Issue:** Исторический compatibility surface содержит private `_...` symbols и провоцирует coupling внешнего кода к внутренним helper-веткам.
 - **Proposal:** оставить только минимально необходимый transition-export (`_persist_reference_citation`), остальные private aliases убрать по этапам; для каждого снятого alias — migration note (куда импортировать теперь).

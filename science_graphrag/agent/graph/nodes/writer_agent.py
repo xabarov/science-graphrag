@@ -22,7 +22,10 @@ from science_graphrag.agent.llm.chat import (
     build_chat_model,
     ensure_messages_safe_for_generation,
 )
-from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
+from science_graphrag.agent.tool_execution_pipeline import (
+    apply_allowed_tools_matrix,
+    build_tool_execution_node,
+)
 from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_writer_tools
 from science_graphrag.api.deps import StoreRegistry
@@ -86,7 +89,13 @@ def _system_prompt_for_mode(mode: str) -> str:
     return SYSTEM_PROMPT
 
 
-def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode: str) -> Any:
+def _compile_writer_subgraph(
+    tools: list[BaseTool],
+    settings: Settings,
+    *,
+    mode: str,
+    sidechain_tag: str,
+) -> Any:
     system_prompt = _system_prompt_for_mode(mode)
     llm = build_chat_model(settings).bind_tools(tools)
 
@@ -144,7 +153,14 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
     subgraph = StateGraph(AgentState)
     subgraph.add_node("chat", chat_node)
     subgraph.add_node("final_answer_nudge", final_answer_nudge_node)
-    subgraph.add_node("tools", build_normalized_tool_node_executor(tools))
+    subgraph.add_node(
+        "tools",
+        build_tool_execution_node(
+            tools=tools,
+            settings=settings,
+            sidechain_id=f"{SPECIALIST_NAME}:{mode}:{sidechain_tag}",
+        ),
+    )
     subgraph.add_node("after_tools", react_after_tools_decrement_budget)
     subgraph.set_entry_point("chat")
     subgraph.add_conditional_edges(
@@ -165,15 +181,27 @@ def _compile_writer_subgraph(tools: list[BaseTool], settings: Settings, *, mode:
 def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
     """Build writer specialist callable for supervisor graph."""
     subgraph_cache: dict[tuple[tuple[str, ...], str], Any] = {}
+    subgraph_tags: dict[tuple[tuple[str, ...], str], str] = {}
+    seq = {"n": 0}
 
     def _cached_subgraph(tools: list[BaseTool], mode: str) -> Any:
         key = (tuple(sorted(getattr(t, "name", "") or "" for t in tools)), mode)
         if key not in subgraph_cache:
-            subgraph_cache[key] = _compile_writer_subgraph(tools, settings, mode=mode)
+            seq["n"] += 1
+            tag = subgraph_tags.setdefault(key, f"h{seq['n']}")
+            subgraph_cache[key] = _compile_writer_subgraph(
+                tools, settings, mode=mode, sidechain_tag=tag
+            )
         return subgraph_cache[key]
 
     def writer_agent_node(state: AgentState) -> dict:
         all_tools = build_writer_tools(stores)
+        sess = None
+        tid = str((state.get("metadata") or {}).get("thread_id") or "").strip()
+        if tid:
+            from science_graphrag.agent.context.session_store import get_session_for_thread
+
+            sess = get_session_for_thread(tid)
         question = _last_user_text(state)
         has_ws = bool((state.get("workspace_id") or "").strip())
         mode = _writer_mode_from_state(state)
@@ -183,7 +211,9 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
             specialist=SPECIALIST_NAME,
             settings=settings,
             has_workspace=has_ws,
+            session=sess,
         )
+        tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
         compiled = _cached_subgraph(tools, mode)
         next_state = compiled.invoke(state)
         messages = list(next_state.get("messages") or [])
@@ -213,7 +243,13 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
                     "top_score": meta.get("top_score"),
                     "skipped": bool(meta.get("skipped")),
                     "writer_mode": mode,
-                }
+                    "carryover_tools": meta.get("carryover_tools"),
+                },
+                *(
+                    [{"type": "tool_permissions", "matrix": mtx}]
+                    if not bool(mtx.get("skipped"))
+                    else []
+                ),
             ],
         }
 

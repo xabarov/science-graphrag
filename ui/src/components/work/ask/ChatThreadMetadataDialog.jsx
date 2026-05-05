@@ -5,6 +5,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Typography from "@mui/material/Typography";
 
+import { mapAnswerClassToLabel } from "../agent/agentRunVocabulary.js";
 import { formatMetricValue } from "./chatThreadMetrics.js";
 
 export default function ChatThreadMetadataDialog({ open, onClose, tk, t, meta, maxMetaBar }) {
@@ -66,8 +67,26 @@ export default function ChatThreadMetadataDialog({ open, onClose, tk, t, meta, m
           </Typography>
         </Box>
         <Typography sx={{ mt: 0.8, fontSize: "0.76rem", color: tk.text.secondary }}>
-          {t("chat.thread.meta.answerClass")}: {meta.answerClass || "—"}
+          {t("chat.thread.meta.answerClass")}: {mapAnswerClassToLabel(t, meta.answerClass) || meta.answerClass || "—"}
         </Typography>
+        {meta.openrouterChatRefPricing ? (
+          <Typography sx={{ mt: 0.75, fontSize: "0.74rem", color: tk.text.muted, lineHeight: 1.4 }}>
+            {t("chat.thread.meta.openrouterListChat", {
+              model: meta.openrouterChatRefPricing.model,
+              prompt: meta.openrouterChatRefPricing.prompt,
+              completion: meta.openrouterChatRefPricing.completion,
+            })}
+          </Typography>
+        ) : null}
+        {meta.openrouterExtractionRefPricing ? (
+          <Typography sx={{ mt: 0.35, fontSize: "0.74rem", color: tk.text.muted, lineHeight: 1.4 }}>
+            {t("chat.thread.meta.openrouterListExtraction", {
+              model: meta.openrouterExtractionRefPricing.model,
+              prompt: meta.openrouterExtractionRefPricing.prompt,
+              completion: meta.openrouterExtractionRefPricing.completion,
+            })}
+          </Typography>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

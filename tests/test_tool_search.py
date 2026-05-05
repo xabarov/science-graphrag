@@ -295,3 +295,30 @@ def test_shortlist_tools_for_single_agent_disabled_returns_full() -> None:
     )
     assert len(out) == len(tools)
     assert meta.get("skipped") is True
+
+
+def test_shortlist_carryover_reinjects_prior_tool_names() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(
+        agent_rule_tool_search_enabled=True,
+        agent_discovered_tools_carryover_enabled=True,
+    )
+    tools = build_retrieval_tools(stores, settings)
+    sess = {"capsules": {"discovered_tools": {"recent_tools": ["paper_quote_search"]}}}
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="how many papers in this workspace",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        answer_class="inventory",
+        session=sess,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "paper_quote_search" in names, meta
+    assert isinstance(meta.get("carryover_tools"), list)

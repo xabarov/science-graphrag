@@ -5,7 +5,23 @@
  * - Primary: `buildLiveStatusPresentation` headline + optional activity chips while streaming.
  * - Secondary: safe explanation lines (reason/summary only; no raw tool args).
  * - Fallback: if explanations are disabled or empty, inspector + recent lines still carry detail.
+ *
+ * Raw enum codes from the SSE stream are translated to user-facing labels via
+ * `agentRunVocabulary.js` so the headline / recent-line history never shows
+ * snake_case identifiers like `single_agent_react` or `low_signal`.
  */
+
+import {
+  humanizeUnknownCode,
+  isRedundantIntentSource,
+  mapAnswerClassToLabel,
+  mapErrorCodeToLabel,
+  mapIntentSourceToLabel,
+  mapRouteReasonToLabel,
+  mapSpecialistToLabel,
+  mapToolSearchReasonToLabel,
+  shouldHideStreamEventFromHeadline,
+} from "./agentRunVocabulary.js";
 
 /** Product-facing stream signals only (tool_call/tool_result stay in inspector). */
 const MEANINGFUL_STREAM_TYPES = new Set([
@@ -80,7 +96,9 @@ export function pickLastMeaningfulStreamEvent(events) {
     const ev = events[i];
     if (!ev || typeof ev !== "object") continue;
     const type = String(ev.type || "");
-    if (MEANINGFUL_STREAM_TYPES.has(type)) return ev;
+    if (!MEANINGFUL_STREAM_TYPES.has(type)) continue;
+    if (shouldHideStreamEventFromHeadline(ev)) continue;
+    return ev;
   }
   return null;
 }
@@ -128,48 +146,79 @@ export function formatStreamEventOneLine(t, event) {
     return parts.join(" · ");
   }
   if (type === "intent_classified") {
-    return t("chat.stream.intent", { cls: String(event.answer_class || ""), src: String(event.source || "") });
+    const clsRaw = String(event.answer_class || "");
+    const clsLabel = mapAnswerClassToLabel(t, clsRaw);
+    const cls = clsLabel || clsRaw;
+    const srcRaw = String(event.source || "");
+    if (!srcRaw || isRedundantIntentSource(srcRaw)) {
+      return t("chat.stream.intentNoSource", { cls });
+    }
+    const srcLabel = mapIntentSourceToLabel(t, srcRaw) || humanizeUnknownCode(srcRaw);
+    return t("chat.stream.intent", { cls, src: srcLabel });
   }
   if (type === "specialist_selected") {
-    return t("chat.stream.route", { fr: String(event.from || ""), to: String(event.to || "") });
+    const fr = mapSpecialistToLabel(t, event.from) || String(event.from || "");
+    const to = mapSpecialistToLabel(t, event.to) || String(event.to || "");
+    return t("chat.stream.route", { fr, to });
   }
   if (type === "tool_search_result") {
-    const reason = String(event.reason || "");
-    const skipNote = event.skipped ? ` ${t("chat.stream.shortlistSkipped")}` : "";
-    return t("chat.stream.toolSearch", { spec: String(event.specialist || ""), reason: `${reason}${skipNote}` });
+    const specRaw = String(event.specialist || "");
+    const spec = mapSpecialistToLabel(t, specRaw) || specRaw;
+    const reasonRaw = String(event.reason || "");
+    const reason = mapToolSearchReasonToLabel(t, reasonRaw);
+    if (event.skipped) {
+      return t("chat.stream.toolSearchSkipped", { spec });
+    }
+    return t("chat.stream.toolSearch", { spec, reason: reason || reasonRaw });
   }
   if (type === "evidence_ready") {
     return t("chat.stream.evidenceReady", { n: String(event.citation_count ?? "") });
   }
   if (type === "context_compacted") {
-    const ex = String(event.session_summary_excerpt || "").slice(0, 160);
-    return t("chat.stream.contextCompacted", { excerpt: ex });
+    return t("chat.stream.contextCompacted");
   }
   if (type === "warning") {
-    return t("chat.stream.warningLine", {
-      code: String(event.code || ""),
-      message: String(event.message || "").slice(0, 180),
-    });
+    const code = String(event.code || "");
+    const message = String(event.message || "").slice(0, 180);
+    const i18nKey = code ? `chat.warnings.${code}` : "";
+    const localized = i18nKey ? t(i18nKey) : "";
+    if (localized && localized !== i18nKey) {
+      return t("chat.stream.warningLine", { message: localized });
+    }
+    if (message) {
+      const label = code ? humanizeUnknownCode(code) : "";
+      return label
+        ? t("chat.stream.warningLineWithCode", { label, message })
+        : t("chat.stream.warningLine", { message });
+    }
+    if (code) {
+      return t("chat.stream.warningLine", { message: humanizeUnknownCode(code) });
+    }
+    return "";
   }
   if (type === "subagent_started") {
-    return t("chat.stream.subagentStarted", {
-      id: String(event.subagent_id || event.name || ""),
-    });
+    const idRaw = String(event.subagent_id || event.name || "");
+    const id = mapSpecialistToLabel(t, idRaw) || idRaw;
+    return t("chat.stream.subagentStarted", { id });
   }
   if (type === "subagent_progress") {
+    const idRaw = String(event.subagent_id || "");
+    const id = mapSpecialistToLabel(t, idRaw) || idRaw;
     const rawSummary = String(event.summary || event.tool || "");
     const tool = String(event.tool || "");
-    const summary =
-      tool && rawSummary === tool ? mapToolNameToUserLabel(t, tool) : rawSummary.slice(0, 120);
-    return t("chat.stream.subagentProgress", {
-      id: String(event.subagent_id || ""),
-      summary,
-    });
+    let summary;
+    if (tool && rawSummary === tool) {
+      summary = mapToolNameToUserLabel(t, tool);
+    } else {
+      const reasonLabel = mapRouteReasonToLabel(t, rawSummary);
+      summary = reasonLabel || rawSummary.slice(0, 120);
+    }
+    return t("chat.stream.subagentProgress", { id, summary });
   }
   if (type === "subagent_finished") {
-    return t("chat.stream.subagentFinished", {
-      id: String(event.subagent_id || ""),
-    });
+    const idRaw = String(event.subagent_id || "");
+    const id = mapSpecialistToLabel(t, idRaw) || idRaw;
+    return t("chat.stream.subagentFinished", { id });
   }
   if (type === "answer_synthesis_started") {
     return t("chat.stream.answerSynthesisStarted");
@@ -185,7 +234,23 @@ export function formatStreamEventOneLine(t, event) {
     }
     const key = `chat.run.productStep.${code}`;
     const out = t(key);
-    return out === key ? code : out;
+    return out === key ? humanizeUnknownCode(code) : out;
+  }
+  if (type === "error") {
+    const errorClass = String(event.error_class || "");
+    const code = String(event.code || "");
+    const message = String(event.message || event.detail || "").trim();
+    const classified = errorClass ? mapErrorCodeToLabel(t, errorClass) : "";
+    if (classified) {
+      return message && !message.startsWith(classified) ? `${classified} · ${message.slice(0, 200)}` : classified;
+    }
+    const codeLabel = code ? mapErrorCodeToLabel(t, code) : "";
+    if (codeLabel) {
+      return message ? `${codeLabel} · ${message.slice(0, 200)}` : codeLabel;
+    }
+    if (message) return message.slice(0, 240);
+    if (errorClass) return humanizeUnknownCode(errorClass);
+    return code ? humanizeUnknownCode(code) : "";
   }
   return "";
 }
@@ -274,29 +339,26 @@ export function collectSafeExplanationLines(t, events, maxLines = 6) {
     if (!ev || typeof ev !== "object") continue;
     const type = String(ev.type || "");
     if (type === "specialist_selected") {
-      const reason = String(ev.reason || "").trim();
-      if (reason) {
-        raw.push(t("chat.run.liveExplain.routeReason", { reason: reason.slice(0, 160) }));
+      const reasonRaw = String(ev.reason || "").trim();
+      if (reasonRaw) {
+        const reason = mapRouteReasonToLabel(t, reasonRaw) || reasonRaw.slice(0, 160);
+        raw.push(t("chat.run.liveExplain.routeReason", { reason }));
       }
     } else if (type === "intent_classified") {
-      const reason = String(ev.reason || "").trim();
-      if (reason) {
-        raw.push(
-          t("chat.run.liveExplain.intentReason", {
-            cls: String(ev.answer_class || ""),
-            reason: reason.slice(0, 160),
-          }),
-        );
+      const reasonRaw = String(ev.reason || "").trim();
+      if (reasonRaw) {
+        const reason = mapRouteReasonToLabel(t, reasonRaw) || reasonRaw.slice(0, 160);
+        const clsRaw = String(ev.answer_class || "");
+        const cls = mapAnswerClassToLabel(t, clsRaw) || clsRaw;
+        raw.push(t("chat.run.liveExplain.intentReason", { cls, reason }));
       }
     } else if (type === "subagent_started") {
-      const summary = String(ev.summary || "").trim();
-      if (summary) {
-        raw.push(
-          t("chat.run.liveExplain.subagentSummary", {
-            id: String(ev.subagent_id || ""),
-            summary: summary.slice(0, 160),
-          }),
-        );
+      const summaryRaw = String(ev.summary || "").trim();
+      if (summaryRaw) {
+        const idRaw = String(ev.subagent_id || "");
+        const id = mapSpecialistToLabel(t, idRaw) || idRaw;
+        const summary = mapRouteReasonToLabel(t, summaryRaw) || summaryRaw.slice(0, 160);
+        raw.push(t("chat.run.liveExplain.subagentSummary", { id, summary }));
       }
     }
   }

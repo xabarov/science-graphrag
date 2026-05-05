@@ -34,6 +34,7 @@ from science_graphrag.agent.runtime import (
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.llm.openrouter_model_registry import openrouter_reference_pricing_run_metadata
 from science_graphrag.observability.spans import (
     OpenInferenceAttributes,
     add_span_event,
@@ -86,12 +87,21 @@ def _extract_runtime_telemetry_from_debug_events(
 
 def _agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
     """LLM fields attached to agent run_metadata (extraction vs chat model split)."""
-    return {
+    resolved_chat = effective_chat_llm_model(settings)
+    meta: dict[str, Any] = {
         "extraction_llm_model": settings.extraction_llm_model,
         "extraction_llm_base_url": settings.extraction_llm_base_url,
         "chat_llm_model": settings.chat_llm_model,
-        "resolved_chat_llm_model": effective_chat_llm_model(settings),
+        "resolved_chat_llm_model": resolved_chat,
     }
+    meta.update(
+        openrouter_reference_pricing_run_metadata(
+            base_url=settings.extraction_llm_base_url,
+            chat_model_id=resolved_chat,
+            extraction_model_id=settings.extraction_llm_model,
+        )
+    )
+    return meta
 
 
 def _product_step_code_for_tool(tool_name: str) -> str | None:
@@ -129,6 +139,50 @@ def _format_agent_stream_error(exc: BaseException) -> str:
         if isinstance(arg0, str) and arg0.strip():
             return arg0.strip()
     return str(exc)
+
+
+def _classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
+    """Return ``(error_class, short_message)`` for SSE ``error`` events.
+
+    ``error_class`` is a stable enum the UI can localize via
+    ``chat.errors.<error_class>`` keys; ``short_message`` is a safe English
+    summary suitable as a fallback when the UI has no translation yet.
+
+    Recognized classes:
+
+    - ``provider_unauthorized`` — 401 from upstream LLM (bad / missing key).
+    - ``provider_forbidden`` — 403 from upstream LLM (quota / region).
+    - ``provider_rejected`` — other upstream LLM HTTP errors (4xx / 5xx with
+      explicit code).
+    - ``provider_timeout`` — request timed out before reaching us.
+    - ``provider_unreachable`` — transport-level failure (DNS, refused).
+    - ``internal_error`` — anything else, including unknown exception types.
+    """
+    if isinstance(exc, ValueError) and exc.args:
+        arg0 = exc.args[0]
+        if isinstance(arg0, dict):
+            code = arg0.get("code")
+            msg = str(arg0.get("message") or "provider error").strip()[:200]
+            try:
+                code_int = int(code) if code is not None else None
+            except (TypeError, ValueError):
+                code_int = None
+            if code_int == 401:
+                return "provider_unauthorized", "Upstream LLM rejected the API key (401)."
+            if code_int == 403:
+                return "provider_forbidden", "Upstream LLM access denied (403)."
+            if code_int is not None:
+                return (
+                    "provider_rejected",
+                    f"Upstream LLM rejected the request (code {code_int}): {msg}",
+                )
+            return "provider_rejected", f"Upstream LLM error: {msg}"
+    name = type(exc).__name__.lower()
+    if "timeout" in name:
+        return "provider_timeout", "Upstream LLM call timed out."
+    if "connection" in name or "unreachable" in name:
+        return "provider_unreachable", "Upstream LLM was unreachable."
+    return "internal_error", str(exc)[:200] or "Internal error during agent run."
 
 
 def normalize_history_digest_input(raw: object) -> tuple[list[dict[str, Any]], bool]:
@@ -241,6 +295,14 @@ class AgentQueryRequestV2(BaseModel):
         default=None,
         description="Optional hint for answer_class / UI (does not force tool routing).",
     )
+    client_idle_ms: int | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Optional client-reported milliseconds since last user activity in this UI session. "
+            "Used for deterministic away-recap framing (CH4/CH5)."
+        ),
+    )
 
     @field_validator("thread_id", mode="before")
     @classmethod
@@ -348,6 +410,7 @@ async def post_agent_query_v2(
     max_tool_calls = body.max_tool_calls or settings.agent_max_tool_calls
     wants_sse = "text/event-stream" in (accept or "")
     thread_id = (body.thread_id or "").strip() or None
+    client_idle_ms = body.client_idle_ms
     history_digest, history_digest_invalid = normalize_history_digest_input(body.history_digest)
     deferred_topic_answer = (
         _deferred_topic_answer(body.question) if _looks_like_deferred_topic(body.question) else None
@@ -377,6 +440,7 @@ async def post_agent_query_v2(
                 thread_id=thread_id,
                 history_digest=history_digest,
                 history_digest_invalid=history_digest_invalid,
+                client_idle_ms=client_idle_ms,
             )
         )
 
@@ -400,6 +464,7 @@ async def post_agent_query_v2(
             answer_class_hint=body.answer_class_hint,
             thread_id=thread_id,
             history_digest=history_digest,
+            client_idle_ms=client_idle_ms,
         )
     except AgentGraphDeadlineExceeded as exc:
         duration_ms = int((perf_counter() - started) * 1000)
@@ -627,6 +692,7 @@ async def _stream_agent(
     thread_id: str | None = None,
     history_digest: list[dict[str, Any]] | None = None,
     history_digest_invalid: bool = False,
+    client_idle_ms: int | None = None,
 ) -> AsyncIterator[dict[str, str]]:
     """Emit SSE events from LangGraph chunks."""
     started = perf_counter()
@@ -670,6 +736,8 @@ async def _stream_agent(
                 history_digest=dig,
                 session_summary=session_summary,
                 answer_class_hint=answer_class_hint,
+                client_idle_ms=client_idle_ms,
+                settings=settings,
             )
             config = {"recursion_limit": settings.agent_supervisor_recursion_limit}
 
@@ -755,7 +823,12 @@ async def _stream_agent(
                                     if not isinstance(ev, dict):
                                         continue
                                     et = ev.get("type")
-                                    if et in ("tool_search_result", "intent_classified"):
+                                    if et in (
+                                        "tool_search_result",
+                                        "intent_classified",
+                                        "tool_execution",
+                                        "tool_permissions",
+                                    ):
                                         yield {"data": json.dumps(dict(ev))}
                                     elif et == "budget_stop_decision":
                                         yield {"data": json.dumps(dict(ev))}
@@ -877,6 +950,8 @@ async def _stream_agent(
                                 "type": "error",
                                 "detail": str(exc),
                                 "code": "agent_turn_deadline_exceeded",
+                                "error_class": "provider_timeout",
+                                "message": "The assistant hit the per-turn time limit before producing a final answer.",
                             }
                         )
                     }
@@ -1081,10 +1156,13 @@ async def _stream_agent(
     except Exception as exc:  # noqa: BLE001
         logger.exception("agent v2 stream error")
         detail = _format_agent_stream_error(exc)
+        error_class, short_message = _classify_agent_stream_error(exc)
         err_payload: dict[str, Any] = {
             "type": "error",
             "detail": detail,
             "code": "agent_runtime_error",
+            "error_class": error_class,
+            "message": short_message,
         }
         if isinstance(exc, ValueError) and exc.args and isinstance(exc.args[0], dict):
             prov_code = exc.args[0].get("code")

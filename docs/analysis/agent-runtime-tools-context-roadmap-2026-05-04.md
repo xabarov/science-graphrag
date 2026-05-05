@@ -127,29 +127,29 @@
 
 ### 6.1 План заимствований из openclaude (high ROI)
 
-1. **Deferred tool schemas через shortlist**  
-   План: держать в prompt короткий каталог инструментов; полные схемы подгружать по запросу (паттерн `ToolSearchTool` + `defer_loading`).
+1. ✅ **Deferred tool schemas через shortlist**  
+   Комментарий (Wave 2, 2026-05-05): добавлены feature-flag `agent_tool_search_deferred_schema_refs_enabled`, `deferred_schema_refs` в `tool_search_result`, telemetry-поля shortlist (`catalog_size`, `shortlist_size`, `shortlist_ratio`), A/B прогон off/on подтверждён без регрессии verdict.
 
-2. **Carry-over discovered tools через compaction boundary**  
-   План: после compact сохранять/восстанавливать контекст «какие инструменты уже развернуты», чтобы не терять рабочий набор.
+2. ✅ **Carry-over discovered tools через compaction boundary**  
+   Комментарий (Wave 3, 2026-05-05): капсула `capsules.discovered_tools` в session backend (merge из `turn_digest.tools_used`), флаги `agent_discovered_tools_carryover_enabled` / `agent_discovered_tools_carryover_max`; прокидка в `tool_search` и блок `<discovered_tools>` в user prompt (`format_user_with_memory`); инварианты в `tests/test_context_session.py`.
 
-3. **Единый execution pipeline для tool-use**  
-   План: ввести явную цепочку `validate → permission → hooks → call → post-hooks` (ориентир — `src/services/tools/toolExecution.ts` в openclaude).
+3. ✅ **Единый execution pipeline для tool-use**  
+   Комментарий (Wave 3, 2026-05-05): модуль [`science_graphrag/agent/tool_execution_pipeline.py`](../../science_graphrag/agent/tool_execution_pipeline.py) — `validate → permission → ToolNode → post-hooks`, debug events `tool_execution`; узлы retrieval/graph/writer и single-agent ReAct в [`supervisor.py`](../../science_graphrag/agent/graph/supervisor.py) переведены на `build_tool_execution_node`; `effective_tool_policy` — единая точка для политики инструментов (supervisor routing использует тот же helper).
 
-4. **Матрица allowed-tools по режимам/ролям**  
-   План: централизовать whitelist/blacklist (аналог `src/constants/tools.ts`) и применять до сборки tool schemas.
+4. ✅ **Матрица allowed-tools по режимам/ролям**  
+   Комментарий (Wave 3, 2026-05-05): флаг `agent_allowed_tools_matrix_enabled` (по умолчанию off), denylist/allowlist по mode и `tool_policy` в [`config.py`](../../science_graphrag/config.py), `apply_allowed_tools_matrix` перед сборкой ToolNode; тесты [`tests/agent/test_allowed_tools_matrix.py`](../../tests/agent/test_allowed_tools_matrix.py).
 
-5. **Sidechain transcripts для изоляции веток**  
-   План: завести отдельные журналы веток/субагентов (по мотивам `recordSidechainTranscript` / `getAgentTranscriptPath`) для debug/recovery.
+5. ✅ **Sidechain transcripts для изоляции веток**  
+   Комментарий (Wave 3, 2026-05-05): JSONL при `agent_sidechain_transcripts_enabled`, каталог `agent_sidechain_transcripts_dir` (default `.agent_sidechains/`, в `.gitignore`); события `tool_batch_start` / `tool_batch_end` на батч вызовов.
 
-6. **Token budget как first-class контур**  
-   План: внедрить не только лимит, но и поведение в loop (continue/stop decisions), чтобы избежать «молчаливого обреза».
+6. ✅ **Token budget как first-class контур**  
+   Комментарий (Wave 2, 2026-05-05): добавлен детерминированный stop event `budget_stop_decision` (`agent_response_budget_cutoff`) и прокладка в SSE/run_metadata; флаг `agent_budget_stop_reasoning_enabled` оставляет fallback-поведение в off-режиме.
 
-7. **Away summary при возврате пользователя**  
-   План: добавить быстрый recap последнего состояния сессии как UX-слой поверх session memory.
+7. ✅ **Away summary при возврате пользователя**  
+   Комментарий (Wave 3, 2026-05-05): клиент передаёт `client_idle_ms` в [`agent_v2`](../../science_graphrag/api/agent_v2.py); порог `agent_away_summary_client_idle_ms_threshold`; при превышении — блок `<away_recap>` в промпте (`build_initial_agent_state` / Ask UI: `useAgentStream.js`, `useAskSubmit.js`).
 
-8. **Feature-gated rollout + telemetry для новых runtime-механизмов**  
-   План: все изменения по LLM/hybrid tool search и L4-компактации выпускать через флаги, с обязательной телеметрией и fallback-веткой.
+8. ✅ **Feature-gated rollout + telemetry для новых runtime-механизмов**  
+   Комментарий (Wave 2, 2026-05-05): dual-run off/on выполнен через `agent_trace_review.py`, compare через `trace_regression_compare.py`; добавлены telemetry-метрики в `trace-review-v1` (`shortlist_ratio_avg`, `deferred_schema_event_count`, `budget_cutoff_count`) и run_context flags.
 
 ### 6.2 Ревизия текущих скриптов и пробелов trace-review
 
@@ -191,6 +191,8 @@
 - Во время Wave 1 поймана и исправлена причина падения SSE-check `missing_intent_classified` для runtime `langgraph_research_v1`:  
   `build_initial_agent_state` теперь добавляет стартовый debug-event `intent_classified` и контракт подтверждён тестом.  
 - После фикса full e2e прогон `agent_trace_review.py` завершился `verdict=pass`; baseline обновлён живым артефактом.
+- Wave 2: устранён CLI-дрифт между `agent_trace_review.py` и `agent_od_workspace_e2e_audit.py` (совместимость `--skip-postgres`), из-за которого e2e сначала падал до выполнения кейсов.  
+- Wave 2: стабилизирован heavy-кейс `graph_ego_methods` (сузили сценарий до `workspace_inspect -> edge_search -> final_answer`), после чего full dual-run off/on дал `verdict=pass` в обоих режимах.
 
 ### 6.3 Канонический формат артефакта trace-review (v1)
 
@@ -293,3 +295,5 @@
 | 2026-05-05 | Добавлены **§6.2** (ревизия текущих scripts/runbooks/eval и зафиксированные пробелы) и **§6.3** (каноническая schema `trace-review-v1`, markdown layout, pass/warn/fail гейты) как база для SOP и новых `scripts/live_check/*`. |
 | 2026-05-05 | Добавлены **§6.4** (P0/P1/P2 приоритизация и тест-матрица по 8 ROI-пунктам) и операционный контур dual-run/regression-gate для runtime rollout. |
 | 2026-05-05 | Обновлён статус в **§6.2**: Wave 1 (P0 + P1 toolkit) отмечен как выполненный с комментариями по каждому пробелу; добавлена пометка о фиксе SSE `missing_intent_classified` для `langgraph_research_v1`, успешном full e2e (`verdict=pass`) и обновлении baseline артефактов. |
+| 2026-05-05 | Обновлён статус в **§6.1**: закрыты ROI-пункты 1/6/8 (deferred schemas, token budget stop reasons, feature-gated rollout + telemetry). Зафиксированы результаты Wave 2: dual-run off/on `pass`, добавленные telemetry-метрики `trace-review-v1`, а также исправления e2e-блокеров (`--skip-postgres` совместимость и стабилизация кейса `graph_ego_methods`). |
+| 2026-05-05 | **Wave 3** — закрыты ROI-пункты §6.1 **2–5 и 7**: carry-over discovered tools, unified tool execution pipeline, allowed-tools matrix (feature-flag), sidechain JSONL transcripts, away summary (`client_idle_ms`). Регрессия к baseline: `trace_regression_compare.py` против `eval/results/trace-review-off.json` — **pass**; live `agent_trace_review.py` (default suite) — **pass**. Техдолг: pylint duplicate-code между графом и pipeline снят через общий `effective_tool_policy`. |

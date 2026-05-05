@@ -36,7 +36,11 @@ from science_graphrag.agent.llm.chat import (
     build_chat_model,
     ensure_messages_safe_for_generation,
 )
-from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
+from science_graphrag.agent.tool_execution_pipeline import (
+    apply_allowed_tools_matrix,
+    build_tool_execution_node,
+    effective_tool_policy,
+)
 from science_graphrag.agent.tool_message_compact import maybe_compact_agent_messages_for_react
 from science_graphrag.agent.tool_search import shortlist_tools_for_single_agent
 from science_graphrag.agent.tools import build_tool_registry
@@ -51,16 +55,6 @@ from science_graphrag.observability.spans import (
 )
 
 ROUTE_FINISH = "finish"
-
-
-def _turn_tool_policy(state: AgentState) -> str:
-    meta = state.get("metadata") or {}
-    tp = meta.get("turn_policy")
-    if isinstance(tp, dict):
-        pol = str(tp.get("tool_policy") or "").strip()
-        if pol in {"no_tools", "clarify", "allow_tools"}:
-            return pol
-    return "allow_tools"
 
 
 def _first_user_plain_question(state: AgentState) -> str:
@@ -117,7 +111,7 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
     def supervisor_node(state: AgentState) -> dict:
         budget = int(state.get("budget_remaining", settings.agent_max_tool_calls))
         prior = list(state.get("routing_log") or [])
-        tool_policy = _turn_tool_policy(state)
+        tool_policy = effective_tool_policy(state)
         if not prior and tool_policy in {"no_tools", "clarify"}:
             meta = state.get("metadata") or {}
             tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
@@ -306,6 +300,11 @@ def build_retrieval_graph(stores: StoreRegistry, settings: Settings):
 def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
     """Wave Y2 fallback: single-agent ReAct graph."""
     tool_registry = build_tool_registry(stores)
+    full_tool_node = build_tool_execution_node(
+        tools=tool_registry,
+        settings=settings,
+        sidechain_id="single_agent_react:full_registry",
+    )
 
     def chat_node(state: AgentState) -> dict:
         cutoff = react_chat_response_budget_cutoff(state, settings=settings)
@@ -325,13 +324,22 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
         )
         question = _first_user_plain_question(state)
         effective_ac = answer_class_hint or heuristic_answer_class(question, None)
+        sess = None
+        tid = str((state.get("metadata") or {}).get("thread_id") or "").strip()
+        if tid:
+            from science_graphrag.agent.context.session_store import get_session_for_thread
+
+            sess = get_session_for_thread(tid)
+
         bound_tools, _ts_meta = shortlist_tools_for_single_agent(
             tool_registry,
             question=question,
             settings=settings,
             has_workspace=bool((state.get("workspace_id") or "").strip()),
             answer_class=effective_ac,
+            session=sess,
         )
+        bound_tools, _mtx = apply_allowed_tools_matrix(bound_tools, settings=settings, state=state)
         ts_meta = dict(_ts_meta or {})
         llm_turn = build_chat_model(settings).bind_tools(bound_tools)
         with llm_span(
@@ -377,6 +385,7 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
                     "deferred_schema_mode": ts_meta.get("deferred_schema_mode"),
                     "deferred_schema_refs": ts_meta.get("deferred_schema_refs"),
                     "skipped": bool(ts_meta.get("skipped")),
+                    "carryover_tools": ts_meta.get("carryover_tools"),
                 }
             ],
         }
@@ -388,7 +397,8 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
     graph = StateGraph(AgentState)
     graph.add_node("chat", chat_node)
     graph.add_node("final_answer_nudge", final_answer_nudge_node)
-    graph.add_node("tools", build_normalized_tool_node_executor(tool_registry))
+
+    graph.add_node("tools", full_tool_node)
     graph.add_node("after_tools", react_after_tools_decrement_budget)
     graph.set_entry_point("chat")
     graph.add_conditional_edges(

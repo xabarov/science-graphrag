@@ -21,7 +21,10 @@ from science_graphrag.agent.llm.chat import (
     build_chat_model,
     ensure_messages_safe_for_generation,
 )
-from science_graphrag.agent.tool_call_normalization import build_normalized_tool_node_executor
+from science_graphrag.agent.tool_execution_pipeline import (
+    apply_allowed_tools_matrix,
+    build_tool_execution_node,
+)
 from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_retrieval_tools
 from science_graphrag.api.deps import StoreRegistry
@@ -69,7 +72,13 @@ def _last_user_text(state: AgentState) -> str:
     return ""
 
 
-def _compile_react_subgraph(tools: list[BaseTool], settings: Settings, system_prompt: str) -> Any:
+def _compile_react_subgraph(
+    tools: list[BaseTool],
+    settings: Settings,
+    system_prompt: str,
+    *,
+    sidechain_tag: str,
+) -> Any:
     llm = build_chat_model(settings).bind_tools(tools)
 
     def chat_node(state: AgentState) -> dict:
@@ -113,7 +122,14 @@ def _compile_react_subgraph(tools: list[BaseTool], settings: Settings, system_pr
 
     graph = StateGraph(AgentState)
     graph.add_node("chat", chat_node)
-    graph.add_node("tools", build_normalized_tool_node_executor(tools))
+    graph.add_node(
+        "tools",
+        build_tool_execution_node(
+            tools=tools,
+            settings=settings,
+            sidechain_id=f"{SPECIALIST_NAME}:{sidechain_tag}",
+        ),
+    )
     graph.add_node("after_tools", react_after_tools_decrement_budget)
     graph.set_entry_point("chat")
     graph.add_conditional_edges(
@@ -135,22 +151,36 @@ def _compile_react_subgraph(tools: list[BaseTool], settings: Settings, system_pr
 def build_retrieval_subgraph(stores: StoreRegistry, settings: Settings) -> Any:
     """Compile retrieval ReAct subgraph with the full tool set (tests / diagnostics)."""
     all_tools = build_retrieval_tools(stores, settings)
-    return _compile_react_subgraph(all_tools, settings, SYSTEM_PROMPT)
+    return _compile_react_subgraph(
+        all_tools, settings, SYSTEM_PROMPT, sidechain_tag="diagnostics_full"
+    )
 
 
 def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
     """Build retrieval specialist callable for supervisor graph."""
     subgraph_cache: dict[tuple[str, ...], Any] = {}
+    subgraph_tags: dict[tuple[str, ...], str] = {}
+    seq = {"n": 0}
 
     def _cached_subgraph(tools: list[BaseTool]) -> Any:
         key = tuple(sorted(getattr(t, "name", "") or "" for t in tools))
         if key not in subgraph_cache:
-            subgraph_cache[key] = _compile_react_subgraph(tools, settings, SYSTEM_PROMPT)
+            seq["n"] += 1
+            tag = subgraph_tags.setdefault(key, f"h{seq['n']}")
+            subgraph_cache[key] = _compile_react_subgraph(
+                tools, settings, SYSTEM_PROMPT, sidechain_tag=tag
+            )
         return subgraph_cache[key]
 
     def retrieval_agent_node(state: AgentState) -> dict:
         before = len(state.get("messages") or [])
         all_tools = build_retrieval_tools(stores, settings)
+        sess = None
+        tid = str((state.get("metadata") or {}).get("thread_id") or "").strip()
+        if tid:
+            from science_graphrag.agent.context.session_store import get_session_for_thread
+
+            sess = get_session_for_thread(tid)
         question = _last_user_text(state)
         has_ws = bool((state.get("workspace_id") or "").strip())
         ac = state.get("answer_class")
@@ -162,7 +192,9 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             settings=settings,
             has_workspace=has_ws,
             answer_class=answer_class,
+            session=sess,
         )
+        tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
         compiled = _cached_subgraph(tools)
         next_state = compiled.invoke(state)
         messages = list(next_state.get("messages") or [])
@@ -196,7 +228,13 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
                 "deferred_schema_mode": meta.get("deferred_schema_mode"),
                 "deferred_schema_refs": meta.get("deferred_schema_refs"),
                 "skipped": bool(meta.get("skipped")),
-            }
+                "carryover_tools": meta.get("carryover_tools"),
+            },
+            *(
+                [{"type": "tool_permissions", "matrix": mtx}]
+                if not bool(mtx.get("skipped"))
+                else []
+            ),
         ]
         return out
 

@@ -7,7 +7,11 @@ from typing import Any
 
 from langchain_core.tools import BaseTool
 
-from science_graphrag.agent.tool_manifest import ToolManifestEntry, compact_catalog_lines, manifest_by_name
+from science_graphrag.agent.tool_manifest import (
+    ToolManifestEntry,
+    compact_catalog_lines,
+    manifest_by_name,
+)
 from science_graphrag.config import Settings
 
 _SESSION_MEMORY_RE = re.compile(
@@ -23,7 +27,7 @@ _ACTIVE_WS_ID_RE = re.compile(
     re.DOTALL | re.IGNORECASE,
 )
 
-# Low-signal gate: below this top score, use full tool catalog (unchanged across Habr Jun 2026 ablation).
+# Low-signal gate: below this top score, use full catalog (Habr Jun 2026 ablation baseline).
 _RULE_TOOL_SEARCH_LOW_SIGNAL_FLOOR = 1.5
 
 
@@ -64,6 +68,45 @@ def _merge_retrieval_catalog_baseline(picked: list[BaseTool], tools: list[BaseTo
             if hit is not None:
                 picked.append(hit)
                 have.add(extra)
+
+
+def _carryover_tool_names_from_session(session: dict[str, Any] | None, *, cap: int) -> list[str]:
+    if not isinstance(session, dict):
+        return []
+    caps = session.get("capsules") or {}
+    if not isinstance(caps, dict):
+        return []
+    dt = caps.get("discovered_tools")
+    if not isinstance(dt, dict):
+        return []
+    raw = [str(x).strip() for x in (dt.get("recent_tools") or []) if str(x).strip()]
+    cap_n = max(0, int(cap))
+    if cap_n <= 0:
+        return []
+    return raw[-cap_n:]
+
+
+def _merge_carryover_into_picked(
+    picked: list[BaseTool],
+    tools: list[BaseTool],
+    carryover: list[str],
+) -> list[str]:
+    """Return list of carryover tool names that were merged into ``picked``."""
+    if not carryover:
+        return []
+    have = {getattr(t, "name", "") for t in picked}
+    merged: list[str] = []
+    by_name = {getattr(t, "name", ""): t for t in tools}
+    for nm in carryover:
+        if nm in have:
+            continue
+        hit = by_name.get(nm)
+        if hit is None:
+            continue
+        picked.append(hit)
+        have.add(nm)
+        merged.append(nm)
+    return merged
 
 
 def _sort_picked_like_registry_order(picked: list[BaseTool], tools: list[BaseTool]) -> None:
@@ -210,6 +253,7 @@ def shortlist_tools_for_specialist(
     has_workspace: bool,
     answer_class: str | None = None,
     for_single_agent: bool = False,
+    session: dict[str, Any] | None = None,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Return possibly narrowed tool list and debug meta for SSE / run_metadata."""
     if not settings.agent_rule_tool_search_enabled:
@@ -236,6 +280,13 @@ def shortlist_tools_for_specialist(
     score_band = float(settings.agent_tool_search_score_band)
     threshold = max(0.0, top_score - score_band)
     picked = [t for s, t in scored if s >= threshold and s > 0]
+    carryover_names = _carryover_tool_names_from_session(
+        session,
+        cap=int(settings.agent_discovered_tools_carryover_max),
+    )
+    carryover_merged: list[str] = []
+    if settings.agent_discovered_tools_carryover_enabled and carryover_names:
+        carryover_merged = _merge_carryover_into_picked(picked, tools, carryover_names)
     if for_single_agent:
         _ensure_final_answer_in_picked(picked, tools)
     if specialist == "retrieval_agent" or for_single_agent:
@@ -274,9 +325,9 @@ def shortlist_tools_for_specialist(
     meta_out["catalog_size"] = len(tools)
     meta_out["shortlist_size"] = len(names)
     meta_out["shortlist_ratio"] = round((len(names) / len(tools)), 4) if tools else 1.0
-    meta_out["catalog_preview"] = compact_catalog_lines(specialist=None if for_single_agent else specialist)[
-        :8
-    ]
+    specialist_arg = None if for_single_agent else specialist
+    preview_lines = compact_catalog_lines(specialist=specialist_arg)[:8]
+    meta_out["catalog_preview"] = preview_lines
     if settings.agent_tool_search_deferred_schema_refs_enabled:
         by_meta = manifest_by_name()
         refs = []
@@ -287,6 +338,10 @@ def shortlist_tools_for_specialist(
             refs.append({"tool": name, "schema_ref": meta.deferred_schema_ref})
         meta_out["deferred_schema_refs"] = refs
         meta_out["deferred_schema_mode"] = "shortlist_only"
+    if carryover_merged:
+        meta_out["carryover_tools"] = carryover_merged
+    elif carryover_names:
+        meta_out["carryover_tools"] = []
     return picked, meta_out
 
 
@@ -297,6 +352,7 @@ def shortlist_tools_for_single_agent(
     settings: Settings,
     has_workspace: bool,
     answer_class: str | None = None,
+    session: dict[str, Any] | None = None,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Rule-based shortlist for single-agent ReAct (full registry in one bind_tools surface)."""
 
@@ -308,4 +364,5 @@ def shortlist_tools_for_single_agent(
         has_workspace=has_workspace,
         answer_class=answer_class,
         for_single_agent=True,
+        session=session,
     )

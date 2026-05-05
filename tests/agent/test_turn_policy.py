@@ -226,15 +226,26 @@ def test_rules_v0_researchish_routes_allow_tools(
 
 
 def test_initial_debug_emits_classifier_fallback_warning(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake_settings = Settings().model_copy(
+        update={
+            "agent_turn_policy_classifier": "llm_v1",
+            "agent_turn_policy_llm_enabled": True,
+            "extraction_llm_api_key": "",
+        },
+    )
+
+    def _get_settings() -> Settings:
+        return fake_settings
+
+    # Submodules bind get_settings at import time; patch each use-site.
+    monkeypatch.setattr("science_graphrag.config.get_settings", _get_settings)
     monkeypatch.setattr(
-        "science_graphrag.config.get_settings",
-        lambda: Settings().model_copy(
-            update={
-                "agent_turn_policy_classifier": "llm_v1",
-                "agent_turn_policy_llm_enabled": True,
-                "extraction_llm_api_key": "",
-            }
-        ),
+        "science_graphrag.agent.coordination.turn_policy.get_settings",
+        _get_settings,
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.state.get_settings",
+        _get_settings,
     )
     st = build_initial_agent_state(
         question="opaque blob zzz yyy www",

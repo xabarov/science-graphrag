@@ -11,6 +11,10 @@ import instructor
 from openai import APIConnectionError, APIError, OpenAI, RateLimitError
 from pydantic import BaseModel
 
+from science_graphrag.llm.openrouter_model_registry import (
+    openrouter_auto_reasoning_extra_body,
+    openrouter_auto_uses_instructor_structured_outputs,
+)
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, set_span_error
 from science_graphrag.utils.llm_deadline import MonotonicDeadline
 
@@ -56,11 +60,6 @@ class SyncInstructorExtractor:
 
         return self._transport_timeout_seconds
 
-    def _is_openrouter_qwen35_397b(self) -> bool:
-        return self.base_url.startswith("https://openrouter.ai/api") and (
-            self.model.strip().lower() == "qwen/qwen3.5-397b-a17b"
-        )
-
     @staticmethod
     def _mode_from_string(mode: str) -> instructor.Mode:
         mapping = {
@@ -76,14 +75,18 @@ class SyncInstructorExtractor:
     def _resolve_mode(self) -> instructor.Mode:
         if self.mode != "auto":
             return self._mode_from_string(self.mode)
-        # OpenRouter + Qwen3.5 397B currently behaves better via structured outputs
-        # than via the default TOOLS mode used by instructor.
-        if self._is_openrouter_qwen35_397b():
+        if openrouter_auto_uses_instructor_structured_outputs(
+            base_url=self.base_url,
+            model_id=self.model,
+        ):
             return instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS
         return instructor.Mode.TOOLS
 
     def _build_extra_body(self) -> dict[str, Any] | None:
-        if self.mode != "auto" or not self._is_openrouter_qwen35_397b():
+        if self.mode != "auto" or not openrouter_auto_reasoning_extra_body(
+            base_url=self.base_url,
+            model_id=self.model,
+        ):
             return None
         return {
             "provider": {"require_parameters": True},

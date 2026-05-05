@@ -17,7 +17,8 @@ Install a custom backend via ``set_session_memory_backend`` (tests) or call
 - Same semantics as in-memory; JSON blob per thread key; TTL refreshed on each write.
 - ``clear_all`` on Redis uses SCAN for the configured prefix — intended for tests only.
 
-Tests: ``tests/test_context_session.py``; Redis integration ``tests/test_session_redis_backend.py`` (optional).
+Tests: ``tests/test_context_session.py``;
+Redis integration ``tests/test_session_redis_backend.py`` (optional).
 """
 
 from __future__ import annotations
@@ -62,6 +63,25 @@ def _merge_workspace_capsule(
     }
 
 
+def _merge_discovered_tools_capsule(
+    prev: dict[str, Any] | None,
+    turn_digest: dict[str, Any],
+    *,
+    cap: int,
+) -> dict[str, Any]:
+    """Rolling union of tool names from CH4 turn digests (Wave 3 carry-over)."""
+    names: list[str] = []
+    if isinstance(prev, dict):
+        names = [str(x) for x in (prev.get("recent_tools") or []) if str(x).strip()]
+    for nm in turn_digest.get("tools_used") or []:
+        s = str(nm).strip()
+        if s and s not in names:
+            names.append(s)
+    cap_n = max(4, int(cap))
+    names = names[-cap_n:]
+    return {"recent_tools": names, "source": "turn_digest_tools_used"}
+
+
 def _empty_session() -> dict[str, Any]:
     return {"digests": [], "session_summary": "", "capsules": {}}
 
@@ -79,6 +99,8 @@ class SessionMemoryBackend(Protocol):
         *,
         turn_digest: dict[str, Any],
         workspace_id: str | None = None,
+        discovered_tools_carryover_enabled: bool = True,
+        discovered_tools_carryover_cap: int = 24,
     ) -> str:
         """Append digest; return new session_summary text."""
 
@@ -111,6 +133,8 @@ class InMemorySessionMemoryBackend:
         *,
         turn_digest: dict[str, Any],
         workspace_id: str | None = None,
+        discovered_tools_carryover_enabled: bool = True,
+        discovered_tools_carryover_cap: int = 24,
     ) -> str:
         """Append ``turn_digest`` and return the updated rolling ``session_summary`` text."""
         tid = (thread_id or "").strip()
@@ -134,6 +158,18 @@ class InMemorySessionMemoryBackend:
                     ws,
                     turn_digest,
                     len(digests),
+                )
+                ent["capsules"] = caps
+            if discovered_tools_carryover_enabled:
+                caps = dict(ent.get("capsules") or {})
+                caps["discovered_tools"] = _merge_discovered_tools_capsule(
+                    (
+                        caps.get("discovered_tools")
+                        if isinstance(caps.get("discovered_tools"), dict)
+                        else None
+                    ),
+                    turn_digest,
+                    cap=discovered_tools_carryover_cap,
                 )
                 ent["capsules"] = caps
             return summary
@@ -203,6 +239,8 @@ class RedisSessionMemoryBackend:
         *,
         turn_digest: dict[str, Any],
         workspace_id: str | None = None,
+        discovered_tools_carryover_enabled: bool = True,
+        discovered_tools_carryover_cap: int = 24,
     ) -> str:
         tid = (thread_id or "").strip()
         if not tid:
@@ -225,6 +263,13 @@ class RedisSessionMemoryBackend:
                 ws,
                 turn_digest,
                 len(digests),
+            )
+        if discovered_tools_carryover_enabled:
+            prev_dt = out["capsules"].get("discovered_tools")
+            out["capsules"]["discovered_tools"] = _merge_discovered_tools_capsule(
+                prev_dt if isinstance(prev_dt, dict) else None,
+                turn_digest,
+                cap=discovered_tools_carryover_cap,
             )
         payload = json.dumps(out, ensure_ascii=False)
         self._redis.setex(self._key(tid), self._ttl, payload)
@@ -254,7 +299,7 @@ def get_session_memory_backend() -> SessionMemoryBackend:
 
 
 def session_memory_backend_kind() -> str:
-    """Return ``redis`` or ``memory`` for /health and ops (after ``configure_session_memory_backend``)."""
+    """Return ``redis`` or ``memory`` for /health (after ``configure_session_memory_backend``)."""
     be = get_session_memory_backend()
     if isinstance(be, RedisSessionMemoryBackend):
         return "redis"

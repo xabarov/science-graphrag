@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from typing import Any, Callable
 
@@ -36,6 +37,7 @@ def run_batch_ingest(
     per_file_timeout_s: int,
     resume: bool,
     duplicate_error_type: type[Exception] | None = None,
+    bypass_markdown_cache: bool = False,
 ) -> list[dict[str, Any]]:
     """Run ingest-corpus batch with resume/timeout/progress semantics."""
     paths = deps.discover_corpus_files(directory)
@@ -46,6 +48,10 @@ def run_batch_ingest(
 
     progress_by_path = load_progress(progress_file) if resume else {}
     rows: list[dict[str, Any]] = []
+    ingest_one = deps.ingest_document
+    if bypass_markdown_cache:
+        ingest_one = partial(deps.ingest_document, bypass_markdown_cache=True)
+
     factory = deps.session_factory(engine)
     for path in paths:
         resolved_path = str(path.resolve())
@@ -67,7 +73,7 @@ def run_batch_ingest(
         try:
             with factory() as db_session:
                 with file_timeout(per_file_timeout_s):
-                    doc_id, work_id = deps.ingest_document(
+                    doc_id, work_id = ingest_one(
                         path,
                         settings=settings,
                         session=db_session,

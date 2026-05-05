@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import base64
+import json
+import re
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
@@ -11,9 +13,13 @@ from pdf2image import convert_from_path
 from PIL import Image
 
 from science_graphrag.config import Settings
-from science_graphrag.ingestion.llm.raw_openai_transport import post_chat_completions_json
+from science_graphrag.ingestion.llm.raw_openai_transport import (
+    ChatCompletionsNonJsonResponseError,
+    post_chat_completions_json,
+)
 from science_graphrag.llm.concurrency import llm_pool_slot
 from science_graphrag.observability.phoenix_tracer import SpanAttributes, llm_span
+from science_graphrag.utils.project_logging import get_logger
 
 DEFAULT_VL_PROMPT = (
     "Extract the document text faithfully as Markdown. "
@@ -27,6 +33,26 @@ CONTINUE_VL_PROMPT = (
     "Preserve headings, paragraphs, lists, tables, references, and URLs. "
     "Output only the document content in Markdown."
 )
+
+logger = get_logger("ingestion.vl_pdf")
+
+_FENCE_RE = re.compile(r"^\s*```(?:json|md|markdown)?\s*$", re.IGNORECASE)
+
+
+class VLAPIError(RuntimeError):
+    """Raised when VL transport returns an unexpected payload shape."""
+
+
+def _strip_common_markdown_fences(text: str) -> str:
+    """Remove a single leading/trailing triple-backtick fence if present."""
+    lines = text.splitlines()
+    if not lines:
+        return text
+    if _FENCE_RE.match(lines[0]):
+        lines = lines[1:]
+    if lines and _FENCE_RE.match(lines[-1]):
+        lines = lines[:-1]
+    return "\n".join(lines).strip()
 
 
 class VLPDFProcessor:  # pylint: disable=too-few-public-methods
@@ -72,14 +98,52 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
 
         key = (self.settings.resolved_vl_api_key or "").strip()
         with llm_pool_slot("vl_pdf", self.settings):
-            data, usage = post_chat_completions_json(
-                base_url=self.settings.vl_base_url,
-                api_key=key,
-                json_body=payload,
-                timeout_seconds=300.0,
-            )
+            try:
+                data, usage = post_chat_completions_json(
+                    base_url=self.settings.vl_base_url,
+                    api_key=key,
+                    json_body=payload,
+                    timeout_seconds=300.0,
+                )
+            except ChatCompletionsNonJsonResponseError:
+                # post_chat_completions_json already includes a short preview in the message.
+                logger.warning("VL chat.completions returned non-JSON body (%s)", prompt[:40])
+                raise
 
-        return data["choices"][0]["message"]["content"], usage
+        try:
+            msg = data["choices"][0]["message"]
+            content = msg["content"]
+        except Exception as exc:  # noqa: BLE001
+            raise VLAPIError(f"unexpected VL response shape: keys={list(data.keys())}") from exc
+
+        if isinstance(content, str):
+            # Some providers may return JSON-encoded string content.
+            candidate = content.strip()
+            if candidate.startswith("{") and "\"choices\"" in candidate:
+                try:
+                    inner = json.loads(candidate)
+                    msg2 = inner["choices"][0]["message"]
+                    content = msg2["content"]
+                except Exception:  # noqa: BLE001
+                    pass
+
+        if isinstance(content, list):
+            # Multimodal segments: join text parts only.
+            parts: list[str] = []
+            for seg in content:
+                if isinstance(seg, dict) and seg.get("type") == "text":
+                    t = seg.get("text")
+                    if isinstance(t, str) and t.strip():
+                        parts.append(t)
+            text_out = "\n".join(parts).strip()
+            if not text_out:
+                raise VLAPIError("VL returned content[] without text segments")
+            return _strip_common_markdown_fences(text_out), usage
+
+        if not isinstance(content, str) or not content.strip():
+            raise VLAPIError(f"VL returned empty/invalid message content: {type(content).__name__}")
+
+        return _strip_common_markdown_fences(content.strip()), usage
 
     def pdf_to_markdown(  # pylint: disable=too-many-locals
         self,

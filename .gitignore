@@ -24,6 +24,9 @@ sdist/
 var/
 wheels/
 share/python-wheels/
+
+# Agent sidechain JSONL transcripts (local debug; configurable via Settings)
+.agent_sidechains/
 *.egg-info/
 .installed.cfg
 *.egg

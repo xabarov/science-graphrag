@@ -104,7 +104,12 @@ class _RecordingBackend:
         return {"digests": [], "session_summary": "", "capsules": {}}
 
     def update_after_turn(
-        self, thread_id: str, *, turn_digest: dict[str, Any], workspace_id: str | None = None
+        self,
+        thread_id: str,
+        *,
+        turn_digest: dict[str, Any],
+        workspace_id: str | None = None,
+        **_kwargs: Any,
     ) -> str:
         self.turns.append((thread_id, dict(turn_digest), workspace_id))
         return "ok"
@@ -159,6 +164,58 @@ def test_workspace_capsule_roundtrip() -> None:
         assert "q about papers" in (wc.get("recent_intents") or [])
     finally:
         clear_session_store_for_tests()
+
+
+def test_discovered_tools_capsule_merges_across_turns() -> None:
+    try:
+        tid = "t_discovered_tools"
+        update_session_after_turn(
+            tid,
+            turn_digest={
+                "user_intent": "q1",
+                "answer_excerpt": "a1",
+                "answer_class": "x",
+                "tools_used": ["idea_search"],
+            },
+        )
+        ent = get_session_for_thread(tid)
+        dt = (ent.get("capsules") or {}).get("discovered_tools")
+        assert isinstance(dt, dict)
+        assert "idea_search" in (dt.get("recent_tools") or [])
+
+        update_session_after_turn(
+            tid,
+            turn_digest={
+                "user_intent": "q2",
+                "answer_excerpt": "a2",
+                "answer_class": "x",
+                "tools_used": ["paper_quote_search", "idea_search"],
+            },
+        )
+        ent2 = get_session_for_thread(tid)
+        dt2 = (ent2.get("capsules") or {}).get("discovered_tools")
+        assert isinstance(dt2, dict)
+        tools = dt2.get("recent_tools") or []
+        assert "paper_quote_search" in tools
+        assert "idea_search" in tools
+    finally:
+        clear_session_store_for_tests()
+
+
+def test_format_user_with_memory_includes_discovered_tools_and_away_recap() -> None:
+    s = format_user_with_memory(
+        question="Next question",
+        session_summary="Old context",
+        history_digest=[],
+        workspace_capsule=None,
+        discovered_tools_capsule={"recent_tools": ["idea_search", "workspace_inspect"]},
+        away_recap_lines=["Away for a while"],
+    )
+    assert "<away_recap>" in s
+    assert "Away for a while" in s
+    assert "<discovered_tools>" in s
+    assert "idea_search" in s
+    assert "Next question" in s
 
 
 def test_set_session_memory_backend_custom_protocol() -> None:
