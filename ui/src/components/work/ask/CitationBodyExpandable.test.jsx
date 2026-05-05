@@ -30,4 +30,35 @@ describe("CitationBodyExpandable", () => {
     );
     expect(screen.queryByText("askPanel.citation.noSnippet")).toBeNull();
   });
+
+  it("renders trailing actions when passage suppressed but deep links provided", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <CitationBodyExpandable
+          t={(k) => k}
+          citation={{}}
+          suppressMissingPlaceholder
+          defaultExpanded
+          trailingActions={<button type="button">deep</button>}
+        />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId("citation-trailing-actions")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "deep" })).toBeTruthy();
+  });
+
+  it("renders trailing actions on the passage action row", () => {
+    render(
+      <ThemeProvider theme={theme}>
+        <CitationBodyExpandable
+          t={(k) => k}
+          citation={{ excerpt: "short" }}
+          defaultExpanded
+          trailingActions={<span data-testid="trail-mark">x</span>}
+        />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId("citation-trailing-actions")).toBeTruthy();
+    expect(screen.getByTestId("trail-mark")).toBeTruthy();
+  });
 });

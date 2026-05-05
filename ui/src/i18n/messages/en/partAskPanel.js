@@ -60,6 +60,8 @@ export default {
   "askPanel.citation.workIdLine": "work_id: {{id}}",
   "askPanel.citation.tooltipArticle": "Open article (reader)",
   "askPanel.citation.tooltipGraphWork": "Open work graph",
+  "askPanel.citation.linkReader": "Reader",
+  "askPanel.citation.linkGraph": "Graph",
   "askPanel.citation.passageLabel": "Passage",
   "askPanel.citation.noSnippet":
     "No passage text in the API response — open the article using the button below.",

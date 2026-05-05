@@ -18,6 +18,7 @@ const EXPANDED_MAX_HEIGHT = "min(52vh, 420px)";
  *   citation: Record<string, unknown>,
  *   defaultExpanded?: boolean,
  *   suppressMissingPlaceholder?: boolean,
+ *   trailingActions?: import("react").ReactNode,
  * }} props
  */
 export function CitationBodyExpandable({
@@ -25,6 +26,7 @@ export function CitationBodyExpandable({
   citation,
   defaultExpanded = true,
   suppressMissingPlaceholder = false,
+  trailingActions = null,
 }) {
   const tk = useTheme().appTokens;
   const fullText = useMemo(() => pickCitationBodyText(citation).trim(), [citation]);
@@ -72,28 +74,57 @@ export function CitationBodyExpandable({
 
   if (!fullText) {
     if (suppressMissingPlaceholder) {
-      return null;
+      return trailingActions ? (
+        <Box
+          sx={{
+            mt: 0.75,
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "flex-end",
+            gap: 0.35,
+          }}
+          data-testid="citation-trailing-actions"
+        >
+          {trailingActions}
+        </Box>
+      ) : null;
     }
     return (
-      <Box
-        sx={{
-          mt: 0.75,
-          py: 1,
-          px: 1.1,
-          borderRadius: "8px",
-          border: `1px dashed ${tk.border.default}`,
-          backgroundColor: "rgba(255, 255, 255, 0.02)",
-        }}
-      >
-        <Typography
+      <Box sx={{ mt: 0.75 }}>
+        <Box
           sx={{
-            fontSize: "0.75rem",
-            color: tk.text.muted,
-            lineHeight: 1.55,
+            py: 1,
+            px: 1.1,
+            borderRadius: "8px",
+            border: `1px dashed ${tk.border.default}`,
+            backgroundColor: "rgba(255, 255, 255, 0.02)",
           }}
         >
-          {t("askPanel.citation.noSnippet")}
-        </Typography>
+          <Typography
+            sx={{
+              fontSize: "0.75rem",
+              color: tk.text.muted,
+              lineHeight: 1.55,
+            }}
+          >
+            {t("askPanel.citation.noSnippet")}
+          </Typography>
+        </Box>
+        {trailingActions ? (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              gap: 0.35,
+              mt: 0.65,
+            }}
+            data-testid="citation-trailing-actions"
+          >
+            {trailingActions}
+          </Box>
+        ) : null}
       </Box>
     );
   }
@@ -147,15 +178,43 @@ export function CitationBodyExpandable({
         )}
       </Box>
 
-      <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75, mt: 0.65 }}>
-        {needsToggle ? (
-          <CursorSmallButton type="button" onClick={() => setExpanded((v) => !v)}>
-            {expanded ? t("askPanel.citation.expandHide") : t("askPanel.citation.expandShow")}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 0.75,
+          mt: 0.65,
+          rowGap: 0.5,
+        }}
+      >
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
+          {needsToggle ? (
+            <CursorSmallButton type="button" onClick={() => setExpanded((v) => !v)}>
+              {expanded ? t("askPanel.citation.expandHide") : t("askPanel.citation.expandShow")}
+            </CursorSmallButton>
+          ) : null}
+          <CursorSmallButton type="button" onClick={onCopy}>
+            {copied ? t("askPanel.citation.copied") : t("askPanel.citation.copy")}
           </CursorSmallButton>
+        </Box>
+        {trailingActions ? (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 0.35,
+              pl: { xs: 0, sm: 1 },
+              ml: { xs: 0, sm: "auto" },
+              borderLeft: { xs: "none", sm: `1px solid ${tk.border.default}` },
+            }}
+            data-testid="citation-trailing-actions"
+          >
+            {trailingActions}
+          </Box>
         ) : null}
-        <CursorSmallButton type="button" onClick={onCopy}>
-          {copied ? t("askPanel.citation.copied") : t("askPanel.citation.copy")}
-        </CursorSmallButton>
       </Box>
     </Box>
   );

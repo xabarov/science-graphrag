@@ -59,6 +59,8 @@ export default {
   "askPanel.citation.workIdLine": "work_id: {{id}}",
   "askPanel.citation.tooltipArticle": "Открыть статью (чтение)",
   "askPanel.citation.tooltipGraphWork": "Открыть граф работы",
+  "askPanel.citation.linkReader": "Чтение",
+  "askPanel.citation.linkGraph": "Граф",
   "askPanel.citation.passageLabel": "Отрывок",
   "askPanel.citation.noSnippet":
     "Фрагмент не включён в ответ сервера — откройте статью кнопкой ниже.",

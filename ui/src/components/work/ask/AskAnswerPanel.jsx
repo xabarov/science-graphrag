@@ -29,7 +29,7 @@ import { AgentRunHeader } from "../agent/AgentRunHeader.jsx";
 import { AgentLiveStatus } from "../agent/AgentLiveStatus.jsx";
 import { AgentSubagentRail } from "../agent/AgentSubagentRail.jsx";
 import MarkdownView from "../markdown/MarkdownView.jsx";
-import { CursorIconButton } from "../../common/index.js";
+import { CursorIconButton, CursorSmallButton } from "../../common/index.js";
 import { CitationBodyExpandable } from "./CitationBodyExpandable.jsx";
 import { formatCitationHeadline, pickCitationWorkTitle } from "./citationDisplay.js";
 import { pickCitationBodyText } from "./citationBodyText.js";
@@ -310,8 +310,62 @@ export function AskAnswerPanel({
               const hasPassage = Boolean(pickCitationBodyText(c).trim());
               const suppressMissingPlaceholder =
                 !hasPassage && (allPassagesMissing || somePassagesMissing);
+              const deepLinks =
+                wid &&
+                (chatDetailLevel === "detailed" ? (
+                  <>
+                    <Tooltip title={t("askPanel.citation.tooltipArticle")}>
+                      <CursorSmallButton
+                        component={RouterLink}
+                        to={readerUrl}
+                        aria-label={t("askPanel.citation.tooltipArticle")}
+                        sx={{ textTransform: "none", minWidth: 0, px: 1.1 }}
+                      >
+                        {t("askPanel.citation.linkReader")}
+                      </CursorSmallButton>
+                    </Tooltip>
+                    <Tooltip title={t("askPanel.citation.tooltipGraphWork")}>
+                      <CursorSmallButton
+                        component={RouterLink}
+                        to={graphUrl}
+                        aria-label={t("askPanel.citation.tooltipGraphWork")}
+                        sx={{ textTransform: "none", minWidth: 0, px: 1.1 }}
+                      >
+                        {t("askPanel.citation.linkGraph")}
+                      </CursorSmallButton>
+                    </Tooltip>
+                  </>
+                ) : (
+                  <>
+                    <Tooltip title={t("askPanel.citation.tooltipArticle")}>
+                      <CursorIconButton
+                        component={RouterLink}
+                        to={readerUrl}
+                        aria-label={t("askPanel.citation.tooltipArticle")}
+                        size="small"
+                      >
+                        <ArticleOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                      </CursorIconButton>
+                    </Tooltip>
+                    <Tooltip title={t("askPanel.citation.tooltipGraphWork")}>
+                      <CursorIconButton
+                        component={RouterLink}
+                        to={graphUrl}
+                        aria-label={t("askPanel.citation.tooltipGraphWork")}
+                        size="small"
+                      >
+                        <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                      </CursorIconButton>
+                    </Tooltip>
+                  </>
+                ));
               return (
-                <Box key={i} sx={{ mb: 1.25, fontSize: "0.8125rem", color: tk.text.secondary }}>
+                <Box
+                  key={i}
+                  id={`ask-citation-${i + 1}`}
+                  data-testid={`citation-block-${i}`}
+                  sx={{ mb: 1.25, fontSize: "0.8125rem", color: tk.text.secondary }}
+                >
                   <Typography sx={{ fontSize: "0.8125rem", color: tk.text.primary, fontWeight: 600 }}>
                     {formatCitationHeadline({
                       rank,
@@ -332,31 +386,8 @@ export function AskAnswerPanel({
                     citation={c}
                     defaultExpanded
                     suppressMissingPlaceholder={suppressMissingPlaceholder}
+                    trailingActions={deepLinks || null}
                   />
-                  {wid ? (
-                    <Box sx={{ mt: 0.65, display: "flex", alignItems: "center", gap: 0.35, flexWrap: "wrap" }}>
-                      <Tooltip title={t("askPanel.citation.tooltipArticle")}>
-                        <CursorIconButton
-                          component={RouterLink}
-                          to={readerUrl}
-                          aria-label={t("askPanel.citation.tooltipArticle")}
-                          size="small"
-                        >
-                          <ArticleOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                        </CursorIconButton>
-                      </Tooltip>
-                      <Tooltip title={t("askPanel.citation.tooltipGraphWork")}>
-                        <CursorIconButton
-                          component={RouterLink}
-                          to={graphUrl}
-                          aria-label={t("askPanel.citation.tooltipGraphWork")}
-                          size="small"
-                        >
-                          <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                        </CursorIconButton>
-                      </Tooltip>
-                    </Box>
-                  ) : null}
                   {chatDetailLevel === "detailed" ? (
                     <Typography
                       data-testid={`citation-chunk-fingerprint-${i}`}
