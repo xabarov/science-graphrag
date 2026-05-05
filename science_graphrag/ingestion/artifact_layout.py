@@ -92,4 +92,7 @@ def has_extracted_body_file(
     artifact_store: ArtifactStorePort | None = None,
 ) -> bool:
     """True if a body file exists for ``document_id`` (local or S3 per settings)."""
-    return resolve_extracted_body_file(settings, document_id, artifact_store=artifact_store) is not None
+    return (
+        resolve_extracted_body_file(settings, document_id, artifact_store=artifact_store)
+        is not None
+    )

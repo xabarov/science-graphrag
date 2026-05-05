@@ -7,6 +7,7 @@ from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.functions import Extract
 
 from science_graphrag.storage.models_orm import IngestJobRecordOrm, IngestJobStageOrm
 
@@ -31,7 +32,7 @@ def load_mean_stage_duration_ms(session: Session, *, max_jobs: int = 30) -> dict
         select(
             IngestJobStageOrm.stage,
             func.avg(
-                func.extract(
+                Extract(
                     "epoch",
                     IngestJobStageOrm.finished_at - IngestJobStageOrm.started_at,
                 )

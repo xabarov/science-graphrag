@@ -8,8 +8,9 @@ from typing import Any, TypeVar
 
 import httpx
 import instructor
-from openai import APIConnectionError, APIError, OpenAI, RateLimitError
-from pydantic import BaseModel
+from instructor.core import InstructorError
+from openai import APIConnectionError, APIError, OpenAI, OpenAIError, RateLimitError
+from pydantic import BaseModel, ValidationError as PydanticValidationError
 
 from science_graphrag.llm.openrouter_model_registry import (
     openrouter_auto_reasoning_extra_body,
@@ -291,7 +292,16 @@ class SyncInstructorExtractor:
                     return _span_fail_from_exception(exc)
                 if not _sleep_capped(wait_s):
                     return _deadline_err()
-            except Exception as exc:  # noqa: BLE001
+            except (
+                OpenAIError,
+                InstructorError,
+                TypeError,
+                ValueError,
+                KeyError,
+                AttributeError,
+                json.JSONDecodeError,
+                PydanticValidationError,
+            ) as exc:
                 return _span_fail_from_exception(exc)
 
         if result is None:

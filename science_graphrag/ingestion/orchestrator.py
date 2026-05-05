@@ -134,7 +134,7 @@ def run_batch_ingest(
             logger.info("FAIL_TIMEOUT path=%s error=%s", path, exc)
             if not continue_on_error:
                 break
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:  # pylint: disable=broad-exception-caught  # batch ingest boundary
             if duplicate_error_type is not None and isinstance(exc, duplicate_error_type):
                 finished_at = datetime.now(UTC)
                 document_id = str(getattr(exc, "document_id", ""))

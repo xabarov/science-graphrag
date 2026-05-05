@@ -47,7 +47,7 @@ def post_chat_completions_json(
                     preview = ""
                     try:
                         preview = (response.text or "")[:800]
-                    except Exception:  # noqa: BLE001
+                    except (UnicodeDecodeError, httpx.DecodingError, TypeError, ValueError, AttributeError):
                         preview = ""
                     raise ChatCompletionsNonJsonResponseError(
                         "non-json chat completions response "

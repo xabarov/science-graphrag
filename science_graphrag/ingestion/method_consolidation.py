@@ -127,7 +127,7 @@ def consolidate_document_methods(methods: list[SemanticMethodV1]) -> list[Semant
     for m in methods:
         try:
             vectors.append(_embed_method_row(embedder, m))
-        except Exception:
+        except (TypeError, ValueError, IndexError, AttributeError, RuntimeError):
             vectors.append([0.0] * 384)
 
     n = len(methods)

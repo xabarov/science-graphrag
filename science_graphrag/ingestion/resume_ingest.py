@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import httpx
 from sqlalchemy.orm import Session
 from tenacity import Retrying, stop_after_attempt, wait_exponential
 
@@ -77,14 +79,14 @@ def _resume_failure_retryable(exc: BaseException) -> bool:
 def _persist_resume_stage_failure(
     *,
     ckpt,
-    stage: IngestStage,
+    failed_stage: IngestStage,
     exc: BaseException,
     row: DocumentRecord,
     ingest_run: IngestionRunRecord,
     session: Session,
 ) -> None:
     retryable = _resume_failure_retryable(exc)
-    mark_stage_failed(ckpt, stage, error=str(exc), retryable=retryable)
+    mark_stage_failed(ckpt, failed_stage, error=str(exc), retryable=retryable)
     row.ingest_checkpoint_json = serialize_checkpoint(ckpt)
     ingest_run.status = "failed_retryable" if retryable else "failed_terminal"
     ingest_run.error_message = str(exc)[:8000]
@@ -244,7 +246,17 @@ def _run_resume_resolve_references(
                     if oa:
                         oa_raw = oa
                         draft = merge_draft_prefer_enriched(draft, draft_from_openalex(oa))
-                except Exception as exc:  # noqa: BLE001
+                except (
+                    httpx.HTTPError,
+                    json.JSONDecodeError,
+                    ValueError,
+                    TypeError,
+                    KeyError,
+                    AttributeError,
+                    RuntimeError,
+                    TimeoutError,
+                    OSError,
+                ) as exc:
                     log.warning(
                         "resume references: OpenAlex enrichment failed doi=%s: %s", draft.doi, exc
                     )
@@ -347,7 +359,17 @@ def _run_resume_extract_claims(
                     embedding_model=embedding_model,
                     workspace_ids=ingest_workspace_ids,
                 )
-            except Exception as exc:  # noqa: BLE001
+            except (
+                EmbeddingCallError,
+                EmbeddingNonRetryableHttpError,
+                httpx.HTTPError,
+                OSError,
+                RuntimeError,
+                ValueError,
+                TypeError,
+                KeyError,
+                AttributeError,
+            ) as exc:
                 log.warning(
                     (
                         "resume claims: failed to refresh claim vectors in Qdrant "
@@ -418,7 +440,7 @@ def resume_document_ingest_stages(
                 except Exception as stage_exc:
                     _persist_resume_stage_failure(
                         ckpt=ckpt,
-                        stage=IngestStage.RESOLVE_REFERENCES,
+                        failed_stage=IngestStage.RESOLVE_REFERENCES,
                         exc=stage_exc,
                         row=row,
                         ingest_run=ingest_run,
@@ -442,7 +464,7 @@ def resume_document_ingest_stages(
                 except Exception as stage_exc:
                     _persist_resume_stage_failure(
                         ckpt=ckpt,
-                        stage=IngestStage.EXTRACT_CLAIMS,
+                        failed_stage=IngestStage.EXTRACT_CLAIMS,
                         exc=stage_exc,
                         row=row,
                         ingest_run=ingest_run,

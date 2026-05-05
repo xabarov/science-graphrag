@@ -1,11 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
 import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import Typography from "@mui/material/Typography";
 
 import { CursorIconAction } from "../../common/index.js";
@@ -34,8 +32,6 @@ export default function ChatHistoryTurn({
   onOpenMetadata,
   onConfirmDelete,
 }) {
-  const [moreAnchor, setMoreAnchor] = useState(null);
-
   return (
     <Box
       sx={{
@@ -97,7 +93,7 @@ export default function ChatHistoryTurn({
               )}
             </AgentAssistantTurnShell>
           )}
-          <Box className="turn-actions" sx={{ mt: 0.6, display: "flex", alignItems: "center", gap: 0.35 }}>
+          <Box className="turn-actions" sx={{ mt: 0.6, display: "flex", alignItems: "center", gap: 0.35, flexWrap: "wrap" }}>
             <CursorIconAction
               type="button"
               disabled={restartDisabled}
@@ -115,54 +111,23 @@ export default function ChatHistoryTurn({
             >
               <ContentCopyOutlinedIcon sx={{ fontSize: "1rem" }} />
             </CursorIconAction>
-            <IconButton
+            <CursorIconAction
               type="button"
-              size="small"
-              aria-label={t("chat.thread.actions.moreTurnActionsAria")}
-              aria-haspopup="true"
-              aria-expanded={Boolean(moreAnchor)}
-              title={t("chat.thread.actions.moreTurnActionsAria")}
-              onClick={(e) => setMoreAnchor(e.currentTarget)}
-              sx={{
-                color: tk.text.muted,
-                p: 0.35,
-                "&:hover": { backgroundColor: tk.control.navItemHoverBg },
-              }}
+              aria-label={t("chat.thread.actions.metadataAria")}
+              title={t("chat.thread.actions.metadataAria")}
+              onClick={() => void onOpenMetadata?.(entry)}
             >
-              <MoreVertOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-            </IconButton>
-            <Menu
-              anchorEl={moreAnchor}
-              open={Boolean(moreAnchor)}
-              onClose={() => setMoreAnchor(null)}
-              slotProps={{
-                paper: {
-                  sx: {
-                    backgroundColor: tk.surface.panel,
-                    border: `1px solid ${tk.border.default}`,
-                    borderRadius: "6px",
-                  },
-                },
-              }}
+              <InfoOutlinedIcon sx={{ fontSize: "1rem" }} />
+            </CursorIconAction>
+            <CursorIconAction
+              type="button"
+              disabled={deleteDisabled}
+              aria-label={t("chat.thread.actions.deleteAria")}
+              title={t("chat.thread.actions.deleteAria")}
+              onClick={() => void onConfirmDelete?.(entry.id)}
             >
-              <MenuItem
-                onClick={() => {
-                  setMoreAnchor(null);
-                  onOpenMetadata(entry);
-                }}
-              >
-                {t("chat.thread.actions.menuMetadata")}
-              </MenuItem>
-              <MenuItem
-                disabled={deleteDisabled}
-                onClick={() => {
-                  setMoreAnchor(null);
-                  void onConfirmDelete(entry.id);
-                }}
-              >
-                {t("chat.thread.actions.menuDelete")}
-              </MenuItem>
-            </Menu>
+              <DeleteOutlineOutlinedIcon sx={{ fontSize: "1rem" }} />
+            </CursorIconAction>
           </Box>
         </Box>
       </Box>

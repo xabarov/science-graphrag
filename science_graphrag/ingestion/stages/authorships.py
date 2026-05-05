@@ -112,7 +112,7 @@ def extract_authorships(text: str) -> list[AuthorshipDraft]:
         markers = match.group("markers") if match else ""
         name = _strip_markers(match.group("base") if match else part)
         words = [w for w in name.split() if w]
-        if not (2 <= len(words) <= 5):
+        if not 2 <= len(words) <= 5:
             continue
         if any(hint in lower for hint in _AFFILIATION_HINTS):
             continue

@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any
 
+import httpx
+
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.cache_policy import read_cached_markdown
+from science_graphrag.ingestion.llm.raw_openai_transport import ChatCompletionsNonJsonResponseError
 from science_graphrag.ingestion.pdf import extract_text_from_pdf
-from science_graphrag.ingestion.vl_pdf import VLPDFProcessor
+from science_graphrag.ingestion.vl_pdf import VLAPIError, VLPDFProcessor
 from science_graphrag.observability.phoenix_tracer import chain_span
 from science_graphrag.utils.project_logging import get_logger
 
@@ -60,7 +64,17 @@ def markdown_from_path(
                     "vl_batch_count": processor.last_batch_count,
                 }
                 return markdown, "vl", vl_stats
-            except Exception as exc:  # noqa: BLE001
+            except (
+                VLAPIError,
+                ValueError,
+                ChatCompletionsNonJsonResponseError,
+                httpx.HTTPError,
+                OSError,
+                RuntimeError,
+                TypeError,
+                KeyError,
+                json.JSONDecodeError,
+            ) as exc:
                 fb_type = getattr(exc, "__class__", type(exc)).__name__
                 msg = str(exc)
                 logger.warning(
@@ -80,7 +94,7 @@ def markdown_from_path(
                 if on_vl_page_progress is not None:
                     try:
                         on_vl_page_progress(1, 1)
-                    except Exception:  # noqa: BLE001
+                    except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
                         pass
                 return md, "pypdf-fallback", fb
 
@@ -88,6 +102,6 @@ def markdown_from_path(
         if on_vl_page_progress is not None:
             try:
                 on_vl_page_progress(1, 1)
-            except Exception:  # noqa: BLE001
+            except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
                 pass
         return md, "pypdf-fallback", {}

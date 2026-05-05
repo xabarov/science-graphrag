@@ -327,7 +327,8 @@ def chunk_document_for_retrieval(
 
     ``engine``:
     - ``legacy``: paragraph packing with ``overlap_tokens`` tail overlap.
-    - ``chonkie_recursive``: Chonkie RecursiveChunker per section; ``overlap_tokens`` ignored for now.
+    - ``chonkie_recursive``: Chonkie RecursiveChunker per section;
+      ``overlap_tokens`` ignored for now.
     """
     if not text.strip():
         return []
@@ -381,7 +382,10 @@ def chunk_document_for_retrieval(
     return all_chunks
 
 
-def chunk_document_for_retrieval_from_settings(text: str, settings: "Settings") -> list[DocumentChunk]:
+def chunk_document_for_retrieval_from_settings(
+    text: str,
+    settings: "Settings",
+) -> list[DocumentChunk]:
     """Chunk normalized markdown using ``settings`` chunking fields (single entry for ingest)."""
     return chunk_document_for_retrieval(
         text,

@@ -124,11 +124,9 @@ describe("ChatMessageThread", () => {
     expect(onRestartFromTurn).toHaveBeenCalledWith("t1");
     fireEvent.click(btnByAria("chat.thread.actions.copyAria"));
     expect(onCopyAssistantEntry).toHaveBeenCalled();
-    fireEvent.click(btnByAria("chat.thread.actions.moreTurnActionsAria"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "chat.thread.actions.menuMetadata" }));
+    fireEvent.click(btnByAria("chat.thread.actions.metadataAria"));
     expect(screen.getByText("chat.thread.meta.title")).toBeTruthy();
-    fireEvent.click(btnByAria("chat.thread.actions.moreTurnActionsAria"));
-    fireEvent.click(screen.getByRole("menuitem", { name: "chat.thread.actions.menuDelete" }));
+    fireEvent.click(btnByAria("chat.thread.actions.deleteAria"));
     expect(await screen.findByText("chat.thread.deleteTurnDialogTitle")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "chat.sidebar.deleteConfirmButton" }));
     await waitFor(() => {

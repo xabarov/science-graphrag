@@ -206,8 +206,12 @@ export function CitationBodyExpandable({
               flexWrap: "wrap",
               alignItems: "center",
               gap: 0.35,
+              flexBasis: { xs: "100%", sm: "auto" },
+              width: { xs: "100%", sm: "auto" },
+              justifyContent: { xs: "flex-end", sm: "flex-start" },
               pl: { xs: 0, sm: 1 },
               ml: { xs: 0, sm: "auto" },
+              mt: { xs: 0.25, sm: 0 },
               borderLeft: { xs: "none", sm: `1px solid ${tk.border.default}` },
             }}
             data-testid="citation-trailing-actions"

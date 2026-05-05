@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import re
 import unicodedata
 import uuid
 from typing import Any
 
+import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from science_graphrag.config import Settings
@@ -150,7 +152,17 @@ def persist_reference_citation(
             oa = fetch_work_by_doi(doi, settings.openalex_mailto)
             if oa:
                 openalex_id = oa.get("id") if isinstance(oa, dict) else None
-        except Exception as exc:  # noqa: BLE001
+        except (
+            httpx.HTTPError,
+            json.JSONDecodeError,
+            ValueError,
+            TypeError,
+            KeyError,
+            AttributeError,
+            RuntimeError,
+            TimeoutError,
+            OSError,
+        ) as exc:
             log.warning(
                 "OpenAlex fetch_work_by_doi failed (continuing without openalex_id): doi=%s err=%s",
                 doi,

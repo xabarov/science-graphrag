@@ -54,4 +54,9 @@ describe("MarkdownViewCore", () => {
     expect(html).toContain("<strong");
     expect(html).not.toContain("<pre>");
   });
+
+  it("renders same-page citation anchors for Ask (#ask-citation-N)", () => {
+    const html = renderMarkdown("See [1](#ask-citation-1) for details.");
+    expect(html).toContain('href="#ask-citation-1"');
+  });
 });

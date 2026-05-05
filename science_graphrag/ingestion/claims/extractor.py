@@ -329,7 +329,7 @@ def extract_claims_llm(  # pylint: disable=too-many-locals,too-many-branches,too
             if on_batch_progress is not None:
                 try:
                     on_batch_progress(idx, len(chunk_batches))
-                except Exception:  # noqa: BLE001
+                except Exception:  # pylint: disable=broad-exception-caught  # optional progress callback
                     pass
         if diagnostics is not None:
             diagnostics.raw_claims_from_llm = len(parsed_claim_rows)

@@ -204,6 +204,7 @@ export function AskAnswerPanel({
                 },
               }}
             >
+              {/* Markdown links `[n](#ask-citation-n)` resolve to citation blocks (`id=ask-citation-n`) below. */}
               <MarkdownView markdown={answerText} data-testid="ask-answer-markdown" />
             </Box>
           ) : (
@@ -231,6 +232,7 @@ export function AskAnswerPanel({
               },
             }}
           >
+            {/* Markdown links `[n](#ask-citation-n)` resolve to citation blocks (`id=ask-citation-n`) below. */}
             <MarkdownView markdown={answerText} data-testid="ask-answer-markdown" />
           </Box>
         </>

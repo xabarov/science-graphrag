@@ -5,11 +5,14 @@ from __future__ import annotations
 from contextlib import nullcontext
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import json
 from pathlib import Path
 from typing import Any, Callable
 
+import httpx
 from opentelemetry import trace as trace_api
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from science_graphrag.dedup.entity_ingest_conflict_check import (
@@ -19,7 +22,7 @@ from science_graphrag.dedup.ingest_conflict_check import (
     enqueue_author_near_duplicate_conflicts_on_ingest,
     enqueue_work_near_duplicate_conflicts_on_ingest,
 )
-from science_graphrag.domain.models import ReferenceDraft, WorkDraft
+from science_graphrag.domain.models import ReferenceDraft
 from science_graphrag.embeddings import resolve_embedding_model_label
 from science_graphrag.embeddings.errors import EmbeddingCallError, EmbeddingNonRetryableHttpError
 from science_graphrag.ingestion.artifact_layout import canonical_normalized_md_rel
@@ -34,7 +37,6 @@ from science_graphrag.ingestion.chunking import (
     chunk_document_for_retrieval_from_settings,
     dedupe_chunks_for_embedding,
 )
-from science_graphrag.ingestion.claims_phase import run_extract_claims_stage
 from science_graphrag.ingestion.dedup import normalize_doi
 from science_graphrag.ingestion.document_slices import (
     build_references_scope_text,
@@ -305,7 +307,17 @@ def run_document_orchestration(
                             set_span_attributes({"openalex.found": True})
                         else:
                             set_span_attributes({"openalex.found": False})
-                    except Exception as exc:  # noqa: BLE001
+                    except (
+                        httpx.HTTPError,
+                        json.JSONDecodeError,
+                        ValueError,
+                        TypeError,
+                        KeyError,
+                        AttributeError,
+                        RuntimeError,
+                        TimeoutError,
+                        OSError,
+                    ) as exc:
                         set_span_attributes({"openalex.found": False})
                         deps.logger.warning(
                             "OpenAlex enrichment failed for doi=%s: %s", draft.doi, exc
@@ -352,7 +364,16 @@ def run_document_orchestration(
                             authorships=authorships,
                         )
                         st.metric("ingest_dedup_conflicts_enqueued", n_dedup)
-                    except Exception as exc:  # noqa: BLE001
+                    except (
+                        SQLAlchemyError,
+                        httpx.HTTPError,
+                        OSError,
+                        RuntimeError,
+                        ValueError,
+                        TypeError,
+                        KeyError,
+                        AttributeError,
+                    ) as exc:
                         deps.logger.warning("ingest_dedup_conflict_check_failed: %s", exc)
                 deps.retry_call(
                     neo.upsert_work_layer1,
@@ -372,7 +393,16 @@ def run_document_orchestration(
                             new_work_id=work_id,
                         )
                         st.metric("ingest_author_dedup_conflicts_enqueued", n_author_dedup)
-                    except Exception as exc:  # noqa: BLE001
+                    except (
+                        SQLAlchemyError,
+                        httpx.HTTPError,
+                        OSError,
+                        RuntimeError,
+                        ValueError,
+                        TypeError,
+                        KeyError,
+                        AttributeError,
+                    ) as exc:
                         deps.logger.warning("ingest_author_dedup_conflict_check_failed: %s", exc)
                     try:
                         enqueue_entity_near_duplicate_conflicts_on_ingest(
@@ -382,7 +412,16 @@ def run_document_orchestration(
                             new_work_id=work_id,
                             settings=settings,
                         )
-                    except Exception as exc:  # noqa: BLE001
+                    except (
+                        SQLAlchemyError,
+                        httpx.HTTPError,
+                        OSError,
+                        RuntimeError,
+                        ValueError,
+                        TypeError,
+                        KeyError,
+                        AttributeError,
+                    ) as exc:
                         deps.logger.warning("ingest_entity_dedup_conflict_check_failed: %s", exc)
 
             with stage(

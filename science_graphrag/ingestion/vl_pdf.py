@@ -112,7 +112,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         try:
             msg = data["choices"][0]["message"]
             content = msg["content"]
-        except Exception as exc:  # noqa: BLE001
+        except (KeyError, IndexError, TypeError) as exc:
             raise VLAPIError(f"unexpected VL response shape: keys={list(data.keys())}") from exc
 
         if isinstance(content, str):
@@ -123,7 +123,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
                     inner = json.loads(candidate)
                     msg2 = inner["choices"][0]["message"]
                     content = msg2["content"]
-                except Exception:  # noqa: BLE001
+                except (json.JSONDecodeError, KeyError, IndexError, TypeError, ValueError):
                     pass
 
         if isinstance(content, list):
@@ -176,7 +176,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         if on_batches_ready is not None:
             try:
                 on_batches_ready(len(batches), len(all_pages), int(batch_size))
-            except Exception:  # noqa: BLE001
+            except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
                 pass
 
         parts: list[str] = []
@@ -208,7 +208,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
                 if on_page_progress is not None:
                     try:
                         on_page_progress(pages_done_before, len(all_pages))
-                    except Exception:  # noqa: BLE001
+                    except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
                         pass
                 markdown_part, usage = self._call_vl_api(batch, prompt)
                 parts.append(markdown_part)
@@ -219,7 +219,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
                     done_pages = sum(len(batches[j]) for j in range(batch_idx + 1))
                     try:
                         on_page_progress(done_pages, len(all_pages))
-                    except Exception:  # noqa: BLE001
+                    except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
                         pass
 
             markdown = "\n\n".join(parts)
