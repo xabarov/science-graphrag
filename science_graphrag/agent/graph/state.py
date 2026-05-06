@@ -12,6 +12,16 @@ from langgraph.graph.message import add_messages
 from science_graphrag.config import Settings, get_settings
 
 
+def resolve_runtime_attribution(agent_runtime: str) -> tuple[str, str]:
+    """Return stable run attribution pair used by SSE/trace artifacts."""
+    rt = str(agent_runtime or "").strip()
+    if rt in {"retrieval_v1", "langgraph_research_v1"}:
+        return "single_agent_research", "single_agent_react"
+    if rt == "langgraph_supervisor_v1":
+        return "supervisor_specialists", "supervisor_graph"
+    return "supervisor_specialists", "supervisor_graph"
+
+
 class AgentState(TypedDict):
     messages: Annotated[list[BaseMessage], add_messages]
     workspace_id: str | None
@@ -89,8 +99,11 @@ def build_initial_agent_state(
         from science_graphrag.agent.prompts.research_chat_system import RESEARCH_CHAT_SYSTEM_PROMPT
 
         _deadline_s = float(st.agent_step_timeout_seconds)
+        run_kind, graph_id = resolve_runtime_attribution(agent_runtime)
         meta = {
             "agent_runtime": agent_runtime,
+            "run_kind": run_kind,
+            "graph_id": graph_id,
             "agent_max_tool_calls": int(max_tool_calls),
             "raw_user_question": question,
             "turn_policy": {
@@ -113,6 +126,8 @@ def build_initial_agent_state(
             {
                 "type": "intent_classified",
                 "source": "single_agent_research_v1",
+                "run_kind": run_kind,
+                "graph_id": graph_id,
                 "conversation_intent": "research_task",
                 "tool_policy": "allow_tools",
                 "route_hint": "retrieval_agent",
@@ -155,8 +170,11 @@ def build_initial_agent_state(
         settings=st,
     )
     coordinator_ms = int((perf_counter() - _t0) * 1000)
+    run_kind, graph_id = resolve_runtime_attribution(agent_runtime)
     meta = {
         "agent_runtime": agent_runtime,
+        "run_kind": run_kind,
+        "graph_id": graph_id,
         "agent_max_tool_calls": int(max_tool_calls),
         "raw_user_question": question,
         "turn_policy": turn_policy.to_dict(),

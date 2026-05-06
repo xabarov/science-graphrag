@@ -3,13 +3,26 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, TypedDict
 
 from langchain_core.messages import AIMessage, ToolMessage
 
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.trace import ToolCallTrace
+
+
+class ToolExecutionStep(TypedDict):
+    """Canonical typed step for one tool invocation and its paired result."""
+
+    step: int
+    tool: str
+    tool_call_id: str | None
+    args_summary: dict[str, str]
+    row_count: int | None
+    duration_ms: int
+    truncated: bool
+    error: str | None
 
 
 def _tool_result_payload(content: Any) -> tuple[dict[str, Any], str | None]:
@@ -33,9 +46,9 @@ def _tool_result_payload(content: Any) -> tuple[dict[str, Any], str | None]:
     return {}, None
 
 
-def _collect_from_messages(messages: list[Any]) -> list[ToolCallTrace]:
-    """Extract ToolCallTrace entries from LangGraph message sequence."""
-    traces: list[ToolCallTrace] = []
+def collect_tool_execution_steps(messages: list[Any]) -> list[ToolExecutionStep]:
+    """Extract canonical execution steps from LangGraph message sequence."""
+    steps: list[ToolExecutionStep] = []
     step = 1
     for idx, msg in enumerate(messages):
         if not isinstance(msg, AIMessage) or not msg.tool_calls:
@@ -59,24 +72,39 @@ def _collect_from_messages(messages: list[Any]) -> list[ToolCallTrace]:
                 row_count = int(row_count_value) if isinstance(row_count_value, int) else None
             args = tool_call.get("args")
             args_dict = args if isinstance(args, dict) else {}
-            traces.append(
-                ToolCallTrace(
-                    step=step,
-                    tool=normalize_tool_call_name(str(tool_call.get("name") or "")),
-                    args_summary={key: str(value)[:200] for key, value in args_dict.items()},
-                    row_count=row_count,
-                    duration_ms=0,
-                    truncated=bool(payload.get("truncated", False)),
-                    error=error,
-                )
+            steps.append(
+                {
+                    "step": step,
+                    "tool": normalize_tool_call_name(str(tool_call.get("name") or "")),
+                    "tool_call_id": (
+                        str(tool_call.get("id") or "") if tool_call.get("id") is not None else None
+                    ),
+                    "args_summary": {key: str(value)[:200] for key, value in args_dict.items()},
+                    "row_count": row_count,
+                    "duration_ms": 0,
+                    "truncated": bool(payload.get("truncated", False)),
+                    "error": error,
+                }
             )
             step += 1
-    return traces
+    return steps
 
 
 def collect_tool_trace(state: AgentState) -> list[ToolCallTrace]:
     """Collect ToolCallTrace entries from messages and routing log."""
-    traces = _collect_from_messages(list(state.get("messages") or []))
+    exec_steps = collect_tool_execution_steps(list(state.get("messages") or []))
+    traces = [
+        ToolCallTrace(
+            step=s["step"],
+            tool=s["tool"],
+            args_summary=s["args_summary"],
+            row_count=s["row_count"],
+            duration_ms=s["duration_ms"],
+            truncated=s["truncated"],
+            error=s["error"],
+        )
+        for s in exec_steps
+    ]
     for entry in reversed(list(state.get("routing_log") or [])):
         traces.insert(
             0,

@@ -107,13 +107,14 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Remaining:** расширение сценариев resume (другие стадии / edge cases), если всплывут в эксплуатации; статус PARTIAL сохранён из‑за ширины исходного scope (CLI + Neo4j + checkpoint).
 - **Raised:** 2026-04-27 (stage-safe ingest follow-up)
 
-### [OPEN] Work dedup hygiene — drift detection after ingest
+### [DONE] Work dedup hygiene — drift detection after ingest
 - **Area:** `science_graphrag/cli/main.py` (`merge-work`, `repoint-qdrant-work-ids`), ingest pipeline, optional nightly job
 - **Issue:** Title-level duplicate `Work` nodes can reappear after bulk ingest; manual merge was required for BT2 (`scripts/merge_duplicate_works_by_title.py` + audit JSON under `eval/results/`).
 - **Proposal:** Post-ingest Cypher report (dup titles) + WARN metric or CI step when `size(ws)>1` for canonical pilot titles; link runbook from `docs/runbooks/benchmark-decision-gate.md`.
 - **Acceptance:** Documented operator path + either automated alert or weekly scheduled report with non-zero exit when new dup clusters appear.
 - **Done (wave 2026-05-06, документация):** операторский отчёт и команда — [`docs/runbooks/benchmark-decision-gate.md`](../runbooks/benchmark-decision-gate.md) §12 (`science-graphrag work-dedup-report`).
-- **Remaining:** автоматический WARN в CI или weekly job с ненулевым exit при новых кластерах дубликатов (приёмка не закрыта).
+- **Done (wave 2026-05-06, CI):** nightly workflow [`.github/workflows/integration-nightly.yml`](../../.github/workflows/integration-nightly.yml) запускает `science-graphrag work-dedup-report --json --fail-on-clusters` и падает при новых кластерах; артефакт выгружается как `eval/results/ci-work-dedup-report.json`.
+- **Remaining:** при необходимости добавить отдельный lightweight scheduled job только для dedup (без полного integration набора), если цикл интеграции станет слишком тяжёлым.
 - **Raised:** 2026-04-26 (Wave 6 benchmarks roadmap)
 
 ### [OPEN] Split benchmark artifact storage: canonical vs runtime diagnostics
@@ -168,12 +169,14 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** BT6 mini / `corpus_ssd_v2` (or `claims_paraphrase_bt6_mini` tier) reaches **≥ 0.55** `claim_recall` on `mistralai/mistral-small-3.2-24b-instruct` with `--extractor production`; distracted lane completes without LLM JSON truncation under the same provider settings used in CI smoke.
 - **Raised:** 2026-04-26 (post P0 quote tolerance).
 
-### [OPEN] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
+### [PARTIAL] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
 - **Progress (2026-04-26):** вынесены дефолтные пути артефактов в [`scripts/benchmark_aggregator/paths.py`](../../scripts/benchmark_aggregator/paths.py); основной файл импортирует их через `sys.path` к `scripts/`. Далее — `_summarize_*` / `_md_*` / family modules.
 - **Area:** `scripts/aggregate_benchmark_metrics.py` (~1100 lines after Wave 3 BT4/BT5 additions).
 - **Issue:** Summarizers (`_summarize_*`), markdown render (`_md_*`), CLI `main()`, family logic all live in one file; hard to review and parallel-edit with BT2–BT12 aggregator deltas. File grows with each wave.
 - **Proposal:** Extract modules: `scripts/benchmark_aggregator/summarizers.py` (`_summarize_*`), `scripts/benchmark_aggregator/markdown.py` (`_md_*` + `_render_markdown`), `scripts/benchmark_aggregator/family_retrieval.py` (retrieval family assembly), `scripts/benchmark_aggregator/family_claims.py` (claims/refs/concept). Keep thin CLI in `aggregate_benchmark_metrics.py` (≤ 250 LoC). Trust/decision glue stays in `science_graphrag/benchmarks/`.
 - **Acceptance:** `aggregate_benchmark_metrics.py` ≤ 250 LoC; `python scripts/aggregate_benchmark_metrics.py` unchanged CLI contract; pytest benchmarks + aggregate smoke pass; no file in `scripts/benchmark_aggregator/` exceeds ~400 LoC.
+- **Done (wave 2026-05-06, deep split):** вынесены `scripts/benchmark_aggregator/summarizers.py` (все `summarize_*`/compare/family trust helpers) и `scripts/benchmark_aggregator/markdown.py` (`render_markdown` + markdown sections); `aggregate_benchmark_metrics.py` переведён на thin orchestration + imports; `python scripts/aggregate_benchmark_metrics.py` и `tests/benchmarks/test_trust_baseline_regression.py` зелёные.
+- **Remaining:** довести `aggregate_benchmark_metrics.py` до целевого ≤250 LoC (сейчас ~456) через вынос сборки payload/family map в отдельный builder-модуль.
 - **Raised:** 2026-04-26 (post-BT1); updated 2026-04-26 (post-Wave 3, now ~1100 LoC).
 
 ### [OPEN] Migrate dual_validate extractors to instructor (Phase 7 task)
@@ -286,12 +289,14 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** orchestrator file <= 180 lines, prompt/schema logic isolated, and unit tests target each submodule independently.
 - **Raised:** 2026-04-25
 
-### [OPEN] Split benchmark backend hubs: `api/benchmark.py` (1249) + `api/task_store.py` (593)
+### [PARTIAL] Split benchmark backend hubs: `api/benchmark.py` (1249) + `api/task_store.py` (593)
 - **Area:** `science_graphrag/api/benchmark.py`, `science_graphrag/api/task_store.py`, `science_graphrag/api/benchmark_profiles.py`
 - **Issue:** `task_store.py` частично разгружен (persistence вынесен в `science_graphrag/storage/benchmark_run_persistence.py`, сериализация — в `science_graphrag/api/task_benchmark_serializers.py`), но `benchmark.py` остаётся главным god-router (fixture catalog + case detail + compare + graph preview + eval integration) и продолжает расти. Глубина seam'ов низкая: добавление нового benchmark family всё ещё требует правок в центральном роутере.
 - **Proposal:** зафиксировать новый target split: (1) `api/benchmark.py` → подпакет `api/benchmark/{router,catalog,case_detail,compare,graph_preview}.py`; (2) `task_store.py` добить до orchestration-only слоя с явными adapter seams к persistence/serialization.
 - **Acceptance:** `api/benchmark.py` как входной router <= 300 LoC; новые benchmark families добавляются через `catalog` adapter без изменения compare/preview модулей; `task_store.py` не содержит JSON snapshot plumbing и не знает layout on-disk артефактов.
 - **Synergy:** **Wave M/P/Q/R/S** в `ontology-benchmarks-roadmap-2026-04-24.md` — каждое семейство не упирается в god-файл.
+- **Done (wave 2026-05-06, phase 0):** общий fixture/path layer вынесен в `science_graphrag/api/benchmark_case_utils.py`; `api/benchmark.py` использует shared helpers вместо локальных `_fixtures_*`/`_tier_*`/`_rel_repo_path`.
+- **Remaining:** основной сплит на `api/benchmark/{router,catalog,case_detail,compare,graph_preview}.py` и финальный orchestration-only `task_store.py`.
 - **Raised:** 2026-04-25, updated 2026-05-05
 
 ### [PARTIAL] Standardize ingestion LLM seams around structured executor
@@ -378,7 +383,8 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Proposal:** Workflow on pull_request / paths filter for `science_graphrag/agent/**`, `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/tool_*`: run live optional job or candidate-only generation + compare to baseline from `main` / artifact.
 - **Acceptance:** CI fails on regression FAIL policies or schema version mismatch (exit 1 / 2); WARN policies documented (`--warn-is-pass` vs strict).
 - **Done (wave 2026-05-06, частично):** PR workflow [`.github/workflows/agent-sse-contract.yml`](../../.github/workflows/agent-sse-contract.yml) — pytest: smoke/parity, product_step manifest coverage, error classification, trace-review schema, OTel stream test (без live LLM).
-- **Remaining:** job с генерацией candidate trace-review + `scripts/live_check/trace_regression_compare.py` против `eval/results/baseline-trace-review.json`; политика FAIL vs WARN в комментарии workflow.
+- **Done (wave 2026-05-06, partial+):** добавлен шаг `trace_regression_compare.py` в `agent-sse-contract.yml` (baseline sanity gate на committed baseline artifact, проверка exit policy/формата).
+- **Remaining:** добавить candidate generation job (не baseline-vs-baseline) и зафиксировать FAIL/WARN policy в workflow comments/docs.
 - **Raised:** 2026-05-05 (Wave 1 trace-review toolkit)
 
 ### [OPEN] Single canonical tool/run audit trail (roadmap §2.1 / §2.2)
@@ -399,6 +405,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Area:** `science_graphrag/agent/graph/react_edges.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
 - **Issue:** After adding ReAct soft-cap and recursion-limit salvage, `react_after_tools_decrement_budget` (~130 lines, 19 branches) and `route_react_chat_to_tools` keep accruing routing cases; `stream_agent_events` is 269+ stmts and pylint flags `R0912/R0915/R0914/R1702`. Score still ≥9.8 but the functions hide multiple concerns (budget bookkeeping, soft-cap detection, debug emission, salvage on deadline + recursion).
 - **Progress (2026-05-06):** вынесен общий OTEL-блок deadline (`deadline_otel.py`); восстановлены span-события для recursion-limit; импорт notes на toplevel — размер/ветвление `stream_agent_events` всё ещё требуют распила по Proposal ниже.
+- **Progress (2026-05-06, follow-up):** soft-cap ветвление вынесено в `agent/graph/react_soft_cap.py` и подключено из `react_edges.py`; recovery-salvage/error-event helper вынесен в `api/agent_v2_modules/recovery.py`, deadline/recursion branches в `stream_lifecycle.py` переведены на общие helper-функции.
 - **Proposal:**
   - Extract soft-cap helpers (`_compute_react_force_finalize`, `_track_react_hops_and_repeats`) from `react_after_tools_decrement_budget` into `science_graphrag/agent/graph/react_soft_cap.py`; keep node thin.
   - Split `stream_agent_events` recovery branches (deadline, recursion-limit) into `_recover_after_deadline` and `_recover_after_recursion_limit` helpers (or move the salvage flow into `agent_v2_modules/recovery.py`); pull update-chunk handling into a per-chunk function.

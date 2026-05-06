@@ -26,6 +26,141 @@ ANSWER_CLASSES = frozenset(
 )
 
 
+def _resolve_answer_class(
+    *,
+    state: AgentState | dict[str, Any],
+    tool_trace: list[ToolCallTrace],
+    answer_class_hint: str | None,
+) -> tuple[str, dict[str, Any], set[str], set[str], str]:
+    """Resolve final answer_class and typed payloads from state/trace + policy hints."""
+    question = _last_user_question(state)
+    meta = state.get("metadata") or {}
+    tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
+    tool_policy = str(tp.get("tool_policy") or "allow_tools")
+    names = {str(t.get("tool") or "") for t in tool_trace if isinstance(t, dict)}
+    names.discard("")
+    _meta_tools = frozenset(
+        {"session_init", "route_to_specialist", "coordinator_gate", "final_answer"}
+    )
+    core_tools = {n for n in names if n and n not in _meta_tools}
+    from_trace = infer_class_from_trace(names)
+
+    if tool_policy in {"no_tools", "clarify"}:
+        suggested = str(tp.get("suggested_answer_class") or "chat")
+        answer_class = suggested if suggested in ANSWER_CLASSES else "chat"
+        typed: dict[str, Any] = {}
+        return answer_class, typed, names, core_tools, tool_policy
+
+    heur = heuristic_answer_class(question, answer_class_hint)
+    if from_trace == "quote_extraction" and not question_suggests_quote_style_intent(question):
+        # ``paper_quote_search`` in the trace is often auxiliary; do not treat the turn as
+        # quote-style when the question does not ask for quotes — avoids ``no_quote_found`` on
+        # architecture comparisons and similar Q&A.
+        answer_class = heur
+    elif from_trace == "quote_extraction" and heur in (
+        "grounded_explanation",
+        "synthesis",
+        "fact_lookup",
+    ):
+        # Same downgrade when heuristic already avoided ``quote_extraction`` despite a hint.
+        answer_class = heur
+    elif from_trace:
+        answer_class = from_trace
+    else:
+        answer_class = heur
+    typed = collect_typed_payloads(state)
+    return answer_class, typed, names, core_tools, tool_policy
+
+
+def _build_product_markers(*, answer: str, core_tools: set[str]) -> tuple[str, list[str]]:
+    answer_stripped = (answer or "").strip()
+    if not answer_stripped:
+        product_path = "empty"
+    elif core_tools:
+        product_path = "tool_assisted"
+    else:
+        product_path = "direct"
+    product_markers: list[str] = []
+    if product_path == "tool_assisted":
+        product_markers.append("answered_with_tools")
+    elif product_path == "direct" and answer_stripped:
+        product_markers.append("answered_directly")
+    return product_path, product_markers
+
+
+def _apply_policy_warnings(
+    *,
+    state: AgentState | dict[str, Any],
+    answer: str,
+    answer_class: str,
+    citations: list[dict[str, Any]],
+    tool_trace: list[ToolCallTrace],
+    names: set[str],
+    typed: dict[str, Any],
+    product_path: str,
+    tool_policy: str,
+    extra_warnings: list[str] | None,
+) -> list[str]:
+    warnings: list[str] = []
+    answer_stripped = (answer or "").strip()
+    if not (state.get("workspace_id") or "").strip():
+        warnings.append("no_workspace")
+    quote_cands = list(typed.get("quote_candidates") or [])
+    _append_evidence_warnings(
+        answer_class=answer_class,
+        citations=citations,
+        tool_names=names,
+        quote_candidates=quote_cands,
+        warnings=warnings,
+        tool_trace=tool_trace,
+    )
+    bib_obj = typed.get("bibliography")
+    if isinstance(bib_obj, dict):
+        for w in bib_obj.get("warnings") or []:
+            if isinstance(w, str) and w.strip() and w not in warnings:
+                warnings.append(w.strip())
+        if bib_obj.get("filtered_work_ids") and "some_work_ids_filtered" not in warnings:
+            warnings.append("some_work_ids_filtered")
+    if not answer_stripped:
+        warnings.append("no_final_answer")
+    last_exec = last_executed_catalog_tool_name(tool_trace)
+    extra_warn_list = list(extra_warnings or []) if extra_warnings else []
+    graph_salvage = "answer_salvaged_from_graph_tool" in extra_warn_list
+    draft_salvage = "answer_salvaged_from_assistant_draft" in extra_warn_list
+    if (
+        tool_policy == "allow_tools"
+        and answer_stripped
+        and last_exec
+        and last_exec != "final_answer"
+        and product_path == "tool_assisted"
+        and not graph_salvage
+        and not draft_salvage
+    ):
+        warnings.append("agent_finished_without_final_answer_tool")
+    if (
+        answer_stripped
+        and not citations
+        and answer_class
+        in (
+            "grounded_explanation",
+            "synthesis",
+            "relation_tracing",
+            "quote_extraction",
+            "ideation",
+        )
+        and product_path == "tool_assisted"
+    ):
+        warnings.append("no_citations")
+    if "weak_evidence" in warnings and "insufficient_evidence" not in warnings:
+        warnings.append("insufficient_evidence")
+    if extra_warnings:
+        for w in extra_warnings:
+            ws = str(w).strip()
+            if ws and ws not in warnings:
+                warnings.append(ws)
+    return warnings
+
+
 def _last_user_question(state: AgentState | dict[str, Any]) -> str:
     from langchain_core.messages import HumanMessage
 
@@ -253,103 +388,22 @@ def build_chat_envelope(
     extra_product_markers: list[str] | None = None,
 ) -> dict[str, Any]:
     """Build optional envelope fields for API v2."""
-    question = _last_user_question(state)
-    meta = state.get("metadata") or {}
-    tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
-    tool_policy = str(tp.get("tool_policy") or "allow_tools")
-    names = {str(t.get("tool") or "") for t in tool_trace if isinstance(t, dict)}
-    names.discard("")
-    _meta_tools = frozenset(
-        {"session_init", "route_to_specialist", "coordinator_gate", "final_answer"}
+    answer_class, typed, names, core_tools, tool_policy = _resolve_answer_class(
+        state=state, tool_trace=tool_trace, answer_class_hint=answer_class_hint
     )
-    core_tools = {n for n in names if n and n not in _meta_tools}
-    from_trace = infer_class_from_trace(names)
-    if tool_policy in {"no_tools", "clarify"}:
-        suggested = str(tp.get("suggested_answer_class") or "chat")
-        answer_class = suggested if suggested in ANSWER_CLASSES else "chat"
-        typed: dict[str, Any] = {}
-    else:
-        heur = heuristic_answer_class(question, answer_class_hint)
-        if from_trace == "quote_extraction" and not question_suggests_quote_style_intent(question):
-            # ``paper_quote_search`` in the trace is often auxiliary; do not treat the turn as
-            # quote-style when the question does not ask for quotes — avoids ``no_quote_found`` on
-            # architecture comparisons and similar Q&A.
-            answer_class = heur
-        elif from_trace == "quote_extraction" and heur in (
-            "grounded_explanation",
-            "synthesis",
-            "fact_lookup",
-        ):
-            # Same downgrade when heuristic already avoided ``quote_extraction`` despite a hint.
-            answer_class = heur
-        elif from_trace:
-            answer_class = from_trace
-        else:
-            answer_class = heur
-        typed = collect_typed_payloads(state)
-    answer_stripped = (answer or "").strip()
-    if not answer_stripped:
-        product_path = "empty"
-    elif core_tools:
-        product_path = "tool_assisted"
-    else:
-        product_path = "direct"
-    product_markers: list[str] = []
-    if product_path == "tool_assisted":
-        product_markers.append("answered_with_tools")
-    elif product_path == "direct" and answer_stripped:
-        product_markers.append("answered_directly")
-    warnings: list[str] = []
-    if not (state.get("workspace_id") or "").strip():
-        warnings.append("no_workspace")
-    quote_cands = list(typed.get("quote_candidates") or [])
-    _append_evidence_warnings(
+    product_path, product_markers = _build_product_markers(answer=answer, core_tools=core_tools)
+    warnings = _apply_policy_warnings(
+        state=state,
+        answer=answer,
         answer_class=answer_class,
         citations=citations,
-        tool_names=names,
-        quote_candidates=quote_cands,
-        warnings=warnings,
         tool_trace=tool_trace,
+        names=names,
+        typed=typed,
+        product_path=product_path,
+        tool_policy=tool_policy,
+        extra_warnings=extra_warnings,
     )
-    bib_obj = typed.get("bibliography")
-    if isinstance(bib_obj, dict):
-        for w in bib_obj.get("warnings") or []:
-            if isinstance(w, str) and w.strip() and w not in warnings:
-                warnings.append(w.strip())
-        if bib_obj.get("filtered_work_ids") and "some_work_ids_filtered" not in warnings:
-            warnings.append("some_work_ids_filtered")
-    if not answer_stripped:
-        warnings.append("no_final_answer")
-    last_exec = last_executed_catalog_tool_name(tool_trace)
-    extra_warn_list = list(extra_warnings or []) if extra_warnings else []
-    graph_salvage = "answer_salvaged_from_graph_tool" in extra_warn_list
-    draft_salvage = "answer_salvaged_from_assistant_draft" in extra_warn_list
-    if (
-        tool_policy == "allow_tools"
-        and answer_stripped
-        and last_exec
-        and last_exec != "final_answer"
-        and product_path == "tool_assisted"
-        and not graph_salvage
-        and not draft_salvage
-    ):
-        warnings.append("agent_finished_without_final_answer_tool")
-    if (
-        answer_stripped
-        and not citations
-        and answer_class
-        in (
-            "grounded_explanation",
-            "synthesis",
-            "relation_tracing",
-            "quote_extraction",
-            "ideation",
-        )
-        and product_path == "tool_assisted"
-    ):
-        warnings.append("no_citations")
-    if "weak_evidence" in warnings and "insufficient_evidence" not in warnings:
-        warnings.append("insufficient_evidence")
     evidence_parts: list[str] = []
     if citations:
         evidence_parts.append(f"{len(citations)} citation(s)")

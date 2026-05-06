@@ -1,0 +1,262 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-06T09:11:58.900412+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": null,
+    "suite": "default",
+    "feature_flags": {
+      "agent_runtime": null,
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "redis",
+          "agent_session_memory_configured": "redis"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 2021,
+        "warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "tools": [
+          "coordinator_gate"
+        ],
+        "answer_class": "grounded_explanation"
+      }
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "thread_id": "live_check_499ba2b512d6",
+        "turn2_warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "turn2_tools": [
+          "coordinator_gate",
+          "session_init"
+        ]
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "tool_search_result",
+          "answer_synthesis_started",
+          "context_compacted",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 6
+      }
+    }
+  ],
+  "trace_timeline": [
+    {
+      "case_id": "catalog_resolution",
+      "thread_id": null,
+      "duration_ms": 8101.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": null,
+        "missing": []
+      },
+      "compaction_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "workspace_stats",
+      "thread_id": null,
+      "duration_ms": 2568.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": null,
+        "missing": []
+      },
+      "compaction_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "grounded_quote",
+      "thread_id": null,
+      "duration_ms": 7757.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": null,
+        "missing": []
+      },
+      "compaction_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    }
+  ],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": 7757.0,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0
+  },
+  "verdict": {
+    "status": "pass",
+    "fail_reasons": [],
+    "warn_reasons": []
+  },
+  "e2e_audit": {
+    "ok": true,
+    "returncode": 0,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "default",
+      "--timeout",
+      "240.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_566komt_.json",
+      "--trace-audit",
+      "--skip-phoenix",
+      "--skip-postgres"
+    ],
+    "stdout_tail": ",\n            \"answer_class\": \"quote_extraction\",\n            \"suggested_answer_class\": \"quote_extraction\"\n          },\n          {\n            \"type\": \"tool_search_result\",\n            \"specialist\": \"single_agent_react\",\n            \"tools\": [\n              \"workspace_inspect\",\n              \"paper_profile\",\n              \"find_works\",\n              \"paper_quote_search\",\n              \"idea_search\",\n              \"final_answer\"\n            ],\n            \"reason\": \"rules\",\n            \"top_score\": 15.5,\n            \"score_band\": 1.35,\n            \"catalog_size\": 10,\n            \"shortlist_size\": 6,\n            \"shortlist_ratio\": 0.6,\n            \"deferred_schema_mode\": null,\n            \"deferred_schema_refs\": null,\n            \"skipped\": false,\n            \"carryover_tools\": null\n          },\n          {\n            \"type\": \"tool_execution\",\n            \"phase\": \"pre_hooks\",\n            \"ok\": true,\n            \"tools\": [\n              \"idea_search\"\n            ]\n          },\n          {\n            \"type\": \"tool_execution\",\n            \"phase\": \"post_hooks\",\n            \"ok\": true,\n            \"elapsed_ms\": 649\n          },\n          {\n            \"type\": \"tool_search_result\",\n            \"specialist\": \"single_agent_react\",\n            \"tools\": [\n              \"workspace_inspect\",\n              \"paper_profile\",\n              \"find_works\",\n              \"paper_quote_search\",\n              \"idea_search\",\n              \"final_answer\"\n            ],\n            \"reason\": \"rules\",\n            \"top_score\": 15.5,\n            \"score_band\": 1.35,\n            \"catalog_size\": 10,\n            \"shortlist_size\": 6,\n            \"shortlist_ratio\": 0.6,\n            \"deferred_schema_mode\": null,\n            \"deferred_schema_refs\": null,\n            \"skipped\": false,\n            \"carryover_tools\": null\n          },\n          {\n            \"type\": \"tool_execution\",\n            \"phase\": \"pre_hooks\",\n            \"ok\": true,\n            \"tools\": [\n              \"paper_quote_search\"\n            ]\n          },\n          {\n            \"type\": \"tool_execution\",\n            \"phase\": \"post_hooks\",\n            \"ok\": true,\n            \"elapsed_ms\": 18\n          },\n          {\n            \"type\": \"tool_search_result\",\n            \"specialist\": \"single_agent_react\",\n            \"tools\": [\n              \"workspace_inspect\",\n              \"paper_profile\",\n              \"find_works\",\n              \"paper_quote_search\",\n              \"idea_search\",\n              \"final_answer\"\n            ],\n            \"reason\": \"rules\",\n            \"top_score\": 15.5,\n            \"score_band\": 1.35,\n            \"catalog_size\": 10,\n            \"shortlist_size\": 6,\n            \"shortlist_ratio\": 0.6,\n            \"deferred_schema_mode\": null,\n            \"deferred_schema_refs\": null,\n            \"skipped\": false,\n            \"carryover_tools\": null\n          },\n          {\n            \"type\": \"tool_execution\",\n            \"phase\": \"pre_hooks\",\n            \"ok\": true,\n            \"tools\": [\n              \"final_answer\"\n            ]\n          },\n          {\n            \"type\": \"tool_execution\",\n            \"phase\": \"post_hooks\",\n            \"ok\": true,\n            \"elapsed_ms\": 5\n          }\n        ]\n      },\n      \"tool_search_shortlist_ratio_avg\": null,\n      \"tool_search_deferred_schema_events\": null,\n      \"budget_stop_reasons\": [],\n      \"answer_class\": \"quote_extraction\",\n      \"citations_count\": 1,\n      \"phoenix_ui_url\": \"http://127.0.0.1:16006/projects/science-graphrag/traces/2e3df0295f6acd4c19814bc5c749e7d0\",\n      \"trace_audit\": {\n        \"tool_counts\": {\n          \"coordinator_gate\": 1,\n          \"final_answer\": 1,\n          \"idea_search\": 1,\n          \"paper_quote_search\": 1\n        },\n        \"consecutive_duplicate_tools\": [],\n        \"tools_called_more_than_once\": {},\n        \"phoenix_sample_llm_agent_react_turn_hits\": 0,\n        \"phoenix_sample_channel_or_route_hits\": 0,\n        \"phoenix_sample_tool_dot_hits\": 0,\n        \"heuristic_issues\": []\n      }\n    }\n  ]\n}\n",
+    "stderr_tail": "note: PHOENIX_TRACE_SCOPE=extraction_llm (agent.* spans still allowed); if Phoenix is empty, check PHOENIX_COLLECTOR_ENDPOINT on the API container.\nwrote full report json: /tmp/e2e_full_report_566komt_.json\n\n--- summary ---\ncatalog_resolution: steps=5 final_answer=True answer_len=348 phoenix_ok=None ok=True\nworkspace_stats: steps=3 final_answer=True answer_len=115 phoenix_ok=None ok=True\ngrounded_quote: steps=4 final_answer=True answer_len=446 phoenix_ok=None ok=True\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_566komt_.json"
+  },
+  "phoenix_snapshot_path": null
+}
