@@ -28,6 +28,8 @@ def _runtime_attribution_from_env() -> tuple[str | None, str | None]:
         return "single_agent_research", "single_agent_react"
     if runtime == "langgraph_supervisor_v1":
         return "supervisor_specialists", "supervisor_graph"
+    if runtime == "langgraph_supervisor_v3":
+        return "supervisor_specialists_v3", "supervisor_graph_v3"
     return None, None
 
 
@@ -37,6 +39,8 @@ def _runtime_attribution_from_runtime_id(runtime_id: Any) -> tuple[str | None, s
         return "single_agent_research", "single_agent_react"
     if rt == "langgraph_supervisor_v1":
         return "supervisor_specialists", "supervisor_graph"
+    if rt == "langgraph_supervisor_v3":
+        return "supervisor_specialists_v3", "supervisor_graph_v3"
     return None, None
 
 
@@ -340,6 +344,11 @@ def main() -> int:
         "--out-md", type=Path, default=_REPO_ROOT / "eval" / "results" / "trace-review.md"
     )
     parser.add_argument("--e2e-json", type=Path, default=None)
+    parser.add_argument(
+        "--with-long-thread-eval",
+        action="store_true",
+        help="Merge offline Epic A3 long-thread prompt-memory metrics into trace-review output.",
+    )
     args = parser.parse_args()
 
     _ensure_local_imports()
@@ -444,6 +453,17 @@ def main() -> int:
     )
 
     review_dict = trace_review_to_dict(review)
+    if args.with_long_thread_eval:
+        from chat_agent.long_thread_eval import (  # pylint: disable=import-outside-toplevel
+            run_offline_long_thread_metrics,
+        )
+
+        lt_blob = run_offline_long_thread_metrics()
+        mcur = dict(review_dict.get("metrics") or {})
+        for k, v in (lt_blob.get("metrics") or {}).items():
+            mcur[k] = v
+        review_dict["metrics"] = mcur
+        review_dict["long_thread_eval"] = lt_blob
     run_kind, graph_id = _runtime_attribution_from_env()
     if report_json_path and report_json_path.exists() and (run_kind is None or graph_id is None):
         try:
@@ -495,6 +515,7 @@ def main() -> int:
             "agent_tool_search_strict_deferred_activation_enabled": os.environ.get(
                 "SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_STRICT_DEFERRED_ACTIVATION_ENABLED"
             ),
+            "long_thread_eval_offline": str(bool(args.with_long_thread_eval)).lower(),
         },
     }
     if phoenix_pull_meta:

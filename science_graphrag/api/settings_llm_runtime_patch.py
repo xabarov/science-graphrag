@@ -6,7 +6,12 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-AgentRuntimeSlug = Literal["langgraph_research_v1", "langgraph_supervisor_v1", "retrieval_v1"]
+AgentRuntimeSlug = Literal[
+    "langgraph_research_v1",
+    "langgraph_supervisor_v1",
+    "langgraph_supervisor_v3",
+    "retrieval_v1",
+]
 
 
 class LlmRuntimeOverridesPatch(BaseModel):

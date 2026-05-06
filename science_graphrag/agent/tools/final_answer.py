@@ -3,6 +3,7 @@ from __future__ import annotations
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field, field_validator
 
+from science_graphrag.agent.subagent_output_contract import maybe_prepend_handoff_warning
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 
@@ -11,9 +12,10 @@ class FinalAnswerTool(BaseAgentTool):
     name = "final_answer"
 
     def run(self, *, answer: str, citations: list[dict] | None = None) -> ToolResult:
+        guarded, _warned = maybe_prepend_handoff_warning(str(answer or ""))
         return ToolResult(
             payload={
-                "answer": str(answer or "").strip(),
+                "answer": str(guarded or "").strip(),
                 "citations": list(citations or []),
             },
             row_count=len(citations or []),

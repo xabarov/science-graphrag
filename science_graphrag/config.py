@@ -507,7 +507,18 @@ class Settings(BaseSettings):
         default="langgraph_research_v1",
         description=(
             "LangGraph agent wiring: ``langgraph_research_v1`` (single-agent ReAct + tools, default), "
-            "``langgraph_supervisor_v1`` (legacy multi-specialist), or ``retrieval_v1`` (legacy non-graph harness)."
+            "``langgraph_supervisor_v1`` (legacy multi-specialist), ``langgraph_supervisor_v3`` "
+            "(v3 subagent observability; same supervisor graph until split), or ``retrieval_v1`` "
+            "(legacy non-graph harness)."
+        ),
+    )
+    agent_max_parallel_subagents: int = Field(
+        default=4,
+        ge=1,
+        le=16,
+        description=(
+            "Hard cap on concurrent explicit ``spawn_subagent`` children per parent turn "
+            "(Train T3 B1). Routing legs remain sequential; this bounds future parallel fan-out."
         ),
     )
     agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
@@ -591,6 +602,61 @@ class Settings(BaseSettings):
             "tools (catalog-first prompt contract, full JSON schemas only for selected tools)."
         ),
     )
+    agent_tool_search_llm_rerank_enabled: bool = Field(
+        default=False,
+        description=(
+            "Epic C1: after rule-based shortlist, optionally call a small JSON-only LLM judge to "
+            "rerank tools within the candidate pool (see tool_selector_hybrid)."
+        ),
+    )
+    agent_tool_search_llm_rerank_max_candidates: int = Field(
+        default=12,
+        ge=4,
+        le=32,
+        description="Max tools passed into the LLM rerank prompt (capped from the rule shortlist).",
+    )
+    agent_tool_search_llm_rerank_timeout_seconds: float = Field(
+        default=8.0,
+        ge=1.0,
+        le=60.0,
+        description="HTTP timeout for the tool-search LLM rerank call.",
+    )
+    agent_tool_search_llm_rerank_max_tokens: int = Field(
+        default=256,
+        ge=64,
+        le=1024,
+        description="max_tokens for the tool-search LLM rerank JSON response.",
+    )
+    agent_tool_search_llm_pre_denylist: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Tool names stripped from the LLM rerank candidate pool before the LLM call "
+            "(defense-in-depth; high-risk tools without discovery/rules path are also excluded)."
+        ),
+    )
+    agent_web_research_tools_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, register ``web_search`` / ``web_fetch`` in the agent tool registry "
+            "(academic host allowlist by default; see tool_manifest + web_research_tools)."
+        ),
+    )
+    agent_doi_resolver_tool_enabled: bool = Field(
+        default=False,
+        description="When true, register ``doi_resolver`` bridge tool (OpenAlex + workspace match).",
+    )
+    agent_web_fetch_max_bytes: int = Field(
+        default=524_288,
+        ge=8_192,
+        le=2_097_152,
+        description="Max response bytes to read for ``web_fetch`` (safety cap).",
+    )
+    agent_web_fetch_cache_ttl_seconds: int = Field(
+        default=600,
+        ge=60,
+        le=3600,
+        description="In-process TTL seconds for ``web_fetch`` URL body cache.",
+    )
     agent_tool_history_compact_enabled: bool = Field(
         default=False,
         description=(
@@ -609,6 +675,52 @@ class Settings(BaseSettings):
         ge=400,
         le=100_000,
         description="Max characters retained per truncated ToolMessage body.",
+    )
+    agent_tool_message_microcompact_time_trigger_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true with agent_tool_history_compact_enabled, clear older ToolMessage bodies "
+            "after a long client idle gap (see tool_message_compact)."
+        ),
+    )
+    agent_tool_message_microcompact_time_gap_minutes: int = Field(
+        default=10,
+        ge=1,
+        le=1440,
+        description="Client idle gap (minutes) that triggers microcompact clearing of old tool rows.",
+    )
+    agent_tool_message_microcompact_keep_last_k_tool_results: int = Field(
+        default=3,
+        ge=1,
+        le=32,
+        description="How many most recent ToolMessage payloads to keep when microcompact triggers.",
+    )
+    agent_writer_verification_output_format_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, writer specialist (normal mode) appends strict Scope/Result/Key sources/VERDICT "
+            "layout instructions to the system prompt (verification-style contract)."
+        ),
+    )
+    agent_post_compact_paper_sources_enabled: bool = Field(
+        default=True,
+        description=(
+            "When true, persist compact paper refs after context_compacted and re-inject on the next "
+            "turn via format_user_with_memory (see post_compact_attachments)."
+        ),
+    )
+    agent_post_compact_paper_sources_max_items: int = Field(
+        default=12,
+        ge=1,
+        le=48,
+        description="Max paper source rows stored for post-compact restore.",
+    )
+    agent_pre_compact_sanitizers_enabled: bool = Field(
+        default=True,
+        description=(
+            "Strip image parts and reinjected attachment blocks from messages/digests before "
+            "compaction-related LLM calls (see message_sanitizers)."
+        ),
     )
     agent_turn_policy_classifier: str = Field(
         default="rules_v0",

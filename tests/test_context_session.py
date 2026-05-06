@@ -2,8 +2,16 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
+from langchain_core.messages import ToolMessage
+
+from science_graphrag.agent.context.post_compact_attachments import (
+    clear_paper_sources_capsule,
+    load_paper_sources_items,
+    persist_post_compact_paper_sources,
+)
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_backend import set_session_memory_backend
 from science_graphrag.agent.context.session_store import (
@@ -14,6 +22,7 @@ from science_graphrag.agent.context.session_store import (
 )
 from science_graphrag.agent.context.turn_digest import build_turn_digest
 from science_graphrag.agent.trace import ToolCallTrace
+from science_graphrag.config import Settings
 
 
 def test_session_store_rolling_summary() -> None:
@@ -144,6 +153,18 @@ def test_format_user_with_memory_includes_workspace_capsule() -> None:
     assert "List papers" in s
 
 
+def test_format_user_with_memory_sanitizes_thread_insight_status() -> None:
+    s = format_user_with_memory(
+        question="q",
+        session_summary="",
+        history_digest=[],
+        thread_insight_text="body",
+        thread_insight_status='fresh" onload="alert(1)',
+    )
+    assert 'status="fresh"' in s
+    assert "onload" not in s
+
+
 def test_workspace_capsule_roundtrip() -> None:
     try:
         tid = "t_capsule_ws"
@@ -216,6 +237,57 @@ def test_format_user_with_memory_includes_discovered_tools_and_away_recap() -> N
     assert "<discovered_tools>" in s
     assert "idea_search" in s
     assert "Next question" in s
+
+
+def test_format_user_with_memory_paper_sources_restored_block() -> None:
+    s = format_user_with_memory(
+        question="main q",
+        session_summary="",
+        history_digest=[],
+        paper_sources_items=[
+            {"work_id": "w-paper", "snippet": "snippet text", "source": "idea_search"},
+        ],
+    )
+    assert "<paper_sources_restored>" in s
+    assert "w-paper" in s
+    assert "snippet text" in s
+    assert "main q" in s
+
+
+def test_persist_post_compact_paper_sources_roundtrip() -> None:
+    try:
+        tid = "t_post_compact_paper"
+        update_session_after_turn(
+            tid,
+            turn_digest={
+                "user_intent": "q",
+                "answer_excerpt": "a",
+                "answer_class": "x",
+                "tools_used": ["idea_search"],
+            },
+        )
+        st = Settings.model_construct(
+            agent_post_compact_paper_sources_enabled=True,
+            agent_post_compact_paper_sources_max_items=12,
+        )
+        msgs = [
+            ToolMessage(
+                content=json.dumps({"items": [{"work_id": "w99", "snippet": "hit"}]}),
+                tool_call_id="tc1",
+                name="idea_search",
+            )
+        ]
+        aud = persist_post_compact_paper_sources(tid, msgs, settings=st)
+        assert aud.get("post_compact_paper_sources_saved") == 1
+        ent = get_session_for_thread(tid)
+        loaded = load_paper_sources_items(ent)
+        assert len(loaded) == 1
+        assert loaded[0].get("work_id") == "w99"
+        clear_paper_sources_capsule(tid)
+        ent2 = get_session_for_thread(tid)
+        assert not load_paper_sources_items(ent2)
+    finally:
+        clear_session_store_for_tests()
 
 
 def test_set_session_memory_backend_custom_protocol() -> None:

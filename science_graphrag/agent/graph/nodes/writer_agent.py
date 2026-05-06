@@ -22,6 +22,7 @@ from science_graphrag.agent.llm.chat import (
     build_chat_model,
     ensure_messages_safe_for_generation,
 )
+from science_graphrag.agent.subagent_output_contract import writer_system_prompt_suffix
 from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
@@ -84,12 +85,15 @@ def _writer_mode_from_state(state: AgentState) -> str:
     return "normal"
 
 
-def _system_prompt_for_mode(mode: str) -> str:
+def _system_prompt_for_mode(mode: str, *, settings: Settings) -> str:
     if mode == "direct":
-        return DIRECT_SYSTEM_PROMPT
-    if mode == "clarify":
-        return CLARIFY_SYSTEM_PROMPT
-    return SYSTEM_PROMPT
+        base = DIRECT_SYSTEM_PROMPT
+    elif mode == "clarify":
+        base = CLARIFY_SYSTEM_PROMPT
+    else:
+        base = SYSTEM_PROMPT
+    suffix = writer_system_prompt_suffix(settings=settings, writer_mode=mode)
+    return f"{base}\n\n{suffix}"
 
 
 def _compile_writer_subgraph(
@@ -99,7 +103,7 @@ def _compile_writer_subgraph(
     mode: str,
     sidechain_tag: str,
 ) -> Any:
-    system_prompt = _system_prompt_for_mode(mode)
+    system_prompt = _system_prompt_for_mode(mode, settings=settings)
     llm = build_chat_model(settings).bind_tools(tools)
 
     def chat_node(state: AgentState) -> dict:

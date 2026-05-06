@@ -41,5 +41,6 @@
 | [025](025-llm-distributed-quota-redis.md) | Phase 5: optional Redis-backed global LLM concurrency quota across workers |
 | [026](026-otlp-logs-defer.md) | OTLP log export: defer; use JSON stderr + optional Prometheus first |
 | [027](027-agent-trace-runtime-attribution.md) | Agent: canonical `agent_runtime` in run_metadata for multi-graph trace attribution |
+| [028](028-agent-runtime-v3-subagents.md) | Agent v3: subagent foundation (HTTP `/v2`, fork-mode default, spawn primitive, observability) |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

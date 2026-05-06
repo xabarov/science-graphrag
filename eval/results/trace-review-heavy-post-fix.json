@@ -1,0 +1,1038 @@
+{
+  "suite": "heavy",
+  "workspace": {
+    "id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+    "name": "Object Detection (clean ingested + claims)",
+    "work_count": 32
+  },
+  "llm": {
+    "chat_model": "qwen/qwen3-235b-a22b-2507"
+  },
+  "postgres_ingest_jobs": {
+    "ingest_jobs_total": 3,
+    "ingest_jobs_completed": 1,
+    "error": null
+  },
+  "cases": [
+    {
+      "case_id": "multi_compare_bibliography",
+      "question": "Compare two detector families in this workspace: (A) works whose titles mention 'YOLO' and (B) works whose titles mention 'Faster R-CNN' or 'Mask R-CNN'. Use find_works with workspace_id for each query. Pick one best match per family, call paper_profile for each work_id, then format_bibliography_gost for exactly those two work_ids. Write a short contrastive paragraph (speed vs accuracy themes) grounded only in tool outputs. Finish with final_answer and citations for both works.",
+      "http_ok": true,
+      "answer_len": 559,
+      "final_answer_reached": true,
+      "tool_names": [
+        "coordinator_gate",
+        "find_works",
+        "find_works",
+        "paper_profile",
+        "paper_profile",
+        "format_bibliography_gost",
+        "final_answer"
+      ],
+      "tool_steps_non_session": 7,
+      "phoenix_trace_id": "7d764390f4089a1e9f8a82023d3fb7e1",
+      "phoenix": {
+        "ok": true,
+        "payload_kind": "span_list",
+        "error": null,
+        "span_name_count": 100,
+        "span_names_sample": [
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "format_bibliography_gost",
+          "tool.format_bibliography_gost",
+          "chat",
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "paper_profile",
+          "tool.paper_profile",
+          "paper_profile",
+          "tool.paper_profile",
+          "chat",
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "find_works",
+          "tool.find_works",
+          "find_works",
+          "tool.find_works",
+          "chat"
+        ]
+      },
+      "notes": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "bibliography_export"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "YOLO",
+            "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+            "limit": "1"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "Faster R-CNN OR Mask R-CNN",
+            "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+            "limit": "1"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "f1a17085-57a3-47ef-872c-9f6f3c8f3d72"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "format_bibliography_gost",
+          "args_summary": {
+            "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+            "work_ids": "['52e5de2a-32ef-4e74-86b1-7fc97c7e2de8', 'f1a17085-57a3-47ef-872c-9f6f3c8f3d72']"
+          },
+          "row_count": 2,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The YOLOX detector, representing the YOLO family, emphasizes speed and efficiency, achieving 68.9 FPS on a Tesla V100 while maintaining competitive accuracy (50.0% AP on COCO). In contrast, Mask R-CNN",
+            "citations": "[{'work_id': '52e5de2a-32ef-4e74-86b1-7fc97c7e2de8', 'title': 'YOLOX: Exceeding YOLO Series in 2021', 'source': 'paper_profile'}, {'work_id': 'f1a17085-57a3-47ef-872c-9f6f3c8f3d72', 'title': 'Mask R-C"
+          },
+          "row_count": 2,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "thread_id": null,
+      "edge_search_zero_row_max_streak": 0,
+      "paper_profile_max_consecutive_same_work_id": 1,
+      "cypher_query_error_count": 0,
+      "duration_ms": 21647,
+      "warnings": [],
+      "run_metadata": {
+        "agent_runtime": "langgraph_research_v1",
+        "agent_max_tool_calls": 12,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "openrouter_reference_pricing_usd_per_1m": {
+          "extraction": {
+            "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+            "prompt_usd_per_1m": 0.075,
+            "completion_usd_per_1m": 0.2
+          }
+        },
+        "usage": {
+          "prompt_tokens": 22684,
+          "completion_tokens": 653,
+          "total_tokens": 23337,
+          "input_tokens": 22684,
+          "output_tokens": 653
+        },
+        "debug_events": [
+          {
+            "type": "intent_classified",
+            "source": "single_agent_research_v1",
+            "conversation_intent": "research_task",
+            "tool_policy": "allow_tools",
+            "route_hint": "retrieval_agent",
+            "reason": "single_agent_research_runtime",
+            "confidence": 1.0,
+            "classifier": "deterministic",
+            "answer_class": "bibliography_export",
+            "suggested_answer_class": "bibliography_export"
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "format_bibliography_gost",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 20.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 7,
+            "shortlist_ratio": 0.7,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "find_works",
+              "find_works"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 20
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "format_bibliography_gost",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 20.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 7,
+            "shortlist_ratio": 0.7,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "paper_profile",
+              "paper_profile"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 17
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "format_bibliography_gost",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 20.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 7,
+            "shortlist_ratio": 0.7,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "format_bibliography_gost"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 40
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "format_bibliography_gost",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 20.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 7,
+            "shortlist_ratio": 0.7,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "final_answer"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 7
+          }
+        ]
+      },
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": null,
+      "budget_stop_reasons": [],
+      "answer_class": "bibliography_export",
+      "citations_count": 2,
+      "phoenix_ui_url": "http://127.0.0.1:16006/projects/science-graphrag/traces/7d764390f4089a1e9f8a82023d3fb7e1"
+    },
+    {
+      "case_id": "graph_ego_methods",
+      "question": "Pick one object-detection paper in this workspace (first call workspace_inspect mode=papers and take one concrete work_id). Then do ONE graph lookup only with edge_search for that work_id (do not run broad cypher). Summarize whether Method or Dataset neighbors are present from returned rows only; if none, state graph coverage gap explicitly. Keep it short and finish with final_answer.",
+      "http_ok": true,
+      "answer_len": 360,
+      "final_answer_reached": true,
+      "tool_names": [
+        "coordinator_gate",
+        "workspace_inspect",
+        "edge_search",
+        "final_answer"
+      ],
+      "tool_steps_non_session": 4,
+      "phoenix_trace_id": "dfad2793003d343a67825ce4e9a1d481",
+      "phoenix": {
+        "ok": true,
+        "payload_kind": "span_list",
+        "error": null,
+        "span_name_count": 100,
+        "span_names_sample": [
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "final_answer",
+          "tool.final_answer",
+          "chat",
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "edge_search",
+          "tool.edge_search",
+          "chat",
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "workspace_inspect",
+          "tool.workspace_inspect",
+          "chat",
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "__start__",
+          "ChannelWrite<start:chat>",
+          "ChannelWrite<...>",
+          "agent.query"
+        ]
+      },
+      "notes": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "relation_tracing"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+            "mode": "papers",
+            "list_limit": "1"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "4c381718-6fc0-48fb-b2c8-8ad550d5c765",
+            "direction": "both",
+            "max_hops": "1"
+          },
+          "row_count": 50,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The paper 'A Theoretical Study on Bridging Internal Probability and Self-Consistency for LLM Reasoning' (work_id: `4c381718-6fc0-48fb-b2c8-8ad550d5c765`) has no Method or Dataset neighbors in its dire",
+            "citations": "[{'work_id': '4c381718-6fc0-48fb-b2c8-8ad550d5c765', 'note': 'Selected paper from workspace'}]"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "thread_id": null,
+      "edge_search_zero_row_max_streak": 0,
+      "paper_profile_max_consecutive_same_work_id": 0,
+      "cypher_query_error_count": 0,
+      "duration_ms": 11659,
+      "warnings": [
+        "graph_only"
+      ],
+      "run_metadata": {
+        "agent_runtime": "langgraph_research_v1",
+        "agent_max_tool_calls": 12,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "openrouter_reference_pricing_usd_per_1m": {
+          "extraction": {
+            "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+            "prompt_usd_per_1m": 0.075,
+            "completion_usd_per_1m": 0.2
+          }
+        },
+        "usage": {
+          "prompt_tokens": 18142,
+          "completion_tokens": 463,
+          "total_tokens": 18605,
+          "input_tokens": 18142,
+          "output_tokens": 463
+        },
+        "debug_events": [
+          {
+            "type": "intent_classified",
+            "source": "single_agent_research_v1",
+            "conversation_intent": "research_task",
+            "tool_policy": "allow_tools",
+            "route_hint": "retrieval_agent",
+            "reason": "single_agent_research_runtime",
+            "confidence": 1.0,
+            "classifier": "deterministic",
+            "answer_class": "relation_tracing",
+            "suggested_answer_class": "relation_tracing"
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "cypher_query",
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 14.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 7,
+            "shortlist_ratio": 0.7,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "workspace_inspect"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 20
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "cypher_query",
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 14.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 7,
+            "shortlist_ratio": 0.7,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "edge_search"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 11
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "cypher_query",
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 14.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 7,
+            "shortlist_ratio": 0.7,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "final_answer"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 5
+          }
+        ]
+      },
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": null,
+      "budget_stop_reasons": [],
+      "answer_class": "relation_tracing",
+      "citations_count": 1,
+      "phoenix_ui_url": "http://127.0.0.1:16006/projects/science-graphrag/traces/dfad2793003d343a67825ce4e9a1d481"
+    },
+    {
+      "case_id": "multi_evidence_speed_accuracy",
+      "question": "What trade-offs between speed and accuracy for real-time object detection does this workspace support with evidence? Use at least two distinct retrieval paths among idea_search, paper_quote_search, and workspace_inspect (blurb or papers). Cite at least two different work_ids from tool outputs. If evidence is thin, state coverage gaps explicitly. Finish with final_answer.",
+      "http_ok": true,
+      "answer_len": 1496,
+      "final_answer_reached": true,
+      "tool_names": [
+        "coordinator_gate",
+        "workspace_inspect",
+        "idea_search",
+        "paper_quote_search",
+        "paper_profile",
+        "paper_profile",
+        "final_answer"
+      ],
+      "tool_steps_non_session": 7,
+      "phoenix_trace_id": "9d90b067191690c489954a175e02ed7f",
+      "phoenix": {
+        "ok": true,
+        "payload_kind": "span_list",
+        "error": null,
+        "span_name_count": 100,
+        "span_names_sample": [
+          "agent.query",
+          "LangGraph",
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "final_answer",
+          "tool.final_answer",
+          "chat",
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "paper_profile",
+          "tool.paper_profile",
+          "chat",
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "after_tools",
+          "route_react_tools_next",
+          "ChannelWrite<...,after_tools>",
+          "tools",
+          "ChannelWrite<...,tools>",
+          "paper_profile",
+          "tool.paper_profile",
+          "chat",
+          "route_react_chat_to_tools",
+          "ChannelWrite<...,chat>",
+          "llm.agent.react_turn",
+          "ChatOpenAI",
+          "after_tools",
+          "route_react_tools_next"
+        ]
+      },
+      "notes": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "quote_extraction"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+            "mode": "blurb"
+          },
+          "row_count": 8,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "trade-offs between speed and accuracy in real-time object detection",
+            "kinds": "['chunk']",
+            "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "trade-offs between speed and accuracy in real-time object detection",
+            "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+            "top_k": "3"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace provides evidence on speed-accuracy trade-offs in real-time object detection, primarily through two key works:\n\n- **EfficientDet (work_id: `142db14f-610a-44ca-b928-83aa48f749a0`)**: This",
+            "citations": "[{'work_id': '142db14f-610a-44ca-b928-83aa48f749a0', 'chunk_id': 'c60e930aa1176a3e3e3dc1865097a88b17dbb1776f23254ea1c33e545492e1f8', 'quote': 'With fixed 640x640, our EfficientDet-D6 achieves real-tim"
+          },
+          "row_count": 2,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "thread_id": null,
+      "edge_search_zero_row_max_streak": 0,
+      "paper_profile_max_consecutive_same_work_id": 1,
+      "cypher_query_error_count": 0,
+      "duration_ms": 24789,
+      "warnings": [],
+      "run_metadata": {
+        "agent_runtime": "langgraph_research_v1",
+        "agent_max_tool_calls": 12,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "openrouter_reference_pricing_usd_per_1m": {
+          "extraction": {
+            "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+            "prompt_usd_per_1m": 0.075,
+            "completion_usd_per_1m": 0.2
+          }
+        },
+        "usage": {
+          "prompt_tokens": 33640,
+          "completion_tokens": 1023,
+          "total_tokens": 34663,
+          "input_tokens": 33640,
+          "output_tokens": 1023
+        },
+        "debug_events": [
+          {
+            "type": "intent_classified",
+            "source": "single_agent_research_v1",
+            "conversation_intent": "research_task",
+            "tool_policy": "allow_tools",
+            "route_hint": "retrieval_agent",
+            "reason": "single_agent_research_runtime",
+            "confidence": 1.0,
+            "classifier": "deterministic",
+            "answer_class": "quote_extraction",
+            "suggested_answer_class": "quote_extraction"
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 23.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 6,
+            "shortlist_ratio": 0.6,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "workspace_inspect",
+              "idea_search"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 32
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 23.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 6,
+            "shortlist_ratio": 0.6,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "paper_quote_search"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 33
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 23.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 6,
+            "shortlist_ratio": 0.6,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "paper_profile"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 14
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 23.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 6,
+            "shortlist_ratio": 0.6,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "paper_profile"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 14
+          },
+          {
+            "type": "tool_search_result",
+            "specialist": "single_agent_react",
+            "tools": [
+              "workspace_inspect",
+              "paper_profile",
+              "find_works",
+              "paper_quote_search",
+              "idea_search",
+              "final_answer"
+            ],
+            "reason": "rules",
+            "top_score": 23.0,
+            "score_band": 1.35,
+            "catalog_size": 10,
+            "shortlist_size": 6,
+            "shortlist_ratio": 0.6,
+            "deferred_schema_mode": null,
+            "deferred_schema_refs": null,
+            "skipped": false,
+            "carryover_tools": null
+          },
+          {
+            "type": "tool_execution",
+            "phase": "pre_hooks",
+            "ok": true,
+            "tools": [
+              "final_answer"
+            ]
+          },
+          {
+            "type": "tool_execution",
+            "phase": "post_hooks",
+            "ok": true,
+            "elapsed_ms": 8
+          }
+        ]
+      },
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": null,
+      "budget_stop_reasons": [],
+      "answer_class": "quote_extraction",
+      "citations_count": 2,
+      "phoenix_ui_url": "http://127.0.0.1:16006/projects/science-graphrag/traces/9d90b067191690c489954a175e02ed7f"
+    }
+  ]
+}

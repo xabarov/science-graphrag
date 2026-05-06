@@ -44,7 +44,22 @@ alwaysApply: true
    science-graphrag ingest-corpus ...
  ```
 
-2. **Инфраструктура поднята.** Для всего, что трогает Neo4j/Qdrant/Postgres:
+2. **Для локального agent live/e2e базовое окружение клиента всегда `dev`.**
+
+   Перед запуском убедиться, что `AGENT_LIVE_BASE` выставлен явно и указывает на dev-контур (а не staging/prod), иначе heavy e2e может не стартовать с корректным base URL:
+
+   ```bash
+   export AGENT_LIVE_BASE=dev
+   echo "AGENT_LIVE_BASE=$AGENT_LIVE_BASE"
+   ```
+
+   Если запуск идёт через скрипт/CI-команду, передавать переменную inline:
+
+   ```bash
+   AGENT_LIVE_BASE=dev .venv/bin/python scripts/live_check/agent_trace_review.py ...
+   ```
+
+3. **Инфраструктура поднята.** Для всего, что трогает Neo4j/Qdrant/Postgres:
 
    ```bash
    docker compose ps --format 'table {{.Service}}\t{{.Status}}'
@@ -52,7 +67,7 @@ alwaysApply: true
 
    Все сервисы должны быть `running (healthy)`. Если какой-то `unhealthy` или `restarting` — ingest/benchmark упадёт молча или повиснет.
 
-3. **Console-script зарегистрирован.** Если ты только что правил `[project.scripts]` в `pyproject.toml` или добавил новый runner — обязательно:
+4. **Console-script зарегистрирован.** Если ты только что правил `[project.scripts]` в `pyproject.toml` или добавил новый runner — обязательно:
 
    ```bash
    .venv/bin/pip install -e . --quiet

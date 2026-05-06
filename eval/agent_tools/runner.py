@@ -225,6 +225,11 @@ def _cli(
                 "latency_p95_ms": sorted([int(r.get("duration_ms") or 0) for r in reports])[
                     max(len(reports) - 1, 0)
                 ],
+                "avg_unnecessary_tool_calls": round(
+                    sum(float((r.get("metrics") or {}).get("unnecessary_tool_calls") or 0) for r in reports)
+                    / max(len(reports), 1),
+                    4,
+                ),
             },
         )
         if not bool(payload.get("summary", {}).get("all_passed", False)):

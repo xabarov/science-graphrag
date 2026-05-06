@@ -14,6 +14,24 @@ def find_work_id_by_doi(client: _Neo4jClient, doi: str) -> str | None:
         return rec["id"] if rec else None
 
 
+def find_work_id_by_doi_in_workspace(
+    client: _Neo4jClient, workspace_id: str, doi: str
+) -> str | None:
+    """Resolve a normalized DOI to a Work id contained in the given workspace."""
+    wid = (workspace_id or "").strip()
+    d = (doi or "").strip()
+    if not wid or not d:
+        return None
+    q = """
+    MATCH (ws:Workspace {id: $ws})-[:CONTAINS]->(w:Work)
+    WHERE coalesce(w.doi, '') = $doi
+    RETURN w.id AS id LIMIT 1
+    """
+    with client.session() as session:
+        rec = session.run(q, ws=wid, doi=d).single()
+        return str(rec["id"]) if rec and rec.get("id") else None
+
+
 def find_work_id_by_fingerprint(client: _Neo4jClient, fingerprint: str) -> str | None:
     q = "MATCH (w:Work {fingerprint: $fp}) RETURN w.id AS id LIMIT 1"
     with client.session() as session:

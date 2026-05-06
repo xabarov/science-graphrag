@@ -326,6 +326,24 @@ def test_sse_reasoning_live_status_emits_product_step_after_idea_search(monkeypa
     assert events.index(ps_events[0]) > tool_idxs[0]
 
 
+def test_sse_subagent_lifecycle_includes_parent_turn_id_and_run_metadata(monkeypatch) -> None:
+    """B1 observability: SSE mirrors routing legs into ``run_metadata.subagent_runs``."""
+    events = _collect_agent_sse_events(monkeypatch, _FakeGraph)
+    started = next(e for e in events if e.get("type") == "subagent_started")
+    assert started.get("parent_turn_id")
+    assert started.get("spawn_reason")
+    fin_ev = [e for e in events if e.get("type") == "subagent_finished"]
+    assert fin_ev
+    assert fin_ev[0].get("parent_turn_id") == started.get("parent_turn_id")
+    assert fin_ev[0].get("terminal_state") == "succeeded"
+    fa = next(e for e in events if e.get("type") == "final_answer")
+    rm = fa.get("run_metadata") or {}
+    assert rm.get("parent_turn_id") == started.get("parent_turn_id")
+    assert isinstance(rm.get("subagent_runs"), list)
+    assert rm.get("max_parallel_subagents") >= 1
+    assert rm["subagent_runs"][0]["subagent_id"] == started.get("subagent_id")
+
+
 def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     events = _collect_agent_sse_events(monkeypatch, _FakeGraph)
 

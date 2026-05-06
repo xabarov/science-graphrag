@@ -21,8 +21,14 @@ from science_graphrag.agent.context.llm_history_compact import (
     maybe_llm_compact_session_after_turn,
     patch_compaction_audit_llm,
 )
+from science_graphrag.agent.context.post_compact_attachments import (
+    persist_post_compact_paper_sources,
+)
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
+from science_graphrag.agent.debug_events_telemetry import (
+    extract_runtime_telemetry_from_debug_events,
+)
 from science_graphrag.agent.graph.errors import (
     AgentGraphDeadlineExceeded,
     AgentGraphRecursionLimitExceeded,
@@ -36,6 +42,11 @@ from science_graphrag.agent.runtime import (
     aggregate_agent_llm_usage,
     current_otel_trace_id_hex,
     resolve_langgraph_answer_with_salvage,
+)
+from science_graphrag.agent.subagents.runtime import (
+    RoutingSubagentLegLedger,
+    SubagentRuntime,
+    merge_subagent_run_rows,
 )
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.api.agent_v2_modules.deadline_otel import (
@@ -82,59 +93,6 @@ META_TOOL_NAMES = frozenset(
 GENERIC_PRODUCT_STEP_TOOLS = frozenset({})
 
 
-def extract_runtime_telemetry_from_debug_events(
-    debug_events: list[dict[str, Any]],
-) -> dict[str, Any]:
-    """Aggregate shortlist/budget telemetry from debug events for run_metadata."""
-    shortlist_ratios: list[float] = []
-    deferred_schema_hits = 0
-    budget_stop_reasons: list[str] = []
-    miss_no_discovery = 0
-    activation_rates: list[float] = []
-    for ev in debug_events:
-        if not isinstance(ev, dict):
-            continue
-        if str(ev.get("type") or "") == "tool_search_result":
-            raw_ratio = ev.get("shortlist_ratio")
-            try:
-                shortlist_ratios.append(float(raw_ratio))
-            except (TypeError, ValueError):
-                pass
-            refs = ev.get("deferred_schema_refs")
-            if isinstance(refs, list) and refs:
-                deferred_schema_hits += 1
-            try:
-                miss_no_discovery += int(ev.get("tool_search_miss_due_to_no_discovery") or 0)
-            except (TypeError, ValueError):
-                pass
-            raw_ar = ev.get("deferred_tool_activation_rate")
-            if raw_ar is not None:
-                try:
-                    activation_rates.append(float(raw_ar))
-                except (TypeError, ValueError):
-                    pass
-        if str(ev.get("type") or "") == "budget_stop_decision":
-            reason = str(ev.get("code") or "").strip()
-            if reason:
-                budget_stop_reasons.append(reason)
-    telemetry: dict[str, Any] = {}
-    if shortlist_ratios:
-        telemetry["tool_search_shortlist_ratio_avg"] = round(
-            sum(shortlist_ratios) / len(shortlist_ratios), 4
-        )
-    if deferred_schema_hits:
-        telemetry["tool_search_deferred_schema_events"] = deferred_schema_hits
-    if budget_stop_reasons:
-        telemetry["budget_stop_reasons"] = budget_stop_reasons
-    if miss_no_discovery:
-        telemetry["tool_search_miss_due_to_no_discovery"] = int(miss_no_discovery)
-    if activation_rates:
-        telemetry["deferred_tool_activation_rate"] = round(
-            sum(activation_rates) / len(activation_rates), 4
-        )
-    return telemetry
-
-
 def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
     """LLM fields attached to agent run_metadata (extraction vs chat model split)."""
     meta = payload_agent_chat_llm_run_metadata(settings)
@@ -167,6 +125,9 @@ def product_step_code_for_tool(tool_name: str) -> str | None:
         "paper_quote_search": "finding_quotes",
         "format_bibliography_gost": "formatting_bibliography",
         "final_answer": "composing_answer",
+        "web_search": "searching_literature",
+        "web_fetch": "gathering_evidence",
+        "doi_resolver": "paper_metadata",
     }
     return mapping.get(tool_name)
 
@@ -320,6 +281,8 @@ def _streamable_debug_event(event: dict[str, Any]) -> bool:
         "tool_execution",
         "tool_permissions",
         "budget_stop_decision",
+        "web_fetched",
+        "doi_resolved",
     ):
         return True
     return event_type == "warning" and bool(str(event.get("code") or "").strip())
@@ -444,6 +407,8 @@ async def stream_agent_events(
     active_subagent_id: str | None = None
     note_counter: dict[str, int] = {"emitted": 0}
     seen_first_tool_result_per_specialist: set[str] = set()
+    prompt_memory_audit_initial: dict[str, Any] | None = None
+    post_compact_paper_sources_restored_initial: int | None = None
 
     deadline_s = float(settings.agent_step_timeout_seconds)
     attrs: dict[str, Any] = {
@@ -477,6 +442,14 @@ async def stream_agent_events(
                 client_idle_ms=client_idle_ms,
                 settings=settings,
             )
+            _im0 = initial_state.get("metadata") or {}
+            if isinstance(_im0, dict):
+                _pm0 = _im0.get("prompt_memory_audit")
+                if isinstance(_pm0, dict):
+                    prompt_memory_audit_initial = dict(_pm0)
+                rpc0 = _im0.get("post_compact_paper_sources_restored_count")
+                if isinstance(rpc0, int) and rpc0 >= 0:
+                    post_compact_paper_sources_restored_initial = int(rpc0)
             config = {"recursion_limit": settings.agent_supervisor_recursion_limit}
 
             initial_debug = list(initial_state.get("debug_events") or [])
@@ -485,6 +458,19 @@ async def stream_agent_events(
             initial_meta = initial_state.get("metadata") or {}
             run_kind = str(initial_meta.get("run_kind") or "").strip() or None
             graph_id = str(initial_meta.get("graph_id") or "").strip() or None
+            _pt_raw = (
+                str(initial_meta.get("parent_turn_id")).strip()
+                if isinstance(initial_meta, dict)
+                else ""
+            )
+            parent_turn_id_str = _pt_raw if _pt_raw else ""
+            routing_subagent_ledger = RoutingSubagentLegLedger(
+                parent_turn_id=parent_turn_id_str or "unknown"
+            )
+            spawn_subagent_runtime = SubagentRuntime(
+                parent_turn_id=parent_turn_id_str or "unknown",
+                max_parallel_subagents=int(settings.agent_max_parallel_subagents),
+            )
             for ev in initial_debug:
                 if isinstance(ev, dict):
                     yield {"data": json.dumps(ev)}
@@ -549,14 +535,22 @@ async def stream_agent_events(
                             if len(routes) > prev_route_len:
                                 for entry in routes[prev_route_len:]:
                                     if active_subagent_id:
-                                        yield {
-                                            "data": json.dumps(
-                                                {
-                                                    "type": "subagent_finished",
-                                                    "subagent_id": active_subagent_id,
-                                                }
-                                            )
+                                        leg_done = routing_subagent_ledger.close_leg(
+                                            terminal_state="succeeded"
+                                        )
+                                        fin_payload: dict[str, Any] = {
+                                            "type": "subagent_finished",
+                                            "subagent_id": active_subagent_id,
+                                            "parent_turn_id": parent_turn_id_str or None,
+                                            "terminal_state": "succeeded",
                                         }
+                                        if leg_done:
+                                            fin_payload["spawn_reason"] = leg_done.get(
+                                                "spawn_reason"
+                                            )
+                                            if leg_done.get("latency_ms") is not None:
+                                                fin_payload["latency_ms"] = leg_done["latency_ms"]
+                                        yield {"data": json.dumps(fin_payload)}
                                         active_subagent_id = None
                                     yield {
                                         "data": json.dumps(
@@ -581,16 +575,27 @@ async def stream_agent_events(
                                         if reason_txt is not None and str(reason_txt).strip()
                                         else None
                                     )
-                                    yield {
-                                        "data": json.dumps(
-                                            {
-                                                "type": "subagent_started",
-                                                "subagent_id": to_id,
-                                                "from": entry.get("from"),
-                                                "summary": summary,
-                                            }
+                                    spawn_reason_open = (
+                                        summary
+                                        if summary
+                                        else (
+                                            str(reason_txt).strip()
+                                            if reason_txt is not None and str(reason_txt).strip()
+                                            else "routing"
                                         )
+                                    )
+                                    routing_subagent_ledger.open_leg(
+                                        subagent_id=to_id, spawn_reason=spawn_reason_open
+                                    )
+                                    start_payload: dict[str, Any] = {
+                                        "type": "subagent_started",
+                                        "subagent_id": to_id,
+                                        "from": entry.get("from"),
+                                        "summary": summary,
+                                        "parent_turn_id": parent_turn_id_str or None,
+                                        "spawn_reason": spawn_reason_open,
                                     }
+                                    yield {"data": json.dumps(start_payload)}
                                     yield {
                                         "data": json.dumps(
                                             {
@@ -656,17 +661,18 @@ async def stream_agent_events(
                                             )
                                         }
                                     if active_subagent_id:
-                                        yield {
-                                            "data": json.dumps(
-                                                {
-                                                    "type": "subagent_progress",
-                                                    "subagent_id": active_subagent_id,
-                                                    "step": step,
-                                                    "tool": tool_name,
-                                                    "summary": tool_name,
-                                                }
-                                            )
+                                        prog_payload: dict[str, Any] = {
+                                            "type": "subagent_progress",
+                                            "subagent_id": active_subagent_id,
+                                            "step": step,
+                                            "tool": tool_name,
+                                            "summary": tool_name,
+                                            "parent_turn_id": parent_turn_id_str or None,
                                         }
+                                        _sr = routing_subagent_ledger.active_spawn_reason()
+                                        if _sr:
+                                            prog_payload["spawn_reason"] = _sr
+                                        yield {"data": json.dumps(prog_payload)}
                             elif isinstance(msg, ToolMessage):
                                 result_payload: dict[str, Any] = {}
                                 error: str | None = None
@@ -828,11 +834,18 @@ async def stream_agent_events(
                 }
 
             if active_subagent_id:
-                yield {
-                    "data": json.dumps(
-                        {"type": "subagent_finished", "subagent_id": active_subagent_id}
-                    )
+                leg_final = routing_subagent_ledger.close_leg(terminal_state="succeeded")
+                fin_final: dict[str, Any] = {
+                    "type": "subagent_finished",
+                    "subagent_id": active_subagent_id,
+                    "parent_turn_id": parent_turn_id_str or None,
+                    "terminal_state": "succeeded",
                 }
+                if leg_final:
+                    fin_final["spawn_reason"] = leg_final.get("spawn_reason")
+                    if leg_final.get("latency_ms") is not None:
+                        fin_final["latency_ms"] = leg_final["latency_ms"]
+                yield {"data": json.dumps(fin_final)}
                 active_subagent_id = None
             yield {"data": json.dumps({"type": "product_step", "code": "composing_answer"})}
             yield {"data": json.dumps({"type": "answer_synthesis_started"})}
@@ -897,6 +910,12 @@ async def stream_agent_events(
                         compact_payload, llm_audit=llm_audit
                     )
                 yield {"data": json.dumps(compact_payload)}
+                if latest_full_state is not None:
+                    persist_post_compact_paper_sources(
+                        thread_id,
+                        list(latest_full_state.get("messages") or []),
+                        settings=settings,
+                    )
                 yield {
                     "data": json.dumps({"type": "product_step", "code": "updating_session_memory"})
                 }
@@ -944,6 +963,21 @@ async def stream_agent_events(
                 run_metadata=run_meta,
                 state=latest_full_state if isinstance(latest_full_state, dict) else None,
             )
+            merged_subagent_runs = merge_subagent_run_rows(
+                routing_rows=routing_subagent_ledger.to_run_rows(),
+                spawned_rows=spawn_subagent_runtime.to_run_rows(),
+            )
+            if merged_subagent_runs:
+                run_meta["subagent_runs"] = merged_subagent_runs
+            if parent_turn_id_str:
+                run_meta["parent_turn_id"] = parent_turn_id_str
+            run_meta["max_parallel_subagents"] = int(settings.agent_max_parallel_subagents)
+            if isinstance(prompt_memory_audit_initial, dict) and prompt_memory_audit_initial:
+                run_meta.update(prompt_memory_audit_initial)
+            if post_compact_paper_sources_restored_initial is not None:
+                run_meta["post_compact_paper_sources_restored_count"] = int(
+                    post_compact_paper_sources_restored_initial
+                )
             if thread_id and compact_payload is not None:
                 comp = compact_payload.get("compaction")
                 if isinstance(comp, dict):

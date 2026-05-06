@@ -5,6 +5,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.tools import tool
 
@@ -30,6 +31,15 @@ def _named_tool(name: str):
 def test_strip_tool_search_context_wrappers_removes_active_workspace_id() -> None:
     raw = "<active_workspace_id>\nws-uuid-1\n</active_workspace_id>\nсколько статей"
     assert strip_tool_search_context_wrappers(raw).strip() == "сколько статей"
+
+
+def test_strip_tool_search_context_wrappers_removes_thread_insight_and_last_digest() -> None:
+    raw = (
+        "<last_turn_digest>\nx\n</last_turn_digest>"
+        '<thread_insight status="fresh">\ny\n</thread_insight>'
+        "What is X?"
+    )
+    assert strip_tool_search_context_wrappers(raw).strip() == "What is X?"
 
 
 def test_strip_tool_search_context_wrappers_removes_memory_blocks() -> None:
@@ -412,3 +422,54 @@ def test_strict_deferred_skips_optional_baseline_without_discovery() -> None:
     assert "idea_search" not in names
     assert "paper_quote_search" not in names
     assert int(meta.get("tool_search_miss_due_to_no_discovery") or 0) >= 2
+
+
+def test_hybrid_llm_rerank_merges_selector_meta(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Optional LLM rerank path surfaces selector_stage / confidence in shortlist meta."""
+
+    def _fake_rerank(
+        picked,
+        *,
+        question: str,
+        specialist: str,
+        settings: Settings,
+        rules_matched_tools: list[str],
+        message_discovery_merged: list[str],
+        carryover_merged: list[str],
+    ):
+        return picked, {
+            "selector_stage": "hybrid_llm",
+            "selector_confidence": 0.88,
+            "selector_reason_codes": ["llm_rerank_ok"],
+            "llm_ranked_tools": [getattr(t, "name", "") for t in picked],
+        }
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.tool_search.maybe_llm_rerank_shortlist",
+        _fake_rerank,
+    )
+    from science_graphrag.agent.tools import build_tool_registry
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(
+        agent_rule_tool_search_enabled=True,
+        agent_tool_search_llm_rerank_enabled=True,
+    )
+    tools = build_tool_registry(stores, settings)
+    out, meta = shortlist_tools_for_single_agent(
+        tools,
+        question="how many papers in this workspace",
+        settings=settings,
+        has_workspace=True,
+        answer_class="inventory",
+    )
+    assert meta.get("reason") == "hybrid_llm"
+    assert meta.get("selector_stage") == "hybrid_llm"
+    assert meta.get("selector_confidence") == 0.88
+    assert meta.get("selector_reason_codes") == ["llm_rerank_ok"]
+    assert "final_answer" in {getattr(t, "name", "") for t in out}

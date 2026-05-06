@@ -77,3 +77,24 @@ def test_score_agent_case_prefix_mode() -> None:
     m = score_agent_case(report, gold)
     assert m["tool_call_correctness"] == 1.0
     assert m["passed"] is True
+
+
+def test_score_agent_case_unnecessary_tool_calls_extra_steps() -> None:
+    """Extra execution steps beyond expected tool count increase unnecessary_tool_calls."""
+    report = {
+        "answer": "ok",
+        "citations": [],
+        "tool_trace": [
+            {"tool": "idea_search", "args_summary": {}},
+            {"tool": "workspace_inspect", "args_summary": {}},
+            {"tool": "final_answer", "args_summary": {}},
+        ],
+    }
+    gold = {
+        "max_calls": 8,
+        "min_tool_call_correctness": 1.0,
+        "expected_tool_sequence": [{"tool": "idea_search"}, {"tool": "final_answer"}],
+    }
+    m = score_agent_case(report, gold)
+    assert m["tool_call_correctness"] == 1.0
+    assert m["unnecessary_tool_calls"] == 1

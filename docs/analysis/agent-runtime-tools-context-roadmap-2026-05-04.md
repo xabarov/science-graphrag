@@ -5,6 +5,10 @@
 **Итог на 2026-05-06:** текущая волна плана выполнена (BT8/BT9, P2 trace-review, L3/L4, prompt-after-compact matrix, trust/runtime updates).  
 **Подтверждение:** live `trace-review`/regression-gate — pass; выполнен полноценный LLM-judge по live-трейсам (`eval/results/habr-window-2026-06-agent-tools-mini-band-1.35-live-llm-judge.json`); full L4 LLM compact подтверждён live-smoke с audit trail.
 
+**Дополнение 2026-05-07 (Train T2 — §10.4 / §10.5):** закрыт срез *prompt discipline + compaction hardening* (writer/final_answer контракт, microcompact по idle, restore paper sources после compact, pre-compact sanitizers); телеметрия `debug_events` вынесена в [`science_graphrag/agent/debug_events_telemetry.py`](../../science_graphrag/agent/debug_events_telemetry.py), sync JSON получает те же агрегаты, что SSE (`payloads.response_from_run`). Детали — комментарии под §11.2.
+
+**Операционный guardrail 2026-05-07 (agent live/heavy e2e):** в локальной разработке базовый контур клиента фиксирован как `dev`; запускать тяжёлые live/e2e проверки только с явным `AGENT_LIVE_BASE=dev`, чтобы исключить ошибки неверного base URL.
+
 **Связанные документы (не дублировать детали):**
 
 | Документ | Роль |
@@ -322,6 +326,7 @@
 | 2026-05-06 | **Wave 5 (runtime/state cleanup + trace-review hardening):** декомпозирован `chat_envelope` (intent/policy/ux), введён канонический typed tool execution trace (`collect_tool_execution_steps`) как source-of-truth для `tool_trace`, добавлена атрибуция `run_kind`/`graph_id` в SSE/final run_metadata/trace-review schema, расширен `agent_trace_review.py` профилями quick/default/heavy, `trace_regression_compare.py` ужесточён fail-политикой `compaction_churn_increase`; обновлены тесты `test_chat_envelope`, `test_api_agent_v2_stream_parity`, `test_trace_review_schema`, `test_trace_regression_compare`. |
 | 2026-05-06 | **Deep-dive openclaude vs план (повторный проход):** уточнён §1.3 (две взаимоисключающие модели субагентов: coordinator vs fork); расширена таблица §5 (cache-safe forked-agent pattern, agent definitions on disk, subagent prompt discipline, per-call canUseTool, microcompact time-trigger, PTL retry + group-by-round); §9.4 B0 получил явную развилку coordinator vs fork с recommendation `fork-mode as baseline`; §9.4 B1 расширен `<task-notification>` envelope и periodic progress label (AgentSummary-pattern); §9.5.1 пополнен P0.3 (web_search/web_fetch с academic allowlist), P0.4 (DOI/OpenAlex resolver), P1.3 (research_plan_write), P1.4 (ask_user_question), P1.5 (claim_verification subagent), P2.3 (plan mode), P2.4 (brief). Добавлен **§10** — deep-dive по паттернам, не закрытым ранее: coordinator/fork contrast, cache-safe side-LLM, built-in subagent catalog → SciGraph mapping, prompt discipline, compaction hardening (microcompact triggers / post-compact restoration / PTL retry / sanitizers), hook surface, agent registry + per-call canUseTool, `<task-notification>` envelope, обновлённый release train (T1–T5) и cross-refs. |
 | 2026-05-06 | Добавлен **§11**: сводный actionable чеклист по Train T1–T5 (`[x] / [~] / [ ]` статусы), отдельный pool §11.6 для tool-parity backlog, §11.0 — закрытое, §11.7 — stop-conditions reminder. Источник правды по прогрессу для §9.3/§9.4/§9.5/§9.5.1/§10. |
+| 2026-05-07 | **Train T2 (§11.2):** зафиксированы комментарии к закрытому срезу §10.4 (writer prompt + `subagent_output_contract`, guard в `FinalAnswerTool.run`) и §10.5.1–§10.5.2 / §10.5.4 (microcompact по `client_idle_ms`, post-compact paper sources + `runtime.py` после digest, pre-compact sanitizers); агрегация `extract_runtime_telemetry_from_debug_events` перенесена в `agent/debug_events_telemetry.py` (SSE + sync parity в `payloads.py`). Тесты: `test_subagent_output_contract`, `test_final_answer_args`, `test_tool_message_compact`, `test_message_sanitizers`, `test_context_session`, `test_debug_events_telemetry`. |
 
 ---
 
@@ -863,6 +868,7 @@
 | 2026-05-06 | Добавлен **§9**: closure plan по исходным целям (smart summarization parity, real subagent runtime v3, tool search parity), с epic-структурой, acceptance/gates, release train и stop-conditions против формального закрытия. |
 | 2026-05-06 | **Второй deep-dive проход openclaude → план:** уточнены §1.3 (coordinator vs fork — две взаимоисключающие модели), §5 (расширена таблица переноса), §9.4 B0/B1 (явная развилка subagent runtime + `<task-notification>` envelope + periodic progress label), §9.5.1 (добавлены P0.3 web tools, P0.4 DOI resolver, P1.3 research_plan_write, P1.4 ask_user_question, P1.5 claim_verification subagent, P2.3 plan mode, P2.4 brief). Добавлен **§10** — паттерны openclaude, не покрытые ранее: cache-safe side-LLM (`runForkedAgent`), built-in subagent catalog (corpus-explore / research-plan / claim-verification), strict prompt discipline (Scope/Result/VERDICT, anti-handoff guard), compaction hardening (microcompact time-trigger, post-compact paper sources restore, PTL retry + group-by-API-round, sanitizers), hook surface (PreCompact/PostCompact/SubagentStart/Stop), agent registry на диске + per-call canUseTool callback, `<task-notification>` envelope. Обновлены acceptance gates §10.10 и release train (§10.11) без сдвига существующих T1–T5. |
 | 2026-05-06 | Добавлен **§11**: сводный actionable чеклист по Train T1–T5 со статусами `[x] / [~] / [ ]`, pool §11.6 для §9.5.1 tool-parity backlog, §11.0 (контекст «уже закрыто»), §11.7 (stop-conditions). Этот раздел становится точкой синхронизации статусов с §9.3/§9.4/§9.5/§9.5.1/§10. |
+| 2026-05-07 | См. §7: комментарии к §11.2 §10.4–§10.5 (реализация + тесты + `debug_events_telemetry` / sync metadata parity). |
 
 ---
 
@@ -1191,7 +1197,7 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 - `[ ]` — PENDING: не начато.
 - `[~]` — PARTIAL: использовать только для эпика, который не декомпозирован на подзадачи прямо здесь. Если эпик декомпозирован (как A1 ниже) — статус выражается смесью `[x]` и `[ ]` среди подпунктов, без `[~]` на уровне эпика.
 
-**Текущий счёт (2026-05-06):** 11 DONE / 105 PENDING (без §11.0 контекста и §11.7 reminder'а).
+**Текущий счёт (2026-05-07):** 53 DONE / 63 PENDING (без §11.0 контекста и §11.7 reminder'а). *Пересчитано по §11.0–§11.6 после закрытия C1/P0.3/P0.4 и связанных quality-fix уточнений.*
 
 > Этот чеклист — **производный**: при движении по пунктам обновлять и здесь, и в исходных секциях (§9.3/§9.4/§9.5/§10), чтобы не возникало дрейфа.
 
@@ -1241,23 +1247,26 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 **Цель:** prompt integration thread_insight'а с precedence policy, long-thread eval gates, hybrid LLM-selector, первый production subagent (claim_verification) на cache-safe helper'е, hardening компактации.
 
 - **A2. Prompt integration + fallback policy** (§9.3 A2)
-  - [ ] `<thread_insight>` блок в `format_user_with_memory` при свежем insight'е
-  - [ ] fallback к `session_summary` при stale/failed/circuit-breaker open
-  - [ ] precedence: `turn_digest` (latest) > `thread_insight` (fresh) > `session_summary`
-  - [ ] conflict detection: `turn_digest` vs `thread_insight` claim mismatch → label `conflicted`
-  - [ ] `insight_conflict_resolved` / `insight_fallback_reason` / `ptl_retry_count` в `run_metadata`
-  - [ ] контракт-тесты на детерминизм precedence (no silent override свежих фактов)
+  - [x] `<thread_insight>` блок в `format_user_with_memory` при свежем insight'е
+  - [x] fallback к `session_summary` при stale/failed/circuit-breaker open
+  - [x] precedence: `turn_digest` (latest) > `thread_insight` (fresh) > `session_summary`
+  - [x] conflict detection: `turn_digest` vs `thread_insight` claim mismatch → label `conflicted`
+  - [x] `insight_conflict_resolved` / `insight_fallback_reason` / `ptl_retry_count` в `run_metadata`
+  - [x] контракт-тесты на детерминизм precedence (no silent override свежих фактов)
 
 - **A3. Eval + gate** (§9.3 A3)
-  - [ ] eval lane `eval/chat_agent/long_thread_*`: long-thread retrieval / context drift / summary hallucination / claim grounding
-  - [ ] метрики `insight_recall@k` / `stale_summary_error_rate` / `compaction_churn_delta` / latency p50/p95 / `insight_stale_reason_rate` / `insight_conflict_resolved_rate` / `ptl_retry_rate` / `compaction_circuit_breaker_trips`
-  - [ ] gate: trust/verdict не хуже baseline + p95 latency в бюджете + claim grounding precision/recall ≥ SLO
+  - [x] eval lane `eval/chat_agent/long_thread_*`: long-thread retrieval / context drift / summary hallucination / claim grounding
+  - [x] метрики `insight_recall@k` / `stale_summary_error_rate` / `compaction_churn_delta` / latency p50/p95 / `insight_stale_reason_rate` / `insight_conflict_resolved_rate` / `ptl_retry_rate` / `compaction_circuit_breaker_trips`
+  - [x] gate: trust/verdict не хуже baseline + p95 latency в бюджете + claim grounding precision/recall ≥ SLO
 
 - **C1. Hybrid selector (rules + LLM judge)** (§9.5 C1)
-  - [ ] LLM rerank поверх rule-based shortlist
-  - [ ] confidence score + reason codes
-  - [ ] guardrails: deny unsafe tools до LLM решения, `final_answer` всегда доступен
-  - [ ] benchmark lane: снижение unnecessary tool calls без regression на verdict/trust
+  - [x] LLM rerank поверх rule-based shortlist (`tool_selector_hybrid.py`, `SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_LLM_RERANK_ENABLED`)
+  - [x] confidence score + reason codes (`selector_confidence`, `selector_reason_codes` в `tool_search_result` / meta)
+  - [x] guardrails: deny unsafe tools до LLM решения, `final_answer` всегда доступен (pre-LLM denylist + `_ensure_final_answer_in_picked`)
+  - [x] benchmark lane: метрика `unnecessary_tool_calls` + `trace-review` / `trace_regression_compare` политики (verdict/trust gates без изменений)
+  - Комментарий: C1 закрыт в hybrid-срезе без смены базового runtime-контракта `(tools, meta)`; fallback rules-only path сохранён.
+  - Комментарий (post-fix, 2026-05-07): ветка `llm_rerank_skipped_no_api_key` теперь тоже проходит pre-LLM deny фильтр (без возврата сырого `picked`), поэтому guardrail консистентен во всех fallback path.
+  - Комментарий: regression покрыт тестами `tests/test_tool_search.py`, `tests/eval/test_agent_tools_metrics.py`, `tests/scripts/live_check/test_trace_*`.
 
 - **§10.3 `claim_verification` subagent** (быстрый ROI, §9.5.1 P1.5)
   - [ ] subagent на `forked_runtime.py` helper с deny-write policy (`createClaimVerificationCanUseTool(paper_ids)`)
@@ -1267,39 +1276,45 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
   - [ ] gate: trust_signal рост без latency регрессии > 15%
 
 - **§10.4 Subagent prompt discipline** (writer/specialist promptы)
-  - [ ] директива «synthesize-not-delegate» в `writer_agent.py` system prompt
-  - [ ] strict output format `Scope:` / `Result:` / `Key sources:` / `VERDICT:` (для verification)
-  - [ ] anti-handoff guard (regex detector «please continue» / «I leave the rest to you» → warning prepend)
-  - [ ] контракт-тест `tests/agent/test_subagent_output_contract.py`
+  - [x] директива «synthesize-not-delegate» в `writer_agent.py` system prompt
+  - [x] strict output format `Scope:` / `Result:` / `Key sources:` / `VERDICT:` (для verification)
+  - [x] anti-handoff guard (regex detector «please continue» / «I leave the rest to you» → warning prepend)
+  - [x] контракт-тест `tests/agent/test_subagent_output_contract.py`
+  - Комментарий (2026-05-07): единый контракт в [`science_graphrag/agent/subagent_output_contract.py`](../../science_graphrag/agent/subagent_output_contract.py) (`SYNTHESIZE_NOT_DELEGATE_DIRECTIVE`, `writer_system_prompt_suffix`, `maybe_prepend_handoff_warning`). Strict блок `Scope/Result/Key sources/VERDICT` подключается только при `SCIENCE_GRAPHRAG_AGENT_WRITER_VERIFICATION_OUTPUT_FORMAT_ENABLED=1` и writer-режиме `normal` (см. `writer_agent.py`). Тот же handoff-regex применяется в **`FinalAnswerTool.run`** (не только в `@tool`-обёртке), чтобы guard не обходился прямым вызовом `run`. Регрессия: `tests/agent/test_subagent_output_contract.py`, `tests/test_final_answer_args.py`.
 
 - **§10.5 Compaction hardening (часть 1)**
-  - [ ] §10.5.1 microcompact time-trigger в `tool_message_compact.py` (gap > N min → clear all but last K) + flag + метрика
-  - [ ] §10.5.2 post-compact paper sources restore (`science_graphrag/agent/context/post_compact_attachments.py` + integration в `format_user_with_memory`) + метрика `post_compact_paper_sources_restored_count`
-  - [ ] §10.5.4 pre-compact sanitizers (`stripImagesFromMessages` + `stripReinjectedAttachments` равнозначные функции)
+  - [x] §10.5.1 microcompact time-trigger в `tool_message_compact.py` (gap > N min → clear all but last K) + flag + метрика
+  - [x] §10.5.2 post-compact paper sources restore (`science_graphrag/agent/context/post_compact_attachments.py` + integration в `format_user_with_memory`) + метрика `post_compact_paper_sources_restored_count`
+  - [x] §10.5.4 pre-compact sanitizers (`stripImagesFromMessages` + `stripReinjectedAttachments` равнозначные функции)
+  - Комментарий (2026-05-07, §10.5.1): триггер по **`client_idle_ms`** из клиента (прокидывается через `supervisor` → compact path); флаги `SCIENCE_GRAPHRAG_AGENT_TOOL_MESSAGE_MICROCOMPACT_TIME_TRIGGER_ENABLED`, `…_TIME_GAP_MINUTES`, `…_KEEP_LAST_K_TOOL_RESULTS`; в audit/debug — `tool_message_microcompact_triggered_count`. Агрегация в `run_metadata`: [`science_graphrag/agent/debug_events_telemetry.py`](../../science_graphrag/agent/debug_events_telemetry.py) — `extract_runtime_telemetry_from_debug_events` (используется и в SSE [`stream_lifecycle.py`](../../science_graphrag/api/agent_v2_modules/stream_lifecycle.py), и в sync [`payloads.py`](../../science_graphrag/api/agent_v2_modules/payloads.py) для parity). Тесты: `tests/agent/test_tool_message_compact.py`, `tests/agent/test_debug_events_telemetry.py`.
+  - Комментарий (2026-05-07, §10.5.2): капсула recent paper sources в `session_meta`, one-shot reinject через `<paper_sources_restored>` в user-памяти, счётчик в metadata; после `apply_turn_digest_to_thread` в [`runtime.py`](../../science_graphrag/agent/runtime.py) вызывается `persist_post_compact_paper_sources` (в дополнение к пути после `context_compacted` в stream). Тесты: `tests/test_context_session.py`.
+  - Комментарий (2026-05-07, §10.5.4): [`science_graphrag/agent/context/message_sanitizers.py`](../../science_graphrag/agent/context/message_sanitizers.py) + вызовы из `tool_message_compact` и [`llm_history_compact.py`](../../science_graphrag/agent/context/llm_history_compact.py); флаг `SCIENCE_GRAPHRAG_AGENT_PRE_COMPACT_SANITIZERS_ENABLED`. Тесты: `tests/agent/test_message_sanitizers.py`.
 
 ### 11.3 Train T3 (2–3 недели) — B0 / B1 + advanced summarization + hooks/registry/envelope
 
 **Цель:** ADR по subagent runtime v3, базовый spawn primitive, hooks layer, agent registry, `<task-notification>` envelope, advanced summarization optimizations.
 
 - **B0. ADR `agent-runtime-v3-subagents`** (§9.4 B0, §10.1)
-  - [ ] decision policy «когда нужен spawn» + sync vs background + merge contract + failure taxonomy
-  - [ ] выбор API: `/v3/agent/query` ИЛИ `run_kind=langgraph_supervisor_v3` под `/v2`
-  - [ ] §10.1 решение: **fork-mode default**, coordinator-mode только при явном продукт-сценарии
+  - [x] decision policy «когда нужен spawn» + sync vs background + merge contract + failure taxonomy
+  - [x] выбор API: `/v3/agent/query` ИЛИ `run_kind=langgraph_supervisor_v3` под `/v2`
+  - [x] §10.1 решение: **fork-mode default**, coordinator-mode только при явном продукт-сценарии
   - [ ] benchmark fork vs coordinator на одинаковом сценарии (latency / cache hit / missing-state events)
-  - [ ] prompt-cache контракт fork-режима зафиксирован в ADR (та же tools array, без `maxOutputTokens`, тот же thinking config)
+  - [x] prompt-cache контракт fork-режима зафиксирован в ADR (та же tools array, без `maxOutputTokens`, тот же thinking config)
   - [ ] sidechain transcript обязателен для каждого subagent run (§6.1.5 ref)
   - [ ] pull-back-to-parent контракт (избегаем flooding)
   - [ ] rollback strategy
+  - Комментарий (2026-05-07): реализовано в ADR `docs/adr/028-agent-runtime-v3-subagents.md` и синхронизировано со spec `docs/specs/agent-chat-v1.md`; benchmark/rollback/sidechain/pull-back оставлены следующей волне по scope.
 
 - **B1. Runtime primitive: spawn / track / collect** (§9.4 B1, §10.8)
-  - [ ] `science_graphrag/agent/subagents/runtime.py` с `spawn_subagent(task_spec) -> subagent_id`
+  - [x] `science_graphrag/agent/subagents/runtime.py` с `spawn_subagent(task_spec) -> subagent_id`
   - [ ] heartbeat / progress channel
-  - [ ] terminal states (`succeeded|failed|cancelled|timed_out`) + bounded fanout (`max_parallel_subagents`)
-  - [ ] observability: `parent_turn_id` / `subagent_id` / `spawn_reason` / `cost/tokens/latency` per child
+  - [x] terminal states (`succeeded|failed|cancelled|timed_out`) + bounded fanout (`max_parallel_subagents`)
+  - [x] observability: `parent_turn_id` / `subagent_id` / `spawn_reason` / `cost/tokens/latency` per child
   - [ ] §10.8 `<task-notification>` envelope как user-role message в parent transcript
   - [ ] SSE `subagent_task_notification` зеркалит payload для UI
   - [ ] periodic `subagent_progress_label` (≥ 30s, lightweight cache-safe forked-агент, AgentSummary-pattern)
   - [ ] gate: live run с 2+ параллельных subagents → полный lifecycle в SSE + trace-review без missing states
+  - Комментарий (2026-05-07): foundation skeleton + state machine + базовая SSE/sync observability готовы; real child execution, heartbeat/progress-label, `<task-notification>` и lifecycle gate остаются deferred.
 
 - **A-advanced** (§9.6 Train T3)
   - [ ] incremental insight updates (не пересобирать полностью при каждом triggere)
@@ -1381,8 +1396,10 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 **P0 (целевой Train T1–T2):**
 - [ ] §9.5.1 P0.1 MCP runtime trio + auth (`call_mcp_tool` / `list_mcp_resources` / `fetch_mcp_resource` / `mcp_auth`)
 - [ ] §9.5.1 P0.2 LSP tool (read-only, bounded)
-- [ ] §9.5.1 P0.3 Web research tools (`web_search` + `web_fetch`, academic allowlist by default)
-- [ ] §9.5.1 P0.4 DOI / OpenAlex resolver
+- [x] §9.5.1 P0.3 Web research tools (`web_search` + `web_fetch`, academic allowlist by default; `SCIENCE_GRAPHRAG_AGENT_WEB_RESEARCH_TOOLS_ENABLED`)
+- [x] §9.5.1 P0.4 DOI / OpenAlex resolver (`doi_resolver`; `SCIENCE_GRAPHRAG_AGENT_DOI_RESOLVER_TOOL_ENABLED`)
+- Комментарий: web-инструменты запускаются только под feature flag; allowlist/redirect-guard + bounded fetch включены, SSE: `web_fetched`.
+- Комментарий: DOI bridge переиспользует `normalize_doi` + OpenAlex/Crossref fallback и workspace mapping, SSE: `doi_resolved`; post-fix: `paper_id_in_workspace` заполняется только для реального workspace-match, общий graph fallback отражается в `graph_work_id`.
 
 **P1 (целевой Train T2–T3):**
 - [ ] §9.5.1 P1.1 Worktree isolation tools (нужно для real multi-agent в Epic B B3)

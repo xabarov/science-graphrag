@@ -105,6 +105,10 @@ class TimelineCase:
     budget_stop_reasons: tuple[str, ...] = field(default_factory=tuple)
     side_llm_cache_read_ratio: float | None = None
     thread_insight_forked: bool | None = None
+    insight_fallback_reason: str | None = None
+    insight_conflict_resolved: bool | None = None
+    run_ptl_retry_count: int | None = None
+    unnecessary_tool_calls: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,6 +125,14 @@ class Metrics:
     deferred_schema_event_count: int = 0
     budget_cutoff_count: int = 0
     side_llm_cache_read_ratio_avg: float | None = None
+    latency_p50_ms: float | None = None
+    insight_recall_at_k: float | None = None
+    stale_summary_error_rate: float | None = None
+    insight_stale_reason_rate: float | None = None
+    insight_conflict_resolved_rate: float | None = None
+    ptl_retry_rate: float | None = None
+    compaction_circuit_breaker_trips: int | None = None
+    unnecessary_tool_calls_avg: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,6 +253,9 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
 
     side_ratio: float | None = None
     ti_forked: bool | None = None
+    fb_reason: str | None = None
+    conflict_res: bool | None = None
+    ptl_n: int | None = None
     rm = case.get("run_metadata")
     if isinstance(rm, dict):
         tia = rm.get("thread_insight_audit")
@@ -249,6 +264,23 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
             fb = tia.get("forked")
             if isinstance(fb, bool):
                 ti_forked = fb
+        raw_ifb = rm.get("insight_fallback_reason")
+        if raw_ifb is not None and str(raw_ifb).strip():
+            fb_reason = str(raw_ifb).strip()
+        icr = rm.get("insight_conflict_resolved")
+        if isinstance(icr, bool):
+            conflict_res = icr
+        try:
+            ptl_raw = rm.get("ptl_retry_count")
+            if ptl_raw is not None:
+                ptl_n = max(0, int(ptl_raw))
+        except (TypeError, ValueError):
+            ptl_n = None
+
+    unn = 0
+    met = case.get("metrics")
+    if isinstance(met, dict):
+        unn = _coerce_int(met.get("unnecessary_tool_calls"), default=0)
 
     return TimelineCase(
         case_id=cid,
@@ -278,6 +310,10 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         budget_stop_reasons=tuple(str(x) for x in (case.get("budget_stop_reasons") or [])),
         side_llm_cache_read_ratio=side_ratio,
         thread_insight_forked=ti_forked,
+        insight_fallback_reason=fb_reason,
+        insight_conflict_resolved=conflict_res,
+        run_ptl_retry_count=ptl_n,
+        unnecessary_tool_calls=unn,
     )
 
 
@@ -295,6 +331,10 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     deferred_schema_events = 0
     budget_cutoff_count = 0
     side_llm_ratios: list[float] = []
+    conflict_true = 0
+    conflict_scored = 0
+    ptl_vals: list[int] = []
+    unnecessary_vals: list[int] = []
 
     for row in timeline:
         for st in row.tool_steps:
@@ -337,17 +377,44 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
                 side_llm_ratios.append(float(row.side_llm_cache_read_ratio))
             except (TypeError, ValueError):
                 pass
+        if row.insight_conflict_resolved is not None:
+            conflict_scored += 1
+            if row.insight_conflict_resolved:
+                conflict_true += 1
+        if row.run_ptl_retry_count is not None:
+            ptl_vals.append(int(row.run_ptl_retry_count))
+        unnecessary_vals.append(int(row.unnecessary_tool_calls or 0))
 
     tool_error_rate = (bad_steps / total_steps) if total_steps else 0.0
 
     latencies = [d for d in durations if d > 0]
     latency_p95: float | None = None
+    latency_p50: float | None = None
     if latencies:
         sorted_lat = sorted(latencies)
         idx = max(0, int(len(sorted_lat) * 0.95) - 1)
         latency_p95 = float(sorted_lat[min(idx, len(sorted_lat) - 1)])
+        idx50 = max(0, int(len(sorted_lat) * 0.50) - 1)
+        latency_p50 = float(sorted_lat[min(idx50, len(sorted_lat) - 1)])
 
     churn_score = float(churn_hints) if churn_hints else None
+
+    n_timeline = len(timeline)
+    stale_lag_hits = sum(
+        1 for row in timeline if (row.insight_fallback_reason or "") == "insight_stale_lag"
+    )
+    circuit_hits = sum(
+        1 for row in timeline if (row.insight_fallback_reason or "") == "insight_circuit_open"
+    )
+    stale_summary_err = round(stale_lag_hits / float(n_timeline), 6) if n_timeline else None
+    stale_reason_rate_val = (
+        round((stale_lag_hits + circuit_hits) / float(n_timeline), 6) if n_timeline else None
+    )
+    conflict_rate = round(conflict_true / float(conflict_scored), 6) if conflict_scored else None
+    ptl_rate = round(sum(ptl_vals) / float(len(ptl_vals)), 6) if ptl_vals else None
+    unn_avg = (
+        round(sum(unnecessary_vals) / float(len(unnecessary_vals)), 6) if unnecessary_vals else None
+    )
 
     return Metrics(
         tool_error_rate=tool_error_rate,
@@ -364,6 +431,14 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         side_llm_cache_read_ratio_avg=(
             round(sum(side_llm_ratios) / len(side_llm_ratios), 4) if side_llm_ratios else None
         ),
+        latency_p50_ms=latency_p50,
+        insight_recall_at_k=None,
+        stale_summary_error_rate=stale_summary_err,
+        insight_stale_reason_rate=stale_reason_rate_val,
+        insight_conflict_resolved_rate=conflict_rate,
+        ptl_retry_rate=ptl_rate,
+        compaction_circuit_breaker_trips=int(circuit_hits),
+        unnecessary_tool_calls_avg=unn_avg,
     )
 
 
@@ -400,6 +475,10 @@ def merge_compaction_events_into_timeline(
                     budget_stop_reasons=row.budget_stop_reasons,
                     side_llm_cache_read_ratio=row.side_llm_cache_read_ratio,
                     thread_insight_forked=row.thread_insight_forked,
+                    insight_fallback_reason=row.insight_fallback_reason,
+                    insight_conflict_resolved=row.insight_conflict_resolved,
+                    run_ptl_retry_count=row.run_ptl_retry_count,
+                    unnecessary_tool_calls=row.unnecessary_tool_calls,
                 )
             )
         else:
@@ -517,7 +596,7 @@ def merge_compaction_into_review_dict(
     data: dict[str, Any],
     compaction_event_dicts: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Merge compaction events into an existing ``trace-review-v1`` document (idempotent on same input)."""
+    """Merge compaction events into an existing trace-review-v1 document (idempotent)."""
     if not compaction_event_dicts:
         return data
     tr = trace_review_from_dict(data)
@@ -611,6 +690,13 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                     thread_id=c.get("thread_id"),
                 )
             )
+        _rtp_raw = item.get("run_ptl_retry_count")
+        _rtp_parsed: int | None = None
+        if _rtp_raw is not None and str(_rtp_raw).strip():
+            try:
+                _rtp_parsed = int(_rtp_raw)
+            except (TypeError, ValueError):
+                _rtp_parsed = None
         timeline.append(
             TimelineCase(
                 case_id=str(item.get("case_id") or "unknown"),
@@ -646,10 +732,29 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                     if isinstance(item.get("thread_insight_forked"), bool)
                     else None
                 ),
+                insight_fallback_reason=(
+                    str(item.get("insight_fallback_reason")).strip()
+                    if item.get("insight_fallback_reason")
+                    else None
+                ),
+                insight_conflict_resolved=(
+                    bool(item["insight_conflict_resolved"])
+                    if isinstance(item.get("insight_conflict_resolved"), bool)
+                    else None
+                ),
+                run_ptl_retry_count=_rtp_parsed,
+                unnecessary_tool_calls=_coerce_int(item.get("unnecessary_tool_calls"), default=0),
             )
         )
 
     mraw = data.get("metrics") or {}
+    _ccb_raw = mraw.get("compaction_circuit_breaker_trips")
+    _ccb_trips: int | None = None
+    if _ccb_raw is not None and str(_ccb_raw).strip():
+        try:
+            _ccb_trips = int(_ccb_raw)
+        except (TypeError, ValueError):
+            _ccb_trips = None
     metrics = Metrics(
         tool_error_rate=float(mraw.get("tool_error_rate") or 0.0),
         missing_span_count=int(mraw.get("missing_span_count") or 0),
@@ -662,6 +767,18 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
         budget_cutoff_count=_coerce_int(mraw.get("budget_cutoff_count"), default=0),
         side_llm_cache_read_ratio_avg=_coerce_optional_float(
             mraw.get("side_llm_cache_read_ratio_avg")
+        ),
+        latency_p50_ms=_coerce_optional_float(mraw.get("latency_p50_ms")),
+        insight_recall_at_k=_coerce_optional_float(mraw.get("insight_recall_at_k")),
+        stale_summary_error_rate=_coerce_optional_float(mraw.get("stale_summary_error_rate")),
+        insight_stale_reason_rate=_coerce_optional_float(mraw.get("insight_stale_reason_rate")),
+        insight_conflict_resolved_rate=_coerce_optional_float(
+            mraw.get("insight_conflict_resolved_rate")
+        ),
+        ptl_retry_rate=_coerce_optional_float(mraw.get("ptl_retry_rate")),
+        compaction_circuit_breaker_trips=_ccb_trips,
+        unnecessary_tool_calls_avg=_coerce_optional_float(
+            mraw.get("unnecessary_tool_calls_avg"),
         ),
     )
 
@@ -715,6 +832,10 @@ def merge_e2e_report_json_into_review(
                     budget_stop_reasons=row.budget_stop_reasons,
                     side_llm_cache_read_ratio=row.side_llm_cache_read_ratio,
                     thread_insight_forked=row.thread_insight_forked,
+                    insight_fallback_reason=row.insight_fallback_reason,
+                    insight_conflict_resolved=row.insight_conflict_resolved,
+                    run_ptl_retry_count=row.run_ptl_retry_count,
+                    unnecessary_tool_calls=row.unnecessary_tool_calls,
                 )
             except (TypeError, ValueError):
                 pass

@@ -49,7 +49,7 @@ LLM_ADVANCED_RUNTIME_KEYS: tuple[str, ...] = (
 )
 
 AGENT_RUNTIME_ALLOWED: frozenset[str] = frozenset(
-    ("langgraph_research_v1", "langgraph_supervisor_v1", "retrieval_v1")
+    ("langgraph_research_v1", "langgraph_supervisor_v1", "langgraph_supervisor_v3", "retrieval_v1")
 )
 
 # UI / OpenAPI grouping (``SettingsSchemaResponse``).

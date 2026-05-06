@@ -154,6 +154,58 @@ def test_merge_compaction_into_review_dict(schema_module) -> None:
     assert merged["metrics"]["compaction_event_count"] >= 1
 
 
+def test_merge_e2e_extracts_prompt_memory_run_metadata(schema_module) -> None:
+    case = {
+        "case_id": "pm_row",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "insight_fallback_reason": "insight_stale_lag",
+            "insight_conflict_resolved": True,
+            "ptl_retry_count": 2,
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].insight_fallback_reason == "insight_stale_lag"
+    assert tl[0].insight_conflict_resolved is True
+    assert tl[0].run_ptl_retry_count == 2
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.ptl_retry_rate == 2.0
+    assert m.stale_summary_error_rate == 1.0
+    assert m.compaction_circuit_breaker_trips == 0
+
+
+def test_merge_e2e_counts_insight_circuit_open_fallback(schema_module) -> None:
+    case = {
+        "case_id": "pm_circuit_open",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "insight_fallback_reason": "insight_circuit_open",
+            "insight_conflict_resolved": False,
+            "ptl_retry_count": 0,
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].insight_fallback_reason == "insight_circuit_open"
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.insight_stale_reason_rate == 1.0
+    assert m.compaction_circuit_breaker_trips == 1
+
+
+def test_merge_e2e_propagates_unnecessary_tool_calls_from_case_metrics(schema_module) -> None:
+    case = {
+        "case_id": "unn",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "metrics": {"unnecessary_tool_calls": 3},
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].unnecessary_tool_calls == 3
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.unnecessary_tool_calls_avg == 3.0
+
+
 def test_aggregate_metrics_from_timeline_p2_roi_counters(schema_module) -> None:
     """§6.4 P2: shortlist/deferred/budget telemetry aggregates into Metrics."""
 

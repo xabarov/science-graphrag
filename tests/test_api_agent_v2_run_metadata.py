@@ -43,3 +43,20 @@ def test_apply_runtime_metadata_from_state_overrides_runtime_attribution() -> No
     assert patched["graph_id"] == "supervisor_graph"
     assert patched["react_total_hops"] == 3
     assert patched["react_force_finalize"] == "budget_exhausted"
+
+
+def test_apply_runtime_metadata_from_state_includes_parent_turn_and_parallel_cap() -> None:
+    patched = apply_runtime_metadata_from_state(
+        run_metadata={"run_kind": "x", "graph_id": "y"},
+        state={
+            "metadata": {
+                "run_kind": "supervisor_specialists_v3",
+                "graph_id": "supervisor_graph_v3",
+                "parent_turn_id": "550e8400-e29b-41d4-a716-446655440000",
+                "max_parallel_subagents": 4,
+            }
+        },
+    )
+    assert patched["parent_turn_id"] == "550e8400-e29b-41d4-a716-446655440000"
+    assert patched["max_parallel_subagents"] == 4
+    assert patched["run_kind"] == "supervisor_specialists_v3"

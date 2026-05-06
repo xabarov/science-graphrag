@@ -46,9 +46,22 @@ def build_writer_tools(_stores: StoreRegistry) -> list[BaseTool]:
     return [_make_final_answer_tool()]
 
 
-def build_tool_registry(stores: StoreRegistry) -> list[BaseTool]:
+def build_tool_registry(stores: StoreRegistry, settings: Settings | None = None) -> list[BaseTool]:
     """Build LangChain tool list with injected stores."""
-    return build_graph_tools(stores) + build_retrieval_tools(stores) + build_writer_tools(stores)
+    settings = settings or get_settings()
+    out: list[BaseTool] = []
+    out.extend(build_graph_tools(stores))
+    out.extend(build_retrieval_tools(stores, settings))
+    if getattr(settings, "agent_web_research_tools_enabled", False):
+        from science_graphrag.agent.tools.web_research_tools import build_web_research_tools
+
+        out.extend(build_web_research_tools(settings=settings))
+    if getattr(settings, "agent_doi_resolver_tool_enabled", False):
+        from science_graphrag.agent.tools.doi_resolver_tool import build_doi_resolver_tool
+
+        out.append(build_doi_resolver_tool(stores.neo4j, settings))
+    out.extend(build_writer_tools(stores))
+    return out
 
 
 __all__ = [

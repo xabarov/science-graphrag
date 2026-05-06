@@ -1,0 +1,53 @@
+# ADR 028: Agent runtime v3 — subagent foundation
+
+**Status:** Accepted  
+**Date:** 2026-05-06  
+**Related:** ADR-020 (supervisor), ADR-027 (`agent_runtime` / `run_metadata`), roadmap §9.4 B0/B1, `docs/specs/agent-chat-v1.md`
+
+## Context
+
+SciGraph needs a first-class **subagent lifecycle** (spawn, bounded parallelism, terminal states, per-child observability) without fragmenting the product HTTP surface. OpenClaude-style **coordinator-mode** (explicit task IDs, async messaging) and **fork-mode** (cache-aligned inherited prefix) are different trade-offs; economics and existing `/v2` contracts must stay coherent.
+
+## Decision
+
+### HTTP / API shape
+
+- **Canonical entrypoint remains `POST /v2/agent/query`** (JSON or SSE). No separate `/v3/agent/query` in this foundation wave.
+- **Runtime selection** continues to use `Settings.agent_runtime` (ADR-027). A dedicated value **`langgraph_supervisor_v3`** marks runs that use v3 subagent observability and policies while the LangGraph wiring may still share the supervisor graph until a split is justified.
+- **Product `run_kind` / `graph_id` attribution** for v3 runs is **`supervisor_specialists_v3` / `supervisor_graph_v3`** so traces and `trace-review-v1` can distinguish v3 from v1 without a second HTTP route.
+
+### Fork-mode vs coordinator-mode
+
+- **Default for v3 side work:** **fork-mode** — child prompts inherit the parent’s stable system/tool surface and thinking configuration so OpenRouter-style **prompt cache** reuse stays predictable (same tool array shape, no child-specific `max_output_tokens` overrides in the fork contract; no alternate “thinking” profile for the child unless explicitly specified later in a product scenario).
+- **Coordinator-mode** (explicit task registry, `send_message` / `task_stop`, stronger async UX) is **out of scope** for this foundation ADR and is only allowed behind a **future explicit product case** + separate ADR when user-visible “continue specialist” semantics are required.
+
+### When to spawn; sync vs background; merge; failures
+
+- **Spawn decision (policy-level):** spawn a bounded child run when work is isolatable (read-only fan-out, verification, corpus slice) and the parent should not interleave tool transcripts; do **not** spawn for trivial single-tool hops that the main graph already models. Exact automation (which nodes call `spawn_subagent`) is deferred; this ADR defines the **contract** and **runtime primitive**.
+- **Sync vs background:** default child execution is **synchronous within the parent turn** (same HTTP/SSE request). **Background** children (outlive the parent response) are **not** implemented in this wave; reserve `execution_mode` in task spec for a later train.
+- **Merge contract (parent):** only structured carry-back (summary + optional citations + provenance) merges into the parent transcript; full child message dumps stay in **sidechain** artifacts (see §6.1.5 / `agent_sidechain_transcripts_*`). **Merge-node / `specialist_results_v3`** implementation is deferred (Epic B2).
+- **Failure taxonomy (child run):**
+  - **Terminal states (machine):** `succeeded` | `failed` | `cancelled` | `timed_out`.
+  - **Semantic causes (telemetry / UI):** map into `failure_code` optional string, including at minimum `timeout`, `partial`, `cancelled`, `tool_denied` (aligns with roadmap §9.4 B0). `failed` is the generic bucket when no finer code is set.
+
+### Prompt-cache contract (fork-mode)
+
+- Child fork inherits the **same catalog tool bindings shape** and **same thinking / reasoning config** as the parent turn unless a future ADR defines an exception list.
+- **Do not** vary `max_output_tokens` (or equivalent) inside the forked child for cache-key stability; token pressure is enforced by **turn budgets** and future per-child caps (B3), not by silent parameter drift on the fork.
+
+### Observability
+
+- Every parent turn exposes **`parent_turn_id`** (UUID) in `run_metadata` and on **`subagent_*` SSE events** where a child leg is active.
+- Each completed or terminal child row in **`run_metadata.subagent_runs`** includes: `subagent_id`, `parent_turn_id`, `spawn_reason`, `terminal_state`, `latency_ms` (when measurable), `tokens` / `cost_usd_estimate` (nullable until per-child usage attribution exists).
+
+## Consequences
+
+- Clients keep one URL; v3 is discovered via `run_metadata.agent_runtime`, `run_kind`, `graph_id`, and `subagent_runs`.
+- Benchmarks comparing fork vs coordinator remain **roadmap acceptance** for B0; not a code dependency of this skeleton.
+- `langgraph_supervisor_v3` currently uses the same compiled supervisor graph as v1 where no v3-only nodes exist yet; divergence is expected in a later train.
+
+## Deferred (explicitly not this ADR)
+
+- `claim_verification`, `corpus-explore`, `research-plan` subagents; hooks layer; registry loader; dynamic schema transport.
+- `<task-notification>` envelope, `subagent_task_notification`, `subagent_progress_label` scheduling.
+- Full per-child token/cost attribution (requires message tagging or subgraph accounting).

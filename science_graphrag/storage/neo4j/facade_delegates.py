@@ -28,6 +28,9 @@ class Neo4jGraphStoreDelegates:
     def find_work_id_by_doi(self, doi: str) -> str | None:
         return reads.find_work_id_by_doi(self._client, doi)
 
+    def find_work_id_by_doi_in_workspace(self, workspace_id: str, doi: str) -> str | None:
+        return reads.find_work_id_by_doi_in_workspace(self._client, workspace_id, doi)
+
     def find_work_id_by_fingerprint(self, fingerprint: str) -> str | None:
         return reads.find_work_id_by_fingerprint(self._client, fingerprint)
 

@@ -67,6 +67,11 @@ Each train in §9.6 closes with **dual-run off/on** vs committed baseline. For T
 
 - **A2** prompt injection + precedence matrix + conflict markers (A1 hardening above does **not** inject `<thread_insight>`).
 - **A3** long-thread eval lane + numeric SLO gate (minimal synthetic metric harness is allowed for A1 only).
+
+## Train T2 bridge (implemented after T1 doc freeze)
+
+- **A2:** `resolve_prompt_memory_policy` + `<last_turn_digest>` / `<thread_insight>` / `<session_memory>` in `format_user_with_memory`; `run_metadata` carries `insight_fallback_reason`, `insight_conflict_resolved`, `ptl_retry_count`, and prompt injection flags (sync + SSE).
+- **A3:** offline `eval/chat_agent/long_thread_eval.py` merged via `agent_trace_review.py --with-long-thread-eval`; `trace-review-v1` metrics extended (p50, recall/stale/ptl aggregates); `trace_regression_compare.py` supports `--min-insight-recall-at-k` / `--max-stale-summary-error-rate`. See [`docs/runbooks/agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) §8.
 - **C1–C3** LLM rerank, dynamic deferred schema transport, lane-specific warn/fail policy.
 - **Epic B** subagent spawn/merge.
 

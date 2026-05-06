@@ -8,6 +8,9 @@ from typing import Any
 from pydantic import BaseModel, Field, field_validator
 
 from science_graphrag.agent.context.session_store import get_session_for_thread
+from science_graphrag.agent.debug_events_telemetry import (
+    extract_runtime_telemetry_from_debug_events,
+)
 from science_graphrag.agent.llm.chat import effective_chat_llm_model
 from science_graphrag.agent.runtime import current_otel_trace_id_hex
 from science_graphrag.config import Settings
@@ -98,6 +101,15 @@ def apply_runtime_metadata_from_state(
     react_force_finalize = raw_meta.get("react_force_finalize")
     if isinstance(react_force_finalize, str) and react_force_finalize:
         run_metadata["react_force_finalize"] = react_force_finalize
+    parent_turn_id = raw_meta.get("parent_turn_id")
+    if isinstance(parent_turn_id, str) and parent_turn_id.strip():
+        run_metadata["parent_turn_id"] = parent_turn_id.strip()
+    max_par = raw_meta.get("max_parallel_subagents")
+    if isinstance(max_par, int) and max_par >= 1:
+        run_metadata["max_parallel_subagents"] = max_par
+    rpc = raw_meta.get("post_compact_paper_sources_restored_count")
+    if isinstance(rpc, int) and rpc >= 0:
+        run_metadata["post_compact_paper_sources_restored_count"] = int(rpc)
     return run_metadata
 
 
@@ -276,14 +288,24 @@ def response_from_run(
     llm_usage = getattr(out, "llm_usage", None)
     if isinstance(llm_usage, dict) and llm_usage:
         run_metadata["usage"] = dict(llm_usage)
-    if getattr(out, "debug_events", None):
-        run_metadata["debug_events"] = list(out.debug_events)[-50:]
+    dbg_tail = [
+        x for x in list(getattr(out, "debug_events", None) or [])[-50:] if isinstance(x, dict)
+    ]
+    if dbg_tail:
+        run_metadata["debug_events"] = dbg_tail
+        run_metadata.update(extract_runtime_telemetry_from_debug_events(dbg_tail))
     tid = getattr(out, "thread_id", None)
     warnings = list(getattr(out, "warnings", None) or [])
     for w in extra_warnings or []:
         ws = str(w).strip()
         if ws and ws not in warnings:
             warnings.append(ws)
+    pm = getattr(out, "prompt_memory_run_metadata", None)
+    if isinstance(pm, dict) and pm:
+        run_metadata.update(pm)
+    sar = getattr(out, "subagent_runs", None)
+    if isinstance(sar, list) and sar:
+        run_metadata["subagent_runs"] = list(sar)
     return AgentQueryResponseV2(
         answer=out.answer,
         citations=out.citations,

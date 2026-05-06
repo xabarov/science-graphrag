@@ -14,6 +14,7 @@ from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from science_graphrag.agent.context.message_sanitizers import sanitize_digest_dict_for_compact
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
 from science_graphrag.agent.llm.chat import build_chat_model, effective_chat_llm_model
 from science_graphrag.config import Settings
@@ -39,17 +40,24 @@ def _is_context_limit_error(exc: BaseException) -> bool:
     return any(n in s for n in needles)
 
 
-def _slim_digests_blob(digests: list[dict[str, Any]], *, max_chars: int) -> str:
+def _slim_digests_blob(
+    digests: list[dict[str, Any]],
+    *,
+    max_chars: int,
+    settings: Settings,
+) -> str:
     slim: list[dict[str, Any]] = []
+    pre_ok = bool(getattr(settings, "agent_pre_compact_sanitizers_enabled", True))
     for d in digests:
         if not isinstance(d, dict):
             continue
+        src = sanitize_digest_dict_for_compact(d) if pre_ok else d
         slim.append(
             {
-                "user_intent": str(d.get("user_intent") or "")[:500],
-                "answer_excerpt": str(d.get("answer_excerpt") or "")[:700],
-                "answer_class": str(d.get("answer_class") or ""),
-                "tools_used": list(d.get("tools_used") or [])[:24],
+                "user_intent": str(src.get("user_intent") or "")[:500],
+                "answer_excerpt": str(src.get("answer_excerpt") or "")[:700],
+                "answer_class": str(src.get("answer_class") or ""),
+                "tools_used": list(src.get("tools_used") or [])[:24],
             }
         )
     raw = json.dumps(slim, ensure_ascii=False)
@@ -129,7 +137,7 @@ def maybe_llm_compact_session_after_turn(
     blob = ""
     try:
         for attempt in range(max_ptl + 1):
-            blob = _slim_digests_blob(digests_work, max_chars=max_in)
+            blob = _slim_digests_blob(digests_work, max_chars=max_in, settings=settings)
             try:
                 summary = _invoke_summary_llm(settings, user_blob=blob)
                 break

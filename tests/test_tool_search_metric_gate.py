@@ -9,8 +9,8 @@ Before enabling LLM shortlist selection, record from production-like runs:
   trace-review merge).
 - ``latency_p95_ms`` — from ``science-graphrag-agent-benchmark`` suite summaries for
   A/B toggles (off vs on deferred schemas).
-- ``unnecessary_tool_calls`` — benchmark-side: compare executed trace length vs gold
-  ``max_calls`` / expected sequences (extend ``eval/agent_tools`` when piloting).
+- ``unnecessary_tool_calls`` — benchmark-side: ``eval/agent_tools/metrics.score_agent_case``
+  (executed trace length minus expected tool count; see ``tests/eval/test_agent_tools_metrics.py``).
 
 No runtime assertions here; implementation hooks live in ``scripts/live_check/trace_review_schema.py``
 and ``science_graphrag/agent/tool_search.py``.
@@ -25,5 +25,6 @@ def test_tool_search_prep_metric_keys_documented() -> None:
         "deferred_schema_event_count",
         "latency_p95_ms",
         "tool_call_count_vs_budget",
+        "unnecessary_tool_calls",
     )
-    assert len(expected_keys) == 4
+    assert len(expected_keys) == 5

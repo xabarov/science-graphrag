@@ -15,6 +15,7 @@ from science_graphrag.agent.tool_manifest import (
     compact_catalog_lines,
     manifest_by_name,
 )
+from science_graphrag.agent.tool_selector_hybrid import maybe_llm_rerank_shortlist
 from science_graphrag.config import Settings
 
 
@@ -34,6 +35,14 @@ _CLIENT_DIGEST_RE = re.compile(
 )
 _ACTIVE_WS_ID_RE = re.compile(
     r"<active_workspace_id>.*?</active_workspace_id>\s*",
+    re.DOTALL | re.IGNORECASE,
+)
+_LAST_TURN_DIGEST_RE = re.compile(
+    r"<last_turn_digest>.*?</last_turn_digest>\s*",
+    re.DOTALL | re.IGNORECASE,
+)
+_THREAD_INSIGHT_RE = re.compile(
+    r"<thread_insight\b[^>]*>.*?</thread_insight>\s*",
     re.DOTALL | re.IGNORECASE,
 )
 
@@ -101,6 +110,8 @@ def strip_tool_search_context_wrappers(text: str) -> str:
     s = _SESSION_MEMORY_RE.sub("", s)
     s = _CLIENT_DIGEST_RE.sub("", s)
     s = _ACTIVE_WS_ID_RE.sub("", s)
+    s = _LAST_TURN_DIGEST_RE.sub("", s)
+    s = _THREAD_INSIGHT_RE.sub("", s)
     return s.strip()
 
 
@@ -294,12 +305,14 @@ def _shortlist_build_rules_meta(
     tools: list[BaseTool],
     *,
     ctx: _RulesShortlistMetaCtx,
+    selector_extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Assemble ``tool_search_result`` metadata for the rules path."""
     _sort_picked_like_registry_order(picked, tools)
     names = [getattr(t, "name", "") for t in picked]
+    reason = "hybrid_llm" if (selector_extra or {}).get("selector_stage") == "hybrid_llm" else "rules"
     meta_out: dict[str, Any] = {
-        "reason": "rules",
+        "reason": reason,
         "matched": names,
         "top_score": ctx.top_score,
         "score_band": ctx.score_band,
@@ -336,6 +349,11 @@ def _shortlist_build_rules_meta(
     if ctx.strict_removed_tools:
         meta_out["deferred_strict_removed_from_picked"] = list(ctx.strict_removed_tools)
     _extend_rules_meta_strict_telemetry(meta_out, ctx, names)
+    if selector_extra:
+        for k, v in selector_extra.items():
+            if v is None:
+                continue
+            meta_out[k] = v
     return meta_out
 
 
@@ -630,6 +648,17 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             "activation_policy": "relaxed_fallback_full",
         }
 
+    selector_extra: dict[str, Any] | None = None
+    picked, selector_extra = maybe_llm_rerank_shortlist(
+        picked,
+        question=question,
+        specialist=specialist,
+        settings=settings,
+        rules_matched_tools=rules_matched_tools,
+        message_discovery_merged=message_discovery_merged,
+        carryover_merged=carryover_merged,
+    )
+
     meta_out = _shortlist_build_rules_meta(
         picked,
         tools,
@@ -648,6 +677,7 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             strict_removed_tools=strict_removed_tools,
             activation_policy=activation_policy,
         ),
+        selector_extra=selector_extra,
     )
     return picked, meta_out
 
@@ -688,6 +718,12 @@ def build_tool_search_result_debug_event(
         "deferred_activated_via_message_or_carryover_count",
         "tool_search_miss_due_to_no_discovery",
         "deferred_tool_activation_rate",
+        "selector_stage",
+        "selector_confidence",
+        "selector_reason_codes",
+        "rules_candidate_tools",
+        "llm_ranked_tools",
+        "pre_llm_denied_tools",
     )
     for k in optional_keys:
         if k not in meta:

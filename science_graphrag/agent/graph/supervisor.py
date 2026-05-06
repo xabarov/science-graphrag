@@ -292,7 +292,7 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
 
 def build_retrieval_graph(stores: StoreRegistry, settings: Settings):
     """Build retrieval graph alias with runtime switch."""
-    if settings.agent_runtime == "langgraph_supervisor_v1":
+    if settings.agent_runtime in ("langgraph_supervisor_v1", "langgraph_supervisor_v3"):
         return build_supervisor_graph(stores, settings)
     if settings.agent_runtime in ("retrieval_v1", "langgraph_research_v1"):
         return _build_single_agent_graph(stores, settings)
@@ -302,7 +302,7 @@ def build_retrieval_graph(stores: StoreRegistry, settings: Settings):
 
 def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
     """Wave Y2 fallback: single-agent ReAct graph."""
-    tool_registry = build_tool_registry(stores)
+    tool_registry = build_tool_registry(stores, settings)
     full_tool_node = build_tool_execution_node(
         tools=tool_registry,
         settings=settings,
@@ -363,9 +363,14 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
                 ),
                 transport_max_attempts=max_attempts,
             )
-            react_msgs = maybe_compact_agent_messages_for_react(
+            react_msgs, compact_audit = maybe_compact_agent_messages_for_react(
                 state["messages"],
                 settings=settings,
+                client_idle_ms=(
+                    int(meta["client_idle_ms"])
+                    if isinstance(meta.get("client_idle_ms"), int)
+                    else None
+                ),
             )
             response = invoke_chat_gated(
                 llm_turn,
@@ -373,14 +378,17 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
                 pool_name="agent_chat",
                 settings=settings,
             )
+        dbg = [
+            build_tool_search_result_debug_event(
+                specialist="single_agent_react",
+                meta=ts_meta,
+            )
+        ]
+        if compact_audit:
+            dbg.append({"type": "tool_message_compact_audit", **compact_audit})
         return {
             "messages": [response],
-            "debug_events": [
-                build_tool_search_result_debug_event(
-                    specialist="single_agent_react",
-                    meta=ts_meta,
-                )
-            ],
+            "debug_events": dbg,
         }
 
     def final_answer_nudge_node(state: AgentState) -> dict:

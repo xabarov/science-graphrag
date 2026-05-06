@@ -44,6 +44,20 @@ def _metric_optional_float(doc: dict[str, Any], key: str) -> float | None:
         return None
 
 
+def _metric_optional_any(doc: dict[str, Any], keys: tuple[str, ...]) -> float | None:
+    for key in keys:
+        val = _metric_optional_float(doc, key)
+        if val is not None:
+            return val
+    return None
+
+
+def _verdict_rank(doc: dict[str, Any]) -> int:
+    verdict = doc.get("verdict") if isinstance(doc, dict) else {}
+    status = str((verdict or {}).get("status") or "pass").strip().lower()
+    return {"fail": 0, "warn": 1, "pass": 2}.get(status, -1)
+
+
 def _require_version(doc: dict[str, Any], label: str) -> None:
     ver = str(doc.get("review_version") or "")
     if ver != REVIEW_VERSION:
@@ -56,6 +70,7 @@ def _require_version(doc: dict[str, Any], label: str) -> None:
 
 
 def main() -> int:
+    """CLI entry: compare two trace-review-v1 JSON artifacts; exit 0/1/2/3 by policy."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--candidate", type=Path, required=True)
@@ -69,7 +84,9 @@ def main() -> int:
     )
     parser.add_argument(
         "--warn-on",
-        default="latency_p95_increase,shortlist_ratio_increase",
+        default=(
+            "latency_p95_increase,shortlist_ratio_increase," "unnecessary_tool_calls_avg_increase"
+        ),
         help="Comma-separated warn policies (non-zero exit 3 unless --warn-is-pass).",
     )
     parser.add_argument(
@@ -85,6 +102,15 @@ def main() -> int:
         help="FAIL if delta compaction_churn_score >= this.",
     )
     parser.add_argument(
+        "--unnecessary-tool-calls-avg-fail-delta",
+        type=float,
+        default=0.5,
+        help=(
+            "FAIL when fail policy includes unnecessary_tool_calls_avg_increase and "
+            "(candidate_avg - baseline_avg) >= this (metrics may be absent on older traces)."
+        ),
+    )
+    parser.add_argument(
         "--warn-is-pass",
         action="store_true",
         help="Treat WARN policies as exit 0 (still printed).",
@@ -97,6 +123,51 @@ def main() -> int:
             "Optional FAIL when candidate metrics.side_llm_cache_read_ratio_avg is set and "
             "strictly below this threshold (Train T1 §10.2 gate for forked thread_insights). "
             "Skipped when the metric is absent (no forked side-LLM rows in trace_timeline)."
+        ),
+    )
+    parser.add_argument(
+        "--min-insight-recall-at-k",
+        type=float,
+        default=None,
+        help="Optional FAIL when candidate metrics.insight_recall_at_k is set and below threshold.",
+    )
+    parser.add_argument(
+        "--max-stale-summary-error-rate",
+        type=float,
+        default=None,
+        help="Optional FAIL when candidate metrics.stale_summary_error_rate is above threshold.",
+    )
+    parser.add_argument(
+        "--enforce-verdict-not-worse",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "FAIL when candidate verdict.status is worse than baseline "
+            "(pass > warn > fail). Use --no-enforce-verdict-not-worse to disable."
+        ),
+    )
+    parser.add_argument(
+        "--max-latency-p95-ms",
+        type=float,
+        default=None,
+        help="Optional FAIL when candidate metrics.latency_p95_ms is above absolute budget.",
+    )
+    parser.add_argument(
+        "--min-claim-grounding-precision",
+        type=float,
+        default=None,
+        help=(
+            "Optional FAIL when candidate claim grounding precision is below threshold; "
+            "reads metrics.claim_grounding_precision then metrics.claim_precision."
+        ),
+    )
+    parser.add_argument(
+        "--min-claim-grounding-recall",
+        type=float,
+        default=None,
+        help=(
+            "Optional FAIL when candidate claim grounding recall is below threshold; "
+            "reads metrics.claim_grounding_recall then metrics.claim_recall."
         ),
     )
     parser.add_argument("--out-json", type=Path, required=True)
@@ -130,6 +201,12 @@ def main() -> int:
         base, "budget_cutoff_count"
     )
 
+    b_unn = _metric_optional_float(base, "unnecessary_tool_calls_avg")
+    c_unn = _metric_optional_float(cand, "unnecessary_tool_calls_avg")
+    delta_unnecessary_tool_calls_avg: float | None = None
+    if b_unn is not None or c_unn is not None:
+        delta_unnecessary_tool_calls_avg = float(c_unn or 0.0) - float(b_unn or 0.0)
+
     c_side = _metric_optional_float(cand, "side_llm_cache_read_ratio_avg")
     b_side = _metric_optional_float(base, "side_llm_cache_read_ratio_avg")
     delta_side_llm: float | None = None
@@ -159,6 +236,23 @@ def main() -> int:
     if "shortlist_ratio_increase" in policies_warn and delta_shortlist_ratio > 0:
         warn_reasons.append(f"shortlist_ratio_increase:{delta_shortlist_ratio:.4f}")
 
+    if (
+        "unnecessary_tool_calls_avg_increase" in policies_warn
+        and delta_unnecessary_tool_calls_avg is not None
+        and delta_unnecessary_tool_calls_avg > 1e-9
+    ):
+        warn_reasons.append(
+            "unnecessary_tool_calls_avg_increase:" f"{delta_unnecessary_tool_calls_avg:.4f}"
+        )
+    if (
+        "unnecessary_tool_calls_avg_increase" in policies_fail
+        and delta_unnecessary_tool_calls_avg is not None
+        and delta_unnecessary_tool_calls_avg >= float(args.unnecessary_tool_calls_avg_fail_delta)
+    ):
+        fail_reasons.append(
+            "unnecessary_tool_calls_avg_increase:" f"{delta_unnecessary_tool_calls_avg:.4f}"
+        )
+
     min_side = args.min_side_llm_cache_read_ratio
     if min_side is not None:
         cand_side = _metric_optional_float(cand, "side_llm_cache_read_ratio_avg")
@@ -166,6 +260,47 @@ def main() -> int:
             fail_reasons.append(
                 f"side_llm_cache_read_ratio_avg:{cand_side:.4f}<{float(min_side):.4f}"
             )
+
+    min_recall = args.min_insight_recall_at_k
+    if min_recall is not None:
+        cand_r = _metric_optional_float(cand, "insight_recall_at_k")
+        if cand_r is not None and cand_r < float(min_recall):
+            fail_reasons.append(f"insight_recall_at_k:{cand_r:.4f}<{float(min_recall):.4f}")
+
+    max_stale = args.max_stale_summary_error_rate
+    if max_stale is not None:
+        cand_s = _metric_optional_float(cand, "stale_summary_error_rate")
+        if cand_s is not None and cand_s > float(max_stale):
+            fail_reasons.append(f"stale_summary_error_rate:{cand_s:.4f}>{float(max_stale):.4f}")
+
+    max_lat_abs = args.max_latency_p95_ms
+    if max_lat_abs is not None:
+        cand_lat_opt = _metric_optional_float(cand, "latency_p95_ms")
+        if cand_lat_opt is not None and cand_lat_opt > float(max_lat_abs):
+            fail_reasons.append(f"latency_p95_ms:{cand_lat_opt:.4f}>{float(max_lat_abs):.4f}")
+
+    min_claim_precision = args.min_claim_grounding_precision
+    if min_claim_precision is not None:
+        cand_prec = _metric_optional_any(cand, ("claim_grounding_precision", "claim_precision"))
+        if cand_prec is not None and cand_prec < float(min_claim_precision):
+            fail_reasons.append(
+                f"claim_grounding_precision:{cand_prec:.4f}<{float(min_claim_precision):.4f}"
+            )
+
+    min_claim_recall = args.min_claim_grounding_recall
+    if min_claim_recall is not None:
+        cand_rec = _metric_optional_any(cand, ("claim_grounding_recall", "claim_recall"))
+        if cand_rec is not None and cand_rec < float(min_claim_recall):
+            fail_reasons.append(
+                f"claim_grounding_recall:{cand_rec:.4f}<{float(min_claim_recall):.4f}"
+            )
+
+    base_verdict_rank = _verdict_rank(base)
+    cand_verdict_rank = _verdict_rank(cand)
+    if args.enforce_verdict_not_worse and cand_verdict_rank < base_verdict_rank:
+        b_status = str((base.get("verdict") or {}).get("status") or "pass")
+        c_status = str((cand.get("verdict") or {}).get("status") or "pass")
+        fail_reasons.append(f"verdict_regressed:{b_status}->{c_status}")
 
     status = "pass"
     if fail_reasons:
@@ -184,10 +319,32 @@ def main() -> int:
             "final_answer_missing_count": delta_final_answer_missing,
             "latency_p95_ms": delta_latency_p95,
             "compaction_churn_score": delta_compaction_churn,
+            "compaction_churn_delta": delta_compaction_churn,
             "shortlist_ratio_avg": delta_shortlist_ratio,
             "deferred_schema_event_count": delta_deferred_schema_events,
             "budget_cutoff_count": delta_budget_cutoff,
             "side_llm_cache_read_ratio_avg": delta_side_llm,
+            "insight_recall_at_k": _metric_optional_float(cand, "insight_recall_at_k"),
+            "stale_summary_error_rate": _metric_optional_float(cand, "stale_summary_error_rate"),
+            "latency_p50_ms": _metric_optional_float(cand, "latency_p50_ms"),
+            "latency_p95_ms_candidate": _metric_optional_float(cand, "latency_p95_ms"),
+            "insight_stale_reason_rate": _metric_optional_float(cand, "insight_stale_reason_rate"),
+            "insight_conflict_resolved_rate": _metric_optional_float(
+                cand, "insight_conflict_resolved_rate"
+            ),
+            "ptl_retry_rate": _metric_optional_float(cand, "ptl_retry_rate"),
+            "compaction_circuit_breaker_trips": _metric_optional_float(
+                cand, "compaction_circuit_breaker_trips"
+            ),
+            "claim_grounding_precision": _metric_optional_any(
+                cand, ("claim_grounding_precision", "claim_precision")
+            ),
+            "claim_grounding_recall": _metric_optional_any(
+                cand, ("claim_grounding_recall", "claim_recall")
+            ),
+            "baseline_verdict_rank": base_verdict_rank,
+            "candidate_verdict_rank": cand_verdict_rank,
+            "unnecessary_tool_calls_avg": delta_unnecessary_tool_calls_avg,
         },
     }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -208,6 +365,9 @@ def main() -> int:
         f"- Delta deferred_schema_event_count: `{delta_deferred_schema_events}`",
         f"- Delta budget_cutoff_count: `{delta_budget_cutoff}`",
         f"- Delta side_llm_cache_read_ratio_avg: `{delta_side_llm}`",
+        f"- Delta unnecessary_tool_calls_avg: `{delta_unnecessary_tool_calls_avg}`",
+        f"- Baseline verdict rank: `{base_verdict_rank}`",
+        f"- Candidate verdict rank: `{cand_verdict_rank}`",
     ]
     if fail_reasons:
         md_lines.extend(["", "## Fail reasons"])

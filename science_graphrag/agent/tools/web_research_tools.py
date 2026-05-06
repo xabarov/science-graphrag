@@ -1,0 +1,451 @@
+"""External web research tools (P0.3) — academic allowlist, bounded fetch + cache."""
+
+from __future__ import annotations
+
+import json
+import threading
+import time
+from typing import Any
+from urllib.parse import urlparse
+
+import httpx
+from langchain_core.messages import HumanMessage
+from langchain_core.tools import tool
+from pydantic import BaseModel, Field
+
+from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
+from science_graphrag.agent.tools.base import ToolResult
+from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
+from science_graphrag.config import Settings
+from science_graphrag.llm.concurrency import invoke_chat_gated
+
+_DEFAULT_ACADEMIC_HOST_SUFFIXES: tuple[str, ...] = (
+    "arxiv.org",
+    "pubmed.ncbi.nlm.nih.gov",
+    "semanticscholar.org",
+    "doi.org",
+    "openreview.net",
+    "biorxiv.org",
+    "api.crossref.org",
+)
+
+_FETCH_CACHE_LOCK = threading.Lock()
+_FETCH_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+
+
+def _web_fetch_cache_key(
+    url: str,
+    prompt: str,
+    *,
+    allowed_domains: list[str] | None,
+    blocked_domains: list[str],
+) -> str:
+    """Stable composite key: same fetch policy + URL + prompt must hit same cache entry."""
+    allow = sorted({str(x).strip().lower() for x in _parse_allowlist(allowed_domains)})
+    blocked_sorted = sorted(
+        {str(x).strip().lower() for x in blocked_domains if str(x).strip()},
+    )
+    payload = {
+        "url": (url or "").strip(),
+        "prompt": (prompt or "").strip()[:512],
+        "allowed": allow,
+        "blocked": blocked_sorted,
+    }
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True)
+
+
+def _parse_allowlist(raw: list[str] | None) -> list[str]:
+    if not raw:
+        return list(_DEFAULT_ACADEMIC_HOST_SUFFIXES)
+    return [str(x).strip().lower() for x in raw if str(x).strip()]
+
+
+def _cache_get(key: str) -> dict[str, Any] | None:
+    now = time.monotonic()
+    with _FETCH_CACHE_LOCK:
+        hit = _FETCH_CACHE.get(key)
+        if not hit:
+            return None
+        exp, payload = hit
+        if exp < now:
+            del _FETCH_CACHE[key]
+            return None
+        return dict(payload)
+
+
+def _cache_set(key: str, ttl: int, payload: dict[str, Any]) -> None:
+    with _FETCH_CACHE_LOCK:
+        _FETCH_CACHE[key] = (time.monotonic() + float(ttl), dict(payload))
+
+
+def _host_allowed(hostname: str, allowed: list[str], blocked: list[str]) -> bool:
+    h = (hostname or "").strip().lower().rstrip(".")
+    if not h:
+        return False
+    for b in blocked:
+        b = str(b).strip().lower().rstrip(".")
+        if b and (h == b or h.endswith("." + b)):
+            return False
+    for a in allowed:
+        a = str(a).strip().lower().rstrip(".")
+        if not a:
+            continue
+        if h == a or h.endswith("." + a):
+            return True
+    return False
+
+
+class WebSearchArgs(BaseModel):
+    query: str = Field(..., min_length=1, max_length=512)
+    allowed_domains: list[str] | None = Field(
+        default=None,
+        description="Optional host suffix allowlist; defaults to academic-only set from roadmap.",
+    )
+    blocked_domains: list[str] | None = Field(default=None, description="Optional host denylist.")
+    max_results: int = Field(default=5, ge=1, le=15)
+
+
+class WebFetchArgs(BaseModel):
+    url: str = Field(..., min_length=8, max_length=2048)
+    prompt: str = Field(
+        default="Summarize the scholarly content in 5 bullet points.",
+        max_length=512,
+    )
+    allowed_domains: list[str] | None = Field(default=None)
+    blocked_domains: list[str] | None = Field(default=None)
+
+
+def build_web_research_tools(*, settings: Settings) -> list[Any]:
+    """Return LangChain tools gated by ``agent_web_research_tools_enabled`` at registry level."""
+
+    @tool("web_search", args_schema=WebSearchArgs, return_direct=False)
+    def web_search_tool(
+        query: str,
+        allowed_domains: list[str] | None = None,
+        blocked_domains: list[str] | None = None,
+        max_results: int = 5,
+    ) -> dict[str, Any]:
+        """Search academic metadata via Crossref (no third-party search API key required).
+
+        Returns titles + DOIs + Crossref URLs. Results are not workspace-grounded; use
+        ``evidence_origin: external_web`` downstream.
+        """
+        res = run_tool_result_with_span(
+            tool_name="web_search",
+            tool_parameters={
+                "query": query[:200],
+                "max_results": max_results,
+            },
+            fn=lambda: _wrap_web_search(
+                query,
+                settings=settings,
+                allowed_domains=allowed_domains,
+                blocked_domains=blocked_domains or [],
+                max_results=max_results,
+            ),
+        )
+        return res.payload
+
+    @tool("web_fetch", args_schema=WebFetchArgs, return_direct=False)
+    def web_fetch_tool(
+        url: str,
+        prompt: str = "Summarize the scholarly content in 5 bullet points.",
+        allowed_domains: list[str] | None = None,
+        blocked_domains: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Fetch a URL (GET, bounded size) and summarize with the chat LLM when allowed."""
+        res = run_tool_result_with_span(
+            tool_name="web_fetch",
+            tool_parameters={"url": url[:300], "prompt_len": len(prompt or "")},
+            fn=lambda: _wrap_web_fetch(
+                url,
+                prompt,
+                settings=settings,
+                allowed_domains=allowed_domains,
+                blocked_domains=blocked_domains or [],
+            ),
+        )
+        return res.payload
+
+    return [web_search_tool, web_fetch_tool]
+
+
+def _wrap_web_search(
+    query: str,
+    *,
+    settings: Settings,
+    allowed_domains: list[str] | None,
+    blocked_domains: list[str],
+    max_results: int,
+) -> ToolResult:
+    pl = _web_search_impl(
+        query,
+        settings=settings,
+        allowed_domains=allowed_domains,
+        blocked_domains=blocked_domains,
+        max_results=max_results,
+    )
+    return ToolResult(payload=pl, row_count=int(pl.get("row_count") or 0))
+
+
+def _wrap_web_fetch(
+    url: str,
+    prompt: str,
+    *,
+    settings: Settings,
+    allowed_domains: list[str] | None,
+    blocked_domains: list[str],
+) -> ToolResult:
+    pl = _web_fetch_impl(
+        url,
+        prompt,
+        settings=settings,
+        allowed_domains=allowed_domains,
+        blocked_domains=blocked_domains,
+    )
+    return ToolResult(payload=pl, row_count=int(pl.get("row_count") or 0))
+
+
+def _web_search_impl(
+    query: str,
+    *,
+    settings: Settings,
+    allowed_domains: list[str] | None,
+    blocked_domains: list[str],
+    max_results: int,
+) -> dict[str, Any]:
+    allow = _parse_allowlist(allowed_domains)
+    if not _host_allowed("api.crossref.org", allow, blocked_domains):
+        return {
+            "ok": False,
+            "error": "host_not_allowed",
+            "detail": "api.crossref.org not in allowlist",
+            "row_count": 0,
+            "items": [],
+            "evidence_origin": "external_web",
+            "sse_hint": {
+                "type": "web_fetched",
+                "url": "",
+                "status": 0,
+                "bytes": 0,
+                "cache_hit": False,
+            },
+        }
+    mailto = (settings.openalex_mailto or "dev@localhost").strip()
+    rows = max(1, min(int(max_results), 15))
+    params = {"query": query.strip(), "rows": rows, "mailto": mailto}
+    url = "https://api.crossref.org/works"
+    try:
+        with httpx.Client(timeout=20.0) as client:
+            r = client.get(
+                url,
+                params=params,
+                headers={"User-Agent": f"science-graphrag/0.1 (mailto:{mailto})"},
+            )
+            r.raise_for_status()
+            data = r.json()
+    except (httpx.HTTPError, OSError, ValueError, json.JSONDecodeError) as exc:
+        return {
+            "ok": False,
+            "error": "web_search_failed",
+            "detail": str(exc)[:240],
+            "row_count": 0,
+            "items": [],
+            "evidence_origin": "external_web",
+            "sse_hint": {
+                "type": "web_fetched",
+                "url": url,
+                "status": 0,
+                "bytes": 0,
+                "cache_hit": False,
+            },
+        }
+    items: list[dict[str, Any]] = []
+    msg = data.get("message") if isinstance(data, dict) else None
+    raw_items = (msg.get("items") if isinstance(msg, dict) else None) or []
+    if isinstance(raw_items, list):
+        for it in raw_items[:rows]:
+            if not isinstance(it, dict):
+                continue
+            title_list = it.get("title")
+            title = title_list[0] if isinstance(title_list, list) and title_list else ""
+            doi = it.get("DOI") or ""
+            link = f"https://doi.org/{doi}" if doi else ""
+            items.append({"title": title, "doi": doi, "url": link})
+    n = len(items)
+    return {
+        "ok": True,
+        "row_count": n,
+        "items": items,
+        "evidence_origin": "external_web",
+        "sse_hint": {
+            "type": "web_fetched",
+            "url": url,
+            "status": 200,
+            "bytes": None,
+            "cache_hit": False,
+            "mode": "crossref_search",
+        },
+    }
+
+
+def _web_fetch_impl(
+    url: str,
+    prompt: str,
+    *,
+    settings: Settings,
+    allowed_domains: list[str] | None,
+    blocked_domains: list[str],
+) -> dict[str, Any]:
+    allow = _parse_allowlist(allowed_domains)
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return {
+            "ok": False,
+            "error": "unsupported_scheme",
+            "detail": parsed.scheme or "",
+            "row_count": 0,
+            "summary": "",
+            "evidence_origin": "external_web",
+            "sse_hint": {
+                "type": "web_fetched",
+                "url": url,
+                "status": 0,
+                "bytes": 0,
+                "cache_hit": False,
+            },
+        }
+    host = (parsed.hostname or "").lower()
+    if not _host_allowed(host, allow, blocked_domains):
+        return {
+            "ok": False,
+            "error": "host_not_allowed",
+            "detail": host,
+            "row_count": 0,
+            "summary": "",
+            "evidence_origin": "external_web",
+            "sse_hint": {
+                "type": "web_fetched",
+                "url": url,
+                "status": 0,
+                "bytes": 0,
+                "cache_hit": False,
+            },
+        }
+    ttl = int(getattr(settings, "agent_web_fetch_cache_ttl_seconds", 600))
+    cache_key = _web_fetch_cache_key(
+        url,
+        prompt,
+        allowed_domains=allowed_domains,
+        blocked_domains=blocked_domains,
+    )
+    cached = _cache_get(cache_key)
+    if cached is not None:
+        out = dict(cached)
+        out["cache_hit"] = True
+        hint = out.get("sse_hint") if isinstance(out.get("sse_hint"), dict) else {}
+        out["sse_hint"] = {**hint, "cache_hit": True}
+        return out
+
+    max_bytes = int(getattr(settings, "agent_web_fetch_max_bytes", 524_288))
+    text = ""
+    status = 0
+    final_url = url
+    try:
+        with httpx.Client(
+            timeout=25.0,
+            follow_redirects=True,
+            max_redirects=5,
+        ) as client:
+            with client.stream("GET", url, headers={"User-Agent": "science-graphrag/0.1"}) as r:
+                status = int(r.status_code)
+                r.raise_for_status()
+                chunks: list[bytes] = []
+                total = 0
+                for blk in r.iter_bytes():
+                    if not blk:
+                        continue
+                    total += len(blk)
+                    if total > max_bytes:
+                        remain = max_bytes - (total - len(blk))
+                        if remain > 0:
+                            chunks.append(blk[:remain])
+                        break
+                    chunks.append(blk)
+                raw = b"".join(chunks)
+                text = raw.decode("utf-8", errors="replace")[:8000]
+                final_url = str(r.url)
+    except (httpx.HTTPError, OSError, ValueError) as exc:
+        return {
+            "ok": False,
+            "error": "fetch_failed",
+            "detail": str(exc)[:240],
+            "row_count": 0,
+            "summary": "",
+            "evidence_origin": "external_web",
+            "sse_hint": {
+                "type": "web_fetched",
+                "url": final_url,
+                "status": status,
+                "bytes": 0,
+                "cache_hit": False,
+            },
+        }
+
+    final_host = (urlparse(final_url).hostname or "").lower()
+    if not _host_allowed(final_host, allow, blocked_domains):
+        return {
+            "ok": False,
+            "error": "redirect_host_not_allowed",
+            "detail": final_host,
+            "row_count": 0,
+            "summary": "",
+            "evidence_origin": "external_web",
+            "sse_hint": {
+                "type": "web_fetched",
+                "url": final_url,
+                "status": status,
+                "bytes": 0,
+                "cache_hit": False,
+            },
+        }
+
+    summary = ""
+    if (settings.extraction_llm_api_key or "").strip():
+        try:
+            llm = build_chat_model(settings, max_tokens=512, timeout_seconds=20.0)
+            msgs = ensure_messages_safe_for_generation(
+                [
+                    HumanMessage(
+                        content=(
+                            "Summarize the following web page excerpt for a researcher. "
+                            "Be factual; if content is not scholarly, say so.\n\n"
+                            f"URL: {final_url}\n\nEXCERPT:\n{text[:6000]}\n\nTASK:\n{prompt}"
+                        )
+                    ),
+                ]
+            )
+            resp = invoke_chat_gated(llm, msgs, pool_name="agent_chat", settings=settings)
+            summary = str(resp.content or "").strip()[:4000]
+        except Exception as exc:  # noqa: BLE001
+            summary = f"(summarization failed: {type(exc).__name__})"
+
+    payload = {
+        "ok": True,
+        "row_count": 1,
+        "url": final_url,
+        "summary": summary or text[:2000],
+        "evidence_origin": "external_web",
+        "sse_hint": {
+            "type": "web_fetched",
+            "url": final_url,
+            "status": status,
+            "bytes": len(text.encode("utf-8", errors="replace")),
+            "cache_hit": False,
+        },
+    }
+    _cache_set(cache_key, ttl, payload)
+    return payload
+
+
+__all__ = ["build_web_research_tools"]

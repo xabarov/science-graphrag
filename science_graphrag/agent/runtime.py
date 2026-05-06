@@ -13,6 +13,9 @@ from science_graphrag.agent.chat_envelope import (
     heuristic_answer_class,
 )
 from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
+from science_graphrag.agent.context.post_compact_attachments import (
+    persist_post_compact_paper_sources,
+)
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
@@ -20,6 +23,10 @@ from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadli
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
+from science_graphrag.agent.subagents.runtime import (
+    build_subagent_runs_from_routing_log,
+    merge_subagent_run_rows,
+)
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.api.deps import StoreRegistry
@@ -120,7 +127,7 @@ _MIN_DRAFT_ASSISTANT_CHARS = 200
 
 
 def _salvage_substantial_ai_visible_content(messages: list[Any]) -> str:
-    """Use long ``AIMessage.content`` left alongside ``tool_calls`` (no completed ``final_answer``)."""
+    """Use substantial ``AIMessage.content`` when ``final_answer`` tool not completed."""
     if has_completed_final_answer_tool(messages):
         return ""
     for msg in reversed(messages):
@@ -370,6 +377,10 @@ class AgentRunOutput:
     debug_events: list[dict[str, Any]] = field(default_factory=list)
     phoenix_trace_id: str | None = None
     thread_id: str | None = None
+    # Epic A2: captured at prompt-build (before post-turn digest append).
+    prompt_memory_run_metadata: dict[str, Any] | None = None
+    # Train T3 B1: per-child observability rows (routing legs + explicit spawns).
+    subagent_runs: list[dict[str, Any]] | None = None
 
 
 class RetrievalAgent:
@@ -495,6 +506,16 @@ class RetrievalAgent:
             client_idle_ms=client_idle_ms,
             settings=self._settings,
         )
+        pm_meta: dict[str, Any] | None = None
+        meta0 = initial_state.get("metadata") or {}
+        if isinstance(meta0, dict):
+            raw_pm = meta0.get("prompt_memory_audit")
+            if isinstance(raw_pm, dict):
+                pm_meta = dict(raw_pm)
+            rpc0 = meta0.get("post_compact_paper_sources_restored_count")
+            if isinstance(rpc0, int) and rpc0 >= 0:
+                pm_meta = dict(pm_meta or {})
+                pm_meta["post_compact_paper_sources_restored_count"] = int(rpc0)
         assert self._graph is not None
         cfg = {"recursion_limit": self._settings.agent_supervisor_recursion_limit}
         final_state = invoke_graph_with_deadline(
@@ -564,12 +585,27 @@ class RetrievalAgent:
                 tool_trace=trace,
                 workspace_id=workspace_id,
             )
+            persist_post_compact_paper_sources(
+                thread_id,
+                messages,
+                settings=self._settings,
+            )
 
         ac = str(envelope.get("answer_class") or "grounded_explanation")
         raw_routing = final_state.get("routing_log")
         routing_log: list[dict[str, Any]] = (
             [x for x in raw_routing if isinstance(x, dict)] if isinstance(raw_routing, list) else []
         )
+        meta_final = final_state.get("metadata") or {}
+        parent_tid = (
+            str(meta_final.get("parent_turn_id")).strip()
+            if isinstance(meta_final, dict) and meta_final.get("parent_turn_id")
+            else None
+        )
+        routing_sub_rows = build_subagent_runs_from_routing_log(
+            routing_log, parent_turn_id=parent_tid
+        )
+        subagent_runs = merge_subagent_run_rows(routing_rows=routing_sub_rows, spawned_rows=[])
 
         SpanAttributes.set_output(
             {
@@ -607,6 +643,8 @@ class RetrievalAgent:
             debug_events=list(final_state.get("debug_events") or []),
             phoenix_trace_id=current_otel_trace_id_hex(),
             thread_id=thread_id,
+            prompt_memory_run_metadata=pm_meta,
+            subagent_runs=subagent_runs or None,
         )
 
 

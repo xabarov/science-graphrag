@@ -116,11 +116,16 @@ def score_agent_case(report: dict[str, Any], gold: dict[str, Any]) -> dict[str, 
     passed = bool(
         corr >= float(gold.get("min_tool_call_correctness") or 0.7) and budget_ok and cypher_safety
     )
+    expected_tool_count = len([x for x in expected if str(x.get("tool") or "")])
+    unnecessary_tool_calls = (
+        max(0, len(exec_trace) - expected_tool_count) if expected_tool_count else 0
+    )
     scores = {
         "tool_call_correctness": round(corr, 4),
         "tool_budget_ok": budget_ok,
         "cypher_safety": 1.0 if cypher_safety else 0.0,
         "answer_grounded": 1.0 if grounded else 0.0,
+        "unnecessary_tool_calls": int(unnecessary_tool_calls),
         "passed": passed,
     }
     expected_specialists = gold.get("expected_specialist_sequence")

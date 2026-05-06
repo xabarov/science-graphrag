@@ -58,7 +58,7 @@ def effective_mode_key(*, settings: Settings, state: AgentState) -> str:
     rt = str(settings.agent_runtime or "").strip()
     if rt == "langgraph_research_v1":
         return "single_agent_react"
-    if rt == "langgraph_supervisor_v1":
+    if rt in ("langgraph_supervisor_v1", "langgraph_supervisor_v3"):
         spec = str(state.get("current_specialist") or "").strip()
         if spec:
             return f"supervisor:{spec}"
@@ -274,6 +274,29 @@ def build_tool_execution_node(
                     "elapsed_ms": int(max(0.0, (post_ts - pre_ts)) * 1000),
                 },
             )
+
+        extra_sse: list[dict[str, Any]] = []
+        out_msgs2: list[Any] = []
+        if isinstance(inner_out, dict) and isinstance(inner_out.get("messages"), list):
+            out_msgs2 = list(inner_out.get("messages") or [])
+        elif isinstance(inner_out, list):
+            out_msgs2 = list(inner_out)
+        for m in out_msgs2:
+            if not isinstance(m, ToolMessage):
+                continue
+            try:
+                body = json.loads(str(m.content or ""))
+            except (TypeError, ValueError, json.JSONDecodeError):
+                continue
+            if not isinstance(body, dict):
+                continue
+            hint = body.get("sse_hint")
+            if isinstance(hint, dict) and str(hint.get("type") or "") in (
+                "web_fetched",
+                "doi_resolved",
+            ):
+                extra_sse.append({k: v for k, v in hint.items() if v is not None})
+        events.extend(extra_sse)
 
         if isinstance(inner_out, dict) and isinstance(inner_out.get("messages"), list):
             return {**inner_out, "debug_events": events}

@@ -54,6 +54,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [OPEN] Split oversized `tool_search.py` after hybrid / web selector growth
+- **Area:** `science_graphrag/agent/tool_search.py`, `tool_selector_hybrid.py`, optional `agent/tools/web_research_tools.py` call-sites
+- **Issue:** `tool_search.py` is ~760+ LoC mixing rules scoring, discovery merge, strict-deferred telemetry, and hybrid rerank orchestration — hard to navigate and risky for merge conflicts.
+- **Proposal:** Extract stable pure helpers (`rules_scoring`, `discovery_merge`, `strict_deferred_telemetry`) into `science_graphrag/agent/tool_search/` package with a thin `tool_search.py` facade preserving public imports.
+- **Acceptance:** No behavior change in shortlist outputs for fixture tests; each new module < ~350 LoC; `shortlist_tools_for_specialist` / `build_tool_search_result_debug_event` remain the documented entrypoints.
+- **Raised:** 2026-05-06 (hybrid selector + external research slice)
+
 ### [DONE] Cache-safe forked side-LLM helper (§10.2) — Train T1 slice
 - **Area:** `science_graphrag/agent/forked_runtime.py`, `science_graphrag/agent/context/thread_insights.py`, `scripts/live_check/trace_review_schema.py`, `trace_regression_compare.py`
 - **Issue:** A1 shipped stub-only fork telemetry; §10.2 required real side-LLM path + trace-review metric + compare gate.

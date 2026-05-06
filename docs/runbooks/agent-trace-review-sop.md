@@ -138,3 +138,36 @@ Warn-политики (`--warn-on`): `latency_p95_increase`, `compaction_churn_d
 6. Token budget loop policy: корректность continue/stop behavior.
 7. Away summary: качество recap и корректность follow-up.
 8. Feature-gated rollout: on/off parity и telemetry stability.
+
+## 8) Long-thread offline eval (Epic A3, nightly / optional PR)
+
+Детерминированный слой проверок `resolve_prompt_memory_policy` + `format_user_with_memory`
+без HTTP. Включается флагом оркестратора; метрики мержатся в `metrics` того же
+`trace-review-v1` артефакта (`insight_recall_at_k`, `stale_summary_error_rate`, …).
+
+```bash
+.venv/bin/python scripts/live_check/agent_trace_review.py \
+  --base-url http://127.0.0.1:18787 \
+  --profile quick \
+  --with-long-thread-eval \
+  --out-json eval/results/trace-review-lt.json \
+  --out-md eval/results/trace-review-lt.md
+```
+
+Numeric gate (пример) поверх того же `trace_regression_compare.py`:
+
+```bash
+.venv/bin/python scripts/live_check/trace_regression_compare.py \
+  --baseline eval/results/baseline-trace-review.json \
+  --candidate eval/results/trace-review-lt.json \
+  --min-insight-recall-at-k 0.95 \
+  --max-stale-summary-error-rate 0.05 \
+  --max-latency-p95-ms 45000 \
+  --min-claim-grounding-precision 0.90 \
+  --min-claim-grounding-recall 0.90 \
+  --out-json eval/results/trace-regression-lt.json \
+  --out-md eval/results/trace-regression-lt.md
+```
+
+По умолчанию compare также валит run при регрессии `verdict.status`
+(`pass > warn > fail`); отключается только явно через `--no-enforce-verdict-not-worse`.

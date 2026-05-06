@@ -4,6 +4,19 @@
 **HTTP:** `POST /v2/agent/query`  
 **Modes:** JSON (`Accept: application/json`) or SSE (`Accept: text/event-stream`)
 
+### Agent runtime v3 foundation (Train T3 B0/B1 skeleton)
+
+**Normative:** ADR-028. **HTTP:** still **`POST /v2/agent/query`** — no `/v3` route in this wave. **Selector:** `SCIENCE_GRAPHRAG_AGENT_RUNTIME=langgraph_supervisor_v3` (same response envelope as v2; distinct `run_kind` / `graph_id` for attribution).
+
+| Field / event | Purpose |
+|---------------|---------|
+| `run_metadata.parent_turn_id` | UUID for one parent turn; stable across all child legs in that request. |
+| `run_metadata.subagent_runs` | List of completed child legs: `subagent_id`, `parent_turn_id`, `spawn_reason`, `terminal_state` (`succeeded` \| `failed` \| `cancelled` \| `timed_out`), optional `latency_ms`, optional `tokens` / `cost_usd_estimate` (often null until per-child usage is wired). |
+| `run_metadata.max_parallel_subagents` | Server fanout cap for explicit `spawn_subagent` (see Settings). |
+| SSE `subagent_started` / `subagent_progress` / `subagent_finished` | Same `type` values as v1; **optional** extra keys when present: `parent_turn_id`, `spawn_reason`, `terminal_state` (on `subagent_finished` when known). |
+
+**Stubbed / next wave:** coordinator-mode, `<task-notification>` + `subagent_task_notification`, `subagent_progress_label`, heartbeat channel, hooks (`SubagentStartHooks`), per-child token accounting beyond whole-turn `usage`, merge-node (`specialist_results_v3`).
+
 **Product architecture (where this spec sits):** research chat stays on the **simplified** single LangGraph run (supervisor → retrieval / graph → writer). Roadmap for goals, deferred work, and future **`tool_search`** plus **context-window summarization / compaction**: [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md). **Каталог инструментов (имена, схемы, карта кода):** [`docs/architecture/agent-chat-tools.md`](../architecture/agent-chat-tools.md). In this document, **CH\*** labels denote **delivery waves / features**, not separate shipped microservices.
 
 ## Client contract (what to read where)
@@ -47,7 +60,7 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `phoenix_trace_id` | string \| null | OpenTelemetry trace id (hex) when a span is active |
 | `thread_id` | string \| null | Echo of request `thread_id` when set |
 | `session_summary_excerpt` | string \| null | **CH4:** First ≤500 chars of server `session_summary` after this turn when `thread_id` set; aligns with SSE `context_compacted.session_summary_excerpt` |
-| `run_metadata` | object | Runtime flags, model ids, **`agent_runtime`** (graph selector; ADR-027), **`run_kind`** (`single_agent_research` \| `supervisor_specialists`), **`graph_id`** (`single_agent_react` \| `supervisor_graph`), etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
+| `run_metadata` | object | Runtime flags, model ids, **`agent_runtime`** (graph selector; ADR-027), **`run_kind`** (`single_agent_research` \| `supervisor_specialists` \| **`supervisor_specialists_v3`**), **`graph_id`** (`single_agent_react` \| `supervisor_graph` \| **`supervisor_graph_v3`**), etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
 | `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `graph_only`, `text_only`, `no_quote_found`, `no_quote_found_after_idea_hits`, `history_digest_invalid`, `agent_turn_deadline_exceeded`, `agent_partial_graph_recursion_limit`, `partial_after_recursion_limit`, `answer_salvaged_from_graph_tool`, `agent_finished_without_final_answer_tool` (tools were used and the model returned text, but the last executed catalog tool was not `final_answer` — suppressed when `answer_salvaged_from_graph_tool` is present; `tool_trace` stays honest; use for monitoring/UI) |
@@ -74,10 +87,12 @@ Each SSE `data:` line is a JSON object with a `type` field.
 |--------|------|---------|
 | `intent_classified` | Start of run | `answer_class`, `source` (e.g. `coordinator_gate_v0` for deterministic rules, `coordinator_gate_llm` / `coordinator_gate_fallback` for hybrid/LLM paths), `conversation_intent`, `tool_policy`, `route_hint`, `reason`, `confidence` (0–1), `classifier` (`deterministic` \| `llm` \| `fallback`), `suggested_answer_class` |
 | `specialist_selected` | After supervisor routing | `from`, `to`, optional `budget_left`, optional `reason`, optional runtime attribution (`run_kind`, `graph_id`) |
-| `subagent_started` | Immediately after `specialist_selected` | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe) |
-| `subagent_progress` | Optional, after `tool_call` while a subagent is active | `subagent_id`, `step`, `tool`, `summary` |
-| `subagent_finished` | When leaving a subagent (next routing or synthesis) | `subagent_id` |
-| `tool_search_result` | After rule shortlist (CH3) + Epic C0 discovery | `specialist`, `tools`, `reason`, `skipped`, optional `message_discovery_tools`, `message_discovery_merged` (LangGraph history), optional `carryover_tools`; Train T1 strict deferred: `activation_policy`, `rules_matched_tools`, `tool_search_miss_due_to_no_discovery`, `deferred_tool_activation_rate`, optional `deferred_strict_*` diagnostics |
+| `subagent_started` | Immediately after `specialist_selected` | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe), optional **`parent_turn_id`**, **`spawn_reason`** (Train T3 B1) |
+| `subagent_progress` | Optional, after `tool_call` while a subagent is active | `subagent_id`, `step`, `tool`, `summary`, optional **`parent_turn_id`**, **`spawn_reason`** |
+| `subagent_finished` | When leaving a subagent (next routing or synthesis) | `subagent_id`, optional **`parent_turn_id`**, **`spawn_reason`**, **`terminal_state`**, **`latency_ms`** |
+| `tool_search_result` | After rule shortlist (CH3) + Epic C0 discovery + optional LLM rerank (C1) | `specialist`, `tools`, `reason` (`rules` \| `hybrid_llm` \| `low_signal` \| …), `skipped`, optional `message_discovery_tools`, `message_discovery_merged` (LangGraph history), optional `carryover_tools`; Train T1 strict deferred: `activation_policy`, `rules_matched_tools`, `tool_search_miss_due_to_no_discovery`, `deferred_tool_activation_rate`, optional `deferred_strict_*` diagnostics; **Train T2 C1 hybrid:** optional `selector_stage`, `selector_confidence` (0–1), `selector_reason_codes` (string[]), `rules_candidate_tools`, `llm_ranked_tools`, `pre_llm_denied_tools` — clients may ignore unknown keys |
+| `web_fetched` | After `web_fetch` tool returns (debug → SSE when streamable) | From tool payload `sse_hint`: bounded URL/host summary fields (product-safe); gated by `SCIENCE_GRAPHRAG_AGENT_WEB_RESEARCH_TOOLS_ENABLED` |
+| `doi_resolved` | After `doi_resolver` tool returns (debug → SSE when streamable) | From tool payload `sse_hint`: normalized DOI, OpenAlex/workspace attribution; gated by `SCIENCE_GRAPHRAG_AGENT_DOI_RESOLVER_TOOL_ENABLED` |
 | `tool_call` | LLM tool call | `step`, `tool`, `args_summary` |
 | `tool_result` | Tool return | `step`, `tool`, `row_count`, `error` |
 | `answer_synthesis_started` | After graph streaming completes, before `evidence_ready` / compaction | empty payload beyond `type` |
@@ -98,7 +113,7 @@ Canonical ladder lives in [`docs/analysis/agent-runtime-tools-context-roadmap-20
 | L4 boundary | `context_compacted.compaction.boundary` | Signals ``digest_window_full``; pairs with optional LLM consolidation above |
 | Discovered tools carry-over | `capsules.discovered_tools` | Merged from prior turn digest tools; injected as `<discovered_tools>` block when flag enabled |
 | Tool-message compact | `tool_message_compact` (ReAct) | Same-turn LangGraph messages only; independent of CH5 SSE compaction |
-| Thread insight (Epic A, Train T1+) | `session_meta.thread_insight` | Optional long-thread synthesis snapshot; when `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED=1`, refreshed after each turn with enough digests; audit mirrored under `run_metadata.thread_insight_audit` and control skips under `run_metadata.thread_insight_control` (sync + SSE). Prompt injection / precedence — **A2** (not default yet). |
+| Thread insight (Epic A, Train T1+) | `session_meta.thread_insight` | Optional long-thread synthesis snapshot; when `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED=1`, refreshed after each turn with enough digests; audit mirrored under `run_metadata.thread_insight_audit` and control skips under `run_metadata.thread_insight_control` (sync + SSE). **Train T2 / A2:** first user message may include `<last_turn_digest>` then `<thread_insight status="fresh or conflicted">` then `<session_memory>`; coarse telemetry in `run_metadata` (`insight_fallback_reason`, `insight_conflict_resolved`, `ptl_retry_count`, …). |
 | LangGraph message tool discovery (Epic C0) | `tool_search` metadata | Tool names from prior `AIMessage.tool_calls` / `ToolMessage` rows merge into the rule shortlist before session carry-over; see `tool_search_result.message_discovery_*` fields. |
 | Away recap | `<away_recap>` | When client sends `client_idle_ms` above threshold (`agent_away_summary_*`) |
 | `product_step` | Whenever the agent crosses a user-visible boundary (start of turn, hand-off, before synthesis, after compaction, on each non-meta `tool_call`) | `code` (e.g. `interpreting_question`, `delegating_to_<specialist>`, `composing_answer`, `updating_session_memory`, `searching_literature`, `using_tool`), optional `tool`, optional `specialist`; for fallback `using_tool` events also emit explicit generic marker fields (`generic=true`, `generic_reason`) |
@@ -114,7 +129,7 @@ Roadmap: [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../
 | Mode | Purpose | Primary inputs | Artifact | Injected into prompt (when enabled) | Stale / invalidation (target) |
 |------|---------|----------------|----------|-------------------------------------|--------------------------------|
 | `turn_loop_memory` | Default CH4/CH5 continuity | Turn digests, rolling `session_summary`, optional L4 LLM compact | `session_summary`, `context_compacted`, capsules | `<session_memory>`, `<workspace_capsule>`, `<discovered_tools>` via `format_user_with_memory` | Rolling window cap; L4 cooldown + digest boundary |
-| `thread_insights_compact` | Long-thread recall / consistency | Full digest window (server), chunked workers | `session_meta.thread_insight` (`current`, `version`, `sources`, `compaction_boundary`, `audit`) | **A2:** `<thread_insight>` block (deferred until A2) | **A1:** TTL (`agent_thread_insights_ttl_seconds`, 0=off) + `agent_thread_insights_stale_after_turn_delta` + high-churn (`agent_thread_insights_high_churn_*`); audit `stale_reason` (`turn_delta` \| `ttl` \| `high_churn` \| `manual`); `run_metadata.thread_insight_control` for `refresh_decision` / skips; circuit-breaker in `session_meta.insight_circuit` |
+| `thread_insights_compact` | Long-thread recall / consistency | Full digest window (server), chunked workers | `session_meta.thread_insight` (`current`, `version`, `sources`, `compaction_boundary`, `audit`) | **A2:** `<thread_insight>` + `<last_turn_digest>` in first user message when policy allows | **A1:** TTL (`agent_thread_insights_ttl_seconds`, 0=off) + `agent_thread_insights_stale_after_turn_delta` + high-churn (`agent_thread_insights_high_churn_*`); audit `stale_reason` (`turn_delta` \| `ttl` \| `high_churn` \| `manual`); `run_metadata.thread_insight_control` for `refresh_decision` / skips; circuit-breaker in `session_meta.insight_circuit` |
 | `hybrid` | Turn-loop + periodic insight refresh | Same as both | Both artifacts | Ordered merge with explicit **precedence** (A2): `turn_digest` (latest facts) > fresh `thread_insight` > `session_summary` | Union of both policies; never silent override of fresher turn facts |
 
 **Negative / edge cases (must stay defined in tests + trace):**
@@ -124,9 +139,11 @@ Roadmap: [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../
 - Insight generation failure / timeout: fall back to `session_summary` only; `insight_fallback_reason` in metadata (**A2**).
 - Tool loop churn: forces refresh with `stale_reason=high_churn` when over threshold; repeated build failures open circuit-breaker (skip refresh for N turns) — **A1** runtime; prompt-side fallback labels remain **A2**.
 
-**Train T1 note:** runtime ships **deterministic stub** chunk summaries + parallel workers + `thread_insight_audit_v1`; LLM chunk synthesis and hybrid precedence are **Train T2** unless otherwise specified.
+**Train T1 note:** runtime ships **deterministic stub** chunk summaries + parallel workers + `thread_insight_audit_v1`; optional LLM synthesis via forked runtime when enabled.
 
-**Train T1+ / A1 hardening note:** orchestration above (freshness, control plane, `compaction_boundary` v1, locks, L4 PTL retry, message-group integrity helpers) is implemented without changing default prompt injection (still **A2**).
+**Train T1+ / A1 hardening note:** orchestration above (freshness, control plane, `compaction_boundary` v1, locks, L4 PTL retry, message-group integrity helpers) is implemented.
+
+**Train T2 / A2 note:** prompt precedence and `<thread_insight>` / `<last_turn_digest>` injection are implemented in `resolve_prompt_memory_policy` + `format_user_with_memory` (see roadmap §9.3 A2).
 
 ### UI vocabulary contract
 
@@ -163,7 +180,7 @@ appended for `using_tool`).
 |-------|-------------|
 | `answer_class` | `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `tool_search_result.specialist` / `specialist_selected.from` / `.to` | `supervisor`, `retrieval_agent`, `graph_agent`, `writer_agent`, `single_agent_react` |
-| `tool_search_result.reason` | `rules`, `low_signal`, `fallback_full`, `fallback_full_single_agent`, `disabled`, `writer_minimal_set` |
+| `tool_search_result.reason` | `rules`, `hybrid_llm`, `low_signal`, `fallback_full`, `fallback_full_single_agent`, `disabled`, `writer_minimal_set` |
 | `intent_classified.source` | `single_agent_research_v1`, `coordinator_gate_v0`, `coordinator_gate_<classifier>`, `heuristic`, `deterministic`, `shortcut` |
 | `specialist_selected.reason` (and `subagent_started.summary` when sourced from routing log) | `single_agent_research_runtime`, `coordinator_route_hint`, `semantic_fast_route`, `supervisor_round_cap`, `budget_exhausted`, `coordinator_classifier_fallback` |
 | `product_step.code` | `interpreting_question`, `delegating_to_retrieval_agent`, `delegating_to_graph_agent`, `delegating_to_writer_agent`, `delegating_to_single_agent_react`, `delegating_to_supervisor`, `delegating_to_specialist`, `composing_answer`, `updating_session_memory`, plus tool-derived codes from `product_step_code_for_tool` (`searching_literature`, `browsing_ideas`, `gathering_evidence`, `summarizing_workspace`, `exploring_graph`, `paper_lookup`, `paper_metadata`, `finding_quotes`, `formatting_bibliography`, `final_answer`) and the catch-all `using_tool` |
