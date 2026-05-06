@@ -193,6 +193,29 @@ def test_merge_e2e_counts_insight_circuit_open_fallback(schema_module) -> None:
     assert m.compaction_circuit_breaker_trips == 1
 
 
+def test_merge_e2e_hook_chain_events_from_run_metadata(schema_module) -> None:
+    case = {
+        "case_id": "hc1",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "hook_chain_events": [
+                {
+                    "type": "hook_chain_event",
+                    "hook": "post_compact.persist_paper_sources",
+                    "phase": "post_compact",
+                    "ok": True,
+                    "detail": {"post_compact_paper_sources_saved": 1},
+                }
+            ]
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert len(tl[0].hook_chain_events) == 1
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.hook_chain_event_count == 1
+
+
 def test_merge_e2e_propagates_unnecessary_tool_calls_from_case_metrics(schema_module) -> None:
     case = {
         "case_id": "unn",

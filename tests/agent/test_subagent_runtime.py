@@ -16,7 +16,8 @@ from science_graphrag.agent.subagents.runtime import (
 
 
 def test_spawn_subagent_returns_id_and_finish_moves_to_completed() -> None:
-    rt = SubagentRuntime(parent_turn_id="pt-1", max_parallel_subagents=4)
+    hooks: list[dict] = []
+    rt = SubagentRuntime(parent_turn_id="pt-1", max_parallel_subagents=4, hook_chain_sink=hooks)
     sid = rt.spawn_subagent(SubagentTaskSpec(spawn_reason="test"))
     assert sid.startswith("sa-")
     assert rt.active_count() == 1
@@ -28,6 +29,8 @@ def test_spawn_subagent_returns_id_and_finish_moves_to_completed() -> None:
     assert rows[0]["parent_turn_id"] == "pt-1"
     assert rows[0]["spawn_reason"] == "test"
     assert rows[0]["latency_ms"] is not None
+    assert any(e.get("hook") == "subagent_start" for e in hooks)
+    assert any(e.get("hook") == "subagent_stop" for e in hooks)
 
 
 def test_max_parallel_subagents_blocks_spawn() -> None:
@@ -48,7 +51,8 @@ def test_cancel_all_marks_cancelled() -> None:
 
 
 def test_routing_ledger_open_close_latency() -> None:
-    led = RoutingSubagentLegLedger(parent_turn_id="pt-4")
+    h: list[dict] = []
+    led = RoutingSubagentLegLedger(parent_turn_id="pt-4", hook_chain_sink=h)
     led.open_leg(subagent_id="retrieval_agent", spawn_reason="route_a")
     row = led.close_leg(terminal_state="succeeded")
     assert row is not None
@@ -56,6 +60,8 @@ def test_routing_ledger_open_close_latency() -> None:
     assert row["spawn_reason"] == "route_a"
     assert row["terminal_state"] == "succeeded"
     assert row["latency_ms"] is not None
+    assert any(e.get("hook") == "subagent_start" for e in h)
+    assert any(e.get("hook") == "subagent_stop" for e in h)
 
 
 def test_build_subagent_runs_from_routing_log() -> None:

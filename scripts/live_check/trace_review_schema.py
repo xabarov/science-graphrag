@@ -98,6 +98,7 @@ class TimelineCase:
     tool_steps: tuple[ToolStep, ...] = field(default_factory=tuple)
     phoenix_alignment: PhoenixAlignment | None = None
     compaction_events: tuple[CompactionEvent, ...] = field(default_factory=tuple)
+    hook_chain_events: tuple[dict[str, Any], ...] = field(default_factory=tuple)
     db_side_effects: DbSideEffects | None = None
     warnings: tuple[str, ...] = field(default_factory=tuple)
     tool_search_shortlist_ratio_avg: float | None = None
@@ -109,6 +110,9 @@ class TimelineCase:
     insight_conflict_resolved: bool | None = None
     run_ptl_retry_count: int | None = None
     unnecessary_tool_calls: int = 0
+    subagent_runs_count: int = 0
+    subagent_task_notification_count: int = 0
+    subagent_lifecycle_missing_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +137,9 @@ class Metrics:
     ptl_retry_rate: float | None = None
     compaction_circuit_breaker_trips: int | None = None
     unnecessary_tool_calls_avg: float | None = None
+    hook_chain_event_count: int = 0
+    subagent_lifecycle_missing_count: int = 0
+    subagent_task_notification_count_avg: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -282,6 +289,26 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     if isinstance(met, dict):
         unn = _coerce_int(met.get("unnecessary_tool_calls"), default=0)
 
+    srun_c = 0
+    stn_c = 0
+    miss_lc = 0
+    if isinstance(rm, dict):
+        sr0 = rm.get("subagent_runs")
+        if isinstance(sr0, list):
+            srun_c = len(sr0)
+        st0 = rm.get("subagent_task_notifications")
+        if isinstance(st0, list):
+            stn_c = len(st0)
+        lane0 = str(rm.get("subagent_observability_lane") or "")
+        if "fork_v3_enhanced" in lane0 and srun_c:
+            miss_lc = max(0, srun_c - stn_c)
+
+    hook_chain: tuple[dict[str, Any], ...] = ()
+    if isinstance(rm, dict):
+        raw_hc = rm.get("hook_chain_events")
+        if isinstance(raw_hc, list):
+            hook_chain = tuple(x for x in raw_hc if isinstance(x, dict))
+
     return TimelineCase(
         case_id=cid,
         thread_id=thread_id,
@@ -299,6 +326,7 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         tool_steps=tuple(steps),
         phoenix_alignment=phoenix_alignment,
         compaction_events=(),
+        hook_chain_events=hook_chain,
         db_side_effects=db_side,
         warnings=warn_tuple,
         tool_search_shortlist_ratio_avg=_coerce_optional_float(
@@ -314,6 +342,9 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         insight_conflict_resolved=conflict_res,
         run_ptl_retry_count=ptl_n,
         unnecessary_tool_calls=unn,
+        subagent_runs_count=srun_c,
+        subagent_task_notification_count=stn_c,
+        subagent_lifecycle_missing_count=miss_lc,
     )
 
 
@@ -335,6 +366,9 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     conflict_scored = 0
     ptl_vals: list[int] = []
     unnecessary_vals: list[int] = []
+    hook_chain_counts: list[int] = []
+    subagent_missing_vals: list[int] = []
+    stn_counts: list[int] = []
 
     for row in timeline:
         for st in row.tool_steps:
@@ -344,6 +378,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         if row.phoenix_alignment and row.phoenix_alignment.missing:
             missing_span_count += len(row.phoenix_alignment.missing)
         compaction_event_count += len(row.compaction_events)
+        hook_chain_counts.append(len(row.hook_chain_events))
 
         steps = row.tool_steps
         last_tool = steps[-1].tool if steps else None
@@ -384,6 +419,8 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         if row.run_ptl_retry_count is not None:
             ptl_vals.append(int(row.run_ptl_retry_count))
         unnecessary_vals.append(int(row.unnecessary_tool_calls or 0))
+        subagent_missing_vals.append(int(row.subagent_lifecycle_missing_count or 0))
+        stn_counts.append(int(row.subagent_task_notification_count or 0))
 
     tool_error_rate = (bad_steps / total_steps) if total_steps else 0.0
 
@@ -415,6 +452,9 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     unn_avg = (
         round(sum(unnecessary_vals) / float(len(unnecessary_vals)), 6) if unnecessary_vals else None
     )
+    hook_chain_event_count = int(sum(hook_chain_counts)) if hook_chain_counts else 0
+    subagent_missing_sum = int(sum(subagent_missing_vals)) if subagent_missing_vals else 0
+    stn_avg = round(sum(stn_counts) / float(len(stn_counts)), 4) if stn_counts else None
 
     return Metrics(
         tool_error_rate=tool_error_rate,
@@ -439,6 +479,9 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         ptl_retry_rate=ptl_rate,
         compaction_circuit_breaker_trips=int(circuit_hits),
         unnecessary_tool_calls_avg=unn_avg,
+        hook_chain_event_count=hook_chain_event_count,
+        subagent_lifecycle_missing_count=subagent_missing_sum,
+        subagent_task_notification_count_avg=stn_avg,
     )
 
 
@@ -468,6 +511,7 @@ def merge_compaction_events_into_timeline(
                     tool_steps=row.tool_steps,
                     phoenix_alignment=row.phoenix_alignment,
                     compaction_events=attach,
+                    hook_chain_events=row.hook_chain_events,
                     db_side_effects=row.db_side_effects,
                     warnings=row.warnings,
                     tool_search_shortlist_ratio_avg=row.tool_search_shortlist_ratio_avg,
@@ -479,6 +523,9 @@ def merge_compaction_events_into_timeline(
                     insight_conflict_resolved=row.insight_conflict_resolved,
                     run_ptl_retry_count=row.run_ptl_retry_count,
                     unnecessary_tool_calls=row.unnecessary_tool_calls,
+                    subagent_runs_count=row.subagent_runs_count,
+                    subagent_task_notification_count=row.subagent_task_notification_count,
+                    subagent_lifecycle_missing_count=row.subagent_lifecycle_missing_count,
                 )
             )
         else:
@@ -516,6 +563,11 @@ def verdict_from_signals(
 
     if metrics.missing_span_count > 0 and not fail_reasons:
         warn_reasons.append(f"missing_span_heuristic:{metrics.missing_span_count}")
+
+    if metrics.subagent_lifecycle_missing_count > 0 and not fail_reasons:
+        warn_reasons.append(
+            f"subagent_lifecycle_missing_count:{metrics.subagent_lifecycle_missing_count}"
+        )
 
     if metrics.compaction_churn_score and metrics.compaction_churn_score > 0 and not fail_reasons:
         warn_reasons.append(f"compaction_churn_hints:{metrics.compaction_churn_score}")
@@ -690,6 +742,10 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                     thread_id=c.get("thread_id"),
                 )
             )
+        hc_raw = item.get("hook_chain_events") or []
+        hook_chain_tuple: tuple[dict[str, Any], ...] = ()
+        if isinstance(hc_raw, list):
+            hook_chain_tuple = tuple(x for x in hc_raw if isinstance(x, dict))
         _rtp_raw = item.get("run_ptl_retry_count")
         _rtp_parsed: int | None = None
         if _rtp_raw is not None and str(_rtp_raw).strip():
@@ -707,6 +763,7 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 tool_steps=tuple(steps),
                 phoenix_alignment=pa,
                 compaction_events=tuple(ces),
+                hook_chain_events=hook_chain_tuple,
                 db_side_effects=None,
                 warnings=(
                     tuple(str(x) for x in item.get("warnings") or [])
@@ -744,6 +801,13 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 ),
                 run_ptl_retry_count=_rtp_parsed,
                 unnecessary_tool_calls=_coerce_int(item.get("unnecessary_tool_calls"), default=0),
+                subagent_runs_count=_coerce_int(item.get("subagent_runs_count"), default=0),
+                subagent_task_notification_count=_coerce_int(
+                    item.get("subagent_task_notification_count"), default=0
+                ),
+                subagent_lifecycle_missing_count=_coerce_int(
+                    item.get("subagent_lifecycle_missing_count"), default=0
+                ),
             )
         )
 
@@ -779,6 +843,13 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
         compaction_circuit_breaker_trips=_ccb_trips,
         unnecessary_tool_calls_avg=_coerce_optional_float(
             mraw.get("unnecessary_tool_calls_avg"),
+        ),
+        hook_chain_event_count=_coerce_int(mraw.get("hook_chain_event_count"), default=0),
+        subagent_lifecycle_missing_count=_coerce_int(
+            mraw.get("subagent_lifecycle_missing_count"), default=0
+        ),
+        subagent_task_notification_count_avg=_coerce_optional_float(
+            mraw.get("subagent_task_notification_count_avg")
         ),
     )
 
@@ -825,6 +896,7 @@ def merge_e2e_report_json_into_review(
                     tool_steps=row.tool_steps,
                     phoenix_alignment=row.phoenix_alignment,
                     compaction_events=row.compaction_events,
+                    hook_chain_events=row.hook_chain_events,
                     db_side_effects=DbSideEffects(ingest_jobs_seen=ig),
                     warnings=row.warnings,
                     tool_search_shortlist_ratio_avg=row.tool_search_shortlist_ratio_avg,
@@ -836,6 +908,9 @@ def merge_e2e_report_json_into_review(
                     insight_conflict_resolved=row.insight_conflict_resolved,
                     run_ptl_retry_count=row.run_ptl_retry_count,
                     unnecessary_tool_calls=row.unnecessary_tool_calls,
+                    subagent_runs_count=row.subagent_runs_count,
+                    subagent_task_notification_count=row.subagent_task_notification_count,
+                    subagent_lifecycle_missing_count=row.subagent_lifecycle_missing_count,
                 )
             except (TypeError, ValueError):
                 pass

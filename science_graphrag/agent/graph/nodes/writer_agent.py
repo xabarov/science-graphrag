@@ -23,6 +23,10 @@ from science_graphrag.agent.llm.chat import (
     ensure_messages_safe_for_generation,
 )
 from science_graphrag.agent.subagent_output_contract import writer_system_prompt_suffix
+from science_graphrag.agent.subagents.lifecycle import (
+    coordinator_lane_stub_message,
+    messages_for_completed_routing_leg,
+)
 from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
@@ -225,6 +229,20 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
         compiled = _cached_subgraph(tools, mode)
         next_state = compiled.invoke(state)
         messages = list(next_state.get("messages") or [])
+        combo: AgentState = dict(state)
+        nsr = next_state.get("specialist_results")
+        if isinstance(nsr, dict):
+            combo["specialist_results"] = nsr
+        combo["current_specialist"] = SPECIALIST_NAME
+        terminal_msgs = messages_for_completed_routing_leg(
+            combo,
+            settings,
+            completed_subagent_id=SPECIALIST_NAME,
+            next_subagent_id=SPECIALIST_NAME,
+            force_terminal=True,
+        )
+        stub_lane = coordinator_lane_stub_message(combo, settings)
+        messages = messages + terminal_msgs + stub_lane
         citations = list(state.get("citations") or [])
         for msg in reversed(messages):
             if isinstance(msg, ToolMessage) and isinstance(msg.content, str):

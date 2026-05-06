@@ -5,7 +5,7 @@ import uuid
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from science_graphrag.agent.chat_envelope import (
     build_chat_envelope,
@@ -13,9 +13,6 @@ from science_graphrag.agent.chat_envelope import (
     heuristic_answer_class,
 )
 from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
-from science_graphrag.agent.context.post_compact_attachments import (
-    persist_post_compact_paper_sources,
-)
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
@@ -23,6 +20,8 @@ from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadli
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
+from science_graphrag.agent.hooks import run_post_compact_hooks
+from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
 from science_graphrag.agent.subagents.runtime import (
     build_subagent_runs_from_routing_log,
     merge_subagent_run_rows,
@@ -38,6 +37,20 @@ from science_graphrag.observability.spans import (
     chain_span,
 )
 from science_graphrag.observability.spans.decorators import MIME_TYPE_JSON
+
+
+def _collect_subagent_task_notifications(messages: list[Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for m in messages:
+        if not isinstance(m, HumanMessage):
+            continue
+        ak = getattr(m, "additional_kwargs", None) or {}
+        if not isinstance(ak, dict) or ak.get("kind") != "task_notification":
+            continue
+        inner = ak.get("task_notification")
+        if isinstance(inner, dict):
+            out.append(inner)
+    return out
 
 
 def _coerce_optional_str(value: object) -> str | None:
@@ -268,6 +281,28 @@ def salvage_markdown_from_quote_candidates(state: dict[str, Any]) -> str:
     return "\n\n---\n\n".join(chunks).strip()
 
 
+def extract_last_brief_from_messages(messages: list[Any]) -> str | None:
+    """Return last successful ``brief`` tool text (<=240 chars) if present."""
+    for msg in reversed(messages):
+        if not isinstance(msg, ToolMessage):
+            continue
+        if normalize_tool_call_name(str(getattr(msg, "name", "") or "")) != "brief":
+            continue
+        raw = msg.content
+        if not isinstance(raw, str):
+            continue
+        try:
+            data = json.loads(raw)
+        except Exception:  # noqa: BLE001
+            continue
+        if not isinstance(data, dict) or not data.get("ok"):
+            continue
+        b = data.get("brief")
+        if isinstance(b, str) and b.strip():
+            return b.strip()[:240]
+    return None
+
+
 def _coerce_non_negative_int(value: object) -> int | None:
     if value is None:
         return None
@@ -377,10 +412,17 @@ class AgentRunOutput:
     debug_events: list[dict[str, Any]] = field(default_factory=list)
     phoenix_trace_id: str | None = None
     thread_id: str | None = None
+    #: Optional short synthetic summary for history/share UI (<=240 chars).
+    brief: str | None = None
     # Epic A2: captured at prompt-build (before post-turn digest append).
     prompt_memory_run_metadata: dict[str, Any] | None = None
     # Train T3 B1: per-child observability rows (routing legs + explicit spawns).
     subagent_runs: list[dict[str, Any]] | None = None
+    # Train T3 B1: structured task notifications mirrored from HumanMessage transcript rows.
+    subagent_task_notifications: list[dict[str, Any]] | None = None
+    subagent_observability_lane: str | None = None
+    # Train T3 §10.6: hook_chain_event rows for trace-review / JSON parity.
+    hook_chain_events: list[dict[str, Any]] | None = None
 
 
 class RetrievalAgent:
@@ -418,6 +460,7 @@ class RetrievalAgent:
         thread_id: str | None = None,
         history_digest: list[dict[str, Any]] | None = None,
         client_idle_ms: int | None = None,
+        user_structured_answer: dict[str, Any] | None = None,
     ) -> AgentRunOutput:
         tid = (thread_id or "").strip() or None
         session_id = tid or str(uuid.uuid4())
@@ -476,6 +519,7 @@ class RetrievalAgent:
                 thread_id=tid,
                 history_digest=history_digest,
                 client_idle_ms=client_idle_ms,
+                user_structured_answer=user_structured_answer,
             )
 
     def _run_langgraph(  # pylint: disable=too-many-locals
@@ -488,6 +532,7 @@ class RetrievalAgent:
         thread_id: str | None = None,
         history_digest: list[dict[str, Any]] | None = None,
         client_idle_ms: int | None = None,
+        user_structured_answer: dict[str, Any] | None = None,
     ) -> AgentRunOutput:
         budget = max_tool_calls or self._settings.agent_max_tool_calls
         session_summary = ""
@@ -505,6 +550,7 @@ class RetrievalAgent:
             answer_class_hint=answer_class_hint,
             client_idle_ms=client_idle_ms,
             settings=self._settings,
+            user_structured_answer=user_structured_answer,
         )
         pm_meta: dict[str, Any] | None = None
         meta0 = initial_state.get("metadata") or {}
@@ -576,6 +622,7 @@ class RetrievalAgent:
         raw_q = (final_state.get("metadata") or {}).get("raw_user_question")
         if not isinstance(raw_q, str) or not raw_q.strip():
             raw_q = question
+        hook_chain: list[dict[str, Any]] = []
         if thread_id:
             apply_turn_digest_to_thread(
                 thread_id=thread_id,
@@ -585,11 +632,14 @@ class RetrievalAgent:
                 tool_trace=trace,
                 workspace_id=workspace_id,
             )
-            persist_post_compact_paper_sources(
-                thread_id,
-                messages,
+            run_post_compact_hooks(
+                thread_id=thread_id,
+                messages=messages,
                 settings=self._settings,
+                out_events=hook_chain,
             )
+        else:
+            hook_chain = []
 
         ac = str(envelope.get("answer_class") or "grounded_explanation")
         raw_routing = final_state.get("routing_log")
@@ -606,6 +656,17 @@ class RetrievalAgent:
             routing_log, parent_turn_id=parent_tid
         )
         subagent_runs = merge_subagent_run_rows(routing_rows=routing_sub_rows, spawned_rows=[])
+        _tn = _collect_subagent_task_notifications(messages)
+        _lane = (
+            "fork_v3_enhanced"
+            if str(self._settings.agent_runtime).strip() == "langgraph_supervisor_v3"
+            and subagent_lifecycle_enhanced_enabled(self._settings)
+            else "legacy_routing_sse_only"
+        )
+
+        brief_out: str | None = None
+        if bool(getattr(self._settings, "agent_brief_output_enabled", False)):
+            brief_out = extract_last_brief_from_messages(messages)
 
         SpanAttributes.set_output(
             {
@@ -643,8 +704,12 @@ class RetrievalAgent:
             debug_events=list(final_state.get("debug_events") or []),
             phoenix_trace_id=current_otel_trace_id_hex(),
             thread_id=thread_id,
+            brief=brief_out,
             prompt_memory_run_metadata=pm_meta,
             subagent_runs=subagent_runs or None,
+            subagent_task_notifications=_tn or None,
+            subagent_observability_lane=_lane,
+            hook_chain_events=hook_chain or None,
         )
 
 

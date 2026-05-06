@@ -18,12 +18,28 @@ from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.prebuilt import ToolNode
 
+from science_graphrag.agent.can_use_tool_contract import CanUseTool
+from science_graphrag.agent.debug_streamable_types import TOOL_SSE_HINT_STREAMABLE_TYPES
 from science_graphrag.agent.graph.state import AgentState
+from science_graphrag.agent.runtime_context import agent_graph_thread_id_scope
 from science_graphrag.agent.tool_call_normalization import (
     normalize_tool_call_name,
     state_with_normalized_last_ai_tool_calls,
 )
 from science_graphrag.config import Settings
+
+
+def _thread_id_for_tool_context(st: AgentState) -> str | None:
+    tid = st.get("thread_id")
+    if isinstance(tid, str) and tid.strip():
+        return tid.strip()
+    meta = st.get("metadata")
+    if isinstance(meta, dict):
+        mt = meta.get("thread_id")
+        if isinstance(mt, str) and mt.strip():
+            return mt.strip()
+    return None
+
 
 _SIDECHAIN_LOCK = threading.Lock()
 
@@ -113,6 +129,16 @@ def apply_allowed_tools_matrix(
     return out, names
 
 
+def _react_bound_tool_names_from_state(state: AgentState) -> set[str] | None:
+    """Optional per-turn bound tool surface for single-agent ReAct (shortlist vs ToolNode)."""
+    meta = state.get("metadata") or {}
+    raw = meta.get("react_bound_tool_names")
+    if not isinstance(raw, list) or not raw:
+        return None
+    out = {normalize_tool_call_name(str(x)) for x in raw if str(x).strip()}
+    return out or None
+
+
 def _deny_maps_for_ai_tool_calls(
     *,
     policy: str,
@@ -169,6 +195,7 @@ def build_tool_execution_node(
     tools: list[BaseTool],
     settings: Settings,
     sidechain_id: str | None = None,
+    can_use_tool: CanUseTool | None = None,
 ) -> Callable[[AgentState, Any | None], dict[str, Any]]:
     """Return LangGraph node callable with validate/permission/hooks around ToolNode."""
     inner = ToolNode(tools)
@@ -207,6 +234,30 @@ def build_tool_execution_node(
         allowed_names = {normalize_tool_call_name(getattr(t, "name", "") or "") for t in tools}
 
         denies = _deny_maps_for_ai_tool_calls(policy=policy, tcs=tcs, allowed_names=allowed_names)
+
+        bound = _react_bound_tool_names_from_state(st0)
+        if bound:
+            for tc in tcs:
+                if not isinstance(tc, dict):
+                    continue
+                nm = normalize_tool_call_name(str(tc.get("name") or ""))
+                if nm and nm not in bound and nm not in denies:
+                    denies[nm] = "not_in_bound_tool_surface"
+
+        if can_use_tool is not None:
+            for tc in tcs:
+                if not isinstance(tc, dict):
+                    continue
+                nm = normalize_tool_call_name(str(tc.get("name") or ""))
+                if not nm or nm in denies:
+                    continue
+                try:
+                    reason = can_use_tool(st0, nm, tc)
+                except Exception as exc:  # pylint: disable=broad-exception-caught
+                    denies[nm] = f"can_use_tool_callback_error:{type(exc).__name__}"
+                else:
+                    if reason:
+                        denies[nm] = str(reason).strip() or "tool_denied_by_policy"
 
         if denies:
             # Permission phase — synthesize ToolMessage errors without invoking tools.
@@ -250,10 +301,12 @@ def build_tool_execution_node(
                 },
             )
 
-        if config is None:
-            inner_out = inner.invoke(st0)
-        else:
-            inner_out = inner.invoke(st0, config)
+        tid_ctx = _thread_id_for_tool_context(st0)
+        with agent_graph_thread_id_scope(tid_ctx):
+            if config is None:
+                inner_out = inner.invoke(st0)
+            else:
+                inner_out = inner.invoke(st0, config)
 
         post_ts = time.time()
         events.append(
@@ -291,9 +344,9 @@ def build_tool_execution_node(
             if not isinstance(body, dict):
                 continue
             hint = body.get("sse_hint")
-            if isinstance(hint, dict) and str(hint.get("type") or "") in (
-                "web_fetched",
-                "doi_resolved",
+            if (
+                isinstance(hint, dict)
+                and str(hint.get("type") or "") in TOOL_SSE_HINT_STREAMABLE_TYPES
             ):
                 extra_sse.append({k: v for k, v in hint.items() if v is not None})
         events.extend(extra_sse)

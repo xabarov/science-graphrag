@@ -117,6 +117,7 @@ async def post_agent_query_v2(
                 history_digest=history_digest,
                 history_digest_invalid=history_digest_invalid,
                 client_idle_ms=client_idle_ms,
+                user_structured_answer=body.user_structured_answer,
             )
         )
 
@@ -141,6 +142,7 @@ async def post_agent_query_v2(
             thread_id=thread_id,
             history_digest=history_digest,
             client_idle_ms=client_idle_ms,
+            user_structured_answer=body.user_structured_answer,
         )
     except AgentGraphDeadlineExceeded as exc:
         duration_ms = int((perf_counter() - started) * 1000)

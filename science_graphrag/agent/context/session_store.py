@@ -57,6 +57,8 @@ def format_user_with_memory(
     thread_insight_text: str | None = None,
     thread_insight_status: str | None = None,
     paper_sources_items: list[dict[str, Any]] | None = None,
+    research_plan_block: str | None = None,
+    structured_user_answer_block: str | None = None,
 ) -> str:
     """Build the first user message, optionally prefixing server/client memory (CH4+CH5).
 
@@ -67,6 +69,9 @@ def format_user_with_memory(
     emitted in precedence order: last digest, thread insight, then session memory.
 
     ``paper_sources_items`` re-injects recent paper refs after CH5 compaction (§10.5.2).
+
+    ``research_plan_block`` / ``structured_user_answer_block`` are optional XML-ish carry-over
+    fragments (session_meta re-attach and ask-user roundtrip).
     """
     parts: list[str] = []
     away_lines = [str(x).strip() for x in (away_recap_lines or []) if str(x).strip()]
@@ -79,6 +84,9 @@ def format_user_with_memory(
     if ti:
         st = _sanitize_thread_insight_status(thread_insight_status)
         parts.append(f'<thread_insight status="{st}">\n{ti}\n</thread_insight>')
+    rp = (research_plan_block or "").strip()
+    if rp:
+        parts.append(rp)
     ss = (session_summary or "").strip()
     if ss:
         parts.append(f"<session_memory>\n{ss}\n</session_memory>")
@@ -125,6 +133,9 @@ def format_user_with_memory(
             + "\n".join(ps_rows[:24])
             + "\n</paper_sources_restored>"
         )
+    sua = (structured_user_answer_block or "").strip()
+    if sua:
+        parts.append(sua)
     if parts:
         parts.append("")
     parts.append(question)

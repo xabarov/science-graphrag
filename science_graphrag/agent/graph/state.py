@@ -55,6 +55,7 @@ def build_initial_agent_state(
     answer_class_hint: str | None = None,
     client_idle_ms: int | None = None,
     settings: Settings | None = None,
+    user_structured_answer: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Shared initial state for LangGraph agent runs (API v2 + RetrievalAgent runtime)."""
     from science_graphrag.agent.context.post_compact_attachments import (
@@ -62,9 +63,13 @@ def build_initial_agent_state(
         load_paper_sources_items,
     )
     from science_graphrag.agent.context.prompt_memory_policy import resolve_prompt_memory_policy
+    from science_graphrag.agent.context.research_plan_session import research_plan_prompt_block
     from science_graphrag.agent.context.session_store import (
         format_user_with_memory,
         get_session_for_thread,
+    )
+    from science_graphrag.agent.context.user_structured_answer import (
+        consume_user_structured_answer_for_thread,
     )
 
     workspace_capsule = None
@@ -110,6 +115,20 @@ def build_initial_agent_state(
             "Recent thread recap is in session_memory below; prefer continuing that line of work.",
         ]
 
+    pre_debug: list[dict[str, Any]] = []
+    structured_answer_block: str | None = None
+    if tid_stripped and user_structured_answer:
+        evs, sfx = consume_user_structured_answer_for_thread(
+            tid_stripped,
+            user_structured_answer,
+            settings=st,
+        )
+        pre_debug.extend(evs)
+        structured_answer_block = sfx
+    rp_block: str | None = None
+    if tid_stripped and bool(getattr(st, "agent_research_plan_tool_enabled", False)):
+        rp_block = research_plan_prompt_block(tid_stripped)
+
     user_content = format_user_with_memory(
         question=question,
         session_summary=pm_session_text,
@@ -122,6 +141,8 @@ def build_initial_agent_state(
         thread_insight_text=pm_insight,
         thread_insight_status=pm_insight_status,
         paper_sources_items=paper_sources_items,
+        research_plan_block=rp_block,
+        structured_user_answer_block=structured_answer_block,
     )
     if post_compact_paper_sources_restored_count and tid_stripped:
         clear_paper_sources_capsule(tid_stripped)
@@ -163,6 +184,7 @@ def build_initial_agent_state(
             )
         ac = answer_class_hint or heuristic_answer_class(question, None)
         initial_debug: list[dict[str, Any]] = [
+            *pre_debug,
             {
                 "type": "intent_classified",
                 "source": "single_agent_research_v1",
@@ -176,7 +198,7 @@ def build_initial_agent_state(
                 "classifier": "deterministic",
                 "answer_class": ac,
                 "suggested_answer_class": ac,
-            }
+            },
         ]
         return {
             "messages": [
@@ -239,7 +261,7 @@ def build_initial_agent_state(
     initial_intent = dict(turn_policy.sse_payload())
     initial_intent["run_kind"] = run_kind
     initial_intent["graph_id"] = graph_id
-    initial_debug = [initial_intent]
+    initial_debug = [*pre_debug, initial_intent]
     if turn_policy.classifier == "fallback":
         initial_debug.append(
             {

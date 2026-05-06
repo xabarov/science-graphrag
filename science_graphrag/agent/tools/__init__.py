@@ -13,6 +13,26 @@ from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings, get_settings
 
 
+def _append_agent_surface_tools(out: list[BaseTool], stores: StoreRegistry, settings: Settings) -> None:
+    """Feature-gated MCP/LSP/monitor + product interaction tools (shared by retrieval + full registry)."""
+    if getattr(settings, "agent_mcp_tools_enabled", False):
+        from science_graphrag.agent.tools.mcp_surface import build_mcp_surface_tools
+
+        out.extend(build_mcp_surface_tools(settings))
+    if getattr(settings, "agent_lsp_tool_enabled", False):
+        from science_graphrag.agent.tools.lsp_surface import build_lsp_tool
+
+        out.extend(build_lsp_tool(settings))
+    if getattr(settings, "agent_runtime_monitor_tool_enabled", False):
+        from science_graphrag.agent.tools.runtime_monitor_surface import build_runtime_monitor_tools
+
+        out.extend(build_runtime_monitor_tools(settings))
+    from science_graphrag.agent.tools.product_interaction_tools import build_product_interaction_tools
+
+    out.extend(build_product_interaction_tools(settings))
+    _ = stores  # reserved for future store-backed adapters
+
+
 def build_retrieval_tools(
     stores: StoreRegistry, settings: Settings | None = None
 ) -> list[BaseTool]:
@@ -30,7 +50,9 @@ def build_retrieval_tools(
             settings=settings,
         ),
     ]
-    return catalog + core
+    out = catalog + core
+    _append_agent_surface_tools(out, stores, settings)
+    return out
 
 
 def build_graph_tools(stores: StoreRegistry) -> list[BaseTool]:
@@ -60,6 +82,7 @@ def build_tool_registry(stores: StoreRegistry, settings: Settings | None = None)
         from science_graphrag.agent.tools.doi_resolver_tool import build_doi_resolver_tool
 
         out.append(build_doi_resolver_tool(stores.neo4j, settings))
+    _append_agent_surface_tools(out, stores, settings)
     out.extend(build_writer_tools(stores))
     return out
 

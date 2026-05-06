@@ -213,6 +213,10 @@ def main() -> int:
     if c_side is not None or b_side is not None:
         delta_side_llm = float(c_side or 0.0) - float(b_side or 0.0)
 
+    delta_subagent_lifecycle_missing = _metric(cand, "subagent_lifecycle_missing_count") - _metric(
+        base, "subagent_lifecycle_missing_count"
+    )
+
     fail_reasons: list[str] = []
     if "new_missing_spans" in policies_fail and delta_missing_spans > 0:
         fail_reasons.append(f"new_missing_spans:+{delta_missing_spans:.0f}")
@@ -345,6 +349,7 @@ def main() -> int:
             "baseline_verdict_rank": base_verdict_rank,
             "candidate_verdict_rank": cand_verdict_rank,
             "unnecessary_tool_calls_avg": delta_unnecessary_tool_calls_avg,
+            "subagent_lifecycle_missing_count": delta_subagent_lifecycle_missing,
         },
     }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -365,6 +370,7 @@ def main() -> int:
         f"- Delta deferred_schema_event_count: `{delta_deferred_schema_events}`",
         f"- Delta budget_cutoff_count: `{delta_budget_cutoff}`",
         f"- Delta side_llm_cache_read_ratio_avg: `{delta_side_llm}`",
+        f"- Delta subagent_lifecycle_missing_count: `{delta_subagent_lifecycle_missing}`",
         f"- Delta unnecessary_tool_calls_avg: `{delta_unnecessary_tool_calls_avg}`",
         f"- Baseline verdict rank: `{base_verdict_rank}`",
         f"- Candidate verdict rank: `{cand_verdict_rank}`",

@@ -65,6 +65,34 @@ def test_redis_session_memory_survives_reconnect() -> None:
             be1.clear_all()
 
 
+@pytest.mark.skipif(
+    os.environ.get("SCIENCE_GRAPHRAG_SKIP_REDIS_SESSION_TEST") == "1",
+    reason="SCIENCE_GRAPHRAG_SKIP_REDIS_SESSION_TEST=1",
+)
+def test_redis_patch_session_meta_creates_key_when_missing() -> None:
+    """Control-plane meta patch must work before first ``update_after_turn`` (T2 surfaces)."""
+    prefix = f"test_sess_patch_{uuid.uuid4().hex}:"
+    url = _redis_url()
+    be: RedisSessionMemoryBackend | None = None
+    try:
+        be = RedisSessionMemoryBackend(redis_url=url, key_prefix=prefix, ttl_seconds=3600)
+        be._redis.ping()  # noqa: SLF001
+    except Exception as exc:  # noqa: BLE001
+        pytest.skip(f"Redis not available: {exc}")
+
+    try:
+        tid = f"thread_meta_only_{uuid.uuid4().hex}"
+        be.patch_session_meta(
+            tid, patch={"research_plan": {"schema_version": "research_plan_v1", "items": []}}
+        )
+        snap = be.get_session_copy(tid)
+        meta = snap.get("session_meta") or {}
+        assert isinstance(meta.get("research_plan"), dict)
+    finally:
+        if be is not None:
+            be.clear_all()
+
+
 def test_configure_falls_back_to_memory_on_bad_redis(monkeypatch) -> None:
     """configure_session_memory_backend must not crash when Redis URL is invalid."""
     from science_graphrag.agent.context import session_backend as sb

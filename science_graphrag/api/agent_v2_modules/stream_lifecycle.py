@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator
 from time import perf_counter
 from typing import Any
 
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from science_graphrag.agent.chat_envelope import (
     build_chat_envelope,
@@ -21,14 +22,12 @@ from science_graphrag.agent.context.llm_history_compact import (
     maybe_llm_compact_session_after_turn,
     patch_compaction_audit_llm,
 )
-from science_graphrag.agent.context.post_compact_attachments import (
-    persist_post_compact_paper_sources,
-)
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.debug_events_telemetry import (
     extract_runtime_telemetry_from_debug_events,
 )
+from science_graphrag.agent.debug_streamable_types import STREAMABLE_DEBUG_EVENT_TYPES
 from science_graphrag.agent.graph.errors import (
     AgentGraphDeadlineExceeded,
     AgentGraphRecursionLimitExceeded,
@@ -36,18 +35,23 @@ from science_graphrag.agent.graph.errors import (
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
+from science_graphrag.agent.hooks import run_post_compact_hooks
 from science_graphrag.agent.llm.chat import effective_chat_llm_model
 from science_graphrag.agent.notes import maybe_generate_agent_note
 from science_graphrag.agent.runtime import (
     aggregate_agent_llm_usage,
     current_otel_trace_id_hex,
+    extract_last_brief_from_messages,
     resolve_langgraph_answer_with_salvage,
 )
+from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
+from science_graphrag.agent.subagents.notification import sse_payload_from_human_message
 from science_graphrag.agent.subagents.runtime import (
     RoutingSubagentLegLedger,
     SubagentRuntime,
     merge_subagent_run_rows,
 )
+from science_graphrag.agent.subagents.sidechain_transcript import append_subagent_sidechain_event
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.api.agent_v2_modules.deadline_otel import (
     record_agent_turn_deadline_exceeded,
@@ -62,6 +66,7 @@ from science_graphrag.api.agent_v2_modules.payloads import (
 from science_graphrag.api.agent_v2_modules.payloads import (
     apply_runtime_metadata_from_state,
     build_run_metadata,
+    merge_hook_chain_events_into_run_metadata,
     thread_insight_audit_fragment,
 )
 from science_graphrag.api.agent_v2_modules.recovery import (
@@ -128,6 +133,15 @@ def product_step_code_for_tool(tool_name: str) -> str | None:
         "web_search": "searching_literature",
         "web_fetch": "gathering_evidence",
         "doi_resolver": "paper_metadata",
+        "call_mcp_tool": "using_tool",
+        "list_mcp_resources": "using_tool",
+        "fetch_mcp_resource": "using_tool",
+        "mcp_auth": "using_tool",
+        "lsp_tool": "exploring_graph",
+        "runtime_monitor_get": "summarizing_workspace",
+        "research_plan_write": "interpreting_question",
+        "ask_user_question": "interpreting_question",
+        "brief": "composing_answer",
     }
     return mapping.get(tool_name)
 
@@ -275,15 +289,7 @@ def _recover_after_recursion_limit(
 
 def _streamable_debug_event(event: dict[str, Any]) -> bool:
     event_type = event.get("type")
-    if event_type in (
-        "tool_search_result",
-        "intent_classified",
-        "tool_execution",
-        "tool_permissions",
-        "budget_stop_decision",
-        "web_fetched",
-        "doi_resolved",
-    ):
+    if event_type in STREAMABLE_DEBUG_EVENT_TYPES:
         return True
     return event_type == "warning" and bool(str(event.get("code") or "").strip())
 
@@ -390,6 +396,7 @@ async def stream_agent_events(
     history_digest: list[dict[str, Any]] | None = None,
     history_digest_invalid: bool = False,
     client_idle_ms: int | None = None,
+    user_structured_answer: dict[str, Any] | None = None,
 ) -> AsyncIterator[dict[str, str]]:
     """Emit SSE events from LangGraph chunks."""
     started = perf_counter()
@@ -405,6 +412,9 @@ async def stream_agent_events(
     prev_debug_len = 0
     dig = list(history_digest or [])
     active_subagent_id: str | None = None
+    seen_task_notification_markers: set[int] = set()
+    last_progress_label_emit_fp: str | None = None
+    last_progress_label_mono = 0.0
     note_counter: dict[str, int] = {"emitted": 0}
     seen_first_tool_result_per_specialist: set[str] = set()
     prompt_memory_audit_initial: dict[str, Any] | None = None
@@ -441,6 +451,7 @@ async def stream_agent_events(
                 answer_class_hint=answer_class_hint,
                 client_idle_ms=client_idle_ms,
                 settings=settings,
+                user_structured_answer=user_structured_answer,
             )
             _im0 = initial_state.get("metadata") or {}
             if isinstance(_im0, dict):
@@ -464,12 +475,15 @@ async def stream_agent_events(
                 else ""
             )
             parent_turn_id_str = _pt_raw if _pt_raw else ""
+            hook_chain_events: list[dict[str, Any]] = []
             routing_subagent_ledger = RoutingSubagentLegLedger(
-                parent_turn_id=parent_turn_id_str or "unknown"
+                parent_turn_id=parent_turn_id_str or "unknown",
+                hook_chain_sink=hook_chain_events,
             )
             spawn_subagent_runtime = SubagentRuntime(
                 parent_turn_id=parent_turn_id_str or "unknown",
                 max_parallel_subagents=int(settings.agent_max_parallel_subagents),
+                hook_chain_sink=hook_chain_events,
             )
             for ev in initial_debug:
                 if isinstance(ev, dict):
@@ -521,12 +535,44 @@ async def stream_agent_events(
                 }
 
             try:
-                async for chunk in iter_graph_chunks(
+                _graph_it = iter_graph_chunks(
                     graph,
                     initial_state,
                     config,
                     deadline_seconds=float(settings.agent_step_timeout_seconds),
-                ):
+                ).__aiter__()
+                _hb_seconds = float(
+                    getattr(settings, "agent_subagent_stream_heartbeat_interval_seconds", 0) or 0
+                )
+                _use_chunk_timeout = (
+                    str(settings.agent_runtime).strip() == "langgraph_supervisor_v3"
+                    and subagent_lifecycle_enhanced_enabled(settings)
+                    and _hb_seconds > 0
+                )
+                while True:
+                    try:
+                        if _use_chunk_timeout and active_subagent_id:
+                            chunk = await asyncio.wait_for(
+                                anext(_graph_it),
+                                timeout=_hb_seconds,
+                            )
+                        else:
+                            chunk = await anext(_graph_it)
+                    except StopAsyncIteration:
+                        break
+                    except asyncio.TimeoutError:
+                        if active_subagent_id and parent_turn_id_str:
+                            yield {
+                                "data": json.dumps(
+                                    {
+                                        "type": "subagent_heartbeat",
+                                        "subagent_id": active_subagent_id,
+                                        "parent_turn_id": parent_turn_id_str,
+                                        "reason": "idle_tick",
+                                    }
+                                )
+                            }
+                        continue
                     if isinstance(chunk, tuple) and len(chunk) == 2:
                         mode, payload = chunk
                         if mode == "values" and isinstance(payload, dict):
@@ -535,6 +581,19 @@ async def stream_agent_events(
                             if len(routes) > prev_route_len:
                                 for entry in routes[prev_route_len:]:
                                     if active_subagent_id:
+                                        if (
+                                            parent_turn_id_str
+                                            and not subagent_lifecycle_enhanced_enabled(settings)
+                                        ):
+                                            append_subagent_sidechain_event(
+                                                settings,
+                                                parent_turn_id=parent_turn_id_str,
+                                                subagent_id=active_subagent_id,
+                                                event={
+                                                    "event": "routing_leg_finished",
+                                                    "terminal_state": "succeeded",
+                                                },
+                                            )
                                         leg_done = routing_subagent_ledger.close_leg(
                                             terminal_state="succeeded"
                                         )
@@ -596,6 +655,18 @@ async def stream_agent_events(
                                         "spawn_reason": spawn_reason_open,
                                     }
                                     yield {"data": json.dumps(start_payload)}
+                                    if parent_turn_id_str and subagent_lifecycle_enhanced_enabled(
+                                        settings
+                                    ):
+                                        append_subagent_sidechain_event(
+                                            settings,
+                                            parent_turn_id=parent_turn_id_str,
+                                            subagent_id=to_id,
+                                            event={
+                                                "event": "routing_leg_started",
+                                                "spawn_reason": spawn_reason_open,
+                                            },
+                                        )
                                     yield {
                                         "data": json.dumps(
                                             {
@@ -619,6 +690,17 @@ async def stream_agent_events(
                                     if note_event is not None:
                                         yield note_event
                                 prev_route_len = len(routes)
+                                if subagent_lifecycle_enhanced_enabled(settings):
+                                    for msg2 in list(payload.get("messages") or []):
+                                        if not isinstance(msg2, HumanMessage):
+                                            continue
+                                        mid2 = id(msg2)
+                                        if mid2 in seen_task_notification_markers:
+                                            continue
+                                        sse_tn = sse_payload_from_human_message(msg2)
+                                        if sse_tn:
+                                            seen_task_notification_markers.add(mid2)
+                                            yield {"data": json.dumps(sse_tn)}
                             dev = list(payload.get("debug_events") or [])
                             if len(dev) > prev_debug_len:
                                 for ev in dev[prev_debug_len:]:
@@ -673,6 +755,45 @@ async def stream_agent_events(
                                         if _sr:
                                             prog_payload["spawn_reason"] = _sr
                                         yield {"data": json.dumps(prog_payload)}
+                                        if (
+                                            str(settings.agent_runtime).strip()
+                                            == "langgraph_supervisor_v3"
+                                            and subagent_lifecycle_enhanced_enabled(settings)
+                                            and bool(
+                                                getattr(
+                                                    settings,
+                                                    "agent_subagent_progress_label_enabled",
+                                                    True,
+                                                )
+                                            )
+                                        ):
+                                            fp = f"{active_subagent_id}|{tool_name}|{step}"
+                                            now_c = perf_counter()
+                                            _label_iv = (
+                                                "agent_subagent_progress_label_interval_seconds"
+                                            )
+                                            gap = float(getattr(settings, _label_iv, 30.0) or 30.0)
+                                            _first_label = last_progress_label_emit_fp is None
+                                            if fp != last_progress_label_emit_fp and (
+                                                _first_label
+                                                or (now_c - last_progress_label_mono >= gap)
+                                            ):
+                                                last_progress_label_emit_fp = fp
+                                                last_progress_label_mono = now_c
+                                                lbl = f"{active_subagent_id}: {tool_name}"
+                                                yield {
+                                                    "data": json.dumps(
+                                                        {
+                                                            "type": "subagent_progress_label",
+                                                            "subagent_id": active_subagent_id,
+                                                            "parent_turn_id": parent_turn_id_str
+                                                            or None,
+                                                            "label": lbl[:240],
+                                                            "tool": tool_name,
+                                                            "step": step,
+                                                        }
+                                                    )
+                                                }
                             elif isinstance(msg, ToolMessage):
                                 result_payload: dict[str, Any] = {}
                                 error: str | None = None
@@ -715,6 +836,31 @@ async def stream_agent_events(
                             citations = list(citations_chunk)
 
             except AgentGraphDeadlineExceeded as exc:
+                if active_subagent_id and parent_turn_id_str:
+                    if subagent_lifecycle_enhanced_enabled(settings):
+                        append_subagent_sidechain_event(
+                            settings,
+                            parent_turn_id=parent_turn_id_str,
+                            subagent_id=active_subagent_id,
+                            event={
+                                "event": "routing_leg_finished",
+                                "terminal_state": "timed_out",
+                            },
+                        )
+                    leg_to = routing_subagent_ledger.close_leg(terminal_state="timed_out")
+                    fin_to: dict[str, Any] = {
+                        "type": "subagent_finished",
+                        "subagent_id": active_subagent_id,
+                        "parent_turn_id": parent_turn_id_str or None,
+                        "terminal_state": "timed_out",
+                    }
+                    if leg_to:
+                        fin_to["spawn_reason"] = leg_to.get("spawn_reason")
+                        if leg_to.get("latency_ms") is not None:
+                            fin_to["latency_ms"] = leg_to["latency_ms"]
+                    yield {"data": json.dumps(fin_to)}
+                    spawn_subagent_runtime.cancel_all(failure_code="parent_timed_out")
+                    active_subagent_id = None
                 (
                     salvaged,
                     salvaged_answer,
@@ -736,6 +882,31 @@ async def stream_agent_events(
                 if warning_payload is not None:
                     yield sse_warning_event(warning_payload)
             except AgentGraphRecursionLimitExceeded as exc:
+                if active_subagent_id and parent_turn_id_str:
+                    if subagent_lifecycle_enhanced_enabled(settings):
+                        append_subagent_sidechain_event(
+                            settings,
+                            parent_turn_id=parent_turn_id_str,
+                            subagent_id=active_subagent_id,
+                            event={
+                                "event": "routing_leg_finished",
+                                "terminal_state": "failed",
+                            },
+                        )
+                    leg_r = routing_subagent_ledger.close_leg(terminal_state="failed")
+                    fin_r: dict[str, Any] = {
+                        "type": "subagent_finished",
+                        "subagent_id": active_subagent_id,
+                        "parent_turn_id": parent_turn_id_str or None,
+                        "terminal_state": "failed",
+                    }
+                    if leg_r:
+                        fin_r["spawn_reason"] = leg_r.get("spawn_reason")
+                        if leg_r.get("latency_ms") is not None:
+                            fin_r["latency_ms"] = leg_r["latency_ms"]
+                    yield {"data": json.dumps(fin_r)}
+                    spawn_subagent_runtime.cancel_all(failure_code="parent_recursion_limit")
+                    active_subagent_id = None
                 (
                     salvaged,
                     salvaged_answer,
@@ -834,6 +1005,16 @@ async def stream_agent_events(
                 }
 
             if active_subagent_id:
+                if parent_turn_id_str and not subagent_lifecycle_enhanced_enabled(settings):
+                    append_subagent_sidechain_event(
+                        settings,
+                        parent_turn_id=parent_turn_id_str,
+                        subagent_id=active_subagent_id,
+                        event={
+                            "event": "routing_leg_finished",
+                            "terminal_state": "succeeded",
+                        },
+                    )
                 leg_final = routing_subagent_ledger.close_leg(terminal_state="succeeded")
                 fin_final: dict[str, Any] = {
                     "type": "subagent_finished",
@@ -911,10 +1092,11 @@ async def stream_agent_events(
                     )
                 yield {"data": json.dumps(compact_payload)}
                 if latest_full_state is not None:
-                    persist_post_compact_paper_sources(
-                        thread_id,
-                        list(latest_full_state.get("messages") or []),
+                    run_post_compact_hooks(
+                        thread_id=thread_id,
+                        messages=list(latest_full_state.get("messages") or []),
                         settings=settings,
+                        out_events=hook_chain_events,
                     )
                 yield {
                     "data": json.dumps({"type": "product_step", "code": "updating_session_memory"})
@@ -952,8 +1134,23 @@ async def stream_agent_events(
                         [x for x in debug_events_tail if isinstance(x, dict)]
                     )
                 )
+            merge_hook_chain_events_into_run_metadata(
+                run_meta,
+                extra_events=hook_chain_events,
+                debug_events_tail=(
+                    debug_events_tail if isinstance(debug_events_tail, list) else None
+                ),
+            )
             if stream_usage:
                 run_meta["usage"] = stream_usage
+            if isinstance(latest_full_state, dict) and bool(
+                getattr(settings, "agent_brief_output_enabled", False)
+            ):
+                _bf = extract_last_brief_from_messages(
+                    list(latest_full_state.get("messages") or [])
+                )
+                if isinstance(_bf, str) and _bf.strip():
+                    run_meta["brief"] = _bf.strip()[:240]
             if salvaged_after_deadline:
                 run_meta["salvaged_after_deadline"] = True
             if salvaged_after_recursion_limit:
@@ -972,6 +1169,27 @@ async def stream_agent_events(
             if parent_turn_id_str:
                 run_meta["parent_turn_id"] = parent_turn_id_str
             run_meta["max_parallel_subagents"] = int(settings.agent_max_parallel_subagents)
+            _tn_collect: list[dict[str, Any]] = []
+            if isinstance(latest_full_state, dict):
+                for _hm in latest_full_state.get("messages") or []:
+                    if not isinstance(_hm, HumanMessage):
+                        continue
+                    _ak = getattr(_hm, "additional_kwargs", None) or {}
+                    if not isinstance(_ak, dict):
+                        continue
+                    if _ak.get("kind") != "task_notification":
+                        continue
+                    _inner = _ak.get("task_notification")
+                    if isinstance(_inner, dict):
+                        _tn_collect.append(_inner)
+            if _tn_collect:
+                run_meta["subagent_task_notifications"] = _tn_collect
+            run_meta["subagent_observability_lane"] = (
+                "fork_v3_enhanced"
+                if str(settings.agent_runtime).strip() == "langgraph_supervisor_v3"
+                and subagent_lifecycle_enhanced_enabled(settings)
+                else "legacy_routing_sse_only"
+            )
             if isinstance(prompt_memory_audit_initial, dict) and prompt_memory_audit_initial:
                 run_meta.update(prompt_memory_audit_initial)
             if post_compact_paper_sources_restored_initial is not None:

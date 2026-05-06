@@ -327,6 +327,9 @@
 | 2026-05-06 | **Deep-dive openclaude vs план (повторный проход):** уточнён §1.3 (две взаимоисключающие модели субагентов: coordinator vs fork); расширена таблица §5 (cache-safe forked-agent pattern, agent definitions on disk, subagent prompt discipline, per-call canUseTool, microcompact time-trigger, PTL retry + group-by-round); §9.4 B0 получил явную развилку coordinator vs fork с recommendation `fork-mode as baseline`; §9.4 B1 расширен `<task-notification>` envelope и periodic progress label (AgentSummary-pattern); §9.5.1 пополнен P0.3 (web_search/web_fetch с academic allowlist), P0.4 (DOI/OpenAlex resolver), P1.3 (research_plan_write), P1.4 (ask_user_question), P1.5 (claim_verification subagent), P2.3 (plan mode), P2.4 (brief). Добавлен **§10** — deep-dive по паттернам, не закрытым ранее: coordinator/fork contrast, cache-safe side-LLM, built-in subagent catalog → SciGraph mapping, prompt discipline, compaction hardening (microcompact triggers / post-compact restoration / PTL retry / sanitizers), hook surface, agent registry + per-call canUseTool, `<task-notification>` envelope, обновлённый release train (T1–T5) и cross-refs. |
 | 2026-05-06 | Добавлен **§11**: сводный actionable чеклист по Train T1–T5 (`[x] / [~] / [ ]` статусы), отдельный pool §11.6 для tool-parity backlog, §11.0 — закрытое, §11.7 — stop-conditions reminder. Источник правды по прогрессу для §9.3/§9.4/§9.5/§9.5.1/§10. |
 | 2026-05-07 | **Train T2 (§11.2):** зафиксированы комментарии к закрытому срезу §10.4 (writer prompt + `subagent_output_contract`, guard в `FinalAnswerTool.run`) и §10.5.1–§10.5.2 / §10.5.4 (microcompact по `client_idle_ms`, post-compact paper sources + `runtime.py` после digest, pre-compact sanitizers); агрегация `extract_runtime_telemetry_from_debug_events` перенесена в `agent/debug_events_telemetry.py` (SSE + sync parity в `payloads.py`). Тесты: `test_subagent_output_contract`, `test_final_answer_args`, `test_tool_message_compact`, `test_message_sanitizers`, `test_context_session`, `test_debug_events_telemetry`. |
+| 2026-05-07 | **Tool surfaces T2 (§11.6 / §9.5.1):** gated MCP quartet (`SCIENCE_GRAPHRAG_AGENT_MCP_TOOLS_ENABLED` + `agent_mcp_http_base_url` / denylist / SSE `mcp_audit`), bounded `lsp_tool` (`agent_lsp_server_argv`, stdio **Content-Length** framing + timeout/budget), `runtime_monitor_get` + in-proc registry, `research_plan_write` → `session_meta.research_plan` + SSE `research_plan_updated`, `ask_user_question` + API `user_structured_answer` + debug `user_answered`, `brief` → `run_metadata.brief`; `thread_id` для session tools через `runtime_context` в `tool_execution_pipeline`. Тесты: `tests/agent/test_product_surfaces.py`, обновлены `test_tool_manifest_sync`. |
+| 2026-05-07 | **Train T3 §11.3 (B0/B1 lifecycle + observability) — зафиксировано в чеклисте:** ADR `docs/adr/028-agent-runtime-v3-subagents.md`, `notification.py` / `lifecycle.py` / `sidechain_transcript.py`, интеграция в `supervisor.py`, `writer_agent.py` (terminal task-notification), `stream_lifecycle.py` + sync `runtime.py`/`payloads.py`, trace-review (`subagent_lifecycle_missing_count`, …), bench `eval/chat_agent/subagent_runtime_fork_vs_coordinator_bench.py` + регрессия по missing. **Quality-pass (тот же день):** без дублирования sidechain-событий успешного завершения ноги (`routing_leg_finished` в stream только если lifecycle enhanced выключен — иначе канон JSONL `routing_leg_completed` из `lifecycle.py`); при ошибке сборки envelope — JSONL `task_notification_rollback`; SSE `subagent_task_notification` всегда с каноническим `type` поверх зеркалируемого payload; мелкие правки pylint (`anext`, locals). |
+| 2026-05-07 | **Quality pass / verification:** локально зелёные таргетные pytest-наборы по runtime/SSE/registry/hooks/tool-surfaces (`49 passed` + отдельно `test_api_agent_v2_stream_parity.py`, `test_allowed_tools_matrix.py`), quick live `agent_trace_review.py --profile quick --skip-e2e` на dev-контуре `http://127.0.0.1:18787` — **pass** (`eval/results/trace-review-t3-quality-pass.json`), baseline compare — **pass** (`eval/results/trace-regression-t3-quality-pass.json`). В ходе добивки: нормализация single-string `tools/disallowedTools` в registry, stricter validation для `ask_user_question` (>=2 options, unique ids), framed stdio для `lsp_tool`. |
 
 ---
 
@@ -676,6 +679,8 @@
 Этот backlog фиксирует **инструментальный хвост parity** к `openclaude` поверх уже описанных Epic A/B/C.
 Фокус — не «добавить всё», а закрыть максимальный product/runtime эффект минимальным числом новых surfaces.
 
+> **Синхронизация с §11.6 (2026-05-07):** закрытые как **backend/SSE seam** пункты P0.1–P0.2, P1.2–P1.4, P2.4 отражены чеклистом в **§11.6**; ниже в §9.5.1 у каждого такого пункта добавлен блок **«Статус SciGraph»** — что уже в коде и что остаётся aspirational относительно исходных acceptance-абзацев.
+
 #### P0 (брать в ближайший train)
 
 1. **MCP runtime trio + auth**
@@ -691,6 +696,7 @@
      - инструменты доступны в `/v2/agent/query` под feature flags;
      - в run metadata/SSE есть audit trail по `server`, `tool`, `resource_uri`, auth-status;
      - минимум 1 e2e scenario проходит с реальным MCP server и policy deny-path.
+   - **Статус SciGraph (2026-05-07):** `[~]` **seam закрыт** — четыре tool surface под `SCIENCE_GRAPHRAG_AGENT_MCP_TOOLS_ENABLED`, HTTP JSON-RPC на `agent_mcp_http_base_url`, denylist, типизированные ответы при `mcp_unconfigured` / deny, debug/SSE `mcp_audit`. **`mcp_auth`** — маркер делегирования, не полный OAuth. Пункт про **e2e с реальным MCP server** остаётся **rollout / staging** (вне обязательного CI).
 
 2. **LSP tool (read-only, bounded)**
    - Scope:
@@ -701,6 +707,7 @@
      - есть bounded latency/timeout policy;
      - trace фиксирует тип LSP операции и payload budget;
      - benchmark lane показывает не хуже baseline по verdict/trust при code-navigation вопросах.
+  - **Статус SciGraph (2026-05-07):** `[~]` **read-only stdio JSON-RPC** — `lsp_tool` + `agent_lsp_server_argv`, **Content-Length framed stdio**, hard timeout / budget / `lsp_audit`; без argv — `lsp_unconfigured`. **Benchmark lane** и универсальная совместимость со всеми LSP — **не заявлены** в этом срезе.
 
 3. **Web research tools (`web_search`, `web_fetch`)** — для research-flow поверх корпуса
    - Scope:
@@ -716,6 +723,7 @@
      - SSE event `web_fetched` с url/status/bytes/cache-hit;
      - trust-audit lane не деградирует (важно: web-source ≠ corpus-grounded; маркировать в `evidence_origin`);
      - allowlist по умолчанию academic-only (arxiv.org, pubmed.ncbi.nlm.nih.gov, semanticscholar.org, doi.org, openreview.net, biorxiv.org).
+   - **Статус SciGraph:** см. **§11.6 P0.3** — закрыто в продуктовом срезе под feature flag; детали acceptance (trust-audit lane, `evidence_origin`) — в Wave/Train логах и тестах web-fetch path.
 
 4. **DOI / OpenAlex resolver tool** — bridge между web и graph корпусом
    - Scope:
@@ -729,6 +737,7 @@
      - SSE `doi_resolved` с `paper_id_in_workspace` (если найдено);
      - `paper_profile` вызывается автоматически если paper_id найден;
      - rate-limit policy по OpenAlex (документировать).
+   - **Статус SciGraph:** см. **§11.6 P0.4** — `doi_resolver` + SSE `doi_resolved`; workspace/graph mapping — по текущему контракту в коде (см. комментарий в §11.6).
 
 #### P1 (после стабилизации P0 и B0/B1)
 
@@ -751,6 +760,7 @@
    - Acceptance:
      - есть единый status contract для async tasks;
      - в trace-review видны monitor events и корректная эскалация timeout/degraded state.
+   - **Статус SciGraph (2026-05-07):** `[~]` — `runtime_monitor_get` + единый DTO, in-proc `register_runtime_monitor_snapshot` для тестов; **привязка к реальному job-store / trace-review поля** — следующий шаг (см. §11.6 P1.2).
 
 3. **`research_plan_write` (TodoWrite-аналог)** — структурированный progress checklist
    - Scope:
@@ -764,6 +774,7 @@
      - SSE `research_plan_updated` event;
      - UI рендерит чеклист в side-panel чата;
      - после `context_compacted` план сохраняется (re-attach как §10.5).
+   - **Статус SciGraph (2026-05-07):** `[~]` — persistence `session_meta.research_plan`, reinject `<research_plan>` в initial state (флаг), SSE `research_plan_updated`, Redis `patch_session_meta` создаёт ключ как in-memory. **UI side-panel** и полный **acceptance «UI рендерит»** — **отдельный фронт-трек**; post-compact re-attach покрыт хуками/форматом (см. §10.5 / `post_compact`).
 
 4. **`ask_user_question` (structured multi-choice)** — снижение ambiguity
    - Scope:
@@ -776,6 +787,7 @@
      - frontend получает structured payload и рендерит UI-форму;
      - ответ возвращается обратно как tool-result в transcript;
      - тест E2E: agent → ask → user picks → continue.
+  - **Статус SciGraph (2026-05-07):** `[~]` — tool + `pending_user_question` в `session_meta`, SSE `user_question_asked`, API **`user_structured_answer`** + debug `user_answered`, suffix в user-турне для LLM; schema tightened: у каждого question минимум 2 options, `question.id`/`option.id` должны быть уникальны. **Dedicated UI-форма** и **полный product E2E** (как в acceptance) — **не закрыты** в этом треке; unit/API coverage — `tests/agent/test_product_surfaces.py` и связанные.
 
 5. **`claim_verification` subagent** (read-only adversarial probe)
    - Scope:
@@ -833,6 +845,7 @@
    - Acceptance:
      - в `run_metadata.brief` (≤ 240 chars);
      - используется в Ask history side-panel.
+   - **Статус SciGraph (2026-05-07):** `[~]` — tool `brief`, `AgentRunOutput.brief`, **`run_metadata.brief`** (≤240), флаг `SCIENCE_GRAPHRAG_AGENT_BRIEF_OUTPUT_ENABLED`. Пункт **«Ask history side-panel»** — **продуктовый follow-up** (потребление поля в UI).
 
 #### Out-of-scope до отдельного ADR
 
@@ -869,6 +882,7 @@
 | 2026-05-06 | **Второй deep-dive проход openclaude → план:** уточнены §1.3 (coordinator vs fork — две взаимоисключающие модели), §5 (расширена таблица переноса), §9.4 B0/B1 (явная развилка subagent runtime + `<task-notification>` envelope + periodic progress label), §9.5.1 (добавлены P0.3 web tools, P0.4 DOI resolver, P1.3 research_plan_write, P1.4 ask_user_question, P1.5 claim_verification subagent, P2.3 plan mode, P2.4 brief). Добавлен **§10** — паттерны openclaude, не покрытые ранее: cache-safe side-LLM (`runForkedAgent`), built-in subagent catalog (corpus-explore / research-plan / claim-verification), strict prompt discipline (Scope/Result/VERDICT, anti-handoff guard), compaction hardening (microcompact time-trigger, post-compact paper sources restore, PTL retry + group-by-API-round, sanitizers), hook surface (PreCompact/PostCompact/SubagentStart/Stop), agent registry на диске + per-call canUseTool callback, `<task-notification>` envelope. Обновлены acceptance gates §10.10 и release train (§10.11) без сдвига существующих T1–T5. |
 | 2026-05-06 | Добавлен **§11**: сводный actionable чеклист по Train T1–T5 со статусами `[x] / [~] / [ ]`, pool §11.6 для §9.5.1 tool-parity backlog, §11.0 (контекст «уже закрыто»), §11.7 (stop-conditions). Этот раздел становится точкой синхронизации статусов с §9.3/§9.4/§9.5/§9.5.1/§10. |
 | 2026-05-07 | См. §7: комментарии к §11.2 §10.4–§10.5 (реализация + тесты + `debug_events_telemetry` / sync metadata parity). |
+| 2026-05-07 | **§9.5.1:** у пунктов P0.1–P0.2, P1.2–P1.4, P2.4 добавлены блоки **«Статус SciGraph»** (что закрыто как backend/SSE seam vs что остаётся aspirational: real MCP e2e, LSP benchmark lane, UI для research plan / ask-user, Ask history для `brief`); вводный callout на **§11.6** как канон чеклиста. |
 
 ---
 
@@ -1298,39 +1312,44 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
   - [x] decision policy «когда нужен spawn» + sync vs background + merge contract + failure taxonomy
   - [x] выбор API: `/v3/agent/query` ИЛИ `run_kind=langgraph_supervisor_v3` под `/v2`
   - [x] §10.1 решение: **fork-mode default**, coordinator-mode только при явном продукт-сценарии
-  - [ ] benchmark fork vs coordinator на одинаковом сценарии (latency / cache hit / missing-state events)
+  - [x] benchmark fork vs coordinator на одинаковом сценарии (latency / cache hit / missing-state events) — **synthetic lanes** в `eval/chat_agent/subagent_runtime_fork_vs_coordinator_bench.py` + delta `subagent_lifecycle_missing_count` в `trace_regression_compare.py`; live export = next step
   - [x] prompt-cache контракт fork-режима зафиксирован в ADR (та же tools array, без `maxOutputTokens`, тот же thinking config)
-  - [ ] sidechain transcript обязателен для каждого subagent run (§6.1.5 ref)
-  - [ ] pull-back-to-parent контракт (избегаем flooding)
-  - [ ] rollback strategy
-  - Комментарий (2026-05-07): реализовано в ADR `docs/adr/028-agent-runtime-v3-subagents.md` и синхронизировано со spec `docs/specs/agent-chat-v1.md`; benchmark/rollback/sidechain/pull-back оставлены следующей волне по scope.
+  - [x] sidechain transcript обязателен для каждого subagent run (§6.1.5 ref) — JSONL `subagent/<parent_turn_id>/<subagent_id>.jsonl` при `agent_sidechain_transcripts_enabled`
+  - [x] pull-back-to-parent контракт (избегаем flooding) — `SubagentCarryBack` + `<task-notification>` без полного child dump
+  - [x] rollback strategy — `agent_subagent_lifecycle_enhanced_enabled` + `run_metadata.subagent_observability_lane`
+  - Комментарий (2026-05-07): lifecycle/observability wave — `notification.py`, `lifecycle.py`, `sidechain_transcript.py`, `stream_lifecycle.py`, `supervisor.py`, `writer_agent.py`, `runtime.py`, `trace_review_schema.py`.
+  - Комментарий (2026-05-07, quality-pass): успешное завершение routing-ноги в sidechain не дублируется: при включённом `agent_subagent_lifecycle_enhanced` JSONL пишет `routing_leg_completed` из `lifecycle.py`, а `stream_lifecycle.py` не добавляет второй ряд `routing_leg_finished` на success (исключения — timeout/recursion и режим без enhanced). При сбое `task_notification_human_message` в JSONL пишется `task_notification_rollback`; в SSE payload для `subagent_task_notification` поле `type` защищено от перезаписи из вложенного dict.
 
 - **B1. Runtime primitive: spawn / track / collect** (§9.4 B1, §10.8)
   - [x] `science_graphrag/agent/subagents/runtime.py` с `spawn_subagent(task_spec) -> subagent_id`
-  - [ ] heartbeat / progress channel
+  - [x] heartbeat / progress channel — SSE `subagent_heartbeat` + `subagent_progress` (существующий) + `subagent_progress_label` (throttle)
   - [x] terminal states (`succeeded|failed|cancelled|timed_out`) + bounded fanout (`max_parallel_subagents`)
   - [x] observability: `parent_turn_id` / `subagent_id` / `spawn_reason` / `cost/tokens/latency` per child
-  - [ ] §10.8 `<task-notification>` envelope как user-role message в parent transcript
-  - [ ] SSE `subagent_task_notification` зеркалит payload для UI
-  - [ ] periodic `subagent_progress_label` (≥ 30s, lightweight cache-safe forked-агент, AgentSummary-pattern)
-  - [ ] gate: live run с 2+ параллельных subagents → полный lifecycle в SSE + trace-review без missing states
-  - Комментарий (2026-05-07): foundation skeleton + state machine + базовая SSE/sync observability готовы; real child execution, heartbeat/progress-label, `<task-notification>` и lifecycle gate остаются deferred.
+  - [x] §10.8 `<task-notification>` envelope как user-role message в parent transcript
+  - [x] SSE `subagent_task_notification` зеркалит payload для UI
+  - [x] periodic `subagent_progress_label` (≥ 30s throttle; **deterministic** label от последнего tool progress — LLM AgentSummary fork отложен)
+  - [ ] gate: live run с 2+ параллельных subagents → полный lifecycle в SSE + trace-review без missing states — **частично:** метрика `subagent_lifecycle_missing_count` + warn в trace-review; полный live gate отдельно
+  - Комментарий (2026-05-07): foundation + v3 lifecycle extras; explicit parallel spawn graph всё ещё sequential routing — gate формулировать как trace completeness, не как настоящий параллельный mesh.
 
 - **A-advanced** (§9.6 Train T3)
   - [ ] incremental insight updates (не пересобирать полностью при каждом triggere)
   - [ ] contradiction-aware synthesis (если новый chunk противоречит previous insight — explicit conflict в audit)
 
 - **§10.6 Hooks layer baseline**
-  - [ ] `science_graphrag/agent/hooks/` модуль (immutable context → diff/decision контракт)
-  - [ ] `PostCompactHooks` (re-inject paper sources / plan / discovered tools — синхронизировано с §11.2 §10.5.2)
-  - [ ] `SubagentStartHooks` / `SubagentStopHooks` (для §11.3 B1 observability)
-  - [ ] `hook_chain_events` в `trace-review-v1`
+  - [x] `science_graphrag/agent/hooks/` модуль (immutable context → diff/decision контракт)
+  - [x] `PostCompactHooks` (re-inject paper sources / plan / discovered tools — синхронизировано с §11.2 §10.5.2)
+  - [x] `SubagentStartHooks` / `SubagentStopHooks` (для §11.3 B1 observability)
+  - [x] `hook_chain_events` в `trace-review-v1`
+  - Комментарий (2026-05-07): реализация в [`science_graphrag/agent/hooks/`](../../science_graphrag/agent/hooks/), `run_post_compact_hooks` + `hook_chain_event` debug rows; subagent ledger/runtime пишет start/stop; `run_metadata.hook_chain_events` + `Metrics.hook_chain_event_count` в [`scripts/live_check/trace_review_schema.py`](../../scripts/live_check/trace_review_schema.py); sync path [`science_graphrag/agent/runtime.py`](../../science_graphrag/agent/runtime.py), SSE [`stream_lifecycle.py`](../../science_graphrag/api/agent_v2_modules/stream_lifecycle.py).
+  - Комментарий (2026-05-07, quality-pass): `merge_hook_chain_events_into_run_metadata` сохраняет уже присутствующие события из `run_metadata` и дедуплицирует объединение (`type/hook/phase/ok/detail`), чтобы sync/SSE merge не терял события и не плодил дубли; покрыто тестами `tests/agent/test_hooks_post_compact.py`.
 
 - **§10.7 Agent registry & per-fork permissions baseline**
-  - [ ] disk loader: `~/.scigraph/agents/*.md` + `<workspace>/.scigraph/agents/*.md` с YAML frontmatter (`name`, `model`, `tools`, `disallowedTools`, `permissionMode`, `whenToUse`, `color`, `isolation`, `background`)
-  - [ ] frontmatter parser → tool policy matrix mapping (§6.1.4 ref) + system prompt builder
-  - [ ] per-call `canUseTool` callback в `tool_execution_pipeline.py` (поверх `effective_tool_policy`)
-  - [ ] integration test: `tests/fixtures/agents/librarian.md` загрузка → AgentTool вызов → permission filter
+  - [x] disk loader: `~/.scigraph/agents/*.md` + `<workspace>/.scigraph/agents/*.md` с YAML frontmatter (`name`, `model`, `tools`, `disallowedTools`, `permissionMode`, `whenToUse`, `color`, `isolation`, `background`)
+  - [x] frontmatter parser → tool policy matrix mapping (§6.1.4 ref) + system prompt builder
+  - [x] per-call `canUseTool` callback в `tool_execution_pipeline.py` (поверх `effective_tool_policy`)
+  - [x] integration test: `tests/fixtures/agents/librarian.md` загрузка → AgentTool вызов → permission filter
+  - Комментарий (2026-05-07): [`science_graphrag/agent/agent_registry.py`](../../science_graphrag/agent/agent_registry.py) + `disk_agent_definition_to_can_use_tool`; single-agent bound surface: `metadata.react_bound_tool_names` в [`supervisor.py`](../../science_graphrag/agent/graph/supervisor.py) + gating в [`tool_execution_pipeline.py`](../../science_graphrag/agent/tool_execution_pipeline.py); тесты `tests/agent/test_agent_registry_permissions.py`, `tests/agent/test_allowed_tools_matrix.py`.
+  - Комментарий (2026-05-07, quality-pass): hardened permission path — исключения в `can_use_tool` теперь конвертируются в явный deny (`can_use_tool_callback_error:<ExceptionName>`), убран неверный implicit deny `cypher_query` для `permissionMode=read_only` (политика задаётся `tools/disallowedTools`), parser корректно обрабатывает не-UTF8 файлы, добавлен общий контракт `CanUseTool` в `science_graphrag/agent/can_use_tool_contract.py`; регрессии закрыты в `tests/agent/test_agent_registry_permissions.py`.
 
 ### 11.4 Train T4 (2–3 недели) — B2 / B3 / C2 + corpus-explore / research-plan + tool_use_summary
 
@@ -1394,8 +1413,8 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 Не все tool-parity items жёстко привязаны к Train acceptance — отслеживаем отдельным чеклистом, выбираем в Train по capacity.
 
 **P0 (целевой Train T1–T2):**
-- [ ] §9.5.1 P0.1 MCP runtime trio + auth (`call_mcp_tool` / `list_mcp_resources` / `fetch_mcp_resource` / `mcp_auth`)
-- [ ] §9.5.1 P0.2 LSP tool (read-only, bounded)
+- [x] §9.5.1 P0.1 MCP runtime trio + auth (`call_mcp_tool` / `list_mcp_resources` / `fetch_mcp_resource` / `mcp_auth`) — **gated seam:** `SCIENCE_GRAPHRAG_AGENT_MCP_TOOLS_ENABLED`, HTTP JSON-RPC на `agent_mcp_http_base_url`, denylist `agent_mcp_server_denylist`, SSE `mcp_audit`; без base URL — typed `mcp_unconfigured`.
+- [x] §9.5.1 P0.2 LSP tool (read-only, bounded) — `lsp_tool` + `agent_lsp_server_argv`, timeouts / `lsp_audit`; без argv — `lsp_unconfigured`.
 - [x] §9.5.1 P0.3 Web research tools (`web_search` + `web_fetch`, academic allowlist by default; `SCIENCE_GRAPHRAG_AGENT_WEB_RESEARCH_TOOLS_ENABLED`)
 - [x] §9.5.1 P0.4 DOI / OpenAlex resolver (`doi_resolver`; `SCIENCE_GRAPHRAG_AGENT_DOI_RESOLVER_TOOL_ENABLED`)
 - Комментарий: web-инструменты запускаются только под feature flag; allowlist/redirect-guard + bounded fetch включены, SSE: `web_fetched`.
@@ -1403,16 +1422,18 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 
 **P1 (целевой Train T2–T3):**
 - [ ] §9.5.1 P1.1 Worktree isolation tools (нужно для real multi-agent в Epic B B3)
-- [ ] §9.5.1 P1.2 Runtime monitor tool
-- [ ] §9.5.1 P1.3 `research_plan_write` (TodoWrite-аналог)
-- [ ] §9.5.1 P1.4 `ask_user_question` (structured multi-choice)
+- [x] §9.5.1 P1.2 Runtime monitor tool — `runtime_monitor_get` + `SCIENCE_GRAPHRAG_AGENT_RUNTIME_MONITOR_TOOL_ENABLED`, единый status contract; snapshot через `register_runtime_monitor_snapshot` (tests) / дальнейший job-store seam.
+- [x] §9.5.1 P1.3 `research_plan_write` (TodoWrite-аналог) — `session_meta.research_plan`, reinject `<research_plan>`, SSE `research_plan_updated`; flag `SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_TOOL_ENABLED`.
+- [x] §9.5.1 P1.4 `ask_user_question` (structured multi-choice) — pending в `session_meta`, SSE `user_question_asked`, клиентский roundtrip поля `user_structured_answer` + debug `user_answered`; flag `SCIENCE_GRAPHRAG_AGENT_ASK_USER_QUESTION_TOOL_ENABLED`.
 - [x] §9.5.1 P1.5 `claim_verification` subagent — **дублируется с §11.2 (Train T2)**, отслеживается там
 
 **P2 (только при явном продукт-сценарии):**
 - [ ] §9.5.1 P2.1 Task orchestration primitives (`task_create` / `task_get` / etc) — только если Epic B0 выбирает coordinator-mode
 - [ ] §9.5.1 P2.2 Scheduled automation (`cron_*`) — требует business case
 - [ ] §9.5.1 P2.3 Plan mode (`enter_plan_mode` / `exit_plan_mode`)
-- [ ] §9.5.1 P2.4 `brief` synthetic output
+- [x] §9.5.1 P2.4 `brief` synthetic output — tool `brief` + `run_metadata.brief` (≤240 chars); `SCIENCE_GRAPHRAG_AGENT_BRIEF_OUTPUT_ENABLED`.
+
+- Комментарий (2026-05-07): детальное разделение **«seam закрыт» vs aspirational acceptance** (real MCP e2e, LSP eval lane, UI чеклиста/формы, Ask history для `brief`) — в **§9.5.1** под каждым пунктом (**«Статус SciGraph»**); quality-pass: Redis `patch_session_meta` без ключа = seed пустой сессии; sidechain JSONL не падает при `OSError`; `science_graphrag/agent/debug_streamable_types.py` — единый набор типов для SSE/debug; quick live `agent_trace_review.py` на `http://127.0.0.1:18787` + baseline compare — **pass**.
 
 **Out-of-scope до отдельного ADR:** `team_create`/`team_delete`, remote triggers, REPL-like execution surfaces (§9.5.1).
 

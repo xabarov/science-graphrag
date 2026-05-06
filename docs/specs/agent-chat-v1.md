@@ -13,9 +13,13 @@
 | `run_metadata.parent_turn_id` | UUID for one parent turn; stable across all child legs in that request. |
 | `run_metadata.subagent_runs` | List of completed child legs: `subagent_id`, `parent_turn_id`, `spawn_reason`, `terminal_state` (`succeeded` \| `failed` \| `cancelled` \| `timed_out`), optional `latency_ms`, optional `tokens` / `cost_usd_estimate` (often null until per-child usage is wired). |
 | `run_metadata.max_parallel_subagents` | Server fanout cap for explicit `spawn_subagent` (see Settings). |
+| `run_metadata.subagent_task_notifications` | Optional list of structured completion payloads mirrored from `<task-notification>` `HumanMessage` rows (same contract as SSE `subagent_task_notification`). |
+| `run_metadata.subagent_observability_lane` | `fork_v3_enhanced` vs `legacy_routing_sse_only` — documents whether v3 lifecycle extras were active for this turn. |
 | SSE `subagent_started` / `subagent_progress` / `subagent_finished` | Same `type` values as v1; **optional** extra keys when present: `parent_turn_id`, `spawn_reason`, `terminal_state` (on `subagent_finished` when known). |
 
-**Stubbed / next wave:** coordinator-mode, `<task-notification>` + `subagent_task_notification`, `subagent_progress_label`, heartbeat channel, hooks (`SubagentStartHooks`), per-child token accounting beyond whole-turn `usage`, merge-node (`specialist_results_v3`).
+**Train T3 lifecycle (v3, implemented 2026-05-07):** `<task-notification>` user-role transcript rows (LangGraph `HumanMessage` with `additional_kwargs.kind="task_notification"`), SSE mirror `subagent_task_notification`, throttled deterministic `subagent_progress_label`, and `subagent_heartbeat` while a routing leg is active (Settings-gated).
+
+**Stubbed / next wave:** real coordinator-mode runtime, hooks (`SubagentStartHooks`) beyond existing hook chain, per-child token accounting beyond whole-turn `usage`, merge-node (`specialist_results_v3`), LLM-generated AgentSummary-style progress labels.
 
 **Product architecture (where this spec sits):** research chat stays on the **simplified** single LangGraph run (supervisor → retrieval / graph → writer). Roadmap for goals, deferred work, and future **`tool_search`** plus **context-window summarization / compaction**: [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md). **Каталог инструментов (имена, схемы, карта кода):** [`docs/architecture/agent-chat-tools.md`](../architecture/agent-chat-tools.md). In this document, **CH\*** labels denote **delivery waves / features**, not separate shipped microservices.
 
@@ -90,9 +94,19 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `subagent_started` | Immediately after `specialist_selected` | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe), optional **`parent_turn_id`**, **`spawn_reason`** (Train T3 B1) |
 | `subagent_progress` | Optional, after `tool_call` while a subagent is active | `subagent_id`, `step`, `tool`, `summary`, optional **`parent_turn_id`**, **`spawn_reason`** |
 | `subagent_finished` | When leaving a subagent (next routing or synthesis) | `subagent_id`, optional **`parent_turn_id`**, **`spawn_reason`**, **`terminal_state`**, **`latency_ms`** |
+| `subagent_task_notification` | After a routing leg completes (v3) | Structured payload + `xml_excerpt` (same keys as `run_metadata.subagent_task_notifications[]`). |
+| `subagent_heartbeat` | While awaiting graph chunks with an active routing leg (v3) | `subagent_id`, `parent_turn_id`, `reason` (`idle_tick`). |
+| `subagent_progress_label` | Throttled UX label on new tool progress (v3) | `subagent_id`, `parent_turn_id`, `label`, `tool`, `step`. |
 | `tool_search_result` | After rule shortlist (CH3) + Epic C0 discovery + optional LLM rerank (C1) | `specialist`, `tools`, `reason` (`rules` \| `hybrid_llm` \| `low_signal` \| …), `skipped`, optional `message_discovery_tools`, `message_discovery_merged` (LangGraph history), optional `carryover_tools`; Train T1 strict deferred: `activation_policy`, `rules_matched_tools`, `tool_search_miss_due_to_no_discovery`, `deferred_tool_activation_rate`, optional `deferred_strict_*` diagnostics; **Train T2 C1 hybrid:** optional `selector_stage`, `selector_confidence` (0–1), `selector_reason_codes` (string[]), `rules_candidate_tools`, `llm_ranked_tools`, `pre_llm_denied_tools` — clients may ignore unknown keys |
 | `web_fetched` | After `web_fetch` tool returns (debug → SSE when streamable) | From tool payload `sse_hint`: bounded URL/host summary fields (product-safe); gated by `SCIENCE_GRAPHRAG_AGENT_WEB_RESEARCH_TOOLS_ENABLED` |
 | `doi_resolved` | After `doi_resolver` tool returns (debug → SSE when streamable) | From tool payload `sse_hint`: normalized DOI, OpenAlex/workspace attribution; gated by `SCIENCE_GRAPHRAG_AGENT_DOI_RESOLVER_TOOL_ENABLED` |
+| `mcp_audit` | After MCP surface tools (`call_mcp_tool` / `list_mcp_resources` / `fetch_mcp_resource` / `mcp_auth`) | `sse_hint` passthrough: `phase`, `server`, optional `tool` / `resource_uri`, `auth_status`, `ok`, optional `deny_reason`; gated by `SCIENCE_GRAPHRAG_AGENT_MCP_TOOLS_ENABLED` + `agent_mcp_http_base_url` for live RPC |
+| `lsp_audit` | After bounded `lsp_tool` | `operation`, payload budget / timeout / `degraded` markers; gated by `SCIENCE_GRAPHRAG_AGENT_LSP_TOOL_ENABLED` |
+| `runtime_monitor` | After `runtime_monitor_get` | `task_id`, `state`, optional `degraded`; gated by `SCIENCE_GRAPHRAG_AGENT_RUNTIME_MONITOR_TOOL_ENABLED` |
+| `research_plan_updated` | After `research_plan_write` | `item_count`, `updated_at`; gated by `SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_TOOL_ENABLED` |
+| `user_question_asked` | After `ask_user_question` | `request_id`, `question_count`; gated by `SCIENCE_GRAPHRAG_AGENT_ASK_USER_QUESTION_TOOL_ENABLED` |
+| `user_answered` | Initial debug when client sends `user_structured_answer` matching pending ask | `request_id`, `answer_count`; requires `thread_id` + prior pending envelope |
+| `brief_recorded` | After `brief` tool | `chars`; `run_metadata.brief` also set on `final_answer` when `SCIENCE_GRAPHRAG_AGENT_BRIEF_OUTPUT_ENABLED` |
 | `tool_call` | LLM tool call | `step`, `tool`, `args_summary` |
 | `tool_result` | Tool return | `step`, `tool`, `row_count`, `error` |
 | `answer_synthesis_started` | After graph streaming completes, before `evidence_ready` / compaction | empty payload beyond `type` |

@@ -15,6 +15,8 @@ Install a custom backend via ``set_session_memory_backend`` (tests) or call
 **Acceptance (Redis)**
 
 - Same semantics as in-memory; JSON blob per thread key; TTL refreshed on each write.
+- ``patch_session_meta`` seeds an empty session when the key is missing (parity with in-memory),
+  so tool-driven meta (e.g. research plan) works before the first ``update_after_turn``.
 - ``clear_all`` on Redis uses SCAN for the configured prefix — intended for tests only.
 
 Tests: ``tests/test_context_session.py``;
@@ -252,7 +254,8 @@ class InMemorySessionMemoryBackend:
         with self._lock:
             ent = self._store.get(tid)
             if not ent:
-                return
+                ent = {"digests": [], "session_summary": "", "capsules": {}, "session_meta": {}}
+                self._store[tid] = ent
             meta = dict(ent.get("session_meta") or {})
             for k, v in patch.items():
                 meta[k] = v
@@ -448,11 +451,13 @@ class RedisSessionMemoryBackend:
         self._redis.setex(self._key(tid), self._ttl, json.dumps(out, ensure_ascii=False))
 
     def patch_session_meta(self, thread_id: str, *, patch: dict[str, Any]) -> None:
-        """Merge ``patch`` keys into ``session_meta`` for control-plane updates."""
+        """Merge ``patch`` keys into ``session_meta`` for control-plane updates.
+
+        When the Redis key is missing, seeds an empty session (parity with in-memory backend)
+        so first-turn ``research_plan_write`` / ``ask_user_question`` persistence works.
+        """
         tid = (thread_id or "").strip()
         if not tid or not patch:
-            return
-        if not self._redis.exists(self._key(tid)):
             return
         ent = self._load_raw(tid)
         meta = dict(ent.get("session_meta") or {})

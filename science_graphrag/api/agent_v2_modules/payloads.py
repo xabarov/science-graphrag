@@ -78,6 +78,60 @@ def build_run_metadata(
     return meta
 
 
+def _hook_chain_event_fingerprint(ev: dict[str, Any]) -> tuple[str, str, str, bool, str]:
+    detail = ev.get("detail")
+    if isinstance(detail, dict):
+        detail_repr = json.dumps(detail, sort_keys=True, default=str)
+    else:
+        detail_repr = str(detail)
+    return (
+        str(ev.get("type") or ""),
+        str(ev.get("hook") or ""),
+        str(ev.get("phase") or ""),
+        bool(ev.get("ok")),
+        detail_repr,
+    )
+
+
+def merge_hook_chain_events_into_run_metadata(
+    run_metadata: dict[str, Any],
+    *,
+    extra_events: list[dict[str, Any]] | None = None,
+    debug_events_tail: list[dict[str, Any]] | None = None,
+) -> None:
+    """Attach explainable hook chain rows (Train T3 §10.6) for trace-review + clients.
+
+    Preserves any ``hook_chain_events`` already merged into ``run_metadata`` (e.g. from
+    ``extra`` in ``build_run_metadata``), then appends ``extra_events`` and ``debug_events_tail``,
+    deduplicating by a stable fingerprint.
+    """
+    merged: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str, bool, str]] = set()
+
+    def _add(ev: dict[str, Any]) -> None:
+        if str(ev.get("type") or "") != "hook_chain_event":
+            return
+        fp = _hook_chain_event_fingerprint(ev)
+        if fp in seen:
+            return
+        seen.add(fp)
+        merged.append(dict(ev))
+
+    existing = run_metadata.get("hook_chain_events")
+    if isinstance(existing, list):
+        for ev in existing:
+            if isinstance(ev, dict):
+                _add(ev)
+    for ev in list(extra_events or []):
+        if isinstance(ev, dict):
+            _add(ev)
+    for ev in list(debug_events_tail or []):
+        if isinstance(ev, dict):
+            _add(ev)
+    if merged:
+        run_metadata["hook_chain_events"] = merged
+
+
 def apply_runtime_metadata_from_state(
     *,
     run_metadata: dict[str, Any],
@@ -195,6 +249,13 @@ class AgentQueryRequestV2(BaseModel):
             "Used for deterministic away-recap framing (CH4/CH5)."
         ),
     )
+    user_structured_answer: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Structured answers to a prior ``ask_user_question`` turn "
+            "(``request_id`` + ``answers``); requires matching ``thread_id``."
+        ),
+    )
 
     @field_validator("thread_id", mode="before")
     @classmethod
@@ -208,6 +269,15 @@ class AgentQueryRequestV2(BaseModel):
     @classmethod
     def _coerce_history_digest(cls, v: object) -> object:
         return v
+
+    @field_validator("user_structured_answer", mode="before")
+    @classmethod
+    def _coerce_user_structured_answer(cls, v: object) -> dict[str, Any] | None:
+        if v is None:
+            return None
+        if isinstance(v, dict) and v:
+            return dict(v)
+        return None
 
 
 class AgentQueryResponseV2(BaseModel):
@@ -294,6 +364,12 @@ def response_from_run(
     if dbg_tail:
         run_metadata["debug_events"] = dbg_tail
         run_metadata.update(extract_runtime_telemetry_from_debug_events(dbg_tail))
+    hc_list = [x for x in (getattr(out, "hook_chain_events", None) or []) if isinstance(x, dict)]
+    merge_hook_chain_events_into_run_metadata(
+        run_metadata,
+        extra_events=hc_list or None,
+        debug_events_tail=dbg_tail if dbg_tail else None,
+    )
     tid = getattr(out, "thread_id", None)
     warnings = list(getattr(out, "warnings", None) or [])
     for w in extra_warnings or []:
@@ -306,6 +382,15 @@ def response_from_run(
     sar = getattr(out, "subagent_runs", None)
     if isinstance(sar, list) and sar:
         run_metadata["subagent_runs"] = list(sar)
+    stn = getattr(out, "subagent_task_notifications", None)
+    if isinstance(stn, list) and stn:
+        run_metadata["subagent_task_notifications"] = list(stn)
+    slane = getattr(out, "subagent_observability_lane", None)
+    if isinstance(slane, str) and slane.strip():
+        run_metadata["subagent_observability_lane"] = slane.strip()
+    brief = getattr(out, "brief", None)
+    if isinstance(brief, str) and brief.strip():
+        run_metadata["brief"] = brief.strip()[:240]
     return AgentQueryResponseV2(
         answer=out.answer,
         citations=out.citations,
@@ -333,6 +418,7 @@ __all__ = [
     "AgentQueryResponseV2",
     "agent_chat_llm_run_metadata",
     "apply_runtime_metadata_from_state",
+    "merge_hook_chain_events_into_run_metadata",
     "build_run_metadata",
     "deferred_topic_answer",
     "looks_like_deferred_topic",

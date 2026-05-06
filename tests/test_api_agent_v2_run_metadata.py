@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from science_graphrag.api.agent_v2_modules.payloads import (
     apply_runtime_metadata_from_state,
     build_run_metadata,
+    response_from_run,
 )
 from science_graphrag.config import Settings
 
@@ -60,3 +63,38 @@ def test_apply_runtime_metadata_from_state_includes_parent_turn_and_parallel_cap
     assert patched["parent_turn_id"] == "550e8400-e29b-41d4-a716-446655440000"
     assert patched["max_parallel_subagents"] == 4
     assert patched["run_kind"] == "supervisor_specialists_v3"
+
+
+def test_response_from_run_merges_brief_into_run_metadata() -> None:
+    out = SimpleNamespace(
+        answer="ok",
+        citations=[],
+        tool_trace=[],
+        llm_usage=None,
+        debug_events=[],
+        phoenix_trace_id=None,
+        thread_id="t1",
+        warnings=[],
+        answer_class="synthesis",
+        evidence_summary=None,
+        inventory=None,
+        relation_trace=None,
+        quote_candidates=None,
+        idea_suggestions=None,
+        bibliography=None,
+        product_path=None,
+        product_markers=[],
+        prompt_memory_run_metadata=None,
+        subagent_runs=None,
+        subagent_task_notifications=None,
+        subagent_observability_lane=None,
+        hook_chain_events=None,
+        brief="Short card for history",
+    )
+    resp = response_from_run(
+        out,
+        duration_ms=1,
+        settings=Settings(),
+        max_tool_calls=5,
+    )
+    assert resp.run_metadata.get("brief") == "Short card for history"

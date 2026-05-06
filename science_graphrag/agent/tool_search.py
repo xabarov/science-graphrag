@@ -45,6 +45,14 @@ _THREAD_INSIGHT_RE = re.compile(
     r"<thread_insight\b[^>]*>.*?</thread_insight>\s*",
     re.DOTALL | re.IGNORECASE,
 )
+_RESEARCH_PLAN_RE = re.compile(
+    r"<research_plan>.*?</research_plan>\s*",
+    re.DOTALL | re.IGNORECASE,
+)
+_USER_STRUCTURED_ANSWER_RE = re.compile(
+    r"<user_structured_answer>.*?</user_structured_answer>\s*",
+    re.DOTALL | re.IGNORECASE,
+)
 
 # Low-signal gate: below this top score, use full catalog (Habr Jun 2026 ablation baseline).
 _RULE_TOOL_SEARCH_LOW_SIGNAL_FLOOR = 1.5
@@ -112,6 +120,8 @@ def strip_tool_search_context_wrappers(text: str) -> str:
     s = _ACTIVE_WS_ID_RE.sub("", s)
     s = _LAST_TURN_DIGEST_RE.sub("", s)
     s = _THREAD_INSIGHT_RE.sub("", s)
+    s = _RESEARCH_PLAN_RE.sub("", s)
+    s = _USER_STRUCTURED_ANSWER_RE.sub("", s)
     return s.strip()
 
 

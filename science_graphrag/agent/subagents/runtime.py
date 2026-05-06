@@ -12,6 +12,11 @@ from dataclasses import dataclass, field
 from time import perf_counter
 from typing import Any, Literal
 
+from science_graphrag.agent.hooks.subagent_hooks import (
+    emit_subagent_start_hook,
+    emit_subagent_stop_hook,
+)
+
 TerminalState = Literal["succeeded", "failed", "cancelled", "timed_out"]
 
 
@@ -41,6 +46,7 @@ class SubagentRuntime:
 
     parent_turn_id: str
     max_parallel_subagents: int
+    hook_chain_sink: list[dict[str, Any]] | None = None
     _active: dict[str, _ActiveLeg] = field(default_factory=dict)
     _completed: list[dict[str, Any]] = field(default_factory=list)
 
@@ -59,6 +65,14 @@ class SubagentRuntime:
             subagent_id=subagent_id,
             spawn_reason=str(task_spec.spawn_reason or "").strip() or "unspecified",
             start_perf=perf_counter(),
+        )
+        emit_subagent_start_hook(
+            out=self.hook_chain_sink,
+            subagent_id=subagent_id,
+            parent_turn_id=self.parent_turn_id,
+            spawn_reason=str(task_spec.spawn_reason or "").strip() or "unspecified",
+            leg_kind="spawned",
+            execution_mode=str(task_spec.execution_mode),
         )
         return subagent_id
 
@@ -90,6 +104,16 @@ class SubagentRuntime:
                 "kind": "spawned",
             }
         )
+        emit_subagent_stop_hook(
+            out=self.hook_chain_sink,
+            subagent_id=leg.subagent_id,
+            parent_turn_id=self.parent_turn_id,
+            spawn_reason=leg.spawn_reason,
+            terminal_state=terminal_state,
+            leg_kind="spawned",
+            latency_ms=latency_ms,
+            failure_code=failure_code,
+        )
 
     def cancel_all(self, *, failure_code: str = "cancelled") -> None:
         """Mark every active child ``cancelled`` (e.g. parent turn aborted)."""
@@ -106,15 +130,24 @@ class RoutingSubagentLegLedger:
     """Track supervisor routing legs as sequential subagent UX (one active leg)."""
 
     parent_turn_id: str
+    hook_chain_sink: list[dict[str, Any]] | None = None
     _active: _ActiveLeg | None = None
     _completed: list[dict[str, Any]] = field(default_factory=list)
 
     def open_leg(self, *, subagent_id: str, spawn_reason: str | None) -> None:
         """Begin a new routing leg; caller must have closed any previous leg."""
+        sr = str(spawn_reason or "").strip() or "routing"
         self._active = _ActiveLeg(
             subagent_id=subagent_id,
-            spawn_reason=str(spawn_reason or "").strip() or "routing",
+            spawn_reason=sr,
             start_perf=perf_counter(),
+        )
+        emit_subagent_start_hook(
+            out=self.hook_chain_sink,
+            subagent_id=subagent_id,
+            parent_turn_id=self.parent_turn_id,
+            spawn_reason=sr,
+            leg_kind="routing_leg",
         )
 
     def close_leg(self, *, terminal_state: TerminalState = "succeeded") -> dict[str, Any] | None:
@@ -137,6 +170,16 @@ class RoutingSubagentLegLedger:
             "kind": "routing_leg",
         }
         self._completed.append(row)
+        emit_subagent_stop_hook(
+            out=self.hook_chain_sink,
+            subagent_id=leg.subagent_id,
+            parent_turn_id=self.parent_turn_id,
+            spawn_reason=leg.spawn_reason,
+            terminal_state=terminal_state,
+            leg_kind="routing_leg",
+            latency_ms=latency_ms,
+            failure_code=None,
+        )
         return row
 
     def active_spawn_reason(self) -> str | None:

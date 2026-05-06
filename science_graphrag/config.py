@@ -521,6 +521,46 @@ class Settings(BaseSettings):
             "(Train T3 B1). Routing legs remain sequential; this bounds future parallel fan-out."
         ),
     )
+    agent_subagent_lifecycle_enhanced_enabled: bool = Field(
+        default=True,
+        description=(
+            "When ``agent_runtime=langgraph_supervisor_v3``, emit task-notification HumanMessages, "
+            "mandatory subagent sidechain lifecycle rows (if sidechain transcripts enabled), "
+            "and extended SSE observability (see stream_lifecycle)."
+        ),
+    )
+    agent_subagent_carry_back_max_chars: int = Field(
+        default=4000,
+        ge=500,
+        le=50_000,
+        description="Max chars serialized into structured carry-back ``result_excerpt`` for subagent legs.",
+    )
+    agent_subagent_stream_heartbeat_interval_seconds: float = Field(
+        default=15.0,
+        ge=0.0,
+        le=120.0,
+        description=(
+            "SSE subagent_heartbeat interval while a routing leg is active (v3 only). "
+            "0 disables heartbeats."
+        ),
+    )
+    agent_subagent_progress_label_enabled: bool = Field(
+        default=True,
+        description="When true (v3), emit throttled deterministic subagent_progress_label events on new tool progress.",
+    )
+    agent_subagent_progress_label_interval_seconds: float = Field(
+        default=30.0,
+        ge=30.0,
+        le=300.0,
+        description="Minimum seconds between subagent_progress_label emissions per leg.",
+    )
+    agent_subagent_coordinator_lane_stub_enabled: bool = Field(
+        default=False,
+        description=(
+            "Synthetic coordinator-mode observability lane marker for fork-vs-coordinator benchmarks; "
+            "does not enable real coordinator runtime."
+        ),
+    )
     agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
     agent_semantic_query_fast_route: bool = Field(
         default=False,
@@ -644,6 +684,72 @@ class Settings(BaseSettings):
     agent_doi_resolver_tool_enabled: bool = Field(
         default=False,
         description="When true, register ``doi_resolver`` bridge tool (OpenAlex + workspace match).",
+    )
+    agent_mcp_tools_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, register MCP surface tools: ``call_mcp_tool``, ``list_mcp_resources``, "
+            "``fetch_mcp_resource``, ``mcp_auth`` (see agent/tools/mcp_surface.py)."
+        ),
+    )
+    agent_mcp_http_base_url: str | None = Field(
+        default=None,
+        description=(
+            "Optional HTTP JSON-RPC base URL for MCP adapter. When unset, tools return "
+            "``mcp_unconfigured`` without expanding scope into a full MCP manager."
+        ),
+    )
+    agent_mcp_server_denylist: list[str] = Field(
+        default_factory=list,
+        description="Substring denylist for MCP ``server`` identifiers (policy deny-path).",
+    )
+    agent_mcp_request_timeout_seconds: float = Field(
+        default=15.0,
+        ge=1.0,
+        le=120.0,
+        description="HTTP timeout for MCP adapter JSON-RPC calls.",
+    )
+    agent_lsp_tool_enabled: bool = Field(
+        default=False,
+        description="When true, register bounded read-only ``lsp_tool`` (stdio JSON-RPC adapter).",
+    )
+    agent_lsp_server_argv: list[str] = Field(
+        default_factory=list,
+        description="Argv to spawn LSP server (stdio). Empty => ``lsp_unconfigured`` tool responses.",
+    )
+    agent_lsp_request_timeout_seconds: float = Field(
+        default=5.0,
+        ge=0.5,
+        le=60.0,
+        description="Per-LSP-request wall timeout (seconds).",
+    )
+    agent_lsp_max_result_items: int = Field(
+        default=48,
+        ge=1,
+        le=256,
+        description="Max symbol/reference items returned per ``lsp_tool`` call (payload budget).",
+    )
+    agent_runtime_monitor_tool_enabled: bool = Field(
+        default=False,
+        description="When true, register ``runtime_monitor_get`` for async task status snapshots.",
+    )
+    agent_runtime_monitor_max_error_tail_chars: int = Field(
+        default=800,
+        ge=64,
+        le=8000,
+        description="Max characters for ``error_tail`` in runtime monitor payloads.",
+    )
+    agent_research_plan_tool_enabled: bool = Field(
+        default=False,
+        description="When true, register ``research_plan_write`` (session_meta.research_plan + SSE).",
+    )
+    agent_ask_user_question_tool_enabled: bool = Field(
+        default=False,
+        description="When true, register ``ask_user_question`` (structured multi-choice + session pending).",
+    )
+    agent_brief_output_enabled: bool = Field(
+        default=False,
+        description="When true, register ``brief`` tool and surface ``run_metadata.brief`` (<=240 chars).",
     )
     agent_web_fetch_max_bytes: int = Field(
         default=524_288,

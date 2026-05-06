@@ -9,11 +9,24 @@ from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.config import Settings
 
 
+def _all_optional_surface_settings() -> Settings:
+    return Settings(
+        agent_web_research_tools_enabled=True,
+        agent_doi_resolver_tool_enabled=True,
+        agent_mcp_tools_enabled=True,
+        agent_lsp_tool_enabled=True,
+        agent_runtime_monitor_tool_enabled=True,
+        agent_research_plan_tool_enabled=True,
+        agent_ask_user_question_tool_enabled=True,
+        agent_brief_output_enabled=True,
+    )
+
+
 def test_build_tool_registry_names_match_tool_manifest() -> None:
     stores = MagicMock()
     reg = build_tool_registry(
         stores,
-        Settings(agent_web_research_tools_enabled=True, agent_doi_resolver_tool_enabled=True),
+        _all_optional_surface_settings(),
     )
     names = sorted({getattr(t, "name", "") for t in reg if getattr(t, "name", "")})
     man_names = sorted({e.name for e in TOOL_MANIFEST})
@@ -27,7 +40,20 @@ def test_default_registry_subset_of_manifest() -> None:
     reg_names = {getattr(t, "name", "") for t in reg if getattr(t, "name", "")}
     man_names = {e.name for e in TOOL_MANIFEST}
     assert reg_names <= man_names
-    optional = {"web_search", "web_fetch", "doi_resolver"}
+    optional = {
+        "web_search",
+        "web_fetch",
+        "doi_resolver",
+        "call_mcp_tool",
+        "list_mcp_resources",
+        "fetch_mcp_resource",
+        "mcp_auth",
+        "lsp_tool",
+        "runtime_monitor_get",
+        "research_plan_write",
+        "ask_user_question",
+        "brief",
+    }
     assert man_names - reg_names <= optional
 
 

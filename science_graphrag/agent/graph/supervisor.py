@@ -36,6 +36,8 @@ from science_graphrag.agent.llm.chat import (
     build_chat_model,
     ensure_messages_safe_for_generation,
 )
+from science_graphrag.agent.subagents.lifecycle import merge_routing_leg_notifications_into_update
+from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
@@ -119,27 +121,39 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
             meta = state.get("metadata") or {}
             tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
             reason = str(tp.get("reason") or "coordinator_gate")
-            return {
-                "current_specialist": WRITER_SPECIALIST,
-                "routing_log": [
-                    *prior,
-                    {
-                        "from": "supervisor",
-                        "to": WRITER_SPECIALIST,
-                        "reason": f"coordinator_gate:{reason}",
-                        "tool_policy": tool_policy,
-                        "budget_left": budget,
-                    },
-                ],
-            }
+            return merge_routing_leg_notifications_into_update(
+                state,
+                settings,
+                {
+                    "current_specialist": WRITER_SPECIALIST,
+                    "routing_log": [
+                        *prior,
+                        {
+                            "from": "supervisor",
+                            "to": WRITER_SPECIALIST,
+                            "reason": f"coordinator_gate:{reason}",
+                            "tool_policy": tool_policy,
+                            "budget_left": budget,
+                        },
+                    ],
+                },
+            )
         if budget <= 0:
-            return {
-                "current_specialist": WRITER_SPECIALIST,
-                "routing_log": [
-                    *list(state.get("routing_log") or []),
-                    {"from": "supervisor", "to": WRITER_SPECIALIST, "reason": "budget_exhausted"},
-                ],
-            }
+            return merge_routing_leg_notifications_into_update(
+                state,
+                settings,
+                {
+                    "current_specialist": WRITER_SPECIALIST,
+                    "routing_log": [
+                        *list(state.get("routing_log") or []),
+                        {
+                            "from": "supervisor",
+                            "to": WRITER_SPECIALIST,
+                            "reason": "budget_exhausted",
+                        },
+                    ],
+                },
+            )
         meta = state.get("metadata") or {}
         tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
         route_hint = str(tp.get("route_hint") or "").strip()
@@ -153,61 +167,77 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                     if route_hint == GRAPH_SPECIALIST
                     else "answer_class_relation_tracing"
                 )
-                return {
-                    "current_specialist": GRAPH_SPECIALIST,
-                    "routing_log": [
-                        {
-                            "from": "supervisor",
-                            "to": GRAPH_SPECIALIST,
-                            "reason": reason,
-                            "route_hint": route_hint or None,
-                            "budget_left": budget,
-                        },
-                    ],
-                }
-            if route_hint == WRITER_SPECIALIST:
-                return {
-                    "current_specialist": WRITER_SPECIALIST,
-                    "routing_log": [
-                        {
-                            "from": "supervisor",
-                            "to": WRITER_SPECIALIST,
-                            "reason": "coordinator_route_hint",
-                            "budget_left": budget,
-                        },
-                    ],
-                }
-            if route_hint == RETRIEVAL_SPECIALIST and settings.agent_semantic_query_fast_route:
-                uq = _first_user_plain_question(state)
-                if uq and not _graph_intent_heuristic(uq):
-                    return {
-                        "current_specialist": RETRIEVAL_SPECIALIST,
+                return merge_routing_leg_notifications_into_update(
+                    state,
+                    settings,
+                    {
+                        "current_specialist": GRAPH_SPECIALIST,
                         "routing_log": [
                             {
                                 "from": "supervisor",
-                                "to": RETRIEVAL_SPECIALIST,
-                                "reason": "semantic_fast_route",
+                                "to": GRAPH_SPECIALIST,
+                                "reason": reason,
+                                "route_hint": route_hint or None,
                                 "budget_left": budget,
                             },
                         ],
-                    }
+                    },
+                )
+            if route_hint == WRITER_SPECIALIST:
+                return merge_routing_leg_notifications_into_update(
+                    state,
+                    settings,
+                    {
+                        "current_specialist": WRITER_SPECIALIST,
+                        "routing_log": [
+                            {
+                                "from": "supervisor",
+                                "to": WRITER_SPECIALIST,
+                                "reason": "coordinator_route_hint",
+                                "budget_left": budget,
+                            },
+                        ],
+                    },
+                )
+            if route_hint == RETRIEVAL_SPECIALIST and settings.agent_semantic_query_fast_route:
+                uq = _first_user_plain_question(state)
+                if uq and not _graph_intent_heuristic(uq):
+                    return merge_routing_leg_notifications_into_update(
+                        state,
+                        settings,
+                        {
+                            "current_specialist": RETRIEVAL_SPECIALIST,
+                            "routing_log": [
+                                {
+                                    "from": "supervisor",
+                                    "to": RETRIEVAL_SPECIALIST,
+                                    "reason": "semantic_fast_route",
+                                    "budget_left": budget,
+                                },
+                            ],
+                        },
+                    )
 
         max_rounds = int(settings.agent_supervisor_max_rounds)
         sup_hops = len([x for x in prior if isinstance(x, dict) and x.get("from") == "supervisor"])
         if sup_hops >= max_rounds > 0:
-            return {
-                "current_specialist": WRITER_SPECIALIST,
-                "routing_log": [
-                    *list(state.get("routing_log") or []),
-                    {
-                        "from": "supervisor",
-                        "to": WRITER_SPECIALIST,
-                        "reason": "supervisor_round_cap",
-                        "budget_left": budget,
-                        "supervisor_hops": sup_hops,
-                    },
-                ],
-            }
+            return merge_routing_leg_notifications_into_update(
+                state,
+                settings,
+                {
+                    "current_specialist": WRITER_SPECIALIST,
+                    "routing_log": [
+                        *list(state.get("routing_log") or []),
+                        {
+                            "from": "supervisor",
+                            "to": WRITER_SPECIALIST,
+                            "reason": "supervisor_round_cap",
+                            "budget_left": budget,
+                            "supervisor_hops": sup_hops,
+                        },
+                    ],
+                },
+            )
 
         route_msgs = _build_supervisor_route_messages(state)
         with chain_span(
@@ -250,13 +280,17 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
             "agent.supervisor.route_selected",
             {"to": choice, "budget_left": budget},
         )
-        return {
-            "current_specialist": choice,
-            "routing_log": [
-                *list(state.get("routing_log") or []),
-                {"from": "supervisor", "to": choice, "budget_left": budget},
-            ],
-        }
+        return merge_routing_leg_notifications_into_update(
+            state,
+            settings,
+            {
+                "current_specialist": choice,
+                "routing_log": [
+                    *list(state.get("routing_log") or []),
+                    {"from": "supervisor", "to": choice, "budget_left": budget},
+                ],
+            },
+        )
 
     def route_to_specialist(
         state: AgentState,
@@ -386,9 +420,16 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
         ]
         if compact_audit:
             dbg.append({"type": "tool_message_compact_audit", **compact_audit})
+        meta_out = dict(state.get("metadata") or {})
+        meta_out["react_bound_tool_names"] = [
+            n
+            for n in (normalize_tool_call_name(getattr(t, "name", "") or "") for t in bound_tools)
+            if n
+        ]
         return {
             "messages": [response],
             "debug_events": dbg,
+            "metadata": meta_out,
         }
 
     def final_answer_nudge_node(state: AgentState) -> dict:

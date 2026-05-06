@@ -54,6 +54,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [OPEN] Split permission / validation phase out of `build_tool_execution_node` inner closure
+- **Area:** `science_graphrag/agent/tool_execution_pipeline.py` (`tools_node` closure)
+- **Issue:** pylint R0914/R0912/R0915 on the inner callable; permission batching (`bound` surface, `can_use_tool`, matrix interaction) is dense and will grow with registry / coordinator hooks.
+- **Proposal:** Extract `_compute_tool_permission_denials(state, tools, tcs, can_use_tool)` (pure-ish) + thin `tools_node` wrapper; keep `ToolNode` wiring and sidechain JSONL in one place.
+- **Acceptance:** No behavior change for existing tests (`test_allowed_tools_matrix`, `test_agent_registry_permissions`, specialist subgraph tests); inner module or helpers each below ~250 LoC where practical.
+- **Raised:** 2026-05-07 (Train T3 can_use_tool + react_bound surface)
+
 ### [OPEN] Split oversized `tool_search.py` after hybrid / web selector growth
 - **Area:** `science_graphrag/agent/tool_search.py`, `tool_selector_hybrid.py`, optional `agent/tools/web_research_tools.py` call-sites
 - **Issue:** `tool_search.py` is ~760+ LoC mixing rules scoring, discovery merge, strict-deferred telemetry, and hybrid rerank orchestration — hard to navigate and risky for merge conflicts.
