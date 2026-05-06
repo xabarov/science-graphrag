@@ -773,6 +773,47 @@ class Settings(BaseSettings):
         description="Hard cap for stored discovered tool names in session memory.",
     )
 
+    agent_thread_insights_enabled: bool = Field(
+        default=False,
+        description=(
+            "Epic A (Train T1): after each turn with thread memory, refresh `session_meta.thread_insight` "
+            "via chunked parallel summarization (deterministic stub summaries unless extended) and expose "
+            "`run_metadata.thread_insight_audit` when `thread_id` is set."
+        ),
+    )
+    agent_thread_insights_min_digests: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Minimum stored turn digests before emitting a thread_insight snapshot.",
+    )
+    agent_thread_insights_max_chunks: int = Field(
+        default=4,
+        ge=1,
+        le=12,
+        description="Upper bound on parallel chunk workers for thread_insights (uniform digest splits).",
+    )
+    agent_thread_insights_max_workers: int = Field(
+        default=4,
+        ge=1,
+        le=8,
+        description="ThreadPoolExecutor worker cap for thread_insights chunk summarization.",
+    )
+
+    agent_tool_search_message_discovery_enabled: bool = Field(
+        default=True,
+        description=(
+            "Epic C0: merge tool names discovered in LangGraph message history (AIMessage.tool_calls / "
+            "ToolMessage) into rule-based shortlists before session carry-over merge."
+        ),
+    )
+    agent_tool_search_message_discovery_cap: int = Field(
+        default=32,
+        ge=0,
+        le=128,
+        description="Max tool names read from message history per shortlist call (chronological dedupe).",
+    )
+
     agent_away_summary_enabled: bool = Field(
         default=True,
         description=(

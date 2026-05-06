@@ -338,6 +338,7 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
             has_workspace=bool((state.get("workspace_id") or "").strip()),
             answer_class=effective_ac,
             session=sess,
+            lc_messages=list(state.get("messages") or []),
         )
         bound_tools, _mtx = apply_allowed_tools_matrix(bound_tools, settings=settings, state=state)
         ts_meta = dict(_ts_meta or {})
@@ -386,6 +387,8 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
                     "deferred_schema_refs": ts_meta.get("deferred_schema_refs"),
                     "skipped": bool(ts_meta.get("skipped")),
                     "carryover_tools": ts_meta.get("carryover_tools"),
+                    "message_discovery_tools": ts_meta.get("message_discovery_tools"),
+                    "message_discovery_merged": ts_meta.get("message_discovery_merged"),
                 }
             ],
         }

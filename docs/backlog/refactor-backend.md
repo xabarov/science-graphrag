@@ -14,6 +14,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 | When | Theme |
 |------|--------|
+| 2026-05-06 | **Agent runtime Train T1 + roadmap §8.5 queue sync:** Train T1 acceptance — [`docs/analysis/agent-runtime-train-t1-acceptance-2026-05-06.md`](../analysis/agent-runtime-train-t1-acceptance-2026-05-06.md). Implemented: `thread_insights` skeleton + flags, C0 LC message tool discovery in `tool_search`, spec §Summarization modes. **Removed from Queue as already delivered (§8.5 / prior waves):** PR CI `agent-sse-contract.yml` candidate `agent_trace_review.py` + advisory vs strict `trace_regression_compare`; `tests/scripts/live_check/test_agent_trace_review.py` orchestration smoke; canonical `build_run_metadata` / `apply_runtime_metadata_from_state` + `test_trace_review_schema.py` tool_trace/span alignment; sync/SSE metadata de-dup via `payloads.py`. |
 | 2026-05-06 | **Refactor wave follow-up (quality + parity):** `cli/main.py` доведён до thin registry (~59 LoC) через вынос `cli/{ingest,dedup,qdrant,config}_commands.py`; `scripts/aggregate_benchmark_metrics.py` доведён до thin entrypoint (~68 LoC) с выносом parser/payload builder в `scripts/benchmark_aggregator/{cli,payload_builder}.py`; `settings` split продолжен (`settings/{snapshots,runtime_overlay}.py`), `tests/test_settings_service.py` зелёный после фикса интеграции overlay; error classifier расширен (`OutputParserException` + parse/validation fallbacks); CI `agent-sse-contract` получил strict trace-regression report step. |
 | 2026-05-06 | **Agent runtime wave (BT8/BT9 + P2 telemetry):** stub agent benchmark traces (no ``mock answer`` / ``mock-work``) for honest ``trust_signal`` on ``agent_tools_mini`` + new **``agent_tools_multiagent``** aggregate lane; ``routing_log`` on ``AgentRunOutput``; ``eval/agent_tools/metrics`` ``tool_name`` + ``args_match``; optional nightly **live** mini regeneration when ``MAIN_LLM_API_KEY`` set; CH5 ``context_compacted.audit``; ADR-027; prompt/memory matrix in ``docs/specs/agent-chat-v1.md``; P2 tests (trace-review ROI counters, sidechain path, tool_search gate docstring). |
 | 2026-05-06 | **Backend wave (agent SSE + ingest seams):** SSE lifecycle в `api/agent_v2_modules/stream_lifecycle.py` + общий OTEL для deadline (`deadline_otel.py`); классификация ошибок stream в `errors.py` + тесты `test_api_agent_v2_error_classification.py`; product_step — маппинг под `TOOL_MANIFEST` + `test_product_step_tool_coverage.py`; ingest VL — общий transport `ingestion/llm/chat_completions_client.py`; cache — порядок резолва + `legacy_slug_ingestion_article_paths()` в `cache_policy.py`; resume — `tests/ingestion/test_resume_claims_embed_integration.py`; paper_profile — read-time OpenAlex overlay + тест `test_paper_profile_openalex_overlay.py`; dedup hygiene — §12 в `benchmark-decision-gate.md`; PR workflow `.github/workflows/agent-sse-contract.yml`; baseline trust rollup перегенерирован (`aggregate_benchmark_metrics.py --write-trust-baseline`); заметка по стоимости `agent_note` — `docs/analysis/agent-note-cost-eval-2026-05-06.md`. VL long-PDF E2E и live BT2/BT4/BT5 — вне этой сессии. |
@@ -401,34 +402,6 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** `pipeline.py` экспортирует только стабильные публичные entrypoints + документированные transition aliases; нет новых импортов private symbols из facade.
 - **Raised:** 2026-05-05
 
-### [OPEN] CI gate — `trace_regression_compare` vs committed baseline
-- **Area:** `.github/workflows/`, `scripts/live_check/trace_regression_compare.py`, `eval/results/baseline-trace-review.json`
-- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.6 (release train T1/T2/T5), §9.7 (stop-conditions)
-- **Issue:** Wave 1 adds offline regression compare and a committed baseline artifact; PRs that touch agent runtime do not yet fail CI when metrics regress vs baseline.
-- **Proposal:** Workflow on pull_request / paths filter for `science_graphrag/agent/**`, `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/tool_*`: run live optional job or candidate-only generation + compare to baseline from `main` / artifact.
-- **Acceptance:** CI fails on regression FAIL policies or schema version mismatch (exit 1 / 2); WARN policies documented (`--warn-is-pass` vs strict).
-- **Done (wave 2026-05-06, частично):** PR workflow [`.github/workflows/agent-sse-contract.yml`](../../.github/workflows/agent-sse-contract.yml) — pytest: smoke/parity, product_step manifest coverage, error classification, trace-review schema, OTel stream test (без live LLM).
-- **Done (wave 2026-05-06, partial+):** добавлен шаг `trace_regression_compare.py` в `agent-sse-contract.yml` (baseline sanity gate на committed baseline artifact, проверка exit policy/формата).
-- **Done (follow-up 2026-05-06):** добавлен второй `trace_regression_compare` шаг со strict policy report (без `--warn-is-pass`) для явной фиксации FAIL/WARN дельт в CI-артефактах.
-- **Remaining:** добавить candidate generation job (не baseline-vs-baseline) и закрепить финальную policy-модель в workflow comments/docs (какой шаг gate, какой advisory).
-- **Raised:** 2026-05-05 (Wave 1 trace-review toolkit)
-
-### [OPEN] Trace review orchestrator contract smoke
-- **Area:** `scripts/live_check/agent_trace_review.py`, `tests/scripts/live_check/`
-- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.1 (anti-formality gate), §9.6 (T1)
-- **Issue:** Схема и compare-политика покрыты, но orchestration path (`profile`, feature-flags, `run_context`, merge отчётов) не зафиксирован отдельным smoke-контрактом.
-- **Proposal:** Добавить subprocess-smoke для `agent_trace_review.py` (quick/default profiles) с проверкой `review_version`, `run_context` и ожидаемого поведения на warn-only результатах.
-- **Acceptance:** Регрессии в orchestration-слое live-check ловятся тестом до workflow execution.
-- **Raised:** 2026-05-06 (backend re-analysis)
-
-### [OPEN] Single canonical tool/run audit trail (roadmap §2.1 / §2.2)
-- **Area:** `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/graph/tracing.py`, `science_graphrag/agent/chat_envelope.py`, LangGraph messages vs `tool_trace`
-- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B), §9.1 (observability gate)
-- **Issue:** Duplicate representations of the same turn facts (`messages`, `tool_trace`, typed payloads) risk drift when adding runtimes or changing message shapes.
-- **Proposal:** Define one canonical “turn facts” structure consumed by envelope + observability; narrow `chat_envelope` responsibilities per roadmap §2.2.
-- **Acceptance:** Documented contract + tests that `tool_trace` and Phoenix spans stay aligned for one reference suite.
-- **Raised:** 2026-05-05
-
 ### [OPEN] Token budget loop policy (agent runtime P2)
 - **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/runtime.py`, client SSE contract
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (B3 quotas), §9.5 (C3 gate policy)
@@ -450,20 +423,14 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** No file in this subtree has a single function exceeding 80 statements / 12 branches; pylint stops emitting `R0912/R0914/R0915` for these modules; existing tests pass.
 - **Raised:** 2026-05-06 (recursion-limit-architecture-fix)
 
-### [OPEN] De-duplicate Agent v2 payload/runtime metadata seams
-- **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/api/agent_v2_modules/payloads.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
-- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (B1/B2), §9.5 (C0 metadata transparency)
-- **Issue:** Sync JSON и SSE paths всё ещё дублируют части payload/runtime metadata assembly (включая run metadata helpers), что создаёт риск drift между протоколами.
-- **Proposal:** Оставить один canonical payload/runtime metadata layer в `agent_v2_modules/payloads.py`; убрать локальные дублирующие builders из router/stream paths.
-- **Acceptance:** В кодовой базе один источник `agent_chat_llm_run_metadata` и единый payload builder для sync/SSE; parity-тесты проходят без специальных исключений.
-- **Raised:** 2026-05-06 (backend re-analysis)
-
 ### [OPEN] Smart context summarization parity track (Epic A)
 - **Area:** `science_graphrag/agent/context/*`, `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/context/session_backend.py`, `eval/chat_agent/*`
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.3 (Epic A), §9.6 (T1/T2), §9.7
 - **Issue:** Текущие `turn_digest`/`session_summary`/L4 compact покрывают базовый контур, но нет отдельного thread-insights pipeline (chunked/parallel summarize + synthesis) с формализованной freshness policy и long-thread quality gate.
 - **Proposal:** Реализовать `thread_insights` слой (`A0/A1/A2`) и интеграцию в prompt с deterministic precedence; добавить eval lane для long-thread drift/recall и regression gate по churn/latency (`A3`).
 - **Acceptance:** Runtime использует `thread_insight` при выполнении freshness policy; trace-review содержит insight decisions/audit; long-thread eval проходит без регрессии trust/verdict и с измеримым улучшением recall/consistency.
+- **Progress (2026-05-06, Train T1 A1 skeleton):** `science_graphrag/agent/context/thread_insights.py` — deterministic chunking + `ThreadPoolExecutor` workers + synthesis; persistence в `session_meta.thread_insight` через `apply_thread_insight_snapshot`; `run_metadata.thread_insight_audit` (sync + SSE) при `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED=1`; спека режимов — `docs/specs/agent-chat-v1.md` §Summarization modes.
+- **Remaining:** A2 prompt precedence / `<thread_insight>` injection; LLM-backed chunk summaries; A3 eval lane + gates.
 - **Raised:** 2026-05-06 (roadmap §9 sync)
 
 ### [OPEN] Real subagent runtime v3 (spawn/fanout/merge) parity track (Epic B)
@@ -480,6 +447,8 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Issue:** Rule-based shortlist + deferred refs уже есть, но нет полного discovery-aware/hybrid контура (model-assisted rerank + dynamic deferred schema activation на discovered tools + lane-specific fail/warn policy).
 - **Proposal:** Поэтапно закрыть `C0/C1/C2/C3`: discovery-aware loading contract, optional LLM rerank поверх rules, dynamic schema transport (refs->full schema on discovery), отдельные eval lanes для sparse/ambiguous/graph-heavy запросов.
 - **Acceptance:** Tool-search в runtime работает как hybrid discovery-aware pipeline; telemetry фиксирует activation/miss/bytes_saved; regression gate ловит деградации missed-tool/tool-loop/latency до rollout.
+- **Progress (2026-05-06, Train T1 C0):** `tool_search.shortlist_tools_for_specialist` принимает `lc_messages` и детерминированно мержит tool names из `AIMessage.tool_calls` / `ToolMessage` до session carry-over; метаданные `message_discovery_tools` / `message_discovery_merged` в SSE `tool_search_result`; флаги `SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_MESSAGE_DISCOVERY_ENABLED` (default true) и cap.
+- **Remaining:** C1 LLM rerank, C2 dynamic schema transport, C3 lanes + policy gate.
 - **Raised:** 2026-05-06 (roadmap §9 sync)
 
 ### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)

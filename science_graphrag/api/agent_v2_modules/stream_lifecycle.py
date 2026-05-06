@@ -45,6 +45,14 @@ from science_graphrag.api.agent_v2_modules.errors import (
     classify_agent_stream_error,
     format_agent_stream_error,
 )
+from science_graphrag.api.agent_v2_modules.payloads import (
+    agent_chat_llm_run_metadata as payload_agent_chat_llm_run_metadata,
+)
+from science_graphrag.api.agent_v2_modules.payloads import (
+    apply_runtime_metadata_from_state,
+    build_run_metadata,
+    thread_insight_audit_fragment,
+)
 from science_graphrag.api.agent_v2_modules.recovery import (
     salvage_answer_from_state,
     sse_error_event,
@@ -53,11 +61,6 @@ from science_graphrag.api.agent_v2_modules.recovery import (
 from science_graphrag.api.agent_v2_modules.streaming import (
     iter_graph_chunks,
     iter_update_node_states,
-)
-from science_graphrag.api.agent_v2_modules.payloads import (
-    apply_runtime_metadata_from_state,
-    agent_chat_llm_run_metadata as payload_agent_chat_llm_run_metadata,
-    build_run_metadata,
 )
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -120,7 +123,9 @@ def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
     meta.update(
         openrouter_reference_pricing_run_metadata(
             base_url=settings.extraction_llm_base_url,
-            chat_model_id=str(meta.get("resolved_chat_llm_model") or effective_chat_llm_model(settings)),
+            chat_model_id=str(
+                meta.get("resolved_chat_llm_model") or effective_chat_llm_model(settings)
+            ),
             extraction_model_id=settings.extraction_llm_model,
         )
     )
@@ -188,8 +193,7 @@ def _deadline_error_payload(exc: AgentGraphDeadlineExceeded) -> dict[str, Any]:
         "code": "agent_turn_deadline_exceeded",
         "error_class": "provider_timeout",
         "message": (
-            "The assistant hit the per-turn time limit before "
-            "producing a final answer."
+            "The assistant hit the per-turn time limit before " "producing a final answer."
         ),
     }
 
@@ -931,6 +935,9 @@ async def stream_agent_events(
                 aud_stream = compact_payload.get("audit")
                 if isinstance(aud_stream, dict):
                     run_meta["compaction_audit"] = aud_stream
+            ti_frag = thread_insight_audit_fragment(thread_id=thread_id, settings=settings)
+            if ti_frag:
+                run_meta.update(ti_frag)
 
             final_warnings = list(envelope.get("warnings") or [])
             if history_digest_invalid and "history_digest_invalid" not in final_warnings:

@@ -26,12 +26,27 @@ from science_graphrag.api.agent_v2_modules.deadline_otel import (
 from science_graphrag.api.agent_v2_modules.payloads import (
     AgentQueryRequestV2,
     AgentQueryResponseV2,
+)
+from science_graphrag.api.agent_v2_modules.payloads import (
     build_run_metadata as build_run_metadata_payload,
+)
+from science_graphrag.api.agent_v2_modules.payloads import (
     deferred_topic_answer as deferred_topic_answer_payload,
+)
+from science_graphrag.api.agent_v2_modules.payloads import (
     looks_like_deferred_topic as looks_like_deferred_topic_payload,
+)
+from science_graphrag.api.agent_v2_modules.payloads import (
     normalize_history_digest_input as normalize_history_digest_input_payload,
+)
+from science_graphrag.api.agent_v2_modules.payloads import (
     response_from_run as response_from_run_payload,
+)
+from science_graphrag.api.agent_v2_modules.payloads import (
     shortcut_response as shortcut_response_payload,
+)
+from science_graphrag.api.agent_v2_modules.payloads import (
+    thread_insight_audit_fragment,
 )
 from science_graphrag.api.agent_v2_modules.stream_lifecycle import (
     stream_agent_events,
@@ -226,6 +241,9 @@ async def post_agent_query_v2(
             aud_sync = cp_sync.get("audit")
             if isinstance(aud_sync, dict):
                 extra_meta["compaction_audit"] = aud_sync
+        ti_frag = thread_insight_audit_fragment(thread_id=thread_id, settings=settings)
+        if ti_frag:
+            extra_meta = {**(extra_meta or {}), **ti_frag}
     extra_warnings = ["history_digest_invalid"] if history_digest_invalid else None
     return response_from_run_payload(
         out,

@@ -193,6 +193,7 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             has_workspace=has_ws,
             answer_class=answer_class,
             session=sess,
+            lc_messages=list(state.get("messages") or []),
         )
         tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
         compiled = _cached_subgraph(tools)
@@ -229,6 +230,8 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
                 "deferred_schema_refs": meta.get("deferred_schema_refs"),
                 "skipped": bool(meta.get("skipped")),
                 "carryover_tools": meta.get("carryover_tools"),
+                "message_discovery_tools": meta.get("message_discovery_tools"),
+                "message_discovery_merged": meta.get("message_discovery_merged"),
             },
             *(
                 [{"type": "tool_permissions", "matrix": mtx}]

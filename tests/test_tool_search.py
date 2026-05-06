@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.tools import tool
 
 from science_graphrag.agent.tool_search import (
+    _tool_call_entry_name,
+    discovered_tool_names_from_lc_messages,
     shortlist_tools_for_single_agent,
     shortlist_tools_for_specialist,
     strip_tool_search_context_wrappers,
@@ -295,6 +299,59 @@ def test_shortlist_tools_for_single_agent_disabled_returns_full() -> None:
     )
     assert len(out) == len(tools)
     assert meta.get("skipped") is True
+
+
+def test_tool_call_entry_name_accepts_dict_and_namespace() -> None:
+    assert _tool_call_entry_name({"name": "paper_profile"}) == "paper_profile"
+    assert _tool_call_entry_name(SimpleNamespace(name=" edge_search ")) == "edge_search"
+
+
+def test_discovered_tool_names_from_lc_messages_order_and_exclude_meta() -> None:
+    ai = AIMessage(
+        content="",
+        tool_calls=[
+            {"name": "edge_search", "id": "a", "args": {}},
+            {"name": "route_to_specialist", "id": "b", "args": {}},
+        ],
+    )
+    tm = ToolMessage(content="{}", tool_call_id="a", name="cypher_query")
+    names = discovered_tool_names_from_lc_messages([ai, tm], cap=10)
+    assert names == ["edge_search", "cypher_query"]
+
+
+def test_shortlist_lc_message_discovery_merges_for_graph_specialist() -> None:
+    from science_graphrag.agent.tools import build_graph_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_graph_tools(stores)
+    msgs = [
+        AIMessage(
+            content="",
+            tool_calls=[
+                {
+                    "name": "cypher_query",
+                    "id": "t1",
+                    "args": {"query": "MATCH (n) RETURN n LIMIT 1"},
+                },
+            ],
+        ),
+    ]
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="show neighborhood of work W-123 via edge tool",
+        specialist="graph_agent",
+        settings=settings,
+        has_workspace=True,
+        answer_class="relation_tracing",
+        lc_messages=msgs,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "cypher_query" in names, meta
+    assert meta.get("message_discovery_merged") == ["cypher_query"]
 
 
 def test_shortlist_carryover_reinjects_prior_tool_names() -> None:

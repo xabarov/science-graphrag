@@ -113,6 +113,14 @@ class SessionMemoryBackend(Protocol):
     ) -> None:
         """Replace rolling ``session_summary`` after L4 LLM compaction; append audit."""
 
+    def apply_thread_insight_snapshot(
+        self,
+        thread_id: str,
+        *,
+        snapshot: dict[str, Any],
+    ) -> None:
+        """Store Epic A ``thread_insight`` payload under ``session_meta`` (Train T1+)."""
+
     def clear_all(self) -> None:
         """Remove all threads (tests / process reset)."""
 
@@ -208,6 +216,23 @@ class InMemorySessionMemoryBackend:
             meta["l4_llm_compacts"] = audits[-20:]
             meta["last_llm_compact_turn"] = int(meta.get("turn_counter") or 0)
             ent["session_summary"] = str(new_summary or "").strip()
+            ent["session_meta"] = meta
+
+    def apply_thread_insight_snapshot(
+        self,
+        thread_id: str,
+        *,
+        snapshot: dict[str, Any],
+    ) -> None:
+        tid = (thread_id or "").strip()
+        if not tid:
+            return
+        with self._lock:
+            ent = self._store.get(tid)
+            if not ent:
+                return
+            meta = dict(ent.get("session_meta") or {})
+            meta["thread_insight"] = dict(snapshot)
             ent["session_meta"] = meta
 
     def clear_all(self) -> None:
@@ -337,6 +362,29 @@ class RedisSessionMemoryBackend:
         out = {
             "digests": list(ent.get("digests") or []),
             "session_summary": str(new_summary or "").strip(),
+            "capsules": dict(ent.get("capsules") or {}),
+            "session_meta": meta,
+        }
+        self._redis.setex(self._key(tid), self._ttl, json.dumps(out, ensure_ascii=False))
+
+    def apply_thread_insight_snapshot(
+        self,
+        thread_id: str,
+        *,
+        snapshot: dict[str, Any],
+    ) -> None:
+        tid = (thread_id or "").strip()
+        if not tid:
+            return
+        if not self._redis.exists(self._key(tid)):
+            # Avoid creating an orphan session key without digests (e.g. TTL race or bad id).
+            return
+        ent = self._load_raw(tid)
+        meta = dict(ent.get("session_meta") or {})
+        meta["thread_insight"] = dict(snapshot)
+        out = {
+            "digests": list(ent.get("digests") or []),
+            "session_summary": str(ent.get("session_summary") or ""),
             "capsules": dict(ent.get("capsules") or {}),
             "session_meta": meta,
         }

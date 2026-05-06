@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from science_graphrag.agent.context.session_store import update_session_after_turn
+from science_graphrag.agent.context.thread_insights import maybe_refresh_thread_insight_after_turn
 from science_graphrag.agent.context.turn_digest import build_turn_digest
 from science_graphrag.config import get_settings
 
@@ -29,10 +30,13 @@ def apply_turn_digest_to_thread(
         tool_trace=tool_trace,
     )
     st = get_settings()
-    return update_session_after_turn(
+    summary = update_session_after_turn(
         tid,
         turn_digest=digest,
         workspace_id=workspace_id,
         discovered_tools_carryover_enabled=bool(st.agent_discovered_tools_carryover_enabled),
         discovered_tools_carryover_cap=int(st.agent_discovered_tools_carryover_max),
     )
+    if bool(st.agent_thread_insights_enabled):
+        maybe_refresh_thread_insight_after_turn(tid, settings=st)
+    return summary

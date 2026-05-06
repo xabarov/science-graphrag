@@ -77,7 +77,7 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `subagent_started` | Immediately after `specialist_selected` | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe) |
 | `subagent_progress` | Optional, after `tool_call` while a subagent is active | `subagent_id`, `step`, `tool`, `summary` |
 | `subagent_finished` | When leaving a subagent (next routing or synthesis) | `subagent_id` |
-| `tool_search_result` | After rule shortlist (CH3) | `specialist`, `tools`, `reason`, `skipped` |
+| `tool_search_result` | After rule shortlist (CH3) + Epic C0 discovery | `specialist`, `tools`, `reason`, `skipped`, optional `message_discovery_tools`, `message_discovery_merged` (LangGraph history), optional `carryover_tools` |
 | `tool_call` | LLM tool call | `step`, `tool`, `args_summary` |
 | `tool_result` | Tool return | `step`, `tool`, `row_count`, `error` |
 | `answer_synthesis_started` | After graph streaming completes, before `evidence_ready` / compaction | empty payload beyond `type` |
@@ -98,12 +98,33 @@ Canonical ladder lives in [`docs/analysis/agent-runtime-tools-context-roadmap-20
 | L4 boundary | `context_compacted.compaction.boundary` | Signals ``digest_window_full``; pairs with optional LLM consolidation above |
 | Discovered tools carry-over | `capsules.discovered_tools` | Merged from prior turn digest tools; injected as `<discovered_tools>` block when flag enabled |
 | Tool-message compact | `tool_message_compact` (ReAct) | Same-turn LangGraph messages only; independent of CH5 SSE compaction |
+| Thread insight (Epic A, Train T1+) | `session_meta.thread_insight` | Optional long-thread synthesis snapshot; when `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED=1`, refreshed after each turn with enough digests; audit mirrored under `run_metadata.thread_insight_audit` (sync + SSE). Prompt injection / precedence — **A2** (not default yet). |
+| LangGraph message tool discovery (Epic C0) | `tool_search` metadata | Tool names from prior `AIMessage.tool_calls` / `ToolMessage` rows merge into the rule shortlist before session carry-over; see `tool_search_result.message_discovery_*` fields. |
 | Away recap | `<away_recap>` | When client sends `client_idle_ms` above threshold (`agent_away_summary_*`) |
 | `product_step` | Whenever the agent crosses a user-visible boundary (start of turn, hand-off, before synthesis, after compaction, on each non-meta `tool_call`) | `code` (e.g. `interpreting_question`, `delegating_to_<specialist>`, `composing_answer`, `updating_session_memory`, `searching_literature`, `using_tool`), optional `tool`, optional `specialist`; for fallback `using_tool` events also emit explicit generic marker fields (`generic=true`, `generic_reason`) |
 | `agent_note` | **Optional** (off by default; gated by `agent_note_enabled`); short LLM-generated phrase emitted ≤ `agent_note_max_per_turn` times per turn after `intent_classified`, after each `specialist_selected`, and once per specialist's first `tool_result` | `kind` (`intent` \| `route` \| `tool`), `note` (≤200 chars plain prose). Costs extra LLM tokens; safe to ignore client-side |
 | `final_answer` | End | Full envelope fields + legacy `answer`, `citations`, `tool_trace` (includes `session_summary_excerpt` when `thread_id` set) |
 | `warning` | Any time | `code`, `message` (optional `reason` / `confidence` for coordinator fallback) |
 | `error` | Fatal | `detail`, `code` (legacy: `agent_runtime_error`, `agent_turn_deadline_exceeded`, `agent_graph_recursion_limit`), optional `error_class` (stable enum the UI localizes via `chat.errors.<error_class>`: `provider_unauthorized`, `provider_forbidden`, `provider_rejected`, `provider_timeout`, `provider_unreachable`, `agent_turn_deadline_exceeded`, `agent_recursion_limit`, `llm_output_validation_error`, `llm_output_parse_error`, `internal_error`), optional safe English `message`. Recursion-limit error events also carry the numeric `recursion_limit`. |
+
+### Summarization modes (Epic A — spec first)
+
+Roadmap: [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) §9.3. Three **modes** describe how rolling memory coexists with long-thread insight (implementation is feature-flagged per mode).
+
+| Mode | Purpose | Primary inputs | Artifact | Injected into prompt (when enabled) | Stale / invalidation (target) |
+|------|---------|----------------|----------|-------------------------------------|--------------------------------|
+| `turn_loop_memory` | Default CH4/CH5 continuity | Turn digests, rolling `session_summary`, optional L4 LLM compact | `session_summary`, `context_compacted`, capsules | `<session_memory>`, `<workspace_capsule>`, `<discovered_tools>` via `format_user_with_memory` | Rolling window cap; L4 cooldown + digest boundary |
+| `thread_insights_compact` | Long-thread recall / consistency | Full digest window (server), chunked workers | `session_meta.thread_insight` (`current`, `version`, `sources`, `audit`) | **A2:** `<thread_insight>` block (deferred until A2) | Target: TTL + turn-delta + high-churn tool trace; audit `stale_reason` |
+| `hybrid` | Turn-loop + periodic insight refresh | Same as both | Both artifacts | Ordered merge with explicit **precedence** (A2): `turn_digest` (latest facts) > fresh `thread_insight` > `session_summary` | Union of both policies; never silent override of fresher turn facts |
+
+**Negative / edge cases (must stay defined in tests + trace):**
+
+- Empty or single-turn thread: no `thread_insight` snapshot (below `agent_thread_insights_min_digests`).
+- Contradicting summaries vs last user/tool facts: **fresh turn digest / tool results win**; conflicting insight claims marked `conflicted` until refresh (**A2**).
+- Insight generation failure / timeout: fall back to `session_summary` only; `insight_fallback_reason` in metadata (**A2**).
+- Tool loop churn: force insight invalidation or circuit-breaker open (**A2**).
+
+**Train T1 note:** runtime ships **deterministic stub** chunk summaries + parallel workers + `thread_insight_audit_v1`; LLM chunk synthesis and hybrid precedence are **Train T2** unless otherwise specified.
 
 ### UI vocabulary contract
 

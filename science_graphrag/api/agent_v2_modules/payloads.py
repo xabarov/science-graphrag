@@ -7,9 +7,33 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
+from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.llm.chat import effective_chat_llm_model
 from science_graphrag.agent.runtime import current_otel_trace_id_hex
 from science_graphrag.config import Settings
+
+
+def thread_insight_audit_fragment(
+    *,
+    thread_id: str | None,
+    settings: Settings,
+) -> dict[str, Any] | None:
+    """Return ``{"thread_insight_audit": ...}`` when Epic A snapshot audit is available."""
+    tid = (thread_id or "").strip()
+    if not tid or not getattr(settings, "agent_thread_insights_enabled", False):
+        return None
+
+    ent = get_session_for_thread(tid)
+    sm = ent.get("session_meta") or {}
+    if not isinstance(sm, dict):
+        return None
+    tip = sm.get("thread_insight")
+    if not isinstance(tip, dict):
+        return None
+    aud = tip.get("audit")
+    if not isinstance(aud, dict):
+        return None
+    return {"thread_insight_audit": aud}
 
 
 def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
@@ -290,4 +314,5 @@ __all__ = [
     "normalize_history_digest_input",
     "response_from_run",
     "shortcut_response",
+    "thread_insight_audit_fragment",
 ]

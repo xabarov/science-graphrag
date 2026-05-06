@@ -212,6 +212,7 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
             settings=settings,
             has_workspace=has_ws,
             session=sess,
+            lc_messages=list(state.get("messages") or []),
         )
         tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
         compiled = _cached_subgraph(tools, mode)
@@ -244,6 +245,8 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
                     "skipped": bool(meta.get("skipped")),
                     "writer_mode": mode,
                     "carryover_tools": meta.get("carryover_tools"),
+                    "message_discovery_tools": meta.get("message_discovery_tools"),
+                    "message_discovery_merged": meta.get("message_discovery_merged"),
                 },
                 *(
                     [{"type": "tool_permissions", "matrix": mtx}]

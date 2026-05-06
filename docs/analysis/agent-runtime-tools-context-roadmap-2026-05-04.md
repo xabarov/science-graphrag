@@ -36,6 +36,12 @@
 **Нет в таком виде.** У нас **фиксированный LangGraph**: `supervisor` → `retrieval_agent` / `graph_agent` → `writer_agent` (см. `agent/graph/`). Маршрутизация — **TurnPolicy** / classifier, а не runtime-spawn воркеров. **Динамическое** ветвление «по одному tool call на субагента» — **не** в продуктовом runtime; в бенчмарках заложены **multi-agent** сценарии (`expected_specialist_sequence`, Wave Y4) и хвост **BT9** (фикстуры). Для тяжёлой изоляции см. спайк [`agent-graph-subprocess-isolation-spike-2026-04-27.md`](./agent-graph-subprocess-isolation-spike-2026-04-27.md).  
 В openclaude — **COORDINATOR_MODE**, **FORK_SUBAGENT**, отдельные transcript-файлы под `subagents/`, **spawn_fallback_agent** в hook chains — это **другой класс продукта** (CLI + mesh).
 
+**Уточнение по openclaude (важно для §9.4 / §10.1):** в openclaude реализованы **два взаимоисключающих** режима субагентов, не один:
+- **Coordinator** (`src/coordinator/coordinatorMode.ts`, `workerAgent.ts`): явная диспетчеризация через `AgentTool` + `SendMessageTool` + `TaskStopTool`, отдельный `getCoordinatorSystemPrompt`, типизированные `worker`-результаты, async-by-default.
+- **Fork** (`src/tools/AgentTool/forkSubagent.ts`, `runForkedAgent`): неявное наследование `system+tools+messages prefix` (cache-share!), text-only / no-tools контракт у форка, recursive-fork guard.
+
+Они **взаимоисключающие** (если активен coordinator — fork-эксперимент отключён). Это критично при выборе runtime для нашего Epic B — см. §10.1 (детальный contrast) и §9.4 B0 (выбор траектории).
+
 ---
 
 ## 2. Архитектура сейчас (канон репозитория)
@@ -115,6 +121,12 @@
 | **VERIFICATION_AGENT** (read-only) | Отдельный лёгкий прогон проверки | Аналог: отдельный eval harness / optional node — не обязательно в user-facing графе |
 | **Hook chains + spawn_fallback** | Ремедиация при ошибках | У нас нет того же event-слоя; ближе — retry в runtime + Phoenix alert |
 | **COORDINATOR / Explore·Plan субагенты** | Отдельные роли в одном продукте | У нас фиксированные ноды; расширение — только при явном ROI и метриках |
+| **Cache-safe forked-agent pattern** (`runForkedAgent`) | Все side-LLM вызовы (compact/away/memory/dream/agent_summary) идут с identical cache key (system+tools+messages prefix), ради 70–95% read-token reuse | **Высокий ROI** для нашей экономики LLM. См. §10.2 — обязательное условие production-ready Epic A1 (`thread_insights`) и L4 LLM compact. Маппинг: обернуть `thread_insights.py` и `llm_history_compact.py` в общий cache-safe payload, измерить `side_llm_cache_read_ratio`. |
+| **Agent definitions on disk + frontmatter** (`.claude/agents/*.md`) | Декларативные роли (tools/disallowedTools/model/permissionMode/whenToUse) без правки кода | См. §10.7 — точка расширения SciGraph для пользовательских ролей (`librarian`, `bibliographer`, `methodology-checker`); расширяет матрицу из §6.1.4 без жёсткого вшивания в config. |
+| **Subagent prompt discipline** (synthesize-not-delegate, Scope/Result/VERDICT) | Жёсткий output contract субагентов: «echo scope → result → key findings → VERDICT» + запрет на handoff-фразы | См. §10.4 — берём в наш supervisor → specialist промпт сразу в B2 (writer contract). Контракт-тест на regex выхода. |
+| **Per-call `canUseTool` callback** | Permission policy на уровне вызова, не только режима (per-fork: `createMemoryFileCanUseTool(path)`, `createCompactCanUseTool()` deny-all, etc.) | См. §10.7 — расширение текущего `effective_tool_policy` опциональным callback'ом для finer control в Epic B (например, claim-verifier deny-write на cypher_query). |
+| **Microcompaction time-trigger** | Если gap > N min между ходами — server cache cold анyway → content-clear старых tool results | См. §10.5 — простой портируемый паттерн в `tool_message_compact.py` (без зависимости от Anthropic-specific `cache_edits`). |
+| **PTL retry + group-by-API-round** | Структурный примитив `groupMessagesByApiRound` + `truncateHeadForPTLRetry` | См. §10.5 — вводим как first-class в `compaction.py` (детерминированное urезание по группам, retry до 3). |
 
 ---
 
@@ -308,6 +320,8 @@
 | 2026-05-06 | **Wave 4 (runner/trust/P2):** BT8/BT9 runner closure — `routing_log` в benchmark/live выводе агента; stub-трассы бенчмарка без ``mock answer`` / ``mock-work`` для честного ``trust_signal``; tier ``agent_tools_multiagent`` в aggregate + артефакт ``current-agent-tools-multiagent.json``; nightly опциональная live-перегенерация mini при секрете; метрики ``tool_name``/``args_match`` в ``eval/agent_tools/metrics``; CH5 ``context_compacted.audit``; матрица prompt/memory в ``agent-chat-v1.md``; ADR-027; тесты P2 (trace-review ROI counters, sidechain path). |
 | 2026-05-06 | **Wave 4.1 (LLM judge + L4 live run):** выполнен полноценный `science-graphrag-agent-judge-benchmark --llm` по live-трейсам (`habr-window-2026-06-agent-tools-mini-band-1.35-live-llm-judge.json`); подтверждён full L4 LLM compact в live smoke (feature-flag `SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED`, audit в `session_meta` и `run_metadata.compaction_audit`). |
 | 2026-05-06 | **Wave 5 (runtime/state cleanup + trace-review hardening):** декомпозирован `chat_envelope` (intent/policy/ux), введён канонический typed tool execution trace (`collect_tool_execution_steps`) как source-of-truth для `tool_trace`, добавлена атрибуция `run_kind`/`graph_id` в SSE/final run_metadata/trace-review schema, расширен `agent_trace_review.py` профилями quick/default/heavy, `trace_regression_compare.py` ужесточён fail-политикой `compaction_churn_increase`; обновлены тесты `test_chat_envelope`, `test_api_agent_v2_stream_parity`, `test_trace_review_schema`, `test_trace_regression_compare`. |
+| 2026-05-06 | **Deep-dive openclaude vs план (повторный проход):** уточнён §1.3 (две взаимоисключающие модели субагентов: coordinator vs fork); расширена таблица §5 (cache-safe forked-agent pattern, agent definitions on disk, subagent prompt discipline, per-call canUseTool, microcompact time-trigger, PTL retry + group-by-round); §9.4 B0 получил явную развилку coordinator vs fork с recommendation `fork-mode as baseline`; §9.4 B1 расширен `<task-notification>` envelope и periodic progress label (AgentSummary-pattern); §9.5.1 пополнен P0.3 (web_search/web_fetch с academic allowlist), P0.4 (DOI/OpenAlex resolver), P1.3 (research_plan_write), P1.4 (ask_user_question), P1.5 (claim_verification subagent), P2.3 (plan mode), P2.4 (brief). Добавлен **§10** — deep-dive по паттернам, не закрытым ранее: coordinator/fork contrast, cache-safe side-LLM, built-in subagent catalog → SciGraph mapping, prompt discipline, compaction hardening (microcompact triggers / post-compact restoration / PTL retry / sanitizers), hook surface, agent registry + per-call canUseTool, `<task-notification>` envelope, обновлённый release train (T1–T5) и cross-refs. |
+| 2026-05-06 | Добавлен **§11**: сводный actionable чеклист по Train T1–T5 (`[x] / [~] / [ ]` статусы), отдельный pool §11.6 для tool-parity backlog, §11.0 — закрытое, §11.7 — stop-conditions reminder. Источник правды по прогрессу для §9.3/§9.4/§9.5/§9.5.1/§10. |
 
 ---
 
@@ -407,6 +421,12 @@
 
 #### A0. Контракт и режимы (spec first)
 
+- **Status (2026-05-06): DONE (Train T1 slice).**
+- Выполнено:
+  - в `docs/specs/agent-chat-v1.md` добавлен раздел `Summarization modes`;
+  - зафиксированы `turn_loop_memory` / `thread_insights_compact` / `hybrid`;
+  - добавлены негативные кейсы и пометка о том, что prompt precedence остаётся в A2.
+
 - Добавить в `docs/specs/agent-chat-v1.md` раздел `Summarization modes`:
   - `turn_loop_memory` (текущий CH4/CH5),
   - `thread_insights_compact` (новый async/offline контур),
@@ -420,6 +440,17 @@
 **Acceptance A0:** документированная матрица режимов + негативные кейсы (empty/noisy/contradicting summaries).
 
 #### A1. Thread-insights pipeline (новый слой)
+
+- **Status (2026-05-06): PARTIAL (Train T1 skeleton).**
+- Выполнено:
+  - добавлен `science_graphrag/agent/context/thread_insights.py` (deterministic chunking + bounded parallel workers + synthesis);
+  - persistence в `session_meta.thread_insight` через `apply_thread_insight_snapshot` (memory + redis backend);
+  - post-turn refresh под feature-flag `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED`;
+  - `run_metadata.thread_insight_audit` в sync/SSE.
+- Осталось до полного A1/A2:
+  - полноценная freshness policy (TTL / turn_delta / high_churn);
+  - circuit-breaker / PTL retry / integrity guards;
+  - prompt injection `<thread_insight>` и precedence matrix (A2).
 
 - Добавить модуль `agent/context/thread_insights.py`:
   - windowing длинного треда на semantic chunks;
@@ -502,8 +533,16 @@
 - Принять решение по API:
   - либо новый endpoint `/v3/agent/query`,
   - либо `run_kind=langgraph_supervisor_v3` под `/v2/agent/query` с жёсткой атрибуцией.
+- **Развилка subagent runtime** (см. §10.1): выбрать одну из траекторий или поддержать обе под флагами:
+  - **(а) Coordinator-mode** — явный `spawn_subagent(role, task)` + `send_message(subagent_id)` + `task_stop` (как `coordinatorMode.ts` в openclaude). Чистая observability через `subagent_id`/`task_id`, async-by-default, явные лейблы лайфцикла. Цена: дополнительный state machine для tasks + ToolUse-обёртка.
+  - **(б) Fork-mode** — неявное наследование `system + tools + messages prefix` родителя (`runForkedAgent`/`forkSubagent.ts`). **Cache-share** на 70–95% read-tokens (соответствует §10.2). text-only output контракт + recursive-fork guard. Цена: меньше явных API-границ, сложнее различать в trace, нельзя continue-talk-back.
+  - **Рекомендация:** для SciGraph экономика LLM критична → **fork-mode как baseline** для side-LLM (thread_insights, away_summary, claim verification), **coordinator-mode** добавить только при явном продукт-сценарии длинного research-турна с пользовательской возможностью «продолжи специалиста». Эту дихотомию закрепить в ADR.
+- В ADR явно зафиксировать:
+  - prompt-cache контракт fork-режима (что и почему НЕ меняется в child системно: тот же tool array, без `maxOutputTokens`, тот же thinking config — см. §10.2);
+  - изоляция subagent transcript'а (sidechain, как в §6.1.5) — обязательна;
+  - pull-back-to-parent контракт (что именно из child carry-back, как избежать flooding — см. B3).
 
-**Acceptance B0:** ADR с финальным вариантом API/compatibility и rollback strategy.
+**Acceptance B0:** ADR с финальным вариантом API/compatibility и rollback strategy + benchmark на одинаковом сценарии (latency, cache hit, missing-state events) для двух траекторий перед фиксацией.
 
 #### B1. Runtime primitive: spawn / track / collect
 
@@ -517,8 +556,14 @@
   - `subagent_id`,
   - `spawn_reason`,
   - `cost/tokens/latency` per child.
+- **Periodic progress label** (UX-паттерн `AgentSummary` в openclaude, `services/AgentSummary/agentSummary.ts`): для долгих background subagents запускать **каждые ~30 сек** lightweight cache-safe forked-агент, который выдаёт **одну фразу** прогресса (например, `«читает paper_quote_search для PMID:12345»`, `«проверяет цитату [3] в claim-verifier»`). Печатается в SSE как `subagent_progress_label`. **Контракт:** ride на parent prompt cache (см. §10.2), отдельная gating через `agent_subagent_progress_label_enabled`, throttle ≥ 30s, drop при отсутствии нового прогресса.
+- **`<task-notification>` envelope для completion** (см. §10.10): когда child завершается, в parent message stream вставляется **user-role** message с XML конвертом `<task-notification task-id=… status=… subagent=…><summary/><result/><usage/></task-notification>`. Это унифицирует «событие завершения» как часть transcript'а, не как боковой канал; делает следующий ход родителя tractable для классификатора и trace-review.
+- **Promptless spawn rules** (как в openclaude `prompt.ts` для AgentTool):
+  - read-only задачи (corpus_explore, claim_verification, paper_profile fanout) — в параллель;
+  - write-heavy / state-mutating — последовательно;
+  - verification — независимо от основного потока, всегда fresh fork.
 
-**Acceptance B1:** live run с 2+ параллельными subagents даёт полный lifecycle в SSE + trace-review без missing states.
+**Acceptance B1:** live run с 2+ параллельными subagents даёт полный lifecycle в SSE + trace-review без missing states; `subagent_progress_label` появляется минимум 1 раз для child длительностью > 30s; `<task-notification>` присутствует в parent transcript на каждый завершившийся child.
 
 #### B2. Merge node и итоговый writer contract
 
@@ -564,6 +609,15 @@
 ### 9.5 Epic C — Tool search parity track
 
 #### C0. V2 contract: discovery-aware tool loading
+
+- **Status (2026-05-06): PARTIAL (Train T1 rules-first increment).**
+- Выполнено:
+  - `tool_search` учитывает discovered tools из message history (`AIMessage.tool_calls` / `ToolMessage`);
+  - merge discovered names происходит детерминированно перед session carry-over;
+  - в `tool_search_result` добавлены `message_discovery_tools` / `message_discovery_merged`.
+- Осталось до полного C0/C2 контракта:
+  - strict deferred activation policy (`only-on-discovery`) как отдельный runtime contract;
+  - расширенная telemetry по activation/miss на lane-уровне.
 
 - Расширить текущий `tool_search` контракт:
   - поддержка `tool_reference`-подобных discovered entries в message history;
@@ -642,6 +696,34 @@
      - trace фиксирует тип LSP операции и payload budget;
      - benchmark lane показывает не хуже baseline по verdict/trust при code-navigation вопросах.
 
+3. **Web research tools (`web_search`, `web_fetch`)** — для research-flow поверх корпуса
+   - Scope:
+     - `web_search(query, allowed_domains?, blocked_domains?, max_results)` — с поддержкой domain allowlist/denylist (как `WebSearchTool` в openclaude);
+     - `web_fetch(url, prompt)` — load + summarize через small/fast model (как `WebFetchTool`), с redirect handling, allow/deny на хосты, cache на 10–15 мин по URL;
+     - адаптеры под provider (Tavily/Serper/Brave/native MCP) с `transient_error → fallback` policy (как `isTransientError` в openclaude).
+   - Why:
+     - SciGraph — research product; пользователю часто нужно найти **новые** статьи/preprints вне локального корпуса; сейчас этот сценарий не закрыт;
+     - дополняет `find_works`/`paper_quote_search` (локальный корпус) внешним каналом;
+     - даёт основу для будущего «дополни корпус по DOI/url» workflow.
+   - Acceptance:
+     - tools видны в `tool_search` shortlist под feature-flag `agent_web_research_tools_enabled`;
+     - SSE event `web_fetched` с url/status/bytes/cache-hit;
+     - trust-audit lane не деградирует (важно: web-source ≠ corpus-grounded; маркировать в `evidence_origin`);
+     - allowlist по умолчанию academic-only (arxiv.org, pubmed.ncbi.nlm.nih.gov, semanticscholar.org, doi.org, openreview.net, biorxiv.org).
+
+4. **DOI / OpenAlex resolver tool** — bridge между web и graph корпусом
+   - Scope:
+     - `doi_resolver(doi_or_url)` — нормализация → metadata (title/authors/year/venue/abstract) + canonical paper_id попытка mapping в локальный workspace;
+     - source: OpenAlex API + Crossref как fallback.
+   - Why:
+     - закрывает разрыв «у пользователя ссылка/DOI — нет в нашем graph»;
+     - пред-этап для решения «можно ли импортировать в workspace» (out-of-scope для tool, in-scope для UX);
+     - удобный complement к `web_fetch` (fetch — content, doi_resolver — structured metadata).
+   - Acceptance:
+     - SSE `doi_resolved` с `paper_id_in_workspace` (если найдено);
+     - `paper_profile` вызывается автоматически если paper_id найден;
+     - rate-limit policy по OpenAlex (документировать).
+
 #### P1 (после стабилизации P0 и B0/B1)
 
 1. **Worktree isolation tools**
@@ -664,6 +746,44 @@
      - есть единый status contract для async tasks;
      - в trace-review видны monitor events и корректная эскалация timeout/degraded state.
 
+3. **`research_plan_write` (TodoWrite-аналог)** — структурированный progress checklist
+   - Scope:
+     - агент создаёт/обновляет JSON-список TODO для длинных multi-step research turn'ов;
+     - формат: `{id, content, status: pending|in_progress|completed|cancelled}` (как `TodoWriteTool` в openclaude);
+     - persistence в `session_meta.research_plan`.
+   - Why:
+     - пользователь видит план хода → меньше «чёрного ящика» в долгих ходах;
+     - агент сам себе structured memory для multi-hop reasoning (что уже сделано / что осталось).
+   - Acceptance:
+     - SSE `research_plan_updated` event;
+     - UI рендерит чеклист в side-panel чата;
+     - после `context_compacted` план сохраняется (re-attach как §10.5).
+
+4. **`ask_user_question` (structured multi-choice)** — снижение ambiguity
+   - Scope:
+     - tool с аргументами `{questions: [{id, prompt, options: [{id, label}], allow_multiple?}]}` (как `AskUserQuestionTool` в openclaude);
+     - SSE `user_question_asked`, ожидание structured `user_answered` payload.
+   - Why:
+     - текущий способ задать вопрос — простая assistant message; UI/UX выигрывают от детерминированных вариантов;
+     - снижает неоднозначность в сценариях «хочешь по PMC ID или по названию?», «какой год / какой журнал?».
+   - Acceptance:
+     - frontend получает structured payload и рендерит UI-форму;
+     - ответ возвращается обратно как tool-result в transcript;
+     - тест E2E: agent → ask → user picks → continue.
+
+5. **`claim_verification` subagent** (read-only adversarial probe)
+   - Scope:
+     - lightweight forked subagent (см. §10.2 cache-safe pattern) с deny-write tool policy: только `paper_quote_search`, `paper_profile`, `find_works`;
+     - запускается на финальный writer ответ, проверяет цитаты/grounding, выдаёт `VERDICT: PASS|FAIL|PARTIAL` + список конкретных проблем (см. §10.4 prompt discipline).
+   - Why:
+     - это **наша** версия `verification` агента из openclaude built-ins, специализированная под citation grounding;
+     - закрывает CH-trust audit на уровне runtime (а не только offline benchmark);
+     - дешёвый ход (cache-share, малая модель).
+   - Acceptance:
+     - SSE `claim_verification_result` с verdict + issues;
+     - feature-flag `agent_claim_verification_enabled`;
+     - trust-audit lane показывает рост trust_signal без latency регрессии > 15%.
+
 #### P2 (опционально, только при явном продукт-сценарии)
 
 1. **Task orchestration primitives**
@@ -683,6 +803,30 @@
    - Acceptance:
      - есть явный бизнес-кейс + retention/cleanup policy;
      - security review закрывает abuse vectors (spam scheduling, privilege escalation).
+
+3. **Plan mode (`enter_plan_mode` / `exit_plan_mode`)**
+   - Scope:
+     - режим «agent только планирует, не действует» (read-only): корпус читать можно, граф писать нельзя, никаких side-effect tool calls;
+     - exit-flow: пользователь approve plan → переключение в act-mode (как `EnterPlanMode`/`ExitPlanMode` в openclaude).
+   - Why:
+     - для долгих research-сессий: сначала approve plan (research outline), потом execute;
+     - снижает риск долгого «не туда»;
+     - синергия с `research_plan_write` (P1.3).
+   - Acceptance:
+     - SSE `plan_mode_entered`/`plan_mode_exited`;
+     - в plan-mode tool policy жёстко ограничивает — нет `cypher_query` write, нет ingestion endpoints;
+     - eval lane: на длинных вопросах plan-mode дешевле в latency на ≥ 30% при сохранении trust.
+
+4. **`brief` (synthetic output / commit-style summary)**
+   - Scope:
+     - дополнительный финальный краткий summary хода для habr-export / UI (1–3 предложения, без ссылок-плумбинга);
+     - отдельно от `final_answer` (которое для пользователя), `brief` — для downstream (sharing, history index, mini-card).
+   - Why:
+     - UX-улучшение для history-list / sharing;
+     - снижает повторное чтение пользователем длинных ответов когда нужен только overview.
+   - Acceptance:
+     - в `run_metadata.brief` (≤ 240 chars);
+     - используется в Ask history side-panel.
 
 #### Out-of-scope до отдельного ADR
 
@@ -712,6 +856,551 @@
 
 | Дата | Изменение |
 |------|-----------|
+| 2026-05-06 | Отмечен фактический статус Train T1 implementation slice: `A0=DONE`, `A1=PARTIAL (skeleton)`, `C0=PARTIAL (rules-first message discovery)`; добавлены явные remaining до A2/C2. |
 | 2026-05-06 | Deep-dive дополнение по заимствованиям из `openclaude` для **Epic A**: добавлены circuit-breaker/PTL-retry/invariant-guards/compaction-boundary, freshness+precedence contract, claim-level grounding eval и расширенные telemetry метрики; обновлён release train `§9.6` (T1/T2/T3). |
 | 2026-05-06 | Добавлен **§9.5.1**: `Tool parity backlog (openclaude-reference)` с приоритетами P0/P1/P2, acceptance-критериями и out-of-scope списком. |
 | 2026-05-06 | Добавлен **§9**: closure plan по исходным целям (smart summarization parity, real subagent runtime v3, tool search parity), с epic-структурой, acceptance/gates, release train и stop-conditions против формального закрытия. |
+| 2026-05-06 | **Второй deep-dive проход openclaude → план:** уточнены §1.3 (coordinator vs fork — две взаимоисключающие модели), §5 (расширена таблица переноса), §9.4 B0/B1 (явная развилка subagent runtime + `<task-notification>` envelope + periodic progress label), §9.5.1 (добавлены P0.3 web tools, P0.4 DOI resolver, P1.3 research_plan_write, P1.4 ask_user_question, P1.5 claim_verification subagent, P2.3 plan mode, P2.4 brief). Добавлен **§10** — паттерны openclaude, не покрытые ранее: cache-safe side-LLM (`runForkedAgent`), built-in subagent catalog (corpus-explore / research-plan / claim-verification), strict prompt discipline (Scope/Result/VERDICT, anti-handoff guard), compaction hardening (microcompact time-trigger, post-compact paper sources restore, PTL retry + group-by-API-round, sanitizers), hook surface (PreCompact/PostCompact/SubagentStart/Stop), agent registry на диске + per-call canUseTool callback, `<task-notification>` envelope. Обновлены acceptance gates §10.10 и release train (§10.11) без сдвига существующих T1–T5. |
+| 2026-05-06 | Добавлен **§11**: сводный actionable чеклист по Train T1–T5 со статусами `[x] / [~] / [ ]`, pool §11.6 для §9.5.1 tool-parity backlog, §11.0 (контекст «уже закрыто»), §11.7 (stop-conditions). Этот раздел становится точкой синхронизации статусов с §9.3/§9.4/§9.5/§9.5.1/§10. |
+
+---
+
+## 10. Глубокая сверка с openclaude (паттерны, ещё не закрытые в плане)
+
+Этот раздел — итог второго сравнительного прохода по дереву `openclaude/src/{coordinator,tools/AgentTool,services/{compact,SessionMemory,AgentSummary,extractMemories,autoDream,awaySummary,toolUseSummary,contextCollapse}}/` с прицелом на то, что **ещё не зафиксировано** в §1–§9. Каждый подраздел имеет конкретный SciGraph-маппинг и ссылки на place в наш план (Epic A/B/C / §6.1 / §9.5.1).
+
+### 10.1 Subagent runtime: coordinator vs fork (детальный contrast)
+
+В openclaude **две независимые** модели субагентов, и они **взаимоисключающие** — это критичный architectural fact для §9.4 B0:
+
+| Свойство | Coordinator (`coordinatorMode.ts`, `workerAgent.ts`) | Fork (`forkSubagent.ts`, `runForkedAgent`) |
+|---|---|---|
+| Триггер | Явный tool call: `AgentTool({subagent_type, prompt})` | Неявный: `AgentTool` без `subagent_type` или `runForkedAgent` из любого места рантайма |
+| System prompt child'а | **Свой** (`getCoordinatorWorkerSystemPrompt`), типизирован под role | **Тот же** что у parent (cache-share!) |
+| Tools child'а | **Свои** (фильтрованный набор для role) | **Тот же tool array** (canUseTool callback ставит фактическую политику) |
+| Messages prefix | **Свой** (минимальный context) | **Идентичный parent prefix** до точки fork → cache hit на 70–95% read tokens |
+| Continuation | **Да** — `SendMessageTool(subagent_id, msg)` | **Нет** — fork работает один turn, output `text-only`, никаких tool calls |
+| Stop | **Да** — `TaskStopTool(subagent_id)` | Только timeout / completion |
+| Recursive nesting | Разрешено (с ограничениями) | **Запрещено** (`isInForkChild` guard, ошибка при попытке fork внутри fork) |
+| Output format | Свободный (последний assistant message) | Strict text-only, обычно с разметкой `Scope:/Result:/VERDICT:` |
+| Observability | Явный `task_id` lifecycle (start / progress / done / failed) | Sidechain transcript, имплицитный |
+| Use case | «Делегируй задачу specialist'у и продолжи беседу с ним» | «Прогони лёгкий side-LLM на тёплом кэше» |
+
+**Что это значит для SciGraph (Epic B0):**
+
+- **Fork-mode** — это **базовый** паттерн для всех «внутренних LLM-вызовов» (thread_insights, away_summary, tool_use_summary, claim verification, full L4 compact). Дешёвый, простой, ride на тёплом кэше. Выбираем как **default**.
+- **Coordinator-mode** — добавляем **только** под явный продукт-сценарий: «пользователь хочет вести беседу со specialist'ом» (например, "продолжи с librarian, найди ещё 3 источника"). Имеет смысл только в Epic B Train T4+, после того как fork-mode и merge contract стабилизированы.
+- В ADR §9.4 B0 эту дихотомию закрепить: **fork-mode** обязательно; **coordinator-mode** — опционально с явным продукт-обоснованием.
+
+### 10.2 Cache-safe side-LLM pattern (runForkedAgent)
+
+Это центральный экономический паттерн openclaude. Все «вторичные» LLM-вызовы (compact summary, away summary, session memory update, extract memories, auto-dream, periodic AgentSummary, tool_use_summary) идут через `runForkedAgent` с **identical cache key** к parent ходу.
+
+**Контракт cache-safe fork** (нарушение → cache invalidation → 5–10× стоимость):
+
+1. **Тот же `system_prompt`** что у parent (даже если child делает другую задачу — cache принимает только идентичные префиксы).
+2. **Тот же `tools` array** — даже если все будут отвергнуты через `canUseTool` callback.
+3. **Тот же `model` и `thinking config`** — нельзя ставить `maxOutputTokens` (clамп `budget_tokens` → cache miss).
+4. `forkContextMessages` — общий префикс messages с parent (до точки fork).
+5. `promptMessages` — задание fork'а как отдельный suffix; именно он оплачивается полностью, всё остальное — cached read.
+6. **Per-call `canUseTool` callback** — фактическая политика на уровне выполнения каждого tool call, без изменения tools array.
+
+**SciGraph mapping (план):**
+
+- **Train T1 hardening (Epic A1):**
+  - обернуть `science_graphrag/agent/context/thread_insights.py` в общий `science_graphrag/agent/forked_runtime.py` helper, который:
+    - принимает `parent_system`, `parent_tools`, `parent_messages_prefix`, `fork_prompt`, `fork_can_use_tool`;
+    - возвращает completion, метрики кэша (cache_creation_tokens, cache_read_tokens), latency;
+    - логирует `side_llm_cache_read_ratio`.
+  - метрика `side_llm_cache_read_ratio` появляется в `trace-review-v1`.
+  - gate: `>= 0.6` для `thread_insights`, `>= 0.8` для full L4 compact (когда вызывается через тот же helper).
+
+- **Train T2 (Epic A2/A3):**
+  - перевести `away_summary` (§6.1.7) и `agent_note` на тот же helper;
+  - перевести L4 LLM compact (`llm_history_compact.py`) на тот же helper.
+
+- **Train T3+ (Epic B):**
+  - все subagent runs (verification, claim_check, corpus_explore из §10.3) — через тот же helper.
+
+**Acceptance §10.2:** в trace-review-v1 каждый side-LLM call помечен `forked: true | false`; при `forked=true` гейт `side_llm_cache_read_ratio >= configured_threshold`.
+
+### 10.3 Built-in subagent catalog → SciGraph projection
+
+openclaude имеет каталог встроенных subagent ролей в `src/tools/AgentTool/built-in/*.ts`. Перенести **дословно** не имеет смысла (продукт другой), но мапятся в наши research-roles:
+
+| openclaude built-in | Назначение | SciGraph аналог | Приоритет |
+|---|---|---|---|
+| `general-purpose` (full tools) | универсальный воркер | текущий `retrieval_agent` (workspace_inspect/find_works/paper_quote_search/idea_search) | already-done |
+| `Explore` (read-only поиск, малая модель) | дешёвый fanout по поиску | новый **`corpus-explore`** subagent: read-only fanout `workspace_inspect` → `find_works` → `paper_quote_search` → `idea_search` на дешёвой модели | Train T3 (Epic B Train) |
+| `Plan` (read-only архитектурное планирование) | декомпозиция сложного запроса на подзадачи | новый **`research-plan`** subagent: декомпозирует пользовательский вопрос на (а) sub-queries по корпусу, (б) sub-queries по графу, (в) writer-spec | Train T3 |
+| `verification` (adversarial PASS/FAIL/PARTIAL) | проверка сделанного | новый **`claim-verification`** subagent: re-read цитат, проверка grounding, adversarial probes (см. §9.5.1 P1.5) | Train T2 (быстрый ROI) |
+| `claude-code-guide` | продуктовая помощь | n/a | — |
+| `worker` (coordinator-spawned typed) | универсальный coordinator-воркер | (опционально, только если Epic B B0 выбирает coordinator-режим) | Train T4+ |
+
+**Контракт каждого SciGraph-subagent'а:**
+
+1. **Self-contained prompt** (см. §10.4): всё, что нужно child'у, — в его prompt; родитель невидим.
+2. **Cache-safe fork** (см. §10.2): system+tools+messages prefix общие с parent.
+3. **Sidechain transcript** (§6.1.5): JSONL, не засоряет основной transcript.
+4. **Strict output format** (§10.4): Scope/Result/Key sources/VERDICT.
+5. **Per-call permission policy** (§10.7): `canUseTool` callback с deny-write для read-only ролей.
+
+### 10.4 Subagent prompt discipline (что брать в промпты дословно)
+
+openclaude в `src/tools/AgentTool/prompt.ts`, `coordinator/coordinatorMode.ts`, `services/*/prompts.ts` использует устойчивый набор директив, которые надо ставить в наши supervisor → specialist промпты:
+
+1. **Synthesize, don't delegate.**
+   > «Никогда не пиши "based on your findings" в адрес parent'а. Выпиши конкретику: что нашёл, какие источники, какой verdict.»
+   
+   У нас сейчас в supervisor → writer контракт это явно не прописано. **Action:** добавить в `science_graphrag/agent/graph/nodes/writer_agent.py` system prompt блок:
+   
+   > `Если specialist вернул резюме без конкретики — синтезируй сам, не просто пересказывай.`
+
+2. **Self-contained scope.**
+   Каждый subagent prompt должен включать всё нужное (workspace_id, paper_ids, claim_text, expected output format), parent context недоступен.
+
+3. **Purpose statement.**
+   > «Это нужно для bibliography / для quote-extraction / для adversarial claim check.»
+   
+   Помогает subagent'у настроить inline reasoning.
+
+4. **Output format directive (strict):**
+   ```
+   Scope: <one-line echo задачи>
+   Result: <тело ответа>
+   Key sources: [paper_id, paper_id, ...]
+   VERDICT: PASS | FAIL | PARTIAL  (только для verification subagent'ов)
+   ```
+   
+   **Action:** контракт-тест в `tests/agent/test_subagent_output_contract.py`: regex match на `Scope:` и (для verification) `VERDICT:`.
+
+5. **Concurrency rule (для §10.3 corpus-explore + research-plan):**
+   - read-only задачи → параллельно;
+   - write-heavy / state-mutating → последовательно;
+   - verification — независимо.
+
+6. **Continuation vs spawn-fresh (для Epic B B1):**
+   - research → implementation continuation: тот же subagent;
+   - research → narrow follow-up: spawn fresh (child наследует cache, не state);
+   - verification: всегда fresh (защита от сговора).
+
+7. **Anti-handoff guard (`classifyHandoffIfNeeded` в openclaude):**
+   classifier на выходе subagent'а проверяет фразы вроде «please continue from here», «I leave the rest to you». При обнаружении — **prepend warning** к result. Защищает от ленивого handoff'а.
+   
+   **Action:** в Epic B Train T2 — добавить regex-detector + warning injection.
+
+### 10.5 Compaction hardening (что усилить поверх §6.1 / §9.3)
+
+**5.1 Microcompaction time-trigger** (`microCompact.ts` в openclaude):
+
+Если gap между last assistant message и current request > N min — server cache cold anyway → content-clear все tool results кроме последних K. Простой, портируемый, без зависимости от Anthropic-specific `cache_edits` (который и так stub в open snapshot).
+
+**SciGraph action:** добавить в `science_graphrag/agent/tool_message_compact.py`:
+- параметры: `microcompact_time_gap_minutes` (default 10), `microcompact_keep_last_k_tool_results` (default 3);
+- feature-flag `agent_tool_message_microcompact_time_trigger_enabled`;
+- метрика `tool_message_microcompact_triggered_count` в trace-review.
+
+**5.2 Post-compact restoration** (после `context_compacted`):
+
+openclaude после compaction re-инжектит:
+- Recently read files (top N by recency, capped by token budget)
+- Plan file (`getPlan(agentId)`)
+- Invoked skills (truncated)
+- Discovered tools delta
+
+**SciGraph mapping** (мы уже частично делаем discovered_tools §6.1.2; нужно расширить):
+- (а) **Recent paper sources**: top N последних `paper_quote_search` / `idea_search` results (paper_id + краткий quote head) — capped budget;
+- (б) **Active research_plan** (если §9.5.1 P1.3 имплементирован) — re-attach целиком;
+- (в) **Discovered tools delta** — уже есть.
+
+**Action:** добавить `science_graphrag/agent/context/post_compact_attachments.py` builder + integration в `format_user_with_memory`. Acceptance: `post_compact_paper_sources_restored_count` в trace-review.
+
+**5.3 PTL retry + group-by-API-round** (`compact.ts` в openclaude — `truncateHeadForPTLRetry`, `groupMessagesByApiRound`):
+
+Когда сама compaction request hits PTL → drop oldest API-round groups и retry. **API-round** = preamble (group 0) + каждый assistant turn + следующие до next assistant.
+
+**SciGraph action:**
+- ввести `science_graphrag/agent/context/message_groups.py` с `group_messages_by_api_round`;
+- расширить `compaction.py` PTL retry policy (already mentioned в §9.3 A1) с использованием этого примитива;
+- метрика `ptl_retry_count_per_compaction` в trace-review.
+
+**5.4 Pre-compact sanitizers** (`stripImagesFromMessages`, `stripReinjectedAttachments`):
+
+Перед summarize-LLM:
+- drop images (для нашего кейса — почти не используются, но потенциально может появиться через `web_fetch`);
+- drop tool attachments которые и так re-инжектятся после compact (избегать double-inclusion в summary).
+
+**Action:** утилита `sanitize_messages_for_summary` в `compaction.py`.
+
+**5.5 Mutual exclusion с session-memory compact:**
+
+В openclaude `sessionMemoryCompact.ts` имеет lock-mechanism: при активной session-memory компактации полный compact отключается до её завершения (избегаем race + double-compact). Нам это тоже понадобится при появлении thread_insights refresh + L4 compact в одном ходе.
+
+**Action:** ввести `compaction_lock` flag в session_meta; circuit-breaker (3 consecutive failures → skip compact на N turns).
+
+### 10.6 Hook surface (расширение over current Phoenix-trace)
+
+openclaude имеет полноценный hook chain (`src/services/hooks/`):
+
+| Hook | Назначение | SciGraph mapping |
+|---|---|---|
+| `PreCompactHooks` (trigger='auto'\|'manual') | custom instructions injection перед compact | будущая точка для thread_insights freshness check + custom system prompt overrides |
+| `PostCompactHooks` | действия после compact | re-inject recent papers / plan / discovered tools (см. §10.5.2) |
+| `SessionStartHooks` | после session resume / compact | re-load workspace metrics, paper_profile freshness, capsules invalidation |
+| `PostSamplingHooks` | после assistant LLM call | trigger thread_insights refresh, extract durable memories, prompt coaching |
+| `PromptSubmitHooks` | до отправки запроса в LLM | inject `<away_recap>`, `<thread_insight>`, `<discovered_tools>` |
+| `SubagentStartHooks` / `SubagentStopHooks` | lifecycle subagent | для §9.4 B1 — обязательны как explicit observability events |
+
+**SciGraph action (Train T3 — параллельно с Epic B0):**
+- вынести в новый модуль `science_graphrag/agent/hooks/` с явным contract'ом, не размазывать по `runtime.py`/`stream_lifecycle.py`/`post_turn.py`;
+- начать с **PostCompact** (re-inject) и **SubagentStart/Stop** (для Epic B observability) — остальное по мере необходимости;
+- avoid hooks-as-monkey-patch — каждый hook принимает immutable context, возвращает diff/decision; собирается в trace-review как `hook_chain_events`.
+
+### 10.7 Agent registry & per-fork permission policy
+
+**7.1 Disk-loaded agent definitions** (`loadAgentsDir.ts` в openclaude):
+
+openclaude читает `~/.claude/agents/*.md` и `<project>/.claude/agents/*.md` с YAML frontmatter:
+
+```yaml
+---
+name: librarian
+model: claude-haiku-4
+tools: [paper_quote_search, paper_profile, find_works]
+disallowedTools: [cypher_query]
+permissionMode: read_only
+requiredMcpServers: []
+isolation: sidechain
+background: true
+whenToUse: |
+  When the user asks for academic references or wants to compose a bibliography section.
+color: blue
+---
+
+You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-formatted entries.
+```
+
+**Расширение для SciGraph:**
+
+- `~/.scigraph/agents/<name>.md` + `<workspace>/.scigraph/agents/<name>.md` — позволяет пользователю/проекту определять собственные роли (`librarian`, `bibliographer`, `methodology-checker`, `dataset-explorer`) **без правки кода**.
+- Frontmatter маппится в нашу tool policy matrix (§6.1.4) + system prompt builder.
+- Subagent invocation: `AgentTool(subagent_type='librarian', prompt='...')` находит definition, применяет canUseTool, runs as cache-safe fork (§10.2).
+
+**Acceptance:**
+- registry loader + frontmatter parser + system prompt builder + permission filter;
+- integration test: загрузка `tests/fixtures/agents/librarian.md`, вызов через AgentTool, контракт verification.
+- В Epic B B0 ADR — фиксируем регистр как часть архитектуры.
+
+**7.2 Per-call `canUseTool` callback** (см. §10.2):
+
+Текущий `effective_tool_policy` (§6.1.3) — **per-mode**. Нужен дополнительный **per-call** layer:
+
+- `createMemoryFileCanUseTool(path)` — только Edit на конкретный путь;
+- `createCompactCanUseTool()` — **deny ALL** (compact subagent работает text-only);
+- `createClaimVerificationCanUseTool(paper_ids)` — Read-only `paper_quote_search` / `paper_profile`, deny `cypher_query` write.
+
+**Action:** добавить optional `can_use_tool: Callable[[Tool, ToolInput], Decision]` в `tool_execution_pipeline.py` (на верх effective_tool_policy). Контракт: если callback возвращает `Decision.DENY`, инструмент не вызывается, agent получает structured error (`tool_denied_by_policy: <reason>`).
+
+### 10.8 `<task-notification>` envelope для subagent completion
+
+В openclaude когда coordinator-spawned worker завершается, parent получает **user-role** message с XML конвертом (см. `coordinator/notifications.ts`):
+
+```xml
+<task-notification>
+  <task-id>5f3a-...</task-id>
+  <subagent>corpus-explore</subagent>
+  <status>completed</status>
+  <usage>
+    <tokens-input>12345</tokens-input>
+    <tokens-output>234</tokens-output>
+    <duration-ms>8400</duration-ms>
+  </usage>
+  <summary>Found 3 candidate papers for the query.</summary>
+  <result>
+    <!-- worker's final assistant message -->
+  </result>
+</task-notification>
+```
+
+**Зачем:** унифицирует «событие завершения child'а» как **часть transcript'а** (а не только SSE боковой канал). Делает следующий ход parent'а tractable для:
+- LLM turn classifier;
+- trace-review (видит lifecycle прямо в messages);
+- compaction (`<task-notification>` сжимается как обычный tool result, structure preserved).
+
+**SciGraph action для Epic B B1:**
+- ввести `<task-notification>` envelope в `science_graphrag/agent/subagents/notification.py`;
+- emit как `HumanMessage` с `additional_kwargs={'kind': 'task_notification'}` после child'а;
+- SSE event `subagent_task_notification` зеркалит payload для UI;
+- compaction-friendly: при сжатии `<task-notification>` сохраняем `<status>`, `<summary>`, `<task-id>`, дропаем `<result>`.
+
+### 10.9 Дополнительные паттерны (короткий список)
+
+| Паттерн | Источник в openclaude | SciGraph value | Куда положить |
+|---|---|---|---|
+| **`extractMemories` / autoMem** — durable memories per-project | `services/extractMemories/` | низкий приоритет: у нас memory — per-session; но при появлении user accounts может пригодиться | Backlog (отдельный ADR) |
+| **`autoDream`** — periodic memory consolidation across sessions | `services/autoDream/` | низкий приоритет, требует cross-session aggregation | Backlog |
+| **`tool_use_summary`** — компрессия больших tool results | `services/toolUseSummary/` | **средний** приоритет; complement к §6.1.4 token budget; может работать на cache-safe fork (§10.2) | Train T4 (post-Epic B B1) |
+| **`agent_listing_delta` attachment** | `tools/AgentTool/AgentTool.tsx` | избежать busting cache при изменении MCP/plugin list — выносить agent listing в delta-attachment | Train T4 (нужен только когда §10.7 disk agents появятся) |
+| **`PromptCoaching` post-sampling** | `services/promptCoaching/` | UX touch — suggest follow-up prompts | Backlog (UI feature) |
+| **`stripReinjectedAttachments` pre-compact** | `services/compact/compact.ts` | санитайзер перед compaction LLM — экономия | Train T2 (вместе с §10.5.4) |
+
+### 10.10 Acceptance / observability layer для §10
+
+| Подраздел | Acceptance gate |
+|---|---|
+| §10.1 (coordinator vs fork) | ADR Epic B0 содержит решение + benchmark на одинаковом сценарии (latency, cache hit, missing-state events) |
+| §10.2 (cache-safe side-LLM) | metric `side_llm_cache_read_ratio` в trace-review-v1; gate `>= 0.6` для thread_insights, `>= 0.8` для full L4 compact |
+| §10.3 (subagent catalog) | benchmark lane `subagent_specialist_routing`; verification subagent VERDICT regex parse rate ≥ 95% |
+| §10.4 (prompt discipline) | contract test на subagent output: `Scope:` regex required, `VERDICT:` для verification subagents |
+| §10.5 (compaction hardening) | существующий `compaction_churn_increase` + новый `post_compact_paper_sources_restored_count` + `ptl_retry_count_per_compaction` |
+| §10.6 (hooks) | `hook_chain_events` в trace-review с порядком вызовов (PostCompact обязателен после context_compacted) |
+| §10.7 (agent registry) | integration test на `~/.scigraph/agents/*.md` loading + per-call canUseTool callback test |
+| §10.8 (`<task-notification>`) | обязательный envelope на каждый завершённый child в Epic B B1 acceptance |
+
+### 10.11 Привязка §10 к release train (§9.6)
+
+Обновлённый порядок (без сдвига существующих trains, только добавление точек):
+
+- **Train T1** (текущий, A0/A1/C0): + **§10.2 helper** `forked_runtime.py` + первый side-LLM helper consumer = `thread_insights.py` (cache-safe).
+- **Train T2** (A2/A3/C1): + **§10.4 prompt discipline** в supervisor → writer; + **§10.5.1/§10.5.2** microcompact time-trigger + post-compact paper sources; + **§10.5.4** sanitizers; + **§10.3 claim-verification** subagent (быстрый ROI поверх cache-safe helper).
+- **Train T3** (B0/B1): + **§10.1 ADR-решение** (fork-mode default); + **§10.6 hooks** layer (Pre/Post compact + Subagent start/stop); + **§10.7 agent registry** baseline (disk loader + per-call canUseTool); + **§10.8 `<task-notification>`** envelope.
+- **Train T4** (B2/B3/C2): + **§10.3 corpus-explore / research-plan** subagents; + **§10.9 tool_use_summary** на cache-safe helper.
+- **Train T5** (B4/C3): + **§10.5.3 PTL retry + group-by-round** primitives; финальный hardening §10.10 acceptance.
+
+### 10.12 Cross-references (где §10 пересекается с §1–§9)
+
+- **§10.1** уточняет **§1.3** и **§9.4 B0** (выбор fork vs coordinator).
+- **§10.2** — обязательное предусловие для **§9.3 A1** production-ready (без cache-safe — экономика side-LLM не выдержит) и для всех будущих subagent runs (§9.4 B*).
+- **§10.3** — конкретные субагенты для **§9.4 B0/B1** + новый item в **§9.5.1 P1** (claim-verification).
+- **§10.4** — input для **§9.4 B2** (writer contract) и **§9.3 A2** (precedence prompt).
+- **§10.5** — уточняет **§9.3 A1/A2** hardening + **§6.1** (микрокомпакт + post-compact).
+- **§10.6** — связан с **§6.1.4** matrix prompt после compact; явный hook layer закроет «smoeshing» политик из §2.1.1.
+- **§10.7** — расширение **§6.1.4** allowed-tools matrix (per-mode → per-call).
+- **§10.8** — обязательный envelope для **§9.4 B1**.
+- **§10.9 / §10.11** — дополняют **§9.5.1** и **§9.6**.
+
+---
+
+## 11. Сводный чеклист по Trains (T1–T5)
+
+**Назначение:** один actionable checklist по подэтапам, чтобы прогресс был виден одним взглядом. Детали (acceptance / gates / observability) — в §9.3 / §9.4 / §9.5 / §9.5.1 / §10.
+
+**Легенда:**
+- `[x]` — DONE: реализовано + покрыто тестами + есть запись в Wave/Train log.
+- `[ ]` — PENDING: не начато.
+- `[~]` — PARTIAL: использовать только для эпика, который не декомпозирован на подзадачи прямо здесь. Если эпик декомпозирован (как A1 ниже) — статус выражается смесью `[x]` и `[ ]` среди подпунктов, без `[~]` на уровне эпика.
+
+**Текущий счёт (2026-05-06):** 11 DONE / 105 PENDING (без §11.0 контекста и §11.7 reminder'а).
+
+> Этот чеклист — **производный**: при движении по пунктам обновлять и здесь, и в исходных секциях (§9.3/§9.4/§9.5/§10), чтобы не возникало дрейфа.
+
+### 11.0 Уже закрыто (контекст «зачёта», не входит в Train T1–T5)
+
+- **§6.1 (8 ROI пунктов из openclaude):** все DONE — deferred schemas, carry-over discovered tools, unified tool-execution pipeline, allowed-tools matrix, sidechain transcripts, token budget loop policy, away summary, feature-gated rollout + telemetry.
+- **§8 Post-closure next wave:** P0 (CI gate trace_regression, orchestrator smoke), P1 (canonical tool/run audit trail + alignment test, runtime metadata builder unify), P2 (`agent_note` 50-turn cost, `paper_profile` null-rate snapshot) — DONE per `§8.5 Execution log`.
+- **Wave 5:** `chat_envelope` декомпозирован, canonical typed tool-execution trace, `run_kind`/`graph_id` атрибуция, profiles `quick/default/heavy` в `agent_trace_review.py`, `compaction_churn_increase` fail-policy в `trace_regression_compare.py` — DONE.
+
+### 11.1 Train T1 (2 недели) — A0 / A1 / C0 + cache-safe helper
+
+**Цель:** schema/freshness/telemetry contracts + thread-insights skeleton + discovery-aware tool loading + общий cache-safe helper для side-LLM.
+
+- **A0. Summarization modes spec** (§9.3 A0)
+  - [x] раздел `Summarization modes` в `docs/specs/agent-chat-v1.md`
+  - [x] зафиксированы `turn_loop_memory` / `thread_insights_compact` / `hybrid`
+  - [x] негативные кейсы + пометка о precedence (откладывается в A2)
+
+- **A1. Thread-insights pipeline** (§9.3 A1, §10.5)
+  - [x] `science_graphrag/agent/context/thread_insights.py` (skeleton: chunking + bounded parallel + synthesis)
+  - [x] persistence в `session_meta.thread_insight` (memory + redis backend)
+  - [x] post-turn refresh под `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED`
+  - [x] `run_metadata.thread_insight_audit` в sync/SSE
+  - [ ] freshness policy: TTL / turn_delta / high_churn (§9.3 A1)
+  - [ ] circuit-breaker (`max_consecutive_failures`) (§9.3 A1, §10.5.5)
+  - [ ] PTL retry policy (`max_ptl_retries`) (§9.3 A1, §10.5.3)
+  - [ ] integrity guards `tool_use/tool_result` при chunk/drop/rebuild (§9.3 A1)
+  - [ ] explicit compaction boundary artifact (`trigger`/`pre_tokens`/`source_range`/`preserved_segment`) (§9.3 A1)
+  - [ ] gate: `insight_recall@k` measurable, `stale_summary_error_rate` baseline (§9.3 A3 ref)
+
+- **C0. Discovery-aware tool loading** (§9.5 C0)
+  - [x] `tool_search` учитывает discovered tools из message history (`AIMessage.tool_calls` / `ToolMessage`)
+  - [x] детерминированный merge перед session carry-over
+  - [x] `message_discovery_tools` / `message_discovery_merged` в `tool_search_result`
+  - [ ] strict deferred activation policy (`only-on-discovery`) как runtime contract
+  - [ ] расширенная telemetry на lane-уровне (`activation_rate` / `miss_due_to_no_discovery`)
+
+- **§10.2 Cache-safe side-LLM helper** (новое в Train T1)
+  - [ ] `science_graphrag/agent/forked_runtime.py` helper (`parent_system + parent_tools + parent_messages_prefix + fork_prompt + fork_can_use_tool` → completion + cache metrics)
+  - [ ] миграция `thread_insights.py` на helper
+  - [ ] метрика `side_llm_cache_read_ratio` в `trace-review-v1`
+  - [ ] gate: `side_llm_cache_read_ratio >= 0.6` для `thread_insights`
+  - [ ] dual-run regression compare on/off через `trace_regression_compare.py`
+
+### 11.2 Train T2 (2 недели) — A2 / A3 / C1 + claim_verification + compaction hardening
+
+**Цель:** prompt integration thread_insight'а с precedence policy, long-thread eval gates, hybrid LLM-selector, первый production subagent (claim_verification) на cache-safe helper'е, hardening компактации.
+
+- **A2. Prompt integration + fallback policy** (§9.3 A2)
+  - [ ] `<thread_insight>` блок в `format_user_with_memory` при свежем insight'е
+  - [ ] fallback к `session_summary` при stale/failed/circuit-breaker open
+  - [ ] precedence: `turn_digest` (latest) > `thread_insight` (fresh) > `session_summary`
+  - [ ] conflict detection: `turn_digest` vs `thread_insight` claim mismatch → label `conflicted`
+  - [ ] `insight_conflict_resolved` / `insight_fallback_reason` / `ptl_retry_count` в `run_metadata`
+  - [ ] контракт-тесты на детерминизм precedence (no silent override свежих фактов)
+
+- **A3. Eval + gate** (§9.3 A3)
+  - [ ] eval lane `eval/chat_agent/long_thread_*`: long-thread retrieval / context drift / summary hallucination / claim grounding
+  - [ ] метрики `insight_recall@k` / `stale_summary_error_rate` / `compaction_churn_delta` / latency p50/p95 / `insight_stale_reason_rate` / `insight_conflict_resolved_rate` / `ptl_retry_rate` / `compaction_circuit_breaker_trips`
+  - [ ] gate: trust/verdict не хуже baseline + p95 latency в бюджете + claim grounding precision/recall ≥ SLO
+
+- **C1. Hybrid selector (rules + LLM judge)** (§9.5 C1)
+  - [ ] LLM rerank поверх rule-based shortlist
+  - [ ] confidence score + reason codes
+  - [ ] guardrails: deny unsafe tools до LLM решения, `final_answer` всегда доступен
+  - [ ] benchmark lane: снижение unnecessary tool calls без regression на verdict/trust
+
+- **§10.3 `claim_verification` subagent** (быстрый ROI, §9.5.1 P1.5)
+  - [ ] subagent на `forked_runtime.py` helper с deny-write policy (`createClaimVerificationCanUseTool(paper_ids)`)
+  - [ ] system prompt с strict output format `Scope/Result/Key sources/VERDICT` (§10.4)
+  - [ ] feature-flag `agent_claim_verification_enabled`
+  - [ ] SSE `claim_verification_result` с verdict + issues
+  - [ ] gate: trust_signal рост без latency регрессии > 15%
+
+- **§10.4 Subagent prompt discipline** (writer/specialist promptы)
+  - [ ] директива «synthesize-not-delegate» в `writer_agent.py` system prompt
+  - [ ] strict output format `Scope:` / `Result:` / `Key sources:` / `VERDICT:` (для verification)
+  - [ ] anti-handoff guard (regex detector «please continue» / «I leave the rest to you» → warning prepend)
+  - [ ] контракт-тест `tests/agent/test_subagent_output_contract.py`
+
+- **§10.5 Compaction hardening (часть 1)**
+  - [ ] §10.5.1 microcompact time-trigger в `tool_message_compact.py` (gap > N min → clear all but last K) + flag + метрика
+  - [ ] §10.5.2 post-compact paper sources restore (`science_graphrag/agent/context/post_compact_attachments.py` + integration в `format_user_with_memory`) + метрика `post_compact_paper_sources_restored_count`
+  - [ ] §10.5.4 pre-compact sanitizers (`stripImagesFromMessages` + `stripReinjectedAttachments` равнозначные функции)
+
+### 11.3 Train T3 (2–3 недели) — B0 / B1 + advanced summarization + hooks/registry/envelope
+
+**Цель:** ADR по subagent runtime v3, базовый spawn primitive, hooks layer, agent registry, `<task-notification>` envelope, advanced summarization optimizations.
+
+- **B0. ADR `agent-runtime-v3-subagents`** (§9.4 B0, §10.1)
+  - [ ] decision policy «когда нужен spawn» + sync vs background + merge contract + failure taxonomy
+  - [ ] выбор API: `/v3/agent/query` ИЛИ `run_kind=langgraph_supervisor_v3` под `/v2`
+  - [ ] §10.1 решение: **fork-mode default**, coordinator-mode только при явном продукт-сценарии
+  - [ ] benchmark fork vs coordinator на одинаковом сценарии (latency / cache hit / missing-state events)
+  - [ ] prompt-cache контракт fork-режима зафиксирован в ADR (та же tools array, без `maxOutputTokens`, тот же thinking config)
+  - [ ] sidechain transcript обязателен для каждого subagent run (§6.1.5 ref)
+  - [ ] pull-back-to-parent контракт (избегаем flooding)
+  - [ ] rollback strategy
+
+- **B1. Runtime primitive: spawn / track / collect** (§9.4 B1, §10.8)
+  - [ ] `science_graphrag/agent/subagents/runtime.py` с `spawn_subagent(task_spec) -> subagent_id`
+  - [ ] heartbeat / progress channel
+  - [ ] terminal states (`succeeded|failed|cancelled|timed_out`) + bounded fanout (`max_parallel_subagents`)
+  - [ ] observability: `parent_turn_id` / `subagent_id` / `spawn_reason` / `cost/tokens/latency` per child
+  - [ ] §10.8 `<task-notification>` envelope как user-role message в parent transcript
+  - [ ] SSE `subagent_task_notification` зеркалит payload для UI
+  - [ ] periodic `subagent_progress_label` (≥ 30s, lightweight cache-safe forked-агент, AgentSummary-pattern)
+  - [ ] gate: live run с 2+ параллельных subagents → полный lifecycle в SSE + trace-review без missing states
+
+- **A-advanced** (§9.6 Train T3)
+  - [ ] incremental insight updates (не пересобирать полностью при каждом triggere)
+  - [ ] contradiction-aware synthesis (если новый chunk противоречит previous insight — explicit conflict в audit)
+
+- **§10.6 Hooks layer baseline**
+  - [ ] `science_graphrag/agent/hooks/` модуль (immutable context → diff/decision контракт)
+  - [ ] `PostCompactHooks` (re-inject paper sources / plan / discovered tools — синхронизировано с §11.2 §10.5.2)
+  - [ ] `SubagentStartHooks` / `SubagentStopHooks` (для §11.3 B1 observability)
+  - [ ] `hook_chain_events` в `trace-review-v1`
+
+- **§10.7 Agent registry & per-fork permissions baseline**
+  - [ ] disk loader: `~/.scigraph/agents/*.md` + `<workspace>/.scigraph/agents/*.md` с YAML frontmatter (`name`, `model`, `tools`, `disallowedTools`, `permissionMode`, `whenToUse`, `color`, `isolation`, `background`)
+  - [ ] frontmatter parser → tool policy matrix mapping (§6.1.4 ref) + system prompt builder
+  - [ ] per-call `canUseTool` callback в `tool_execution_pipeline.py` (поверх `effective_tool_policy`)
+  - [ ] integration test: `tests/fixtures/agents/librarian.md` загрузка → AgentTool вызов → permission filter
+
+### 11.4 Train T4 (2–3 недели) — B2 / B3 / C2 + corpus-explore / research-plan + tool_use_summary
+
+**Цель:** merge node + writer contract, subagent isolation policies, dynamic schema transport, второй и третий production-subagent, компрессия больших tool results.
+
+- **B2. Merge node + writer contract** (§9.4 B2)
+  - [ ] merge-узел: child outputs → typed `specialist_results_v3`
+  - [ ] confidence ranking + provenance (`evidence_origin`: `parent_tool` / `subagent:<id>` / `mixed`)
+  - [ ] writer system prompt: явная работа с конфликтующими ответами двух subagents
+  - [ ] gate: при конфликтующих ответах финальный answer объяснимо выбирает/синтезирует, provenance виден
+
+- **B3. Tool/search/memory subagent isolation** (§9.4 B3)
+  - [ ] изолированный tool policy на subagent run
+  - [ ] локальный short-term memory (не carry-over в parent если не явно)
+  - [ ] controlled carry-back (структурированный summary, не полный transcript)
+  - [ ] квоты `max_subagent_hops_per_turn` / `max_subagent_tokens_per_turn` / hard timeout per child
+  - [ ] gate: subagent mode не ломает token budget policy и не создаёт runaway loops
+
+- **C2. Dynamic schema transport** (§9.5 C2)
+  - [ ] компактные refs для deferred tools by default
+  - [ ] полная схема only-on-discovery
+  - [ ] метрики: `tool_schema_bytes_saved` / `deferred_tool_activation_rate` / `tool_search_miss_due_to_no_discovery`
+
+- **§10.3 corpus-explore subagent** (read-only fanout)
+  - [ ] system prompt: read-only `workspace_inspect` → `find_works` → `paper_quote_search` → `idea_search` на дешёвой модели
+  - [ ] `canUseTool` deny-write
+  - [ ] strict output format (§10.4)
+
+- **§10.3 research-plan subagent** (декомпозиция запроса)
+  - [ ] system prompt: декомпозиция вопроса на (а) corpus sub-queries, (б) graph sub-queries, (в) writer-spec
+  - [ ] integration с `research_plan_write` (если P1.3 имплементирован)
+
+- **§10.9 tool_use_summary** на cache-safe helper
+  - [ ] компрессия больших tool results (до limit) в structured summary через `forked_runtime.py`
+  - [ ] complement к §6.1.6 token budget
+
+### 11.5 Train T5 (1–2 недели) — B4 / C3 + PTL retry + финальный hardening
+
+**Цель:** safety/eval gate multi-agent, eval lanes для tool search, PTL retry primitives, финальный rollout decision.
+
+- **B4. Safety/eval gate multi-agent** (§9.4 B4)
+  - [ ] eval scenarios: fanout research (N children) / one-child-fails / timeout + salvage / malicious tool request (permission deny)
+  - [ ] gate: failover без silent success + trace completeness 100% по lifecycle events
+
+- **C3. Eval + policy gate** (§9.5 C3)
+  - [ ] lanes: sparse-query / ambiguous intent / graph-heavy / bibliography-quote workflows
+  - [ ] policy: `warn` при росте latency без роста ошибок / `fail` при росте missed-tool или tool-loop instability
+
+- **§10.5.3 PTL retry + group-by-API-round** (compaction hardening финал)
+  - [ ] `science_graphrag/agent/context/message_groups.py` с `group_messages_by_api_round`
+  - [ ] PTL retry policy в `compaction.py` (drop oldest API-round groups, retry до 3)
+  - [ ] метрика `ptl_retry_count_per_compaction` в trace-review
+
+- **§10.10 финальный acceptance check**
+  - [ ] все §10 gate'ы проходят на reference suite
+  - [ ] dual-run off/on на committed baseline = pass для всех Train T1–T5 фич
+  - [ ] rollout decision: какие feature-flags идут в default-on, какие остаются gated
+
+### 11.6 Tool parity backlog (§9.5.1) — мапинг к Trains
+
+Не все tool-parity items жёстко привязаны к Train acceptance — отслеживаем отдельным чеклистом, выбираем в Train по capacity.
+
+**P0 (целевой Train T1–T2):**
+- [ ] §9.5.1 P0.1 MCP runtime trio + auth (`call_mcp_tool` / `list_mcp_resources` / `fetch_mcp_resource` / `mcp_auth`)
+- [ ] §9.5.1 P0.2 LSP tool (read-only, bounded)
+- [ ] §9.5.1 P0.3 Web research tools (`web_search` + `web_fetch`, academic allowlist by default)
+- [ ] §9.5.1 P0.4 DOI / OpenAlex resolver
+
+**P1 (целевой Train T2–T3):**
+- [ ] §9.5.1 P1.1 Worktree isolation tools (нужно для real multi-agent в Epic B B3)
+- [ ] §9.5.1 P1.2 Runtime monitor tool
+- [ ] §9.5.1 P1.3 `research_plan_write` (TodoWrite-аналог)
+- [ ] §9.5.1 P1.4 `ask_user_question` (structured multi-choice)
+- [x] §9.5.1 P1.5 `claim_verification` subagent — **дублируется с §11.2 (Train T2)**, отслеживается там
+
+**P2 (только при явном продукт-сценарии):**
+- [ ] §9.5.1 P2.1 Task orchestration primitives (`task_create` / `task_get` / etc) — только если Epic B0 выбирает coordinator-mode
+- [ ] §9.5.1 P2.2 Scheduled automation (`cron_*`) — требует business case
+- [ ] §9.5.1 P2.3 Plan mode (`enter_plan_mode` / `exit_plan_mode`)
+- [ ] §9.5.1 P2.4 `brief` synthetic output
+
+**Out-of-scope до отдельного ADR:** `team_create`/`team_delete`, remote triggers, REPL-like execution surfaces (§9.5.1).
+
+### 11.7 Stop-conditions reminder (§9.7)
+
+- ❌ Нельзя пометить Epic B как done, пока `subagent_*` события не подтверждены реальными child runtimes в trace artifacts.
+- ❌ Нельзя пометить Epic A как done без long-thread eval с цифрами (не только «pass smoke»).
+- ❌ Нельзя пометить Epic C как done, если нет отдельного lane с ambiguous/sparse queries и зафиксированной policy `warn/fail`.
+- ❌ Нельзя пометить Train T1 как done, пока не выполнен gate `side_llm_cache_read_ratio >= 0.6` для thread_insights (§11.1).
