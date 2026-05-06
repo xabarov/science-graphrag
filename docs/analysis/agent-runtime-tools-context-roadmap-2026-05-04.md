@@ -127,6 +127,11 @@
 3. ✅ **L3/L4** (капсулы + full-history LLM compact) закрыты: реализованы триггеры, feature-flag и audit trail для eval/run metadata.  
 4. ✅ Матрица «что попадает в prompt после compact» документирована в [`agent-chat-v1.md`](../specs/agent-chat-v1.md).  
 5. При рефакторинге envelope / state: держать в уме **§2.2** (канон фактов хода, слои envelope, атрибуция графа в trace).
+6. ✅ **Wave 5 runtime/state cleanup + trace-review hardening** закрыт:
+   - `chat_envelope` декомпозирован по слоям `intent_resolution` / `response_policy` / `ux_annotations` без изменения внешнего контракта;
+   - в `graph/tracing.py` добавлен канонический typed-след `collect_tool_execution_steps`, из которого строится legacy `tool_trace`;
+   - добавлена runtime-атрибуция `run_kind` / `graph_id` в initial metadata, SSE `specialist_selected`, `run_metadata` и `trace-review-v1` (`run_context` + `trace_timeline`);
+   - `agent_trace_review.py` получил профили `quick/default/heavy`, а `trace_regression_compare.py` — жёсткий fail-policy на рост `compaction_churn_score` (`compaction_churn_increase`).
 
 ### 6.1 План заимствований из openclaude (high ROI)
 
@@ -302,3 +307,4 @@
 | 2026-05-05 | **Wave 3** — закрыты ROI-пункты §6.1 **2–5 и 7**: carry-over discovered tools, unified tool execution pipeline, allowed-tools matrix (feature-flag), sidechain JSONL transcripts, away summary (`client_idle_ms`). Регрессия к baseline: `trace_regression_compare.py` против `eval/results/trace-review-off.json` — **pass**; live `agent_trace_review.py` (default suite) — **pass**. Техдолг: pylint duplicate-code между графом и pipeline снят через общий `effective_tool_policy`. |
 | 2026-05-06 | **Wave 4 (runner/trust/P2):** BT8/BT9 runner closure — `routing_log` в benchmark/live выводе агента; stub-трассы бенчмарка без ``mock answer`` / ``mock-work`` для честного ``trust_signal``; tier ``agent_tools_multiagent`` в aggregate + артефакт ``current-agent-tools-multiagent.json``; nightly опциональная live-перегенерация mini при секрете; метрики ``tool_name``/``args_match`` в ``eval/agent_tools/metrics``; CH5 ``context_compacted.audit``; матрица prompt/memory в ``agent-chat-v1.md``; ADR-027; тесты P2 (trace-review ROI counters, sidechain path). |
 | 2026-05-06 | **Wave 4.1 (LLM judge + L4 live run):** выполнен полноценный `science-graphrag-agent-judge-benchmark --llm` по live-трейсам (`habr-window-2026-06-agent-tools-mini-band-1.35-live-llm-judge.json`); подтверждён full L4 LLM compact в live smoke (feature-flag `SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED`, audit в `session_meta` и `run_metadata.compaction_audit`). |
+| 2026-05-06 | **Wave 5 (runtime/state cleanup + trace-review hardening):** декомпозирован `chat_envelope` (intent/policy/ux), введён канонический typed tool execution trace (`collect_tool_execution_steps`) как source-of-truth для `tool_trace`, добавлена атрибуция `run_kind`/`graph_id` в SSE/final run_metadata/trace-review schema, расширен `agent_trace_review.py` профилями quick/default/heavy, `trace_regression_compare.py` ужесточён fail-политикой `compaction_churn_increase`; обновлены тесты `test_chat_envelope`, `test_api_agent_v2_stream_parity`, `test_trace_review_schema`, `test_trace_regression_compare`. |

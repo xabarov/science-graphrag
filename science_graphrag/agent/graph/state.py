@@ -188,7 +188,10 @@ def build_initial_agent_state(
         meta["away_recap"] = {"injected": True, "lines": away_lines}
     if thread_id:
         meta["thread_id"] = thread_id
-    initial_debug = [turn_policy.sse_payload()]
+    initial_intent = dict(turn_policy.sse_payload())
+    initial_intent["run_kind"] = run_kind
+    initial_intent["graph_id"] = graph_id
+    initial_debug = [initial_intent]
     if turn_policy.classifier == "fallback":
         initial_debug.append(
             {

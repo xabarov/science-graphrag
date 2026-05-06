@@ -334,6 +334,9 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     assert types.index("answer_synthesis_started") < types.index("final_answer")
     assert types.index("answer_synthesis_finished") < types.index("final_answer")
     assert "subagent_progress" in types or "tool_call" in types
+    selected = next(e for e in events if e.get("type") == "specialist_selected")
+    assert selected.get("run_kind") == "supervisor_specialists"
+    assert selected.get("graph_id") == "supervisor_graph"
 
     finals = [e for e in events if e.get("type") == "final_answer"]
     assert len(finals) == 1
@@ -353,6 +356,8 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     assert rm.get("tool_search_shortlist_ratio_avg") == 0.5
     assert rm.get("tool_search_deferred_schema_events") == 1
     assert "agent_response_budget_cutoff" in (rm.get("budget_stop_reasons") or [])
+    assert rm.get("run_kind") == "supervisor_specialists"
+    assert rm.get("graph_id") == "supervisor_graph"
 
 
 def test_sse_final_answer_uses_structured_final_answer_tool(monkeypatch) -> None:

@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.tools import tool
 
 from science_graphrag.agent.graph.state import AgentState
-from science_graphrag.agent.graph.tracing import collect_tool_trace
+from science_graphrag.agent.graph.tracing import collect_tool_execution_steps, collect_tool_trace
 from science_graphrag.agent.tool_call_normalization import (
     build_normalized_tool_node_executor,
     normalize_ai_message_tool_calls,
@@ -58,6 +58,28 @@ def test_collect_tool_trace_uses_normalized_names() -> None:
     state: AgentState = {"messages": [msg, follow]}
     traces = collect_tool_trace(state)
     assert any(t.get("tool") == "workspace_inspect" for t in traces)
+
+
+def test_collect_tool_execution_steps_matches_tool_trace_rows() -> None:
+    ai = AIMessage(
+        content="",
+        tool_calls=[{"name": " idea_search ", "id": "tc2", "args": {"query": "x"}}],
+    )
+    tool_message = ToolMessage(
+        content='{"row_count": 2, "truncated": true}',
+        tool_call_id="tc2",
+        name="idea_search",
+    )
+    state: AgentState = {"messages": [ai, tool_message]}
+    steps = collect_tool_execution_steps(state["messages"])
+    trace = collect_tool_trace(state)
+    assert len(steps) == 1
+    assert steps[0]["tool"] == "idea_search"
+    assert steps[0]["row_count"] == 2
+    assert steps[0]["truncated"] is True
+    assert len(trace) == 1
+    assert trace[0]["tool"] == steps[0]["tool"]
+    assert trace[0]["row_count"] == steps[0]["row_count"]
 
 
 def test_build_normalized_tool_node_executor_invokes_with_trimmed_names() -> None:

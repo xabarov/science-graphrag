@@ -47,7 +47,7 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `phoenix_trace_id` | string \| null | OpenTelemetry trace id (hex) when a span is active |
 | `thread_id` | string \| null | Echo of request `thread_id` when set |
 | `session_summary_excerpt` | string \| null | **CH4:** First ≤500 chars of server `session_summary` after this turn when `thread_id` set; aligns with SSE `context_compacted.session_summary_excerpt` |
-| `run_metadata` | object | Runtime flags, model ids, **`agent_runtime`** (graph selector; ADR-027), etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
+| `run_metadata` | object | Runtime flags, model ids, **`agent_runtime`** (graph selector; ADR-027), **`run_kind`** (`single_agent_research` \| `supervisor_specialists`), **`graph_id`** (`single_agent_react` \| `supervisor_graph`), etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
 | `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `graph_only`, `text_only`, `no_quote_found`, `no_quote_found_after_idea_hits`, `history_digest_invalid`, `agent_turn_deadline_exceeded`, `agent_partial_graph_recursion_limit`, `partial_after_recursion_limit`, `answer_salvaged_from_graph_tool`, `agent_finished_without_final_answer_tool` (tools were used and the model returned text, but the last executed catalog tool was not `final_answer` — suppressed when `answer_salvaged_from_graph_tool` is present; `tool_trace` stays honest; use for monitoring/UI) |
@@ -73,7 +73,7 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `type` | When | Payload |
 |--------|------|---------|
 | `intent_classified` | Start of run | `answer_class`, `source` (e.g. `coordinator_gate_v0` for deterministic rules, `coordinator_gate_llm` / `coordinator_gate_fallback` for hybrid/LLM paths), `conversation_intent`, `tool_policy`, `route_hint`, `reason`, `confidence` (0–1), `classifier` (`deterministic` \| `llm` \| `fallback`), `suggested_answer_class` |
-| `specialist_selected` | After supervisor routing | `from`, `to`, optional `budget_left`, optional `reason` |
+| `specialist_selected` | After supervisor routing | `from`, `to`, optional `budget_left`, optional `reason`, optional runtime attribution (`run_kind`, `graph_id`) |
 | `subagent_started` | Immediately after `specialist_selected` | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe) |
 | `subagent_progress` | Optional, after `tool_call` while a subagent is active | `subagent_id`, `step`, `tool`, `summary` |
 | `subagent_finished` | When leaving a subagent (next routing or synthesis) | `subagent_id` |

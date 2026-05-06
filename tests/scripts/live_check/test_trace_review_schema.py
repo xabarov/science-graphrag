@@ -34,9 +34,15 @@ def test_merge_e2e_builds_timeline_and_metrics(schema_module) -> None:
                 "coverage": {"covered": 5, "missing": ["gap_a"]},
             }
         },
+        "run_metadata": {
+            "run_kind": "supervisor_specialists",
+            "graph_id": "supervisor_graph",
+        },
     }
     tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
     assert len(tl) == 1
+    assert tl[0].run_kind == "supervisor_specialists"
+    assert tl[0].graph_id == "supervisor_graph"
     m = schema_module.aggregate_metrics_from_timeline(tl)
     assert m.final_answer_missing_count == 0
     assert m.missing_span_count == 1
@@ -68,6 +74,13 @@ def test_trace_review_round_trip_dict(schema_module) -> None:
     tr = schema_module.TraceReviewV1(
         review_version=schema_module.REVIEW_VERSION,
         generated_at="t",
+        run_context=schema_module.RunContext(
+            base_url="http://127.0.0.1:8000",
+            workspace_id="ws1",
+            suite="default",
+            run_kind="single_agent_research",
+            graph_id="single_agent_react",
+        ),
         checks=(),
         trace_timeline=(),
         metrics=schema_module.Metrics(),
@@ -76,6 +89,9 @@ def test_trace_review_round_trip_dict(schema_module) -> None:
     d = schema_module.trace_review_to_dict(tr)
     back = schema_module.trace_review_from_dict(d)
     assert back.review_version == schema_module.REVIEW_VERSION
+    assert back.run_context is not None
+    assert back.run_context.run_kind == "single_agent_research"
+    assert back.run_context.graph_id == "single_agent_react"
 
 
 def test_merge_compaction_into_review_dict(schema_module) -> None:

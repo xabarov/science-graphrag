@@ -36,6 +36,8 @@ class RunContext:
     workspace_id: str | None
     suite: str
     feature_flags: dict[str, str | None] = field(default_factory=dict)
+    run_kind: str | None = None
+    graph_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,6 +92,8 @@ class TimelineCase:
 
     case_id: str
     thread_id: str | None = None
+    run_kind: str | None = None
+    graph_id: str | None = None
     duration_ms: float | int | None = None
     tool_steps: tuple[ToolStep, ...] = field(default_factory=tuple)
     phoenix_alignment: PhoenixAlignment | None = None
@@ -235,6 +239,16 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     return TimelineCase(
         case_id=cid,
         thread_id=thread_id,
+        run_kind=(
+            str(case.get("run_kind") or "").strip()
+            or str((case.get("run_metadata") or {}).get("run_kind") or "").strip()
+            or None
+        ),
+        graph_id=(
+            str(case.get("graph_id") or "").strip()
+            or str((case.get("run_metadata") or {}).get("graph_id") or "").strip()
+            or None
+        ),
         duration_ms=duration_ms,
         tool_steps=tuple(steps),
         phoenix_alignment=phoenix_alignment,
@@ -348,6 +362,8 @@ def merge_compaction_events_into_timeline(
                 TimelineCase(
                     case_id=row.case_id,
                     thread_id=row.thread_id,
+                    run_kind=row.run_kind,
+                    graph_id=row.graph_id,
                     duration_ms=row.duration_ms,
                     tool_steps=row.tool_steps,
                     phoenix_alignment=row.phoenix_alignment,
@@ -520,6 +536,8 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
         workspace_id=rc.get("workspace_id"),
         suite=str(rc.get("suite") or "default"),
         feature_flags={str(k): (None if v is None else str(v)) for k, v in flags.items()},
+        run_kind=(str(rc.get("run_kind") or "").strip() or None),
+        graph_id=(str(rc.get("graph_id") or "").strip() or None),
     )
     checks_raw = data.get("checks") or []
     checks = tuple(check_from_dict(x) for x in checks_raw if isinstance(x, dict))
@@ -570,6 +588,8 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
             TimelineCase(
                 case_id=str(item.get("case_id") or "unknown"),
                 thread_id=item.get("thread_id"),
+                run_kind=(str(item.get("run_kind") or "").strip() or None),
+                graph_id=(str(item.get("graph_id") or "").strip() or None),
                 duration_ms=item.get("duration_ms"),
                 tool_steps=tuple(steps),
                 phoenix_alignment=pa,
@@ -644,6 +664,8 @@ def merge_e2e_report_json_into_review(
                 row = TimelineCase(
                     case_id=row.case_id,
                     thread_id=row.thread_id,
+                    run_kind=row.run_kind,
+                    graph_id=row.graph_id,
                     duration_ms=row.duration_ms,
                     tool_steps=row.tool_steps,
                     phoenix_alignment=row.phoenix_alignment,

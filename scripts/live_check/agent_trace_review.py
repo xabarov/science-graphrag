@@ -22,6 +22,15 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _SCRIPT_DIR.parent.parent
 
 
+def _runtime_attribution_from_env() -> tuple[str | None, str | None]:
+    runtime = str(os.environ.get("SCIENCE_GRAPHRAG_AGENT_RUNTIME") or "").strip()
+    if runtime in {"retrieval_v1", "langgraph_research_v1"}:
+        return "single_agent_research", "single_agent_react"
+    if runtime == "langgraph_supervisor_v1":
+        return "supervisor_specialists", "supervisor_graph"
+    return None, None
+
+
 def _ensure_local_imports() -> None:
     if str(_SCRIPT_DIR) not in sys.path:
         sys.path.insert(0, str(_SCRIPT_DIR))
@@ -189,6 +198,10 @@ def _write_markdown(path: Path, review_dict: dict[str, Any]) -> None:
     lines.append(f"- Base URL: `{ctx.get('base_url')}`")
     lines.append(f"- Workspace: `{ctx.get('workspace_id')}`")
     lines.append(f"- Suite: `{ctx.get('suite')}`")
+    if ctx.get("run_kind"):
+        lines.append(f"- Run kind: `{ctx.get('run_kind')}`")
+    if ctx.get("graph_id"):
+        lines.append(f"- Graph id: `{ctx.get('graph_id')}`")
     if review_dict.get("phoenix_snapshot_path"):
         lines.append(f"- Phoenix snapshot: `{review_dict.get('phoenix_snapshot_path')}`")
     lines.append("")
@@ -207,9 +220,9 @@ def _write_markdown(path: Path, review_dict: dict[str, Any]) -> None:
         lines.append("## Trace timeline")
         lines.append("")
         lines.append(
-            "| Case | Steps | last_tool | Phoenix missing | dur_ms | warnings |",
+            "| Case | Run kind | Graph id | Steps | last_tool | Phoenix missing | dur_ms | warnings |",
         )
-        lines.append("|------|-------|-----------|-----------------|--------|----------|")
+        lines.append("|------|----------|----------|-------|-----------|-----------------|--------|----------|")
         for row in tl:
             steps = row.get("tool_steps") or []
             last_tool = steps[-1].get("tool") if steps else ""
@@ -218,7 +231,8 @@ def _write_markdown(path: Path, review_dict: dict[str, Any]) -> None:
             warns = row.get("warnings") or []
             wshort = ",".join(str(x)[:40] for x in warns[:2])
             lines.append(
-                f"| `{row.get('case_id')}` | {len(steps)} | `{last_tool}` | {miss_n} | "
+                f"| `{row.get('case_id')}` | `{row.get('run_kind')}` | `{row.get('graph_id')}` "
+                f"| {len(steps)} | `{last_tool}` | {miss_n} | "
                 f"`{row.get('duration_ms')}` | {wshort[:80]} |",
             )
         lines.append("")
@@ -281,6 +295,12 @@ def main() -> int:
         "--timeout", type=float, default=float(os.environ.get("AGENT_LIVE_TIMEOUT_SEC", "240"))
     )
     parser.add_argument("--suite", choices=["default", "heavy", "full"], default="default")
+    parser.add_argument(
+        "--profile",
+        choices=["quick", "default", "heavy"],
+        default="default",
+        help="Execution profile controlling default skip flags/timeouts.",
+    )
     parser.add_argument("--skip-sse", action="store_true")
     parser.add_argument("--skip-multi-turn", action="store_true")
     parser.add_argument("--skip-e2e", action="store_true")
@@ -323,6 +343,15 @@ def main() -> int:
     )
 
     _load_dotenv(args.env_file)
+    if args.profile == "quick":
+        args.skip_e2e = True
+        args.skip_multi_turn = True
+    elif args.profile == "heavy":
+        args.with_trace_audit = True
+        args.with_phoenix = True
+        args.with_db_audit = True
+        if args.suite == "default":
+            args.suite = "heavy"
 
     checks = _run_http_suite(
         base_url=args.base_url.rstrip("/"),
@@ -404,10 +433,14 @@ def main() -> int:
     )
 
     review_dict = trace_review_to_dict(review)
+    run_kind, graph_id = _runtime_attribution_from_env()
     review_dict["run_context"] = {
         "base_url": args.base_url.rstrip("/"),
         "workspace_id": args.workspace_id,
         "suite": args.suite,
+        "profile": args.profile,
+        "run_kind": run_kind,
+        "graph_id": graph_id,
         "feature_flags": {
             "agent_runtime": os.environ.get("SCIENCE_GRAPHRAG_AGENT_RUNTIME"),
             "agent_rule_tool_search_enabled": os.environ.get(

@@ -8,11 +8,11 @@
 
 ## 1. Режимы runtime
 
-| `Settings.agent_runtime` | Граф | Реестр тулов |
+| `Settings.agent_runtime` | Граф | Реестр тулов | Runtime attribution |
 |--------------------------|------|--------------|
-| `langgraph_research_v1` (**по умолчанию**) | Один агент ReAct: `chat` → `tools` → `after_tools` в [`supervisor.py::_build_single_agent_graph`](../../science_graphrag/agent/graph/supervisor.py) | Исполнение: полный [`build_tool_registry`](../../science_graphrag/agent/tools/__init__.py). На **каждый** LLM-ход `chat` при `SCIENCE_GRAPHRAG_AGENT_RULE_TOOL_SEARCH_ENABLED=true` вызывается rule-based [`shortlist_tools_for_single_agent`](../../science_graphrag/agent/tool_search.py) и `bind_tools` только на **подмножество** (см. §3). |
-| `langgraph_supervisor_v1` | Supervisor и ноды-специалисты [`build_supervisor_graph`](../../science_graphrag/agent/graph/supervisor.py) | Подмножества: [`build_graph_tools`](../../science_graphrag/agent/tools/__init__.py), [`build_retrieval_tools`](../../science_graphrag/agent/tools/__init__.py), [`build_writer_tools`](../../science_graphrag/agent/tools/__init__.py). |
-| `retrieval_v1` | Наследуемый harness | См. [`RetrievalAgent`](../../science_graphrag/agent/runtime.py). |
+| `langgraph_research_v1` (**по умолчанию**) | Один агент ReAct: `chat` → `tools` → `after_tools` в [`supervisor.py::_build_single_agent_graph`](../../science_graphrag/agent/graph/supervisor.py) | Исполнение: полный [`build_tool_registry`](../../science_graphrag/agent/tools/__init__.py). На **каждый** LLM-ход `chat` при `SCIENCE_GRAPHRAG_AGENT_RULE_TOOL_SEARCH_ENABLED=true` вызывается rule-based [`shortlist_tools_for_single_agent`](../../science_graphrag/agent/tool_search.py) и `bind_tools` только на **подмножество** (см. §3). | `run_kind=single_agent_research`, `graph_id=single_agent_react` |
+| `langgraph_supervisor_v1` | Supervisor и ноды-специалисты [`build_supervisor_graph`](../../science_graphrag/agent/graph/supervisor.py) | Подмножества: [`build_graph_tools`](../../science_graphrag/agent/tools/__init__.py), [`build_retrieval_tools`](../../science_graphrag/agent/tools/__init__.py), [`build_writer_tools`](../../science_graphrag/agent/tools/__init__.py). | `run_kind=supervisor_specialists`, `graph_id=supervisor_graph` |
+| `retrieval_v1` | Наследуемый harness | См. [`RetrievalAgent`](../../science_graphrag/agent/runtime.py). | `run_kind=single_agent_research`, `graph_id=single_agent_react` |
 
 ---
 
@@ -31,6 +31,8 @@ def build_tool_registry(stores: StoreRegistry) -> list[BaseTool]:
 - **`build_writer_tools`** — `final_answer`.
 
 Исполнение тулов в single-agent: [`build_normalized_tool_node_executor`](../../science_graphrag/agent/tool_call_normalization.py) вокруг `ToolNode` (нормализация имён вызовов). Трассы: [`run_tool_result_with_span`](../../science_graphrag/agent/tools/base.py).
+
+С Wave 5 канонический след исполнения собирается как typed шаги `tool_call -> result` в [`science_graphrag/agent/graph/tracing.py`](../../science_graphrag/agent/graph/tracing.py) (`collect_tool_execution_steps`) и уже из него строится legacy `tool_trace` для API/совместимости.
 
 ---
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from langchain_core.exceptions import OutputParserException
 from langgraph.errors import GraphRecursionError
 from pydantic import ValidationError
 
@@ -49,6 +50,11 @@ def classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
             "llm_output_validation_error",
             "The model returned structured output that failed validation.",
         )
+    if isinstance(exc, OutputParserException):
+        return (
+            "llm_output_parse_error",
+            "The model output could not be parsed into the expected schema.",
+        )
     if isinstance(exc, json.JSONDecodeError):
         return ("llm_output_parse_error", "The model returned invalid JSON.")
 
@@ -77,6 +83,18 @@ def classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
         return "provider_timeout", "Upstream LLM call timed out."
     if "timeout" in detail or "timed out" in detail:
         return "provider_timeout", "Upstream LLM call timed out."
+    if "validationerror" in name or "validation error" in detail:
+        return (
+            "llm_output_validation_error",
+            "The model returned structured output that failed validation.",
+        )
+    if "jsondecodeerror" in name or "expecting value" in detail:
+        return ("llm_output_parse_error", "The model returned invalid JSON.")
+    if "outputparserexception" in name or "output parser" in detail:
+        return (
+            "llm_output_parse_error",
+            "The model output could not be parsed into the expected schema.",
+        )
     if "connection" in name or "unreachable" in name:
         return "provider_unreachable", "Upstream LLM was unreachable."
     if any(

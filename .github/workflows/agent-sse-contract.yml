@@ -41,3 +41,10 @@ jobs:
             --warn-is-pass \
             --out-json eval/results/ci-trace-regression-compare.json \
             --out-md eval/results/ci-trace-regression-compare.md
+      - name: Trace regression compare (strict policy report)
+        run: |
+          python scripts/live_check/trace_regression_compare.py \
+            --baseline eval/results/baseline-trace-review.json \
+            --candidate eval/results/trace-review-off.json \
+            --out-json eval/results/ci-trace-regression-compare-strict.json \
+            --out-md eval/results/ci-trace-regression-compare-strict.md

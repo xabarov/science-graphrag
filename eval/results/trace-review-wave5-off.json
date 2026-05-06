@@ -1,0 +1,101 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-06T10:46:19.467694+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:8000",
+    "workspace_id": null,
+    "suite": "heavy",
+    "profile": "heavy",
+    "run_kind": null,
+    "graph_id": null,
+    "feature_flags": {
+      "agent_runtime": null,
+      "agent_rule_tool_search_enabled": "false",
+      "agent_tool_search_deferred_schema_refs_enabled": "false",
+      "agent_budget_stop_reasoning_enabled": "false"
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": false,
+      "detail": "[Errno 111] Connection refused",
+      "data": {}
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": false,
+      "detail": "[Errno 111] Connection refused",
+      "data": {}
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": false,
+      "detail": "turn1: [Errno 111] Connection refused",
+      "data": {}
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": false,
+      "detail": "[Errno 111] Connection refused",
+      "data": {
+        "partial_event_count": 0
+      }
+    }
+  ],
+  "trace_timeline": [],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": null,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0
+  },
+  "verdict": {
+    "status": "fail",
+    "fail_reasons": [
+      "failed_check:agent_v2_sse",
+      "failed_check:agent_v2_sync_json",
+      "failed_check:health",
+      "e2e_failed"
+    ],
+    "warn_reasons": []
+  },
+  "e2e_audit": {
+    "ok": false,
+    "returncode": 1,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "heavy",
+      "--timeout",
+      "240.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_wtuvwa2a.json",
+      "--trace-audit"
+    ],
+    "stdout_tail": "",
+    "stderr_tail": "^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py\", line 256, in handle_request\n    raise exc from None\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py\", line 236, in handle_request\n    response = connection.handle_request(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py\", line 101, in handle_request\n    raise exc\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py\", line 78, in handle_request\n    stream = self._connect(request)\n             ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py\", line 124, in _connect\n    stream = self._network_backend.connect_tcp(**kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_backends/sync.py\", line 207, in connect_tcp\n    with map_exceptions(exc_map):\n  File \"/usr/lib/python3.12/contextlib.py\", line 158, in __exit__\n    self.gen.throw(value)\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_exceptions.py\", line 14, in map_exceptions\n    raise to_exc(exc) from exc\nhttpcore.ConnectError: [Errno 111] Connection refused\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py\", line 650, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py\", line 571, in main\n    health = client.get(f\"{base}/health\")\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 1053, in get\n    return self.request(\n           ^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 825, in request\n    return self.send(request, auth=auth, follow_redirects=follow_redirects)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 914, in send\n    response = self._send_handling_auth(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 942, in _send_handling_auth\n    response = self._send_handling_redirects(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 979, in _send_handling_redirects\n    response = self._send_single_request(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 1014, in _send_single_request\n    response = transport.handle_request(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_transports/default.py\", line 249, in handle_request\n    with map_httpcore_exceptions():\n  File \"/usr/lib/python3.12/contextlib.py\", line 158, in __exit__\n    self.gen.throw(value)\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_transports/default.py\", line 118, in map_httpcore_exceptions\n    raise mapped_exc(message) from exc\nhttpx.ConnectError: [Errno 111] Connection refused\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_wtuvwa2a.json"
+  },
+  "phoenix_snapshot_path": null,
+  "phoenix_pull": {
+    "ok": false,
+    "error": "report_parse_failed"
+  },
+  "compaction_turn_review": {
+    "ok": false,
+    "returncode": 1,
+    "path": "eval/results/trace-review-wave5-off_compaction_review.json",
+    "stdout_tail": "",
+    "stderr_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 1144, in post\n    return self.request(\n           ^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 825, in request\n    return self.send(request, auth=auth, follow_redirects=follow_redirects)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 914, in send\n    response = self._send_handling_auth(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 942, in _send_handling_auth\n    response = self._send_handling_redirects(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 979, in _send_handling_redirects\n    response = self._send_single_request(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 1014, in _send_single_request\n    response = transport.handle_request(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_transports/default.py\", line 249, in handle_request\n    with map_httpcore_exceptions():\n  File \"/usr/lib/python3.12/contextlib.py\", line 158, in __exit__\n    self.gen.throw(value)\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_transports/default.py\", line 118, in map_httpcore_exceptions\n    raise mapped_exc(message) from exc\nhttpx.ConnectError: [Errno 111] Connection refused\n"
+  }
+}

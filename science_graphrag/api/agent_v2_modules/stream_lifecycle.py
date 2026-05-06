@@ -282,6 +282,19 @@ def _recover_after_recursion_limit(
     )
 
 
+def _streamable_debug_event(event: dict[str, Any]) -> bool:
+    event_type = event.get("type")
+    if event_type in (
+        "tool_search_result",
+        "intent_classified",
+        "tool_execution",
+        "tool_permissions",
+        "budget_stop_decision",
+    ):
+        return True
+    return event_type == "warning" and bool(str(event.get("code") or "").strip())
+
+
 async def emit_agent_note(
     *,
     kind: str,
@@ -394,6 +407,7 @@ async def stream_agent_events(
     latest_full_state: dict[str, Any] | None = None
     salvaged_after_deadline = False
     salvaged_after_recursion_limit = False
+    recursion_limit_value = 0
     prev_route_len = 0
     prev_debug_len = 0
     dig = list(history_digest or [])
@@ -438,6 +452,9 @@ async def stream_agent_events(
             initial_debug = list(initial_state.get("debug_events") or [])
             interpreting_question_emitted = False
             initial_intent_event: dict[str, Any] | None = None
+            initial_meta = initial_state.get("metadata") or {}
+            run_kind = str(initial_meta.get("run_kind") or "").strip() or None
+            graph_id = str(initial_meta.get("graph_id") or "").strip() or None
             for ev in initial_debug:
                 if isinstance(ev, dict):
                     yield {"data": json.dumps(ev)}
@@ -519,6 +536,8 @@ async def stream_agent_events(
                                                 "to": entry.get("to"),
                                                 "budget_left": entry.get("budget_left"),
                                                 "reason": entry.get("reason"),
+                                                "run_kind": run_kind,
+                                                "graph_id": graph_id,
                                             }
                                         )
                                     }
@@ -570,17 +589,7 @@ async def stream_agent_events(
                                 for ev in dev[prev_debug_len:]:
                                     if not isinstance(ev, dict):
                                         continue
-                                    et = ev.get("type")
-                                    if et in (
-                                        "tool_search_result",
-                                        "intent_classified",
-                                        "tool_execution",
-                                        "tool_permissions",
-                                    ):
-                                        yield {"data": json.dumps(dict(ev))}
-                                    elif et == "budget_stop_decision":
-                                        yield {"data": json.dumps(dict(ev))}
-                                    elif et == "warning" and str(ev.get("code") or "").strip():
+                                    if _streamable_debug_event(ev):
                                         yield {"data": json.dumps(dict(ev))}
                                 prev_debug_len = len(dev)
                         if mode != "updates":
@@ -869,6 +878,8 @@ async def stream_agent_events(
                 stream_usage = aggregate_agent_llm_usage(msgs_for_usage)
             run_meta: dict[str, Any] = {
                 "agent_runtime": settings.agent_runtime,
+                "run_kind": run_kind,
+                "graph_id": graph_id,
                 "agent_max_tool_calls": max_tool_calls,
                 **agent_chat_llm_run_metadata(settings),
                 "product_path": envelope.get("product_path"),
@@ -900,6 +911,12 @@ async def stream_agent_events(
             if isinstance(latest_full_state, dict):
                 meta_state = latest_full_state.get("metadata") or {}
                 if isinstance(meta_state, dict):
+                    state_run_kind = str(meta_state.get("run_kind") or "").strip()
+                    state_graph_id = str(meta_state.get("graph_id") or "").strip()
+                    if state_run_kind:
+                        run_meta["run_kind"] = state_run_kind
+                    if state_graph_id:
+                        run_meta["graph_id"] = state_graph_id
                     react_total_hops = meta_state.get("react_total_hops")
                     if isinstance(react_total_hops, int):
                         run_meta["react_total_hops"] = react_total_hops

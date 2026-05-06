@@ -8,6 +8,8 @@ import typer
 from sqlalchemy import desc, select
 
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.cli.config_commands import register as register_config_commands
+from science_graphrag.cli.qdrant_commands import register as register_qdrant_commands
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.ingestion.pipeline import run_ingest_batch_cli, run_ingest_cli
 from science_graphrag.ingestion.resume_ingest import (
@@ -17,15 +19,7 @@ from science_graphrag.ingestion.resume_ingest import (
 from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import WorkDedupMergeLog
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
-from science_graphrag.storage.qdrant_store import (
-    QdrantChunkStore,
-    QdrantWorkEmbeddingStore,
-    recreate_all_embedding_collections,
-    recreate_qdrant_chunk_collection,
-)
-from science_graphrag.storage.qdrant_store.recreate_embedding_collections import (
-    describe_embedding_collections_cutover,
-)
+from science_graphrag.storage.qdrant_store import QdrantChunkStore, QdrantWorkEmbeddingStore
 from science_graphrag.utils.project_logging import (
     configure_logging,
     describe_dramatiq_log_level_env,
@@ -41,6 +35,10 @@ app = typer.Typer(no_args_is_help=True, help="science-graphrag CLI")
 def _root() -> None:
     """Scholarly GraphRAG — ingestion and graph backbone."""
     configure_logging()
+
+
+register_qdrant_commands(app)
+register_config_commands(app)
 
 
 @app.command("neo4j-wipe")
@@ -178,184 +176,6 @@ def merge_work_cmd(
         )
     else:
         typer.echo(f"Neo4j: merge did not complete for drop={drop_id}. keep={keep_id}")
-
-
-@app.command("repoint-qdrant-work-ids")
-def repoint_qdrant_work_ids_cmd(
-    keep_id: str = typer.Argument(
-        ...,
-        help="Canonical Work.id (payload.work_id after repair)",
-    ),
-    drop_id: str = typer.Argument(
-        ...,
-        help="Stale Work.id still stored in Qdrant payloads",
-    ),
-) -> None:
-    """Rewrite Qdrant payloads: drop_id → keep_id (repair old merge without Qdrant sync)."""
-
-    s = get_settings()
-    dim = resolve_embedding_dim(settings=s)
-    q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
-    n = q.repoint_work_id_payload(from_work_id=drop_id, to_work_id=keep_id)
-    typer.echo(f"Qdrant: repointed {n} chunk(s) from work_id={drop_id} to work_id={keep_id}.")
-
-
-@app.command("diagnose-qdrant-work-ids")
-def diagnose_qdrant_work_ids_cmd(
-    max_points: int = typer.Option(
-        50_000,
-        "--max-points",
-        help="Stop scrolling after this many points (safety on large collections).",
-    ),
-) -> None:
-    """List Qdrant payload work_id values with no matching :Work in Neo4j."""
-
-    s = get_settings()
-    dim = resolve_embedding_dim(settings=s)
-    q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
-    neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
-    seen: set[str] = set()
-    orphans: set[str] = set()
-    scanned = 0
-    offset = None
-    try:
-        while scanned < max_points:
-            batch, offset = q.scroll_points_payload_only(
-                limit=min(256, max_points - scanned),
-                offset=offset,
-            )
-            if not batch:
-                break
-            for rec in batch:
-                scanned += 1
-                if scanned > max_points:
-                    break
-                wid = (rec.payload or {}).get("work_id")
-                if not wid or not isinstance(wid, str):
-                    continue
-                if wid in seen:
-                    continue
-                seen.add(wid)
-                if not neo.work_exists(wid):
-                    orphans.add(wid)
-            if offset is None:
-                break
-    finally:
-        neo.close()
-
-    if not orphans:
-        typer.echo(
-            f"No orphan work_id in Qdrant among {scanned} point(s) scanned "
-            f"({len(seen)} distinct work_id)."
-        )
-        return
-    typer.echo(
-        f"Scanned {scanned} point(s), {len(seen)} distinct work_id. "
-        f"Orphan payload work_id (not in Neo4j):"
-    )
-    for wid in sorted(orphans):
-        n = q.count_chunks_for_work(work_id=wid)
-        typer.echo(f"  {wid}  ({n} chunk(s) in Qdrant)")
-    typer.echo(
-        "Repair: science-graphrag repoint-qdrant-work-ids " "<keep_work_id> <orphan_work_id>"
-    )
-
-
-@app.command("delete-qdrant-by-document-id")
-def delete_qdrant_by_document_id_cmd(
-    document_id: str = typer.Argument(..., help="Payload document_id to delete"),
-) -> None:
-    """Delete all Qdrant points with this payload document_id."""
-
-    s = get_settings()
-    dim = resolve_embedding_dim(settings=s)
-    q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
-    n = q.delete_points_by_document_id(document_id=document_id)
-    typer.echo(f"Qdrant: deleted {n} point(s) for document_id={document_id}.")
-
-
-@app.command("delete-qdrant-by-work-id")
-def delete_qdrant_by_work_id_cmd(
-    work_id: str = typer.Argument(..., help="Payload work_id to delete"),
-) -> None:
-    """Delete all Qdrant points with this payload work_id (destructive)."""
-
-    s = get_settings()
-    dim = resolve_embedding_dim(settings=s)
-    q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
-    n = q.delete_points_by_work_id(work_id=work_id)
-    typer.echo(f"Qdrant: deleted {n} point(s) for work_id={work_id}.")
-
-
-@app.command("qdrant-recreate-collection")
-def qdrant_recreate_collection_cmd() -> None:
-    """Delete and recreate the configured Qdrant collection (empty). Dev reset."""
-
-    s = get_settings()
-    dim = resolve_embedding_dim(settings=s)
-    recreate_qdrant_chunk_collection(
-        url=s.qdrant_url,
-        collection=s.qdrant_collection,
-        vector_dim=dim,
-    )
-    typer.echo(f"Qdrant: recreated empty collection {s.qdrant_collection!r}.")
-
-
-@app.command("qdrant-recreate-embedding-collections")
-def qdrant_recreate_embedding_collections_cmd(
-    dry_run: bool = typer.Option(
-        False,
-        "--dry-run",
-        help="Resolve vector_dim and print target collection names; do not delete or create.",
-    ),
-) -> None:
-    """Drop and recreate dense-vector Qdrant collections (chunks, work/claim/author/entity)."""
-
-    s = get_settings()
-    if dry_run:
-        dim, targets, existing = describe_embedding_collections_cutover(s)
-        typer.echo(f"Qdrant dry-run: vector_dim={dim} url={s.qdrant_url!r}")
-        for name in sorted(targets):
-            typer.echo(f"  - {name}  (exists_now={name in existing})")
-        typer.echo("No collections were modified. Omit --dry-run to drop+recreate.")
-        return
-
-    dim = recreate_all_embedding_collections(s)
-    typer.echo(
-        f"Qdrant: recreated embedding collections with vector_dim={dim} "
-        f"(chunks, work_embeddings, claims, author_embeddings, entity dedup)."
-    )
-
-
-@app.command("purge-work")
-def purge_work_cmd(
-    work_id: str = typer.Argument(..., help="Work.id to purge from Qdrant"),
-    detach_neo4j: bool = typer.Option(
-        False,
-        "--detach-neo4j",
-        help="DETACH DELETE :Work if it exists and has no incoming CITES",
-    ),
-) -> None:
-    """Remove retrieval chunks for a work; optionally remove isolated :Work in Neo4j."""
-
-    s = get_settings()
-    dim = resolve_embedding_dim(settings=s)
-    q = QdrantChunkStore(s.qdrant_url, s.qdrant_collection, vector_dim=dim)
-    n = q.delete_points_by_work_id(work_id=work_id)
-    typer.echo(f"Qdrant: deleted {n} point(s) for work_id={work_id}.")
-    if detach_neo4j:
-        neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
-        try:
-            removed = neo.detach_delete_work_if_no_incoming_cites(work_id)
-        finally:
-            neo.close()
-        if not removed:
-            typer.echo(
-                "Neo4j: work not removed (missing, or another Work cites it via CITES).",
-                err=True,
-            )
-            raise typer.Exit(code=1)
-        typer.echo(f"Neo4j: DETACH DELETE work_id={work_id}")
 
 
 @app.command("ingest-corpus")
@@ -501,117 +321,6 @@ def work_dedup_report_cmd(
         typer.echo(f"... truncated ({len(rows)} total); use --json for full dump.")
     if fail_on_clusters:
         raise typer.Exit(code=2)
-
-
-def _mask_url(url: str) -> str:
-    u = str(url or "").strip()
-    if "@" in u and "://" in u:
-        head, tail = u.split("://", 1)
-        if "@" in tail:
-            creds, host = tail.rsplit("@", 1)
-            if creds:
-                return f"{head}://***@{host}"
-    return u
-
-
-@app.command("config-check")
-def config_check_cmd(
-    strict: bool = typer.Option(
-        True,
-        "--strict/--no-strict",
-        help="Exit 1 if no LLM API key is configured (SCIENCE_GRAPHRAG_API_KEY or extraction key; recommended before long ingest).",
-    ),
-    embeddings_preflight: bool = typer.Option(
-        False,
-        "--embeddings-preflight/--no-embeddings-preflight",
-        help="After printing settings, call embeddings once (fails fast on OpenRouter outages).",
-    ),
-    object_storage_preflight: bool = typer.Option(
-        True,
-        "--object-storage-preflight/--no-object-storage-preflight",
-        help="Verify S3/MinIO bucket access (head + list); disable for air-gapped diagnostics.",
-    ),
-) -> None:
-    """Print non-secret diagnostics for Settings (operator pre-flight)."""
-
-    s: Settings = get_settings()
-
-    def _line(label: str, value: str) -> None:
-        typer.echo(f"[config-check] {label:40} {value}")
-
-    canon_ok = bool((s.api_key or "").strip())
-    ex_ok = bool(s.extraction_llm_api_key)
-    vl_explicit = bool((s.vl_api_key or "").strip())
-    vl_effective = bool(s.resolved_vl_api_key)
-    _line("SCIENCE_GRAPHRAG_API_KEY", "SET" if canon_ok else "UNSET")
-    _line("extraction_llm_api_key", "SET" if ex_ok else "UNSET")
-    _line("vl_api_key (explicit env)", "SET" if vl_explicit else "UNSET")
-    _line("vl_api_key (effective for VL)", "SET" if vl_effective else "UNSET")
-    if s.openrouter_embedding_model:
-        _line(
-            "embeddings channel",
-            f"openrouter (model={s.openrouter_embedding_model}, dim={s.openrouter_embedding_dim})",
-        )
-    elif s.embedding_model:
-        _line("embeddings channel", f"local_sentence_transformers ({s.embedding_model})")
-    else:
-        _line(
-            "embeddings channel", "hash_fallback (no embedding_model / openrouter_embedding_model)"
-        )
-    _line("database_url", _mask_url(s.database_url))
-    _line("neo4j_uri", str(s.neo4j_uri))
-    _line("qdrant_url", str(s.qdrant_url))
-    _line("redis_url", _mask_url(s.redis_url))
-    _line("agent_session_memory_backend", str(s.agent_session_memory_backend))
-    skip = os.getenv("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV", "")
-    _line("SCIENCE_GRAPHRAG_SKIP_HOST_DOTENV", skip or "(unset)")
-    app_log = os.getenv("SCIENCE_GRAPHRAG_LOG_LEVEL", "INFO")
-    _line("SCIENCE_GRAPHRAG_LOG_LEVEL", app_log)
-    _line("SCIENCE_GRAPHRAG_LOG_LEVEL_INGEST", describe_ingest_log_level_env())
-    _line("SCIENCE_GRAPHRAG_HTTP_LOG_LEVEL", describe_http_log_level_env())
-    _line("SCIENCE_GRAPHRAG_DRAMATIQ_LOG_LEVEL", describe_dramatiq_log_level_env())
-    _line("SCIENCE_GRAPHRAG_LOG_FORMAT", describe_log_format_env())
-    _line("SCIENCE_GRAPHRAG_METRICS_ENABLED", str(bool(s.metrics_enabled)))
-    _line("extraction_llm_enabled", str(bool(s.extraction_llm_enabled)))
-    br = s.blob_root
-    try:
-        exists = br.exists()
-    except OSError:
-        exists = False
-    _line("blob_root", f"{br} (exists={exists})")
-    _line(
-        "s3_endpoint_url",
-        (s.s3_endpoint_url or "").strip() or "(default virtual-hosted AWS / moto)",
-    )
-    _line("s3_bucket", (s.s3_bucket or "").strip())
-    _line("s3_access_key_id", "SET" if (s.s3_access_key_id or "").strip() else "UNSET")
-    _line("s3_secret_access_key", "SET" if (s.s3_secret_access_key or "").strip() else "UNSET")
-    _line("s3_use_ssl", str(bool(s.s3_use_ssl)))
-    if strict and not ex_ok:
-        typer.echo(
-            "[config-check] FAILED: no LLM API key (set SCIENCE_GRAPHRAG_API_KEY or "
-            "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY)",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-    if embeddings_preflight:
-        from science_graphrag.embeddings.preflight import probe_embeddings
-
-        try:
-            probe_embeddings(s)
-            typer.echo("[config-check] embeddings preflight: OK")
-        except Exception as exc:  # noqa: BLE001
-            typer.echo(f"[config-check] embeddings preflight: FAILED ({exc!s})", err=True)
-            raise typer.Exit(code=1) from exc
-    if object_storage_preflight:
-        from science_graphrag.storage.object_storage_preflight import probe_object_storage
-
-        try:
-            probe_object_storage(s)
-            typer.echo("[config-check] object storage preflight: OK")
-        except Exception as exc:  # noqa: BLE001
-            typer.echo(f"[config-check] object storage preflight: FAILED ({exc!s})", err=True)
-            raise typer.Exit(code=1) from exc
 
 
 def main() -> None:

@@ -276,3 +276,22 @@ def test_initial_debug_emits_intent_for_single_agent_research_runtime() -> None:
     assert isinstance(intent, dict)
     assert intent.get("source") == "single_agent_research_v1"
     assert intent.get("tool_policy") == "allow_tools"
+    assert intent.get("run_kind") == "single_agent_research"
+    assert intent.get("graph_id") == "single_agent_react"
+
+
+def test_initial_debug_emits_runtime_attribution_for_supervisor_runtime() -> None:
+    st = build_initial_agent_state(
+        question="Какие статьи есть в workspace?",
+        workspace_id="ws-1",
+        max_tool_calls=3,
+        agent_runtime="langgraph_supervisor_v1",
+    )
+    dev = list(st.get("debug_events") or [])
+    intent = next(
+        (e for e in dev if isinstance(e, dict) and e.get("type") == "intent_classified"),
+        None,
+    )
+    assert isinstance(intent, dict)
+    assert intent.get("run_kind") == "supervisor_specialists"
+    assert intent.get("graph_id") == "supervisor_graph"

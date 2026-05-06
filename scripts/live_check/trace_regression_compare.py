@@ -48,12 +48,15 @@ def main() -> int:
     parser.add_argument("--candidate", type=Path, required=True)
     parser.add_argument(
         "--fail-on",
-        default="new_missing_spans,tool_error_increase,final_answer_missing_increase",
+        default=(
+            "new_missing_spans,tool_error_increase,final_answer_missing_increase,"
+            "compaction_churn_increase"
+        ),
         help="Comma-separated fail policies.",
     )
     parser.add_argument(
         "--warn-on",
-        default="latency_p95_increase,compaction_churn_drop,shortlist_ratio_increase",
+        default="latency_p95_increase,shortlist_ratio_increase",
         help="Comma-separated warn policies (non-zero exit 3 unless --warn-is-pass).",
     )
     parser.add_argument(
@@ -63,10 +66,10 @@ def main() -> int:
         help="WARN if candidate latency_p95_ms > baseline * ratio (when both set).",
     )
     parser.add_argument(
-        "--compaction-churn-warn-delta",
+        "--compaction-churn-fail-delta",
         type=float,
-        default=-1.0,
-        help="WARN if delta compaction_churn_score <= this (more churn degradation).",
+        default=1.0,
+        help="FAIL if delta compaction_churn_score >= this.",
     )
     parser.add_argument(
         "--warn-is-pass",
@@ -107,6 +110,11 @@ def main() -> int:
         fail_reasons.append(f"tool_error_increase:+{delta_tool_error:.5f}")
     if "final_answer_missing_increase" in policies_fail and delta_final_answer_missing > 0:
         fail_reasons.append(f"final_answer_missing_increase:+{delta_final_answer_missing:.0f}")
+    if (
+        "compaction_churn_increase" in policies_fail
+        and delta_compaction_churn >= args.compaction_churn_fail_delta
+    ):
+        fail_reasons.append(f"compaction_churn_increase:+{delta_compaction_churn:.4f}")
 
     warn_reasons: list[str] = []
     base_lat = _metric(base, "latency_p95_ms")
@@ -115,9 +123,6 @@ def main() -> int:
         if cand_lat > base_lat * args.latency_warn_ratio:
             warn_reasons.append(f"latency_p95_increase:{base_lat}->{cand_lat}")
 
-    if "compaction_churn_drop" in policies_warn:
-        if delta_compaction_churn <= args.compaction_churn_warn_delta:
-            warn_reasons.append(f"compaction_churn_delta:{delta_compaction_churn}")
     if "shortlist_ratio_increase" in policies_warn and delta_shortlist_ratio > 0:
         warn_reasons.append(f"shortlist_ratio_increase:{delta_shortlist_ratio:.4f}")
 
