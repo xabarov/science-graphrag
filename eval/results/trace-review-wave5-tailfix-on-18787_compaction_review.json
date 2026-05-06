@@ -1,0 +1,77 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-06T10:57:56.772473+00:00",
+  "thread_id": "compaction_review_fdc4028ae209",
+  "turns": 2,
+  "require_compaction_after": 2,
+  "turn_reports": [
+    {
+      "thread_id": "compaction_review_fdc4028ae209",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 3821,
+      "warnings": [
+        "no_workspace",
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 3,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 1,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 1
+    },
+    {
+      "thread_id": "compaction_review_fdc4028ae209",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 1740,
+      "warnings": [
+        "no_workspace",
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 2,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 2,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 2
+    }
+  ],
+  "compaction_events": [
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest"
+      ],
+      "turn": 1,
+      "thread_id": "compaction_review_fdc4028ae209"
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest"
+      ],
+      "turn": 2,
+      "thread_id": "compaction_review_fdc4028ae209"
+    }
+  ],
+  "verdict": {
+    "status": "pass",
+    "reasons": []
+  }
+}

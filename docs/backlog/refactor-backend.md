@@ -14,6 +14,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 | When | Theme |
 |------|--------|
+| 2026-05-06 | **Refactor wave follow-up (quality + parity):** `cli/main.py` доведён до thin registry (~59 LoC) через вынос `cli/{ingest,dedup,qdrant,config}_commands.py`; `scripts/aggregate_benchmark_metrics.py` доведён до thin entrypoint (~68 LoC) с выносом parser/payload builder в `scripts/benchmark_aggregator/{cli,payload_builder}.py`; `settings` split продолжен (`settings/{snapshots,runtime_overlay}.py`), `tests/test_settings_service.py` зелёный после фикса интеграции overlay; error classifier расширен (`OutputParserException` + parse/validation fallbacks); CI `agent-sse-contract` получил strict trace-regression report step. |
 | 2026-05-06 | **Agent runtime wave (BT8/BT9 + P2 telemetry):** stub agent benchmark traces (no ``mock answer`` / ``mock-work``) for honest ``trust_signal`` on ``agent_tools_mini`` + new **``agent_tools_multiagent``** aggregate lane; ``routing_log`` on ``AgentRunOutput``; ``eval/agent_tools/metrics`` ``tool_name`` + ``args_match``; optional nightly **live** mini regeneration when ``MAIN_LLM_API_KEY`` set; CH5 ``context_compacted.audit``; ADR-027; prompt/memory matrix in ``docs/specs/agent-chat-v1.md``; P2 tests (trace-review ROI counters, sidechain path, tool_search gate docstring). |
 | 2026-05-06 | **Backend wave (agent SSE + ingest seams):** SSE lifecycle в `api/agent_v2_modules/stream_lifecycle.py` + общий OTEL для deadline (`deadline_otel.py`); классификация ошибок stream в `errors.py` + тесты `test_api_agent_v2_error_classification.py`; product_step — маппинг под `TOOL_MANIFEST` + `test_product_step_tool_coverage.py`; ingest VL — общий transport `ingestion/llm/chat_completions_client.py`; cache — порядок резолва + `legacy_slug_ingestion_article_paths()` в `cache_policy.py`; resume — `tests/ingestion/test_resume_claims_embed_integration.py`; paper_profile — read-time OpenAlex overlay + тест `test_paper_profile_openalex_overlay.py`; dedup hygiene — §12 в `benchmark-decision-gate.md`; PR workflow `.github/workflows/agent-sse-contract.yml`; baseline trust rollup перегенерирован (`aggregate_benchmark_metrics.py --write-trust-baseline`); заметка по стоимости `agent_note` — `docs/analysis/agent-note-cost-eval-2026-05-06.md`. VL long-PDF E2E и live BT2/BT4/BT5 — вне этой сессии. |
 | 2026-05-05 | **Wave Next (ingest stability) — partial delivery:** вынесены `ingestion/{orchestrator,progress_store,cache_policy,document_runtime}.py`; batch ingest переведён на orchestrator seam; `claims` path переведён на shared runtime envelope (`ingestion/llm/claims_runtime.py` + обновление `claims/extractor.py`); добавлены регрессионные тесты `tests/ingestion/test_progress_store_and_cache_policy.py` + прогоны `tests/ingestion`, `test_ingest_checkpoint`, `test_ingest_sha_dedup`, `test_full_ingest_integration`. |
@@ -52,12 +53,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
-### [OPEN] Stable error_class enum on `error` SSE — extend coverage
+### [PARTIAL] Stable error_class enum on `error` SSE — extend coverage
 - **Area:** `science_graphrag/api/agent_v2_modules/errors.py` (`classify_agent_stream_error`), `docs/specs/agent-chat-v1.md`
 - **Issue:** Initial classifier covers OpenRouter-shaped `ValueError({code, message})`, generic timeouts, connection errors, and a catch-all `internal_error`. Real-world failures (LangChain validation, langgraph deadline before tool call, instructor parse failures) currently still collapse to `internal_error`.
 - **Proposal:** Walk recent traces (`eval/results/trace-review-*.json`) and add discriminator branches for the most common opaque error kinds; keep the small enum (`provider_*`, `internal_error`) and document each new code in `chat-errors.md` / spec.
 - **Acceptance:** ≥80% of `error` events from a recent live run land on a non-`internal_error` class; UI ships a localized message for each new class via `chat.errors.<error_class>`.
 - **Done (wave 2026-05-06):** ветки для graph deadline (`AgentGraphDeadlineExceeded` → `agent_turn_deadline_exceeded`), Pydantic `ValidationError` → `llm_output_validation_error`, `json.JSONDecodeError` → `llm_output_parse_error`; документировано в `docs/specs/agent-chat-v1.md`; i18n EN/RU (`chat.errors.*`); регрессии — `tests/test_api_agent_v2_error_classification.py`.
+- **Done (follow-up 2026-05-06):** добавлена классификация `OutputParserException` → `llm_output_parse_error`; усилены эвристики `validation/parse` по строковым маркерам (fallback path).
 - **Remaining:** замер доли non-`internal_error` на фиксированном live/trace наборе (критерий приёмки ≥80%); при необходимости отдельный `chat-errors.md`.
 - **Raised:** 2026-05-05 (readable-stream-events plan)
 
@@ -169,14 +171,14 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** BT6 mini / `corpus_ssd_v2` (or `claims_paraphrase_bt6_mini` tier) reaches **≥ 0.55** `claim_recall` on `mistralai/mistral-small-3.2-24b-instruct` with `--extractor production`; distracted lane completes without LLM JSON truncation under the same provider settings used in CI smoke.
 - **Raised:** 2026-04-26 (post P0 quote tolerance).
 
-### [PARTIAL] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
+### [DONE] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
 - **Progress (2026-04-26):** вынесены дефолтные пути артефактов в [`scripts/benchmark_aggregator/paths.py`](../../scripts/benchmark_aggregator/paths.py); основной файл импортирует их через `sys.path` к `scripts/`. Далее — `_summarize_*` / `_md_*` / family modules.
 - **Area:** `scripts/aggregate_benchmark_metrics.py` (~1100 lines after Wave 3 BT4/BT5 additions).
 - **Issue:** Summarizers (`_summarize_*`), markdown render (`_md_*`), CLI `main()`, family logic all live in one file; hard to review and parallel-edit with BT2–BT12 aggregator deltas. File grows with each wave.
 - **Proposal:** Extract modules: `scripts/benchmark_aggregator/summarizers.py` (`_summarize_*`), `scripts/benchmark_aggregator/markdown.py` (`_md_*` + `_render_markdown`), `scripts/benchmark_aggregator/family_retrieval.py` (retrieval family assembly), `scripts/benchmark_aggregator/family_claims.py` (claims/refs/concept). Keep thin CLI in `aggregate_benchmark_metrics.py` (≤ 250 LoC). Trust/decision glue stays in `science_graphrag/benchmarks/`.
 - **Acceptance:** `aggregate_benchmark_metrics.py` ≤ 250 LoC; `python scripts/aggregate_benchmark_metrics.py` unchanged CLI contract; pytest benchmarks + aggregate smoke pass; no file in `scripts/benchmark_aggregator/` exceeds ~400 LoC.
 - **Done (wave 2026-05-06, deep split):** вынесены `scripts/benchmark_aggregator/summarizers.py` (все `summarize_*`/compare/family trust helpers) и `scripts/benchmark_aggregator/markdown.py` (`render_markdown` + markdown sections); `aggregate_benchmark_metrics.py` переведён на thin orchestration + imports; `python scripts/aggregate_benchmark_metrics.py` и `tests/benchmarks/test_trust_baseline_regression.py` зелёные.
-- **Remaining:** довести `aggregate_benchmark_metrics.py` до целевого ≤250 LoC (сейчас ~456) через вынос сборки payload/family map в отдельный builder-модуль.
+- **Done (follow-up 2026-05-06):** parser вынесен в `scripts/benchmark_aggregator/cli.py`, сборка payload/family map — в `scripts/benchmark_aggregator/payload_builder.py`; `aggregate_benchmark_metrics.py` сжат до thin entrypoint (~68 LoC), smoke + `tests/benchmarks/test_trust_baseline_regression.py` зелёные.
 - **Raised:** 2026-04-26 (post-BT1); updated 2026-04-26 (post-Wave 3, now ~1100 LoC).
 
 ### [OPEN] Migrate dual_validate extractors to instructor (Phase 7 task)
@@ -311,20 +313,38 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Done (wave 2026-05-06):** общий non-Instructor transport — `science_graphrag/ingestion/llm/chat_completions_client.py` (`ingest_chat_completions_json`), использование из `vl_pdf.py`; комментарии по словарю diagnostics для VL в `ingestion/llm/diagnostics.py`.
 - **Remaining:** claims и прочие стадии на полном общем executor/factory из Proposal; полное выравнивание diagnostics keys во всех потребителях ingest report.
 
-### [OPEN] Settings service split (1027)
+### [PARTIAL] Settings service split (1027)
 - **Area:** `science_graphrag/settings/service.py`, `science_graphrag/api/settings.py`
 - **Issue:** Модуль смешивает как минимум 4 ответственности: runtime overrides merge, secret-aware LLM config/test, storage/benchmark snapshot assembly, security/diagnostics output. Из-за высокой связности любое расширение settings API повышает риск скрытых регрессий.
 - **Proposal:** выделить `settings/runtime_overlay.py` (merge + validation), `settings/snapshots.py` (DTO assembly), `settings/llm_probe.py` (test connection + OpenAI/OpenRouter probes); `SettingsService` оставить как thin orchestration facade.
 - **Acceptance:** `settings/service.py` <= 350 LoC; unit-тесты покрывают каждый модуль изоляционно (overlay/snapshots/probes), а API слой проверяет только wiring.
+- **Done (follow-up 2026-05-06):** вынесены `settings/snapshots.py` (diagnostics/security/ingestion resolve) и `settings/runtime_overlay.py` (non-secret overlay merge); `tests/test_settings_service.py` обновлённый сплит проходит.
+- **Remaining:** вынести `llm_probe` и schema/update группы из `settings/service.py`; текущий размер ~906 LoC всё ещё выше целевого порога.
 - **Raised:** 2026-04-25, updated 2026-05-05
 
-### [OPEN] Split `cli/main.py` (566) by command groups
+### [OPEN] Runtime overlay unit seam coverage
+- **Area:** `science_graphrag/settings/runtime_overlay.py`, `tests/test_settings_service.py`
+- **Issue:** `runtime_overlay` в основном покрыт интеграционно через `SettingsService`; точечных unit-контрактов на edge-cases merge (priority persisted vs env, normalization, storage explicit secrets) почти нет.
+- **Proposal:** Добавить прямые unit-тесты для `build_non_secret_overrides(...)` с table-driven кейсами по `llm/general/storage` и explicit secrets path.
+- **Acceptance:** Отдельный тест-модуль фиксирует deterministic merge-правила; регрессии overlay ловятся без полного прогона `SettingsService`.
+- **Raised:** 2026-05-06 (backend re-analysis)
+
+### [PARTIAL] Split `cli/main.py` (566) by command groups
 - **Area:** `science_graphrag/cli/main.py`
 - **Issue:** Typer-приложение фактически — оркестратор offline-операций (`neo4j-wipe`, `ingest`, `merge-work`, `repoint-qdrant-work-ids` и т.п.); по мере Wave Q/T/W будет расти.
 - **Proposal:** `cli/{ingest,neo4j,qdrant,dedup,worker}.py`, тонкий `cli/main.py` собирает Typer-app из подкоманд.
 - **Acceptance:** ни один файл > ≈200 строк; запуск `science-graphrag --help` идентичен.
 - **Synergy:** **Wave W** добавит `cli/worker.py` (запуск Dramatiq) без раздувания main.
+- **Done (follow-up 2026-05-06):** вынесены `cli/qdrant_commands.py`, `cli/config_commands.py`, `cli/ingest_commands.py`, `cli/dedup_commands.py`; `cli/main.py` ужат до thin registry (~59 LoC), smoke `science-graphrag --help` зелёный.
+- **Remaining:** выделить `cli/neo4j_commands.py` и `cli/worker.py` (когда появится продуктовый scope worker-runner), чтобы закрыть целевую группировку из Proposal полностью.
 - **Raised:** 2026-04-25, updated 2026-05-05
+
+### [OPEN] CLI module split contract tests (register/help parity)
+- **Area:** `science_graphrag/cli/main.py`, `science_graphrag/cli/ingest_commands.py`, `science_graphrag/cli/dedup_commands.py`, `science_graphrag/cli/qdrant_commands.py`, `science_graphrag/cli/config_commands.py`
+- **Issue:** После split почти нет прямых тестов на регистрацию команд и стабильность ключевых флагов (`--stages`, `--no-cache`, `--fail-on-clusters`); риск тихой потери CLI-контракта при следующих переносах.
+- **Proposal:** Добавить `CliRunner`-контракты: smoke `--help`, presence ключевых команд и проверка критичных опций без выполнения тяжёлых side effects.
+- **Acceptance:** Тесты падают при удалении/переименовании команды или критичного флага; CLI parity фиксируется в CI.
+- **Raised:** 2026-05-06 (backend re-analysis)
 
 ### [OPEN] Targeted backend test coverage for hot modules
 - **Area:** `tests/test_ingest_jobs*`, `tests/test_retrieval*`, `tests/storage/test_neo4j_*`, `tests/agent/`
@@ -384,8 +404,16 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** CI fails on regression FAIL policies or schema version mismatch (exit 1 / 2); WARN policies documented (`--warn-is-pass` vs strict).
 - **Done (wave 2026-05-06, частично):** PR workflow [`.github/workflows/agent-sse-contract.yml`](../../.github/workflows/agent-sse-contract.yml) — pytest: smoke/parity, product_step manifest coverage, error classification, trace-review schema, OTel stream test (без live LLM).
 - **Done (wave 2026-05-06, partial+):** добавлен шаг `trace_regression_compare.py` в `agent-sse-contract.yml` (baseline sanity gate на committed baseline artifact, проверка exit policy/формата).
-- **Remaining:** добавить candidate generation job (не baseline-vs-baseline) и зафиксировать FAIL/WARN policy в workflow comments/docs.
+- **Done (follow-up 2026-05-06):** добавлен второй `trace_regression_compare` шаг со strict policy report (без `--warn-is-pass`) для явной фиксации FAIL/WARN дельт в CI-артефактах.
+- **Remaining:** добавить candidate generation job (не baseline-vs-baseline) и закрепить финальную policy-модель в workflow comments/docs (какой шаг gate, какой advisory).
 - **Raised:** 2026-05-05 (Wave 1 trace-review toolkit)
+
+### [OPEN] Trace review orchestrator contract smoke
+- **Area:** `scripts/live_check/agent_trace_review.py`, `tests/scripts/live_check/`
+- **Issue:** Схема и compare-политика покрыты, но orchestration path (`profile`, feature-flags, `run_context`, merge отчётов) не зафиксирован отдельным smoke-контрактом.
+- **Proposal:** Добавить subprocess-smoke для `agent_trace_review.py` (quick/default profiles) с проверкой `review_version`, `run_context` и ожидаемого поведения на warn-only результатах.
+- **Acceptance:** Регрессии в orchestration-слое live-check ловятся тестом до workflow execution.
+- **Raised:** 2026-05-06 (backend re-analysis)
 
 ### [OPEN] Single canonical tool/run audit trail (roadmap §2.1 / §2.2)
 - **Area:** `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/graph/tracing.py`, `science_graphrag/agent/chat_envelope.py`, LangGraph messages vs `tool_trace`
@@ -406,11 +434,19 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Issue:** After adding ReAct soft-cap and recursion-limit salvage, `react_after_tools_decrement_budget` (~130 lines, 19 branches) and `route_react_chat_to_tools` keep accruing routing cases; `stream_agent_events` is 269+ stmts and pylint flags `R0912/R0915/R0914/R1702`. Score still ≥9.8 but the functions hide multiple concerns (budget bookkeeping, soft-cap detection, debug emission, salvage on deadline + recursion).
 - **Progress (2026-05-06):** вынесен общий OTEL-блок deadline (`deadline_otel.py`); восстановлены span-события для recursion-limit; импорт notes на toplevel — размер/ветвление `stream_agent_events` всё ещё требуют распила по Proposal ниже.
 - **Progress (2026-05-06, follow-up):** soft-cap ветвление вынесено в `agent/graph/react_soft_cap.py` и подключено из `react_edges.py`; recovery-salvage/error-event helper вынесен в `api/agent_v2_modules/recovery.py`, deadline/recursion branches в `stream_lifecycle.py` переведены на общие helper-функции.
+- **Progress (2026-05-06, follow-up-2):** в `stream_lifecycle.py` добавлен helper `_streamable_debug_event` (уменьшение локальной ветвистости в debug-events path), `run_kind/graph_id` проброшены в stream metadata/events для лучшего trace-audit контекста.
 - **Proposal:**
   - Extract soft-cap helpers (`_compute_react_force_finalize`, `_track_react_hops_and_repeats`) from `react_after_tools_decrement_budget` into `science_graphrag/agent/graph/react_soft_cap.py`; keep node thin.
   - Split `stream_agent_events` recovery branches (deadline, recursion-limit) into `_recover_after_deadline` and `_recover_after_recursion_limit` helpers (or move the salvage flow into `agent_v2_modules/recovery.py`); pull update-chunk handling into a per-chunk function.
 - **Acceptance:** No file in this subtree has a single function exceeding 80 statements / 12 branches; pylint stops emitting `R0912/R0914/R0915` for these modules; existing tests pass.
 - **Raised:** 2026-05-06 (recursion-limit-architecture-fix)
+
+### [OPEN] De-duplicate Agent v2 payload/runtime metadata seams
+- **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/api/agent_v2_modules/payloads.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
+- **Issue:** Sync JSON и SSE paths всё ещё дублируют части payload/runtime metadata assembly (включая run metadata helpers), что создаёт риск drift между протоколами.
+- **Proposal:** Оставить один canonical payload/runtime metadata layer в `agent_v2_modules/payloads.py`; убрать локальные дублирующие builders из router/stream paths.
+- **Acceptance:** В кодовой базе один источник `agent_chat_llm_run_metadata` и единый payload builder для sync/SSE; parity-тесты проходят без специальных исключений.
+- **Raised:** 2026-05-06 (backend re-analysis)
 
 ### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)
 - **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.

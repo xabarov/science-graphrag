@@ -1,0 +1,326 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-06T10:57:51.054760+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": null,
+    "suite": "heavy",
+    "profile": "heavy",
+    "run_kind": "single_agent_research",
+    "graph_id": "single_agent_react",
+    "feature_flags": {
+      "agent_runtime": null,
+      "agent_rule_tool_search_enabled": "true",
+      "agent_tool_search_deferred_schema_refs_enabled": "true",
+      "agent_budget_stop_reasoning_enabled": "true"
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "redis",
+          "agent_session_memory_configured": "redis"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 2792,
+        "warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "tools": [
+          "coordinator_gate"
+        ],
+        "answer_class": "grounded_explanation"
+      }
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "thread_id": "live_check_0697e2283766",
+        "turn2_warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "turn2_tools": [
+          "coordinator_gate",
+          "session_init"
+        ]
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "tool_search_result",
+          "answer_synthesis_started",
+          "context_compacted",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 6
+      }
+    }
+  ],
+  "trace_timeline": [
+    {
+      "case_id": "multi_compare_bibliography",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 15422.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "format_bibliography_gost",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_fdc4028ae209"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_fdc4028ae209"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "graph_ego_methods",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 13483.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "edge_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_fdc4028ae209"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_fdc4028ae209"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [
+        "graph_only"
+      ],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    },
+    {
+      "case_id": "multi_evidence_speed_accuracy",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 240056.0,
+      "tool_steps": [],
+      "phoenix_alignment": {
+        "covered": null,
+        "missing": []
+      },
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_fdc4028ae209"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_fdc4028ae209"
+        }
+      ],
+      "db_side_effects": null,
+      "warnings": [
+        "agent_turn_deadline_exceeded"
+      ],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": []
+    }
+  ],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 6,
+    "final_answer_missing_count": 1,
+    "latency_p95_ms": 15422.0,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0
+  },
+  "verdict": {
+    "status": "fail",
+    "fail_reasons": [
+      "e2e_failed",
+      "final_answer_missing_count:1"
+    ],
+    "warn_reasons": []
+  },
+  "e2e_audit": {
+    "ok": false,
+    "returncode": 1,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "heavy",
+      "--timeout",
+      "240.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_7lxdf0ot.json",
+      "--trace-audit"
+    ],
+    "stdout_tail": "  \"trace_audit\": {\n        \"tool_counts\": {\n          \"coordinator_gate\": 1,\n          \"edge_search\": 1,\n          \"final_answer\": 1,\n          \"workspace_inspect\": 1\n        },\n        \"consecutive_duplicate_tools\": [],\n        \"tools_called_more_than_once\": {},\n        \"phoenix_sample_llm_agent_react_turn_hits\": 8,\n        \"phoenix_sample_channel_or_route_hits\": 37,\n        \"phoenix_sample_tool_dot_hits\": 8,\n        \"heuristic_issues\": [\n          \"api_warnings:['graph_only']\"\n        ],\n        \"phoenix_structure_audit\": {\n          \"span_sample_size\": 100,\n          \"llm_agent_react_turn_hits\": 8,\n          \"tool_dot_span_hits\": 8,\n          \"embedding_span_hits\": 0,\n          \"retrieval_span_hits\": 0,\n          \"channel_or_route_noise_hits\": 37,\n          \"tool_dot_sample\": [\n            \"tool.edge_search\",\n            \"tool.workspace_inspect\",\n            \"tool.final_answer\",\n            \"tool.format_bibliography_gost\",\n            \"tool.paper_profile\",\n            \"tool.paper_profile\",\n            \"tool.find_works\",\n            \"tool.find_works\"\n          ],\n          \"issues\": [],\n          \"sequence_hints\": [\n            \"edge_search_without_workspace_graph_reltypes: model may invent rel_types; check prompts and edge_search docstring.\"\n          ],\n          \"coverage\": {\n            \"covered\": 100,\n            \"missing\": []\n          }\n        }\n      }\n    },\n    {\n      \"case_id\": \"multi_evidence_speed_accuracy\",\n      \"question\": \"What trade-offs between speed and accuracy for real-time object detection does this workspace support with evidence? Use at least two distinct retrieval paths among idea_search, paper_quote_search, and workspace_inspect (blurb or papers). Cite at least two different work_ids from tool outputs. If evidence is thin, state coverage gaps explicitly. Finish with final_answer.\",\n      \"http_ok\": true,\n      \"answer_len\": 142,\n      \"final_answer_reached\": false,\n      \"tool_names\": [],\n      \"tool_steps_non_session\": 0,\n      \"phoenix_trace_id\": null,\n      \"phoenix\": null,\n      \"notes\": [\n        \"last_tool_not_final_answer\",\n        \"missing_phoenix_trace_id\"\n      ],\n      \"tool_trace\": [],\n      \"thread_id\": null,\n      \"edge_search_zero_row_max_streak\": 0,\n      \"paper_profile_max_consecutive_same_work_id\": 0,\n      \"cypher_query_error_count\": 0,\n      \"duration_ms\": 240056,\n      \"warnings\": [\n        \"agent_turn_deadline_exceeded\"\n      ],\n      \"run_metadata\": {\n        \"agent_runtime\": \"langgraph_research_v1\",\n        \"agent_max_tool_calls\": 12,\n        \"extraction_llm_model\": \"mistralai/mistral-small-3.2-24b-instruct\",\n        \"extraction_llm_base_url\": \"https://openrouter.ai/api/v1\",\n        \"chat_llm_model\": \"qwen/qwen3-235b-a22b-2507\",\n        \"resolved_chat_llm_model\": \"qwen/qwen3-235b-a22b-2507\",\n        \"openrouter_reference_pricing_usd_per_1m\": {\n          \"extraction\": {\n            \"model_id\": \"mistralai/mistral-small-3.2-24b-instruct\",\n            \"prompt_usd_per_1m\": 0.075,\n            \"completion_usd_per_1m\": 0.2\n          }\n        },\n        \"agent_turn_deadline_exceeded\": true,\n        \"agent_step_timeout_seconds\": 240.0,\n        \"agent_response_deadline_seconds\": 240.0,\n        \"agent_response_deadline_enforces_upstream_cancel\": false,\n        \"agent_worker_may_continue_after_deadline\": true\n      },\n      \"run_kind\": \"single_agent_research\",\n      \"graph_id\": \"single_agent_react\",\n      \"tool_search_shortlist_ratio_avg\": null,\n      \"tool_search_deferred_schema_events\": null,\n      \"budget_stop_reasons\": [],\n      \"answer_class\": \"synthesis\",\n      \"citations_count\": 0,\n      \"trace_audit\": {\n        \"tool_counts\": {},\n        \"consecutive_duplicate_tools\": [],\n        \"tools_called_more_than_once\": {},\n        \"phoenix_sample_llm_agent_react_turn_hits\": 0,\n        \"phoenix_sample_channel_or_route_hits\": 0,\n        \"phoenix_sample_tool_dot_hits\": 0,\n        \"heuristic_issues\": [\n          \"api_warnings:['agent_turn_deadline_exceeded']\"\n        ]\n      }\n    }\n  ]\n}\n",
+    "stderr_tail": "note: PHOENIX_TRACE_SCOPE=extraction_llm (agent.* spans still allowed); if Phoenix is empty, check PHOENIX_COLLECTOR_ENDPOINT on the API container.\nwrote full report json: /tmp/e2e_full_report_7lxdf0ot.json\n\n--- summary ---\nmulti_compare_bibliography: steps=7 final_answer=True answer_len=622 phoenix_ok=True ok=True\ngraph_ego_methods: steps=4 final_answer=True answer_len=274 phoenix_ok=True ok=True\nmulti_evidence_speed_accuracy: steps=0 final_answer=False answer_len=142 phoenix_ok=None ok=False\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_7lxdf0ot.json"
+  },
+  "phoenix_snapshot_path": "eval/results/trace-review-wave5-tailfix-on-18787_phoenix_spans.jsonl",
+  "phoenix_pull": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-wave5-tailfix-on-18787_phoenix_spans.jsonl",
+    "stderr_tail": ""
+  },
+  "compaction_turn_review": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-wave5-tailfix-on-18787_compaction_review.json",
+    "stdout_tail": "[compaction-review] merged into: eval/results/trace-review-wave5-tailfix-on-18787.json\n[compaction-review] json: eval/results/trace-review-wave5-tailfix-on-18787_compaction_review.json\n[compaction-review] md:   eval/results/trace-review-wave5-tailfix-on-18787_compaction_review.md\n",
+    "stderr_tail": ""
+  }
+}

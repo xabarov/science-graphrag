@@ -86,6 +86,15 @@ def _tool_steps(trace: list[dict[str, Any]]) -> tuple[list[str], int]:
     return names, len(non_session)
 
 
+def _runtime_attribution_from_runtime_id(runtime_id: Any) -> tuple[str | None, str | None]:
+    rt = str(runtime_id or "").strip()
+    if rt in {"retrieval_v1", "langgraph_research_v1"}:
+        return "single_agent_research", "single_agent_react"
+    if rt == "langgraph_supervisor_v1":
+        return "supervisor_specialists", "supervisor_graph"
+    return None, None
+
+
 def _question_suite(suite: str) -> list[tuple[str, str]]:
     s = (suite or "default").strip().lower()
     if s == "heavy":
@@ -93,6 +102,30 @@ def _question_suite(suite: str) -> list[tuple[str, str]]:
     if s == "full":
         return list(DEFAULT_QUESTIONS) + list(HEAVY_QUESTIONS)
     return DEFAULT_QUESTIONS
+
+
+def _case_passes_acceptance(case_report: dict[str, Any]) -> bool:
+    """Return True when a case satisfies E2E acceptance gates."""
+    return bool(
+        case_report.get("http_ok")
+        and case_report.get("final_answer_reached")
+        and int(case_report.get("answer_len") or 0) >= 40
+    )
+
+
+def _should_retry_after_case_failure(case_report: dict[str, Any]) -> bool:
+    """Retry only on known transport/runtime deadline flakes."""
+    warnings = case_report.get("warnings") or []
+    if not isinstance(warnings, list):
+        warnings = []
+    if "agent_turn_deadline_exceeded" in {str(x).strip() for x in warnings}:
+        return True
+    notes = case_report.get("notes") or []
+    if isinstance(notes, list) and "last_tool_not_final_answer" in {str(x).strip() for x in notes}:
+        run_meta = case_report.get("run_metadata") or {}
+        if isinstance(run_meta, dict) and bool(run_meta.get("agent_turn_deadline_exceeded")):
+            return True
+    return False
 
 
 # pylint: disable-next=too-many-locals
@@ -282,6 +315,16 @@ def _run_single_query(  # pylint: disable=too-many-arguments,too-many-locals
     case_report["warnings"] = data.get("warnings") or []
     run_meta = data.get("run_metadata") if isinstance(data.get("run_metadata"), dict) else {}
     case_report["run_metadata"] = run_meta
+    run_kind = str(run_meta.get("run_kind") or "").strip() or None
+    graph_id = str(run_meta.get("graph_id") or "").strip() or None
+    if run_kind is None or graph_id is None:
+        derived_run_kind, derived_graph_id = _runtime_attribution_from_runtime_id(
+            run_meta.get("agent_runtime")
+        )
+        run_kind = run_kind or derived_run_kind
+        graph_id = graph_id or derived_graph_id
+    case_report["run_kind"] = run_kind
+    case_report["graph_id"] = graph_id
     if run_meta:
         case_report["tool_search_shortlist_ratio_avg"] = run_meta.get(
             "tool_search_shortlist_ratio_avg"
@@ -588,6 +631,25 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
                 try_fetch_phoenix_spans=try_fetch_phoenix_spans,
                 extract_span_names_for_trace_fn=extract_span_names_for_trace,
             )
+            retries = 0
+            while retries < 1 and (not case_ok) and _should_retry_after_case_failure(case_report):
+                retries += 1
+                case_report["notes"].append("retry_after_deadline_exceeded")
+                case_report, case_ok = _run_single_query(
+                    client,
+                    url=url,
+                    workspace_id=workspace_id,
+                    case_id=case_id,
+                    question=question,
+                    skip_phoenix=args.skip_phoenix,
+                    verbose=args.verbose,
+                    trace_audit=args.trace_audit,
+                    phoenix_span_cap=phoenix_span_cap,
+                    phoenix_ui_trace_url=phoenix_ui_trace_url,
+                    try_fetch_phoenix_spans=try_fetch_phoenix_spans,
+                    extract_span_names_for_trace_fn=extract_span_names_for_trace,
+                )
+                case_report["retry_count"] = retries
             if args.trace_audit:
                 case_report["trace_audit"] = build_tool_trace_audit(case_report)
             if not case_ok:

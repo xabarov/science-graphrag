@@ -31,6 +31,15 @@ def _runtime_attribution_from_env() -> tuple[str | None, str | None]:
     return None, None
 
 
+def _runtime_attribution_from_runtime_id(runtime_id: Any) -> tuple[str | None, str | None]:
+    rt = str(runtime_id or "").strip()
+    if rt in {"retrieval_v1", "langgraph_research_v1"}:
+        return "single_agent_research", "single_agent_react"
+    if rt == "langgraph_supervisor_v1":
+        return "supervisor_specialists", "supervisor_graph"
+    return None, None
+
+
 def _ensure_local_imports() -> None:
     if str(_SCRIPT_DIR) not in sys.path:
         sys.path.insert(0, str(_SCRIPT_DIR))
@@ -434,6 +443,29 @@ def main() -> int:
 
     review_dict = trace_review_to_dict(review)
     run_kind, graph_id = _runtime_attribution_from_env()
+    if report_json_path and report_json_path.exists() and (run_kind is None or graph_id is None):
+        try:
+            report_obj = json.loads(report_json_path.read_text(encoding="utf-8"))
+            cases = report_obj.get("cases") or []
+            if isinstance(cases, list):
+                for case in cases:
+                    if not isinstance(case, dict):
+                        continue
+                    rm = case.get("run_metadata") or {}
+                    if not isinstance(rm, dict):
+                        continue
+                    rk = str(rm.get("run_kind") or "").strip() or None
+                    gid = str(rm.get("graph_id") or "").strip() or None
+                    if rk is None or gid is None:
+                        drk, dgid = _runtime_attribution_from_runtime_id(rm.get("agent_runtime"))
+                        rk = rk or drk
+                        gid = gid or dgid
+                    if rk or gid:
+                        run_kind = run_kind or rk
+                        graph_id = graph_id or gid
+                        break
+        except (OSError, json.JSONDecodeError):
+            pass
     review_dict["run_context"] = {
         "base_url": args.base_url.rstrip("/"),
         "workspace_id": args.workspace_id,

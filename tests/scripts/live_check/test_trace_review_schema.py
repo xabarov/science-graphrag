@@ -50,6 +50,19 @@ def test_merge_e2e_builds_timeline_and_metrics(schema_module) -> None:
     assert m.latency_p95_ms == 1000.0
 
 
+def test_merge_e2e_extracts_runtime_attribution_from_top_level_case(schema_module) -> None:
+    case = {
+        "case_id": "runtime_case",
+        "run_kind": "single_agent_research",
+        "graph_id": "single_agent_react",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].run_kind == "single_agent_research"
+    assert tl[0].graph_id == "single_agent_react"
+
+
 def test_verdict_fail_on_final_answer_missing(schema_module) -> None:
     row = schema_module.TimelineCase(
         case_id="x",

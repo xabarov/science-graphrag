@@ -24,11 +24,11 @@ from science_graphrag.settings.llm_advanced_fields import (
     advanced_effective_map,
     advanced_schema_fields,
     clamp_advanced_field,
-    merge_llm_advanced_into_overrides,
     recommended_advanced_values,
     validate_merged_runtime_settings,
 )
 from science_graphrag.settings.repository import SettingsRepository
+from science_graphrag.settings.runtime_overlay import build_non_secret_overrides
 from science_graphrag.settings.secret_display import mask_short_secret as _mask_secret
 from science_graphrag.settings.secrets import SecretStore
 from science_graphrag.settings.snapshots import (
@@ -42,7 +42,6 @@ from science_graphrag.settings.storage_runtime import (
     _SK_S3_SECRET,
     apply_storage_json_updates,
     build_storage_ui_snapshot,
-    merge_storage_runtime_fields,
 )
 
 if TYPE_CHECKING:
@@ -109,69 +108,6 @@ class SettingsService:
         self._repository = repository or SettingsRepository(root_dir)
         self._secret_store = secret_store or SecretStore(root_dir)
         self._lock = Lock()
-
-    def _non_secret_overrides_dict(  # pylint: disable=too-many-locals
-        self,
-        base_settings: Settings,
-        *,
-        llm: dict[str, Any],
-        ingestion_cfg: dict[str, Any],
-        general_cfg: dict[str, Any] | None = None,
-        storage_cfg: dict[str, Any] | None = None,
-        storage_secret_explicit: dict[str, str | None] | None = None,
-    ) -> dict[str, Any]:
-        """Build the same overlay dict as ``get_snapshot`` uses for ``model_copy``."""
-
-        timeout_seconds = llm.get("timeout_seconds")
-        if timeout_seconds is None:
-            timeout_seconds = base_settings.extraction_llm_timeout_seconds
-
-        persisted_chat = str(llm.get("chat_model") or "").strip()
-        env_chat = str(base_settings.chat_llm_model or "").strip()
-
-        resolved_upload_mb, resolved_claims_enabled = resolve_ingestion_fields(
-            ingestion_cfg, base_settings
-        )
-
-        persisted_vl_model = str(llm.get("vl_model") or "").strip()
-        persisted_vl_base = str(llm.get("vl_base_url") or "").strip().rstrip("/")
-
-        non_secret_overrides: dict[str, Any] = {
-            "extraction_llm_base_url": llm.get("base_url") or base_settings.extraction_llm_base_url,
-            "extraction_llm_model": llm.get("model") or base_settings.extraction_llm_model,
-            "extraction_llm_temperature": llm.get(
-                "temperature", base_settings.extraction_llm_temperature
-            ),
-            "extraction_llm_timeout_seconds": timeout_seconds,
-            "vl_model": persisted_vl_model or base_settings.vl_model,
-            "vl_base_url": persisted_vl_base or base_settings.vl_base_url,
-        }
-        if "enabled" in llm:
-            non_secret_overrides["extraction_llm_enabled"] = bool(llm["enabled"])
-        chat_override = persisted_chat or env_chat
-        if chat_override:
-            non_secret_overrides["chat_llm_model"] = chat_override
-        non_secret_overrides["workspace_upload_max_file_size_mb"] = resolved_upload_mb
-        non_secret_overrides["claims_extraction_enabled"] = resolved_claims_enabled
-        gcfg = dict(general_cfg or {})
-        persisted_mailto = str(gcfg.get("openalex_mailto") or "").strip()
-        non_secret_overrides["openalex_mailto"] = (
-            persisted_mailto if persisted_mailto else base_settings.openalex_mailto
-        )
-        merge_llm_advanced_into_overrides(
-            non_secret_overrides,
-            llm=llm,
-            base=base_settings,
-        )
-        sc = dict(storage_cfg or {})
-        storage_fields = merge_storage_runtime_fields(
-            base_settings,
-            sc,
-            self._secret_store,
-            explicit_secrets=storage_secret_explicit,
-        )
-        non_secret_overrides.update(storage_fields)
-        return non_secret_overrides
 
     def build_runtime_settings(self, base_settings: Settings) -> Settings:
         """Overlay persisted runtime overrides onto env-derived settings."""
@@ -335,12 +271,14 @@ class SettingsService:
         diagnostics_snapshot = build_diagnostics_snapshot()
         security_snapshot = build_security_snapshot(base_settings)
 
-        non_secret_overrides = self._non_secret_overrides_dict(
-            base_settings,
+        non_secret_overrides = build_non_secret_overrides(
+            base_settings=base_settings,
             llm=llm,
             ingestion_cfg=ingestion_cfg,
             general_cfg=general_cfg,
             storage_cfg=storage_cfg,
+            secret_store=self._secret_store,
+            storage_secret_explicit=None,
         )
         merged_settings = base_settings.model_copy(update=non_secret_overrides)
 
@@ -653,12 +591,14 @@ class SettingsService:
             ingestion_cfg = dict(payload.get("ingestion") or {})
             general_cfg = dict(payload.get("general") or {})
             storage_cfg = dict(payload.get("storage") or {})
-            merged_non_secret = self._non_secret_overrides_dict(
-                base_settings,
+            merged_non_secret = build_non_secret_overrides(
+                base_settings=base_settings,
                 llm=llm,
                 ingestion_cfg=ingestion_cfg,
                 general_cfg=general_cfg,
                 storage_cfg=storage_cfg,
+                secret_store=self._secret_store,
+                storage_secret_explicit=None,
             )
             validate_merged_runtime_settings(
                 base_settings.model_copy(update=merged_non_secret),
@@ -722,12 +662,14 @@ class SettingsService:
             llm = dict(payload.get("llm") or {})
             ingestion_cfg = dict(payload.get("ingestion") or {})
             storage_cfg = dict(payload.get("storage") or {})
-            merged_non_secret = self._non_secret_overrides_dict(
-                base_settings,
+            merged_non_secret = build_non_secret_overrides(
+                base_settings=base_settings,
                 llm=llm,
                 ingestion_cfg=ingestion_cfg,
                 general_cfg=general,
                 storage_cfg=storage_cfg,
+                secret_store=self._secret_store,
+                storage_secret_explicit=None,
             )
             validate_merged_runtime_settings(
                 base_settings.model_copy(update=merged_non_secret),
@@ -765,12 +707,13 @@ class SettingsService:
             llm = dict(payload.get("llm") or {})
             ingestion_cfg = dict(payload.get("ingestion") or {})
             general_cfg = dict(payload.get("general") or {})
-            merged_non_secret = self._non_secret_overrides_dict(
-                base_settings,
+            merged_non_secret = build_non_secret_overrides(
+                base_settings=base_settings,
                 llm=llm,
                 ingestion_cfg=ingestion_cfg,
                 general_cfg=general_cfg,
                 storage_cfg=storage_next,
+                secret_store=self._secret_store,
                 storage_secret_explicit=explicit if explicit else None,
             )
             candidate = base_settings.model_copy(update=merged_non_secret)
