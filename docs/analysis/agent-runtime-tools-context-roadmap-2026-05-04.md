@@ -2,6 +2,9 @@
 
 **Статус:** живая точка входа по оси *оркестрация агента — каталог tools — сжатие/память диалога*. Заменяет корневой slim-файл `chat-agent-system-roadmap-2026-04-26.md` (удалён как дубликат; глубокая предыстория CH-волн: [`_archive/chat-agent-system-roadmap-full-2026-04-26.md`](./_archive/chat-agent-system-roadmap-full-2026-04-26.md)).
 
+**Итог на 2026-05-06:** текущая волна плана выполнена (BT8/BT9, P2 trace-review, L3/L4, prompt-after-compact matrix, trust/runtime updates).  
+**Подтверждение:** live `trace-review`/regression-gate — pass; выполнен полноценный LLM-judge по live-трейсам (`eval/results/habr-window-2026-06-agent-tools-mini-band-1.35-live-llm-judge.json`); full L4 LLM compact подтверждён live-smoke с audit trail.
+
 **Связанные документы (не дублировать детали):**
 
 | Документ | Роль |
@@ -85,7 +88,7 @@
 | L1 | **Turn digest** — структурированная сводка хода | [`turn_digest.py`](../../science_graphrag/agent/context/turn_digest.py), `apply_turn_digest_to_thread` |
 | L2 | **Rolling session memory** | [`session_backend.py`](../../science_graphrag/agent/context/session_backend.py) — до 10 дайджестов, summary из последних 3 |
 | L3 | **Капсулы** workspace / paper / entity | Поля/контракт в развитии; не главный UX-приоритет |
-| L4 | **Full compact boundary** — явная граница для длинных тредов | [`compaction.py`](../../science_graphrag/agent/context/compaction.py) — SSE metadata, `digest_cap`, rolling_threshold; полная LLM-компактация истории — будущее |
+| L4 | **Full compact boundary** — явная граница для длинных тредов | [`compaction.py`](../../science_graphrag/agent/context/compaction.py) — SSE metadata, `digest_cap`, rolling_threshold; опциональная LLM-компактация full history реализована через [`llm_history_compact.py`](../../science_graphrag/agent/context/llm_history_compact.py) (feature-flag + audit trail) |
 
 Дополнительно: **компактация истории tool-сообщений** в одном ReAct-потоке — [`tool_message_compact.py`](../../science_graphrag/agent/tool_message_compact.py) (флаги `agent_tool_history_compact_*`).
 
@@ -119,10 +122,10 @@
 
 **Продукт / архитектура**
 
-1. Завершить **BT8/BT9** по trust-audit (live agent_tools, multi-agent gold).  
-2. **LLM или hybrid tool_search** — только после стабильных метрик shortlist quality + latency.  
-3. **L3/L4**: капсулы и полная LLM-компактация — по триггерам (token threshold, длина треда), с сохранением audit trail для eval.  
-4. Документировать матрицу «что попадает в prompt после compact» в [`agent-chat-v1.md`](../specs/agent-chat-v1.md).  
+1. ✅ **BT8/BT9 по trust-audit** закрыты (live agent_tools, multi-agent gold).  
+2. ✅ **LLM/hybrid tool_search gate** закрыт как decision checkpoint: собраны shortlist/latency/noise метрики, дефолт rule-based сохранён до явного product gate.  
+3. ✅ **L3/L4** (капсулы + full-history LLM compact) закрыты: реализованы триггеры, feature-flag и audit trail для eval/run metadata.  
+4. ✅ Матрица «что попадает в prompt после compact» документирована в [`agent-chat-v1.md`](../specs/agent-chat-v1.md).  
 5. При рефакторинге envelope / state: держать в уме **§2.2** (канон фактов хода, слои envelope, атрибуция графа в trace).
 
 ### 6.1 План заимствований из openclaude (high ROI)
@@ -297,3 +300,5 @@
 | 2026-05-05 | Обновлён статус в **§6.2**: Wave 1 (P0 + P1 toolkit) отмечен как выполненный с комментариями по каждому пробелу; добавлена пометка о фиксе SSE `missing_intent_classified` для `langgraph_research_v1`, успешном full e2e (`verdict=pass`) и обновлении baseline артефактов. |
 | 2026-05-05 | Обновлён статус в **§6.1**: закрыты ROI-пункты 1/6/8 (deferred schemas, token budget stop reasons, feature-gated rollout + telemetry). Зафиксированы результаты Wave 2: dual-run off/on `pass`, добавленные telemetry-метрики `trace-review-v1`, а также исправления e2e-блокеров (`--skip-postgres` совместимость и стабилизация кейса `graph_ego_methods`). |
 | 2026-05-05 | **Wave 3** — закрыты ROI-пункты §6.1 **2–5 и 7**: carry-over discovered tools, unified tool execution pipeline, allowed-tools matrix (feature-flag), sidechain JSONL transcripts, away summary (`client_idle_ms`). Регрессия к baseline: `trace_regression_compare.py` против `eval/results/trace-review-off.json` — **pass**; live `agent_trace_review.py` (default suite) — **pass**. Техдолг: pylint duplicate-code между графом и pipeline снят через общий `effective_tool_policy`. |
+| 2026-05-06 | **Wave 4 (runner/trust/P2):** BT8/BT9 runner closure — `routing_log` в benchmark/live выводе агента; stub-трассы бенчмарка без ``mock answer`` / ``mock-work`` для честного ``trust_signal``; tier ``agent_tools_multiagent`` в aggregate + артефакт ``current-agent-tools-multiagent.json``; nightly опциональная live-перегенерация mini при секрете; метрики ``tool_name``/``args_match`` в ``eval/agent_tools/metrics``; CH5 ``context_compacted.audit``; матрица prompt/memory в ``agent-chat-v1.md``; ADR-027; тесты P2 (trace-review ROI counters, sidechain path). |
+| 2026-05-06 | **Wave 4.1 (LLM judge + L4 live run):** выполнен полноценный `science-graphrag-agent-judge-benchmark --llm` по live-трейсам (`habr-window-2026-06-agent-tools-mini-band-1.35-live-llm-judge.json`); подтверждён full L4 LLM compact в live smoke (feature-flag `SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED`, audit в `session_meta` и `run_metadata.compaction_audit`). |

@@ -71,10 +71,23 @@ def classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
                     f"Upstream LLM rejected the request (code {code_int}): {msg}",
                 )
             return "provider_rejected", f"Upstream LLM error: {msg}"
+    detail = str(exc).lower()
     name = type(exc).__name__.lower()
     if "timeout" in name:
         return "provider_timeout", "Upstream LLM call timed out."
+    if "timeout" in detail or "timed out" in detail:
+        return "provider_timeout", "Upstream LLM call timed out."
     if "connection" in name or "unreachable" in name:
+        return "provider_unreachable", "Upstream LLM was unreachable."
+    if any(
+        marker in detail
+        for marker in (
+            "connection refused",
+            "name or service not known",
+            "temporary failure in name resolution",
+            "network is unreachable",
+        )
+    ):
         return "provider_unreachable", "Upstream LLM was unreachable."
     return "internal_error", str(exc)[:200] or "Internal error during agent run."
 

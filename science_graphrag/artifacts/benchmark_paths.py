@@ -38,6 +38,7 @@ DEFAULT_RETRIEVAL_HYBRID_ABLATION_LIVE = "eval/results/current-retrieval-hybrid-
 DEFAULT_RETRIEVAL_LIVE_CORPUS_HOLDOUT = "eval/results/current-retrieval-live-corpus-holdout.json"
 DEFAULT_RETRIEVAL_MULTIHOP_MINI = "eval/results/current-retrieval-multihop-mini.json"
 DEFAULT_AGENT_TOOLS_MINI = "eval/results/current-agent-tools-mini.json"
+DEFAULT_AGENT_TOOLS_MULTIAGENT = "eval/results/current-agent-tools-multiagent.json"
 DEFAULT_AGENT_TOOLS_JUDGE = "eval/results/current-agent-tools-judge-pilot.json"
 
 DEFAULT_CLAIMS_MERGE_CONTRACT = "eval/results/current-claims-merge-contract.json"
@@ -91,6 +92,7 @@ class BenchmarkLogicalId(StrEnum):
     RETRIEVAL_LIVE_CORPUS_HOLDOUT = "benchmark.canonical.retrieval.live_corpus_holdout"
     RETRIEVAL_MULTIHOP_MINI = "benchmark.canonical.retrieval.multihop_mini"
     AGENT_TOOLS_MINI = "benchmark.canonical.agent_tools.mini"
+    AGENT_TOOLS_MULTIAGENT = "benchmark.canonical.agent_tools.multiagent"
     AGENT_TOOLS_JUDGE_PILOT = "benchmark.canonical.agent_tools.judge_pilot"
     CLAIMS_MERGE_CONTRACT = "benchmark.canonical.claims.merge_contract"
     CLAIMS_MINI_SUITE = "benchmark.canonical.claims.mini_suite"

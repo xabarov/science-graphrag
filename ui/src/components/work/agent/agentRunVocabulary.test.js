@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 import {
   __VOCAB_KEYS,
   humanizeUnknownCode,
+  isHiddenFromSpecialistRunTrace,
   isRedundantIntentSource,
+  isSpecialistRailNoiseEvent,
   mapAnswerClassToLabel,
   mapErrorCodeToLabel,
   mapIntentSourceToLabel,
@@ -174,10 +176,43 @@ describe("shouldHideStreamEventFromHeadline", () => {
 });
 
 describe("shouldOmitFromLiveRecentList", () => {
-  it("omits tool_result and tool_search_result from live recent-lines feed", () => {
+  it("omits noisy debug rows from live recent-lines feed", () => {
     expect(shouldOmitFromLiveRecentList({ type: "tool_result", tool: "x" })).toBe(true);
     expect(shouldOmitFromLiveRecentList({ type: "tool_search_result", reason: "rules" })).toBe(true);
+    expect(shouldOmitFromLiveRecentList({ type: "tool_execution", phase: "pre_hooks" })).toBe(true);
+    expect(shouldOmitFromLiveRecentList({ type: "tool_permissions", matrix: {} })).toBe(true);
+    expect(shouldOmitFromLiveRecentList({ type: "final_answer", answer: "a" })).toBe(true);
+    expect(shouldOmitFromLiveRecentList({ type: "tool_call", tool: "final_answer" })).toBe(true);
+    expect(shouldOmitFromLiveRecentList({ type: "subagent_progress", tool: "final_answer" })).toBe(true);
     expect(shouldOmitFromLiveRecentList({ type: "intent_classified" })).toBe(false);
     expect(shouldOmitFromLiveRecentList({ type: "tool_call", tool: "idea_search" })).toBe(false);
+  });
+});
+
+describe("isSpecialistRailNoiseEvent", () => {
+  it("flags LangGraph debug payloads only", () => {
+    expect(isSpecialistRailNoiseEvent({ type: "tool_execution", phase: "post_hooks" })).toBe(true);
+    expect(isSpecialistRailNoiseEvent({ type: "tool_permissions", matrix: {} })).toBe(true);
+    expect(isSpecialistRailNoiseEvent({ type: "tool_call", tool: "x" })).toBe(false);
+    expect(isSpecialistRailNoiseEvent(null)).toBe(false);
+  });
+});
+
+describe("isHiddenFromSpecialistRunTrace", () => {
+  it("includes debug noise and final_answer mechanics only", () => {
+    expect(isHiddenFromSpecialistRunTrace({ type: "tool_execution", phase: "pre_hooks" })).toBe(true);
+    expect(isHiddenFromSpecialistRunTrace({ type: "final_answer", answer: "x" })).toBe(true);
+    expect(isHiddenFromSpecialistRunTrace({ type: "tool_call", tool: "final_answer" })).toBe(true);
+    expect(isHiddenFromSpecialistRunTrace({ type: "tool_result", tool: "final_answer", row_count: 2 })).toBe(true);
+    expect(
+      isHiddenFromSpecialistRunTrace({
+        type: "subagent_progress",
+        subagent_id: "single_agent_react",
+        tool: "final_answer",
+        summary: "final_answer",
+      }),
+    ).toBe(true);
+    expect(isHiddenFromSpecialistRunTrace({ type: "tool_call", tool: "idea_search" })).toBe(false);
+    expect(isHiddenFromSpecialistRunTrace({ type: "product_step", code: "composing_answer" })).toBe(false);
   });
 });

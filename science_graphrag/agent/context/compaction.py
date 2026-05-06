@@ -1,8 +1,8 @@
 """CH5 v1: trace-safe compaction metadata for stream events and eval contracts.
 
 Adds multi-kind compaction (turn_digest, rolling_memory, workspace_capsule) and a
-boundary hint when the digest window is full. Full coordinator-triggered compaction
-and LLM summarization remain future work.
+boundary hint when the digest window is full. Optional **L4** LLM-wide session summary
+is implemented in ``llm_history_compact`` (feature-flagged).
 """
 
 from __future__ import annotations
@@ -58,5 +58,12 @@ def build_context_compacted_payload(
             "trigger": trigger,
             "digest_count": digest_count,
             "boundary": boundary,
+        },
+        "audit": {
+            "schema_version": 1,
+            "digest_cap": digest_cap,
+            "rolling_threshold": rolling_threshold,
+            "workspace_capsule_present": bool(workspace_capsule_present),
+            "llm_full_history_compact": False,
         },
     }

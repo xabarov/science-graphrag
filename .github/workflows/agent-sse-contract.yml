@@ -33,3 +33,11 @@ jobs:
             tests/scripts/live_check/test_trace_review_schema.py \
             tests/observability/test_agent_sse_stream_otel.py \
             -q
+      - name: Trace regression compare (baseline sanity gate)
+        run: |
+          python scripts/live_check/trace_regression_compare.py \
+            --baseline eval/results/baseline-trace-review.json \
+            --candidate eval/results/trace-review-off.json \
+            --warn-is-pass \
+            --out-json eval/results/ci-trace-regression-compare.json \
+            --out-md eval/results/ci-trace-regression-compare.md

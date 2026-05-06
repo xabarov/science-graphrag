@@ -60,6 +60,7 @@ def _output_to_dict(out: AgentRunOutput) -> dict[str, Any]:
         "answer": out.answer,
         "citations": out.citations,
         "tool_trace": [dict(x) for x in out.tool_trace],
+        "routing_log": list(out.routing_log or []),
         "answer_class": out.answer_class,
         "evidence_summary": out.evidence_summary,
         "warnings": list(out.warnings or []),

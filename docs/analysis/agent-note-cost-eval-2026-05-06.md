@@ -22,4 +22,14 @@ Target: ≥80% of runs show predictable overhead (e.g. median Δtokens ≤ X%, l
 
 **Default:** keep `agent_note_enabled=false` until a numbered pilot records **live** numbers on production-like models; offline stubs prove wiring only.
 
-**Next step:** wire eval runner flag `--agent-note-on` into `eval/chat_agent/runner.py` (or dedicated smoke batch) and attach CSV summaries under `eval/results/` when executing the 50-turn batch.
+## Wave 5 execution snapshot (2026-05-06)
+
+- Added comparator utility: `eval/chat_agent/agent_note_cost_eval.py`.
+- Smoke run executed on committed mini artifact (`10` cases):
+  - command:
+    - `.venv/bin/python eval/chat_agent/agent_note_cost_eval.py --off-json eval/results/current-agent-tools-mini.json --on-json eval/results/current-agent-tools-mini.json --out-json eval/results/agent-note-cost-sample.json --out-md eval/results/agent-note-cost-sample.md`
+  - result: `latency_p50=2ms`, `latency_p95=3ms`, token fields unavailable (`tokens_available_rate=0.0`) because this artifact does not contain per-turn usage.
+
+## Decision
+
+Keep `agent_note_enabled=false` by default. The tooling for OFF/ON comparison is now in repo; final go/no-go still requires a dedicated **50-turn live** dual-run with populated `run_metadata.usage.total_tokens`.

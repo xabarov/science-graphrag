@@ -47,7 +47,7 @@ All new fields are **optional** for backward compatibility; clients should treat
 | `phoenix_trace_id` | string \| null | OpenTelemetry trace id (hex) when a span is active |
 | `thread_id` | string \| null | Echo of request `thread_id` when set |
 | `session_summary_excerpt` | string \| null | **CH4:** First ≤500 chars of server `session_summary` after this turn when `thread_id` set; aligns with SSE `context_compacted.session_summary_excerpt` |
-| `run_metadata` | object | Runtime flags, model ids, etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
+| `run_metadata` | object | Runtime flags, model ids, **`agent_runtime`** (graph selector; ADR-027), etc.; when `thread_id` is set, may include **`compaction`** (CH5 v1: `kind`, `kinds`, `trigger`, `digest_count`, `boundary`) and **`session_digest_count`** |
 | `answer_class` | string | One of `inventory`, `fact_lookup`, `grounded_explanation`, `relation_tracing`, `quote_extraction`, `ideation`, `bibliography_export`, `synthesis` |
 | `evidence_summary` | string \| null | Short human-readable evidence summary |
 | `warnings` | array of string | e.g. `weak_evidence`, `no_workspace`, `graph_only`, `text_only`, `no_quote_found`, `no_quote_found_after_idea_hits`, `history_digest_invalid`, `agent_turn_deadline_exceeded`, `agent_partial_graph_recursion_limit`, `partial_after_recursion_limit`, `answer_salvaged_from_graph_tool`, `agent_finished_without_final_answer_tool` (tools were used and the model returned text, but the last executed catalog tool was not `final_answer` — suppressed when `answer_salvaged_from_graph_tool` is present; `tool_trace` stays honest; use for monitoring/UI) |
@@ -83,8 +83,23 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `answer_synthesis_started` | After graph streaming completes, before `evidence_ready` / compaction | empty payload beyond `type` |
 | `evidence_ready` | Before final | `citation_count` |
 | `answer_synthesis_finished` | Immediately before `final_answer` | empty payload beyond `type` |
-| `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt`, **`compaction`**: `{ "kind": "turn_digest", "kinds": string[], "trigger": "post_answer" \| "post_answer_degraded_stream", "digest_count": int, "boundary": { "status": "idle" \| "candidate", ... } }` — `kinds` may include `rolling_memory` (after enough digests) and `workspace_capsule` when a workspace-scoped capsule exists; `post_answer_degraded_stream` when the graph stream did not yield a final `values` chunk |
-| `product_step` | Whenever the agent crosses a user-visible boundary (start of turn, hand-off, before synthesis, after compaction, on each non-meta `tool_call`) | `code` (e.g. `interpreting_question`, `delegating_to_<specialist>`, `composing_answer`, `updating_session_memory`, `searching_literature`, `using_tool`), optional `tool`, optional `specialist` |
+| `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt`, **`compaction`**: `{ "kind": "turn_digest", "kinds": string[], "trigger": "post_answer" \| "post_answer_degraded_stream", "digest_count": int, "boundary": { "status": "idle" \| "candidate", ... } }` — `kinds` may include `rolling_memory` (after enough digests) and `workspace_capsule` when a workspace-scoped capsule exists; `post_answer_degraded_stream` when the graph stream did not yield a final `values` chunk; **`audit`** (eval CH5): `{ schema_version, digest_cap, rolling_threshold, workspace_capsule_present, llm_full_history_compact }` — reproducibility slice for compaction gates (`llm_full_history_compact` reserved for future L4 LLM-wide summarization) |
+
+### Prompt / memory matrix after compaction (L1–L4)
+
+Canonical ladder lives in [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) §3. Below: **what can influence the model prompt** after server-side compaction on a turn (exact templating in `science_graphrag/agent/context/`).
+
+| Layer | Source | Typically injected when |
+|-------|--------|------------------------|
+| L1 turn digest | `turn_digest` → thread store | Next turn via `history_digest` client echo + server merge (`apply_turn_digest_to_thread`) |
+| L2 rolling session summary | `session_backend` rolling window over digests | `format_user_with_memory` / initial state builder when `thread_id` present |
+| L3 workspace capsule | Session `capsules` / workspace scope | When workspace-bound thread has capsule materialization enabled; also reflected in `context_compacted.compaction.kinds` |
+| L4 LLM consolidation | `SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED` (+ cooldown / token caps in Settings) | When digest window is full, optional chat-LLM rewrite of ``session_summary`` (cooldown-gated); **`audit.llm_full_history_compact`** + **`audit.llm_compact`** on SSE ``context_compacted``; sync JSON mirrors audit under ``run_metadata.compaction_audit`` |
+| L4 boundary | `context_compacted.compaction.boundary` | Signals ``digest_window_full``; pairs with optional LLM consolidation above |
+| Discovered tools carry-over | `capsules.discovered_tools` | Merged from prior turn digest tools; injected as `<discovered_tools>` block when flag enabled |
+| Tool-message compact | `tool_message_compact` (ReAct) | Same-turn LangGraph messages only; independent of CH5 SSE compaction |
+| Away recap | `<away_recap>` | When client sends `client_idle_ms` above threshold (`agent_away_summary_*`) |
+| `product_step` | Whenever the agent crosses a user-visible boundary (start of turn, hand-off, before synthesis, after compaction, on each non-meta `tool_call`) | `code` (e.g. `interpreting_question`, `delegating_to_<specialist>`, `composing_answer`, `updating_session_memory`, `searching_literature`, `using_tool`), optional `tool`, optional `specialist`; for fallback `using_tool` events also emit explicit generic marker fields (`generic=true`, `generic_reason`) |
 | `agent_note` | **Optional** (off by default; gated by `agent_note_enabled`); short LLM-generated phrase emitted ≤ `agent_note_max_per_turn` times per turn after `intent_classified`, after each `specialist_selected`, and once per specialist's first `tool_result` | `kind` (`intent` \| `route` \| `tool`), `note` (≤200 chars plain prose). Costs extra LLM tokens; safe to ignore client-side |
 | `final_answer` | End | Full envelope fields + legacy `answer`, `citations`, `tool_trace` (includes `session_summary_excerpt` when `thread_id` set) |
 | `warning` | Any time | `code`, `message` (optional `reason` / `confidence` for coordinator fallback) |

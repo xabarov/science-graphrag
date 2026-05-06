@@ -390,12 +390,12 @@ export function AskAnswerPanel({
                     suppressMissingPlaceholder={suppressMissingPlaceholder}
                     trailingActions={deepLinks || null}
                   />
-                  {chatDetailLevel === "detailed" ? (
+                  {chatDetailLevel === "detailed" && String(c.chunk_fingerprint ?? "").trim() !== "" ? (
                     <Typography
                       data-testid={`citation-chunk-fingerprint-${i}`}
                       sx={{ fontSize: "0.75rem", color: tk.text.muted, mt: 0.35 }}
                     >
-                      {t("askPanel.chunkLabel")} {String(c.chunk_fingerprint ?? t("workspace.upload.dash"))}
+                      {t("askPanel.chunkLabel")} {String(c.chunk_fingerprint).trim()}
                     </Typography>
                   ) : null}
                 </Box>

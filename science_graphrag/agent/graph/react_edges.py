@@ -10,6 +10,10 @@ from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langgraph.graph import END
 
 from science_graphrag.agent.final_answer_policy import needs_final_answer_nudge
+from science_graphrag.agent.graph.react_soft_cap import (
+    compute_force_finalize_reason,
+    force_finalize_debug_event,
+)
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.config import Settings, get_settings
@@ -161,6 +165,47 @@ def _latest_react_tool_batch_signatures(messages: list[Any]) -> list[str]:
     return out
 
 
+def _maybe_set_force_finalize_reason(
+    *,
+    meta: dict[str, Any],
+    same_count: int,
+    same_batch_cap: int,
+    repeated_pp_wid: str | None,
+    total_hops: int,
+    total_hops_cap: int,
+) -> list[dict[str, Any]]:
+    """Set ``react_force_finalize`` once and return associated debug events."""
+    if meta.get("react_force_finalize"):
+        return []
+    force_reason = compute_force_finalize_reason(
+        same_count=same_count,
+        same_batch_cap=same_batch_cap,
+        repeated_paper_profile_work_id=repeated_pp_wid,
+        total_hops=total_hops,
+        total_hops_cap=total_hops_cap,
+    )
+    if force_reason is None:
+        return []
+    meta["react_force_finalize"] = force_reason
+    add_span_event(
+        "agent.react_force_finalize",
+        {
+            "reason": force_reason,
+            "react_total_hops": total_hops,
+            "react_consecutive_same_batch_count": same_count,
+            "max_consecutive_same_batch": same_batch_cap,
+            "max_total_hops": total_hops_cap,
+        },
+    )
+    return [
+        force_finalize_debug_event(
+            reason=force_reason,
+            total_hops=total_hops,
+            same_count=same_count,
+        )
+    ]
+
+
 def react_after_tools_decrement_budget(state: AgentState) -> dict[str, Any]:
     """Decrement tool budget once per executed tool batch (after ToolNode).
 
@@ -269,39 +314,16 @@ def react_after_tools_decrement_budget(state: AgentState) -> dict[str, Any]:
     else:
         total_hops = int(meta.get("react_total_hops") or 0)
 
-    if not meta.get("react_force_finalize"):
-        force_reason: str | None = None
-        if same_count >= same_batch_cap:
-            force_reason = "duplicate_tool_batch"
-        elif repeated_pp_wid is not None:
-            force_reason = "repeated_paper_profile"
-        elif total_hops >= total_hops_cap:
-            force_reason = "react_hops_cap"
-        if force_reason is not None:
-            meta["react_force_finalize"] = force_reason
-            debug_patch.append(
-                {
-                    "type": "warning",
-                    "code": "react_force_finalize",
-                    "reason": force_reason,
-                    "react_total_hops": total_hops,
-                    "react_consecutive_same_batch_count": same_count,
-                    "detail": (
-                        "ReAct soft-cap engaged before recursion_limit; next route forces "
-                        "final_answer to close the turn."
-                    ),
-                }
-            )
-            add_span_event(
-                "agent.react_force_finalize",
-                {
-                    "reason": force_reason,
-                    "react_total_hops": total_hops,
-                    "react_consecutive_same_batch_count": same_count,
-                    "max_consecutive_same_batch": same_batch_cap,
-                    "max_total_hops": total_hops_cap,
-                },
-            )
+    debug_patch.extend(
+        _maybe_set_force_finalize_reason(
+            meta=meta,
+            same_count=same_count,
+            same_batch_cap=same_batch_cap,
+            repeated_pp_wid=repeated_pp_wid,
+            total_hops=total_hops,
+            total_hops_cap=total_hops_cap,
+        )
+    )
 
     out: dict[str, Any] = {"budget_remaining": budget - 1, "metadata": meta}
     if debug_patch:

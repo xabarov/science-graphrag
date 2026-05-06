@@ -40,5 +40,6 @@
 | [024](024-artifact-promotion-and-retention-phase4.md) | Phase 4: object retention tags, promotion to reviewable JSON, evidence export / GC |
 | [025](025-llm-distributed-quota-redis.md) | Phase 5: optional Redis-backed global LLM concurrency quota across workers |
 | [026](026-otlp-logs-defer.md) | OTLP log export: defer; use JSON stderr + optional Prometheus first |
+| [027](027-agent-trace-runtime-attribution.md) | Agent: canonical `agent_runtime` in run_metadata for multi-graph trace attribution |
 
 Новые ADR нумеровать по порядку (`001-...`, `002-...`); при отмене пометить как Superseded и сослаться на замену.

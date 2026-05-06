@@ -178,6 +178,7 @@ export default {
   "chat.stream.subagentFinished": "Подагент {{id}} завершён",
   "chat.stream.answerSynthesisStarted": "Сборка финального ответа",
   "chat.stream.answerSynthesisFinished": "Ответ готов",
+  "chat.stream.finalAnswerEnvelope": "Данные ответа получены",
 
   "chat.run.assistantLabel": "Исследовательский агент",
   "chat.run.state.running": "Выполняется",

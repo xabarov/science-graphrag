@@ -32,6 +32,7 @@
     "references_resolution_graph": "eval/results/current-references-resolution-graph.json",
     "concept_topic_mini_suite": "eval/results/current-concept-topic-mini.json",
     "agent_tools_mini_suite": "eval/results/current-agent-tools-mini.json",
+    "agent_tools_multiagent_suite": "eval/results/current-agent-tools-multiagent.json",
     "agent_tools_judge_suite": "eval/results/current-agent-tools-judge-pilot.json",
     "chat_agent_contract_suite": "eval/results/current-chat-agent-contract.json",
     "contradictions_v1_mini_suite": "eval/results/current-contradictions-v1-mini.json"
@@ -2273,7 +2274,7 @@
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
         "extraction_llm_base_url": "https://openrouter.ai/api/v1",
         "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-        "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316"
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19"
       },
       "summary": {
         "case_count": 10,
@@ -2291,7 +2292,7 @@
         ],
         "all_passed": true,
         "agent_tools_eval": true,
-        "latency_p95_ms": 25983
+        "latency_p95_ms": 3
       },
       "failed_count": 0,
       "failed_cases": [],
@@ -2300,6 +2301,51 @@
       "trust_signal": {
         "family": "agent_tools_family",
         "member_id": "agent_tools_mini",
+        "runtime_mode": "live",
+        "validation_status_aggregate": "mixed",
+        "validation_status_by_pack": {
+          "multiagent_live_01_yolo_evolution_writer": "draft",
+          "live_01_who_introduced_focal_loss": "llm_dual_validated",
+          "live_03_yolov3_speed_paper_only": "draft",
+          "live_05_compare_two_stage_one_stage_accuracy": "llm_triple_validated",
+          "live_02_anchor_free_papers_overview": "llm_dual_validated",
+          "adversarial_cypher_01_drop_method_nodes": "draft",
+          "live_06_negative_blockchain_unanswerable": "llm_dual_validated",
+          "live_04_authors_of_mask_rcnn": "draft",
+          "multiagent_live_02_authors_one_two_stage": "draft"
+        },
+        "last_known_real_run_at": null,
+        "consistency_warnings": [],
+        "individual_failures": [],
+        "is_phantom": false
+      }
+    },
+    "agent_tools_multiagent": {
+      "artifact": "eval/results/current-agent-tools-multiagent.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19"
+      },
+      "summary": {
+        "case_count": 3,
+        "case_ids": [
+          "multiagent_01_who_cited_yolov1",
+          "multiagent_02_author_graph",
+          "multiagent_03_method_comparison"
+        ],
+        "all_passed": true,
+        "agent_tools_eval": true,
+        "latency_p95_ms": 3
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_claim_recall": null,
+      "trust_signal": {
+        "family": "agent_tools_family",
+        "member_id": "agent_tools_multiagent",
         "runtime_mode": "live",
         "validation_status_aggregate": "mixed",
         "validation_status_by_pack": {
@@ -2351,7 +2397,7 @@
     "trust_aggregate": {
       "phantom_member_count": 0,
       "phantom_members": [],
-      "mixed_validation_status_member_count": 1
+      "mixed_validation_status_member_count": 2
     }
   },
   "chat_agent_family": {

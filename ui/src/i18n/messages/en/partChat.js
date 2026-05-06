@@ -177,6 +177,7 @@ export default {
   "chat.stream.subagentFinished": "Subagent {{id}} finished",
   "chat.stream.answerSynthesisStarted": "Assembling final answer",
   "chat.stream.answerSynthesisFinished": "Answer ready",
+  "chat.stream.finalAnswerEnvelope": "Answer payload received",
 
   "chat.run.assistantLabel": "Research agent",
   "chat.run.state.running": "Running",

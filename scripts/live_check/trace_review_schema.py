@@ -650,6 +650,9 @@ def merge_e2e_report_json_into_review(
                     compaction_events=row.compaction_events,
                     db_side_effects=DbSideEffects(ingest_jobs_seen=ig),
                     warnings=row.warnings,
+                    tool_search_shortlist_ratio_avg=row.tool_search_shortlist_ratio_avg,
+                    tool_search_deferred_schema_events=row.tool_search_deferred_schema_events,
+                    budget_stop_reasons=row.budget_stop_reasons,
                 )
             except (TypeError, ValueError):
                 pass

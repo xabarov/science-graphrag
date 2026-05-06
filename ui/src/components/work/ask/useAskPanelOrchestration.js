@@ -84,6 +84,8 @@ export function useAskPanelOrchestration({
   const [streamingTarget, setStreamingTarget] = useState(null);
   const skipHydrateWorkRef = useRef(false);
   const streamFailureRef = useRef("");
+  /** When storage head matches this turn id, do not refill composer from `recent[0]` (avoids scopeKey churn after submit). */
+  const composerSuppressHydrateTurnIdRef = useRef("");
 
   const formatAgentUiError = useCallback(
     (msg) => {
@@ -265,6 +267,11 @@ export function useAskPanelOrchestration({
     if (locked || initialWorkId) return;
     const recent = getActiveSessionEntries(scopeKey);
     if (!recent[0]) return;
+    const headId = String(recent[0].id || "");
+    if (headId && headId === composerSuppressHydrateTurnIdRef.current) {
+      return;
+    }
+    composerSuppressHydrateTurnIdRef.current = "";
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setQuery(recent[0].query);
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -345,14 +352,22 @@ export function useAskPanelOrchestration({
       const submitSid = String(activeSessionId || "").trim();
       setStreamingTarget({ scopeKey: submitSk, sessionId: submitSid });
       setPendingUserQuery(q);
+      setQuery("");
       try {
         const historyForDigest = submitSid ? getAskSessionEntries(submitSk, submitSid) : getActiveSessionEntries(submitSk);
         const historyDigest = buildAgentHistoryDigest(historyForDigest);
-        const pack = await submit({
-          query: q,
-          threadId: submitSid || null,
-          historyDigest,
-        });
+        let pack;
+        try {
+          pack = await submit({
+            query: q,
+            threadId: submitSid || null,
+            historyDigest,
+          });
+        } catch (submitExc) {
+          composerSuppressHydrateTurnIdRef.current = "";
+          setQuery(q);
+          throw submitExc;
+        }
         const queryMode =
           locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : turnWorkId ? "scoped" : "global";
         if (!pack?.normalized) {
@@ -415,6 +430,7 @@ export function useAskPanelOrchestration({
             setHistory(submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk));
           }
           const entriesAfter = submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk);
+          composerSuppressHydrateTurnIdRef.current = String(entriesAfter[0]?.id || "");
           if (submitSid && entriesAfter.length === 1 && q) {
             const autoTitle = q.slice(0, 56) + (q.length > 56 ? "…" : "");
             renameAskSession(sk, submitSid, autoTitle);
@@ -427,7 +443,6 @@ export function useAskPanelOrchestration({
             }
           }
           setNormalized(null);
-          setQuery("");
           bumpSessions();
           if (serverSync && submitSid && isServerAskSessionId(submitSid)) {
             const activeNow = String(readAskSessionUi(sk).activeId || "");
@@ -491,6 +506,7 @@ export function useAskPanelOrchestration({
           setHistory(submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk));
         }
         const entriesAfter = submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk);
+        composerSuppressHydrateTurnIdRef.current = String(entriesAfter[0]?.id || "");
         if (submitSid && entriesAfter.length === 1 && q) {
           const autoTitle = q.slice(0, 56) + (q.length > 56 ? "…" : "");
           renameAskSession(sk, submitSid, autoTitle);
@@ -503,7 +519,6 @@ export function useAskPanelOrchestration({
           }
         }
         setNormalized(null);
-        setQuery("");
         bumpSessions();
         if (!serverSync) return;
         if (submitSid && isServerAskSessionId(submitSid)) {

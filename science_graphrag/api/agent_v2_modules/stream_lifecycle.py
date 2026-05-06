@@ -17,6 +17,10 @@ from science_graphrag.agent.chat_envelope import (
 )
 from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
 from science_graphrag.agent.context.compaction import build_context_compacted_payload
+from science_graphrag.agent.context.llm_history_compact import (
+    maybe_llm_compact_session_after_turn,
+    patch_compaction_audit_llm,
+)
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.graph.errors import (
@@ -40,6 +44,11 @@ from science_graphrag.api.agent_v2_modules.deadline_otel import (
 from science_graphrag.api.agent_v2_modules.errors import (
     classify_agent_stream_error,
     format_agent_stream_error,
+)
+from science_graphrag.api.agent_v2_modules.recovery import (
+    salvage_answer_from_state,
+    sse_error_event,
+    sse_warning_event,
 )
 from science_graphrag.api.agent_v2_modules.streaming import (
     iter_graph_chunks,
@@ -136,6 +145,20 @@ def product_step_code_for_tool(tool_name: str) -> str | None:
     return mapping.get(tool_name)
 
 
+def product_step_event_for_tool(tool_name: str) -> dict[str, Any]:
+    """Build a product_step payload with explicit generic fallback semantics."""
+    code = product_step_code_for_tool(tool_name)
+    if code:
+        return {"type": "product_step", "code": code, "tool": tool_name}
+    return {
+        "type": "product_step",
+        "code": "using_tool",
+        "tool": tool_name,
+        "generic": True,
+        "generic_reason": "unmapped_tool_name",
+    }
+
+
 DELEGATING_TO_BY_SPECIALIST: dict[str, str] = {
     "retrieval_agent": "delegating_to_retrieval_agent",
     "graph_agent": "delegating_to_graph_agent",
@@ -149,6 +172,114 @@ def delegating_product_step_code(specialist_id: str) -> str:
     """Return a product_step code describing handoff to ``specialist_id``."""
     code = DELEGATING_TO_BY_SPECIALIST.get(str(specialist_id or "").strip())
     return code or "delegating_to_specialist"
+
+
+def _deadline_error_payload(exc: AgentGraphDeadlineExceeded) -> dict[str, Any]:
+    return {
+        "detail": str(exc),
+        "code": "agent_turn_deadline_exceeded",
+        "error_class": "provider_timeout",
+        "message": (
+            "The assistant hit the per-turn time limit before "
+            "producing a final answer."
+        ),
+    }
+
+
+def _recursion_error_payload(
+    exc: AgentGraphRecursionLimitExceeded, recursion_limit_value: int
+) -> dict[str, Any]:
+    return {
+        "detail": str(exc),
+        "code": "agent_graph_recursion_limit",
+        "error_class": "agent_recursion_limit",
+        "message": (
+            "The assistant stopped because the reasoning graph hit its "
+            "hard step limit before producing a final answer."
+        ),
+        "recursion_limit": recursion_limit_value,
+    }
+
+
+def _recover_after_deadline(
+    *,
+    exc: AgentGraphDeadlineExceeded,
+    latest_full_state: dict[str, Any] | None,
+    stores: StoreRegistry,
+) -> tuple[bool, str, list[dict[str, Any]], dict[str, Any] | None, dict[str, Any] | None]:
+    record_agent_turn_deadline_exceeded(exc, log_message="agent v2 stream deadline exceeded")
+    salvaged, salvaged_answer, salvaged_citations = salvage_answer_from_state(
+        latest_full_state=latest_full_state,
+        stores=stores,
+    )
+    if not salvaged:
+        return False, "", [], _deadline_error_payload(exc), None
+    return (
+        True,
+        salvaged_answer,
+        salvaged_citations,
+        None,
+        {
+            "code": "agent_turn_deadline_exceeded",
+            "message": (
+                "The assistant hit the per-turn time limit after producing "
+                "an answer; treat this turn as partially finalized."
+            ),
+        },
+    )
+
+
+def _recover_after_recursion_limit(
+    *,
+    exc: AgentGraphRecursionLimitExceeded,
+    latest_full_state: dict[str, Any] | None,
+    stores: StoreRegistry,
+    settings: Settings,
+    max_tool_calls: int,
+) -> tuple[bool, str, list[dict[str, Any]], int, dict[str, Any] | None, dict[str, Any] | None]:
+    recursion_limit_value = int(getattr(exc, "recursion_limit", 0) or 0)
+    logger.warning(
+        "agent v2 stream recursion_limit exceeded limit=%s",
+        recursion_limit_value,
+    )
+    add_span_event(
+        "agent.graph_recursion_limit_hit",
+        {
+            "recursion_limit": recursion_limit_value,
+            "agent.runtime": settings.agent_runtime,
+            "agent.max_tool_calls": int(max_tool_calls),
+            "salvage_state_present": bool(latest_full_state),
+        },
+    )
+    salvaged, salvaged_answer, salvaged_citations = salvage_answer_from_state(
+        latest_full_state=latest_full_state,
+        stores=stores,
+    )
+    if not salvaged:
+        return (
+            False,
+            "",
+            [],
+            recursion_limit_value,
+            _recursion_error_payload(exc, recursion_limit_value),
+            None,
+        )
+    return (
+        True,
+        salvaged_answer,
+        salvaged_citations,
+        recursion_limit_value,
+        None,
+        {
+            "code": "agent_partial_graph_recursion_limit",
+            "message": (
+                "The reasoning graph hit its step limit; the answer below is "
+                "partial. Try narrowing the question or asking it more "
+                "specifically."
+            ),
+            "recursion_limit": recursion_limit_value,
+        },
+    )
 
 
 async def emit_agent_note(
@@ -479,28 +610,12 @@ async def stream_agent_events(
                                         },
                                     }
                                     yield {"data": json.dumps(event_data)}
-                                    psc = product_step_code_for_tool(tool_name)
                                     if tool_name not in META_TOOL_NAMES:
-                                        if psc:
-                                            yield {
-                                                "data": json.dumps(
-                                                    {
-                                                        "type": "product_step",
-                                                        "code": psc,
-                                                        "tool": tool_name,
-                                                    }
-                                                )
-                                            }
-                                        else:
-                                            yield {
-                                                "data": json.dumps(
-                                                    {
-                                                        "type": "product_step",
-                                                        "code": "using_tool",
-                                                        "tool": tool_name,
-                                                    }
-                                                )
-                                            }
+                                        yield {
+                                            "data": json.dumps(
+                                                product_step_event_for_tool(tool_name)
+                                            )
+                                        }
                                     if active_subagent_id:
                                         yield {
                                             "data": json.dumps(
@@ -555,123 +670,50 @@ async def stream_agent_events(
                             citations = list(citations_chunk)
 
             except AgentGraphDeadlineExceeded as exc:
-                record_agent_turn_deadline_exceeded(
-                    exc, log_message="agent v2 stream deadline exceeded"
+                (
+                    salvaged,
+                    salvaged_answer,
+                    salvaged_citations,
+                    error_payload,
+                    warning_payload,
+                ) = _recover_after_deadline(
+                    exc=exc,
+                    latest_full_state=latest_full_state,
+                    stores=stores,
                 )
-                salvaged = False
-                if latest_full_state is not None:
-                    state_answer, resolved_cites, _g, _q, _d = (
-                        resolve_langgraph_answer_with_salvage(latest_full_state)
-                    )
-                    if (state_answer or "").strip():
-                        salvaged = True
-                        final_answer = str(state_answer).strip()
-                        typed_deadline = collect_typed_payloads(latest_full_state)
-                        inv_d = typed_deadline.get("inventory")
-                        sr_d = latest_full_state.get("specialist_results")
-                        citations = hydrate_citations_for_ui(
-                            list(resolved_cites),
-                            quote_candidates=list(typed_deadline.get("quote_candidates") or []),
-                            chunk_store=stores.qdrant_chunks,
-                            inventory=inv_d if isinstance(inv_d, dict) else None,
-                            messages=list(latest_full_state.get("messages") or []),
-                            specialist_results=sr_d if isinstance(sr_d, dict) else None,
-                        )
-                if not salvaged:
-                    yield {
-                        "data": json.dumps(
-                            {
-                                "type": "error",
-                                "detail": str(exc),
-                                "code": "agent_turn_deadline_exceeded",
-                                "error_class": "provider_timeout",
-                                "message": (
-                                    "The assistant hit the per-turn time limit before "
-                                    "producing a final answer."
-                                ),
-                            }
-                        )
-                    }
+                if salvaged:
+                    final_answer = salvaged_answer
+                    citations = salvaged_citations
+                if not salvaged and error_payload is not None:
+                    yield sse_error_event(error_payload)
                     return
                 salvaged_after_deadline = True
-                yield {
-                    "data": json.dumps(
-                        {
-                            "type": "warning",
-                            "code": "agent_turn_deadline_exceeded",
-                            "message": (
-                                "The assistant hit the per-turn time limit after producing "
-                                "an answer; treat this turn as partially finalized."
-                            ),
-                        }
-                    )
-                }
+                if warning_payload is not None:
+                    yield sse_warning_event(warning_payload)
             except AgentGraphRecursionLimitExceeded as exc:
-                recursion_limit_value = int(getattr(exc, "recursion_limit", 0) or 0)
-                logger.warning(
-                    "agent v2 stream recursion_limit exceeded limit=%s",
+                (
+                    salvaged,
+                    salvaged_answer,
+                    salvaged_citations,
                     recursion_limit_value,
+                    error_payload,
+                    warning_payload,
+                ) = _recover_after_recursion_limit(
+                    exc=exc,
+                    latest_full_state=latest_full_state,
+                    stores=stores,
+                    settings=settings,
+                    max_tool_calls=max_tool_calls,
                 )
-                add_span_event(
-                    "agent.graph_recursion_limit_hit",
-                    {
-                        "recursion_limit": recursion_limit_value,
-                        "agent.runtime": settings.agent_runtime,
-                        "agent.max_tool_calls": int(max_tool_calls),
-                        "salvage_state_present": bool(latest_full_state),
-                    },
-                )
-                salvaged = False
-                if latest_full_state is not None:
-                    state_answer, resolved_cites, _g, _q, _d = (
-                        resolve_langgraph_answer_with_salvage(latest_full_state)
-                    )
-                    if (state_answer or "").strip():
-                        salvaged = True
-                        final_answer = str(state_answer).strip()
-                        typed_recursion = collect_typed_payloads(latest_full_state)
-                        inv_r = typed_recursion.get("inventory")
-                        sr_r = latest_full_state.get("specialist_results")
-                        citations = hydrate_citations_for_ui(
-                            list(resolved_cites),
-                            quote_candidates=list(typed_recursion.get("quote_candidates") or []),
-                            chunk_store=stores.qdrant_chunks,
-                            inventory=inv_r if isinstance(inv_r, dict) else None,
-                            messages=list(latest_full_state.get("messages") or []),
-                            specialist_results=sr_r if isinstance(sr_r, dict) else None,
-                        )
-                if not salvaged:
-                    yield {
-                        "data": json.dumps(
-                            {
-                                "type": "error",
-                                "detail": str(exc),
-                                "code": "agent_graph_recursion_limit",
-                                "error_class": "agent_recursion_limit",
-                                "message": (
-                                    "The assistant stopped because the reasoning graph hit its "
-                                    "hard step limit before producing a final answer."
-                                ),
-                                "recursion_limit": recursion_limit_value,
-                            }
-                        )
-                    }
+                if salvaged:
+                    final_answer = salvaged_answer
+                    citations = salvaged_citations
+                if not salvaged and error_payload is not None:
+                    yield sse_error_event(error_payload)
                     return
                 salvaged_after_recursion_limit = True
-                yield {
-                    "data": json.dumps(
-                        {
-                            "type": "warning",
-                            "code": "agent_partial_graph_recursion_limit",
-                            "message": (
-                                "The reasoning graph hit its step limit; the answer below is "
-                                "partial. Try narrowing the question or asking it more "
-                                "specifically."
-                            ),
-                            "recursion_limit": recursion_limit_value,
-                        }
-                    )
-                }
+                if warning_payload is not None:
+                    yield sse_warning_event(warning_payload)
 
             duration_ms = int((perf_counter() - started) * 1000)
 
@@ -790,6 +832,31 @@ async def stream_agent_events(
                     workspace_capsule_present=isinstance(wc_post, dict)
                     and bool(str(wc_post.get("workspace_id") or "").strip()),
                 )
+                llm_audit = maybe_llm_compact_session_after_turn(
+                    settings,
+                    thread_id,
+                    digest_count=dcount,
+                    digest_cap=int(settings.agent_compaction_digest_cap),
+                )
+                if llm_audit:
+                    new_sum2 = str(get_session_for_thread(thread_id).get("session_summary") or "")
+                    wc_post2 = (get_session_for_thread(thread_id).get("capsules") or {}).get(
+                        "workspace"
+                    )
+                    compact_payload = build_context_compacted_payload(
+                        thread_id=thread_id,
+                        session_summary_excerpt=(new_sum2 or "")[:500],
+                        latest_full_state=latest_full_state,
+                        digest_count=dcount,
+                        rolling_threshold=settings.agent_compaction_rolling_memory_min_digests,
+                        digest_cap=settings.agent_compaction_digest_cap,
+                        workspace_id=workspace_id,
+                        workspace_capsule_present=isinstance(wc_post2, dict)
+                        and bool(str(wc_post2.get("workspace_id") or "").strip()),
+                    )
+                    compact_payload = patch_compaction_audit_llm(
+                        compact_payload, llm_audit=llm_audit
+                    )
                 yield {"data": json.dumps(compact_payload)}
                 yield {
                     "data": json.dumps({"type": "product_step", "code": "updating_session_memory"})
@@ -847,6 +914,9 @@ async def stream_agent_events(
                         run_meta["compaction"] = comp
                         if isinstance(comp.get("digest_count"), int):
                             run_meta["session_digest_count"] = comp["digest_count"]
+                    aud_stream = compact_payload.get("audit")
+                    if isinstance(aud_stream, dict):
+                        run_meta["compaction_audit"] = aud_stream
 
             final_warnings = list(envelope.get("warnings") or [])
             if history_digest_invalid and "history_digest_invalid" not in final_warnings:

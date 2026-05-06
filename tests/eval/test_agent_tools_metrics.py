@@ -28,6 +28,37 @@ def test_score_agent_case_subsequence_ignores_routing() -> None:
     assert m["passed"] is True
 
 
+def test_score_agent_case_normalizes_tool_name_and_args_match() -> None:
+    report = {
+        "answer": "ok",
+        "citations": [],
+        "tool_trace": [
+            {
+                "tool": "vector_search",
+                "args_summary": {"q": "focal loss dense detector"},
+            },
+            {"tool": "cypher_query", "args_summary": {"query": "MATCH focal_loss MENTIONS_METHOD"}},
+        ],
+    }
+    gold = {
+        "max_calls": 8,
+        "min_tool_call_correctness": 1.0,
+        "expected_tool_sequence": [
+            {
+                "tool_name": "vector_search",
+                "args_match": {"query_contains_any": ["focal loss", "class imbalance"]},
+            },
+            {
+                "tool_name": "cypher_query",
+                "args_match": {"query_contains_all": ["focal_loss"]},
+            },
+        ],
+    }
+    m = score_agent_case(report, gold)
+    assert m["tool_call_correctness"] == 1.0
+    assert m["passed"] is True
+
+
 def test_score_agent_case_prefix_mode() -> None:
     report = {
         "answer": "ok",

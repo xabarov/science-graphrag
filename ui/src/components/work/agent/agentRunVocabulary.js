@@ -206,6 +206,56 @@ export function shouldHideStreamEventFromHeadline(event) {
   return false;
 }
 
+/** Debug-only SSE payloads forwarded from LangGraph tool batches (not user-facing). */
+const SPECIALIST_RAIL_NOISE_TYPES = new Set(["tool_execution", "tool_permissions"]);
+
+/**
+ * Whether this stream event should be hidden from the «Запуски специалистов» rail
+ * (raw history still keeps them).
+ *
+ * @param {unknown} event
+ * @returns {boolean}
+ */
+export function isSpecialistRailNoiseEvent(event) {
+  if (!event || typeof event !== "object") return false;
+  const type = String(/** @type {Record<string, unknown>} */ (event).type || "");
+  return SPECIALIST_RAIL_NOISE_TYPES.has(type);
+}
+
+/**
+ * Normalized tool name from stream payloads (matches backend ``normalize_tool_call_name`` style).
+ *
+ * @param {unknown} event
+ * @returns {string}
+ */
+function streamEventToolName(event) {
+  if (!event || typeof event !== "object") return "";
+  const raw = /** @type {Record<string, unknown>} */ (event).tool;
+  return String(raw ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, "_");
+}
+
+/**
+ * Rows hidden from «Запуски специалистов»: debug batches plus ``final_answer`` plumbing
+ * (tool call / tool result / subagent progress duplicate labels already covered by
+ * ``answer_synthesis_*`` and ``evidence_ready``).
+ *
+ * @param {unknown} event
+ * @returns {boolean}
+ */
+export function isHiddenFromSpecialistRunTrace(event) {
+  if (!event || typeof event !== "object") return false;
+  if (isSpecialistRailNoiseEvent(event)) return true;
+  const ev = /** @type {Record<string, unknown>} */ (event);
+  const type = String(ev.type || "");
+  if (type === "final_answer") return true;
+  const tool = streamEventToolName(ev);
+  if (tool !== "final_answer") return false;
+  return type === "tool_call" || type === "tool_result" || type === "subagent_progress";
+}
+
 /**
  * Omit noisy / redundant event types from the live card's «recent lines» list only.
  * Keeps chips + headline focused on product-facing steps; avoids repeating every
@@ -216,8 +266,19 @@ export function shouldHideStreamEventFromHeadline(event) {
  */
 export function shouldOmitFromLiveRecentList(event) {
   if (!event || typeof event !== "object") return false;
-  const type = String(/** @type {Record<string, unknown>} */ (event).type || "");
-  return type === "tool_result" || type === "tool_search_result";
+  const ev = /** @type {Record<string, unknown>} */ (event);
+  const type = String(ev.type || "");
+  const tool = streamEventToolName(ev);
+  if (type === "final_answer") return true;
+  if ((type === "tool_call" || type === "subagent_progress") && tool === "final_answer") {
+    return true;
+  }
+  return (
+    type === "tool_result" ||
+    type === "tool_search_result" ||
+    type === "tool_execution" ||
+    type === "tool_permissions"
+  );
 }
 
 export const __VOCAB_KEYS = {

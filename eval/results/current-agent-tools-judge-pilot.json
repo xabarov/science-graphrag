@@ -4,7 +4,7 @@
     "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
     "extraction_llm_base_url": "https://openrouter.ai/api/v1",
     "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
     "semantic_extraction_enabled": true,
     "judge_prompt_fingerprint": "sha256-20:d3c2b207458ebbc39dde",
     "judge_schema_version": "agent_tools_judge_v1",

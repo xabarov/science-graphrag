@@ -83,7 +83,7 @@ def _merge_discovered_tools_capsule(
 
 
 def _empty_session() -> dict[str, Any]:
-    return {"digests": [], "session_summary": "", "capsules": {}}
+    return {"digests": [], "session_summary": "", "capsules": {}, "session_meta": {}}
 
 
 @runtime_checkable
@@ -103,6 +103,15 @@ class SessionMemoryBackend(Protocol):
         discovered_tools_carryover_cap: int = 24,
     ) -> str:
         """Append digest; return new session_summary text."""
+
+    def apply_llm_session_compact(
+        self,
+        thread_id: str,
+        *,
+        new_summary: str,
+        audit_fragment: dict[str, Any],
+    ) -> None:
+        """Replace rolling ``session_summary`` after L4 LLM compaction; append audit."""
 
     def clear_all(self) -> None:
         """Remove all threads (tests / process reset)."""
@@ -125,6 +134,7 @@ class InMemorySessionMemoryBackend:
                 "digests": list(ent.get("digests") or []),
                 "session_summary": str(ent.get("session_summary") or ""),
                 "capsules": dict(ent.get("capsules") or {}),
+                "session_meta": dict(ent.get("session_meta") or {}),
             }
 
     def update_after_turn(
@@ -142,7 +152,8 @@ class InMemorySessionMemoryBackend:
             return ""
         with self._lock:
             ent = self._store.setdefault(
-                tid, {"digests": [], "session_summary": "", "capsules": {}}
+                tid,
+                {"digests": [], "session_summary": "", "capsules": {}, "session_meta": {}},
             )
             digests: list[dict[str, Any]] = list(ent.get("digests") or [])
             digests.append(dict(turn_digest))
@@ -150,6 +161,9 @@ class InMemorySessionMemoryBackend:
             ent["digests"] = digests
             summary = _rolling_summary(digests)
             ent["session_summary"] = summary
+            meta = dict(ent.get("session_meta") or {})
+            meta["turn_counter"] = int(meta.get("turn_counter") or 0) + 1
+            ent["session_meta"] = meta
             ws = (workspace_id or "").strip()
             if ws:
                 caps = dict(ent.get("capsules") or {})
@@ -173,6 +187,28 @@ class InMemorySessionMemoryBackend:
                 )
                 ent["capsules"] = caps
             return summary
+
+    def apply_llm_session_compact(
+        self,
+        thread_id: str,
+        *,
+        new_summary: str,
+        audit_fragment: dict[str, Any],
+    ) -> None:
+        tid = (thread_id or "").strip()
+        if not tid:
+            return
+        with self._lock:
+            ent = self._store.get(tid)
+            if not ent:
+                return
+            meta = dict(ent.get("session_meta") or {})
+            audits = [dict(x) for x in (meta.get("l4_llm_compacts") or []) if isinstance(x, dict)]
+            audits.append(dict(audit_fragment))
+            meta["l4_llm_compacts"] = audits[-20:]
+            meta["last_llm_compact_turn"] = int(meta.get("turn_counter") or 0)
+            ent["session_summary"] = str(new_summary or "").strip()
+            ent["session_meta"] = meta
 
     def clear_all(self) -> None:
         """Drop all threads (tests / process-local reset)."""
@@ -216,10 +252,13 @@ class RedisSessionMemoryBackend:
         caps = obj.get("capsules") or {}
         if not isinstance(caps, dict):
             caps = {}
+        sm = obj.get("session_meta") or {}
+        session_meta = dict(sm) if isinstance(sm, dict) else {}
         return {
             "digests": digests,
             "session_summary": str(obj.get("session_summary") or ""),
             "capsules": {k: v for k, v in caps.items() if isinstance(v, dict)},
+            "session_meta": session_meta,
         }
 
     def get_session_copy(self, thread_id: str) -> dict[str, Any]:
@@ -231,6 +270,7 @@ class RedisSessionMemoryBackend:
             "digests": list(ent["digests"]),
             "session_summary": str(ent.get("session_summary") or ""),
             "capsules": dict(ent.get("capsules") or {}),
+            "session_meta": dict(ent.get("session_meta") or {}),
         }
 
     def update_after_turn(
@@ -250,10 +290,13 @@ class RedisSessionMemoryBackend:
         digests.append(dict(turn_digest))
         digests = digests[-10:]
         summary = _rolling_summary(digests)
+        meta = dict(ent.get("session_meta") or {})
+        meta["turn_counter"] = int(meta.get("turn_counter") or 0) + 1
         out: dict[str, Any] = {
             "digests": digests,
             "session_summary": summary,
             "capsules": dict(ent.get("capsules") or {}),
+            "session_meta": meta,
         }
         ws = (workspace_id or "").strip()
         if ws:
@@ -274,6 +317,30 @@ class RedisSessionMemoryBackend:
         payload = json.dumps(out, ensure_ascii=False)
         self._redis.setex(self._key(tid), self._ttl, payload)
         return summary
+
+    def apply_llm_session_compact(
+        self,
+        thread_id: str,
+        *,
+        new_summary: str,
+        audit_fragment: dict[str, Any],
+    ) -> None:
+        tid = (thread_id or "").strip()
+        if not tid:
+            return
+        ent = self._load_raw(tid)
+        meta = dict(ent.get("session_meta") or {})
+        audits = [dict(x) for x in (meta.get("l4_llm_compacts") or []) if isinstance(x, dict)]
+        audits.append(dict(audit_fragment))
+        meta["l4_llm_compacts"] = audits[-20:]
+        meta["last_llm_compact_turn"] = int(meta.get("turn_counter") or 0)
+        out = {
+            "digests": list(ent.get("digests") or []),
+            "session_summary": str(new_summary or "").strip(),
+            "capsules": dict(ent.get("capsules") or {}),
+            "session_meta": meta,
+        }
+        self._redis.setex(self._key(tid), self._ttl, json.dumps(out, ensure_ascii=False))
 
     def clear_all(self) -> None:
         """SCAN-unlink keys under prefix (tests / dev only — avoid in shared prod Redis)."""

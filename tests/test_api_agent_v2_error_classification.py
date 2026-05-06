@@ -51,6 +51,16 @@ def test_classify_provider_unreachable_from_connection_error_name() -> None:
     assert cls == "provider_unreachable"
 
 
+def test_classify_provider_timeout_from_error_message() -> None:
+    cls, _msg = classify_agent_stream_error(RuntimeError("request timed out after 30s"))
+    assert cls == "provider_timeout"
+
+
+def test_classify_provider_unreachable_from_error_message() -> None:
+    cls, _msg = classify_agent_stream_error(RuntimeError("connection refused by upstream"))
+    assert cls == "provider_unreachable"
+
+
 def test_classify_internal_error_for_unknown_exception() -> None:
     cls, msg = classify_agent_stream_error(RuntimeError("kaboom"))
     assert cls == "internal_error"

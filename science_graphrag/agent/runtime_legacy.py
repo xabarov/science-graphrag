@@ -98,4 +98,5 @@ class LegacyRetrievalAgent:
             answer=str(final.payload.get("answer") or ""),
             citations=list(final.payload.get("citations") or []),
             tool_trace=trace,
+            routing_log=None,
         )

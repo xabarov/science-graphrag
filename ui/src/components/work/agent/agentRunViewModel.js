@@ -13,6 +13,7 @@
 
 import {
   humanizeUnknownCode,
+  isHiddenFromSpecialistRunTrace,
   isRedundantIntentSource,
   mapAnswerClassToLabel,
   mapErrorCodeToLabel,
@@ -350,6 +351,10 @@ export function formatStreamEventOneLine(t, event) {
     if (!note) return "";
     return t("chat.stream.agentNote", { note });
   }
+  if (type === "final_answer") {
+    const out = t("chat.stream.finalAnswerEnvelope");
+    return out === "chat.stream.finalAnswerEnvelope" ? "" : out;
+  }
   if (type === "error") {
     const errorClass = String(event.error_class || "");
     const code = String(event.code || "");
@@ -524,6 +529,8 @@ export function collectRecentToolNamesForChips(events, maxChips = 4) {
     if (String(ev.type || "") !== "tool_call") continue;
     const name = String(ev.tool || "").trim();
     if (!name) continue;
+    const normalized = name.toLowerCase().replace(/-/g, "_");
+    if (normalized === "final_answer") continue;
     ordered.push(name);
   }
   if (ordered.length === 0) return [];
@@ -790,6 +797,7 @@ export function buildSpecialistStreamGroups(events) {
 
   for (const ev of events) {
     if (!ev || typeof ev !== "object") continue;
+    if (isHiddenFromSpecialistRunTrace(ev)) continue;
     const type = String(ev.type || "");
     if (type === "specialist_selected") {
       flushOrphan();

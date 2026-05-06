@@ -472,6 +472,11 @@ def dedup_merge_audit_cmd(
 @app.command("work-dedup-report")
 def work_dedup_report_cmd(
     as_json: bool = typer.Option(False, "--json", help="Emit JSON instead of plain text rows."),
+    fail_on_clusters: bool = typer.Option(
+        False,
+        "--fail-on-clusters",
+        help="Exit 2 when duplicate clusters are present (for CI/nightly checks).",
+    ),
 ) -> None:
     """List Work dedup clusters from Neo4j (read-only; Wave H3 prep)."""
 
@@ -483,6 +488,8 @@ def work_dedup_report_cmd(
         neo.close()
     if as_json:
         typer.echo(json.dumps(rows, indent=2, default=str))
+        if fail_on_clusters and rows:
+            raise typer.Exit(code=2)
         return
     if not rows:
         typer.echo("No duplicate Work clusters reported by find_work_dedup_violations().")
@@ -492,6 +499,8 @@ def work_dedup_report_cmd(
         typer.echo(f"- {row.get('dedup_key')}: {row.get('work_ids')}")
     if len(rows) > 200:
         typer.echo(f"... truncated ({len(rows)} total); use --json for full dump.")
+    if fail_on_clusters:
+        raise typer.Exit(code=2)
 
 
 def _mask_url(url: str) -> str:

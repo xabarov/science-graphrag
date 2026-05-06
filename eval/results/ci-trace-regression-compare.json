@@ -1,0 +1,16 @@
+{
+  "review_version": "trace-review-v1",
+  "status": "pass",
+  "fail_reasons": [],
+  "warn_reasons": [],
+  "delta": {
+    "missing_span_count": 0.0,
+    "tool_error_rate": 0.0,
+    "final_answer_missing_count": 0.0,
+    "latency_p95_ms": -10929.0,
+    "compaction_churn_score": 0.0,
+    "shortlist_ratio_avg": 0.0,
+    "deferred_schema_event_count": 0.0,
+    "budget_cutoff_count": 0.0
+  }
+}

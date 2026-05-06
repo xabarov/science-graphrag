@@ -35,49 +35,103 @@ def discover_agent_case_dirs(fixtures_root: Path, *, tier: str = "agent_tools_mi
     return out
 
 
-def _mock_case_report(case_id: str, question: str, *, workspace_id: str | None) -> dict[str, Any]:
-    trace = [
-        {
-            "step": 1,
-            "tool": "idea_search",
-            "args_summary": {"q": question[:40]},
-            "row_count": 3,
-            "duration_ms": 1,
-            "truncated": False,
-            "error": None,
-        }
-    ]
-    step = 2
-    if workspace_id:
+def _tool_name_from_gold_step(item: Any) -> str:
+    if isinstance(item, str):
+        return item
+    if isinstance(item, dict):
+        return str(item.get("tool") or item.get("tool_name") or "")
+    return ""
+
+
+def _mock_case_report(
+    case_id: str, question: str, *, workspace_id: str | None, gold: dict[str, Any]
+) -> dict[str, Any]:
+    """Deterministic stub trace aligned with gold (BT8/BT9 CI); not ``mock answer`` / ``mock-work``."""
+
+    raw_expected = gold.get("expected_tool_sequence") or []
+    trace: list[dict[str, Any]] = []
+    step = 1
+    for item in raw_expected:
+        tool = _tool_name_from_gold_step(item)
+        if not tool:
+            continue
+        if tool == "final_answer":
+            args_summary: dict[str, Any] = {"answer_chars": 24}
+            row_count = 1
+        elif tool in {"cypher_query", "edge_search"}:
+            args_summary = {"query": question[:200]}
+            row_count = 2
+        else:
+            args_summary = {"q": question[:80]}
+            row_count = 3
         trace.append(
             {
                 "step": step,
-                "tool": "workspace_inspect",
-                "args_summary": {"workspace_id": workspace_id},
-                "row_count": 2,
+                "tool": tool,
+                "args_summary": args_summary,
+                "row_count": row_count,
                 "duration_ms": 1,
                 "truncated": False,
                 "error": None,
             }
         )
         step += 1
-    trace.append(
-        {
-            "step": step,
-            "tool": "final_answer",
-            "args_summary": {"answer_chars": 12},
-            "row_count": 1,
-            "duration_ms": 1,
-            "truncated": False,
-            "error": None,
-        }
-    )
+    if not trace:
+        trace = [
+            {
+                "step": 1,
+                "tool": "idea_search",
+                "args_summary": {"q": question[:40]},
+                "row_count": 3,
+                "duration_ms": 1,
+                "truncated": False,
+                "error": None,
+            }
+        ]
+        step = 2
+        if workspace_id:
+            trace.append(
+                {
+                    "step": step,
+                    "tool": "workspace_inspect",
+                    "args_summary": {"workspace_id": workspace_id},
+                    "row_count": 2,
+                    "duration_ms": 1,
+                    "truncated": False,
+                    "error": None,
+                }
+            )
+            step += 1
+        trace.append(
+            {
+                "step": step,
+                "tool": "final_answer",
+                "args_summary": {"answer_chars": 12},
+                "row_count": 1,
+                "duration_ms": 1,
+                "truncated": False,
+                "error": None,
+            }
+        )
+
+    routing_log: list[dict[str, Any]] = []
+    budget_left = int(gold.get("max_calls") or 8)
+    for spec in gold.get("expected_specialist_sequence") or []:
+        routing_log.append(
+            {"from": "supervisor", "to": str(spec), "budget_left": budget_left},
+        )
+
+    answer = f"benchmark_stub_answer:{case_id}"
+    citations = [{"work_id": f"benchmark-stub-work:{case_id}"}]
+    duration_ms = max(2, len(trace))
     return {
         "case_id": case_id,
-        "answer": "mock answer",
-        "citations": [{"work_id": "mock-work"}],
+        "question": question,
+        "answer": answer,
+        "citations": citations,
         "tool_trace": trace,
-        "duration_ms": 2,
+        "routing_log": routing_log,
+        "duration_ms": duration_ms,
     }
 
 
@@ -86,7 +140,12 @@ def run_agent_case(case_dir: Path, *, mock_runtime: bool = False) -> dict[str, A
     gold = json.loads((case_dir / "gold.json").read_text(encoding="utf-8"))
     started = perf_counter()
     if mock_runtime:
-        report = _mock_case_report(case_dir.name, question, workspace_id=gold.get("workspace_id"))
+        report = _mock_case_report(
+            case_dir.name,
+            question,
+            workspace_id=gold.get("workspace_id"),
+            gold=gold,
+        )
     else:
         settings = get_settings()
         try:
@@ -99,14 +158,17 @@ def run_agent_case(case_dir: Path, *, mock_runtime: bool = False) -> dict[str, A
             )
             report = {
                 "case_id": case_dir.name,
+                "question": question,
                 "answer": out.answer,
                 "citations": out.citations,
                 "tool_trace": list(out.tool_trace),
+                "routing_log": list(out.routing_log or []),
                 "duration_ms": int((perf_counter() - started) * 1000),
             }
         except Exception as exc:  # noqa: BLE001 — benchmark must emit JSON
             report = {
                 "case_id": case_dir.name,
+                "question": question,
                 "answer": "",
                 "citations": [],
                 "tool_trace": [],

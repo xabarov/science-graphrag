@@ -355,6 +355,7 @@ class AgentRunOutput:
     answer: str
     citations: list[dict[str, Any]]
     tool_trace: list[ToolCallTrace]
+    routing_log: list[dict[str, Any]] | None = None
     answer_class: str = "grounded_explanation"
     product_path: str | None = None
     product_markers: list[str] = field(default_factory=list)
@@ -589,6 +590,7 @@ class RetrievalAgent:
             answer=answer,
             citations=citations,
             tool_trace=trace,
+            routing_log=routing_log or None,
             answer_class=ac,
             product_path=_coerce_optional_str(envelope.get("product_path")),
             product_markers=[

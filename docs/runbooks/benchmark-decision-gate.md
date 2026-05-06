@@ -173,6 +173,7 @@ Single-case retest после правок gold (если лежат в `eval/re
 Артефакты по умолчанию:
 
 - `eval/results/current-agent-tools-mini.json`
+- `eval/results/current-agent-tools-multiagent.json` (BT9 tier summary)
 - `eval/results/current-agent-tools-judge-pilot.json`
 
 ## 9. Trust signal: что считается «фантомом»
@@ -183,7 +184,7 @@ Single-case retest после правок gold (если лежат в `eval/re
 |-----------------|--------------------------|--------------|
 | `workspace_scoped` | большинство кейсов: `retrieval_trace.embedding.embedding_model == "mock"` | да → `canned` |
 | `merge_safe_contract_mock`, `strict_pilot_mock` | как выше / contract mock | да |
-| `agent_tools_mini` | ≥50%: `answer == "mock answer"` или `work_id == "mock-work"` в citations | да → `mock_runtime` |
+| `agent_tools_mini`, `agent_tools_multiagent` | ≥50%: `answer == "mock answer"` или `work_id == "mock-work"` в citations | да → `mock_runtime` |
 | `multihop_mini` | ≥50%: `request_error` начинается с `[Errno 111]` | да → `broken_connection` |
 | `hybrid_ablation` | `extraction_llm_model is null` и идентичные triples MRR по всем кейсам | да → `synthetic_gold` |
 | `concept_topic_mini` | v1 mini harness (substring) | да → `harness_substring` |

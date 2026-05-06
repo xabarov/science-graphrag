@@ -66,6 +66,7 @@ _GOLD_SUBDIR_BY_MEMBER: Final[dict[str, str | None]] = {
     "refs_graph": "references_resolution",
     "concept_topic_mini": "concept_topic",
     "agent_tools_mini": "agent_tools_v1",
+    "agent_tools_multiagent": "agent_tools_v1",
     "agent_tools_judge": None,
     "contradictions_v1_mini": "contradictions_v1",
     "chat_agent_contract": None,
@@ -136,7 +137,7 @@ def detect_runtime_mode(
         # Default harness until an explicit production extractor is wired.
         return "harness_substring"
 
-    if member_id == "agent_tools_mini" and cases:
+    if member_id in {"agent_tools_mini", "agent_tools_multiagent"} and cases:
         mockish = 0
         for c in cases:
             if str(c.get("answer") or "").strip() == "mock answer":

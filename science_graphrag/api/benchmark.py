@@ -23,6 +23,20 @@ from eval.report_compare import (
     compare_result_to_markdown,
     normalize_api_run_for_compare,
 )
+from science_graphrag.api.benchmark_case_utils import (
+    fixtures_root_graph_v1 as _fixtures_root_graph_v1,
+    fixtures_root_layer1 as _fixtures_root_layer1,
+    fixtures_root_layer2 as _fixtures_root_layer2,
+    gold_has_graph_expectations as _gold_has_graph_expectations,
+    load_case_tiers as _load_case_tiers,
+    merge_case_tier_dicts as _merge_case_tier_dicts,
+    rel_repo_path as _rel_repo_path,
+    repo_root as _repo_root,
+    resolve_graph_benchmark_fixture_dir as _resolve_graph_benchmark_fixture_dir,
+    teacher_gold_root_layer1 as _teacher_gold_root_layer1,
+    teacher_gold_root_layer2 as _teacher_gold_root_layer2,
+    tier_for_case_id as _tier_for_case_id,
+)
 from science_graphrag.api.benchmark_profiles import list_model_profiles
 from science_graphrag.api.graph_snapshot_diff import (
     compare_graph_expectations_to_snapshot,
@@ -38,101 +52,6 @@ _MAX_COMPARE_CASE_ROWS = 2000
 
 # Raw JSON body limit for graph snapshot preview (bytes).
 _GRAPH_SNAPSHOT_PREVIEW_MAX_BYTES = 3 * 1024 * 1024
-
-
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[2]
-
-
-def _fixtures_root_layer1() -> Path:
-    """Return fixtures root directory for layer-1 benchmark cases."""
-    return _repo_root() / "tests" / "fixtures" / "benchmarks" / "layer1"
-
-
-def _fixtures_root_layer2() -> Path:
-    """Return fixtures root for layer-2 semantic benchmark cases."""
-    return _repo_root() / "tests" / "fixtures" / "benchmarks" / "layer2"
-
-
-def _fixtures_root_graph_v1() -> Path:
-    """Graph-v1 benchmark cases (workspace projection expectations, etc.)."""
-    return _repo_root() / "tests" / "fixtures" / "benchmarks" / "graph_v1"
-
-
-def _resolve_graph_benchmark_fixture_dir(case_id: str) -> Path | None:
-    """Layer-1 dir if present, else graph_v1 case directory (for catalog + detail)."""
-
-    layer1 = _fixtures_root_layer1() / case_id
-    if layer1.is_dir():
-        return layer1
-    gv1 = _fixtures_root_graph_v1() / case_id
-    if gv1.is_dir():
-        return gv1
-    return None
-
-
-def _teacher_gold_root_layer1() -> Path:
-    return _repo_root() / "eval" / "teacher_gold" / "layer1"
-
-
-def _teacher_gold_root_layer2() -> Path:
-    return _repo_root() / "eval" / "teacher_gold" / "layer2"
-
-
-def _rel_repo_path(path: Path) -> str:
-    root = _repo_root().resolve()
-    try:
-        return str(path.resolve().relative_to(root))
-    except ValueError:
-        return str(path.resolve())
-
-
-def _load_case_tiers(root: Path) -> dict[str, list[str]]:
-    """Load case_tiers.json mapping (tier -> list[case_id])."""
-    tiers_path = root / "case_tiers.json"
-    if not tiers_path.is_file():
-        return {}
-    raw = json.loads(tiers_path.read_text(encoding="utf-8"))
-    out: dict[str, list[str]] = {}
-    for k, v in raw.items():
-        out[str(k)] = [str(x) for x in (v or [])]
-    return out
-
-
-def _merge_case_tier_dicts(*maps: dict[str, list[str]]) -> dict[str, list[str]]:
-    """Merge tier manifests (e.g. layer1 + graph_v1) without duplicate case_ids per tier."""
-    out: dict[str, list[str]] = {}
-    for m in maps:
-        for tier, ids in m.items():
-            bucket = out.setdefault(str(tier), [])
-            seen = set(bucket)
-            for cid in ids:
-                c = str(cid)
-                if c not in seen:
-                    bucket.append(c)
-                    seen.add(c)
-    return out
-
-
-def _tier_for_case_id(case_id: str, tiers: dict[str, list[str]]) -> str | None:
-    """Find tier name for case_id using loaded tier mapping."""
-    for tier, ids in tiers.items():
-        if case_id in ids:
-            return tier
-    return None
-
-
-def _gold_has_graph_expectations(fixture_dir: Path) -> bool:
-    """True if layer-1 gold.json defines graph_expectations (graph-v1 benchmark)."""
-
-    path = fixture_dir / "gold.json"
-    if not path.is_file():
-        return False
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, TypeError):
-        return False
-    return bool(data.get("graph_expectations"))
 
 
 def _build_article_sections(article_md: str) -> list[dict[str, Any]]:

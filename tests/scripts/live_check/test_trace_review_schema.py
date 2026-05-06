@@ -105,6 +105,27 @@ def test_merge_compaction_into_review_dict(schema_module) -> None:
     assert merged["metrics"]["compaction_event_count"] >= 1
 
 
+def test_aggregate_metrics_from_timeline_p2_roi_counters(schema_module) -> None:
+    """§6.4 P2: shortlist/deferred/budget telemetry aggregates into Metrics."""
+
+    row = schema_module.TimelineCase(
+        case_id="roi_smoke",
+        duration_ms=1200.0,
+        tool_steps=(
+            schema_module.ToolStep(1, "idea_search", True),
+            schema_module.ToolStep(2, "final_answer", True),
+        ),
+        tool_search_shortlist_ratio_avg=0.42,
+        tool_search_deferred_schema_events=2,
+        budget_stop_reasons=("agent_response_budget_cutoff",),
+    )
+    m = schema_module.aggregate_metrics_from_timeline((row,))
+    assert m.shortlist_ratio_avg == 0.42
+    assert m.deferred_schema_event_count == 2
+    assert m.budget_cutoff_count == 1
+    assert m.latency_p95_ms == 1200.0
+
+
 def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module) -> None:
     payload = {
         "review_version": schema_module.REVIEW_VERSION,

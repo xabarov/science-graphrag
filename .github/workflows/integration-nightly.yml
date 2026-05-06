@@ -121,11 +121,29 @@ jobs:
             --allow-skip-on-infra \
             --json-out eval/results/ci-retrieval-multihop-mini.json
 
-      # BT8: advisory judge over committed agent_tools mini (heuristic; no extra LLM calls).
+      # BT8: optional live regeneration of mini artifact when MAIN_LLM_API_KEY is set (real traces).
+      - name: Agent tools mini suite (live runtime, optional)
+        if: ${{ secrets.MAIN_LLM_API_KEY != '' }}
+        env:
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_ENABLED: "true"
+          SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY: ${{ secrets.MAIN_LLM_API_KEY }}
+        run: |
+          science-graphrag-agent-benchmark tests/fixtures/benchmarks/agent_tools_v1 \
+            --suite --tier agent_tools_mini --live-runtime \
+            --json-out eval/results/current-agent-tools-mini.json
+
+      # BT8: advisory judge over committed (or freshly regenerated) agent_tools mini.
       - name: Agent tools judge pilot (from current-agent-tools-mini.json)
         run: |
           science-graphrag-agent-judge-benchmark eval/results/current-agent-tools-mini.json \
             --json-out eval/results/current-agent-tools-judge-pilot.json
+
+      # BT9: multi-agent tier smoke (deterministic stub trace; validates fixtures + scoring).
+      - name: Agent tools multiagent tier (mock / stub runtime)
+        run: |
+          science-graphrag-agent-benchmark tests/fixtures/benchmarks/agent_tools_v1 \
+            --suite --tier agent_tools_multiagent --no-live-runtime \
+            --json-out eval/results/ci-agent-tools-multiagent-stub.json
 
       - name: Aggregate benchmark metrics summary
         run: python scripts/aggregate_benchmark_metrics.py
@@ -135,6 +153,10 @@ jobs:
           .venv/bin/python scripts/aggregate_benchmark_metrics.py
           .venv/bin/pytest tests/benchmarks/test_trust_baseline_regression.py -q
 
+      - name: Work dedup drift report (fail on clusters)
+        run: |
+          .venv/bin/science-graphrag work-dedup-report --json --fail-on-clusters > eval/results/ci-work-dedup-report.json
+
       - name: Upload benchmark JSON artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -143,4 +165,5 @@ jobs:
           path: |
             eval/results/ci-*.json
             eval/results/benchmark-metrics-summary.json
+            eval/results/ci-work-dedup-report.json
           if-no-files-found: ignore

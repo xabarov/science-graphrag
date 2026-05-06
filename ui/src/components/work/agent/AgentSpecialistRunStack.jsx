@@ -11,6 +11,7 @@ import {
   formatAggregatedEventOneLine,
   formatStreamEventOneLine,
 } from "./agentRunViewModel.js";
+import { isHiddenFromSpecialistRunTrace } from "./agentRunVocabulary.js";
 
 /**
  * Compact per-specialist grouping of stream events (no new SSE types required).
@@ -189,12 +190,21 @@ function SpecialistRunGroup({ t, group, panelId, chatDetailLevel = "simple" }) {
             const line = repeatExpand
               ? formatStreamEventOneLine(t, /** @type {Record<string, unknown>} */ (row))
               : formatAggregatedEventOneLine(t, /** @type {any} */ (row));
+            const rawEvent =
+              repeatExpand && row && typeof row === "object"
+                ? /** @type {Record<string, unknown>} */ (row)
+                : row && typeof row === "object" && "event" in row && row.event && typeof row.event === "object"
+                  ? /** @type {Record<string, unknown>} */ (row.event)
+                  : null;
             const type =
               repeatExpand && row && typeof row === "object"
                 ? String(/** @type {Record<string, unknown>} */ (row).type || "")
                 : row && typeof row === "object" && "event" in row && row.event && typeof row.event === "object"
                   ? String(/** @type {Record<string, unknown>} */ (row.event).type || "")
                   : "";
+            if (!line && rawEvent && isHiddenFromSpecialistRunTrace(rawEvent)) {
+              return null;
+            }
             const text = line || type || "—";
             return (
               <Typography

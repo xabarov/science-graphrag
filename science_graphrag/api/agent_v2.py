@@ -12,6 +12,10 @@ from pydantic import BaseModel, Field, field_validator
 from sse_starlette.sse import EventSourceResponse
 
 from science_graphrag.agent.context.compaction import build_context_compacted_payload
+from science_graphrag.agent.context.llm_history_compact import (
+    maybe_llm_compact_session_after_turn,
+    patch_compaction_audit_llm,
+)
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.graph.errors import (
     AgentGraphDeadlineExceeded,
@@ -382,6 +386,14 @@ async def post_agent_query_v2(
     excerpt: str | None = None
     extra_meta: dict[str, Any] | None = None
     if thread_id:
+        ent_sync = get_session_for_thread(thread_id)
+        dcount = len(ent_sync.get("digests") or [])
+        llm_audit_sync = maybe_llm_compact_session_after_turn(
+            settings,
+            thread_id,
+            digest_count=dcount,
+            digest_cap=int(settings.agent_compaction_digest_cap),
+        )
         raw_sum = str(get_session_for_thread(thread_id).get("session_summary") or "")
         excerpt = raw_sum[:500] if raw_sum.strip() else None
         ent_sync = get_session_for_thread(thread_id)
@@ -398,9 +410,14 @@ async def post_agent_query_v2(
             workspace_capsule_present=isinstance(wc_sync, dict)
             and bool(str(wc_sync.get("workspace_id") or "").strip()),
         )
+        if llm_audit_sync:
+            cp_sync = patch_compaction_audit_llm(cp_sync, llm_audit=llm_audit_sync)
         comp_sync = cp_sync.get("compaction")
         if isinstance(comp_sync, dict):
             extra_meta = {"compaction": comp_sync, "session_digest_count": dcount}
+            aud_sync = cp_sync.get("audit")
+            if isinstance(aud_sync, dict):
+                extra_meta["compaction_audit"] = aud_sync
     extra_warnings = ["history_digest_invalid"] if history_digest_invalid else None
     return _response_from_run(
         out,

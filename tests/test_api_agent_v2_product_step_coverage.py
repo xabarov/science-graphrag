@@ -188,11 +188,7 @@ def test_agent_note_emitted_when_enabled_with_cap(monkeypatch) -> None:
         call_count["n"] += 1
         return f"Note {kind} {call_count['n']}"
 
-    # Patch the lazy import inside _emit_agent_note's local module load by patching
-    # the source module directly.
-    from science_graphrag.agent import notes as notes_mod
-
-    monkeypatch.setattr(notes_mod, "maybe_generate_agent_note", _fake_generate)
+    monkeypatch.setattr(agent_v2_stream_lifecycle, "maybe_generate_agent_note", _fake_generate)
 
     monkeypatch.setattr(
         agent_v2_stream_lifecycle,

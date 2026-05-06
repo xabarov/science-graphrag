@@ -601,6 +601,38 @@ describe("AskAnswerPanel", () => {
     expect(screen.getByText(/Short excerpt/)).toBeTruthy();
   });
 
+  it("hides chunk id line in detailed mode when chunk_fingerprint is missing", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "ok",
+      citations: [{ work_id: "w1", excerpt: "Short excerpt", title: "Paper" }],
+      graph_context: {},
+      retrieval_trace: {},
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+            chatDetailLevel="detailed"
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId("citation-chunk-fingerprint-0")).toBeNull();
+    expect(screen.getByText(/Short excerpt/)).toBeTruthy();
+  });
+
   it("shows chunk id line in detailed mode when citation has chunk_fingerprint", () => {
     const normalized = normalizeQueryResponse({
       answer: "ok",

@@ -36,6 +36,12 @@ def test_build_context_compacted_payload_shape() -> None:
     assert p["compaction"]["kinds"] == ["turn_digest"]
     assert p["compaction"]["digest_count"] == 2
     assert p["compaction"]["boundary"]["status"] == "idle"
+    audit = p["audit"]
+    assert audit["schema_version"] == 1
+    assert audit["digest_cap"] == 10
+    assert audit["rolling_threshold"] == 3
+    assert audit["workspace_capsule_present"] is False
+    assert audit["llm_full_history_compact"] is False
 
 
 def test_build_context_compacted_degraded_trigger() -> None:
@@ -96,3 +102,5 @@ def test_chat_context_compaction_fixture_valid() -> None:
     )
     for k in raw.get("expected_compaction_keys") or []:
         assert k in sample["compaction"]
+    for k in raw.get("expected_audit_keys") or []:
+        assert k in sample["audit"]

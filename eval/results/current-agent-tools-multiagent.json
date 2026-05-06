@@ -1,0 +1,236 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 3,
+    "case_ids": [
+      "multiagent_01_who_cited_yolov1",
+      "multiagent_02_author_graph",
+      "multiagent_03_method_comparison"
+    ],
+    "all_passed": true,
+    "agent_tools_eval": true,
+    "latency_p95_ms": 3
+  },
+  "cases": [
+    {
+      "case_id": "multiagent_01_who_cited_yolov1",
+      "answer": "benchmark_stub_answer:multiagent_01_who_cited_yolov1",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:multiagent_01_who_cited_yolov1"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Which papers in the workspace cite YOLOv1 and use Transformer-based methods?"
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "cypher_query",
+          "args_summary": {
+            "query": "Which papers in the workspace cite YOLOv1 and use Transformer-based methods?"
+          },
+          "row_count": 2,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 24
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "routing_log": [
+        {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 8
+        },
+        {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 8
+        }
+      ],
+      "duration_ms": 3,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true,
+        "specialist_sequence_match": 1.0
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "multiagent_02_author_graph",
+      "answer": "benchmark_stub_answer:multiagent_02_author_graph",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:multiagent_02_author_graph"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "q": "Find all coauthors of the paper 'Attention is All You Need' in our corpus."
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "edge_search",
+          "args_summary": {
+            "query": "Find all coauthors of the paper 'Attention is All You Need' in our corpus."
+          },
+          "row_count": 2,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 24
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "routing_log": [
+        {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 8
+        },
+        {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 8
+        }
+      ],
+      "duration_ms": 3,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true,
+        "specialist_sequence_match": 1.0
+      },
+      "wall_clock_seconds": 0.0
+    },
+    {
+      "case_id": "multiagent_03_method_comparison",
+      "answer": "benchmark_stub_answer:multiagent_03_method_comparison",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:multiagent_03_method_comparison"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 1,
+          "tool": "cypher_query",
+          "args_summary": {
+            "query": "Compare the methods used in the top 3 most-cited papers in the workspace."
+          },
+          "row_count": 2,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "idea_search",
+          "args_summary": {
+            "q": "Compare the methods used in the top 3 most-cited papers in the workspace."
+          },
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer_chars": 24
+          },
+          "row_count": 1,
+          "duration_ms": 1,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "routing_log": [
+        {
+          "from": "supervisor",
+          "to": "graph_agent",
+          "budget_left": 8
+        },
+        {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 8
+        },
+        {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 8
+        }
+      ],
+      "duration_ms": 3,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true,
+        "specialist_sequence_match": 1.0
+      },
+      "wall_clock_seconds": 0.0
+    }
+  ]
+}

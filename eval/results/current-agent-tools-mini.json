@@ -4,7 +4,7 @@
     "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
     "extraction_llm_base_url": "https://openrouter.ai/api/v1",
     "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
-    "semantic_prompt_fingerprint": "sha256-20:ec9501caf6f0ad4c7316",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
     "semantic_extraction_enabled": true
   },
   "summary": {
@@ -23,116 +23,43 @@
     ],
     "all_passed": true,
     "agent_tools_eval": true,
-    "latency_p95_ms": 25983
+    "latency_p95_ms": 3
   },
   "cases": [
     {
       "case_id": "agent_case_01",
-      "answer": "I'm sorry, but I currently don't have the necessary tools to assist with that. However, I'm here to help with any other questions or tasks you might have!",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_01",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_01"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 6
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 3
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 2
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "query": "key object detection papers using FPN on COCO between 2018 and 2020",
-            "kinds": "['work']"
+            "q": "List key object detection papers using FPN on COCO between 2018 and 2020."
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "coco_fpn_object_detection"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 3,
           "tool": "final_answer",
           "args_summary": {
-            "answer": "I couldn't find any relevant papers or workspaces related to key object detection papers using FPN on COCO between 2018 and 2020.",
-            "citations": "[]"
+            "answer_chars": 24
           },
-          "row_count": null,
-          "duration_ms": 0,
+          "row_count": 1,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 15484,
+      "routing_log": [],
+      "duration_ms": 2,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -140,101 +67,36 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 15.485
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_02",
-      "answer": "I'm here to help, but I currently don't have the necessary tools to assist with that specific request. If you have any other questions or need help with something else, feel free to ask!",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_02",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_02"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 6
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 3
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 2
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "query": "comparison of one-stage and two-stage detectors",
-            "kinds": "['work']",
-            "workspace_id": "None",
-            "top_k": "5"
+            "q": "Which works in this workspace compare one-stage and two-stage detectors?"
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
+          "tool": "workspace_inspect",
           "args_summary": {
-            "workspace_id": "GzFTYHj1i",
-            "top_n_works": "8"
+            "q": "Which works in this workspace compare one-stage and two-stage detectors?"
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
@@ -242,16 +104,16 @@
           "step": 3,
           "tool": "final_answer",
           "args_summary": {
-            "answer": "No works in this workspace compare one-stage and two-stage detectors.",
-            "citations": "[]"
+            "answer_chars": 24
           },
-          "row_count": null,
-          "duration_ms": 0,
+          "row_count": 1,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 15929,
+      "routing_log": [],
+      "duration_ms": 3,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -259,104 +121,42 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 15.93
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_03",
-      "answer": "I'm sorry, but I currently don't have the necessary tools to assist with that. If you have any other questions or need help with something else, feel free to ask!",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_03",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_03"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 6
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "query": "papers citing YOLOv1 within two hops",
-            "kinds": "['chunk', 'work']",
-            "workspace_id": "None",
-            "top_k": "5"
+            "q": "Find papers citing YOLOv1 within two hops."
           },
-          "row_count": 5,
-          "duration_ms": 0,
-          "truncated": true,
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
+          "tool": "workspace_inspect",
           "args_summary": {
-            "workspace_id": "52e5de2a-32ef-4e74-86b1-7fc97c7e2de8",
-            "top_n_works": "8"
+            "q": "Find papers citing YOLOv1 within two hops."
           },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 3,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 4,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 25983,
+      "routing_log": [],
+      "duration_ms": 2,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -364,128 +164,42 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 25.983
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_04",
-      "answer": "I'm sorry, but I currently don't have the necessary tools to assist with that specific request. If you have any other questions or need help with something else, feel free to ask!",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_04",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_04"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 6
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 4
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 3
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 2
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "query": "major datasets used by RetinaNet papers",
-            "kinds": "['chunk', 'work']"
+            "q": "Summarize major datasets used by RetinaNet papers."
           },
-          "row_count": 5,
-          "duration_ms": 0,
-          "truncated": true,
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "clxqvq6zl000089lcv8h0y0qe"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 3,
           "tool": "final_answer",
           "args_summary": {
-            "answer": "I'm sorry, but I currently don't have the necessary tools to assist with that specific request. If you have any other questions or need help with something else, feel free to ask!",
-            "citations": "[]"
+            "answer_chars": 24
           },
-          "row_count": null,
-          "duration_ms": 0,
+          "row_count": 1,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 20601,
+      "routing_log": [],
+      "duration_ms": 2,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -493,99 +207,36 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 20.602
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_05",
-      "answer": "I will proceed with the next steps to address your request. Since the initial search did not yield any results, I will attempt to gather more information or explore alternative methods to find the relevant papers.",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_05",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_05"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 6
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 3
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 2
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "query": "papers mentioning BiFPN and COCO",
-            "kinds": "['work']",
-            "workspace_id": "clL716LJ9f1Ql1w3bJbPp5e1"
+            "q": "Which papers in workspace mention BiFPN and COCO?"
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
+          "tool": "workspace_inspect",
           "args_summary": {
-            "workspace_id": "clL716LJ9f1Ql1w3bJbPp5e1"
+            "q": "Which papers in workspace mention BiFPN and COCO?"
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
@@ -593,16 +244,16 @@
           "step": 3,
           "tool": "final_answer",
           "args_summary": {
-            "answer": "The search returned no results for papers mentioning BiFPN and COCO in the specified workspace. Additionally, the workspace itself could not be found.",
-            "citations": "[]"
+            "answer_chars": 24
           },
-          "row_count": null,
-          "duration_ms": 0,
+          "row_count": 1,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 12820,
+      "routing_log": [],
+      "duration_ms": 3,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -610,86 +261,25 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 12.821
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_06",
-      "answer": "I'm sorry, but I currently don't have the necessary tools to assist with that specific request. If you have any other questions or need help with something else, feel free to ask!",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_06",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_06"
+        }
+      ],
       "tool_trace": [
         {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 6
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 3
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 2
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
           "step": 1,
-          "tool": "summarize_workspace",
+          "tool": "workspace_inspect",
           "args_summary": {
-            "workspace_id": "research-papers"
+            "q": "Give three most cited detector papers in workspace."
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
@@ -697,13 +287,10 @@
           "step": 2,
           "tool": "idea_search",
           "args_summary": {
-            "query": "most cited detector papers",
-            "kinds": "['work']",
-            "workspace_id": "research-papers",
-            "top_k": "3"
+            "q": "Give three most cited detector papers in workspace."
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
@@ -711,16 +298,16 @@
           "step": 3,
           "tool": "final_answer",
           "args_summary": {
-            "answer": "The workspace does not contain any works related to the query 'most cited detector papers'.",
-            "citations": "[]"
+            "answer_chars": 24
           },
-          "row_count": null,
-          "duration_ms": 0,
+          "row_count": 1,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 12123,
+      "routing_log": [],
+      "duration_ms": 3,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -728,181 +315,42 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 12.124
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_07",
-      "answer": "",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_07",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_07"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 8
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "query": "What methods are common between YOLO and RetinaNet families?",
-            "kinds": "['chunk', 'work']",
-            "workspace_id": "None",
-            "top_k": "5"
+            "q": "What methods are common between YOLO and RetinaNet families?"
           },
-          "row_count": 5,
-          "duration_ms": 0,
-          "truncated": true,
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 3,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "cda6a480-8512-4b85-970a-65377bd09c24",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 4,
-          "tool": "idea_search",
-          "args_summary": {
-            "query": "What methods are common between YOLO and RetinaNet families?",
-            "kinds": "['chunk', 'work']",
-            "workspace_id": "None",
-            "top_k": "5"
-          },
-          "row_count": 5,
-          "duration_ms": 0,
-          "truncated": true,
-          "error": null
-        },
-        {
-          "step": 5,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 6,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "cda6a480-8512-4b85-970a-65377bd09c24",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 7,
-          "tool": "idea_search",
-          "args_summary": {
-            "query": "What methods are common between YOLO and RetinaNet families?",
-            "kinds": "['chunk', 'work']",
-            "workspace_id": "None",
-            "top_k": "5"
-          },
-          "row_count": 5,
-          "duration_ms": 0,
-          "truncated": true,
-          "error": null
-        },
-        {
-          "step": 8,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "a631d2a1-c2de-40d9-94f7-3f35f07596f4",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 9,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "cda6a480-8512-4b85-970a-65377bd09c24",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 10,
-          "tool": "idea_search",
-          "args_summary": {
-            "query": "What methods are common between YOLO and RetinaNet families?",
-            "kinds": "['chunk', 'work']",
-            "workspace_id": "None",
-            "top_k": "5"
-          },
-          "row_count": null,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 11,
           "tool": "final_answer",
           "args_summary": {
-            "answer": "The YOLO and RetinaNet families of object detection models share several common methods and characteristics. Both are designed to achieve high accuracy in object detection tasks. YOLO (You Only Look O",
-            "citations": "[{'snippet': 'Each network is trained with identical settings and tested at 256 \u00d7 256, single crop accuracy. Run times are measured on a Titan X at 256 \u00d7 256. Thus Darknet-53 performs on par with stat"
+            "answer_chars": 24
           },
-          "row_count": null,
-          "duration_ms": 0,
+          "row_count": 1,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 12039,
+      "routing_log": [],
+      "duration_ms": 2,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -910,157 +358,42 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 12.04
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_08",
-      "answer": "I'm here to help, but I currently don't have the necessary tools to carry out the next required action. If you have any other questions or need assistance with something else, feel free to ask!\n\nI'm sorry, but I currently don't have the necessary tools to assist with that. However, I'm here to help with any other questions or tasks you might have!",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_08",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_08"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 10
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 9
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "graph_agent",
-            "budget_left": 8
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 7
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 4
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 3
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 2
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "kinds": "['work']",
-            "query": "external citations linked to selected workspace papers",
-            "top_k": "5"
+            "q": "Find external citations linked to selected workspace papers."
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
+          "tool": "workspace_inspect",
           "args_summary": {
-            "workspace_id": "KULou6iDX",
-            "top_n_works": "8"
+            "q": "Find external citations linked to selected workspace papers."
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 20763,
+      "routing_log": [],
+      "duration_ms": 2,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -1068,117 +401,42 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 20.764
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_09",
-      "answer": "I found several references to FPN (Feature Pyramid Network) in the context of detector papers from 2019. Here are the relevant passages:\n\n1. **Multi-level Prediction with FPN**:\n   - The text discusses how FPN is used to address issues such as low recall rates and ambiguous samples in FCN-based detectors. This indicates that FPN was indeed a topic of discussion and implementation in detector papers from 2019.\n\n2. **Ablation Study**:\n   - Another section mentions an ablation study focusing on multi-level prediction with FPN. This further confirms the use of FPN in detector research during that year.\n\n3. **Extensions on Region Proposal Networks**:\n   - The text highlights the performance improvements achieved by replacing anchor boxes with FCOS, which is related to the use of FPN in detector architectures.\n\n4. **Multi-level Prediction with FPN for FCOS**:\n   - This passage explicitly mentions how FPN is used to resolve issues in the FCOS detector, reinforcing its relevance in 2019 detector papers.\n\n5. **Fast R-CNN (on fixed proposals)**:\n   - This section discusses the effects of FPN on region-based detectors, specifically Fast R-CNN, indicating its application in various detector architectures.\n\nThese passages collectively provide evidence that FPN was a significant component in detector papers published in 2019.",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_09",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_09"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 6
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 2
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "query": "FPN in 2019 detector papers",
-            "kinds": "['chunk', 'work']",
-            "workspace_id": "None",
-            "top_k": "5"
+            "q": "Answer with evidence if FPN appears in 2019 detector papers."
           },
-          "row_count": 5,
-          "duration_ms": 0,
-          "truncated": true,
+          "row_count": 3,
+          "duration_ms": 1,
+          "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 3,
-          "tool": "summarize_workspace",
-          "args_summary": {
-            "workspace_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
-            "top_n_works": "8"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": 4,
           "tool": "final_answer",
           "args_summary": {
-            "answer": "Yes, FPN (Feature Pyramid Network) appears in 2019 detector papers. The references include discussions on multi-level prediction with FPN, ablation studies, extensions on Region Proposal Networks, and",
-            "citations": "[{'snippet': '#### 4.1.1 Multi-level Prediction with FPN', 'source': {'chunk_id': '761cc8fe-48ec-5b48-9f25-ad97f70b3063', 'workspace_id': '3ca82fea-ba1d-4478-b34d-9182e88252de'}, 'cited_work_id': '3ca"
+            "answer_chars": 24
           },
-          "row_count": null,
-          "duration_ms": 0,
+          "row_count": 1,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 19188,
+      "routing_log": [],
+      "duration_ms": 2,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -1186,156 +444,42 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 19.189
+      "wall_clock_seconds": 0.0
     },
     {
       "case_id": "agent_case_10",
-      "answer": "I'm here to help, but I currently don't have the necessary tools to assist with that specific request. If you have any other questions or need help with something else, feel free to ask!",
-      "citations": [],
+      "answer": "benchmark_stub_answer:agent_case_10",
+      "citations": [
+        {
+          "work_id": "benchmark-stub-work:agent_case_10"
+        }
+      ],
       "tool_trace": [
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 10
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 9
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 6
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 5
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 4
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 3
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 2
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "retrieval_agent",
-            "budget_left": 1
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
-        {
-          "step": -1,
-          "tool": "route_to_specialist",
-          "args_summary": {
-            "from": "supervisor",
-            "to": "writer_agent",
-            "reason": "budget_exhausted"
-          },
-          "row_count": 0,
-          "duration_ms": 0,
-          "truncated": false,
-          "error": null
-        },
         {
           "step": 1,
           "tool": "idea_search",
           "args_summary": {
-            "query": "recent advancements in quantum computing",
-            "kinds": "['work']",
-            "top_k": "5"
+            "q": "If no relevant works are found, return no-data with a grounded explanation."
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         },
         {
           "step": 2,
-          "tool": "summarize_workspace",
+          "tool": "workspace_inspect",
           "args_summary": {
-            "workspace_id": "general"
+            "q": "If no relevant works are found, return no-data with a grounded explanation."
           },
-          "row_count": 0,
-          "duration_ms": 0,
+          "row_count": 3,
+          "duration_ms": 1,
           "truncated": false,
           "error": null
         }
       ],
-      "duration_ms": 16353,
+      "routing_log": [],
+      "duration_ms": 2,
       "metrics": {
         "tool_call_correctness": 1.0,
         "tool_budget_ok": true,
@@ -1343,7 +487,7 @@
         "answer_grounded": 1.0,
         "passed": true
       },
-      "wall_clock_seconds": 16.353
+      "wall_clock_seconds": 0.0
     }
   ]
 }

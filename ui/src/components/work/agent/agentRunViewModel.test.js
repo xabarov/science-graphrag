@@ -4,6 +4,7 @@ import {
   buildLiveStatusPresentation,
   buildSpecialistStreamGroups,
   collectFormattedStreamLines,
+  collectRecentToolNamesForChips,
   collectSafeExplanationLines,
   deriveDecisionRationale,
   derivePrimaryHeadline,
@@ -35,6 +36,7 @@ const MOCK_T = {
   "chat.stream.subagentFinished": "S-{{id}}",
   "chat.stream.answerSynthesisStarted": "SYN+",
   "chat.stream.answerSynthesisFinished": "SYN-",
+  "chat.stream.finalAnswerEnvelope": "FA-ENV",
   "chat.stream.toolResultLabel": "TR",
   "chat.stream.rowsLabel": "rows",
   "chat.stream.errorLabel": "err",
@@ -267,6 +269,10 @@ describe("formatStreamEventOneLine", () => {
     expect(formatStreamEventOneLine(t, { type: "answer_synthesis_finished" })).toBe("SYN-");
   });
 
+  it("formats final_answer SSE envelope without raw type token", () => {
+    expect(formatStreamEventOneLine(t, { type: "final_answer", answer: "body" })).toBe("FA-ENV");
+  });
+
   it("hides all tool_search_result variants from headline picker", () => {
     const withRules = [
       { type: "intent_classified", answer_class: "inventory", source: "heuristic" },
@@ -335,6 +341,52 @@ describe("buildSpecialistStreamGroups", () => {
     expect(g[0].isOrphan).toBe(true);
     expect(g[1].to).toBe("ret");
     expect(g[1].events.length).toBe(2);
+  });
+
+  it("drops tool_execution and tool_permissions from grouped streams", () => {
+    const events = [
+      { type: "specialist_selected", from: "sup", to: "ret" },
+      { type: "tool_execution", phase: "pre_hooks", ok: true, tools: ["idea_search"] },
+      { type: "tool_call", tool: "idea_search" },
+      { type: "tool_execution", phase: "post_hooks", ok: true, elapsed_ms: 12 },
+      { type: "tool_permissions", matrix: {} },
+      { type: "tool_result", tool: "idea_search", row_count: 1 },
+    ];
+    const g = buildSpecialistStreamGroups(events);
+    expect(g.length).toBe(1);
+    expect(g[0].events.map((e) => e.type)).toEqual([
+      "specialist_selected",
+      "tool_call",
+      "tool_result",
+    ]);
+  });
+
+  it("drops final_answer plumbing from grouped streams", () => {
+    const events = [
+      { type: "specialist_selected", from: "sup", to: "ret" },
+      { type: "tool_call", tool: "final_answer" },
+      { type: "tool_result", tool: "final_answer", row_count: 3 },
+      { type: "subagent_progress", subagent_id: "single_agent_react", tool: "final_answer", summary: "final_answer" },
+      { type: "product_step", code: "composing_answer" },
+      { type: "final_answer", answer: "text" },
+    ];
+    const g = buildSpecialistStreamGroups(events);
+    expect(g.length).toBe(1);
+    expect(g[0].events.map((e) => e.type)).toEqual(["specialist_selected", "product_step"]);
+  });
+});
+
+describe("collectRecentToolNamesForChips", () => {
+  it("skips final_answer tool calls", () => {
+    expect(
+      collectRecentToolNamesForChips(
+        [
+          { type: "tool_call", tool: "idea_search" },
+          { type: "tool_call", tool: "final_answer" },
+        ],
+        4,
+      ),
+    ).toEqual(["idea_search"]);
   });
 });
 

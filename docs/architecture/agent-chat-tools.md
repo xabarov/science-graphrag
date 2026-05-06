@@ -110,6 +110,12 @@ Roadmap §4.2 (L0–L4): digest сессии, капсулы, границы п�
 
 Инструмент [`PaperProfileTool`](../../science_graphrag/agent/tools/workspace_catalog_tools.py) читает карточку работы из Neo4j (`fetch_work_bibliography_card`, связанные `Venue`, авторы). Если в графе нет **года** или **venue**, но у работы есть **DOI** и задан `Settings.openalex_mailto`, выполняется одно чтение **OpenAlex** (`fetch_work_by_doi` + `draft_from_openalex`) и поля дополняются только в ответе тула (граф не мутируется). В payload это отражается как `metadata_source: neo4j_work_card+openalex_overlay`, `venue_resolution: openalex_overlay` при venue только из OpenAlex.
 
+Wave 5 status: измерение null-rate вынесено в явный offline шаг (`eval/paper_profile_stats.py`), но в коммитнутых `eval/results/*` пока нет канонического экспорта raw `paper_profile` payloads для OD. Для closure используем команду:
+
+`python -c "import json; from eval.paper_profile_stats import summarize_paper_profile_payloads; payloads=json.load(open('path/to/paper_profile_payloads.json')); print(summarize_paper_profile_payloads(payloads))"`
+
+и фиксируем baseline/after в отдельном analysis-артефакте при следующем live export.
+
 ---
 
 ## 7. История

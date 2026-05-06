@@ -1,0 +1,99 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true,
+    "judge_prompt_fingerprint": "sha256-20:c64cb37c1ae909cf9fd5",
+    "judge_schema_version": "agent_tools_judge_v2_llm",
+    "agent_tools_artifact": "eval/results/habr-window-2026-06-agent-tools-mini-band-1.35-live.json",
+    "judge_llm_model": "qwen/qwen3-235b-a22b-2507"
+  },
+  "summary": {
+    "case_count": 10,
+    "mean_weighted_score": 4.6,
+    "all_passed": false,
+    "agent_tools_judge_eval": true,
+    "llm_rubric": true
+  },
+  "cases": [
+    {
+      "case_id": "agent_case_01",
+      "weighted_score": 5.0,
+      "passed": true,
+      "rationale": "The answer correctly identifies three key papers using FPN for object detection on COCO, with accurate descriptions of their contributions and performance. The tool trace shows a logical sequence: initial search, profiling key works, and quote search for temporal relevance. While the answer acknowledges the lack of explicit publication years in the corpus, it reasonably infers relevance based on content. The inclusion of a fourth citation in CITATIONS_JSON not mentioned in the answer is a minor inconsistency, but does not detract significantly from the overall quality.",
+      "flags": []
+    },
+    {
+      "case_id": "agent_case_02",
+      "weighted_score": 6.0,
+      "passed": true,
+      "rationale": "The answer correctly identifies the single paper in the workspace that compares one-stage and two-stage detectors, providing accurate details about YOLO and its comparison to Fast R-CNN and DPM. It references specific sections and performance metrics from the paper, and the citations are properly aligned with the claims made. The tool trace shows a logical sequence of search and retrieval steps leading to a grounded, precise response.",
+      "flags": []
+    },
+    {
+      "case_id": "agent_case_03",
+      "weighted_score": 1.0,
+      "passed": false,
+      "rationale": "The assistant fails to address the user's request about finding papers citing YOLOv1 within two hops. Instead, it returns an error about a non-existent workspace, which is unrelated to the task of citation tracing. The tool trace shows an attempt to inspect a workspace that does not exist, indicating a misalignment with the intended query. No relevant citations or papers are retrieved or referenced.",
+      "flags": [
+        "workspace_error",
+        "task_misalignment"
+      ]
+    },
+    {
+      "case_id": "agent_case_04",
+      "weighted_score": 4.0,
+      "passed": true,
+      "rationale": "The assistant correctly identifies that no RetinaNet-related papers are present in the current workspace and provides a grounded explanation for why it cannot summarize datasets. The response aligns with the tool trace, which shows a failed lookup via 'find_works'. It avoids fabricating information and accurately reflects the absence of relevant sources. However, it could have noted that RetinaNet is commonly associated with datasets like COCO in the broader literature, but refrains from external knowledge, sticking strictly to workspace content.",
+      "flags": []
+    },
+    {
+      "case_id": "agent_case_05",
+      "weighted_score": 6.0,
+      "passed": true,
+      "rationale": "The assistant correctly identifies the only paper in the workspace and conducts a thorough search across multiple tools (find_works, idea_search, paper_quote_search) to check for mentions of both 'BiFPN' and 'COCO'. The conclusion is well-supported by the evidence: no direct or semantic matches were found for either term in the paper's content. The response is accurate, grounded in the tool trace, and avoids hallucination by clearly stating the absence of relevant mentions.",
+      "flags": []
+    },
+    {
+      "case_id": "agent_case_06",
+      "weighted_score": 6.0,
+      "passed": true,
+      "rationale": "The assistant correctly identifies that only one paper is present in the workspace and provides a precise, grounded response based on the tool trace. It accurately interprets the query, uses the tools appropriately to inspect the workspace, retrieves citation data, and transparently communicates the limitation of having only one paper. The answer is fully aligned with the evidence and avoids fabrication.",
+      "flags": []
+    },
+    {
+      "case_id": "agent_case_07",
+      "weighted_score": 4.0,
+      "passed": true,
+      "rationale": "The assistant correctly identifies that RetinaNet papers are missing from the workspace, limiting direct comparison. It accurately summarizes key methods from the YOLO paper using proper citations and explains the lack of shared method analysis due to insufficient data. While it cannot fulfill the full comparison, it is transparent about the corpus limitations and avoids fabrication. A higher score would require evidence of shared techniques if present in the trace, but the reasoning and grounding are sound.",
+      "flags": []
+    },
+    {
+      "case_id": "agent_case_08",
+      "weighted_score": 6.0,
+      "passed": true,
+      "rationale": "The assistant correctly identifies the single paper in the workspace and retrieves its 34 external citations by following outgoing CITES relationships. It uses the paper_profile tool to fetch metadata for a representative sample of cited works, providing titles, years, venues, and arXiv IDs where available. The response is well-structured, accurately grounded in the tool trace, and includes all necessary citations in the required JSON format. No information is fabricated beyond what is supported by the trace.",
+      "flags": []
+    },
+    {
+      "case_id": "agent_case_09",
+      "weighted_score": 2.0,
+      "passed": false,
+      "rationale": "The assistant correctly reports that no papers were found matching the query 'FPN 2019 detector' in the current workspace and acknowledges the lack of evidence. However, it does not attempt to draw on general knowledge or broader context about FPN (Feature Pyramid Networks), which is a well-known component in object detection systems and widely used in 2019 detector papers outside the scope of the workspace. The answer is technically accurate with respect to the available tools and trace but provides only minimal grounding and fails to offer useful context that could inform the user.",
+      "flags": [
+        "partial_grounding",
+        "missed_context"
+      ]
+    },
+    {
+      "case_id": "agent_case_10",
+      "weighted_score": 6.0,
+      "passed": true,
+      "rationale": "The assistant correctly identified the single relevant paper in the workspace and provided a well-structured, accurate summary of its key contributions, including YOLO's real-time performance, speed metrics (45 and 155 FPS), and generalization to non-natural images like artwork. All claims are directly supported by citations from specific sections of the paper, with proper alignment between the answer and the tool trace. The response is fully grounded, with no hallucination or fabrication beyond the provided evidence.",
+      "flags": []
+    }
+  ]
+}

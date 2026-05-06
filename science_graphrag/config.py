@@ -732,6 +732,32 @@ class Settings(BaseSettings):
         le=50,
         description="CH5: digest window size (matches store cap); boundary_candidate when full.",
     )
+    agent_llm_full_history_compact_enabled: bool = Field(
+        default=False,
+        description=(
+            "L4: when digest window is full (count >= agent_compaction_digest_cap), optionally "
+            "call the chat LLM once per cooldown to replace rolling session_summary with a denser "
+            "consolidation of all stored digests (audit in session_meta + context_compacted.audit)."
+        ),
+    )
+    agent_llm_full_history_compact_cooldown_turns: int = Field(
+        default=3,
+        ge=1,
+        le=50,
+        description="Minimum turns between L4 LLM compactions while the digest window stays full.",
+    )
+    agent_llm_full_history_compact_max_digest_chars: int = Field(
+        default=24_000,
+        ge=4000,
+        le=120_000,
+        description="Max JSON chars fed into the L4 summarization prompt (truncated tail marked).",
+    )
+    agent_llm_full_history_compact_max_out_tokens: int = Field(
+        default=2048,
+        ge=256,
+        le=8192,
+        description="LLM max_tokens cap for L4 session consolidation output.",
+    )
 
     agent_discovered_tools_carryover_enabled: bool = Field(
         default=True,

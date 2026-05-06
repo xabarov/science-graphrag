@@ -60,6 +60,18 @@ def test_detect_runtime_mode_agent_mock() -> None:
     assert detect_runtime_mode("agent_tools_mini", block, cases) == "mock_runtime"
 
 
+def test_detect_runtime_mode_agent_tools_multiagent_benchmark_stub() -> None:
+    cases = [
+        {
+            "case_id": "m1",
+            "answer": "benchmark_stub_answer:m1",
+            "citations": [{"work_id": "benchmark-stub-work:m1"}],
+        },
+    ]
+    block: dict = {"run_metadata": {"extraction_llm_model": "x"}}
+    assert detect_runtime_mode("agent_tools_multiagent", block, cases) == "live"
+
+
 def test_detect_runtime_mode_contradictions_v1_mini_live() -> None:
     cases = [{"case_id": "pair_01", "metrics": {"passed": True}}]
     block: dict = {"run_metadata": {}}
