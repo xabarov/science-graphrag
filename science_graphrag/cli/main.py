@@ -5,9 +5,8 @@ import typer
 from science_graphrag.cli.config_commands import register as register_config_commands
 from science_graphrag.cli.dedup_commands import register as register_dedup_commands
 from science_graphrag.cli.ingest_commands import register as register_ingest_commands
+from science_graphrag.cli.neo4j_commands import register as register_neo4j_commands
 from science_graphrag.cli.qdrant_commands import register as register_qdrant_commands
-from science_graphrag.config import get_settings
-from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.utils.project_logging import configure_logging
 
 app = typer.Typer(no_args_is_help=True, help="science-graphrag CLI")
@@ -23,18 +22,7 @@ register_qdrant_commands(app)
 register_config_commands(app)
 register_ingest_commands(app)
 register_dedup_commands(app)
-
-
-@app.command("neo4j-wipe")
-def neo4j_wipe_cmd() -> None:
-    """Remove all nodes and relationships from the configured Neo4j database."""
-    s = get_settings()
-    neo = Neo4jGraphStore(s.neo4j_uri, s.neo4j_user, s.neo4j_password)
-    try:
-        neo.wipe_all()
-    finally:
-        neo.close()
-    typer.echo("Neo4j database wiped.")
+register_neo4j_commands(app)
 
 
 @app.command("merge-catalog-audit")

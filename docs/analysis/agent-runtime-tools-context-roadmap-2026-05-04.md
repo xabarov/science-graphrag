@@ -308,3 +308,291 @@
 | 2026-05-06 | **Wave 4 (runner/trust/P2):** BT8/BT9 runner closure — `routing_log` в benchmark/live выводе агента; stub-трассы бенчмарка без ``mock answer`` / ``mock-work`` для честного ``trust_signal``; tier ``agent_tools_multiagent`` в aggregate + артефакт ``current-agent-tools-multiagent.json``; nightly опциональная live-перегенерация mini при секрете; метрики ``tool_name``/``args_match`` в ``eval/agent_tools/metrics``; CH5 ``context_compacted.audit``; матрица prompt/memory в ``agent-chat-v1.md``; ADR-027; тесты P2 (trace-review ROI counters, sidechain path). |
 | 2026-05-06 | **Wave 4.1 (LLM judge + L4 live run):** выполнен полноценный `science-graphrag-agent-judge-benchmark --llm` по live-трейсам (`habr-window-2026-06-agent-tools-mini-band-1.35-live-llm-judge.json`); подтверждён full L4 LLM compact в live smoke (feature-flag `SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED`, audit в `session_meta` и `run_metadata.compaction_audit`). |
 | 2026-05-06 | **Wave 5 (runtime/state cleanup + trace-review hardening):** декомпозирован `chat_envelope` (intent/policy/ux), введён канонический typed tool execution trace (`collect_tool_execution_steps`) как source-of-truth для `tool_trace`, добавлена атрибуция `run_kind`/`graph_id` в SSE/final run_metadata/trace-review schema, расширен `agent_trace_review.py` профилями quick/default/heavy, `trace_regression_compare.py` ужесточён fail-политикой `compaction_churn_increase`; обновлены тесты `test_chat_envelope`, `test_api_agent_v2_stream_parity`, `test_trace_review_schema`, `test_trace_regression_compare`. |
+
+---
+
+## 8. Post-closure next wave (обновление после выполнения Wave 5)
+
+Текущая волна roadmap закрыта; ниже — **узкий хвост hardening-работ**, синхронизированный с backend backlog.  
+Цель блока: не переоткрывать закрытые ROI-пункты §6.1/§6.2, а зафиксировать, что осталось для «production-ready steady state».
+
+### 8.1 P0 (ближайший цикл)
+
+1. **CI gate: candidate vs baseline для trace-review**  
+   Закрыть хвост по OPEN `CI gate — trace_regression_compare vs committed baseline`:  
+   добавить candidate-generation шаг (не baseline-vs-baseline), зафиксировать policy (какой compare step blocking, какой advisory) в workflow comments/docs.
+
+2. **Orchestrator smoke-контракт для `agent_trace_review.py`**  
+   Добавить subprocess smoke (quick/default) с проверкой `review_version`, `run_context`, поведения warn/fail-paths.
+
+### 8.2 P1 (архитектурный hardening)
+
+1. **Единый канонический tool/run audit trail**  
+   Дожать OPEN `Single canonical tool/run audit trail`:  
+   контракт «turn facts» как единственный источник для envelope/observability + тест выравнивания `tool_trace` ↔ spans на reference suite.
+
+2. **Дальнейший распил перегруженных модулей runtime/SSE**  
+   Продолжить OPEN `Split oversized agent edges + SSE lifecycle modules` и `De-duplicate Agent v2 payload/runtime metadata seams` до целевых acceptance-критериев (ветвление/statement budget, один canonical metadata builder для sync/SSE).
+
+### 8.3 P2 (операционные измерения и качество данных)
+
+1. **`agent_note` cost evidence (50-turn batch)**  
+   Дособрать фактические token/latency числа и финализировать рекомендацию в `docs/analysis/agent-note-cost-eval-2026-05-06.md`.
+
+2. **`paper_profile` null-rate closure (OD)**  
+   Провести замер `eval/paper_profile_stats.summarize_paper_profile_payloads`, затем решить: достаточно read-path overlay или нужен ingest-time writeback year/venue в граф.
+
+### 8.4 Definition of done для этой next wave
+
+- CI на PR-ветках ловит trace-regressions в candidate-vs-baseline режиме.
+- `agent_trace_review.py` имеет отдельный smoke-контракт orchestration-слоя.
+- Для runtime trail зафиксирован один канон фактов хода и есть тесты выравнивания trace/observability.
+- Операционные хвосты (`agent_note` cost, `paper_profile` null-rate) закрыты цифрами, а не только proposal-формулировками.
+
+---
+
+## 9. Closure plan по исходным целям (openclaude-parity track)
+
+Этот раздел фиксирует **первичные цели**, с которых начался roadmap:
+
+1. умная суммаризация контекста как в `openclaude`;
+2. вариант runtime (условно `agent v3`), где агент может вызывать субагентов как в `openclaude`;
+3. tool_search логика как в `openclaude`.
+
+Ниже — не «общие намерения», а исполнимый план до состояния, когда можно честно сказать «цели закрыты».
+
+### 9.1 Принцип «закрыто» (anti-formality gate)
+
+Любой пункт считается закрытым только при одновременном выполнении трёх условий:
+
+- **Runtime:** механизм реально включается в live `/v2/agent/query` (или явно в новом `/v3/agent/query`), а не только в тестовых/stub путях.
+- **Observability:** в SSE/run_metadata/trace-review есть проверяемые следы работы механизма.
+- **Quality gate:** есть минимум один benchmark/eval сценарий, где новая логика не ухудшает baseline по trust/verdict/latency выше оговорённых порогов.
+
+Если есть только код без trace + gate, статус — `PARTIAL`.
+
+### 9.2 Стартовая диагностика (что уже есть и чего не хватает)
+
+#### A) Context summarization
+
+- **Есть:** `turn_digest`, rolling `session_summary`, `context_compacted`, L4 full-history compact через feature-flag, `away_recap`, `tool_message_compact`.
+- **Не хватает до parity-цели:** отдельного слоя «insights-like» для длинных тредов (chunked/parallel summarize + synthesis), явной policy «когда offline summary заменяет/дополняет turn-loop memory».
+- **Важная оговорка по openclaude:** в snapshot `contextCollapse` отмечен как stub/feature-gated (`src/services/contextCollapse/index.ts`), поэтому parity-ориентир берём не по «внутренней реализации collapse», а по поведенческому контракту: устойчивый long-thread UX + reproducible compaction decisions + traceability.
+
+#### B) Subagent runtime (`agent v3`)
+
+- **Есть:** specialist routing в фиксированном LangGraph + sidechain transcripts + SSE-события `subagent_*` как UX-слой.
+- **Не хватает до parity-цели:** реального динамического spawn/fork автономных воркеров с последующим merge-этапом.
+- **Текущий риск формальности:** термин `subagent` в stream событиях сейчас может вводить в заблуждение (маркирует specialist handoff, но не отдельный runtime-process/task lifecycle).
+
+#### C) Tool search
+
+- **Есть:** rule-based shortlist, deferred schema refs, carry-over discovered tools, telemetry и regression gates.
+- **Не хватает до parity-цели:** model-assisted discovery loop и динамическое подключение deferred tools по факту «discovered references», а не только эвристический скоринг по тексту.
+
+### 9.3 Epic A — Smart context summarization parity
+
+#### A0. Контракт и режимы (spec first)
+
+- Добавить в `docs/specs/agent-chat-v1.md` раздел `Summarization modes`:
+  - `turn_loop_memory` (текущий CH4/CH5),
+  - `thread_insights_compact` (новый async/offline контур),
+  - `hybrid` (turn-loop + periodic insights refresh).
+- Для каждого режима зафиксировать:
+  - source inputs,
+  - artifact schema,
+  - как попадает в prompt,
+  - когда отбрасывается как stale.
+
+**Acceptance A0:** документированная матрица режимов + негативные кейсы (empty/noisy/contradicting summaries).
+
+#### A1. Thread-insights pipeline (новый слой)
+
+- Добавить модуль `agent/context/thread_insights.py`:
+  - windowing длинного треда на semantic chunks;
+  - parallel summarize workers (bounded concurrency, timeout/cancel-safe);
+  - final synthesis в единый `thread_insight`.
+- Добавить `session_backend` поля:
+  - `thread_insight.current`,
+  - `thread_insight.version`,
+  - `thread_insight.sources` (chunk ids / turn range),
+  - `thread_insight.generated_at`.
+- Добавить policy freshness:
+  - invalidation на N новых turn-ов;
+  - forced refresh при high-churn tool traces.
+
+**Acceptance A1:** на длинном synthetic треде строится `thread_insight` с воспроизводимым audit trail (`chunk_count`, `worker_count`, `generation_ms`, `source_range`).
+
+#### A2. Prompt integration + fallback policy
+
+- Расширить `format_user_with_memory`:
+  - при наличии свежего `thread_insight` инжектить компактный `<thread_insight>` блок;
+  - при stale/failed insight откат к текущему `session_summary`.
+- Добавить guardrail:
+  - если insight конфликтует с последним `turn_digest`, приоритет у свежих turn facts;
+  - в run_metadata писать `insight_conflict_resolved=true/false`.
+
+**Acceptance A2:** deterministic precedence policy покрыта тестами; нет silent override свежих фактов старым insight.
+
+#### A3. Eval + gate
+
+- Новый набор в `eval/chat_agent`:
+  - long-thread retrieval,
+  - context drift detection,
+  - summary hallucination rejection.
+- Метрики:
+  - `insight_recall@k`,
+  - `stale_summary_error_rate`,
+  - `compaction_churn_delta`,
+  - latency overhead p50/p95.
+- Gate:
+  - trust/verdict не хуже baseline,
+  - p95 latency рост в пределах согласованного бюджета.
+
+**Definition of done (Epic A):**
+- thread-insights реально участвует в runtime;
+- trace-review показывает его decisions;
+- long-thread eval показывает улучшение recall/consistency или минимум отсутствие регрессии при включённом feature-flag.
+
+### 9.4 Epic B — Agent v3 with real subagent spawning
+
+#### B0. ADR и границы v3
+
+- Выпустить ADR `agent-runtime-v3-subagents`:
+  - когда нужен spawn (decision policy),
+  - sync vs background branches,
+  - merge contract,
+  - failure taxonomy (timeout, partial, cancelled, tool-denied).
+- Принять решение по API:
+  - либо новый endpoint `/v3/agent/query`,
+  - либо `run_kind=langgraph_supervisor_v3` под `/v2/agent/query` с жёсткой атрибуцией.
+
+**Acceptance B0:** ADR с финальным вариантом API/compatibility и rollback strategy.
+
+#### B1. Runtime primitive: spawn / track / collect
+
+- Новый слой `agent/subagents/runtime.py`:
+  - `spawn_subagent(task_spec) -> subagent_id`,
+  - heartbeat/progress channel,
+  - terminal states (`succeeded|failed|cancelled|timed_out`),
+  - bounded fanout (`max_parallel_subagents`).
+- Привязка к observability:
+  - единый `parent_turn_id`,
+  - `subagent_id`,
+  - `spawn_reason`,
+  - `cost/tokens/latency` per child.
+
+**Acceptance B1:** live run с 2+ параллельными subagents даёт полный lifecycle в SSE + trace-review без missing states.
+
+#### B2. Merge node и итоговый writer contract
+
+- Добавить merge-узел:
+  - агрегирует child outputs в typed `specialist_results_v3`,
+  - устраняет дубли/конфликты (confidence ranking + provenance).
+- Writer получает merge payload с явным `evidence_origin`:
+  - `parent_tool`,
+  - `subagent:<id>`,
+  - `mixed`.
+
+**Acceptance B2:** при конфликтующих ответах двух subagents финальный ответ объяснимо выбирает/синтезирует результат, provenance виден в run artifacts.
+
+#### B3. Tool/search/memory взаимодействие
+
+- Для subagent runs:
+  - изолированный tool policy,
+  - локальный short-term memory,
+  - controlled carry-back в parent context (без полного transcript flooding).
+- Ввести квоты:
+  - `max_subagent_hops_per_turn`,
+  - `max_subagent_tokens_per_turn`,
+  - hard timeout per child.
+
+**Acceptance B3:** subagent mode не ломает token budget policy и не создаёт runaway loops.
+
+#### B4. Safety/eval gate
+
+- Новые сценарии:
+  - fanout research (N children),
+  - one child fails, others succeed,
+  - timeout + salvage,
+  - malicious tool request в child (permission deny).
+- Гейт:
+  - корректный failover без silent success,
+  - trace completeness 100% по lifecycle events.
+
+**Definition of done (Epic B):**
+- в runtime есть настоящий spawn/fanout/merge;
+- SSE `subagent_*` отражает реальный lifecycle, а не только specialist routing;
+- multi-agent eval lane стабильно проходит и отделён от legacy v2 режима.
+
+### 9.5 Epic C — Tool search parity track
+
+#### C0. V2 contract: discovery-aware tool loading
+
+- Расширить текущий `tool_search` контракт:
+  - поддержка `tool_reference`-подобных discovered entries в message history;
+  - deferred tools реально подключаются только после discovery;
+  - fallback к rule-based shortlist при low-signal/unsupported model.
+
+**Acceptance C0:** история discovered tools влияет на доступный tool set в следующем ходе детерминированно и прозрачно в metadata.
+
+#### C1. Hybrid selector (rules + LLM judge)
+
+- Добавить optional LLM-selector поверх rule shortlist:
+  - rules формируют candidate pool,
+  - LLM rerank выбирает final shortlist,
+  - confidence score + reason codes.
+- Guardrails:
+  - deny unsafe/excluded tools до LLM decision,
+  - `final_answer` всегда доступен.
+
+**Acceptance C1:** в benchmark lane снижается unnecessary tool calls без ухудшения verdict/trust.
+
+#### C2. Dynamic schema transport
+
+- Для deferred tools:
+  - передавать компактные refs по умолчанию;
+  - полную схему отправлять only-on-discovery.
+- Добавить telemetry:
+  - `tool_schema_bytes_saved`,
+  - `deferred_tool_activation_rate`,
+  - `tool_search_miss_due_to_no_discovery`.
+
+**Acceptance C2:** уменьшение tool schema payload при сохранении/улучшении качества вызовов.
+
+#### C3. Eval + policy gate
+
+- Отдельные пакеты:
+  - sparse-query (низкий сигнал),
+  - ambiguous intent,
+  - graph-heavy workloads,
+  - bibliography/quote workflows.
+- Gate policy:
+  - `warn` при росте latency без роста ошибок,
+  - `fail` при росте missed-tool или tool-loop instability.
+
+**Definition of done (Epic C):**
+- tool search работает как hybrid discovery-aware контур, а не только keyword scoring;
+- деградации ловятся до rollout через trace regression compare + lane-specific metrics.
+
+### 9.6 Порядок внедрения (release train)
+
+1. **Train T1 (2 недели):** A0/A1/C0 — контракты + thread-insights skeleton + discovery-aware tool loading.
+2. **Train T2 (2 недели):** A2/A3/C1 — prompt integration + eval gates + hybrid selector.
+3. **Train T3 (2-3 недели):** B0/B1 — ADR + runtime spawn primitive + lifecycle observability.
+4. **Train T4 (2-3 недели):** B2/B3/C2 — merge node + quotas + dynamic schema transport.
+5. **Train T5 (1-2 недели):** B4/C3 + финальный regression hardening и rollout decision.
+
+Каждый train закрывается dual-run (`off/on`) и сравнением с committed baseline.
+
+### 9.7 Явные stop-conditions (чтобы не повторить «отписку»)
+
+- Нельзя пометить Epic B как done, пока `subagent_*` события не подтверждены реальными child runtimes в trace artifacts.
+- Нельзя пометить Epic A как done без long-thread eval с цифрами (не только “pass smoke”).
+- Нельзя пометить Epic C как done, если нет отдельного lane с ambiguous/sparse queries и зафиксированной policy `warn/fail`.
+
+### 9.8 Изменение в истории документа
+
+| Дата | Изменение |
+|------|-----------|
+| 2026-05-06 | Добавлен **§9**: closure plan по исходным целям (smart summarization parity, real subagent runtime v3, tool search parity), с epic-структурой, acceptance/gates, release train и stop-conditions против формального закрытия. |

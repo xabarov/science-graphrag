@@ -96,6 +96,14 @@ class AgentQueryRequestV2(BaseModel):
         default=None,
         description="Optional hint for answer_class / UI (does not force tool routing).",
     )
+    client_idle_ms: int | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Optional client-reported milliseconds since last user activity in this UI session. "
+            "Used for deterministic away-recap framing (CH4/CH5)."
+        ),
+    )
 
     @field_validator("thread_id", mode="before")
     @classmethod

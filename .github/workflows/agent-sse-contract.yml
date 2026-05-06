@@ -9,6 +9,7 @@ on:
       - "tests/test_api_agent_v2_*.py"
       - "tests/test_product_step_tool_coverage.py"
       - "tests/scripts/live_check/test_trace_review_schema.py"
+      - "tests/scripts/live_check/test_agent_trace_review.py"
 
 jobs:
   pytest-agent-stream-contract:
@@ -31,6 +32,7 @@ jobs:
             tests/test_api_agent_v2_error_classification.py \
             tests/test_product_step_tool_coverage.py \
             tests/scripts/live_check/test_trace_review_schema.py \
+            tests/scripts/live_check/test_agent_trace_review.py \
             tests/observability/test_agent_sse_stream_otel.py \
             -q
       - name: Trace regression compare (baseline sanity gate)

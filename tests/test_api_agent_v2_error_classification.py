@@ -105,3 +105,15 @@ def test_classify_internal_error_truncates_long_messages() -> None:
     cls, msg = classify_agent_stream_error(RuntimeError(big))
     assert cls == "internal_error"
     assert len(msg) <= 200
+
+
+def test_classify_validation_error_from_string_markers() -> None:
+    cls, msg = classify_agent_stream_error(RuntimeError("Validation error in output schema"))
+    assert cls == "llm_output_validation_error"
+    assert "validation" in msg.lower()
+
+
+def test_classify_output_parser_error_from_string_markers() -> None:
+    cls, msg = classify_agent_stream_error(RuntimeError("Output parser failed to parse content"))
+    assert cls == "llm_output_parse_error"
+    assert "parse" in msg.lower()

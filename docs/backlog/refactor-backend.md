@@ -322,11 +322,12 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Remaining:** вынести `llm_probe` и schema/update группы из `settings/service.py`; текущий размер ~906 LoC всё ещё выше целевого порога.
 - **Raised:** 2026-04-25, updated 2026-05-05
 
-### [OPEN] Runtime overlay unit seam coverage
+### [DONE] Runtime overlay unit seam coverage
 - **Area:** `science_graphrag/settings/runtime_overlay.py`, `tests/test_settings_service.py`
 - **Issue:** `runtime_overlay` в основном покрыт интеграционно через `SettingsService`; точечных unit-контрактов на edge-cases merge (priority persisted vs env, normalization, storage explicit secrets) почти нет.
 - **Proposal:** Добавить прямые unit-тесты для `build_non_secret_overrides(...)` с table-driven кейсами по `llm/general/storage` и explicit secrets path.
 - **Acceptance:** Отдельный тест-модуль фиксирует deterministic merge-правила; регрессии overlay ловятся без полного прогона `SettingsService`.
+- **Done (2026-05-06):** добавлен `tests/test_runtime_overlay.py` с прямыми unit-контрактами для `build_non_secret_overrides(...)`: persisted-vs-env приоритеты, нормализация `chat_model`/`vl_base_url`, ingest/general merge и explicit storage secrets fallback на base/env.
 - **Raised:** 2026-05-06 (backend re-analysis)
 
 ### [PARTIAL] Split `cli/main.py` (566) by command groups
@@ -339,11 +340,12 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Remaining:** выделить `cli/neo4j_commands.py` и `cli/worker.py` (когда появится продуктовый scope worker-runner), чтобы закрыть целевую группировку из Proposal полностью.
 - **Raised:** 2026-04-25, updated 2026-05-05
 
-### [OPEN] CLI module split contract tests (register/help parity)
+### [DONE] CLI module split contract tests (register/help parity)
 - **Area:** `science_graphrag/cli/main.py`, `science_graphrag/cli/ingest_commands.py`, `science_graphrag/cli/dedup_commands.py`, `science_graphrag/cli/qdrant_commands.py`, `science_graphrag/cli/config_commands.py`
 - **Issue:** После split почти нет прямых тестов на регистрацию команд и стабильность ключевых флагов (`--stages`, `--no-cache`, `--fail-on-clusters`); риск тихой потери CLI-контракта при следующих переносах.
 - **Proposal:** Добавить `CliRunner`-контракты: smoke `--help`, presence ключевых команд и проверка критичных опций без выполнения тяжёлых side effects.
 - **Acceptance:** Тесты падают при удалении/переименовании команды или критичного флага; CLI parity фиксируется в CI.
+- **Done (2026-05-06):** добавлен `tests/test_cli_module_contract.py` (Typer `CliRunner`) с контрактами на root `--help`, присутствие ключевых команд split-модулей и критичные флаги `--stages`, `--no-cache`, `--fail-on-clusters`.
 - **Raised:** 2026-05-06 (backend re-analysis)
 
 ### [OPEN] Targeted backend test coverage for hot modules
@@ -399,6 +401,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] CI gate — `trace_regression_compare` vs committed baseline
 - **Area:** `.github/workflows/`, `scripts/live_check/trace_regression_compare.py`, `eval/results/baseline-trace-review.json`
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.6 (release train T1/T2/T5), §9.7 (stop-conditions)
 - **Issue:** Wave 1 adds offline regression compare and a committed baseline artifact; PRs that touch agent runtime do not yet fail CI when metrics regress vs baseline.
 - **Proposal:** Workflow on pull_request / paths filter for `science_graphrag/agent/**`, `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/tool_*`: run live optional job or candidate-only generation + compare to baseline from `main` / artifact.
 - **Acceptance:** CI fails on regression FAIL policies or schema version mismatch (exit 1 / 2); WARN policies documented (`--warn-is-pass` vs strict).
@@ -410,6 +413,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] Trace review orchestrator contract smoke
 - **Area:** `scripts/live_check/agent_trace_review.py`, `tests/scripts/live_check/`
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.1 (anti-formality gate), §9.6 (T1)
 - **Issue:** Схема и compare-политика покрыты, но orchestration path (`profile`, feature-flags, `run_context`, merge отчётов) не зафиксирован отдельным smoke-контрактом.
 - **Proposal:** Добавить subprocess-smoke для `agent_trace_review.py` (quick/default profiles) с проверкой `review_version`, `run_context` и ожидаемого поведения на warn-only результатах.
 - **Acceptance:** Регрессии в orchestration-слое live-check ловятся тестом до workflow execution.
@@ -417,6 +421,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] Single canonical tool/run audit trail (roadmap §2.1 / §2.2)
 - **Area:** `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/graph/tracing.py`, `science_graphrag/agent/chat_envelope.py`, LangGraph messages vs `tool_trace`
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B), §9.1 (observability gate)
 - **Issue:** Duplicate representations of the same turn facts (`messages`, `tool_trace`, typed payloads) risk drift when adding runtimes or changing message shapes.
 - **Proposal:** Define one canonical “turn facts” structure consumed by envelope + observability; narrow `chat_envelope` responsibilities per roadmap §2.2.
 - **Acceptance:** Documented contract + tests that `tool_trace` and Phoenix spans stay aligned for one reference suite.
@@ -424,6 +429,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] Token budget loop policy (agent runtime P2)
 - **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/runtime.py`, client SSE contract
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (B3 quotas), §9.5 (C3 gate policy)
 - **Issue:** Roadmap §6.4 lists token budget / continue-stop behavior as P2; not implemented as first-class metrics in trace-review.
 - **Proposal:** Add cooperative cutoff telemetry + `trace-review-v1` metrics when product adds loop policy; extend regression gate thresholds.
 - **Acceptance:** Documented stop reasons + tests; trace-review artifacts include budget signals when enabled.
@@ -431,6 +437,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] Split oversized agent edges + SSE lifecycle modules
 - **Area:** `science_graphrag/agent/graph/react_edges.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B runtime spine), §9.6 (T3/T4)
 - **Issue:** After adding ReAct soft-cap and recursion-limit salvage, `react_after_tools_decrement_budget` (~130 lines, 19 branches) and `route_react_chat_to_tools` keep accruing routing cases; `stream_agent_events` is 269+ stmts and pylint flags `R0912/R0915/R0914/R1702`. Score still ≥9.8 but the functions hide multiple concerns (budget bookkeeping, soft-cap detection, debug emission, salvage on deadline + recursion).
 - **Progress (2026-05-06):** вынесен общий OTEL-блок deadline (`deadline_otel.py`); восстановлены span-события для recursion-limit; импорт notes на toplevel — размер/ветвление `stream_agent_events` всё ещё требуют распила по Proposal ниже.
 - **Progress (2026-05-06, follow-up):** soft-cap ветвление вынесено в `agent/graph/react_soft_cap.py` и подключено из `react_edges.py`; recovery-salvage/error-event helper вынесен в `api/agent_v2_modules/recovery.py`, deadline/recursion branches в `stream_lifecycle.py` переведены на общие helper-функции.
@@ -443,10 +450,35 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] De-duplicate Agent v2 payload/runtime metadata seams
 - **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/api/agent_v2_modules/payloads.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (B1/B2), §9.5 (C0 metadata transparency)
 - **Issue:** Sync JSON и SSE paths всё ещё дублируют части payload/runtime metadata assembly (включая run metadata helpers), что создаёт риск drift между протоколами.
 - **Proposal:** Оставить один canonical payload/runtime metadata layer в `agent_v2_modules/payloads.py`; убрать локальные дублирующие builders из router/stream paths.
 - **Acceptance:** В кодовой базе один источник `agent_chat_llm_run_metadata` и единый payload builder для sync/SSE; parity-тесты проходят без специальных исключений.
 - **Raised:** 2026-05-06 (backend re-analysis)
+
+### [OPEN] Smart context summarization parity track (Epic A)
+- **Area:** `science_graphrag/agent/context/*`, `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/context/session_backend.py`, `eval/chat_agent/*`
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.3 (Epic A), §9.6 (T1/T2), §9.7
+- **Issue:** Текущие `turn_digest`/`session_summary`/L4 compact покрывают базовый контур, но нет отдельного thread-insights pipeline (chunked/parallel summarize + synthesis) с формализованной freshness policy и long-thread quality gate.
+- **Proposal:** Реализовать `thread_insights` слой (`A0/A1/A2`) и интеграцию в prompt с deterministic precedence; добавить eval lane для long-thread drift/recall и regression gate по churn/latency (`A3`).
+- **Acceptance:** Runtime использует `thread_insight` при выполнении freshness policy; trace-review содержит insight decisions/audit; long-thread eval проходит без регрессии trust/verdict и с измеримым улучшением recall/consistency.
+- **Raised:** 2026-05-06 (roadmap §9 sync)
+
+### [OPEN] Real subagent runtime v3 (spawn/fanout/merge) parity track (Epic B)
+- **Area:** `science_graphrag/agent/graph/*`, `science_graphrag/agent/runtime.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, new `science_graphrag/agent/subagents/*`, `eval/chat_agent/*`
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B), §9.6 (T3/T4/T5), §9.7
+- **Issue:** В текущем runtime `subagent_*` события отражают specialist handoff в фиксированном графе, но не lifecycle реально spawned child runtimes (нет полноценного spawn/fanout/merge контура как целевой parity).
+- **Proposal:** Зафиксировать ADR и API границы (`B0`), внедрить runtime primitive spawn/track/collect (`B1`), merge-node с provenance (`B2`), квоты/guardrails (`B3`) и safety/eval gate (`B4`).
+- **Acceptance:** В live run есть реальные child lifecycles с terminal states и merge; SSE/trace artifacts показывают полную цепочку parent->child->merge; multi-agent lane стабильно проходит и отделён от legacy v2 режима.
+- **Raised:** 2026-05-06 (roadmap §9 sync)
+
+### [OPEN] Hybrid discovery-aware tool search parity track (Epic C)
+- **Area:** `science_graphrag/agent/tool_search.py`, `science_graphrag/agent/tool_manifest.py`, `science_graphrag/agent/graph/*`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, `eval/chat_agent/*`
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.5 (Epic C), §9.6 (T1/T2/T4/T5), §9.7
+- **Issue:** Rule-based shortlist + deferred refs уже есть, но нет полного discovery-aware/hybrid контура (model-assisted rerank + dynamic deferred schema activation на discovered tools + lane-specific fail/warn policy).
+- **Proposal:** Поэтапно закрыть `C0/C1/C2/C3`: discovery-aware loading contract, optional LLM rerank поверх rules, dynamic schema transport (refs->full schema on discovery), отдельные eval lanes для sparse/ambiguous/graph-heavy запросов.
+- **Acceptance:** Tool-search в runtime работает как hybrid discovery-aware pipeline; telemetry фиксирует activation/miss/bytes_saved; regression gate ловит деградации missed-tool/tool-loop/latency до rollout.
+- **Raised:** 2026-05-06 (roadmap §9 sync)
 
 ### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)
 - **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.

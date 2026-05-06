@@ -10,7 +10,6 @@ from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING, Any
 
-from openai import OpenAI
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from science_graphrag.settings.benchmark_defaults import (
@@ -27,6 +26,7 @@ from science_graphrag.settings.llm_advanced_fields import (
     recommended_advanced_values,
     validate_merged_runtime_settings,
 )
+from science_graphrag.settings.llm_probe import run_llm_connection_probe
 from science_graphrag.settings.repository import SettingsRepository
 from science_graphrag.settings.runtime_overlay import build_non_secret_overrides
 from science_graphrag.settings.secret_display import mask_short_secret as _mask_secret
@@ -825,82 +825,22 @@ class SettingsService:
             else effective["resolved_temperature"]
         )
         api_key = (candidate.api_key or "").strip() if candidate.api_key is not None else None
+        api_key_source = "draft" if api_key else "missing"
         if not api_key and candidate.use_saved_secret:
             api_key = self._secret_store.get_secret(_LLM_SECRET_KEY)
+            if api_key:
+                api_key_source = "secret_store"
         if not api_key and candidate.use_saved_secret:
             env_fallback = (base_settings.extraction_llm_api_key or "").strip()
             if env_fallback:
                 api_key = env_fallback
+                api_key_source = "env_fallback"
 
-        if not api_key:
-            return {
-                "status": "error",
-                "error_kind": "missing_api_key",
-                "message": (
-                    "API key is not configured (set SCIENCE_GRAPHRAG_API_KEY or "
-                    "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY, save a key in Settings, "
-                    "or pass api_key in the draft request)."
-                ),
-                "resolved": {
-                    "base_url": base_url,
-                    "model": model,
-                    "timeout_seconds": timeout_seconds,
-                    "temperature": temperature,
-                    "used_saved_secret": False,
-                },
-            }
-
-        started = datetime.now(tz=UTC)
-        try:
-            client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout_seconds)
-            completion = client.chat.completions.create(
-                model=model,
-                temperature=temperature,
-                max_tokens=12,
-                messages=[
-                    {"role": "system", "content": "Reply with exactly OK."},
-                    {"role": "user", "content": "Connection test. Reply OK."},
-                ],
-            )
-            reply = (
-                completion.choices[0].message.content if completion and completion.choices else None
-            ) or ""
-            elapsed_ms = int((datetime.now(tz=UTC) - started).total_seconds() * 1000)
-            normalized = reply.strip()
-            return {
-                "status": "connected" if normalized.upper() == "OK" else "unexpected_response",
-                "message": normalized or "No response text returned by provider.",
-                "latency_ms": elapsed_ms,
-                "tested_at": _now_iso(),
-                "resolved": {
-                    "base_url": base_url,
-                    "model": model,
-                    "timeout_seconds": timeout_seconds,
-                    "temperature": temperature,
-                    "used_saved_secret": candidate.api_key is None,
-                },
-            }
-        except Exception as exc:  # noqa: BLE001
-            text = str(exc)
-            lower = text.lower()
-            if "401" in lower or "unauthorized" in lower or "invalid api key" in lower:
-                error_kind = "auth_failed"
-            elif "404" in lower or "model" in lower and "not found" in lower:
-                error_kind = "model_unavailable"
-            elif "timeout" in lower:
-                error_kind = "timeout"
-            else:
-                error_kind = "provider_error"
-            return {
-                "status": "error",
-                "error_kind": error_kind,
-                "message": text,
-                "tested_at": _now_iso(),
-                "resolved": {
-                    "base_url": base_url,
-                    "model": model,
-                    "timeout_seconds": timeout_seconds,
-                    "temperature": temperature,
-                    "used_saved_secret": candidate.api_key is None,
-                },
-            }
+        return run_llm_connection_probe(
+            base_url=base_url,
+            model=model,
+            timeout_seconds=timeout_seconds,
+            temperature=temperature,
+            api_key=api_key,
+            used_saved_secret=(api_key_source == "secret_store"),
+        )

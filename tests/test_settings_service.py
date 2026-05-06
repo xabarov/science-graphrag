@@ -7,7 +7,7 @@ import pytest
 
 from science_graphrag.config import Settings
 from science_graphrag.settings.secret_display import mask_short_secret
-from science_graphrag.settings.service import SettingsService
+from science_graphrag.settings.service import LlmTestDraft, SettingsService
 from science_graphrag.settings.storage_runtime import mask_url_userinfo
 
 
@@ -165,3 +165,51 @@ def test_update_benchmark_settings_rejects_custom_without_id(tmp_path: Path) -> 
             actor="admin",
             by_family={"layer1": {"model_profile": "custom", "custom_model_id": ""}},
         )
+
+
+def test_test_llm_connection_marks_saved_secret_source_only_for_secret_store(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    captured: dict[str, Any] = {}
+
+    def _fake_probe(**kwargs: Any) -> dict[str, Any]:
+        captured.update(kwargs)
+        return {"status": "connected", "resolved": {"used_saved_secret": kwargs["used_saved_secret"]}}
+
+    monkeypatch.setattr("science_graphrag.settings.service.run_llm_connection_probe", _fake_probe)
+
+    # Explicit draft api_key must not be marked as saved-secret usage.
+    out_draft = service.test_llm_connection(
+        base_settings=Settings(),
+        actor="tester",
+        draft=LlmTestDraft(api_key="draft-key", use_saved_secret=False),
+    )
+    assert out_draft["resolved"]["used_saved_secret"] is False
+
+    # Env fallback (no managed secret) also must not be marked as saved-secret usage.
+    base_env = Settings(extraction_llm_api_key="env-key")
+    out_env = service.test_llm_connection(
+        base_settings=base_env,
+        actor="tester",
+        draft=LlmTestDraft(api_key="", use_saved_secret=True),
+    )
+    assert out_env["resolved"]["used_saved_secret"] is False
+
+    # Managed secret path should be marked explicitly.
+    service.update_llm_settings(
+        base_settings=Settings(),
+        base_url="https://example.org/v1",
+        model="model-x",
+        temperature=0.1,
+        timeout_seconds=30.0,
+        actor="tester",
+        api_key="saved-secret",
+    )
+    out_saved = service.test_llm_connection(
+        base_settings=Settings(),
+        actor="tester",
+        draft=LlmTestDraft(api_key=None, use_saved_secret=True),
+    )
+    assert out_saved["resolved"]["used_saved_secret"] is True
+    assert captured["used_saved_secret"] is True

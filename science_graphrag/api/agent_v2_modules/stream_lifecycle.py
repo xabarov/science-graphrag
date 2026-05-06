@@ -54,6 +54,9 @@ from science_graphrag.api.agent_v2_modules.streaming import (
     iter_graph_chunks,
     iter_update_node_states,
 )
+from science_graphrag.api.agent_v2_modules.payloads import (
+    agent_chat_llm_run_metadata as payload_agent_chat_llm_run_metadata,
+)
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.openrouter_model_registry import openrouter_reference_pricing_run_metadata
@@ -68,6 +71,10 @@ logger = logging.getLogger(__name__)
 META_TOOL_NAMES = frozenset(
     {"session_init", "route_to_specialist", "coordinator_gate", "final_answer"}
 )
+
+# Tools that intentionally remain on generic `using_tool` wording.
+# Keep this set explicit and small to prevent accidental fallback drift.
+GENERIC_PRODUCT_STEP_TOOLS = frozenset({})
 
 
 def extract_runtime_telemetry_from_debug_events(
@@ -107,17 +114,11 @@ def extract_runtime_telemetry_from_debug_events(
 
 def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
     """LLM fields attached to agent run_metadata (extraction vs chat model split)."""
-    resolved_chat = effective_chat_llm_model(settings)
-    meta: dict[str, Any] = {
-        "extraction_llm_model": settings.extraction_llm_model,
-        "extraction_llm_base_url": settings.extraction_llm_base_url,
-        "chat_llm_model": settings.chat_llm_model,
-        "resolved_chat_llm_model": resolved_chat,
-    }
+    meta = payload_agent_chat_llm_run_metadata(settings)
     meta.update(
         openrouter_reference_pricing_run_metadata(
             base_url=settings.extraction_llm_base_url,
-            chat_model_id=resolved_chat,
+            chat_model_id=str(meta.get("resolved_chat_llm_model") or effective_chat_llm_model(settings)),
             extraction_model_id=settings.extraction_llm_model,
         )
     )
@@ -150,12 +151,17 @@ def product_step_event_for_tool(tool_name: str) -> dict[str, Any]:
     code = product_step_code_for_tool(tool_name)
     if code:
         return {"type": "product_step", "code": code, "tool": tool_name}
+    generic_reason = (
+        "intentionally_generic_tool"
+        if tool_name in GENERIC_PRODUCT_STEP_TOOLS
+        else "unmapped_tool_name"
+    )
     return {
         "type": "product_step",
         "code": "using_tool",
         "tool": tool_name,
         "generic": True,
-        "generic_reason": "unmapped_tool_name",
+        "generic_reason": generic_reason,
     }
 
 
