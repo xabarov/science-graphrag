@@ -1,0 +1,12 @@
+{
+  "source": "eval/results/**/case_result.json inventory.paper_matches proxy",
+  "payload_count": 8,
+  "summary": {
+    "count": 8,
+    "work_not_found": 0,
+    "year_null": 8,
+    "venue_null": 8,
+    "year_null_rate_excluding_not_found": 1.0,
+    "venue_null_rate_excluding_not_found": 1.0
+  }
+}

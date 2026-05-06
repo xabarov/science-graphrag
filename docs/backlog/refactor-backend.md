@@ -87,7 +87,9 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Proposal:** Run aggregator on OD workspace exports; extend merge/writers for venue/year from OpenAlex or PDF front-matter; re-measure with the same helper.
 - **Acceptance:** Documented null-rate baseline drops or stays stable with explicit «thin corpus» rationale in `docs/architecture/agent-chat-tools.md`.
 - **Done (wave 2026-05-06, read-path):** OpenAlex overlay в `PaperProfileTool` (DOI + `SCIENCE_GRAPHRAG_OPENALEX_MAILTO`) подставляет year/venue, если в Neo4j карточке пусто; §6.4 в [`docs/architecture/agent-chat-tools.md`](../architecture/agent-chat-tools.md); тест `tests/agent/test_paper_profile_openalex_overlay.py`; при сбое OpenAlex — `logger.debug(..., exc_info=True)` (не глушим молча).
-- **Remaining:** замер null-rate через `eval/paper_profile_stats.summarize_paper_profile_payloads` на экспортах; запись year/venue в граф на этапе ingest/merge (не только в ответе tool).
+- **Measurement (2026-05-06, next-wave pass):** proxy-срез по `eval/results/**/case_result.json` (`final_output.inventory.paper_matches` → `summarize_paper_profile_payloads`) сохранён в `eval/results/paper-profile-null-rate-od-snapshot.json`: `count=8`, `year_null_rate_excluding_not_found=1.0`, `venue_null_rate_excluding_not_found=1.0`.
+- **Decision:** read-path overlay остаётся safety-net, но для устойчивого снижения null-rate нужен ingest-time writeback `year/venue` в граф (не только ответ tool).
+- **Remaining:** реализовать ingest/merge writeback `year/venue`, затем повторить тот же null-rate замер на том же OD-экспорте и зафиксировать дельту.
 - **Raised:** 2026-04-28 (agent tools plan phase A3)
 
 ### [OPEN] Phase 5B — per-model / tenant-fairness quota (post–Redis ZSET v1)

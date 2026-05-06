@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -187,3 +188,19 @@ def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module)
     assert parsed.metrics.shortlist_ratio_avg is None
     assert parsed.metrics.deferred_schema_event_count == 0
     assert parsed.metrics.budget_cutoff_count == 0
+
+
+def test_reference_suite_tool_trace_span_alignment_contract(schema_module) -> None:
+    """Reference trace-review artifacts keep metric alignment with per-case span gaps."""
+    path = Path(__file__).resolve().parents[3] / "eval" / "results" / "trace-review-off.json"
+    if not path.exists():
+        pytest.skip("trace-review-off.json not present")
+    payload = path.read_text(encoding="utf-8")
+    parsed = schema_module.trace_review_from_dict(json.loads(payload))
+    total_missing = 0
+    for row in parsed.trace_timeline:
+        if row.phoenix_alignment and row.phoenix_alignment.missing:
+            total_missing += len(row.phoenix_alignment.missing)
+        if row.phoenix_alignment and row.tool_steps:
+            assert len(row.phoenix_alignment.missing) <= len(row.tool_steps)
+    assert parsed.metrics.missing_span_count == total_missing

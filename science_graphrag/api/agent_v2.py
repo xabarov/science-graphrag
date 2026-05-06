@@ -26,6 +26,7 @@ from science_graphrag.api.agent_v2_modules.deadline_otel import (
 from science_graphrag.api.agent_v2_modules.payloads import (
     AgentQueryRequestV2,
     AgentQueryResponseV2,
+    build_run_metadata as build_run_metadata_payload,
     deferred_topic_answer as deferred_topic_answer_payload,
     looks_like_deferred_topic as looks_like_deferred_topic_payload,
     normalize_history_digest_input as normalize_history_digest_input_payload,
@@ -33,7 +34,6 @@ from science_graphrag.api.agent_v2_modules.payloads import (
     shortcut_response as shortcut_response_payload,
 )
 from science_graphrag.api.agent_v2_modules.stream_lifecycle import (
-    agent_chat_llm_run_metadata,
     stream_agent_events,
     stream_shortcut_answer_events,
 )
@@ -130,18 +130,18 @@ async def post_agent_query_v2(
     except AgentGraphDeadlineExceeded as exc:
         duration_ms = int((perf_counter() - started) * 1000)
         record_agent_turn_deadline_exceeded(exc, log_message="agent v2 sync deadline exceeded")
-        meta = {
-            "agent_runtime": settings.agent_runtime,
-            "agent_max_tool_calls": max_tool_calls,
-            **agent_chat_llm_run_metadata(settings),
-            "agent_turn_deadline_exceeded": True,
-            "agent_step_timeout_seconds": settings.agent_step_timeout_seconds,
-            "agent_response_deadline_seconds": float(settings.agent_step_timeout_seconds),
-            "agent_response_deadline_enforces_upstream_cancel": False,
-            "agent_worker_may_continue_after_deadline": True,
-        }
-        if thread_id:
-            meta["thread_id"] = thread_id
+        meta = build_run_metadata_payload(
+            settings=settings,
+            max_tool_calls=max_tool_calls,
+            thread_id=thread_id,
+            extra={
+                "agent_turn_deadline_exceeded": True,
+                "agent_step_timeout_seconds": settings.agent_step_timeout_seconds,
+                "agent_response_deadline_seconds": float(settings.agent_step_timeout_seconds),
+                "agent_response_deadline_enforces_upstream_cancel": False,
+                "agent_worker_may_continue_after_deadline": True,
+            },
+        )
         return AgentQueryResponseV2(
             answer=(
                 "The assistant run exceeded the server time limit for one turn. "
@@ -164,15 +164,15 @@ async def post_agent_query_v2(
             "agent v2 sync recursion_limit exceeded limit=%s",
             getattr(exc, "recursion_limit", None),
         )
-        meta = {
-            "agent_runtime": settings.agent_runtime,
-            "agent_max_tool_calls": max_tool_calls,
-            **agent_chat_llm_run_metadata(settings),
-            "agent_graph_recursion_limit_exceeded": True,
-            "recursion_limit": int(getattr(exc, "recursion_limit", 0) or 0),
-        }
-        if thread_id:
-            meta["thread_id"] = thread_id
+        meta = build_run_metadata_payload(
+            settings=settings,
+            max_tool_calls=max_tool_calls,
+            thread_id=thread_id,
+            extra={
+                "agent_graph_recursion_limit_exceeded": True,
+                "recursion_limit": int(getattr(exc, "recursion_limit", 0) or 0),
+            },
+        )
         return AgentQueryResponseV2(
             answer=(
                 "The assistant stopped because the reasoning graph hit its hard step limit "

@@ -1,0 +1,26 @@
+{
+  "off_artifact": "eval/results/agent-note-cost-50turn-off.json",
+  "on_artifact": "eval/results/agent-note-cost-50turn-on.json",
+  "off": {
+    "count": 50,
+    "latency_p50_ms": 21216.0,
+    "latency_p95_ms": 123205.0,
+    "tokens_p50": 0.0,
+    "tokens_p95": 0.0,
+    "tokens_available_rate": 0.0
+  },
+  "on": {
+    "count": 50,
+    "latency_p50_ms": 20081.5,
+    "latency_p95_ms": 84621.0,
+    "tokens_p50": 0.0,
+    "tokens_p95": 0.0,
+    "tokens_available_rate": 0.0
+  },
+  "delta_on_minus_off": {
+    "latency_p50_ms": -1134.5,
+    "latency_p95_ms": -38584.0,
+    "tokens_p50": 0.0,
+    "tokens_p95": 0.0
+  }
+}

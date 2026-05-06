@@ -349,6 +349,19 @@
 - Для runtime trail зафиксирован один канон фактов хода и есть тесты выравнивания trace/observability.
 - Операционные хвосты (`agent_note` cost, `paper_profile` null-rate) закрыты цифрами, а не только proposal-формулировками.
 
+### 8.5 Execution log (2026-05-06, next-wave pass)
+
+- **P0 закрыт:** `.github/workflows/agent-sse-contract.yml` переведён на candidate-generation + compare с policy split:
+  - advisory compare (`--warn-is-pass`);
+  - blocking strict compare (без `--warn-is-pass`).
+- **P0 закрыт:** `tests/scripts/live_check/test_agent_trace_review.py` получил subprocess smoke-контракты для `--profile quick/default` с проверкой `review_version`, `run_context.profile` и fail-path verdict.
+- **P1 закрыт (runtime canon):**
+  - добавлен canonical metadata builder в `science_graphrag/api/agent_v2_modules/payloads.py` (`build_run_metadata`, `apply_runtime_metadata_from_state`);
+  - sync/SSE пути выровнены на один builder в `science_graphrag/api/agent_v2.py` и `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`.
+- **P1 закрыт (alignment test):** добавлен regression-контракт `tests/scripts/live_check/test_trace_review_schema.py::test_reference_suite_tool_trace_span_alignment_contract`.
+- **P2 обновлён (agent_note cost):** добавлен 50-turn batch результат в `docs/analysis/agent-note-cost-eval-2026-05-06.md` + артефакт `eval/results/agent-note-cost-50turn.json`.
+- **P2 обновлён (paper_profile null-rate):** измерен proxy-null-rate на OD case exports (`eval/results/paper-profile-null-rate-od-snapshot.json`): `year_null=1.0`, `venue_null=1.0` (n=8), решение по ingest writeback — в backend backlog (OPEN).
+
 ---
 
 ## 9. Closure plan по исходным целям (openclaude-parity track)
@@ -575,6 +588,87 @@
 - tool search работает как hybrid discovery-aware контур, а не только keyword scoring;
 - деградации ловятся до rollout через trace regression compare + lane-specific metrics.
 
+### 9.5.1 Tool parity backlog (openclaude-reference)
+
+Этот backlog фиксирует **инструментальный хвост parity** к `openclaude` поверх уже описанных Epic A/B/C.
+Фокус — не «добавить всё», а закрыть максимальный product/runtime эффект минимальным числом новых surfaces.
+
+#### P0 (брать в ближайший train)
+
+1. **MCP runtime trio + auth**
+   - Scope:
+     - `call_mcp_tool` (server/tool/arguments),
+     - `list_mcp_resources`,
+     - `fetch_mcp_resource`,
+     - `mcp_auth` (interactive auth handoff).
+   - Why:
+     - даёт масштабируемое подключение внешних систем без N кастомных tool adapters;
+     - напрямую усиливает Epic C (tool discovery) и Epic B (subagent payload usefulness).
+   - Acceptance:
+     - инструменты доступны в `/v2/agent/query` под feature flags;
+     - в run metadata/SSE есть audit trail по `server`, `tool`, `resource_uri`, auth-status;
+     - минимум 1 e2e scenario проходит с реальным MCP server и policy deny-path.
+
+2. **LSP tool (read-only, bounded)**
+   - Scope:
+     - symbol lookup / references / go-to-definition в sandboxed read-only режиме.
+   - Why:
+     - улучшает code-aware retrieval и уменьшает ложные tool hops в codebase workflows.
+   - Acceptance:
+     - есть bounded latency/timeout policy;
+     - trace фиксирует тип LSP операции и payload budget;
+     - benchmark lane показывает не хуже baseline по verdict/trust при code-navigation вопросах.
+
+#### P1 (после стабилизации P0 и B0/B1)
+
+1. **Worktree isolation tools**
+   - Scope:
+     - `enter_worktree`,
+     - `exit_worktree`.
+   - Why:
+     - готовит основу для реального multi-agent execution (Epic B) с безопасной изоляцией правок.
+   - Acceptance:
+     - lifecycle worktree прозрачно отражается в run artifacts;
+     - fail/cleanup paths покрыты (dangling worktree не остаётся);
+     - permission policy не позволяет escape за workspace boundaries.
+
+2. **Runtime monitor tool**
+   - Scope:
+     - чтение статуса long-running task (state/progress/last heartbeat/error tail).
+   - Why:
+     - снижает риск silent hangs и усиливает observability для ingest/eval сценариев.
+   - Acceptance:
+     - есть единый status contract для async tasks;
+     - в trace-review видны monitor events и корректная эскалация timeout/degraded state.
+
+#### P2 (опционально, только при явном продукт-сценарии)
+
+1. **Task orchestration primitives**
+   - Scope:
+     - `task_create`, `task_get`, `task_list`, `task_update`, `send_message`.
+   - Why:
+     - полезно для coordinator/subagent runtime, но создаёт дополнительный state-management overhead.
+   - Acceptance:
+     - доказан сценарий, где coordinator mode выигрывает у текущего graph routing по latency/reliability;
+     - нет регрессий по trace completeness и permission safety.
+
+2. **Scheduled automation (`cron_*`)**
+   - Scope:
+     - `cron_create`, `cron_list`, `cron_delete`.
+   - Why:
+     - ценно только если нужен first-class background automation в продукте.
+   - Acceptance:
+     - есть явный бизнес-кейс + retention/cleanup policy;
+     - security review закрывает abuse vectors (spam scheduling, privilege escalation).
+
+#### Out-of-scope до отдельного ADR
+
+- `team_create` / `team_delete`,
+- remote triggers,
+- REPL-like execution surfaces.
+
+Причина: высокий security/ops overhead при низком краткосрочном эффекте для текущего parity-трека.
+
 ### 9.6 Порядок внедрения (release train)
 
 1. **Train T1 (2 недели):** A0/A1/C0 — контракты + thread-insights skeleton + discovery-aware tool loading.
@@ -595,4 +689,5 @@
 
 | Дата | Изменение |
 |------|-----------|
+| 2026-05-06 | Добавлен **§9.5.1**: `Tool parity backlog (openclaude-reference)` с приоритетами P0/P1/P2, acceptance-критериями и out-of-scope списком. |
 | 2026-05-06 | Добавлен **§9**: closure plan по исходным целям (smart summarization parity, real subagent runtime v3, tool search parity), с epic-структурой, acceptance/gates, release train и stop-conditions против формального закрытия. |

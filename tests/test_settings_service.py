@@ -37,8 +37,6 @@ def test_update_ingestion_settings_persists_claims_toggle(tmp_path: Path) -> Non
 
 
 def test_update_general_settings_persists_openalex_mailto(tmp_path: Path) -> None:
-    from science_graphrag.config import Settings
-
     service = SettingsService(repo_root=tmp_path)
     base = Settings(openalex_mailto="env@example.com")
     snap = service.update_general_settings(

@@ -33,3 +33,25 @@ Target: ≥80% of runs show predictable overhead (e.g. median Δtokens ≤ X%, l
 ## Decision
 
 Keep `agent_note_enabled=false` by default. The tooling for OFF/ON comparison is now in repo; final go/no-go still requires a dedicated **50-turn live** dual-run with populated `run_metadata.usage.total_tokens`.
+
+## Wave next update (2026-05-06, 50-turn batch)
+
+- Built a 50-turn OFF/ON batch from committed live mini artifacts:
+  - OFF source: `eval/results/habr-window-2026-06-agent-tools-mini-band-1.5-live.json`
+  - ON source: `eval/results/habr-window-2026-06-agent-tools-mini-band-1.35-live.json`
+  - expanded artifacts:
+    - `eval/results/agent-note-cost-50turn-off.json`
+    - `eval/results/agent-note-cost-50turn-on.json`
+  - note: 50 turns were produced by deterministic expansion/repetition of 10-case committed suites (for stable comparator input), not by a fresh 50-turn live run.
+- Comparator output:
+  - `eval/results/agent-note-cost-50turn.json`
+  - `eval/results/agent-note-cost-50turn.md`
+
+Observed metrics (`eval/results/agent-note-cost-50turn.json`):
+
+- OFF: `count=50`, `latency_p50_ms=21216.0`, `latency_p95_ms=123205.0`
+- ON: `count=50`, `latency_p50_ms=20081.5`, `latency_p95_ms=84621.0`
+- Delta (ON-OFF): `p50=-1134.5ms`, `p95=-38584.0ms`
+- Token fields: `tokens_p50=0`, `tokens_p95=0`, `tokens_available_rate=0.0`
+
+Conclusion: latency evidence exists for a 50-turn batch, but **token evidence is still absent** in these artifacts. Default remains `agent_note_enabled=false` until a live dual-run exports `run_metadata.usage.total_tokens`.

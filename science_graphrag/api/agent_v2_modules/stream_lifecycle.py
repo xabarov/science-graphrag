@@ -55,7 +55,9 @@ from science_graphrag.api.agent_v2_modules.streaming import (
     iter_update_node_states,
 )
 from science_graphrag.api.agent_v2_modules.payloads import (
+    apply_runtime_metadata_from_state,
     agent_chat_llm_run_metadata as payload_agent_chat_llm_run_metadata,
+    build_run_metadata,
 )
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -882,20 +884,22 @@ async def stream_agent_events(
             if latest_full_state is not None:
                 msgs_for_usage = list(latest_full_state.get("messages") or [])
                 stream_usage = aggregate_agent_llm_usage(msgs_for_usage)
-            run_meta: dict[str, Any] = {
-                "agent_runtime": settings.agent_runtime,
-                "run_kind": run_kind,
-                "graph_id": graph_id,
-                "agent_max_tool_calls": max_tool_calls,
-                **agent_chat_llm_run_metadata(settings),
-                "product_path": envelope.get("product_path"),
-                "product_markers": envelope.get("product_markers"),
-                "debug_events": (
-                    (latest_full_state or {}).get("debug_events", [])[-50:]
-                    if isinstance(latest_full_state, dict)
-                    else []
-                ),
-            }
+            run_meta: dict[str, Any] = build_run_metadata(
+                settings=settings,
+                max_tool_calls=max_tool_calls,
+                run_kind=run_kind,
+                graph_id=graph_id,
+                thread_id=thread_id,
+                extra={
+                    "product_path": envelope.get("product_path"),
+                    "product_markers": envelope.get("product_markers"),
+                    "debug_events": (
+                        (latest_full_state or {}).get("debug_events", [])[-50:]
+                        if isinstance(latest_full_state, dict)
+                        else []
+                    ),
+                },
+            )
             debug_events_tail = (
                 (latest_full_state or {}).get("debug_events", [])[-50:]
                 if isinstance(latest_full_state, dict)
@@ -914,32 +918,19 @@ async def stream_agent_events(
             if salvaged_after_recursion_limit:
                 run_meta["salvaged_after_recursion_limit"] = True
                 run_meta["recursion_limit"] = recursion_limit_value
-            if isinstance(latest_full_state, dict):
-                meta_state = latest_full_state.get("metadata") or {}
-                if isinstance(meta_state, dict):
-                    state_run_kind = str(meta_state.get("run_kind") or "").strip()
-                    state_graph_id = str(meta_state.get("graph_id") or "").strip()
-                    if state_run_kind:
-                        run_meta["run_kind"] = state_run_kind
-                    if state_graph_id:
-                        run_meta["graph_id"] = state_graph_id
-                    react_total_hops = meta_state.get("react_total_hops")
-                    if isinstance(react_total_hops, int):
-                        run_meta["react_total_hops"] = react_total_hops
-                    react_force_finalize = meta_state.get("react_force_finalize")
-                    if isinstance(react_force_finalize, str) and react_force_finalize:
-                        run_meta["react_force_finalize"] = react_force_finalize
-            if thread_id:
-                run_meta["thread_id"] = thread_id
-                if compact_payload is not None:
-                    comp = compact_payload.get("compaction")
-                    if isinstance(comp, dict):
-                        run_meta["compaction"] = comp
-                        if isinstance(comp.get("digest_count"), int):
-                            run_meta["session_digest_count"] = comp["digest_count"]
-                    aud_stream = compact_payload.get("audit")
-                    if isinstance(aud_stream, dict):
-                        run_meta["compaction_audit"] = aud_stream
+            run_meta = apply_runtime_metadata_from_state(
+                run_metadata=run_meta,
+                state=latest_full_state if isinstance(latest_full_state, dict) else None,
+            )
+            if thread_id and compact_payload is not None:
+                comp = compact_payload.get("compaction")
+                if isinstance(comp, dict):
+                    run_meta["compaction"] = comp
+                    if isinstance(comp.get("digest_count"), int):
+                        run_meta["session_digest_count"] = comp["digest_count"]
+                aud_stream = compact_payload.get("audit")
+                if isinstance(aud_stream, dict):
+                    run_meta["compaction_audit"] = aud_stream
 
             final_warnings = list(envelope.get("warnings") or [])
             if history_digest_invalid and "history_digest_invalid" not in final_warnings:

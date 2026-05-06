@@ -35,18 +35,44 @@ jobs:
             tests/scripts/live_check/test_agent_trace_review.py \
             tests/observability/test_agent_sse_stream_otel.py \
             -q
-      - name: Trace regression compare (baseline sanity gate)
+      # Policy:
+      # - Candidate generation is advisory (quick profile can fail without live backend),
+      #   but must always produce a comparable trace-review-v1 artifact.
+      # - Strict compare below is the blocking gate.
+      - name: Generate trace-review candidate artifact (advisory)
+        run: |
+          set +e
+          python scripts/live_check/agent_trace_review.py \
+            --profile quick \
+            --base-url http://127.0.0.1:65535 \
+            --timeout 2 \
+            --out-json eval/results/ci-trace-review-candidate.json \
+            --out-md eval/results/ci-trace-review-candidate.md
+          rc=$?
+          echo "agent_trace_review_exit_code=${rc}" >> "$GITHUB_ENV"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path("eval/results/ci-trace-review-candidate.json")
+          if not p.exists():
+              raise SystemExit("candidate artifact was not produced")
+          payload = json.loads(p.read_text(encoding="utf-8"))
+          if payload.get("review_version") != "trace-review-v1":
+              raise SystemExit("candidate artifact must be trace-review-v1")
+          PY
+      - name: Trace regression compare (candidate vs baseline, advisory)
         run: |
           python scripts/live_check/trace_regression_compare.py \
             --baseline eval/results/baseline-trace-review.json \
-            --candidate eval/results/trace-review-off.json \
+            --candidate eval/results/ci-trace-review-candidate.json \
             --warn-is-pass \
             --out-json eval/results/ci-trace-regression-compare.json \
             --out-md eval/results/ci-trace-regression-compare.md
-      - name: Trace regression compare (strict policy report)
+      - name: Trace regression compare (candidate vs baseline, blocking strict)
         run: |
           python scripts/live_check/trace_regression_compare.py \
             --baseline eval/results/baseline-trace-review.json \
-            --candidate eval/results/trace-review-off.json \
+            --candidate eval/results/ci-trace-review-candidate.json \
             --out-json eval/results/ci-trace-regression-compare-strict.json \
             --out-md eval/results/ci-trace-regression-compare-strict.md

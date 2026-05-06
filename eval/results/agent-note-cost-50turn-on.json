@@ -1,0 +1,5035 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 50,
+    "case_ids": [
+      "agent_case_01",
+      "agent_case_02",
+      "agent_case_03",
+      "agent_case_04",
+      "agent_case_05",
+      "agent_case_06",
+      "agent_case_07",
+      "agent_case_08",
+      "agent_case_09",
+      "agent_case_10"
+    ],
+    "all_passed": false,
+    "agent_tools_eval": true,
+    "latency_p95_ms": 84621
+  },
+  "cases": [
+    {
+      "case_id": "agent_case_01_rep1",
+      "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82a1a6a6597f`): This foundational paper introduces FPN as a generic feature extractor, achieving state-of-the-art results on the COCO detection benchmark when integrated with Faster R-CNN. It specifically evaluates performance using COCO-style Average Precision (AP) and reports results for objects of different sizes.\n\n- **EfficientDet: Scalable and Efficient Object Detection** (work_id: `142db14f-610a-44ca-b928-83aa48f749a0`): This paper proposes a weighted bi-directional feature pyramid network (BiFPN) for improved multi-scale feature fusion. EfficientDet achieves state-of-the-art performance on COCO, with the D7 variant reaching 55.1 AP.\n\n- **Libra R-CNN: Towards Balanced Learning for Object Detection** (work_id: `ee487d82-2719-4276-9ca4-ad54ea102685`): This work introduces a balanced feature pyramid as part of its Libra R-CNN framework, which improves detection performance on COCO by 2.5 points AP compared to the FPN baseline.\n\nWhile the metadata (like year) for these papers is absent in the corpus, the content of these papers confirms their relevance to FPN-based object detection on the COCO dataset.",
+      "citations": [
+        {
+          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+        },
+        {
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+        },
+        {
+          "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+        },
+        {
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "chunk_id": "0f7d73be8adbe2c4fcace46a2eafdaec28e583b601304c78d894e6afb69dd6c6"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "object detection FPN COCO",
+            "workspace_id": "None",
+            "limit": "10"
+          },
+          "row_count": 10,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "object detection FPN COCO 2018 to 2020",
+            "workspace_id": "None",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82",
+            "citations": "[{'work_id': '0ccc5f8d-239c-442b-8e43-82a1a6a6597f'}, {'work_id': '142db14f-610a-44ca-b928-83aa48f749a0'}, {'work_id': 'ee487d82-2719-4276-9ca4-ad54ea102685'}, {'work_id': 'da2a6348-1a91-447d-8a17-da4"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 84621,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 84.622
+    },
+    {
+      "case_id": "agent_case_02_rep1",
+      "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper introduces YOLO, a one-stage detector, and compares it to two-stage approaches such as Fast R-CNN and Deformable Parts Models (DPM). Key points from the comparison include:\n\n- YOLO is significantly faster than most two-stage detectors, processing images at 45 frames per second (or 155 fps for Fast YOLO).\n- While YOLO makes more localization errors, it is less likely to predict false positives on background compared to Fast R-CNN.\n- The paper highlights architectural differences: two-stage methods like R-CNN use region proposal followed by classification, whereas YOLO frames detection as a single regression problem.\n\nThe comparison is detailed in sections such as \"3. Comparison to Other Detection Systems\" and \"4.2. VOC 2007 Error Analysis\".\n\nNo other works in the workspace discuss this comparison.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 3. Comparison to Other Detection Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e69abb23417da2160c9c30c338676d8d93fd38c2ce15ef65bfbad8583765c736",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.2. VOC 2007 Error Analysis"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "20"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec2",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 2,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 21503,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 21.503
+    },
+    {
+      "case_id": "agent_case_03_rep1",
+      "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws_12345",
+            "mode": "stats"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 11509,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 11.509
+    },
+    {
+      "case_id": "agent_case_04_rep1",
+      "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 5843,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 5.843
+    },
+    {
+      "case_id": "agent_case_05_rep1",
+      "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"COCO\" using full-text, semantic, and verbatim quote searches, no evidence was found that this paper discusses either BiFPN (Bidirectional Feature Pyramid Network) or the COCO (Common Objects in Context) dataset.\n\nWhile the paper does mention several datasets and detection frameworks, including PASCAL VOC, Picasso Dataset, and People-Art Dataset, there is no mention of COCO or BiFPN in the retrieved text chunks.\n\nTherefore, based on the current workspace content and available evidence, **no papers in the workspace mention both BiFPN and COCO**.",
+      "citations": [
+        {
+          "tool": "find_works",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 0
+        },
+        {
+          "tool": "idea_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5,
+          "items": [
+            {
+              "kind": "chunk",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "snippet": "the test data can diverge from what the system has seen before [3]. We compare YOLO to other detection systems on the Picasso Dataset [12] and the People-Art Dataset [3], two datasets for testing person detection on artwork."
+            }
+          ]
+        },
+        {
+          "tool": "paper_quote_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5
+        },
+        {
+          "tool": "paper_profile",
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "limit": "10"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"",
+            "citations": "[{'tool': 'find_works', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 0}, {'tool': 'idea_search', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 5, 'items': [{"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 24229,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 24.23
+    },
+    {
+      "case_id": "agent_case_06_rep1",
+      "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the broader graph, but within the current workspace, it is the sole entry and thus the most cited by default. No additional detector papers are present in this workspace to form a list of three.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "incoming",
+            "rel_types": "['CITES']",
+            "limit": "3"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 10336,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 10.336
+    },
+    {
+      "case_id": "agent_case_07_rep1",
+      "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHowever, based on the YOLO paper present in the workspace:\n\n- YOLO frames object detection as a **single regression problem**, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n- It uses a **unified convolutional neural network** that enables end-to-end optimization.\n- The model is **extremely fast**, processing images at 45 fps (or up to 155 fps in the Fast YOLO variant), making it suitable for real-time applications.\n- YOLO learns **generalizable representations** of objects, showing robustness when applied to domains like artwork, outperforming methods such as DPM and R-CNN in such scenarios.\n\nSince RetinaNet is not represented in the workspace, no shared or contrasting methods can be identified from the available materials.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "1d11e54e1418ef35630aeaeee2290537a800ad485efd2bfb72f57cce2b29fad3",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+          "tool_used": "paper_quote_search"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "YOLO",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "RetinaNet",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "common methods between YOLO and RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHow",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'tool_used': 'paper_quote_search'}, {'work_id': 'da37b10b-f5e6-4b74"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 18660,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 18.66
+    },
+    {
+      "case_id": "agent_case_08_rep1",
+      "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cited papers includes:\n\n- **The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs** (2015, arXiv:1505.00110)\n- **Decaf: A deep convolutional activation feature for generic visual recognition** (2013, arXiv:1310.1531)\n- **Object detection via a multi-region & semantic segmentation-aware CNN model** (2015, arXiv:1505.01749)\n- **Fast R-CNN** by Ross Girshick (abstract available, year missing)\n- **Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition** (2014, ECCV 2014, arXiv:1406.4729)\n\nThese citations were identified by inspecting outgoing `CITES` relationships from the central paper in the workspace. Metadata for cited works was retrieved using `paper_profile`.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        },
+        {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2",
+          "title": "The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs",
+          "year": 2015
+        },
+        {
+          "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b",
+          "title": "Decaf: A deep convolutional activation feature for generic visual recognition",
+          "year": 2013
+        },
+        {
+          "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f",
+          "title": "Object detection via a multi-region & semantic segmentation-aware CNN model",
+          "year": 2015
+        },
+        {
+          "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+          "title": "Fast R-CNN",
+          "first_author": "Ross Girshick"
+        },
+        {
+          "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+          "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+          "year": 2014,
+          "venue": "ECCV 2014"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "10"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "outgoing",
+            "rel_types": "['CITES']"
+          },
+          "row_count": 34,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 8,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cit",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'title': 'You Only Look Once: Unified, Real-Time Object Detection'}, {'work_id': '807c8f48-f811-4d22-bb05-6fe7d27615c2', 'title': 'The cross-depict"
+          },
+          "row_count": 6,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26122,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.123
+    },
+    {
+      "case_id": "agent_case_09_rep1",
+      "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be provided that FPN appears in 2019 detector papers within this workspace.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "FPN 2019 detector",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be ",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 6716,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 6.717
+    },
+    {
+      "case_id": "agent_case_10_rep1",
+      "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contributions**:\n  - YOLO frames object detection as a single regression problem, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n  - The model is extremely fast: the base YOLO processes images at **45 frames per second**, and the smaller Fast YOLO variant runs at **155 frames per second** while still outperforming other real-time detectors in mean Average Precision (mAP).\n  - YOLO generalizes well to new domains. It outperforms methods like R-CNN and DPM when applied to non-natural images such as artwork (tested on Picasso and People-Art datasets), demonstrating robustness beyond its training data.\n\nThese findings are supported by direct quotes from the paper's abstract, experiments, and conclusion sections.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / Abstract"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 6. Conclusion"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "7344fc454b5b48675b24c7310b1ac6ee833af86d37f39e4bbc7ba0eec313c508",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "stats"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "5"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "YOLO architecture and real-time object detection",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO model speed in frames per second",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO generalization to artwork and other domains",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contrib",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26728,
+      "metrics": {
+        "tool_call_correctness": 0.5,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.729
+    },
+    {
+      "case_id": "agent_case_01_rep2",
+      "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82a1a6a6597f`): This foundational paper introduces FPN as a generic feature extractor, achieving state-of-the-art results on the COCO detection benchmark when integrated with Faster R-CNN. It specifically evaluates performance using COCO-style Average Precision (AP) and reports results for objects of different sizes.\n\n- **EfficientDet: Scalable and Efficient Object Detection** (work_id: `142db14f-610a-44ca-b928-83aa48f749a0`): This paper proposes a weighted bi-directional feature pyramid network (BiFPN) for improved multi-scale feature fusion. EfficientDet achieves state-of-the-art performance on COCO, with the D7 variant reaching 55.1 AP.\n\n- **Libra R-CNN: Towards Balanced Learning for Object Detection** (work_id: `ee487d82-2719-4276-9ca4-ad54ea102685`): This work introduces a balanced feature pyramid as part of its Libra R-CNN framework, which improves detection performance on COCO by 2.5 points AP compared to the FPN baseline.\n\nWhile the metadata (like year) for these papers is absent in the corpus, the content of these papers confirms their relevance to FPN-based object detection on the COCO dataset.",
+      "citations": [
+        {
+          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+        },
+        {
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+        },
+        {
+          "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+        },
+        {
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "chunk_id": "0f7d73be8adbe2c4fcace46a2eafdaec28e583b601304c78d894e6afb69dd6c6"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "object detection FPN COCO",
+            "workspace_id": "None",
+            "limit": "10"
+          },
+          "row_count": 10,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "object detection FPN COCO 2018 to 2020",
+            "workspace_id": "None",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82",
+            "citations": "[{'work_id': '0ccc5f8d-239c-442b-8e43-82a1a6a6597f'}, {'work_id': '142db14f-610a-44ca-b928-83aa48f749a0'}, {'work_id': 'ee487d82-2719-4276-9ca4-ad54ea102685'}, {'work_id': 'da2a6348-1a91-447d-8a17-da4"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 84621,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 84.622
+    },
+    {
+      "case_id": "agent_case_02_rep2",
+      "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper introduces YOLO, a one-stage detector, and compares it to two-stage approaches such as Fast R-CNN and Deformable Parts Models (DPM). Key points from the comparison include:\n\n- YOLO is significantly faster than most two-stage detectors, processing images at 45 frames per second (or 155 fps for Fast YOLO).\n- While YOLO makes more localization errors, it is less likely to predict false positives on background compared to Fast R-CNN.\n- The paper highlights architectural differences: two-stage methods like R-CNN use region proposal followed by classification, whereas YOLO frames detection as a single regression problem.\n\nThe comparison is detailed in sections such as \"3. Comparison to Other Detection Systems\" and \"4.2. VOC 2007 Error Analysis\".\n\nNo other works in the workspace discuss this comparison.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 3. Comparison to Other Detection Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e69abb23417da2160c9c30c338676d8d93fd38c2ce15ef65bfbad8583765c736",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.2. VOC 2007 Error Analysis"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "20"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec2",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 2,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 21503,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 21.503
+    },
+    {
+      "case_id": "agent_case_03_rep2",
+      "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws_12345",
+            "mode": "stats"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 11509,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 11.509
+    },
+    {
+      "case_id": "agent_case_04_rep2",
+      "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 5843,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 5.843
+    },
+    {
+      "case_id": "agent_case_05_rep2",
+      "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"COCO\" using full-text, semantic, and verbatim quote searches, no evidence was found that this paper discusses either BiFPN (Bidirectional Feature Pyramid Network) or the COCO (Common Objects in Context) dataset.\n\nWhile the paper does mention several datasets and detection frameworks, including PASCAL VOC, Picasso Dataset, and People-Art Dataset, there is no mention of COCO or BiFPN in the retrieved text chunks.\n\nTherefore, based on the current workspace content and available evidence, **no papers in the workspace mention both BiFPN and COCO**.",
+      "citations": [
+        {
+          "tool": "find_works",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 0
+        },
+        {
+          "tool": "idea_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5,
+          "items": [
+            {
+              "kind": "chunk",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "snippet": "the test data can diverge from what the system has seen before [3]. We compare YOLO to other detection systems on the Picasso Dataset [12] and the People-Art Dataset [3], two datasets for testing person detection on artwork."
+            }
+          ]
+        },
+        {
+          "tool": "paper_quote_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5
+        },
+        {
+          "tool": "paper_profile",
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "limit": "10"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"",
+            "citations": "[{'tool': 'find_works', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 0}, {'tool': 'idea_search', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 5, 'items': [{"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 24229,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 24.23
+    },
+    {
+      "case_id": "agent_case_06_rep2",
+      "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the broader graph, but within the current workspace, it is the sole entry and thus the most cited by default. No additional detector papers are present in this workspace to form a list of three.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "incoming",
+            "rel_types": "['CITES']",
+            "limit": "3"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 10336,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 10.336
+    },
+    {
+      "case_id": "agent_case_07_rep2",
+      "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHowever, based on the YOLO paper present in the workspace:\n\n- YOLO frames object detection as a **single regression problem**, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n- It uses a **unified convolutional neural network** that enables end-to-end optimization.\n- The model is **extremely fast**, processing images at 45 fps (or up to 155 fps in the Fast YOLO variant), making it suitable for real-time applications.\n- YOLO learns **generalizable representations** of objects, showing robustness when applied to domains like artwork, outperforming methods such as DPM and R-CNN in such scenarios.\n\nSince RetinaNet is not represented in the workspace, no shared or contrasting methods can be identified from the available materials.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "1d11e54e1418ef35630aeaeee2290537a800ad485efd2bfb72f57cce2b29fad3",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+          "tool_used": "paper_quote_search"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "YOLO",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "RetinaNet",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "common methods between YOLO and RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHow",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'tool_used': 'paper_quote_search'}, {'work_id': 'da37b10b-f5e6-4b74"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 18660,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 18.66
+    },
+    {
+      "case_id": "agent_case_08_rep2",
+      "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cited papers includes:\n\n- **The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs** (2015, arXiv:1505.00110)\n- **Decaf: A deep convolutional activation feature for generic visual recognition** (2013, arXiv:1310.1531)\n- **Object detection via a multi-region & semantic segmentation-aware CNN model** (2015, arXiv:1505.01749)\n- **Fast R-CNN** by Ross Girshick (abstract available, year missing)\n- **Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition** (2014, ECCV 2014, arXiv:1406.4729)\n\nThese citations were identified by inspecting outgoing `CITES` relationships from the central paper in the workspace. Metadata for cited works was retrieved using `paper_profile`.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        },
+        {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2",
+          "title": "The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs",
+          "year": 2015
+        },
+        {
+          "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b",
+          "title": "Decaf: A deep convolutional activation feature for generic visual recognition",
+          "year": 2013
+        },
+        {
+          "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f",
+          "title": "Object detection via a multi-region & semantic segmentation-aware CNN model",
+          "year": 2015
+        },
+        {
+          "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+          "title": "Fast R-CNN",
+          "first_author": "Ross Girshick"
+        },
+        {
+          "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+          "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+          "year": 2014,
+          "venue": "ECCV 2014"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "10"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "outgoing",
+            "rel_types": "['CITES']"
+          },
+          "row_count": 34,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 8,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cit",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'title': 'You Only Look Once: Unified, Real-Time Object Detection'}, {'work_id': '807c8f48-f811-4d22-bb05-6fe7d27615c2', 'title': 'The cross-depict"
+          },
+          "row_count": 6,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26122,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.123
+    },
+    {
+      "case_id": "agent_case_09_rep2",
+      "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be provided that FPN appears in 2019 detector papers within this workspace.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "FPN 2019 detector",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be ",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 6716,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 6.717
+    },
+    {
+      "case_id": "agent_case_10_rep2",
+      "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contributions**:\n  - YOLO frames object detection as a single regression problem, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n  - The model is extremely fast: the base YOLO processes images at **45 frames per second**, and the smaller Fast YOLO variant runs at **155 frames per second** while still outperforming other real-time detectors in mean Average Precision (mAP).\n  - YOLO generalizes well to new domains. It outperforms methods like R-CNN and DPM when applied to non-natural images such as artwork (tested on Picasso and People-Art datasets), demonstrating robustness beyond its training data.\n\nThese findings are supported by direct quotes from the paper's abstract, experiments, and conclusion sections.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / Abstract"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 6. Conclusion"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "7344fc454b5b48675b24c7310b1ac6ee833af86d37f39e4bbc7ba0eec313c508",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "stats"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "5"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "YOLO architecture and real-time object detection",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO model speed in frames per second",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO generalization to artwork and other domains",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contrib",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26728,
+      "metrics": {
+        "tool_call_correctness": 0.5,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.729
+    },
+    {
+      "case_id": "agent_case_01_rep3",
+      "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82a1a6a6597f`): This foundational paper introduces FPN as a generic feature extractor, achieving state-of-the-art results on the COCO detection benchmark when integrated with Faster R-CNN. It specifically evaluates performance using COCO-style Average Precision (AP) and reports results for objects of different sizes.\n\n- **EfficientDet: Scalable and Efficient Object Detection** (work_id: `142db14f-610a-44ca-b928-83aa48f749a0`): This paper proposes a weighted bi-directional feature pyramid network (BiFPN) for improved multi-scale feature fusion. EfficientDet achieves state-of-the-art performance on COCO, with the D7 variant reaching 55.1 AP.\n\n- **Libra R-CNN: Towards Balanced Learning for Object Detection** (work_id: `ee487d82-2719-4276-9ca4-ad54ea102685`): This work introduces a balanced feature pyramid as part of its Libra R-CNN framework, which improves detection performance on COCO by 2.5 points AP compared to the FPN baseline.\n\nWhile the metadata (like year) for these papers is absent in the corpus, the content of these papers confirms their relevance to FPN-based object detection on the COCO dataset.",
+      "citations": [
+        {
+          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+        },
+        {
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+        },
+        {
+          "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+        },
+        {
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "chunk_id": "0f7d73be8adbe2c4fcace46a2eafdaec28e583b601304c78d894e6afb69dd6c6"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "object detection FPN COCO",
+            "workspace_id": "None",
+            "limit": "10"
+          },
+          "row_count": 10,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "object detection FPN COCO 2018 to 2020",
+            "workspace_id": "None",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82",
+            "citations": "[{'work_id': '0ccc5f8d-239c-442b-8e43-82a1a6a6597f'}, {'work_id': '142db14f-610a-44ca-b928-83aa48f749a0'}, {'work_id': 'ee487d82-2719-4276-9ca4-ad54ea102685'}, {'work_id': 'da2a6348-1a91-447d-8a17-da4"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 84621,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 84.622
+    },
+    {
+      "case_id": "agent_case_02_rep3",
+      "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper introduces YOLO, a one-stage detector, and compares it to two-stage approaches such as Fast R-CNN and Deformable Parts Models (DPM). Key points from the comparison include:\n\n- YOLO is significantly faster than most two-stage detectors, processing images at 45 frames per second (or 155 fps for Fast YOLO).\n- While YOLO makes more localization errors, it is less likely to predict false positives on background compared to Fast R-CNN.\n- The paper highlights architectural differences: two-stage methods like R-CNN use region proposal followed by classification, whereas YOLO frames detection as a single regression problem.\n\nThe comparison is detailed in sections such as \"3. Comparison to Other Detection Systems\" and \"4.2. VOC 2007 Error Analysis\".\n\nNo other works in the workspace discuss this comparison.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 3. Comparison to Other Detection Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e69abb23417da2160c9c30c338676d8d93fd38c2ce15ef65bfbad8583765c736",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.2. VOC 2007 Error Analysis"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "20"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec2",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 2,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 21503,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 21.503
+    },
+    {
+      "case_id": "agent_case_03_rep3",
+      "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws_12345",
+            "mode": "stats"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 11509,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 11.509
+    },
+    {
+      "case_id": "agent_case_04_rep3",
+      "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 5843,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 5.843
+    },
+    {
+      "case_id": "agent_case_05_rep3",
+      "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"COCO\" using full-text, semantic, and verbatim quote searches, no evidence was found that this paper discusses either BiFPN (Bidirectional Feature Pyramid Network) or the COCO (Common Objects in Context) dataset.\n\nWhile the paper does mention several datasets and detection frameworks, including PASCAL VOC, Picasso Dataset, and People-Art Dataset, there is no mention of COCO or BiFPN in the retrieved text chunks.\n\nTherefore, based on the current workspace content and available evidence, **no papers in the workspace mention both BiFPN and COCO**.",
+      "citations": [
+        {
+          "tool": "find_works",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 0
+        },
+        {
+          "tool": "idea_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5,
+          "items": [
+            {
+              "kind": "chunk",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "snippet": "the test data can diverge from what the system has seen before [3]. We compare YOLO to other detection systems on the Picasso Dataset [12] and the People-Art Dataset [3], two datasets for testing person detection on artwork."
+            }
+          ]
+        },
+        {
+          "tool": "paper_quote_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5
+        },
+        {
+          "tool": "paper_profile",
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "limit": "10"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"",
+            "citations": "[{'tool': 'find_works', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 0}, {'tool': 'idea_search', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 5, 'items': [{"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 24229,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 24.23
+    },
+    {
+      "case_id": "agent_case_06_rep3",
+      "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the broader graph, but within the current workspace, it is the sole entry and thus the most cited by default. No additional detector papers are present in this workspace to form a list of three.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "incoming",
+            "rel_types": "['CITES']",
+            "limit": "3"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 10336,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 10.336
+    },
+    {
+      "case_id": "agent_case_07_rep3",
+      "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHowever, based on the YOLO paper present in the workspace:\n\n- YOLO frames object detection as a **single regression problem**, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n- It uses a **unified convolutional neural network** that enables end-to-end optimization.\n- The model is **extremely fast**, processing images at 45 fps (or up to 155 fps in the Fast YOLO variant), making it suitable for real-time applications.\n- YOLO learns **generalizable representations** of objects, showing robustness when applied to domains like artwork, outperforming methods such as DPM and R-CNN in such scenarios.\n\nSince RetinaNet is not represented in the workspace, no shared or contrasting methods can be identified from the available materials.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "1d11e54e1418ef35630aeaeee2290537a800ad485efd2bfb72f57cce2b29fad3",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+          "tool_used": "paper_quote_search"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "YOLO",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "RetinaNet",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "common methods between YOLO and RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHow",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'tool_used': 'paper_quote_search'}, {'work_id': 'da37b10b-f5e6-4b74"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 18660,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 18.66
+    },
+    {
+      "case_id": "agent_case_08_rep3",
+      "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cited papers includes:\n\n- **The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs** (2015, arXiv:1505.00110)\n- **Decaf: A deep convolutional activation feature for generic visual recognition** (2013, arXiv:1310.1531)\n- **Object detection via a multi-region & semantic segmentation-aware CNN model** (2015, arXiv:1505.01749)\n- **Fast R-CNN** by Ross Girshick (abstract available, year missing)\n- **Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition** (2014, ECCV 2014, arXiv:1406.4729)\n\nThese citations were identified by inspecting outgoing `CITES` relationships from the central paper in the workspace. Metadata for cited works was retrieved using `paper_profile`.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        },
+        {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2",
+          "title": "The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs",
+          "year": 2015
+        },
+        {
+          "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b",
+          "title": "Decaf: A deep convolutional activation feature for generic visual recognition",
+          "year": 2013
+        },
+        {
+          "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f",
+          "title": "Object detection via a multi-region & semantic segmentation-aware CNN model",
+          "year": 2015
+        },
+        {
+          "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+          "title": "Fast R-CNN",
+          "first_author": "Ross Girshick"
+        },
+        {
+          "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+          "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+          "year": 2014,
+          "venue": "ECCV 2014"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "10"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "outgoing",
+            "rel_types": "['CITES']"
+          },
+          "row_count": 34,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 8,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cit",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'title': 'You Only Look Once: Unified, Real-Time Object Detection'}, {'work_id': '807c8f48-f811-4d22-bb05-6fe7d27615c2', 'title': 'The cross-depict"
+          },
+          "row_count": 6,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26122,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.123
+    },
+    {
+      "case_id": "agent_case_09_rep3",
+      "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be provided that FPN appears in 2019 detector papers within this workspace.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "FPN 2019 detector",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be ",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 6716,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 6.717
+    },
+    {
+      "case_id": "agent_case_10_rep3",
+      "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contributions**:\n  - YOLO frames object detection as a single regression problem, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n  - The model is extremely fast: the base YOLO processes images at **45 frames per second**, and the smaller Fast YOLO variant runs at **155 frames per second** while still outperforming other real-time detectors in mean Average Precision (mAP).\n  - YOLO generalizes well to new domains. It outperforms methods like R-CNN and DPM when applied to non-natural images such as artwork (tested on Picasso and People-Art datasets), demonstrating robustness beyond its training data.\n\nThese findings are supported by direct quotes from the paper's abstract, experiments, and conclusion sections.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / Abstract"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 6. Conclusion"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "7344fc454b5b48675b24c7310b1ac6ee833af86d37f39e4bbc7ba0eec313c508",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "stats"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "5"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "YOLO architecture and real-time object detection",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO model speed in frames per second",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO generalization to artwork and other domains",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contrib",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26728,
+      "metrics": {
+        "tool_call_correctness": 0.5,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.729
+    },
+    {
+      "case_id": "agent_case_01_rep4",
+      "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82a1a6a6597f`): This foundational paper introduces FPN as a generic feature extractor, achieving state-of-the-art results on the COCO detection benchmark when integrated with Faster R-CNN. It specifically evaluates performance using COCO-style Average Precision (AP) and reports results for objects of different sizes.\n\n- **EfficientDet: Scalable and Efficient Object Detection** (work_id: `142db14f-610a-44ca-b928-83aa48f749a0`): This paper proposes a weighted bi-directional feature pyramid network (BiFPN) for improved multi-scale feature fusion. EfficientDet achieves state-of-the-art performance on COCO, with the D7 variant reaching 55.1 AP.\n\n- **Libra R-CNN: Towards Balanced Learning for Object Detection** (work_id: `ee487d82-2719-4276-9ca4-ad54ea102685`): This work introduces a balanced feature pyramid as part of its Libra R-CNN framework, which improves detection performance on COCO by 2.5 points AP compared to the FPN baseline.\n\nWhile the metadata (like year) for these papers is absent in the corpus, the content of these papers confirms their relevance to FPN-based object detection on the COCO dataset.",
+      "citations": [
+        {
+          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+        },
+        {
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+        },
+        {
+          "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+        },
+        {
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "chunk_id": "0f7d73be8adbe2c4fcace46a2eafdaec28e583b601304c78d894e6afb69dd6c6"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "object detection FPN COCO",
+            "workspace_id": "None",
+            "limit": "10"
+          },
+          "row_count": 10,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "object detection FPN COCO 2018 to 2020",
+            "workspace_id": "None",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82",
+            "citations": "[{'work_id': '0ccc5f8d-239c-442b-8e43-82a1a6a6597f'}, {'work_id': '142db14f-610a-44ca-b928-83aa48f749a0'}, {'work_id': 'ee487d82-2719-4276-9ca4-ad54ea102685'}, {'work_id': 'da2a6348-1a91-447d-8a17-da4"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 84621,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 84.622
+    },
+    {
+      "case_id": "agent_case_02_rep4",
+      "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper introduces YOLO, a one-stage detector, and compares it to two-stage approaches such as Fast R-CNN and Deformable Parts Models (DPM). Key points from the comparison include:\n\n- YOLO is significantly faster than most two-stage detectors, processing images at 45 frames per second (or 155 fps for Fast YOLO).\n- While YOLO makes more localization errors, it is less likely to predict false positives on background compared to Fast R-CNN.\n- The paper highlights architectural differences: two-stage methods like R-CNN use region proposal followed by classification, whereas YOLO frames detection as a single regression problem.\n\nThe comparison is detailed in sections such as \"3. Comparison to Other Detection Systems\" and \"4.2. VOC 2007 Error Analysis\".\n\nNo other works in the workspace discuss this comparison.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 3. Comparison to Other Detection Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e69abb23417da2160c9c30c338676d8d93fd38c2ce15ef65bfbad8583765c736",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.2. VOC 2007 Error Analysis"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "20"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec2",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 2,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 21503,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 21.503
+    },
+    {
+      "case_id": "agent_case_03_rep4",
+      "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws_12345",
+            "mode": "stats"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 11509,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 11.509
+    },
+    {
+      "case_id": "agent_case_04_rep4",
+      "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 5843,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 5.843
+    },
+    {
+      "case_id": "agent_case_05_rep4",
+      "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"COCO\" using full-text, semantic, and verbatim quote searches, no evidence was found that this paper discusses either BiFPN (Bidirectional Feature Pyramid Network) or the COCO (Common Objects in Context) dataset.\n\nWhile the paper does mention several datasets and detection frameworks, including PASCAL VOC, Picasso Dataset, and People-Art Dataset, there is no mention of COCO or BiFPN in the retrieved text chunks.\n\nTherefore, based on the current workspace content and available evidence, **no papers in the workspace mention both BiFPN and COCO**.",
+      "citations": [
+        {
+          "tool": "find_works",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 0
+        },
+        {
+          "tool": "idea_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5,
+          "items": [
+            {
+              "kind": "chunk",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "snippet": "the test data can diverge from what the system has seen before [3]. We compare YOLO to other detection systems on the Picasso Dataset [12] and the People-Art Dataset [3], two datasets for testing person detection on artwork."
+            }
+          ]
+        },
+        {
+          "tool": "paper_quote_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5
+        },
+        {
+          "tool": "paper_profile",
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "limit": "10"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"",
+            "citations": "[{'tool': 'find_works', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 0}, {'tool': 'idea_search', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 5, 'items': [{"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 24229,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 24.23
+    },
+    {
+      "case_id": "agent_case_06_rep4",
+      "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the broader graph, but within the current workspace, it is the sole entry and thus the most cited by default. No additional detector papers are present in this workspace to form a list of three.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "incoming",
+            "rel_types": "['CITES']",
+            "limit": "3"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 10336,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 10.336
+    },
+    {
+      "case_id": "agent_case_07_rep4",
+      "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHowever, based on the YOLO paper present in the workspace:\n\n- YOLO frames object detection as a **single regression problem**, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n- It uses a **unified convolutional neural network** that enables end-to-end optimization.\n- The model is **extremely fast**, processing images at 45 fps (or up to 155 fps in the Fast YOLO variant), making it suitable for real-time applications.\n- YOLO learns **generalizable representations** of objects, showing robustness when applied to domains like artwork, outperforming methods such as DPM and R-CNN in such scenarios.\n\nSince RetinaNet is not represented in the workspace, no shared or contrasting methods can be identified from the available materials.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "1d11e54e1418ef35630aeaeee2290537a800ad485efd2bfb72f57cce2b29fad3",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+          "tool_used": "paper_quote_search"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "YOLO",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "RetinaNet",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "common methods between YOLO and RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHow",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'tool_used': 'paper_quote_search'}, {'work_id': 'da37b10b-f5e6-4b74"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 18660,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 18.66
+    },
+    {
+      "case_id": "agent_case_08_rep4",
+      "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cited papers includes:\n\n- **The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs** (2015, arXiv:1505.00110)\n- **Decaf: A deep convolutional activation feature for generic visual recognition** (2013, arXiv:1310.1531)\n- **Object detection via a multi-region & semantic segmentation-aware CNN model** (2015, arXiv:1505.01749)\n- **Fast R-CNN** by Ross Girshick (abstract available, year missing)\n- **Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition** (2014, ECCV 2014, arXiv:1406.4729)\n\nThese citations were identified by inspecting outgoing `CITES` relationships from the central paper in the workspace. Metadata for cited works was retrieved using `paper_profile`.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        },
+        {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2",
+          "title": "The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs",
+          "year": 2015
+        },
+        {
+          "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b",
+          "title": "Decaf: A deep convolutional activation feature for generic visual recognition",
+          "year": 2013
+        },
+        {
+          "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f",
+          "title": "Object detection via a multi-region & semantic segmentation-aware CNN model",
+          "year": 2015
+        },
+        {
+          "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+          "title": "Fast R-CNN",
+          "first_author": "Ross Girshick"
+        },
+        {
+          "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+          "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+          "year": 2014,
+          "venue": "ECCV 2014"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "10"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "outgoing",
+            "rel_types": "['CITES']"
+          },
+          "row_count": 34,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 8,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cit",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'title': 'You Only Look Once: Unified, Real-Time Object Detection'}, {'work_id': '807c8f48-f811-4d22-bb05-6fe7d27615c2', 'title': 'The cross-depict"
+          },
+          "row_count": 6,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26122,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.123
+    },
+    {
+      "case_id": "agent_case_09_rep4",
+      "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be provided that FPN appears in 2019 detector papers within this workspace.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "FPN 2019 detector",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be ",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 6716,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 6.717
+    },
+    {
+      "case_id": "agent_case_10_rep4",
+      "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contributions**:\n  - YOLO frames object detection as a single regression problem, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n  - The model is extremely fast: the base YOLO processes images at **45 frames per second**, and the smaller Fast YOLO variant runs at **155 frames per second** while still outperforming other real-time detectors in mean Average Precision (mAP).\n  - YOLO generalizes well to new domains. It outperforms methods like R-CNN and DPM when applied to non-natural images such as artwork (tested on Picasso and People-Art datasets), demonstrating robustness beyond its training data.\n\nThese findings are supported by direct quotes from the paper's abstract, experiments, and conclusion sections.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / Abstract"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 6. Conclusion"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "7344fc454b5b48675b24c7310b1ac6ee833af86d37f39e4bbc7ba0eec313c508",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "stats"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "5"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "YOLO architecture and real-time object detection",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO model speed in frames per second",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO generalization to artwork and other domains",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contrib",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26728,
+      "metrics": {
+        "tool_call_correctness": 0.5,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.729
+    },
+    {
+      "case_id": "agent_case_01_rep5",
+      "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82a1a6a6597f`): This foundational paper introduces FPN as a generic feature extractor, achieving state-of-the-art results on the COCO detection benchmark when integrated with Faster R-CNN. It specifically evaluates performance using COCO-style Average Precision (AP) and reports results for objects of different sizes.\n\n- **EfficientDet: Scalable and Efficient Object Detection** (work_id: `142db14f-610a-44ca-b928-83aa48f749a0`): This paper proposes a weighted bi-directional feature pyramid network (BiFPN) for improved multi-scale feature fusion. EfficientDet achieves state-of-the-art performance on COCO, with the D7 variant reaching 55.1 AP.\n\n- **Libra R-CNN: Towards Balanced Learning for Object Detection** (work_id: `ee487d82-2719-4276-9ca4-ad54ea102685`): This work introduces a balanced feature pyramid as part of its Libra R-CNN framework, which improves detection performance on COCO by 2.5 points AP compared to the FPN baseline.\n\nWhile the metadata (like year) for these papers is absent in the corpus, the content of these papers confirms their relevance to FPN-based object detection on the COCO dataset.",
+      "citations": [
+        {
+          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+        },
+        {
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+        },
+        {
+          "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+        },
+        {
+          "work_id": "da2a6348-1a91-447d-8a17-da475a87b75f",
+          "chunk_id": "0f7d73be8adbe2c4fcace46a2eafdaec28e583b601304c78d894e6afb69dd6c6"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "object detection FPN COCO",
+            "workspace_id": "None",
+            "limit": "10"
+          },
+          "row_count": 10,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "object detection FPN COCO 2018 to 2020",
+            "workspace_id": "None",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "Based on the retrieved results, here are key object detection papers using FPN on COCO between 2018 and 2020:\n\n- **Feature Pyramid Networks for Object Detection** (work_id: `0ccc5f8d-239c-442b-8e43-82",
+            "citations": "[{'work_id': '0ccc5f8d-239c-442b-8e43-82a1a6a6597f'}, {'work_id': '142db14f-610a-44ca-b928-83aa48f749a0'}, {'work_id': 'ee487d82-2719-4276-9ca4-ad54ea102685'}, {'work_id': 'da2a6348-1a91-447d-8a17-da4"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 84621,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 84.622
+    },
+    {
+      "case_id": "agent_case_02_rep5",
+      "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper introduces YOLO, a one-stage detector, and compares it to two-stage approaches such as Fast R-CNN and Deformable Parts Models (DPM). Key points from the comparison include:\n\n- YOLO is significantly faster than most two-stage detectors, processing images at 45 frames per second (or 155 fps for Fast YOLO).\n- While YOLO makes more localization errors, it is less likely to predict false positives on background compared to Fast R-CNN.\n- The paper highlights architectural differences: two-stage methods like R-CNN use region proposal followed by classification, whereas YOLO frames detection as a single regression problem.\n\nThe comparison is detailed in sections such as \"3. Comparison to Other Detection Systems\" and \"4.2. VOC 2007 Error Analysis\".\n\nNo other works in the workspace discuss this comparison.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 3. Comparison to Other Detection Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "e69abb23417da2160c9c30c338676d8d93fd38c2ce15ef65bfbad8583765c736",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.2. VOC 2007 Error Analysis"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "20"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "comparison between one-stage and two-stage object detectors",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper that compares one-stage and two-stage object detectors:\n\n- **\"You Only Look Once: Unified, Real-Time Object Detection\"** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec2",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'e6dddc6542869822c2f8c2bfa804ff26221c53b2ead913d5a3cbd5e9d542dbb2', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 2,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 21503,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 21.503
+    },
+    {
+      "case_id": "agent_case_03_rep5",
+      "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws_12345",
+            "mode": "stats"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace `ws_12345` could not be found. Please verify the workspace ID to proceed with the analysis.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 11509,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 11.509
+    },
+    {
+      "case_id": "agent_case_04_rep5",
+      "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers related to RetinaNet. Therefore, no datasets can be summarized from this collection.",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 5843,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 5.843
+    },
+    {
+      "case_id": "agent_case_05_rep5",
+      "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"COCO\" using full-text, semantic, and verbatim quote searches, no evidence was found that this paper discusses either BiFPN (Bidirectional Feature Pyramid Network) or the COCO (Common Objects in Context) dataset.\n\nWhile the paper does mention several datasets and detection frameworks, including PASCAL VOC, Picasso Dataset, and People-Art Dataset, there is no mention of COCO or BiFPN in the retrieved text chunks.\n\nTherefore, based on the current workspace content and available evidence, **no papers in the workspace mention both BiFPN and COCO**.",
+      "citations": [
+        {
+          "tool": "find_works",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 0
+        },
+        {
+          "tool": "idea_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5,
+          "items": [
+            {
+              "kind": "chunk",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "snippet": "the test data can diverge from what the system has seen before [3]. We compare YOLO to other detection systems on the Picasso Dataset [12] and the People-Art Dataset [3], two datasets for testing person detection on artwork."
+            }
+          ]
+        },
+        {
+          "tool": "paper_quote_search",
+          "query": "BiFPN COCO",
+          "workspace_id": "ws-pilot-od",
+          "row_count": 5
+        },
+        {
+          "tool": "paper_profile",
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "limit": "10"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "BiFPN COCO",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). However, after searching for mentions of both \"BiFPN\" and \"",
+            "citations": "[{'tool': 'find_works', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 0}, {'tool': 'idea_search', 'query': 'BiFPN COCO', 'workspace_id': 'ws-pilot-od', 'row_count': 5, 'items': [{"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 24229,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": false,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 24.23
+    },
+    {
+      "case_id": "agent_case_06_rep5",
+      "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the broader graph, but within the current workspace, it is the sole entry and thus the most cited by default. No additional detector papers are present in this workspace to form a list of three.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "inventory"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "50"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "incoming",
+            "rel_types": "['CITES']",
+            "limit": "3"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains only one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (work_id: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper is cited by three other works in the",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 10336,
+      "metrics": {
+        "tool_call_correctness": 0.3333,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 10.336
+    },
+    {
+      "case_id": "agent_case_07_rep5",
+      "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHowever, based on the YOLO paper present in the workspace:\n\n- YOLO frames object detection as a **single regression problem**, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n- It uses a **unified convolutional neural network** that enables end-to-end optimization.\n- The model is **extremely fast**, processing images at 45 fps (or up to 155 fps in the Fast YOLO variant), making it suitable for real-time applications.\n- YOLO learns **generalizable representations** of objects, showing robustness when applied to domains like artwork, outperforming methods such as DPM and R-CNN in such scenarios.\n\nSince RetinaNet is not represented in the workspace, no shared or contrasting methods can be identified from the available materials.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "1d11e54e1418ef35630aeaeee2290537a800ad485efd2bfb72f57cce2b29fad3",
+          "tool_used": "paper_quote_search"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+          "tool_used": "paper_quote_search"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "YOLO",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "RetinaNet",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "common methods between YOLO and RetinaNet",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains the original YOLO paper but no RetinaNet-related papers. Therefore, a direct comparison of common methods between YOLO and RetinaNet cannot be made from the current corpus.\n\nHow",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'tool_used': 'paper_quote_search'}, {'work_id': 'da37b10b-f5e6-4b74"
+          },
+          "row_count": 3,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 18660,
+      "metrics": {
+        "tool_call_correctness": 1.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": true
+      },
+      "wall_clock_seconds": 18.66
+    },
+    {
+      "case_id": "agent_case_08_rep5",
+      "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cited papers includes:\n\n- **The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs** (2015, arXiv:1505.00110)\n- **Decaf: A deep convolutional activation feature for generic visual recognition** (2013, arXiv:1310.1531)\n- **Object detection via a multi-region & semantic segmentation-aware CNN model** (2015, arXiv:1505.01749)\n- **Fast R-CNN** by Ross Girshick (abstract available, year missing)\n- **Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition** (2014, ECCV 2014, arXiv:1406.4729)\n\nThese citations were identified by inspecting outgoing `CITES` relationships from the central paper in the workspace. Metadata for cited works was retrieved using `paper_profile`.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "title": "You Only Look Once: Unified, Real-Time Object Detection"
+        },
+        {
+          "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2",
+          "title": "The cross-depiction problem: Computer vision algorithms for recognising objects in artwork and in photographs",
+          "year": 2015
+        },
+        {
+          "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b",
+          "title": "Decaf: A deep convolutional activation feature for generic visual recognition",
+          "year": 2013
+        },
+        {
+          "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f",
+          "title": "Object detection via a multi-region & semantic segmentation-aware CNN model",
+          "year": 2015
+        },
+        {
+          "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2",
+          "title": "Fast R-CNN",
+          "first_author": "Ross Girshick"
+        },
+        {
+          "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75",
+          "title": "Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition",
+          "year": 2014,
+          "venue": "ECCV 2014"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "10"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "edge_search",
+          "args_summary": {
+            "node_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "direction": "outgoing",
+            "rel_types": "['CITES']"
+          },
+          "row_count": 34,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "807c8f48-f811-4d22-bb05-6fe7d27615c2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "fa2f8a64-453b-495a-9e84-5aa27967299b"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "79898048-5bbe-4c59-9087-2898fbc1118f"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "b3118291-8e4b-427d-9994-ce6f14b958b2"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "db6796f1-78d0-41d1-8237-4814f256bc75"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 8,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains one paper:\n\n- **You Only Look Once: Unified, Real-Time Object Detection** (ID: `da37b10b-f5e6-4b74-9659-cc66e4abec26`)\n\nThis paper cites 34 external works. A sample of these cit",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'title': 'You Only Look Once: Unified, Real-Time Object Detection'}, {'work_id': '807c8f48-f811-4d22-bb05-6fe7d27615c2', 'title': 'The cross-depict"
+          },
+          "row_count": 6,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26122,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.123
+    },
+    {
+      "case_id": "agent_case_09_rep5",
+      "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be provided that FPN appears in 2019 detector papers within this workspace.",
+      "citations": [],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "find_works",
+          "args_summary": {
+            "query": "FPN 2019 detector",
+            "workspace_id": "<active_workspace_id>"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The current workspace does not contain any papers matching the query 'FPN 2019 detector'. Either the workspace is empty, lacks relevant papers, or could not be accessed. Therefore, no evidence can be ",
+            "citations": "[]"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 6716,
+      "metrics": {
+        "tool_call_correctness": 0.0,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 6.717
+    },
+    {
+      "case_id": "agent_case_10_rep5",
+      "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contributions**:\n  - YOLO frames object detection as a single regression problem, directly predicting bounding boxes and class probabilities from full images in one evaluation.\n  - The model is extremely fast: the base YOLO processes images at **45 frames per second**, and the smaller Fast YOLO variant runs at **155 frames per second** while still outperforming other real-time detectors in mean Average Precision (mAP).\n  - YOLO generalizes well to new domains. It outperforms methods like R-CNN and DPM when applied to non-natural images such as artwork (tested on Picasso and People-Art datasets), demonstrating robustness beyond its training data.\n\nThese findings are supported by direct quotes from the paper's abstract, experiments, and conclusion sections.",
+      "citations": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / Abstract"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "d8e44eaa7e79ef23008a90c3556195d37c02e32df22f638b527d41bc0c6e2304",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 4. Experiments / 4.1. Comparison to Other Real-Time Systems"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection / 6. Conclusion"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "chunk_id": "7344fc454b5b48675b24c7310b1ac6ee833af86d37f39e4bbc7ba0eec313c508",
+          "section": "You Only Look Once: Unified, Real-Time Object Detection"
+        }
+      ],
+      "tool_trace": [
+        {
+          "step": 0,
+          "tool": "coordinator_gate",
+          "args_summary": {
+            "tool_policy": "allow_tools",
+            "classifier": "single_agent_research_v1",
+            "suggested_answer_class": "grounded_explanation"
+          },
+          "row_count": 0,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 1,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "stats"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 2,
+          "tool": "workspace_inspect",
+          "args_summary": {
+            "workspace_id": "ws-pilot-od",
+            "mode": "papers",
+            "list_limit": "5"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 3,
+          "tool": "paper_profile",
+          "args_summary": {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+          },
+          "row_count": 1,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 4,
+          "tool": "idea_search",
+          "args_summary": {
+            "query": "YOLO architecture and real-time object detection",
+            "kinds": "['chunk']",
+            "workspace_id": "ws-pilot-od",
+            "top_k": "5"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": true,
+          "error": null
+        },
+        {
+          "step": 5,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO model speed in frames per second",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 6,
+          "tool": "paper_quote_search",
+          "args_summary": {
+            "query": "YOLO generalization to artwork and other domains",
+            "workspace_id": "ws-pilot-od"
+          },
+          "row_count": 5,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        },
+        {
+          "step": 7,
+          "tool": "final_answer",
+          "args_summary": {
+            "answer": "The workspace contains a single paper:\n\n- **Title**: *You Only Look Once: Unified, Real-Time Object Detection*\n- **Authors**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi\n- **Key Contrib",
+            "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': 'cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7', 'section': 'You Only Look Once: Unified, Real-Time Object Detection"
+          },
+          "row_count": 4,
+          "duration_ms": 0,
+          "truncated": false,
+          "error": null
+        }
+      ],
+      "duration_ms": 26728,
+      "metrics": {
+        "tool_call_correctness": 0.5,
+        "tool_budget_ok": true,
+        "cypher_safety": 1.0,
+        "answer_grounded": 1.0,
+        "passed": false
+      },
+      "wall_clock_seconds": 26.729
+    }
+  ]
+}

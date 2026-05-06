@@ -22,6 +22,58 @@ def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
     }
 
 
+def build_run_metadata(
+    *,
+    settings: Settings,
+    max_tool_calls: int,
+    run_kind: str | None = None,
+    graph_id: str | None = None,
+    thread_id: str | None = None,
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Build canonical agent run_metadata envelope used by sync and SSE."""
+    meta: dict[str, Any] = {
+        "agent_runtime": settings.agent_runtime,
+        "agent_max_tool_calls": max_tool_calls,
+        **agent_chat_llm_run_metadata(settings),
+    }
+    if run_kind:
+        meta["run_kind"] = run_kind
+    if graph_id:
+        meta["graph_id"] = graph_id
+    if thread_id:
+        meta["thread_id"] = thread_id
+    if extra:
+        meta.update(extra)
+    return meta
+
+
+def apply_runtime_metadata_from_state(
+    *,
+    run_metadata: dict[str, Any],
+    state: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Patch run metadata with canonical runtime attribution from graph state."""
+    if not isinstance(state, dict):
+        return run_metadata
+    raw_meta = state.get("metadata") or {}
+    if not isinstance(raw_meta, dict):
+        return run_metadata
+    state_run_kind = str(raw_meta.get("run_kind") or "").strip()
+    state_graph_id = str(raw_meta.get("graph_id") or "").strip()
+    if state_run_kind:
+        run_metadata["run_kind"] = state_run_kind
+    if state_graph_id:
+        run_metadata["graph_id"] = state_graph_id
+    react_total_hops = raw_meta.get("react_total_hops")
+    if isinstance(react_total_hops, int):
+        run_metadata["react_total_hops"] = react_total_hops
+    react_force_finalize = raw_meta.get("react_force_finalize")
+    if isinstance(react_force_finalize, str) and react_force_finalize:
+        run_metadata["react_force_finalize"] = react_force_finalize
+    return run_metadata
+
+
 def normalize_history_digest_input(raw: object) -> tuple[list[dict[str, Any]], bool]:
     """Parse client history digest; return (normalized_turn_dicts, invalid)."""
     if raw is None:
@@ -156,15 +208,12 @@ def shortcut_response(
     run_metadata: dict[str, Any] | None = None,
 ) -> AgentQueryResponseV2:
     """Build shortcut response payload for pre-agent clarifications."""
-    meta = {
-        "agent_runtime": settings.agent_runtime,
-        "agent_max_tool_calls": max_tool_calls,
-        **agent_chat_llm_run_metadata(settings),
-    }
-    if run_metadata:
-        meta.update(run_metadata)
-    if thread_id:
-        meta["thread_id"] = thread_id
+    meta = build_run_metadata(
+        settings=settings,
+        max_tool_calls=max_tool_calls,
+        thread_id=thread_id,
+        extra=run_metadata,
+    )
     return AgentQueryResponseV2(
         answer=answer,
         citations=[],
@@ -191,21 +240,18 @@ def response_from_run(
 ) -> AgentQueryResponseV2:
     """Build JSON response payload from agent run output."""
     trace_dicts = [dict(t) for t in (out.tool_trace or [])]
-    run_metadata = {
-        "agent_runtime": settings.agent_runtime,
-        "agent_max_tool_calls": max_tool_calls,
-        **agent_chat_llm_run_metadata(settings),
-    }
-    if extra_run_metadata:
-        run_metadata.update(extra_run_metadata)
+    run_metadata = build_run_metadata(
+        settings=settings,
+        max_tool_calls=max_tool_calls,
+        thread_id=getattr(out, "thread_id", None),
+        extra=extra_run_metadata,
+    )
     llm_usage = getattr(out, "llm_usage", None)
     if isinstance(llm_usage, dict) and llm_usage:
         run_metadata["usage"] = dict(llm_usage)
     if getattr(out, "debug_events", None):
         run_metadata["debug_events"] = list(out.debug_events)[-50:]
     tid = getattr(out, "thread_id", None)
-    if tid:
-        run_metadata["thread_id"] = tid
     warnings = list(getattr(out, "warnings", None) or [])
     for w in extra_warnings or []:
         ws = str(w).strip()
@@ -237,6 +283,8 @@ __all__ = [
     "AgentQueryRequestV2",
     "AgentQueryResponseV2",
     "agent_chat_llm_run_metadata",
+    "apply_runtime_metadata_from_state",
+    "build_run_metadata",
     "deferred_topic_answer",
     "looks_like_deferred_topic",
     "normalize_history_digest_input",

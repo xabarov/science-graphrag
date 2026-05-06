@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -12,6 +13,33 @@ from typing import Any
 
 _REPO = Path(__file__).resolve().parents[3]
 _SCRIPT = _REPO / "scripts" / "live_check" / "agent_trace_review.py"
+
+
+def _run_script_subprocess(*, tmp_path: Path, profile: str) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
+    out_json = tmp_path / f"trace-review-subprocess-{profile}.json"
+    out_md = tmp_path / f"trace-review-subprocess-{profile}.md"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(_SCRIPT),
+            "--profile",
+            profile,
+            "--base-url",
+            "http://127.0.0.1:65535",
+            "--timeout",
+            "0.5",
+            "--skip-e2e",
+            "--out-json",
+            str(out_json),
+            "--out-md",
+            str(out_md),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(out_json.read_text(encoding="utf-8"))
+    return completed, payload
 
 
 def _load_module() -> Any:
@@ -104,4 +132,30 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
     assert run_ctx.get("profile") == "quick"
     assert run_ctx.get("run_kind") == "single_agent_research"
     assert run_ctx.get("graph_id") == "single_agent_react"
+
+
+def test_agent_trace_review_subprocess_quick_profile_fail_path_contract(
+    tmp_path: Path,
+) -> None:
+    completed, payload = _run_script_subprocess(tmp_path=tmp_path, profile="quick")
+    assert completed.returncode == 1
+    assert payload["review_version"] == "trace-review-v1"
+    run_ctx = payload.get("run_context") or {}
+    assert run_ctx.get("profile") == "quick"
+    verdict = payload.get("verdict") or {}
+    assert verdict.get("status") == "fail"
+    assert verdict.get("fail_reasons")
+
+
+def test_agent_trace_review_subprocess_default_profile_fail_path_contract(
+    tmp_path: Path,
+) -> None:
+    completed, payload = _run_script_subprocess(tmp_path=tmp_path, profile="default")
+    assert completed.returncode == 1
+    assert payload["review_version"] == "trace-review-v1"
+    run_ctx = payload.get("run_context") or {}
+    assert run_ctx.get("profile") == "default"
+    verdict = payload.get("verdict") or {}
+    assert verdict.get("status") == "fail"
+    assert verdict.get("fail_reasons")
 
