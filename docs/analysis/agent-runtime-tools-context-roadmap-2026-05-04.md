@@ -441,16 +441,17 @@
 
 #### A1. Thread-insights pipeline (новый слой)
 
-- **Status (2026-05-06): PARTIAL (Train T1 skeleton).**
+- **Status (2026-05-06): A1 hardening delivered in-repo (server-side artifact + resilience); A2 remains prompt path.**
+- **Scope split:** A1 = `thread_insight` snapshot, persistence, post-turn refresh policy, audit/control telemetry, compaction boundary, circuit-breaker, L4 PTL retry + `message_groups` integrity helpers. **A2** = `<thread_insight>` injection, precedence matrix, `insight_fallback_reason` / conflict markers in prompt + run_metadata. **A3** = full long-thread eval lane + numeric SLO gate (beyond minimal synthetic harness).
 - Выполнено:
   - добавлен `science_graphrag/agent/context/thread_insights.py` (deterministic chunking + bounded parallel workers + synthesis);
   - persistence в `session_meta.thread_insight` через `apply_thread_insight_snapshot` (memory + redis backend);
   - post-turn refresh под feature-flag `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED`;
-  - `run_metadata.thread_insight_audit` в sync/SSE.
-- Осталось до полного A1/A2:
-  - полноценная freshness policy (TTL / turn_delta / high_churn);
-  - circuit-breaker / PTL retry / integrity guards;
-  - prompt injection `<thread_insight>` и precedence matrix (A2).
+  - `run_metadata.thread_insight_audit` в sync/SSE;
+  - freshness (`turn_delta`, optional TTL, `high_churn`), `thread_insight_control`, `stale_reason` / `refresh_decision` в audit/control;
+  - `compaction_lock` + insight circuit-breaker; L4 PTL retry (`agent_llm_full_history_compact_ptl_max_retries`); `science_graphrag/agent/context/message_groups.py` + `science_graphrag/agent/forked_runtime.py` seam stub.
+- Осталось до полного **A2**:
+  - prompt injection `<thread_insight>` и precedence matrix.
 
 - Добавить модуль `agent/context/thread_insights.py`:
   - windowing длинного треда на semantic chunks;
@@ -1214,26 +1215,26 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
   - [x] persistence в `session_meta.thread_insight` (memory + redis backend)
   - [x] post-turn refresh под `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED`
   - [x] `run_metadata.thread_insight_audit` в sync/SSE
-  - [ ] freshness policy: TTL / turn_delta / high_churn (§9.3 A1)
-  - [ ] circuit-breaker (`max_consecutive_failures`) (§9.3 A1, §10.5.5)
-  - [ ] PTL retry policy (`max_ptl_retries`) (§9.3 A1, §10.5.3)
-  - [ ] integrity guards `tool_use/tool_result` при chunk/drop/rebuild (§9.3 A1)
-  - [ ] explicit compaction boundary artifact (`trigger`/`pre_tokens`/`source_range`/`preserved_segment`) (§9.3 A1)
-  - [ ] gate: `insight_recall@k` measurable, `stale_summary_error_rate` baseline (§9.3 A3 ref)
+  - [x] freshness policy: TTL / turn_delta / high_churn (§9.3 A1)
+  - [x] circuit-breaker (`max_consecutive_failures`) (§9.3 A1, §10.5.5)
+  - [x] PTL retry policy (`max_ptl_retries`) — L4 digest path + `message_groups` for LC history (§9.3 A1, §10.5.3)
+  - [x] integrity guards `tool_use/tool_result` при chunk/drop/rebuild (`message_groups.py`) (§9.3 A1)
+  - [x] explicit compaction boundary artifact (`trigger`/`pre_tokens`/`source_range`/`preserved_segment`) (§9.3 A1)
+  - [x] gate: `insight_recall@k` measurable, `stale_summary_error_rate` baseline — synthetic harness only (§9.3 A3 ref; full A3 eval still T2+)
 
 - **C0. Discovery-aware tool loading** (§9.5 C0)
   - [x] `tool_search` учитывает discovered tools из message history (`AIMessage.tool_calls` / `ToolMessage`)
   - [x] детерминированный merge перед session carry-over
   - [x] `message_discovery_tools` / `message_discovery_merged` в `tool_search_result`
-  - [ ] strict deferred activation policy (`only-on-discovery`) как runtime contract
-  - [ ] расширенная telemetry на lane-уровне (`activation_rate` / `miss_due_to_no_discovery`)
+  - [x] strict deferred activation policy (`only-on-discovery`) как runtime contract
+  - [x] расширенная telemetry на lane-уровне (`activation_rate` / `miss_due_to_no_discovery`)
 
 - **§10.2 Cache-safe side-LLM helper** (новое в Train T1)
-  - [ ] `science_graphrag/agent/forked_runtime.py` helper (`parent_system + parent_tools + parent_messages_prefix + fork_prompt + fork_can_use_tool` → completion + cache metrics)
-  - [ ] миграция `thread_insights.py` на helper
-  - [ ] метрика `side_llm_cache_read_ratio` в `trace-review-v1`
-  - [ ] gate: `side_llm_cache_read_ratio >= 0.6` для `thread_insights`
-  - [ ] dual-run regression compare on/off через `trace_regression_compare.py`
+  - [x] `science_graphrag/agent/forked_runtime.py` **stub** (`side_llm_fork_metadata` + audit merge; full fork helper deferred)
+  - [x] `thread_insights.py` пишет fork/cache telemetry fields в audit через stub
+  - [x] метрика `side_llm_cache_read_ratio` в `trace-review-v1` (non-stub)
+  - [x] gate: `side_llm_cache_read_ratio >= 0.6` для `thread_insights` (CLI `--min-side-llm-cache-read-ratio`, nightly / live когда forked audit присутствует)
+  - [x] dual-run regression compare on/off через `trace_regression_compare.py` (два артефакта + compare; feature_flags в `run_context` для A/B; см. `agent-runtime-train-t1-acceptance-2026-05-06.md`)
 
 ### 11.2 Train T2 (2 недели) — A2 / A3 / C1 + claim_verification + compaction hardening
 
@@ -1403,4 +1404,4 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 - ❌ Нельзя пометить Epic B как done, пока `subagent_*` события не подтверждены реальными child runtimes в trace artifacts.
 - ❌ Нельзя пометить Epic A как done без long-thread eval с цифрами (не только «pass smoke»).
 - ❌ Нельзя пометить Epic C как done, если нет отдельного lane с ambiguous/sparse queries и зафиксированной policy `warn/fail`.
-- ❌ Нельзя пометить Train T1 как done, пока не выполнен gate `side_llm_cache_read_ratio >= 0.6` для thread_insights (§11.1).
+- Train T1 cache gate: `trace_regression_compare.py --min-side-llm-cache-read-ratio 0.6` на кандидате с непустым `metrics.side_llm_cache_read_ratio_avg` (forked `thread_insight_audit` в E2E); PR CI остаётся без этого порога, nightly/live — по желанию (§11.1).

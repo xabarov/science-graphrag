@@ -54,6 +54,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [DONE] Cache-safe forked side-LLM helper (§10.2) — Train T1 slice
+- **Area:** `science_graphrag/agent/forked_runtime.py`, `science_graphrag/agent/context/thread_insights.py`, `scripts/live_check/trace_review_schema.py`, `trace_regression_compare.py`
+- **Issue:** A1 shipped stub-only fork telemetry; §10.2 required real side-LLM path + trace-review metric + compare gate.
+- **Done (2026-05-06):** `run_side_llm_chat` / `synthesize_thread_insight_markdown` with usage_metadata cache token parsing; optional `agent_thread_insights_llm_synthesis_enabled`; `trace-review-v1` `metrics.side_llm_cache_read_ratio_avg`; `trace_regression_compare.py --min-side-llm-cache-read-ratio`; acceptance + roadmap §11.1 updated.
+- **Remaining (Train T2+):** migrate L4 `llm_history_compact.py`, `away_summary`, subagents onto the same helper; optional OpenRouter `cache_control` transport hints if provider needs explicit cache breakpoints beyond identical prefix.
+- **Raised:** 2026-05-06 (A1 hardening — stub only)
+
 ### [PARTIAL] Stable error_class enum on `error` SSE — extend coverage
 - **Area:** `science_graphrag/api/agent_v2_modules/errors.py` (`classify_agent_stream_error`), `docs/specs/agent-chat-v1.md`
 - **Issue:** Initial classifier covers OpenRouter-shaped `ValueError({code, message})`, generic timeouts, connection errors, and a catch-all `internal_error`. Real-world failures (LangChain validation, langgraph deadline before tool call, instructor parse failures) currently still collapse to `internal_error`.

@@ -94,6 +94,8 @@ class _FakeGraph:
                 {
                     "type": "tool_search_result",
                     "shortlist_ratio": 0.5,
+                    "tool_search_miss_due_to_no_discovery": 2,
+                    "deferred_tool_activation_rate": 0.25,
                     "deferred_schema_refs": [
                         {"tool": "idea_search", "schema_ref": "tool://idea_search"}
                     ],
@@ -355,6 +357,8 @@ def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     assert "resolved_chat_llm_model" in rm
     assert rm.get("tool_search_shortlist_ratio_avg") == 0.5
     assert rm.get("tool_search_deferred_schema_events") == 1
+    assert rm.get("tool_search_miss_due_to_no_discovery") == 2
+    assert rm.get("deferred_tool_activation_rate") == 0.25
     assert "agent_response_budget_cutoff" in (rm.get("budget_stop_reasons") or [])
     assert rm.get("run_kind") == "supervisor_specialists"
     assert rm.get("graph_id") == "supervisor_graph"

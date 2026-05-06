@@ -1,21 +1,95 @@
-"""Thread-level insight snapshot (Epic A / Train T1 skeleton).
+"""Thread-level insight snapshot (Epic A1).
 
-Builds a reproducible ``thread_insight`` artifact from stored turn digests using
-uniform chunking and bounded parallel *stub* summarizers (deterministic text).
-LLM-backed summaries and prompt injection (A2) are follow-ups.
-
-See: ``docs/specs/agent-chat-v1.md`` §Summarization modes.
+Deterministic chunking + bounded parallel stub summarizers; freshness, circuit-breaker,
+explicit compaction boundary artifact, and control-plane telemetry. LLM synthesis and
+prompt injection remain follow-ups (see ``docs/specs/agent-chat-v1.md``).
 """
 
 from __future__ import annotations
 
+import json
+import logging
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
-from science_graphrag.agent.context.session_backend import get_session_memory_backend
+from science_graphrag.agent.context.session_backend import (
+    SessionMemoryBackend,
+    get_session_memory_backend,
+)
+from science_graphrag.agent.forked_runtime import (
+    side_llm_fork_metadata,
+    synthesize_thread_insight_markdown,
+)
 from science_graphrag.config import Settings
+
+logger = logging.getLogger(__name__)
+
+# Per-chunk worker ceiling (stub work is fast; avoids hung threads if workers block).
+_CHUNK_FUTURE_TIMEOUT_S = 45.0
+
+RefreshDecision = Literal[
+    "refresh",
+    "skip_fresh",
+    "skip_below_threshold",
+    "skip_circuit_open",
+    "skip_lock_held",
+    "skip_build_failed",
+]
+StaleReason = Literal["turn_delta", "ttl", "high_churn", "manual"]
+
+
+def _approx_tokens(text: str) -> int:
+    return max(0, len(text) // 4)
+
+
+def _parse_generated_at(ts: str | None) -> datetime | None:
+    if not ts or not isinstance(ts, str):
+        return None
+    s = ts.strip()
+    if s.endswith("Z"):
+        s = s[:-1] + "+00:00"
+    try:
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        return dt.astimezone(UTC)
+    except (TypeError, ValueError):
+        return None
+
+
+def _digest_blob_for_estimate(digests: list[dict[str, Any]]) -> str:
+    try:
+        return json.dumps(digests, ensure_ascii=False)
+    except (TypeError, ValueError):
+        return ""
+
+
+def _tool_event_churn(digests: list[dict[str, Any]], window: int) -> int:
+    n = max(0, len(digests))
+    if n == 0:
+        return 0
+    w = min(max(1, window), n)
+    tail = digests[-w:]
+    count = 0
+    for d in tail:
+        tools = d.get("tools_used") or []
+        if isinstance(tools, list):
+            count += len([x for x in tools if str(x).strip()])
+        else:
+            count += 1
+    return count
+
+
+def _preserved_segment(digests: list[dict[str, Any]]) -> str:
+    parts: list[str] = []
+    for d in digests[-3:]:
+        ui = str(d.get("user_intent") or "")[:80].strip()
+        if ui:
+            parts.append(ui)
+    seg = " | ".join(parts)
+    return seg[:400] if seg else "(empty window)"
 
 
 def _chunk_digests_uniform(
@@ -55,6 +129,7 @@ def _parallel_chunk_summaries(
     *,
     max_chunks: int,
     max_workers_cap: int,
+    result_timeout_s: float = _CHUNK_FUTURE_TIMEOUT_S,
 ) -> tuple[list[str], int, int]:
     """Return (chunk_summaries in order, wall_ms, worker_count)."""
     chunks = _chunk_digests_uniform(digests, max_chunks)
@@ -63,40 +138,289 @@ def _parallel_chunk_summaries(
     workers = min(len(chunks), max(1, max_workers_cap))
     summaries: list[str | None] = [None] * len(chunks)
     t0 = time.monotonic()
+    timeout = max(5.0, min(120.0, float(result_timeout_s)))
 
     def _work(idx: int, ch: list[dict[str, Any]]) -> tuple[int, str]:
         return idx, _deterministic_chunk_summary(ch, f"c{idx}")
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = [pool.submit(_work, i, ch) for i, ch in enumerate(chunks)]
-        for fut in as_completed(futures):
-            idx, text = fut.result()
-            summaries[idx] = text
+        _collect_chunk_summaries(futures, summaries, timeout=timeout)
     elapsed_ms = int((time.monotonic() - t0) * 1000)
     ordered = [s for s in summaries if isinstance(s, str)]
     return ordered, elapsed_ms, workers
 
 
-def build_thread_insight_snapshot(
+def _built_turn_from_prev_insight(prev_insight: dict[str, Any]) -> int | None:
+    """Turn index when the previous snapshot was built (supports legacy audit shapes)."""
+    prev_audit = prev_insight.get("audit")
+    if not isinstance(prev_audit, dict):
+        return None
+    raw_built = prev_audit.get("built_at_turn_counter")
+    if raw_built is None or raw_built == "":
+        raw_built = prev_audit.get("turn_counter")
+    try:
+        built = int(raw_built or 0)
+    except (TypeError, ValueError):
+        return None
+    return built if built > 0 else None
+
+
+def _collect_chunk_summaries(
+    futures: list[Future[tuple[int, str]]],
+    summaries: list[str | None],
+    *,
+    timeout: float,
+) -> None:
+    """Fill ``summaries`` slots from executor futures; cancel on timeout."""
+    pending = set(futures)
+    while pending:
+        done, pending = wait(pending, timeout=timeout, return_when=FIRST_COMPLETED)
+        if not done:
+            for fut in pending:
+                fut.cancel()
+            raise TimeoutError("thread_insights chunk worker timed out")
+        for fut in done:
+            idx, text = fut.result(timeout=timeout)
+            summaries[idx] = text
+
+
+def _boundary_trigger_for_stale(stale: StaleReason | None) -> str:
+    if stale == "high_churn":
+        return "high_churn_refresh"
+    if stale == "ttl":
+        return "ttl_stale"
+    if stale == "manual":
+        return "manual_refresh"
+    if stale == "turn_delta":
+        return "turn_delta_stale"
+    return "post_turn_digest"
+
+
+def _freshness_flags(
+    *,
+    digests: list[dict[str, Any]],
+    turn_counter: int,
+    built_turn: int,
+    prev_insight: dict[str, Any],
+    settings: Settings,
+) -> tuple[bool, bool, bool]:
+    """Return (turn_delta_hit, ttl_hit, churn_hit) for an existing snapshot."""
+    delta_needed = max(1, int(settings.agent_thread_insights_stale_after_turn_delta))
+    turns_since = turn_counter - built_turn
+
+    gen_at = _parse_generated_at(str(prev_insight.get("generated_at") or ""))
+    ttl_sec = int(settings.agent_thread_insights_ttl_seconds)
+    ttl_hit = False
+    if ttl_sec > 0 and gen_at is not None:
+        age = (datetime.now(UTC) - gen_at).total_seconds()
+        ttl_hit = age >= float(ttl_sec)
+
+    win = max(1, int(settings.agent_thread_insights_high_churn_window_digests))
+    churn = _tool_event_churn(digests, win)
+    churn_hit = churn >= int(settings.agent_thread_insights_high_churn_min_tool_events)
+
+    turn_delta_hit = turns_since >= delta_needed
+    return turn_delta_hit, ttl_hit, churn_hit
+
+
+def _decide_refresh(  # pylint: disable=too-many-return-statements
+    *,
+    digests: list[dict[str, Any]],
+    turn_counter: int,
+    prev_insight: dict[str, Any] | None,
+    meta: dict[str, Any],
+    settings: Settings,
+) -> tuple[RefreshDecision, StaleReason | None]:
+    """Explicit refresh/skip branches (policy table)."""
+    min_d = int(settings.agent_thread_insights_min_digests)
+    if len(digests) < min_d:
+        return "skip_below_threshold", None
+
+    circuit = meta.get("insight_circuit") if isinstance(meta.get("insight_circuit"), dict) else {}
+    open_until = int(circuit.get("open_until_turn") or 0)
+    if open_until and turn_counter < open_until:
+        return "skip_circuit_open", None
+
+    if settings.agent_thread_insights_force_manual_stale:
+        return "refresh", "manual"
+
+    if not isinstance(prev_insight, dict):
+        return "refresh", None
+
+    built_turn = _built_turn_from_prev_insight(prev_insight)
+    if not built_turn:
+        return "refresh", "turn_delta"
+
+    td, ttl_hit, churn_hit = _freshness_flags(
+        digests=digests,
+        turn_counter=turn_counter,
+        built_turn=built_turn,
+        prev_insight=prev_insight,
+        settings=settings,
+    )
+    if not td and not ttl_hit and not churn_hit:
+        return "skip_fresh", None
+    if churn_hit:
+        return "refresh", "high_churn"
+    if ttl_hit:
+        return "refresh", "ttl"
+    return "refresh", "turn_delta"
+
+
+def _record_insight_control(
+    backend: SessionMemoryBackend,
+    thread_id: str,
+    *,
+    turn_counter: int,
+    decision: RefreshDecision,
+    stale_reason: StaleReason | None,
+    extra: dict[str, Any] | None = None,
+) -> None:
+    ctrl: dict[str, Any] = {
+        "schema_version": "thread_insight_control_v1",
+        "last_turn": int(turn_counter),
+        "refresh_decision": decision,
+        "last_stale_reason": stale_reason,
+    }
+    if extra:
+        ctrl.update(extra)
+    backend.patch_session_meta(thread_id, patch={"thread_insight_control": ctrl})
+
+
+def _circuit_record_failure(
+    backend: SessionMemoryBackend,
+    thread_id: str,
+    *,
+    turn_counter: int,
+    settings: Settings,
+) -> None:
+    ent = backend.get_session_copy(thread_id)
+    meta = dict(ent.get("session_meta") or {})
+    c = (
+        dict(meta.get("insight_circuit") or {})
+        if isinstance(meta.get("insight_circuit"), dict)
+        else {}
+    )
+    failures = int(c.get("consecutive_failures") or 0) + 1
+    max_f = max(1, int(settings.agent_thread_insights_max_consecutive_failures))
+    skip_n = max(1, int(settings.agent_thread_insights_circuit_open_skip_turns))
+    open_until = int(c.get("open_until_turn") or 0)
+    if failures >= max_f:
+        open_until = max(open_until, int(turn_counter) + skip_n)
+    patch = {
+        "insight_circuit": {
+            "consecutive_failures": failures,
+            "open_until_turn": open_until,
+            "last_failure_turn": int(turn_counter),
+        }
+    }
+    backend.patch_session_meta(thread_id, patch=patch)
+
+
+def _merge_success_control_patch(
+    *,
+    turn_counter: int,
+    stale: StaleReason | None,
+    snap: dict[str, Any],
+) -> dict[str, Any]:
+    """Single session_meta patch after successful snapshot (circuit reset + control plane)."""
+    aud = snap.get("audit") if isinstance(snap.get("audit"), dict) else {}
+    ctrl: dict[str, Any] = {
+        "schema_version": "thread_insight_control_v1",
+        "last_turn": int(turn_counter),
+        "refresh_decision": "refresh",
+        "last_stale_reason": stale,
+        "version": snap.get("version"),
+        "chunk_count": aud.get("chunk_count"),
+    }
+    return {
+        "insight_circuit": {"consecutive_failures": 0, "open_until_turn": 0},
+        "thread_insight_control": ctrl,
+    }
+
+
+def _maybe_llm_synthesize_thread_insight(
+    summaries: list[str],
+    digest_blob: str,
+    *,
+    settings: Settings,
+) -> tuple[str, str, dict[str, Any], int | None, str | None]:
+    """Return (markdown_body, mode, fork_meta, side_llm_latency_ms, llm_error_or_none)."""
+    current = "## thread_insight (skeleton)\n" + "\n\n".join(summaries)
+    mode = "deterministic_stub"
+    fork_meta = side_llm_fork_metadata(forked=False)
+    side_ms: int | None = None
+    err: str | None = None
+    llm_on = bool(getattr(settings, "agent_thread_insights_llm_synthesis_enabled", False))
+    api_ok = bool(str(getattr(settings, "extraction_llm_api_key", None) or "").strip())
+    if not (llm_on and api_ok):
+        return current, mode, fork_meta, side_ms, err
+    try:
+        run = synthesize_thread_insight_markdown(
+            settings=settings,
+            chunk_summaries=summaries,
+            digest_prefix_text=digest_blob,
+        )
+        side_ms = int(run.latency_ms)
+        fork_meta_from_run = side_llm_fork_metadata(
+            forked=bool(run.forked),
+            side_llm_cache_read_tokens=run.side_llm_cache_read_tokens,
+            side_llm_cache_creation_tokens=run.side_llm_cache_creation_tokens,
+            side_llm_cache_read_ratio=run.side_llm_cache_read_ratio,
+        )
+        if run.text.strip():
+            body = run.text.strip()
+            if not body.lstrip().startswith("#"):
+                body = "## thread_insight\n\n" + body
+            return (
+                body,
+                "llm_forked_synthesis",
+                fork_meta_from_run,
+                side_ms,
+                None,
+            )
+        return (
+            current,
+            "llm_forked_empty_body_fallback",
+            fork_meta_from_run,
+            side_ms,
+            None,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("thread_insight LLM synthesis failed: %s", exc, exc_info=True)
+        err = str(exc)[:500]
+    return current, mode, fork_meta, side_ms, err
+
+
+def build_thread_insight_snapshot(  # pylint: disable=too-many-locals
     digests: list[dict[str, Any]],
     *,
     settings: Settings,
     prev_version: int,
     turn_counter: int,
+    stale_reason: StaleReason | None,
 ) -> dict[str, Any] | None:
     """Assemble ``session_meta.thread_insight`` payload or ``None`` if below threshold."""
     if len(digests) < int(settings.agent_thread_insights_min_digests):
         return None
+    ext_to = float(getattr(settings, "extraction_llm_timeout_seconds", 60) or 60)
     summaries, gen_ms, workers = _parallel_chunk_summaries(
         digests,
         max_chunks=int(settings.agent_thread_insights_max_chunks),
         max_workers_cap=int(settings.agent_thread_insights_max_workers),
+        result_timeout_s=max(10.0, min(120.0, ext_to)),
     )
     if not summaries:
         return None
-    current = "## thread_insight (skeleton)\n" + "\n\n".join(summaries)
+    digest_blob = _digest_blob_for_estimate(digests)
+    current, mode, fork_meta, side_llm_latency_ms, llm_synthesis_error = (
+        _maybe_llm_synthesize_thread_insight(summaries, digest_blob, settings=settings)
+    )
     n = len(digests)
     chunk_ids = [f"c{i}" for i in range(len(summaries))]
+    pre_tokens = _approx_tokens(digest_blob) + 32 * len(summaries)
+    boundary_trigger = _boundary_trigger_for_stale(stale_reason)
     audit: dict[str, Any] = {
         "schema_version": "thread_insight_audit_v1",
         "chunk_count": len(summaries),
@@ -106,10 +430,16 @@ def build_thread_insight_snapshot(
         "source_turn_end": max(0, n - 1),
         "digest_count": n,
         "turn_counter": turn_counter,
-        "stale_reason": None,
-        "boundary_trigger": "post_turn_digest",
-        "mode": "deterministic_stub",
+        "built_at_turn_counter": int(turn_counter),
+        "stale_reason": stale_reason,
+        "boundary_trigger": boundary_trigger,
+        "mode": mode,
+        **fork_meta,
     }
+    if side_llm_latency_ms is not None:
+        audit["side_llm_latency_ms"] = side_llm_latency_ms
+    if llm_synthesis_error:
+        audit["llm_synthesis_error"] = llm_synthesis_error
     snapshot: dict[str, Any] = {
         "current": current,
         "version": int(prev_version) + 1,
@@ -124,8 +454,15 @@ def build_thread_insight_snapshot(
             "max_workers": int(settings.agent_thread_insights_max_workers),
         },
         "compaction_boundary": {
-            "trigger": "post_turn_digest",
-            "note": "TTL / invalidation policy deferred to Epic A2",
+            "schema_version": "thread_insight_compaction_boundary_v1",
+            "trigger": boundary_trigger,
+            "pre_tokens": int(pre_tokens),
+            "source_range": {
+                "digest_index_start": 0,
+                "digest_index_end": max(0, n - 1),
+                "turn_counter": int(turn_counter),
+            },
+            "preserved_segment": _preserved_segment(digests),
         },
         "audit": audit,
     }
@@ -133,7 +470,7 @@ def build_thread_insight_snapshot(
 
 
 def maybe_refresh_thread_insight_after_turn(thread_id: str, *, settings: Settings) -> None:
-    """Persist a new thread insight when enabled and enough digests exist."""
+    """Persist a new thread insight when enabled, fresh, lock-free, and circuit closed."""
     if not settings.agent_thread_insights_enabled:
         return
     tid = (thread_id or "").strip()
@@ -146,18 +483,74 @@ def maybe_refresh_thread_insight_after_turn(thread_id: str, *, settings: Setting
     meta_dict = dict(meta) if isinstance(meta, dict) else {}
     turn_counter = int(meta_dict.get("turn_counter") or 0)
     prev = meta_dict.get("thread_insight")
-    prev_ver = 0
-    if isinstance(prev, dict):
-        try:
-            prev_ver = int(prev.get("version") or 0)
-        except (TypeError, ValueError):
-            prev_ver = 0
-    snap = build_thread_insight_snapshot(
-        digests,
-        settings=settings,
-        prev_version=prev_ver,
+    prev_dict = dict(prev) if isinstance(prev, dict) else None
+
+    decision, stale = _decide_refresh(
+        digests=digests,
         turn_counter=turn_counter,
+        prev_insight=prev_dict,
+        meta=meta_dict,
+        settings=settings,
     )
-    if snap is None:
+
+    if decision != "refresh":
+        _record_insight_control(
+            backend,
+            tid,
+            turn_counter=turn_counter,
+            decision=decision,
+            stale_reason=stale,
+        )
         return
-    backend.apply_thread_insight_snapshot(tid, snapshot=snap)
+
+    if not backend.compaction_lock_acquire(tid, owner="thread_insight", turn=turn_counter):
+        _record_insight_control(
+            backend,
+            tid,
+            turn_counter=turn_counter,
+            decision="skip_lock_held",
+            stale_reason=stale,
+        )
+        return
+
+    try:
+        prev_ver = 0
+        if isinstance(prev_dict, dict):
+            try:
+                prev_ver = int(prev_dict.get("version") or 0)
+            except (TypeError, ValueError):
+                prev_ver = 0
+        snap = build_thread_insight_snapshot(
+            digests,
+            settings=settings,
+            prev_version=prev_ver,
+            turn_counter=turn_counter,
+            stale_reason=stale,
+        )
+        if snap is None:
+            _record_insight_control(
+                backend,
+                tid,
+                turn_counter=turn_counter,
+                decision="skip_below_threshold",
+                stale_reason=stale,
+            )
+            return
+        backend.apply_thread_insight_snapshot(tid, snapshot=snap)
+        backend.patch_session_meta(
+            tid,
+            patch=_merge_success_control_patch(turn_counter=turn_counter, stale=stale, snap=snap),
+        )
+    except Exception:  # noqa: BLE001
+        logger.warning("thread_insight refresh failed for thread_id=%s", tid, exc_info=True)
+        _circuit_record_failure(backend, tid, turn_counter=turn_counter, settings=settings)
+        _record_insight_control(
+            backend,
+            tid,
+            turn_counter=turn_counter,
+            decision="skip_build_failed",
+            stale_reason=stale,
+            extra={"error": "thread_insight_build_failed"},
+        )
+    finally:
+        backend.compaction_lock_release(tid, owner="thread_insight")

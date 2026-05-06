@@ -121,6 +121,15 @@ class SessionMemoryBackend(Protocol):
     ) -> None:
         """Store Epic A ``thread_insight`` payload under ``session_meta`` (Train T1+)."""
 
+    def patch_session_meta(self, thread_id: str, *, patch: dict[str, Any]) -> None:
+        """Merge shallow ``patch`` keys into ``session_meta`` (control plane / locks)."""
+
+    def compaction_lock_acquire(self, thread_id: str, *, owner: str, turn: int) -> bool:
+        """Acquire exclusive compaction lock for ``owner`` if free or already held by same owner."""
+
+    def compaction_lock_release(self, thread_id: str, *, owner: str) -> None:
+        """Release compaction lock when held by ``owner``."""
+
     def clear_all(self) -> None:
         """Remove all threads (tests / process reset)."""
 
@@ -233,6 +242,54 @@ class InMemorySessionMemoryBackend:
                 return
             meta = dict(ent.get("session_meta") or {})
             meta["thread_insight"] = dict(snapshot)
+            ent["session_meta"] = meta
+
+    def patch_session_meta(self, thread_id: str, *, patch: dict[str, Any]) -> None:
+        """Merge ``patch`` keys into ``session_meta`` for control-plane updates."""
+        tid = (thread_id or "").strip()
+        if not tid or not patch:
+            return
+        with self._lock:
+            ent = self._store.get(tid)
+            if not ent:
+                return
+            meta = dict(ent.get("session_meta") or {})
+            for k, v in patch.items():
+                meta[k] = v
+            ent["session_meta"] = meta
+
+    def compaction_lock_acquire(self, thread_id: str, *, owner: str, turn: int) -> bool:
+        """Acquire ``compaction_lock`` for ``owner`` if unheld or already held by ``owner``."""
+        tid = (thread_id or "").strip()
+        if not tid:
+            return True
+        with self._lock:
+            ent = self._store.get(tid)
+            if not ent:
+                return True
+            meta = dict(ent.get("session_meta") or {})
+            cur = meta.get("compaction_lock")
+            if isinstance(cur, dict):
+                cur_owner = str(cur.get("owner") or "")
+                if cur_owner and cur_owner != owner:
+                    return False
+            meta["compaction_lock"] = {"owner": owner, "turn": int(turn)}
+            ent["session_meta"] = meta
+            return True
+
+    def compaction_lock_release(self, thread_id: str, *, owner: str) -> None:
+        """Clear ``compaction_lock`` when it is held by ``owner``."""
+        tid = (thread_id or "").strip()
+        if not tid:
+            return
+        with self._lock:
+            ent = self._store.get(tid)
+            if not ent:
+                return
+            meta = dict(ent.get("session_meta") or {})
+            cur = meta.get("compaction_lock")
+            if isinstance(cur, dict) and str(cur.get("owner") or "") == owner:
+                meta.pop("compaction_lock", None)
             ent["session_meta"] = meta
 
     def clear_all(self) -> None:
@@ -382,6 +439,69 @@ class RedisSessionMemoryBackend:
         ent = self._load_raw(tid)
         meta = dict(ent.get("session_meta") or {})
         meta["thread_insight"] = dict(snapshot)
+        out = {
+            "digests": list(ent.get("digests") or []),
+            "session_summary": str(ent.get("session_summary") or ""),
+            "capsules": dict(ent.get("capsules") or {}),
+            "session_meta": meta,
+        }
+        self._redis.setex(self._key(tid), self._ttl, json.dumps(out, ensure_ascii=False))
+
+    def patch_session_meta(self, thread_id: str, *, patch: dict[str, Any]) -> None:
+        """Merge ``patch`` keys into ``session_meta`` for control-plane updates."""
+        tid = (thread_id or "").strip()
+        if not tid or not patch:
+            return
+        if not self._redis.exists(self._key(tid)):
+            return
+        ent = self._load_raw(tid)
+        meta = dict(ent.get("session_meta") or {})
+        for k, v in patch.items():
+            meta[k] = v
+        out = {
+            "digests": list(ent.get("digests") or []),
+            "session_summary": str(ent.get("session_summary") or ""),
+            "capsules": dict(ent.get("capsules") or {}),
+            "session_meta": meta,
+        }
+        self._redis.setex(self._key(tid), self._ttl, json.dumps(out, ensure_ascii=False))
+
+    def compaction_lock_acquire(self, thread_id: str, *, owner: str, turn: int) -> bool:
+        """Acquire ``compaction_lock`` for ``owner`` if unheld or already held by ``owner``."""
+        tid = (thread_id or "").strip()
+        if not tid:
+            return True
+        if not self._redis.exists(self._key(tid)):
+            return True
+        ent = self._load_raw(tid)
+        meta = dict(ent.get("session_meta") or {})
+        cur = meta.get("compaction_lock")
+        if isinstance(cur, dict):
+            cur_owner = str(cur.get("owner") or "")
+            if cur_owner and cur_owner != owner:
+                return False
+        meta["compaction_lock"] = {"owner": owner, "turn": int(turn)}
+        out = {
+            "digests": list(ent.get("digests") or []),
+            "session_summary": str(ent.get("session_summary") or ""),
+            "capsules": dict(ent.get("capsules") or {}),
+            "session_meta": meta,
+        }
+        self._redis.setex(self._key(tid), self._ttl, json.dumps(out, ensure_ascii=False))
+        return True
+
+    def compaction_lock_release(self, thread_id: str, *, owner: str) -> None:
+        """Clear ``compaction_lock`` when it is held by ``owner``."""
+        tid = (thread_id or "").strip()
+        if not tid:
+            return
+        if not self._redis.exists(self._key(tid)):
+            return
+        ent = self._load_raw(tid)
+        meta = dict(ent.get("session_meta") or {})
+        cur = meta.get("compaction_lock")
+        if isinstance(cur, dict) and str(cur.get("owner") or "") == owner:
+            meta.pop("compaction_lock", None)
         out = {
             "digests": list(ent.get("digests") or []),
             "session_summary": str(ent.get("session_summary") or ""),

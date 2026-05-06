@@ -231,7 +231,9 @@ def _write_markdown(path: Path, review_dict: dict[str, Any]) -> None:
         lines.append(
             "| Case | Run kind | Graph id | Steps | last_tool | Phoenix missing | dur_ms | warnings |",
         )
-        lines.append("|------|----------|----------|-------|-----------|-----------------|--------|----------|")
+        lines.append(
+            "|------|----------|----------|-------|-----------|-----------------|--------|----------|"
+        )
         for row in tl:
             steps = row.get("tool_steps") or []
             last_tool = steps[-1].get("tool") if steps else ""
@@ -483,6 +485,15 @@ def main() -> int:
             ),
             "agent_budget_stop_reasoning_enabled": os.environ.get(
                 "SCIENCE_GRAPHRAG_AGENT_BUDGET_STOP_REASONING_ENABLED"
+            ),
+            "agent_thread_insights_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED"
+            ),
+            "agent_thread_insights_llm_synthesis_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_LLM_SYNTHESIS_ENABLED"
+            ),
+            "agent_tool_search_strict_deferred_activation_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_STRICT_DEFERRED_ACTIVATION_ENABLED"
             ),
         },
     }

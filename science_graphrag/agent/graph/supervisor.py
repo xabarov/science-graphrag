@@ -42,7 +42,10 @@ from science_graphrag.agent.tool_execution_pipeline import (
     effective_tool_policy,
 )
 from science_graphrag.agent.tool_message_compact import maybe_compact_agent_messages_for_react
-from science_graphrag.agent.tool_search import shortlist_tools_for_single_agent
+from science_graphrag.agent.tool_search import (
+    build_tool_search_result_debug_event,
+    shortlist_tools_for_single_agent,
+)
 from science_graphrag.agent.tools import build_tool_registry
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -373,23 +376,10 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
         return {
             "messages": [response],
             "debug_events": [
-                {
-                    "type": "tool_search_result",
-                    "specialist": "single_agent_react",
-                    "tools": ts_meta.get("matched"),
-                    "reason": ts_meta.get("reason"),
-                    "top_score": ts_meta.get("top_score"),
-                    "score_band": ts_meta.get("score_band"),
-                    "catalog_size": ts_meta.get("catalog_size"),
-                    "shortlist_size": ts_meta.get("shortlist_size"),
-                    "shortlist_ratio": ts_meta.get("shortlist_ratio"),
-                    "deferred_schema_mode": ts_meta.get("deferred_schema_mode"),
-                    "deferred_schema_refs": ts_meta.get("deferred_schema_refs"),
-                    "skipped": bool(ts_meta.get("skipped")),
-                    "carryover_tools": ts_meta.get("carryover_tools"),
-                    "message_discovery_tools": ts_meta.get("message_discovery_tools"),
-                    "message_discovery_merged": ts_meta.get("message_discovery_merged"),
-                }
+                build_tool_search_result_debug_event(
+                    specialist="single_agent_react",
+                    meta=ts_meta,
+                )
             ],
         }
 

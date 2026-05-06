@@ -379,3 +379,36 @@ def test_shortlist_carryover_reinjects_prior_tool_names() -> None:
     names = {getattr(t, "name", "") for t in out}
     assert "paper_quote_search" in names, meta
     assert isinstance(meta.get("carryover_tools"), list)
+
+
+def test_strict_deferred_skips_optional_baseline_without_discovery() -> None:
+    """Train T1 C0: optional baseline extras withheld until discovery path."""
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(
+        agent_rule_tool_search_enabled=True,
+        agent_tool_search_strict_deferred_activation_enabled=True,
+    )
+    tools = build_retrieval_tools(stores, settings)
+    out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="how many papers in this workspace",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        answer_class="inventory",
+        lc_messages=[],
+        session=None,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert meta.get("activation_policy") == "strict_only_on_discovery"
+    assert "workspace_inspect" in names
+    assert "paper_profile" in names
+    assert "find_works" in names
+    assert "idea_search" not in names
+    assert "paper_quote_search" not in names
+    assert int(meta.get("tool_search_miss_due_to_no_discovery") or 0) >= 2

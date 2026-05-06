@@ -141,3 +141,63 @@ def test_regression_compaction_churn_increase_fail(tmp_path: Path) -> None:
     payload = json.loads(out_j.read_text())
     assert payload["status"] == "fail"
     assert any("compaction_churn_increase" in x for x in payload["fail_reasons"])
+
+
+def test_regression_min_side_llm_cache_read_ratio_fail(tmp_path: Path) -> None:
+    base = _minimal_review({"side_llm_cache_read_ratio_avg": 0.9})
+    cand = _minimal_review({"side_llm_cache_read_ratio_avg": 0.5})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--min-side-llm-cache-read-ratio",
+            "0.6",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("side_llm_cache_read_ratio_avg" in x for x in payload["fail_reasons"])
+
+
+def test_regression_min_side_llm_skipped_when_metric_absent(tmp_path: Path) -> None:
+    base = _minimal_review({"missing_span_count": 0})
+    cand = _minimal_review({"missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--min-side-llm-cache-read-ratio",
+            "0.6",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 0

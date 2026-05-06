@@ -103,6 +103,8 @@ class TimelineCase:
     tool_search_shortlist_ratio_avg: float | None = None
     tool_search_deferred_schema_events: int = 0
     budget_stop_reasons: tuple[str, ...] = field(default_factory=tuple)
+    side_llm_cache_read_ratio: float | None = None
+    thread_insight_forked: bool | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +120,7 @@ class Metrics:
     shortlist_ratio_avg: float | None = None
     deferred_schema_event_count: int = 0
     budget_cutoff_count: int = 0
+    side_llm_cache_read_ratio_avg: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -236,6 +239,17 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         except (TypeError, ValueError):
             db_side = None
 
+    side_ratio: float | None = None
+    ti_forked: bool | None = None
+    rm = case.get("run_metadata")
+    if isinstance(rm, dict):
+        tia = rm.get("thread_insight_audit")
+        if isinstance(tia, dict):
+            side_ratio = _coerce_optional_float(tia.get("side_llm_cache_read_ratio"))
+            fb = tia.get("forked")
+            if isinstance(fb, bool):
+                ti_forked = fb
+
     return TimelineCase(
         case_id=cid,
         thread_id=thread_id,
@@ -262,6 +276,8 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
             case.get("tool_search_deferred_schema_events"), default=0
         ),
         budget_stop_reasons=tuple(str(x) for x in (case.get("budget_stop_reasons") or [])),
+        side_llm_cache_read_ratio=side_ratio,
+        thread_insight_forked=ti_forked,
     )
 
 
@@ -278,6 +294,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     shortlist_ratios: list[float] = []
     deferred_schema_events = 0
     budget_cutoff_count = 0
+    side_llm_ratios: list[float] = []
 
     for row in timeline:
         for st in row.tool_steps:
@@ -315,6 +332,11 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         budget_cutoff_count += sum(
             1 for x in row.budget_stop_reasons if str(x).strip() == "agent_response_budget_cutoff"
         )
+        if row.thread_insight_forked is True and row.side_llm_cache_read_ratio is not None:
+            try:
+                side_llm_ratios.append(float(row.side_llm_cache_read_ratio))
+            except (TypeError, ValueError):
+                pass
 
     tool_error_rate = (bad_steps / total_steps) if total_steps else 0.0
 
@@ -339,6 +361,9 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         ),
         deferred_schema_event_count=deferred_schema_events,
         budget_cutoff_count=budget_cutoff_count,
+        side_llm_cache_read_ratio_avg=(
+            round(sum(side_llm_ratios) / len(side_llm_ratios), 4) if side_llm_ratios else None
+        ),
     )
 
 
@@ -373,6 +398,8 @@ def merge_compaction_events_into_timeline(
                     tool_search_shortlist_ratio_avg=row.tool_search_shortlist_ratio_avg,
                     tool_search_deferred_schema_events=row.tool_search_deferred_schema_events,
                     budget_stop_reasons=row.budget_stop_reasons,
+                    side_llm_cache_read_ratio=row.side_llm_cache_read_ratio,
+                    thread_insight_forked=row.thread_insight_forked,
                 )
             )
         else:
@@ -611,6 +638,14 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                     if isinstance(item.get("budget_stop_reasons"), list)
                     else ()
                 ),
+                side_llm_cache_read_ratio=_coerce_optional_float(
+                    item.get("side_llm_cache_read_ratio")
+                ),
+                thread_insight_forked=(
+                    bool(item["thread_insight_forked"])
+                    if isinstance(item.get("thread_insight_forked"), bool)
+                    else None
+                ),
             )
         )
 
@@ -625,6 +660,9 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
         shortlist_ratio_avg=_coerce_optional_float(mraw.get("shortlist_ratio_avg")),
         deferred_schema_event_count=_coerce_int(mraw.get("deferred_schema_event_count"), default=0),
         budget_cutoff_count=_coerce_int(mraw.get("budget_cutoff_count"), default=0),
+        side_llm_cache_read_ratio_avg=_coerce_optional_float(
+            mraw.get("side_llm_cache_read_ratio_avg")
+        ),
     )
 
     vraw = data.get("verdict") or {}
@@ -675,6 +713,8 @@ def merge_e2e_report_json_into_review(
                     tool_search_shortlist_ratio_avg=row.tool_search_shortlist_ratio_avg,
                     tool_search_deferred_schema_events=row.tool_search_deferred_schema_events,
                     budget_stop_reasons=row.budget_stop_reasons,
+                    side_llm_cache_read_ratio=row.side_llm_cache_read_ratio,
+                    thread_insight_forked=row.thread_insight_forked,
                 )
             except (TypeError, ValueError):
                 pass

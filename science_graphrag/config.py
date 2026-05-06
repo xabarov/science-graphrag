@@ -799,6 +799,83 @@ class Settings(BaseSettings):
         le=8,
         description="ThreadPoolExecutor worker cap for thread_insights chunk summarization.",
     )
+    agent_thread_insights_stale_after_turn_delta: int = Field(
+        default=1,
+        ge=1,
+        le=50,
+        description=(
+            "Epic A1: refresh thread_insight when turn_counter advanced by at least this many "
+            "turns since the snapshot's built_at_turn_counter (unless TTL/high-churn forces earlier)."
+        ),
+    )
+    agent_thread_insights_ttl_seconds: int = Field(
+        default=0,
+        ge=0,
+        le=2_592_000,
+        description=(
+            "Epic A1: mark insight stale after this many seconds since generated_at; 0 disables TTL."
+        ),
+    )
+    agent_thread_insights_high_churn_window_digests: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Epic A1: count tool events across this many latest digests for high_churn detection.",
+    )
+    agent_thread_insights_high_churn_min_tool_events: int = Field(
+        default=8,
+        ge=1,
+        le=128,
+        description=(
+            "Epic A1: if tool-use events in the churn window reach this threshold, force refresh "
+            "with stale_reason=high_churn."
+        ),
+    )
+    agent_thread_insights_max_consecutive_failures: int = Field(
+        default=3,
+        ge=1,
+        le=20,
+        description="Epic A1: open circuit-breaker after this many consecutive insight build failures.",
+    )
+    agent_thread_insights_circuit_open_skip_turns: int = Field(
+        default=5,
+        ge=1,
+        le=100,
+        description="Epic A1: skip insight refresh for this many turns after circuit opens.",
+    )
+    agent_thread_insights_force_manual_stale: bool = Field(
+        default=False,
+        description="Epic A1 debug: treat every eligible turn as manual stale (tests / smoke).",
+    )
+    agent_thread_insights_llm_synthesis_enabled: bool = Field(
+        default=False,
+        description=(
+            "Epic A1 / §10.2: when true, run a cache-instrumented side-LLM pass (forked_runtime) to "
+            "synthesize thread_insight markdown from deterministic chunk summaries; requires API key. "
+            "When false, insight text stays deterministic_stub and fork telemetry stays forked=false."
+        ),
+    )
+    agent_thread_insights_llm_max_tokens: int = Field(
+        default=768,
+        ge=64,
+        le=4096,
+        description="Max output tokens for thread_insight LLM synthesis (forked_runtime path).",
+    )
+    agent_thread_insights_llm_temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Sampling temperature for thread_insight LLM synthesis.",
+    )
+    agent_llm_full_history_compact_ptl_max_retries: int = Field(
+        default=3,
+        ge=0,
+        le=10,
+        description=(
+            "Epic A1: when L4 compaction LLM hits context/token limits, drop oldest digests and retry "
+            "up to this many extra attempts (0 disables PTL retry for L4)."
+        ),
+    )
 
     agent_tool_search_message_discovery_enabled: bool = Field(
         default=True,
@@ -812,6 +889,17 @@ class Settings(BaseSettings):
         ge=0,
         le=128,
         description="Max tool names read from message history per shortlist call (chronological dedupe).",
+    )
+    agent_tool_search_strict_deferred_activation_enabled: bool = Field(
+        default=False,
+        description=(
+            "Epic C0 Train T1: strict deferred activation (only-on-discovery). When true with rule "
+            "tool_search, tools with ``ToolManifestEntry.strict_deferred_requires_discovery`` stay "
+            "bound only if rule-scored, merged from LangGraph message history, session carry-over, "
+            "or retrieval core baseline (workspace_inspect/paper_profile/find_works); optional "
+            "baseline extras (idea_search, paper_quote_search) are not auto-injected without those "
+            "paths. Low-signal / fallback_full still return full catalog (policy relaxed for the turn)."
+        ),
     )
 
     agent_away_summary_enabled: bool = Field(

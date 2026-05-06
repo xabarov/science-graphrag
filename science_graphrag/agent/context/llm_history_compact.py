@@ -1,7 +1,8 @@
 """L4: optional LLM consolidation of full turn-digest window into ``session_summary``.
 
 Runs when digest count reaches ``agent_compaction_digest_cap`` (boundary candidate) and
-cooldown elapsed — feature-flagged (default off).
+cooldown elapsed — feature-flagged (default off). Uses compaction_lock mutual exclusion
+with thread_insights refresh and optional PTL-style retries by dropping oldest digests.
 """
 
 from __future__ import annotations
@@ -20,6 +21,22 @@ from science_graphrag.config import Settings
 logger = logging.getLogger(__name__)
 
 _L4_PROMPT_VERSION = "l4_llm_compact_v1"
+
+
+def _is_context_limit_error(exc: BaseException) -> bool:
+    """Heuristic: provider/context errors that may succeed with a smaller input."""
+    s = str(exc).lower()
+    needles = (
+        "token",
+        "context length",
+        "maximum context",
+        "too many tokens",
+        "max_tokens",
+        "context_window",
+        "length limit",
+        "reduce the length",
+    )
+    return any(n in s for n in needles)
 
 
 def _slim_digests_blob(digests: list[dict[str, Any]], *, max_chars: int) -> str:
@@ -100,13 +117,35 @@ def maybe_llm_compact_session_after_turn(
     if not digests:
         return None
 
-    max_in = max(2000, int(settings.agent_llm_full_history_compact_max_digest_chars))
-    blob = _slim_digests_blob(digests, max_chars=max_in)
-    try:
-        summary = _invoke_summary_llm(settings, user_blob=blob)
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("l4_llm_compact failed: %s", exc, exc_info=True)
+    if not backend.compaction_lock_acquire(thread_id, owner="l4", turn=turn_counter):
+        logger.info("l4_llm_compact skipped: compaction_lock held")
         return None
+
+    max_in = max(2000, int(settings.agent_llm_full_history_compact_max_digest_chars))
+    max_ptl = max(0, int(settings.agent_llm_full_history_compact_ptl_max_retries))
+    digests_work = list(digests)
+    ptl_retry_count = 0
+    summary = ""
+    blob = ""
+    try:
+        for attempt in range(max_ptl + 1):
+            blob = _slim_digests_blob(digests_work, max_chars=max_in)
+            try:
+                summary = _invoke_summary_llm(settings, user_blob=blob)
+                break
+            except Exception as exc:  # noqa: BLE001
+                if attempt >= max_ptl or not _is_context_limit_error(exc) or len(digests_work) <= 2:
+                    logger.warning("l4_llm_compact failed: %s", exc, exc_info=True)
+                    return None
+                digests_work = digests_work[1:]
+                ptl_retry_count += 1
+                logger.info(
+                    "l4_llm_compact PTL retry %s dropping oldest digest (remaining=%s)",
+                    ptl_retry_count,
+                    len(digests_work),
+                )
+    finally:
+        backend.compaction_lock_release(thread_id, owner="l4")
 
     if not summary.strip():
         return None
@@ -114,8 +153,10 @@ def maybe_llm_compact_session_after_turn(
     audit = {
         "schema_version": _L4_PROMPT_VERSION,
         "digest_count": len(digests),
+        "digest_prompt_count": len(digests_work),
         "turn_counter": turn_counter,
         "model": effective_chat_llm_model(settings),
+        "ptl_retry_count": ptl_retry_count,
         "digest_blob_chars": len(blob),
         "summary_chars": len(summary),
     }

@@ -89,6 +89,8 @@ def extract_runtime_telemetry_from_debug_events(
     shortlist_ratios: list[float] = []
     deferred_schema_hits = 0
     budget_stop_reasons: list[str] = []
+    miss_no_discovery = 0
+    activation_rates: list[float] = []
     for ev in debug_events:
         if not isinstance(ev, dict):
             continue
@@ -101,6 +103,16 @@ def extract_runtime_telemetry_from_debug_events(
             refs = ev.get("deferred_schema_refs")
             if isinstance(refs, list) and refs:
                 deferred_schema_hits += 1
+            try:
+                miss_no_discovery += int(ev.get("tool_search_miss_due_to_no_discovery") or 0)
+            except (TypeError, ValueError):
+                pass
+            raw_ar = ev.get("deferred_tool_activation_rate")
+            if raw_ar is not None:
+                try:
+                    activation_rates.append(float(raw_ar))
+                except (TypeError, ValueError):
+                    pass
         if str(ev.get("type") or "") == "budget_stop_decision":
             reason = str(ev.get("code") or "").strip()
             if reason:
@@ -114,6 +126,12 @@ def extract_runtime_telemetry_from_debug_events(
         telemetry["tool_search_deferred_schema_events"] = deferred_schema_hits
     if budget_stop_reasons:
         telemetry["budget_stop_reasons"] = budget_stop_reasons
+    if miss_no_discovery:
+        telemetry["tool_search_miss_due_to_no_discovery"] = int(miss_no_discovery)
+    if activation_rates:
+        telemetry["deferred_tool_activation_rate"] = round(
+            sum(activation_rates) / len(activation_rates), 4
+        )
     return telemetry
 
 

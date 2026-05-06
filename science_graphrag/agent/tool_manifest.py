@@ -21,6 +21,10 @@ class ToolManifestEntry:
     requires_workspace: bool
     prompt_summary: str
     deferred_schema_ref: str
+    #: When ``agent_tool_search_strict_deferred_activation_enabled``, bind shortlist drops this
+    #: tool unless it was rule-scored, merged from message history, session carry-over, or is part
+    #: of the retrieval core trio baseline (workspace_inspect / paper_profile / find_works).
+    strict_deferred_requires_discovery: bool = False
 
 
 # Names must match LangChain @tool function names.
@@ -35,6 +39,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         True,
         "Workspace inventory and counts",
         "tool://workspace_inspect",
+        False,
     ),
     ToolManifestEntry(
         "workspace_graph_reltypes",
@@ -46,6 +51,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         True,
         "Workspace graph relationship types/schema",
         "tool://workspace_graph_reltypes",
+        True,
     ),
     ToolManifestEntry(
         "paper_profile",
@@ -79,6 +85,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         False,
         "Semantic quote/passage retrieval",
         "tool://paper_quote_search",
+        True,
     ),
     ToolManifestEntry(
         "format_bibliography_gost",
@@ -90,6 +97,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         True,
         "Format bibliography in GOST",
         "tool://format_bibliography_gost",
+        True,
     ),
     ToolManifestEntry(
         "idea_search",
@@ -101,6 +109,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         False,
         "Semantic discovery across chunks",
         "tool://idea_search",
+        True,
     ),
     ToolManifestEntry(
         "cypher_query",
@@ -112,6 +121,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         False,
         "Read-only Cypher graph queries",
         "tool://cypher_query",
+        True,
     ),
     ToolManifestEntry(
         "edge_search",
@@ -123,6 +133,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         False,
         "Edge neighborhood lookup",
         "tool://edge_search",
+        True,
     ),
     ToolManifestEntry(
         "final_answer",

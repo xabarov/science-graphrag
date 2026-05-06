@@ -18,7 +18,7 @@ def thread_insight_audit_fragment(
     thread_id: str | None,
     settings: Settings,
 ) -> dict[str, Any] | None:
-    """Return ``{"thread_insight_audit": ...}`` when Epic A snapshot audit is available."""
+    """Return thread insight audit (+ optional control plane) for run_metadata."""
     tid = (thread_id or "").strip()
     if not tid or not getattr(settings, "agent_thread_insights_enabled", False):
         return None
@@ -27,13 +27,16 @@ def thread_insight_audit_fragment(
     sm = ent.get("session_meta") or {}
     if not isinstance(sm, dict):
         return None
+    out: dict[str, Any] = {}
     tip = sm.get("thread_insight")
-    if not isinstance(tip, dict):
-        return None
-    aud = tip.get("audit")
-    if not isinstance(aud, dict):
-        return None
-    return {"thread_insight_audit": aud}
+    if isinstance(tip, dict):
+        aud = tip.get("audit")
+        if isinstance(aud, dict):
+            out["thread_insight_audit"] = aud
+    ctrl = sm.get("thread_insight_control")
+    if isinstance(ctrl, dict):
+        out["thread_insight_control"] = ctrl
+    return out if out else None
 
 
 def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:

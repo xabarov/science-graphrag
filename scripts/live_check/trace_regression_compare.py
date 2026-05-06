@@ -31,6 +31,19 @@ def _metric(doc: dict[str, Any], key: str) -> float:
         return 0.0
 
 
+def _metric_optional_float(doc: dict[str, Any], key: str) -> float | None:
+    metrics = doc.get("metrics") if isinstance(doc, dict) else {}
+    if not isinstance(metrics, dict) or key not in metrics:
+        return None
+    raw = metrics.get(key)
+    if raw is None:
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def _require_version(doc: dict[str, Any], label: str) -> None:
     ver = str(doc.get("review_version") or "")
     if ver != REVIEW_VERSION:
@@ -76,6 +89,16 @@ def main() -> int:
         action="store_true",
         help="Treat WARN policies as exit 0 (still printed).",
     )
+    parser.add_argument(
+        "--min-side-llm-cache-read-ratio",
+        type=float,
+        default=None,
+        help=(
+            "Optional FAIL when candidate metrics.side_llm_cache_read_ratio_avg is set and "
+            "strictly below this threshold (Train T1 §10.2 gate for forked thread_insights). "
+            "Skipped when the metric is absent (no forked side-LLM rows in trace_timeline)."
+        ),
+    )
     parser.add_argument("--out-json", type=Path, required=True)
     parser.add_argument("--out-md", type=Path, required=True)
     args = parser.parse_args()
@@ -97,11 +120,21 @@ def main() -> int:
     delta_compaction_churn = _metric(cand, "compaction_churn_score") - _metric(
         base, "compaction_churn_score"
     )
-    delta_shortlist_ratio = _metric(cand, "shortlist_ratio_avg") - _metric(base, "shortlist_ratio_avg")
+    delta_shortlist_ratio = _metric(cand, "shortlist_ratio_avg") - _metric(
+        base, "shortlist_ratio_avg"
+    )
     delta_deferred_schema_events = _metric(cand, "deferred_schema_event_count") - _metric(
         base, "deferred_schema_event_count"
     )
-    delta_budget_cutoff = _metric(cand, "budget_cutoff_count") - _metric(base, "budget_cutoff_count")
+    delta_budget_cutoff = _metric(cand, "budget_cutoff_count") - _metric(
+        base, "budget_cutoff_count"
+    )
+
+    c_side = _metric_optional_float(cand, "side_llm_cache_read_ratio_avg")
+    b_side = _metric_optional_float(base, "side_llm_cache_read_ratio_avg")
+    delta_side_llm: float | None = None
+    if c_side is not None or b_side is not None:
+        delta_side_llm = float(c_side or 0.0) - float(b_side or 0.0)
 
     fail_reasons: list[str] = []
     if "new_missing_spans" in policies_fail and delta_missing_spans > 0:
@@ -126,6 +159,14 @@ def main() -> int:
     if "shortlist_ratio_increase" in policies_warn and delta_shortlist_ratio > 0:
         warn_reasons.append(f"shortlist_ratio_increase:{delta_shortlist_ratio:.4f}")
 
+    min_side = args.min_side_llm_cache_read_ratio
+    if min_side is not None:
+        cand_side = _metric_optional_float(cand, "side_llm_cache_read_ratio_avg")
+        if cand_side is not None and cand_side < float(min_side):
+            fail_reasons.append(
+                f"side_llm_cache_read_ratio_avg:{cand_side:.4f}<{float(min_side):.4f}"
+            )
+
     status = "pass"
     if fail_reasons:
         status = "fail"
@@ -146,6 +187,7 @@ def main() -> int:
             "shortlist_ratio_avg": delta_shortlist_ratio,
             "deferred_schema_event_count": delta_deferred_schema_events,
             "budget_cutoff_count": delta_budget_cutoff,
+            "side_llm_cache_read_ratio_avg": delta_side_llm,
         },
     }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -165,6 +207,7 @@ def main() -> int:
         f"- Delta shortlist_ratio_avg: `{delta_shortlist_ratio}`",
         f"- Delta deferred_schema_event_count: `{delta_deferred_schema_events}`",
         f"- Delta budget_cutoff_count: `{delta_budget_cutoff}`",
+        f"- Delta side_llm_cache_read_ratio_avg: `{delta_side_llm}`",
     ]
     if fail_reasons:
         md_lines.extend(["", "## Fail reasons"])

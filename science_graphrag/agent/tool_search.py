@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import functools
 import re
 from dataclasses import dataclass
 from typing import Any, Sequence
@@ -15,6 +16,13 @@ from science_graphrag.agent.tool_manifest import (
     manifest_by_name,
 )
 from science_graphrag.config import Settings
+
+
+@functools.lru_cache(maxsize=1)
+def _manifest_map() -> dict[str, ToolManifestEntry]:
+    """Frozen tool manifest keyed by name (cached for shortlist hot paths)."""
+    return manifest_by_name()
+
 
 _SESSION_MEMORY_RE = re.compile(
     r"<session_memory>.*?</session_memory>\s*",
@@ -105,6 +113,13 @@ _RETRIEVAL_CORE_CATALOG = (
     "paper_profile",
     "find_works",
 )
+_RETRIEVAL_OPTIONAL_BASELINE = ("idea_search", "paper_quote_search")
+_RETRIEVAL_CORE_EXEMPT: frozenset[str] = frozenset(_RETRIEVAL_CORE_CATALOG)
+
+
+def _strict_deferred_requires_discovery(name: str) -> bool:
+    meta = _manifest_map().get(name)
+    return bool(meta and meta.strict_deferred_requires_discovery)
 
 
 def _ensure_final_answer_in_picked(picked: list[BaseTool], tools: list[BaseTool]) -> None:
@@ -116,14 +131,30 @@ def _ensure_final_answer_in_picked(picked: list[BaseTool], tools: list[BaseTool]
         picked.append(final_tool)
 
 
-def _merge_retrieval_catalog_baseline(picked: list[BaseTool], tools: list[BaseTool]) -> None:
+def _merge_retrieval_catalog_baseline(
+    picked: list[BaseTool],
+    tools: list[BaseTool],
+    *,
+    strict_deferred: bool,
+) -> list[str]:
+    """Merge retrieval baseline; optional tools may be skipped under strict policy.
+
+    Returns names of strict-deferred optional baseline tools (idea_search, paper_quote_search)
+    that were **not** merged because ``strict_deferred`` withheld auto-injection.
+    """
+    skipped: list[str] = []
     have = {getattr(t, "name", "") for t in picked}
-    for extra in ("idea_search", "paper_quote_search") + _RETRIEVAL_CORE_CATALOG:
-        if extra not in have:
-            hit = next((t for t in tools if getattr(t, "name", "") == extra), None)
-            if hit is not None:
-                picked.append(hit)
-                have.add(extra)
+    for extra in _RETRIEVAL_OPTIONAL_BASELINE + _RETRIEVAL_CORE_CATALOG:
+        if extra in have:
+            continue
+        if strict_deferred and extra in _RETRIEVAL_OPTIONAL_BASELINE:
+            skipped.append(extra)
+            continue
+        hit = next((t for t in tools if getattr(t, "name", "") == extra), None)
+        if hit is not None:
+            picked.append(hit)
+            have.add(extra)
+    return skipped
 
 
 def _carryover_tool_names_from_session(session: dict[str, Any] | None, *, cap: int) -> list[str]:
@@ -223,6 +254,39 @@ class _RulesShortlistMetaCtx:
     carryover_names: list[str]
     message_discovery_tools: list[str]
     message_discovery_merged: list[str]
+    rules_matched_tools: list[str]
+    skipped_optional_baseline: list[str]
+    strict_removed_tools: list[str]
+    activation_policy: str
+
+
+def _extend_rules_meta_strict_telemetry(
+    meta_out: dict[str, Any],
+    ctx: _RulesShortlistMetaCtx,
+    names: list[str],
+) -> None:
+    """Append Train T1 strict-deferred diagnostics and activation counters."""
+    meta_out["activation_policy"] = ctx.activation_policy
+    deferred_candidates = [n for n in names if _strict_deferred_requires_discovery(n)]
+    if deferred_candidates:
+        meta_out["deferred_strict_candidates"] = deferred_candidates
+    msg_set = set(ctx.message_discovery_merged)
+    carry_set = set(ctx.carryover_merged)
+    rules_set = set(ctx.rules_matched_tools)
+    strict_in_picked = [n for n in names if _strict_deferred_requires_discovery(n)]
+    via_discovery = [
+        n for n in strict_in_picked if (n in msg_set or n in carry_set) and n not in rules_set
+    ]
+    meta_out["deferred_strict_in_shortlist_count"] = len(strict_in_picked)
+    meta_out["deferred_activated_via_message_or_carryover_count"] = len(via_discovery)
+    miss = len(ctx.skipped_optional_baseline) + len(ctx.strict_removed_tools)
+    meta_out["tool_search_miss_due_to_no_discovery"] = int(miss)
+    if strict_in_picked:
+        meta_out["deferred_tool_activation_rate"] = round(
+            len(via_discovery) / max(1, len(strict_in_picked)), 4
+        )
+    else:
+        meta_out["deferred_tool_activation_rate"] = None
 
 
 def _shortlist_build_rules_meta(
@@ -248,7 +312,7 @@ def _shortlist_build_rules_meta(
     specialist_arg = None if ctx.for_single_agent else ctx.specialist
     meta_out["catalog_preview"] = compact_catalog_lines(specialist=specialist_arg)[:8]
     if ctx.settings.agent_tool_search_deferred_schema_refs_enabled:
-        by_meta = manifest_by_name()
+        by_meta = _manifest_map()
         refs: list[dict[str, Any]] = []
         for name in names:
             meta = by_meta.get(name)
@@ -265,6 +329,13 @@ def _shortlist_build_rules_meta(
         meta_out["message_discovery_tools"] = list(ctx.message_discovery_tools)
     if ctx.message_discovery_merged:
         meta_out["message_discovery_merged"] = list(ctx.message_discovery_merged)
+    if ctx.rules_matched_tools:
+        meta_out["rules_matched_tools"] = list(ctx.rules_matched_tools)
+    if ctx.skipped_optional_baseline:
+        meta_out["deferred_strict_skipped_optional_baseline"] = list(ctx.skipped_optional_baseline)
+    if ctx.strict_removed_tools:
+        meta_out["deferred_strict_removed_from_picked"] = list(ctx.strict_removed_tools)
+    _extend_rules_meta_strict_telemetry(meta_out, ctx, names)
     return meta_out
 
 
@@ -293,6 +364,27 @@ def _shortlist_apply_discovery_and_session_carryover(
     return msg_tools, msg_merged, carryover_names, carry_merged
 
 
+def _apply_strict_deferred_activation_filter(
+    picked: list[BaseTool],
+    *,
+    rules_names: set[str],
+    message_merged: set[str],
+    carry_merged: set[str],
+    retrieval_core_exempt: frozenset[str],
+) -> tuple[list[BaseTool], list[str]]:
+    """Drop strict-deferred tools that lack a discovery/rule/core baseline path."""
+    allowed = rules_names | message_merged | carry_merged | retrieval_core_exempt
+    removed: list[str] = []
+    kept: list[BaseTool] = []
+    for t in picked:
+        nm = getattr(t, "name", "") or ""
+        if _strict_deferred_requires_discovery(nm) and nm not in allowed:
+            removed.append(nm)
+            continue
+        kept.append(t)
+    return kept, removed
+
+
 def _build_scored_tools_for_shortlist(
     tools: list[BaseTool],
     *,
@@ -302,7 +394,7 @@ def _build_scored_tools_for_shortlist(
     has_workspace: bool,
     answer_class: str | None,
 ) -> list[tuple[float, BaseTool]]:
-    by_meta = manifest_by_name()
+    by_meta = _manifest_map()
     scored: list[tuple[float, BaseTool]] = []
     for t in tools:
         name = getattr(t, "name", "") or ""
@@ -463,15 +555,33 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
         answer_class=answer_class,
     )
     if not scored:
-        return tools, {"reason": "fallback_full", "matched": [], "catalog_size": len(tools)}
+        return tools, {
+            "reason": "fallback_full",
+            "matched": [],
+            "catalog_size": len(tools),
+            "activation_policy": "relaxed_fallback_full",
+        }
 
     top_score = scored[0][0]
     if top_score < _RULE_TOOL_SEARCH_LOW_SIGNAL_FLOOR:
-        return tools, {"reason": "low_signal", "top_score": top_score, "catalog_size": len(tools)}
+        return tools, {
+            "reason": "low_signal",
+            "top_score": top_score,
+            "catalog_size": len(tools),
+            "activation_policy": "relaxed_low_signal",
+        }
 
     score_band = float(settings.agent_tool_search_score_band)
     threshold = max(0.0, top_score - score_band)
     picked = [t for s, t in scored if s >= threshold and s > 0]
+    rules_matched_tools = [getattr(t, "name", "") for t in picked]
+    rules_names = {n for n in rules_matched_tools if n}
+    strict_on = bool(
+        getattr(settings, "agent_tool_search_strict_deferred_activation_enabled", False)
+    )
+    activation_policy = "strict_only_on_discovery" if strict_on else "default"
+    skipped_optional_baseline: list[str] = []
+    strict_removed_tools: list[str] = []
     (
         message_discovery_tools,
         message_discovery_merged,
@@ -487,7 +597,24 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
     if for_single_agent:
         _ensure_final_answer_in_picked(picked, tools)
     if specialist == "retrieval_agent" or for_single_agent:
-        _merge_retrieval_catalog_baseline(picked, tools)
+        skipped_optional_baseline = _merge_retrieval_catalog_baseline(
+            picked,
+            tools,
+            strict_deferred=strict_on,
+        )
+    core_exempt = (
+        _RETRIEVAL_CORE_EXEMPT
+        if (specialist == "retrieval_agent" or for_single_agent)
+        else frozenset()
+    )
+    if strict_on:
+        picked, strict_removed_tools = _apply_strict_deferred_activation_filter(
+            picked,
+            rules_names=rules_names,
+            message_merged=set(message_discovery_merged),
+            carry_merged=set(carryover_merged),
+            retrieval_core_exempt=core_exempt,
+        )
     # Retrieval catalog is large — avoid over-narrow shortlists
     # Keep shortlists only when they still cover a reasonable slice of the catalog.
     need_full, fb_reason = _shortlist_needs_full_catalog_fallback(
@@ -500,6 +627,7 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             "reason": fb_reason,
             "matched": [getattr(x, "name", "") for x in picked],
             "catalog_size": len(tools),
+            "activation_policy": "relaxed_fallback_full",
         }
 
     meta_out = _shortlist_build_rules_meta(
@@ -515,9 +643,60 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             carryover_names=carryover_names,
             message_discovery_tools=message_discovery_tools,
             message_discovery_merged=message_discovery_merged,
+            rules_matched_tools=rules_matched_tools,
+            skipped_optional_baseline=skipped_optional_baseline,
+            strict_removed_tools=strict_removed_tools,
+            activation_policy=activation_policy,
         ),
     )
     return picked, meta_out
+
+
+def build_tool_search_result_debug_event(
+    *,
+    specialist: str,
+    meta: dict[str, Any],
+    writer_mode: str | None = None,
+) -> dict[str, Any]:
+    """Canonical ``tool_search_result`` debug payload for SSE / run_metadata aggregation."""
+    ev: dict[str, Any] = {
+        "type": "tool_search_result",
+        "specialist": specialist,
+        "tools": meta.get("matched"),
+        "reason": meta.get("reason"),
+        "top_score": meta.get("top_score"),
+        "score_band": meta.get("score_band"),
+        "catalog_size": meta.get("catalog_size"),
+        "shortlist_size": meta.get("shortlist_size"),
+        "shortlist_ratio": meta.get("shortlist_ratio"),
+        "deferred_schema_mode": meta.get("deferred_schema_mode"),
+        "deferred_schema_refs": meta.get("deferred_schema_refs"),
+        "skipped": bool(meta.get("skipped")),
+        "carryover_tools": meta.get("carryover_tools"),
+        "message_discovery_tools": meta.get("message_discovery_tools"),
+        "message_discovery_merged": meta.get("message_discovery_merged"),
+    }
+    if writer_mode is not None:
+        ev["writer_mode"] = writer_mode
+    optional_keys = (
+        "activation_policy",
+        "rules_matched_tools",
+        "deferred_strict_skipped_optional_baseline",
+        "deferred_strict_removed_from_picked",
+        "deferred_strict_candidates",
+        "deferred_strict_in_shortlist_count",
+        "deferred_activated_via_message_or_carryover_count",
+        "tool_search_miss_due_to_no_discovery",
+        "deferred_tool_activation_rate",
+    )
+    for k in optional_keys:
+        if k not in meta:
+            continue
+        val = meta[k]
+        if val is None:
+            continue
+        ev[k] = val
+    return ev
 
 
 def shortlist_tools_for_single_agent(

@@ -25,7 +25,10 @@ from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
 )
-from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
+from science_graphrag.agent.tool_search import (
+    build_tool_search_result_debug_event,
+    shortlist_tools_for_specialist,
+)
 from science_graphrag.agent.tools import build_graph_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -197,17 +200,7 @@ def build_graph_agent_node(stores: StoreRegistry, settings: Settings):
             "specialist_results": specialist_results,
             "current_specialist": SPECIALIST_NAME,
             "debug_events": [
-                {
-                    "type": "tool_search_result",
-                    "specialist": SPECIALIST_NAME,
-                    "tools": meta.get("matched"),
-                    "reason": meta.get("reason"),
-                    "top_score": meta.get("top_score"),
-                    "skipped": bool(meta.get("skipped")),
-                    "carryover_tools": meta.get("carryover_tools"),
-                    "message_discovery_tools": meta.get("message_discovery_tools"),
-                    "message_discovery_merged": meta.get("message_discovery_merged"),
-                },
+                build_tool_search_result_debug_event(specialist=SPECIALIST_NAME, meta=meta),
                 *(
                     [{"type": "tool_permissions", "matrix": mtx}]
                     if not bool(mtx.get("skipped"))

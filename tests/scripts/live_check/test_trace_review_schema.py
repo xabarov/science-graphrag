@@ -51,6 +51,25 @@ def test_merge_e2e_builds_timeline_and_metrics(schema_module) -> None:
     assert m.latency_p95_ms == 1000.0
 
 
+def test_merge_e2e_extracts_thread_insight_side_llm_from_run_metadata(schema_module) -> None:
+    case = {
+        "case_id": "ti_side",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "thread_insight_audit": {
+                "forked": True,
+                "side_llm_cache_read_ratio": 0.72,
+            }
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].thread_insight_forked is True
+    assert tl[0].side_llm_cache_read_ratio == 0.72
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.side_llm_cache_read_ratio_avg == 0.72
+
+
 def test_merge_e2e_extracts_runtime_attribution_from_top_level_case(schema_module) -> None:
     case = {
         "case_id": "runtime_case",
@@ -154,6 +173,7 @@ def test_aggregate_metrics_from_timeline_p2_roi_counters(schema_module) -> None:
     assert m.deferred_schema_event_count == 2
     assert m.budget_cutoff_count == 1
     assert m.latency_p95_ms == 1200.0
+    assert m.side_llm_cache_read_ratio_avg is None
 
 
 def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module) -> None:
@@ -180,6 +200,7 @@ def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module)
             "shortlist_ratio_avg": "bad",
             "deferred_schema_event_count": "bad",
             "budget_cutoff_count": "bad",
+            "side_llm_cache_read_ratio_avg": "bad",
         },
         "verdict": {"status": "pass", "fail_reasons": [], "warn_reasons": []},
     }
@@ -188,6 +209,7 @@ def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module)
     assert parsed.metrics.shortlist_ratio_avg is None
     assert parsed.metrics.deferred_schema_event_count == 0
     assert parsed.metrics.budget_cutoff_count == 0
+    assert parsed.metrics.side_llm_cache_read_ratio_avg is None
 
 
 def test_reference_suite_tool_trace_span_alignment_contract(schema_module) -> None:
