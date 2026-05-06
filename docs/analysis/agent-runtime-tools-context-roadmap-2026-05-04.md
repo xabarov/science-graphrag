@@ -425,25 +425,42 @@
   - windowing длинного треда на semantic chunks;
   - parallel summarize workers (bounded concurrency, timeout/cancel-safe);
   - final synthesis в единый `thread_insight`.
+- Роли memory-слоёв разделить явно:
+  - `thread_insight` = long-thread synthesis и anchor для recall/consistency;
+  - `session_summary` = rolling continuity для короткого turn-loop.
 - Добавить `session_backend` поля:
   - `thread_insight.current`,
   - `thread_insight.version`,
   - `thread_insight.sources` (chunk ids / turn range),
-  - `thread_insight.generated_at`.
+  - `thread_insight.generated_at`,
+  - `thread_insight.section_budgets`,
+  - `thread_insight.compaction_boundary`.
 - Добавить policy freshness:
-  - invalidation на N новых turn-ов;
-  - forced refresh при high-churn tool traces.
+  - invalidation на N новых turn-ов + TTL;
+  - forced refresh при high-churn tool traces;
+  - в audit писать `stale_reason` (`turn_delta|ttl|high_churn|manual`).
+- Добавить runtime hardening паттерны из openclaude:
+  - circuit breaker для repeated compaction failures (`max_consecutive_failures`);
+  - PTL retry policy с bounded head truncation (`max_ptl_retries`);
+  - инварианты целостности `tool_use/tool_result` при chunk/drop/rebuild;
+  - явный compaction boundary artifact (`trigger`, `pre_tokens`, `source_range`, `preserved_segment`).
 
-**Acceptance A1:** на длинном synthetic треде строится `thread_insight` с воспроизводимым audit trail (`chunk_count`, `worker_count`, `generation_ms`, `source_range`).
+**Acceptance A1:** на длинном synthetic треде строится `thread_insight` с воспроизводимым audit trail (`chunk_count`, `worker_count`, `generation_ms`, `source_range`, `stale_reason`, `boundary_trigger`) и детерминированной section-budget policy.
 
 #### A2. Prompt integration + fallback policy
 
 - Расширить `format_user_with_memory`:
   - при наличии свежего `thread_insight` инжектить компактный `<thread_insight>` блок;
-  - при stale/failed insight откат к текущему `session_summary`.
-- Добавить guardrail:
+  - при stale/failed insight откат к текущему `session_summary`;
+  - при circuit-breaker open сразу принудительный fallback в `session_summary`.
+- Добавить deterministic precedence matrix:
+  - `turn_digest` (latest) > `thread_insight` (fresh) > `session_summary`;
   - если insight конфликтует с последним `turn_digest`, приоритет у свежих turn facts;
-  - в run_metadata писать `insight_conflict_resolved=true/false`.
+  - конфликтные claim-ы помечать как `conflicted` до следующего refresh.
+- В run_metadata писать:
+  - `insight_conflict_resolved=true/false`,
+  - `insight_fallback_reason`,
+  - `ptl_retry_count`.
 
 **Acceptance A2:** deterministic precedence policy покрыта тестами; нет silent override свежих фактов старым insight.
 
@@ -452,15 +469,21 @@
 - Новый набор в `eval/chat_agent`:
   - long-thread retrieval,
   - context drift detection,
-  - summary hallucination rejection.
+  - summary hallucination rejection,
+  - claim-level grounding checks (claim -> source chunk/tool evidence).
 - Метрики:
   - `insight_recall@k`,
   - `stale_summary_error_rate`,
   - `compaction_churn_delta`,
-  - latency overhead p50/p95.
+  - latency overhead p50/p95,
+  - `insight_stale_reason_rate`,
+  - `insight_conflict_resolved_rate`,
+  - `ptl_retry_rate`,
+  - `compaction_circuit_breaker_trips`.
 - Gate:
   - trust/verdict не хуже baseline,
-  - p95 latency рост в пределах согласованного бюджета.
+  - p95 latency рост в пределах согласованного бюджета,
+  - claim grounding precision/recall не ниже согласованного SLO.
 
 **Definition of done (Epic A):**
 - thread-insights реально участвует в runtime;
@@ -671,9 +694,9 @@
 
 ### 9.6 Порядок внедрения (release train)
 
-1. **Train T1 (2 недели):** A0/A1/C0 — контракты + thread-insights skeleton + discovery-aware tool loading.
-2. **Train T2 (2 недели):** A2/A3/C1 — prompt integration + eval gates + hybrid selector.
-3. **Train T3 (2-3 недели):** B0/B1 — ADR + runtime spawn primitive + lifecycle observability.
+1. **Train T1 (2 недели):** A0/A1/C0 — schema/freshness/telemetry contracts + thread-insights skeleton + discovery-aware tool loading.
+2. **Train T2 (2 недели):** A2/A3/C1 — fallback/preference policy, prompt integration, claim-grounding eval gates, hybrid selector.
+3. **Train T3 (2-3 недели):** B0/B1 + A-advanced — ADR + runtime spawn primitive + lifecycle observability + advanced summarization optimizations (incremental insight updates, contradiction-aware synthesis).
 4. **Train T4 (2-3 недели):** B2/B3/C2 — merge node + quotas + dynamic schema transport.
 5. **Train T5 (1-2 недели):** B4/C3 + финальный regression hardening и rollout decision.
 
@@ -689,5 +712,6 @@
 
 | Дата | Изменение |
 |------|-----------|
+| 2026-05-06 | Deep-dive дополнение по заимствованиям из `openclaude` для **Epic A**: добавлены circuit-breaker/PTL-retry/invariant-guards/compaction-boundary, freshness+precedence contract, claim-level grounding eval и расширенные telemetry метрики; обновлён release train `§9.6` (T1/T2/T3). |
 | 2026-05-06 | Добавлен **§9.5.1**: `Tool parity backlog (openclaude-reference)` с приоритетами P0/P1/P2, acceptance-критериями и out-of-scope списком. |
 | 2026-05-06 | Добавлен **§9**: closure plan по исходным целям (smart summarization parity, real subagent runtime v3, tool search parity), с epic-структурой, acceptance/gates, release train и stop-conditions против формального закрытия. |
