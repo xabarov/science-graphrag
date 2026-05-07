@@ -1,8 +1,11 @@
-"""Unified LangGraph tool execution seam (Wave 3).
+"""Unified LangGraph tool execution seam (Wave 3 + Phase 6 deadline).
 
 Thin wrapper around LangGraph ``ToolNode``: normalize names, enforce an optional
-mode/tool-policy allowlist, emit lightweight debug events, and optionally append
-JSONL sidechain transcripts for specialist branches.
+mode/tool-policy allowlist, emit lightweight debug events, optionally append
+JSONL sidechain transcripts for specialist branches, and (Phase 6 of the
+2026-05-07 orchestration stabilization plan) cap each tool batch with an
+independent wall-clock deadline so a single stuck tool/LLM call does not eat
+the global ``agent_step_timeout_seconds``.
 """
 
 from __future__ import annotations
@@ -19,6 +22,10 @@ from typing import Any
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.prebuilt import ToolNode
+
+# When the per-tool deadline fires, surface the failure as a ToolMessage with
+# this stable error code. Callers (planner, salvage) can pattern-match on it.
+PER_TOOL_DEADLINE_REASON = "per_tool_deadline_exceeded"
 
 from science_graphrag.agent.can_use_tool_contract import CanUseTool
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
@@ -88,6 +95,75 @@ def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
                 fh.write(line + "\n")
     except OSError as exc:
         logger.warning("tool_execution_pipeline: skip sidechain append (path=%s): %s", path, exc)
+
+
+def _per_tool_deadline_seconds(settings: Settings) -> float:
+    """Return the configured per-tool-call deadline (0 disables the cap)."""
+    raw = float(getattr(settings, "agent_per_tool_call_timeout_seconds", 0.0) or 0.0)
+    if raw <= 0.0:
+        return 0.0
+    return min(raw, 600.0)
+
+
+def _run_with_per_tool_deadline(
+    runner: Callable[[], Any], *, deadline_s: float
+) -> tuple[Any | None, bool]:
+    """Run ``runner`` in a daemon thread with a wall-clock cap.
+
+    Returns ``(result, fired)``. When ``fired`` is True the worker thread is
+    abandoned (left running as daemon) and ``result`` is None — the caller
+    must synthesize a fallback ToolMessage so the rest of the turn proceeds.
+
+    A ``ThreadPoolExecutor`` is **not** suitable here: its ``__exit__`` calls
+    ``shutdown(wait=True)`` which blocks the supervisor until the stuck tool
+    actually returns, defeating the deadline. A bare daemon thread does not
+    pin process exit and lets the agent turn move on immediately.
+    """
+    result_holder: list[Any] = []
+    error_holder: list[BaseException] = []
+
+    def _worker_target() -> None:
+        try:
+            result_holder.append(runner())
+        except BaseException as exc:  # pylint: disable=broad-except
+            error_holder.append(exc)
+
+    worker = threading.Thread(target=_worker_target, name="tool-batch-deadline", daemon=True)
+    worker.start()
+    worker.join(timeout=deadline_s)
+    if worker.is_alive():
+        return None, True
+    if error_holder:
+        raise error_holder[0]
+    return (result_holder[0] if result_holder else None), False
+
+
+def _build_per_tool_deadline_messages(*, tcs: list[Any], deadline_s: float) -> list[ToolMessage]:
+    """Synthesize ToolMessage failures when the batch deadline fires."""
+    out: list[ToolMessage] = []
+    for tc in tcs:
+        if not isinstance(tc, dict):
+            continue
+        nm = normalize_tool_call_name(str(tc.get("name") or ""))
+        call_id = tc.get("id")
+        payload = {
+            "ok": False,
+            "error": PER_TOOL_DEADLINE_REASON,
+            "reason": (
+                f"per-tool wall-clock cap of {deadline_s:.1f}s exceeded; "
+                "tool call abandoned to keep the turn alive"
+            ),
+            "tool": nm,
+            "deadline_seconds": float(deadline_s),
+        }
+        out.append(
+            ToolMessage(
+                content=json.dumps(payload, ensure_ascii=False),
+                tool_call_id=str(call_id or ""),
+                name=nm,
+            )
+        )
+    return out
 
 
 def effective_tool_policy(state: AgentState) -> str:
@@ -344,13 +420,39 @@ def build_tool_execution_node(
             )
 
         tid_ctx = _thread_id_for_tool_context(st0)
-        with agent_graph_thread_id_scope(tid_ctx):
-            if config is None:
-                inner_out = inner.invoke(st0)
-            else:
-                inner_out = inner.invoke(st0, config)
+        deadline_s = _per_tool_deadline_seconds(settings)
+        deadline_fired = False
+
+        def _run_inner() -> Any:
+            with agent_graph_thread_id_scope(tid_ctx):
+                if config is None:
+                    return inner.invoke(st0)
+                return inner.invoke(st0, config)
+
+        if deadline_s > 0.0:
+            inner_out, deadline_fired = _run_with_per_tool_deadline(
+                _run_inner, deadline_s=deadline_s
+            )
+            if deadline_fired:
+                inner_out = {
+                    "messages": _build_per_tool_deadline_messages(
+                        tcs=list(tcs), deadline_s=deadline_s
+                    )
+                }
+        else:
+            inner_out = _run_inner()
 
         post_ts = time.time()
+        if deadline_fired:
+            events.append(
+                {
+                    "type": "tool_execution",
+                    "phase": "deadline",
+                    "ok": False,
+                    "code": PER_TOOL_DEADLINE_REASON,
+                    "deadline_seconds": float(deadline_s),
+                }
+            )
         events.append(
             {
                 "type": "tool_execution",

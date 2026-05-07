@@ -59,8 +59,6 @@ def build_initial_agent_state(
     user_structured_answer: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Shared initial state for LangGraph agent runs (API v2 + RetrievalAgent runtime)."""
-    from science_graphrag.agent.subagents.specialist_results_v3 import empty_specialist_results_v3
-
     from science_graphrag.agent.context.post_compact_attachments import (
         clear_paper_sources_capsule,
         load_paper_sources_items,
@@ -74,6 +72,7 @@ def build_initial_agent_state(
     from science_graphrag.agent.context.user_structured_answer import (
         consume_user_structured_answer_for_thread,
     )
+    from science_graphrag.agent.subagents.specialist_results_v3 import empty_specialist_results_v3
 
     workspace_capsule = None
     discovered_tools_capsule = None
@@ -224,6 +223,10 @@ def build_initial_agent_state(
             "history_digest": list(history_digest or []),
         }
 
+    from science_graphrag.agent.coordination.question_features import (
+        extract_question_features,
+    )
+    from science_graphrag.agent.coordination.route_planner import build_route_plan
     from science_graphrag.agent.coordination.turn_policy import classify_turn_policy
 
     _t0 = perf_counter()
@@ -236,6 +239,16 @@ def build_initial_agent_state(
         settings=st,
     )
     coordinator_ms = int((perf_counter() - _t0) * 1000)
+    turn_policy_payload = turn_policy.to_dict()
+    if bool(getattr(st, "agent_route_plan_enabled", False)):
+        features = extract_question_features(question=question, workspace_id=workspace_id)
+        route_plan = build_route_plan(
+            features=features,
+            turn_policy=turn_policy,
+            settings=st,
+        )
+        turn_policy_payload["route_plan"] = route_plan.to_dict()
+        turn_policy_payload["question_features"] = features.to_dict()
     run_kind, graph_id = resolve_runtime_attribution(agent_runtime)
     meta = {
         "agent_runtime": agent_runtime,
@@ -243,7 +256,7 @@ def build_initial_agent_state(
         "graph_id": graph_id,
         "agent_max_tool_calls": int(max_tool_calls),
         "raw_user_question": question,
-        "turn_policy": turn_policy.to_dict(),
+        "turn_policy": turn_policy_payload,
         "coordinator_latency_ms": coordinator_ms,
         "agent_response_deadline_perf_start": perf_counter(),
         "agent_response_deadline_seconds": float(st.agent_step_timeout_seconds),

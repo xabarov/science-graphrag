@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
-from typing import Literal
+from typing import Any, Literal
 
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.chat_envelope import heuristic_answer_class
-from science_graphrag.agent.coordination.deterministic import _graph_intent_heuristic
+from science_graphrag.agent.coordination.question_features import extract_question_features
+from science_graphrag.agent.coordination.route_planner import planner_post_retrieval_handoff
 from science_graphrag.agent.graph.nodes.graph_agent import SPECIALIST_NAME as GRAPH_SPECIALIST
 from science_graphrag.agent.graph.nodes.graph_agent import (
     build_graph_agent_node,
@@ -32,6 +33,12 @@ from science_graphrag.agent.graph.react_edges import (
     route_react_tools_next,
 )
 from science_graphrag.agent.graph.state import AgentState
+from science_graphrag.agent.graph.supervisor_decisions import (
+    compute_first_hop_decision,
+    compute_post_retrieval_handoff,
+    compute_round_cap_decision,
+    should_skip_llm_router,
+)
 from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
 from science_graphrag.agent.llm.chat import (
     agent_chat_transport_max_attempts,
@@ -63,95 +70,6 @@ from science_graphrag.observability.spans import (
 
 ROUTE_FINISH = "finish"
 
-# OD acceptance `v3_cv_fanout_dual_evidence` + similar catalog-compare prompts (workspace-scoped).
-_DUAL_EVIDENCE_CATALOG_COMPARE_MARKERS: tuple[str, ...] = (
-    "compare evidence",
-    "compare two",
-    "two different",
-    "different title keywords",
-    "distinct work_ids",
-    "disagree on any factual point",
-)
-
-
-def _normalized_question(text: str) -> str:
-    return " ".join(str(text or "").strip().lower().split())
-
-
-def _maybe_force_writer_after_retrieval(state: AgentState) -> str | None:
-    """Deterministic writer handoff for simple retrieval-complete prompts.
-
-    This trims supervisor churn on prompts where retrieval already gathered the exact
-    requested evidence and another retrieval hop is usually redundant.
-    """
-
-    q_norm = _normalized_question(_first_user_plain_question(state))
-    if not q_norm:
-        return None
-    tool_counts: dict[str, int] = {}
-    for step in collect_tool_execution_steps(list(state.get("messages") or [])):
-        name = str(step.get("tool") or "").strip()
-        if not name:
-            continue
-        tool_counts[name] = tool_counts.get(name, 0) + 1
-    tool_names = set(tool_counts)
-    if "final_answer" in tool_names:
-        return None
-    if "workspace_inspect" in tool_names and any(
-        needle in q_norm
-        for needle in (
-            "how many works",
-            "how many papers",
-            "works are in this workspace",
-            "сколько",
-            "mode=stats",
-            "claim-related",
-            "citation-related counts",
-        )
-    ):
-        return "retrieval_completion_workspace_stats"
-    if (
-        {"find_works", "paper_profile"}.issubset(tool_names)
-        and "compare" not in q_norm
-        and any(
-            needle in q_norm
-            for needle in (
-                "titles mention",
-                "pick one clear match",
-                "clear match",
-                "year and venue",
-                "report year and venue",
-            )
-        )
-    ):
-        return "retrieval_completion_catalog_resolution"
-    if (
-        tool_counts.get("find_works", 0) >= 2
-        and tool_counts.get("paper_profile", 0) >= 2
-        and any(needle in q_norm for needle in _DUAL_EVIDENCE_CATALOG_COMPARE_MARKERS)
-    ):
-        if any(x in q_norm for x in ("gost", "bibliograph", "список литературы")) and (
-            tool_counts.get("format_bibliography_gost", 0) < 1
-        ):
-            return None
-        if any(x in q_norm for x in ("quote", "snippet", "verbatim", "цитат")) and not any(
-            tool_counts.get(t, 0) > 0 for t in ("paper_quote_search", "idea_search")
-        ):
-            return None
-        return "retrieval_completion_dual_evidence_compare"
-    if any(t in tool_names for t in ("paper_quote_search", "idea_search")) and any(
-        needle in q_norm
-        for needle in (
-            "quote one short snippet",
-            "quote one",
-            "short snippet",
-            "anchor-free",
-            "anchor free",
-        )
-    ):
-        return "retrieval_completion_quote_evidence"
-    return None
-
 
 def _first_user_plain_question(state: AgentState) -> str:
     meta = state.get("metadata") or {}
@@ -167,19 +85,51 @@ def _first_user_plain_question(state: AgentState) -> str:
     return ""
 
 
-def _should_force_retrieval_first_hop_workspace_dual_evidence(state: AgentState) -> bool:
-    """First-hop retrieval for workspace dual-paper catalog compare (skip LLM graph noise)."""
-    if not str(state.get("workspace_id") or "").strip():
-        return False
+def _maybe_force_writer_after_retrieval(state: AgentState) -> str | None:
+    """Deterministic writer handoff for simple retrieval-complete prompts.
+
+    This is a thin compatibility shim over :func:`planner_post_retrieval_handoff`
+    so the legacy code path (planner-handoff flag off) still uses the
+    centralized marker tables in ``coordination.question_features``. All
+    substring rules live in one place; no parallel tables.
+    """
     raw = _first_user_plain_question(state)
-    qn = _normalized_question(raw)
-    if not qn:
+    if not raw:
+        return None
+    feats = extract_question_features(
+        question=raw,
+        workspace_id=str(state.get("workspace_id") or "").strip() or None,
+    )
+    tool_counts: dict[str, int] = {}
+    for step in collect_tool_execution_steps(list(state.get("messages") or [])):
+        name = str(step.get("tool") or "").strip()
+        if not name:
+            continue
+        tool_counts[name] = tool_counts.get(name, 0) + 1
+    return planner_post_retrieval_handoff(features=feats, tool_counts=tool_counts)
+
+
+def _should_force_retrieval_first_hop_workspace_dual_evidence(state: AgentState) -> bool:
+    """First-hop retrieval for workspace dual-paper catalog compare (skip LLM graph noise).
+
+    Compatibility shim over :class:`QuestionFeatures` so the legacy fallback
+    (route-plan flag off) reads the same marker tables as the planner.
+    """
+    raw = _first_user_plain_question(state)
+    if not raw:
         return False
-    if _graph_intent_heuristic(raw):
+    feats = extract_question_features(
+        question=raw,
+        workspace_id=str(state.get("workspace_id") or "").strip() or None,
+    )
+    if not feats.has_workspace:
         return False
+    if feats.asks_for_relations:
+        return False
+    qn = feats.normalized_question
     if "workspace" not in qn and "workspace_id" not in qn:
         return False
-    return any(needle in qn for needle in _DUAL_EVIDENCE_CATALOG_COMPARE_MARKERS)
+    return feats.asks_for_dual_evidence
 
 
 def _build_supervisor_route_messages(state: AgentState) -> list[HumanMessage]:
@@ -275,114 +225,12 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                     ],
                 },
             )
-        if str(state.get("current_specialist") or "").strip() == RETRIEVAL_SPECIALIST:
-            ready_reason = _maybe_force_writer_after_retrieval(state)
-            if ready_reason:
-                return merge_routing_leg_notifications_into_update(
-                    state,
-                    settings,
-                    {
-                        "current_specialist": WRITER_SPECIALIST,
-                        "routing_log": [
-                            *list(state.get("routing_log") or []),
-                            {
-                                "from": "supervisor",
-                                "to": WRITER_SPECIALIST,
-                                "reason": ready_reason,
-                                "budget_left": budget,
-                            },
-                        ],
-                    },
-                )
-        meta = state.get("metadata") or {}
-        tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
-        route_hint = str(tp.get("route_hint") or "").strip()
-        ans_cls = str(state.get("answer_class") or "").strip()
-
-        # First hop: honor coordinator route_hint, except OD dual-evidence catalog compare.
-        # hybrid_v1 LLM may set graph_agent; supervisor still starts with catalog tools (retrieval).
-        if not prior and tool_policy == "allow_tools":
-            if (
-                route_hint != WRITER_SPECIALIST
-                and ans_cls != "relation_tracing"
-                and _should_force_retrieval_first_hop_workspace_dual_evidence(state)
-            ):
-                return merge_routing_leg_notifications_into_update(
-                    state,
-                    settings,
-                    {
-                        "current_specialist": RETRIEVAL_SPECIALIST,
-                        "routing_log": [
-                            {
-                                "from": "supervisor",
-                                "to": RETRIEVAL_SPECIALIST,
-                                "reason": "workspace_dual_evidence_first_hop",
-                                "budget_left": budget,
-                                "route_hint": route_hint or None,
-                            },
-                        ],
-                    },
-                )
-            if route_hint == GRAPH_SPECIALIST or ans_cls == "relation_tracing":
-                reason = (
-                    "coordinator_route_hint"
-                    if route_hint == GRAPH_SPECIALIST
-                    else "answer_class_relation_tracing"
-                )
-                return merge_routing_leg_notifications_into_update(
-                    state,
-                    settings,
-                    {
-                        "current_specialist": GRAPH_SPECIALIST,
-                        "routing_log": [
-                            {
-                                "from": "supervisor",
-                                "to": GRAPH_SPECIALIST,
-                                "reason": reason,
-                                "route_hint": route_hint or None,
-                                "budget_left": budget,
-                            },
-                        ],
-                    },
-                )
-            if route_hint == WRITER_SPECIALIST:
-                return merge_routing_leg_notifications_into_update(
-                    state,
-                    settings,
-                    {
-                        "current_specialist": WRITER_SPECIALIST,
-                        "routing_log": [
-                            {
-                                "from": "supervisor",
-                                "to": WRITER_SPECIALIST,
-                                "reason": "coordinator_route_hint",
-                                "budget_left": budget,
-                            },
-                        ],
-                    },
-                )
-            if route_hint == RETRIEVAL_SPECIALIST and settings.agent_semantic_query_fast_route:
-                uq = _first_user_plain_question(state)
-                if uq and not _graph_intent_heuristic(uq):
-                    return merge_routing_leg_notifications_into_update(
-                        state,
-                        settings,
-                        {
-                            "current_specialist": RETRIEVAL_SPECIALIST,
-                            "routing_log": [
-                                {
-                                    "from": "supervisor",
-                                    "to": RETRIEVAL_SPECIALIST,
-                                    "reason": "semantic_fast_route",
-                                    "budget_left": budget,
-                                },
-                            ],
-                        },
-                    )
-
-        max_rounds = int(settings.agent_supervisor_max_rounds)
-        sup_hops = len([x for x in prior if isinstance(x, dict) and x.get("from") == "supervisor"])
-        if sup_hops >= max_rounds > 0:
+        ready_reason = compute_post_retrieval_handoff(
+            state=state,
+            settings=settings,
+            legacy_fn=_maybe_force_writer_after_retrieval,
+        )
+        if ready_reason:
             return merge_routing_leg_notifications_into_update(
                 state,
                 settings,
@@ -393,9 +241,90 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                         {
                             "from": "supervisor",
                             "to": WRITER_SPECIALIST,
-                            "reason": "supervisor_round_cap",
+                            "reason": ready_reason,
                             "budget_left": budget,
-                            "supervisor_hops": sup_hops,
+                        },
+                    ],
+                },
+            )
+        meta = state.get("metadata") or {}
+        tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
+        route_hint = str(tp.get("route_hint") or "").strip()
+        ans_cls = str(state.get("answer_class") or "").strip()
+
+        # First hop / coordinator route_hint / fast-route — delegated to pure helper.
+        if not prior:
+            first_hop = compute_first_hop_decision(
+                state=state,
+                settings=settings,
+                tool_policy=tool_policy,
+                route_hint=route_hint,
+                answer_class=ans_cls,
+            )
+            if first_hop is not None:
+                entry: dict[str, Any] = {
+                    "from": "supervisor",
+                    "to": first_hop.specialist,
+                    "reason": first_hop.reason,
+                    "budget_left": budget,
+                }
+                if first_hop.extra:
+                    if first_hop.extra.get("from_route_plan"):
+                        entry["decision_source"] = "route_plan"
+                    for k, v in first_hop.extra.items():
+                        if v is None or k == "from_route_plan":
+                            continue
+                        entry.setdefault(k, v)
+                return merge_routing_leg_notifications_into_update(
+                    state,
+                    settings,
+                    {
+                        "current_specialist": first_hop.specialist,
+                        "routing_log": [entry],
+                    },
+                )
+
+        round_cap = compute_round_cap_decision(state=state, settings=settings)
+        if round_cap.triggered:
+            return merge_routing_leg_notifications_into_update(
+                state,
+                settings,
+                {
+                    "current_specialist": WRITER_SPECIALIST,
+                    "routing_log": [
+                        *list(state.get("routing_log") or []),
+                        {
+                            "from": "supervisor",
+                            "to": WRITER_SPECIALIST,
+                            "reason": round_cap.reason,
+                            "budget_left": budget,
+                            "supervisor_hops": round_cap.supervisor_hops,
+                        },
+                    ],
+                },
+            )
+
+        # Phase 4: when RoutePlan + replan_only_llm flag are enabled, follow the
+        # plan deterministically; LLM router is invoked only on explicit replan.
+        plan_choice = should_skip_llm_router(state=state, settings=settings)
+        if plan_choice is not None:
+            add_span_event(
+                "agent.supervisor.route_plan_step",
+                {"to": plan_choice, "budget_left": budget},
+            )
+            return merge_routing_leg_notifications_into_update(
+                state,
+                settings,
+                {
+                    "current_specialist": plan_choice,
+                    "routing_log": [
+                        *list(state.get("routing_log") or []),
+                        {
+                            "from": "supervisor",
+                            "to": plan_choice,
+                            "reason": "route_plan_step",
+                            "budget_left": budget,
+                            "decision_source": "route_plan",
                         },
                     ],
                 },

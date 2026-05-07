@@ -12,7 +12,18 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
+# Phase 6 of the orchestration stabilization plan (2026-05-07): typed
+# completion-readiness markers consumed by the planner and salvage paths.
+# Source of truth for the literal values is ``coordination.route_plan``
+# (CompletionSignalId); this re-export lets v3 callers validate without
+# importing the planner package.
+from science_graphrag.agent.coordination.route_plan import CompletionSignalId as _CompletionSignalId
+
 _SCHEMA_VERSION = 1
+
+COMPLETION_STATE_VALUES: frozenset[str] = frozenset(
+    _CompletionSignalId.__args__  # type: ignore[attr-defined]
+)
 
 _VERDICT_RE = re.compile(
     r"(?im)^\s*VERDICT\s*:\s*(PASS|FAIL|PARTIAL)\b",
@@ -71,8 +82,31 @@ def empty_specialist_results_v3() -> dict[str, Any]:
             "conflict": None,
             "writer_directive": "",
             "partial_failure": False,
+            "completion_state": "any_specialist_payload",
         },
     }
+
+
+def annotate_completion_state(
+    prev: dict[str, Any] | None, *, completion_state: str
+) -> dict[str, Any]:
+    """Stamp ``merge.completion_state`` on the v3 payload.
+
+    Specialists call this after they have decided their leg is "ready". The
+    planner (``planner_post_retrieval_handoff`` and salvage paths) inspects
+    this value to decide whether to hand off to writer immediately.
+    Unknown values fall back to ``any_specialist_payload`` so older callers
+    cannot poison the merge.
+    """
+    base = dict(prev) if isinstance(prev, dict) else empty_specialist_results_v3()
+    state = str(completion_state or "").strip()
+    if state not in COMPLETION_STATE_VALUES:
+        state = "any_specialist_payload"
+    merge = dict(base.get("merge") or {})
+    merge["completion_state"] = state
+    base["merge"] = merge
+    base["schema_version"] = _SCHEMA_VERSION
+    return base
 
 
 def append_parent_tool_leg(
@@ -298,13 +332,34 @@ def _compute_merge(legs: list[dict[str, Any]]) -> dict[str, Any]:
 
     writer_directive = _build_writer_directive(origin, conflict, partial_failure, legs)
 
+    completion_state = _infer_completion_state(legs, partial_failure=partial_failure)
+
     return {
         "evidence_origin": origin,
         "confidence": round(float(confidence), 4),
         "conflict": conflict,
         "writer_directive": writer_directive,
         "partial_failure": partial_failure,
+        "completion_state": completion_state,
     }
+
+
+def _infer_completion_state(legs: list[dict[str, Any]], *, partial_failure: bool) -> str:
+    """Heuristic completion_state derived from leg shapes.
+
+    Specialists are expected to call ``annotate_completion_state`` for an
+    explicit marker. This helper covers the implicit case so older legs do
+    not break v3 readers.
+    """
+    if not legs:
+        return "any_specialist_payload"
+    for leg in legs:
+        explicit = leg.get("completion_state")
+        if isinstance(explicit, str) and explicit in COMPLETION_STATE_VALUES:
+            return explicit
+    if partial_failure:
+        return "partial_failure_recoverable"
+    return "any_specialist_payload"
 
 
 def _build_writer_directive(
@@ -348,6 +403,8 @@ def serialize_for_writer(prev: dict[str, Any] | None, *, max_chars: int = 12000)
 
 
 __all__ = [
+    "COMPLETION_STATE_VALUES",
+    "annotate_completion_state",
     "append_claim_verification_leg",
     "append_corpus_explore_leg",
     "append_parent_tool_leg",

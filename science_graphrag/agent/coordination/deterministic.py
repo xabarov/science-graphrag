@@ -94,12 +94,16 @@ _GRAPH_CITATION_RELATIONISH = re.compile(
 )
 
 
-def _graph_intent_heuristic(text: str) -> bool:
+def graph_intent_heuristic(text: str) -> bool:
+    """Detect explicit graph-intent prompts (lineage / cypher / citation chain).
+
+    Conservative: avoids false positives on boilerplate like ``citations`` /
+    ``Finish with ... citations`` where ``cite`` is a substring of ``citations``.
+    Public; the leading underscore alias is kept for backward compatibility.
+    """
     t = text.lower()
     if any(h in t for h in _GRAPH_INTENT_HINTS):
         return True
-    # Citation / influence *relations* — avoid false positives on boilerplate like
-    # ``citations`` / ``Finish with ... citations`` (substring ``cite`` inside ``citations``).
     if _GRAPH_CITATION_RELATIONISH.search(t):
         return True
     if re.search(r"\bcites\b", t) and any(
@@ -107,6 +111,10 @@ def _graph_intent_heuristic(text: str) -> bool:
     ):
         return True
     return False
+
+
+# Backwards-compatible private alias kept for older imports.
+_graph_intent_heuristic = graph_intent_heuristic
 
 
 def explicit_research_signal(q_norm: str, answer_class_hint: str | None) -> bool:

@@ -714,6 +714,52 @@ class Settings(BaseSettings):
         description="Temperature for tool_use_summary side-LLM.",
     )
     agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
+    agent_route_plan_enabled: bool = Field(
+        default=False,
+        description=(
+            "Phase 1 (orchestration stabilization 2026-05-07): when true, "
+            "``build_initial_agent_state`` writes a deterministic ``RoutePlan`` "
+            "(see ``science_graphrag.agent.coordination.route_planner``) into "
+            "``metadata.turn_policy.route_plan`` and the supervisor reads it for "
+            "first-hop / writer-handoff decisions. When false, supervisor stays on "
+            "the legacy imperative force-rules. Off by default until Phase 1.4 "
+            "regression sweep is complete."
+        ),
+    )
+    agent_route_plan_post_retrieval_handoff_enabled: bool = Field(
+        default=False,
+        description=(
+            "Phase 1.4: when true and a RoutePlan is attached, ``supervisor_node`` "
+            "uses the planner's ``planner_post_retrieval_handoff`` (consumer of "
+            "QuestionFeatures + tool_counts) instead of the legacy "
+            "``_maybe_force_writer_after_retrieval`` heuristic. Migration flag — "
+            "enable for canary, then default-on after acceptance soak."
+        ),
+    )
+    agent_supervisor_replan_only_llm_enabled: bool = Field(
+        default=False,
+        description=(
+            "Phase 4: when true and a RoutePlan is attached, the supervisor only "
+            "invokes the LLM router when the plan raises ``replan_signal`` (or "
+            "terminates without a next step). Otherwise it follows the plan steps "
+            "deterministically. Off by default until per-specialist completion "
+            "signals are wired through ``specialist_results_v3``."
+        ),
+    )
+    agent_per_tool_call_timeout_seconds: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=600.0,
+        description=(
+            "Phase 6: optional per-tool-call wall-clock cap inside "
+            "``tool_execution_pipeline``. ``0`` disables the cap (the global "
+            "``agent_step_timeout_seconds`` still applies). When set, a single "
+            "stuck tool no longer eats the whole turn — it raises a typed "
+            "``permission_denied``-style ToolMessage with reason "
+            "``per_tool_deadline_exceeded`` and the planner can fall back to "
+            "salvage."
+        ),
+    )
     agent_semantic_query_fast_route: bool = Field(
         default=False,
         description=(
