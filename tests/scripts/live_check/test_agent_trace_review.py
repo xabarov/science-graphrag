@@ -91,6 +91,7 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
     }
     schema_mod.check_from_dict = lambda x: x
     schema_mod.merge_e2e_report_json_into_review = lambda **_k: []
+    schema_mod.e2e_failures_are_retryable_provider_flakes = lambda _report: False
     schema_mod.trace_review_to_dict = lambda review: {
         "review_version": "trace-review-v1",
         "generated_at": "2026-01-01T00:00:00+00:00",
@@ -104,6 +105,7 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
         "fail_reasons": [],
         "warn_reasons": [],
     }
+    schema_mod.build_acceptance_summary = lambda _review: {}
     monkeypatch.setitem(sys.modules, "trace_review_schema", schema_mod)
 
     out_json = tmp_path / "trace-review.json"
@@ -158,4 +160,16 @@ def test_agent_trace_review_subprocess_default_profile_fail_path_contract(
     verdict = payload.get("verdict") or {}
     assert verdict.get("status") == "fail"
     assert verdict.get("fail_reasons")
+
+
+def test_server_agent_runtime_from_checks_reads_sync_json_run_metadata() -> None:
+    mod = _load_module()
+    checks: list[dict[str, Any]] = [
+        {
+            "name": "agent_v2_sync_json",
+            "ok": True,
+            "data": {"run_metadata": {"agent_runtime": "langgraph_supervisor_v3"}},
+        },
+    ]
+    assert mod._server_agent_runtime_from_checks(checks) == "langgraph_supervisor_v3"
 

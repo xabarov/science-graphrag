@@ -101,6 +101,7 @@ def test_build_agent_and_run_smoke(monkeypatch) -> None:
     out = agent.run(question="test question", workspace_id="ws1", max_tool_calls=8)
     assert out.answer == "Synthesized answer."
     assert isinstance(out.citations, list)
-    # Direct supervisor→writer path yields routing pseudo-step(s) only (no tool_calls in fake writer).
+    # Bare writer text is normalized into a terminal ``final_answer`` contract.
     assert out.tool_trace
     assert any(t.get("tool") == "route_to_specialist" for t in out.tool_trace)
+    assert any(t.get("tool") == "final_answer" for t in out.tool_trace)

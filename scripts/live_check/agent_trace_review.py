@@ -67,6 +67,7 @@ def _run_http_suite(
     timeout: float,
     skip_sse: bool,
     skip_multi_turn: bool,
+    extended_safety: bool = False,
 ) -> list[dict[str, Any]]:
     from http_suite import (  # pylint: disable=import-outside-toplevel,import-error
         CheckResult,
@@ -80,6 +81,7 @@ def _run_http_suite(
         timeout=timeout,
         skip_sse=skip_sse,
         skip_multi_turn=skip_multi_turn,
+        extended_safety=extended_safety,
     ):
         obj = asdict(res) if isinstance(res, CheckResult) else dict(res)
         out.append(obj)
@@ -202,6 +204,18 @@ def _sse_missing_final(checks: list[dict[str, Any]]) -> bool:
     return False
 
 
+def _server_agent_runtime_from_checks(checks: list[dict[str, Any]]) -> str | None:
+    """Prefer API-reported ``run_metadata.agent_runtime`` when client env omits it."""
+    for c in checks:
+        if str(c.get("name") or "") != "agent_v2_sync_json" or not c.get("ok"):
+            continue
+        data = c.get("data") if isinstance(c.get("data"), dict) else {}
+        rm = data.get("run_metadata") if isinstance(data.get("run_metadata"), dict) else {}
+        rt = str(rm.get("agent_runtime") or "").strip()
+        return rt or None
+    return None
+
+
 def _write_markdown(path: Path, review_dict: dict[str, Any]) -> None:
     lines: list[str] = []
     lines.append("# Agent Trace Review")
@@ -223,9 +237,10 @@ def _write_markdown(path: Path, review_dict: dict[str, Any]) -> None:
     lines.append("| Check | OK | Detail |")
     lines.append("|------|----|--------|")
     for chk in review_dict.get("checks") or []:
-        lines.append(
-            f"| `{chk.get('name')}` | `{bool(chk.get('ok'))}` | {str(chk.get('detail') or '')[:180]} |"
-        )
+        if not isinstance(chk, dict):
+            continue
+        det = str(chk.get("detail") or "")[:180]
+        lines.append(f"| `{chk.get('name')}` | `{bool(chk.get('ok'))}` | {det} |")
     lines.append("")
 
     tl = review_dict.get("trace_timeline") or []
@@ -233,10 +248,12 @@ def _write_markdown(path: Path, review_dict: dict[str, Any]) -> None:
         lines.append("## Trace timeline")
         lines.append("")
         lines.append(
-            "| Case | Run kind | Graph id | Steps | last_tool | Phoenix missing | dur_ms | warnings |",
+            "| Case | Run kind | Graph id | Steps | last_tool | "
+            "Phoenix missing | dur_ms | warnings |",
         )
         lines.append(
-            "|------|----------|----------|-------|-----------|-----------------|--------|----------|"
+            "|------|----------|----------|-------|-----------|"
+            "-----------------|--------|----------|",
         )
         for row in tl:
             steps = row.get("tool_steps") or []
@@ -294,6 +311,37 @@ def _write_markdown(path: Path, review_dict: dict[str, Any]) -> None:
         lines.append(f"- FAIL: {reason}")
     for reason in verdict.get("warn_reasons") or []:
         lines.append(f"- WARN: {reason}")
+
+    acc = review_dict.get("acceptance_summary")
+    if isinstance(acc, dict):
+        lines.append("")
+        lines.append("## Acceptance summary (§10.10)")
+        lines.append("")
+        lines.append(f"- schema: `{acc.get('schema_version')}`")
+        gates = acc.get("gates") if isinstance(acc.get("gates"), dict) else {}
+        for gk, gv in sorted(gates.items()):
+            lines.append(f"- `{gk}`: `{gv}`")
+        sc = acc.get("synthetic_covered") or []
+        if isinstance(sc, list) and sc:
+            lines.append("")
+            lines.append("### synthetic_covered")
+            for item in sc[:30]:
+                lines.append(f"- {item}")
+            if len(sc) > 30:
+                lines.append(f"- … ({len(sc) - 30} more)")
+        lp = acc.get("live_proven") or []
+        if isinstance(lp, list) and lp:
+            lines.append("")
+            lines.append("### live_proven")
+            for item in lp:
+                lines.append(f"- {item}")
+        ro = acc.get("residual_open") or []
+        if isinstance(ro, list) and ro:
+            lines.append("")
+            lines.append("### residual_open")
+            for item in ro:
+                lines.append(f"- {item}")
+
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -309,7 +357,15 @@ def main() -> int:
     parser.add_argument(
         "--timeout", type=float, default=float(os.environ.get("AGENT_LIVE_TIMEOUT_SEC", "240"))
     )
-    parser.add_argument("--suite", choices=["default", "heavy", "full"], default="default")
+    parser.add_argument(
+        "--suite",
+        choices=["default", "heavy", "full", "acceptance"],
+        default="default",
+        help=(
+            "E2E question pack; acceptance = full OD suite + v3 hardening cases "
+            "(requires live v3)."
+        ),
+    )
     parser.add_argument(
         "--profile",
         choices=["quick", "default", "heavy"],
@@ -349,6 +405,27 @@ def main() -> int:
         action="store_true",
         help="Merge offline Epic A3 long-thread prompt-memory metrics into trace-review output.",
     )
+    parser.add_argument(
+        "--strict-v3-lifecycle",
+        action="store_true",
+        help="Fail trace-review when subagent_lifecycle_missing_count>0 (Epic B1 hard gate).",
+    )
+    parser.add_argument(
+        "--min-claim-verification-parse-rate",
+        type=float,
+        default=None,
+        help="Fail when claim_verification_verdict_parse_rate is below threshold (0..1).",
+    )
+    parser.add_argument(
+        "--with-acceptance-summary",
+        action="store_true",
+        help="Embed acceptance_summary_v1 (§10.10) into the JSON artifact.",
+    )
+    parser.add_argument(
+        "--no-acceptance-summary",
+        action="store_true",
+        help="Disable auto acceptance_summary for suite=acceptance.",
+    )
     args = parser.parse_args()
 
     _ensure_local_imports()
@@ -356,13 +433,23 @@ def main() -> int:
         REVIEW_VERSION,
         TraceReviewV1,
         aggregate_metrics_from_timeline,
+        build_acceptance_summary,
         check_from_dict,
+        e2e_failures_are_retryable_provider_flakes,
         merge_e2e_report_json_into_review,
         trace_review_to_dict,
         verdict_from_signals,
     )
 
     _load_dotenv(args.env_file)
+    if args.suite == "acceptance":
+        args.strict_v3_lifecycle = True
+        if args.min_claim_verification_parse_rate is None:
+            args.min_claim_verification_parse_rate = 0.95
+        if not args.no_acceptance_summary:
+            args.with_acceptance_summary = True
+        if not args.with_long_thread_eval:
+            args.with_long_thread_eval = True
     if args.profile == "quick":
         args.skip_e2e = True
         args.skip_multi_turn = True
@@ -379,6 +466,7 @@ def main() -> int:
         timeout=args.timeout,
         skip_sse=args.skip_sse,
         skip_multi_turn=args.skip_multi_turn,
+        extended_safety=(args.suite == "acceptance"),
     )
 
     report_json_path: Path | None = None
@@ -430,7 +518,19 @@ def main() -> int:
 
     chk_map = _checks_dict(checks)
     required = frozenset({"health", "agent_v2_sync_json", "agent_v2_sse"})
+    if args.suite == "acceptance":
+        required = required | frozenset({"agent_v2_fanout_probe", "agent_v2_malicious_deny"})
     sse_bad = _sse_missing_final(checks)
+
+    e2e_retryable_provider_flakes_only = False
+    if report_json_path and report_json_path.exists() and not args.skip_e2e:
+        try:
+            report_for_verdict = json.loads(report_json_path.read_text(encoding="utf-8"))
+            e2e_retryable_provider_flakes_only = e2e_failures_are_retryable_provider_flakes(
+                report_for_verdict
+            )
+        except (OSError, json.JSONDecodeError):
+            e2e_retryable_provider_flakes_only = False
 
     verdict_obj = verdict_from_signals(
         checks_ok=chk_map,
@@ -438,6 +538,11 @@ def main() -> int:
         e2e_ok=None if e2e is None else bool(e2e.get("ok")),
         metrics=metrics,
         sse_missing_final_in_checks=sse_bad,
+        e2e_retryable_provider_flakes_only=(
+            e2e is not None and not bool(e2e.get("ok")) and e2e_retryable_provider_flakes_only
+        ),
+        strict_subagent_lifecycle=bool(args.strict_v3_lifecycle),
+        min_claim_verification_parse_rate=args.min_claim_verification_parse_rate,
     )
 
     review = TraceReviewV1(
@@ -488,6 +593,9 @@ def main() -> int:
                         break
         except (OSError, json.JSONDecodeError):
             pass
+    server_rt = _server_agent_runtime_from_checks(checks)
+    client_rt = (os.environ.get("SCIENCE_GRAPHRAG_AGENT_RUNTIME") or "").strip() or None
+    merged_agent_runtime = client_rt or server_rt
     review_dict["run_context"] = {
         "base_url": args.base_url.rstrip("/"),
         "workspace_id": args.workspace_id,
@@ -496,7 +604,7 @@ def main() -> int:
         "run_kind": run_kind,
         "graph_id": graph_id,
         "feature_flags": {
-            "agent_runtime": os.environ.get("SCIENCE_GRAPHRAG_AGENT_RUNTIME"),
+            "agent_runtime": merged_agent_runtime,
             "agent_rule_tool_search_enabled": os.environ.get(
                 "SCIENCE_GRAPHRAG_AGENT_RULE_TOOL_SEARCH_ENABLED"
             ),
@@ -516,10 +624,19 @@ def main() -> int:
                 "SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_STRICT_DEFERRED_ACTIVATION_ENABLED"
             ),
             "long_thread_eval_offline": str(bool(args.with_long_thread_eval)).lower(),
+            "agent_claim_verification_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_CLAIM_VERIFICATION_ENABLED"
+            ),
+            "agent_subagent_lifecycle_enhanced_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_SUBAGENT_LIFECYCLE_ENHANCED_ENABLED"
+            ),
         },
     }
     if phoenix_pull_meta:
         review_dict["phoenix_pull"] = phoenix_pull_meta
+
+    if args.with_acceptance_summary:
+        review_dict["acceptance_summary"] = build_acceptance_summary(review_dict)
 
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_md.parent.mkdir(parents=True, exist_ok=True)
@@ -549,12 +666,16 @@ def main() -> int:
                     json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
                 )
                 review_dict = merged
+                if args.with_acceptance_summary:
+                    review_dict["acceptance_summary"] = build_acceptance_summary(review_dict)
                 _write_markdown(args.out_md, review_dict)
             except (OSError, json.JSONDecodeError):
                 review_dict["compaction_turn_review"] = compaction_meta
                 args.out_json.write_text(
                     json.dumps(review_dict, ensure_ascii=False, indent=2) + "\n"
                 )
+                if args.with_acceptance_summary:
+                    review_dict["acceptance_summary"] = build_acceptance_summary(review_dict)
                 _write_markdown(args.out_md, review_dict)
 
     if report_json_path:

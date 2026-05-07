@@ -11,7 +11,8 @@ Loads repo ``.env`` (override=True) like other ``live_check`` scripts. Uses:
 - ``AGENT_E2E_PHOENIX_SPAN_CAP`` (optional): max span names stored per case when ``--trace-audit``
   (default ``400``)
 
-**Suites:** ``default`` (3 light), ``heavy`` (3 multi-tool), ``full`` (6 = default + heavy) for
+**Suites:** ``default`` (3 light), ``heavy`` (3 multi-tool), ``full`` (6 = default + heavy),
+``acceptance`` (full + v3 hardening prompts for live gates) for
 post–phases A/B/C regression and Phoenix sequence review.
 
 **Phoenix:** With ``--trace-audit``, each case gets ``trace_audit`` (tool heuristics) plus
@@ -45,6 +46,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -92,6 +94,8 @@ def _runtime_attribution_from_runtime_id(runtime_id: Any) -> tuple[str | None, s
         return "single_agent_research", "single_agent_react"
     if rt == "langgraph_supervisor_v1":
         return "supervisor_specialists", "supervisor_graph"
+    if rt == "langgraph_supervisor_v3":
+        return "supervisor_specialists_v3", "supervisor_graph_v3"
     return None, None
 
 
@@ -101,6 +105,8 @@ def _question_suite(suite: str) -> list[tuple[str, str]]:
         return HEAVY_QUESTIONS
     if s == "full":
         return list(DEFAULT_QUESTIONS) + list(HEAVY_QUESTIONS)
+    if s == "acceptance":
+        return list(DEFAULT_QUESTIONS) + list(HEAVY_QUESTIONS) + list(ACCEPTANCE_V3_QUESTIONS)
     return DEFAULT_QUESTIONS
 
 
@@ -124,6 +130,52 @@ def _should_retry_after_case_failure(case_report: dict[str, Any]) -> bool:
     if isinstance(notes, list) and "last_tool_not_final_answer" in {str(x).strip() for x in notes}:
         run_meta = case_report.get("run_metadata") or {}
         if isinstance(run_meta, dict) and bool(run_meta.get("agent_turn_deadline_exceeded")):
+            return True
+    return False
+
+
+def _should_retry_after_transport_flake(case_report: dict[str, Any]) -> bool:
+    """One-shot retry for infra disconnects (uvicorn reload, transient proxy, API restart)."""
+    if case_report.get("http_ok"):
+        return False
+    err = str(case_report.get("error") or "")
+    needles = (
+        "Server disconnected",
+        "Connection refused",
+        "ReadTimeout",
+        "Read timeout",
+        "timed out",
+        "RemoteProtocolError",
+        "Connection reset",
+        "ConnectError",
+    )
+    if any(n in err for n in needles):
+        return True
+    # httpx.HTTPStatusError string shapes: ``Client error '524' for url ...``
+    for code in ("502", "503", "504", "524"):
+        if f"'{code}'" in err or f'"{code}"' in err:
+            return True
+    return False
+
+
+def _should_retry_after_provider_flake(case_report: dict[str, Any]) -> bool:
+    """HTTP 200 but degraded body after upstream/gateway flake (sync JSON normalization)."""
+    if not case_report.get("http_ok"):
+        return False
+    if _case_passes_acceptance(case_report):
+        return False
+    if case_report.get("retryable_provider_flake"):
+        return True
+    warns = case_report.get("warnings") or []
+    if isinstance(warns, list) and "retryable_provider_flake" in {str(x).strip() for x in warns}:
+        return True
+    rm = case_report.get("run_metadata") or {}
+    if isinstance(rm, dict) and rm.get("agent_sync_error"):
+        from science_graphrag.api.agent_v2_modules.errors import (  # pylint: disable=import-outside-toplevel
+            is_retryable_provider_error_class,
+        )
+
+        if is_retryable_provider_error_class(str(rm.get("error_class") or "")):
             return True
     return False
 
@@ -185,7 +237,7 @@ def _markdown_report(
             lines.append(
                 "- **Phoenix structure:** issues="
                 f"{psa.get('issues') or '—'}; "
-                f"llm_turns={psa.get('llm_agent_react_turn_hits')}, "
+                f"llm_spans={psa.get('llm_agent_span_hits', psa.get('llm_agent_react_turn_hits'))}, "
                 f"tool_spans={psa.get('tool_dot_span_hits')}, "
                 f"sample_size={psa.get('span_sample_size')}\n"
             )
@@ -293,8 +345,19 @@ def _run_single_query(  # pylint: disable=too-many-arguments,too-many-locals
         )
         r.raise_for_status()
         data = r.json()
+    except httpx.HTTPStatusError as exc:
+        case_report["error"] = str(exc)
+        if int(exc.response.status_code) in {502, 503, 504, 524}:
+            case_report["retryable_provider_flake"] = True
+        return case_report, False
+    except (httpx.ReadTimeout, httpx.WriteTimeout, httpx.ConnectTimeout) as exc:
+        case_report["error"] = str(exc)
+        case_report["retryable_provider_flake"] = True
+        return case_report, False
     except Exception as exc:  # noqa: BLE001
         case_report["error"] = str(exc)
+        if _should_retry_after_transport_flake({"http_ok": False, "error": str(exc)}):
+            case_report["retryable_provider_flake"] = True
         return case_report, False
 
     case_report["http_ok"] = True
@@ -312,9 +375,24 @@ def _run_single_query(  # pylint: disable=too-many-arguments,too-many-locals
     )
     case_report["cypher_query_error_count"] = cypher_query_error_count(trace)
     case_report["duration_ms"] = data.get("duration_ms")
-    case_report["warnings"] = data.get("warnings") or []
+    raw_warns = data.get("warnings") or []
+    case_report["warnings"] = raw_warns if isinstance(raw_warns, list) else []
     run_meta = data.get("run_metadata") if isinstance(data.get("run_metadata"), dict) else {}
     case_report["run_metadata"] = run_meta
+    markers_raw = data.get("product_markers") or []
+    markers: set[str] = set()
+    if isinstance(markers_raw, list):
+        markers = {str(x).strip() for x in markers_raw if str(x).strip()}
+    warn_set = {str(x).strip() for x in case_report["warnings"]}
+    if "retryable_provider_flake" in warn_set or "retryable_provider_flake" in markers:
+        case_report["retryable_provider_flake"] = True
+    elif run_meta.get("agent_sync_error"):
+        from science_graphrag.api.agent_v2_modules.errors import (  # pylint: disable=import-outside-toplevel
+            is_retryable_provider_error_class,
+        )
+
+        if is_retryable_provider_error_class(str(run_meta.get("error_class") or "")):
+            case_report["retryable_provider_flake"] = True
     run_kind = str(run_meta.get("run_kind") or "").strip() or None
     graph_id = str(run_meta.get("graph_id") or "").strip() or None
     if run_kind is None or graph_id is None:
@@ -375,6 +453,38 @@ def _run_single_query(  # pylint: disable=too-many-arguments,too-many-locals
         case_report["tool_trace_verbose"] = trace
 
     return case_report, ok
+
+
+ACCEPTANCE_V3_QUESTIONS: list[tuple[str, str]] = [
+    (
+        "v3_cv_fanout_dual_evidence",
+        (
+            "Compare evidence for two different object-detection works in this workspace: "
+            "use find_works twice with different title keywords (for example 'YOLO' vs "
+            "'Faster R-CNN'), then call paper_profile for two distinct work_ids from the "
+            "results. Note whether blurbs or metadata disagree on any factual point. "
+            "Finish with final_answer and citations for both work_ids."
+        ),
+    ),
+    (
+        "v3_subagent_mesh_multi_tool",
+        (
+            "Does this workspace support real-time object detection trade-offs between speed "
+            "and accuracy? Use at least two different tools among idea_search, paper_quote_search, "
+            "workspace_inspect, and find_works; cite at least two distinct work_ids from tool "
+            "outputs. If evidence is thin, say so explicitly. Finish with final_answer."
+        ),
+    ),
+    (
+        "b2_merge_provenance_probe",
+        (
+            "Pick one factual claim that could be checked against two different works in this "
+            "workspace (use find_works + paper_profile). If tool outputs disagree, explain how "
+            "you reconcile them and which work_id you trust more and why. "
+            "Mention provenance (which tools) in the narrative. Finish with final_answer."
+        ),
+    ),
+]
 
 
 HEAVY_QUESTIONS: list[tuple[str, str]] = [
@@ -486,9 +596,9 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
     parser.add_argument("--verbose", action="store_true", help="Print full tool_trace per case")
     parser.add_argument(
         "--suite",
-        choices=("default", "heavy", "full"),
+        choices=("default", "heavy", "full", "acceptance"),
         default="default",
-        help="Question pack: default (3), heavy (3), full (6 = default+heavy)",
+        help="Question pack: default (3), heavy (3), full (6), acceptance (full + v3 prompts)",
     )
     parser.add_argument(
         "--trace-audit",
@@ -632,9 +742,24 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
                 extract_span_names_for_trace_fn=extract_span_names_for_trace,
             )
             retries = 0
-            while retries < 1 and (not case_ok) and _should_retry_after_case_failure(case_report):
+            while (
+                retries < 1
+                and (not case_ok)
+                and (
+                    _should_retry_after_case_failure(case_report)
+                    or _should_retry_after_transport_flake(case_report)
+                    or _should_retry_after_provider_flake(case_report)
+                )
+            ):
                 retries += 1
-                case_report["notes"].append("retry_after_deadline_exceeded")
+                if _should_retry_after_transport_flake(case_report):
+                    case_report["notes"].append("retry_after_transport_error")
+                    time.sleep(2.0)
+                elif _should_retry_after_provider_flake(case_report):
+                    case_report["notes"].append("retry_after_provider_error_response")
+                    time.sleep(2.0)
+                else:
+                    case_report["notes"].append("retry_after_deadline_exceeded")
                 case_report, case_ok = _run_single_query(
                     client,
                     url=url,

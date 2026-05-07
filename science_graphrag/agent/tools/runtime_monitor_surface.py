@@ -11,6 +11,9 @@ from typing import Any
 from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
+from science_graphrag.agent.tools.runtime_monitor_sources import (
+    resolve_runtime_monitor_from_job_stores,
+)
 from science_graphrag.config import Settings
 
 _REGISTRY_LOCK = threading.Lock()
@@ -32,6 +35,8 @@ def clear_runtime_monitor_snapshots_for_tests() -> None:
 
 
 def _monitor_hint(**kwargs: Any) -> dict[str, Any]:
+    """SSE/debug payload for monitor lookups (stable keys for telemetry + trace-review)."""
+
     return {"type": "runtime_monitor", **{k: v for k, v in kwargs.items() if v is not None}}
 
 
@@ -56,6 +61,8 @@ def build_runtime_monitor_tools(settings: Settings) -> list[BaseTool]:
         with _REGISTRY_LOCK:
             row = dict(_TASK_STATUS.get(tid) or {})
         if not row:
+            row = resolve_runtime_monitor_from_job_stores(tid, settings) or {}
+        if not row:
             payload = {
                 "ok": True,
                 "task_id": tid,
@@ -65,26 +72,46 @@ def build_runtime_monitor_tools(settings: Settings) -> list[BaseTool]:
                 "degraded": True,
                 "error_tail": None,
                 "detail": "no_snapshot_registered",
-                "sse_hint": _monitor_hint(task_id=tid, state="unknown", degraded=True, ok=True),
+                "source": None,
+                "timeout_hit": None,
+                "sse_hint": _monitor_hint(
+                    task_id=tid,
+                    state="unknown",
+                    degraded=True,
+                    ok=True,
+                    source=None,
+                ),
             }
             return payload
+        if row.get("source") is None:
+            row["source"] = "explicit"
         tail = row.get("error_tail")
         max_tail = int(settings.agent_runtime_monitor_max_error_tail_chars)
         if isinstance(tail, str) and len(tail) > max_tail:
             tail = tail[:max_tail] + "...[truncated]"
+        state_s = str(row.get("state") or "unknown")
+        deg = bool(row.get("degraded", False))
+        to_hit = row.get("timeout_hit")
+        timeout_hit = bool(to_hit) if to_hit is not None else None
+        src = row.get("source")
+        source = str(src) if src is not None else None
         out = {
             "ok": True,
             "task_id": tid,
-            "state": str(row.get("state") or "unknown"),
+            "state": state_s,
             "progress": row.get("progress"),
             "last_heartbeat_at": row.get("last_heartbeat_at"),
-            "degraded": bool(row.get("degraded", False)),
+            "degraded": deg,
             "error_tail": tail,
+            "source": source,
+            "timeout_hit": timeout_hit,
             "sse_hint": _monitor_hint(
                 task_id=tid,
-                state=str(row.get("state") or "unknown"),
-                degraded=bool(row.get("degraded", False)),
+                state=state_s,
+                degraded=deg,
                 ok=True,
+                source=source,
+                timeout_hit=timeout_hit,
             ),
         }
         return out

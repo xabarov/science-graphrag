@@ -394,6 +394,20 @@ def response_from_run(
     cvr = getattr(out, "claim_verification_results", None)
     if isinstance(cvr, list) and cvr:
         run_metadata["claim_verification_results"] = list(cvr)
+    cer = getattr(out, "corpus_explore_results", None)
+    if isinstance(cer, list) and cer:
+        run_metadata["corpus_explore_results"] = list(cer)
+    rpr = getattr(out, "research_plan_results", None)
+    if isinstance(rpr, list) and rpr:
+        run_metadata["research_plan_results"] = list(rpr)
+    if tid and bool(getattr(settings, "agent_research_plan_tool_enabled", False)):
+        from science_graphrag.agent.context.research_plan_session import (
+            get_research_plan_snapshot_for_thread,
+        )
+
+        rp_snap = get_research_plan_snapshot_for_thread(str(tid).strip())
+        if isinstance(rp_snap, dict):
+            run_metadata["research_plan"] = rp_snap
     brief = getattr(out, "brief", None)
     if isinstance(brief, str) and brief.strip():
         run_metadata["brief"] = brief.strip()[:240]

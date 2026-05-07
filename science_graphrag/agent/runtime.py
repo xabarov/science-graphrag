@@ -67,6 +67,34 @@ def _collect_claim_verification_results(messages: list[Any]) -> list[dict[str, A
     return out
 
 
+def _collect_corpus_explore_results(messages: list[Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for m in messages:
+        if not isinstance(m, HumanMessage):
+            continue
+        ak = getattr(m, "additional_kwargs", None) or {}
+        if not isinstance(ak, dict) or ak.get("kind") != "corpus_explore_result":
+            continue
+        inner = ak.get("corpus_explore_result")
+        if isinstance(inner, dict):
+            out.append(inner)
+    return out
+
+
+def _collect_research_plan_results(messages: list[Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for m in messages:
+        if not isinstance(m, HumanMessage):
+            continue
+        ak = getattr(m, "additional_kwargs", None) or {}
+        if not isinstance(ak, dict) or ak.get("kind") != "research_plan_result":
+            continue
+        inner = ak.get("research_plan_result")
+        if isinstance(inner, dict):
+            out.append(inner)
+    return out
+
+
 def _coerce_optional_str(value: object) -> str | None:
     if not isinstance(value, str):
         return None
@@ -98,6 +126,10 @@ def _agent_query_output_summary(
 
 _GRAPH_TOOL_SALVAGE_PREFIX = (
     "[Graph tool output; call final_answer to complete the turn for the user.]\n"
+)
+_RUNTIME_FALLBACK_ANSWER = (
+    "I could not produce a complete final answer for this turn. "
+    "Please rephrase the request or narrow the scope."
 )
 
 
@@ -151,6 +183,59 @@ def _salvage_answer_from_last_graph_tool(messages: list[Any], *, max_chars: int 
 
 
 _MIN_DRAFT_ASSISTANT_CHARS = 200
+
+
+def _stringify_ai_message_content(content: Any) -> str:
+    """Flatten AIMessage.content (str or provider-specific multimodal lists) for salvage."""
+    if isinstance(content, str):
+        return content.strip()
+    if content is None:
+        return ""
+    return str(content).strip()
+
+
+def _salvage_visible_ai_after_defective_final_answer(messages: list[Any]) -> str:
+    """Use same-turn AIMessage visible text when ``final_answer`` JSON has an empty ``answer``."""
+    for i in range(len(messages) - 1, -1, -1):
+        msg = messages[i]
+        if not isinstance(msg, AIMessage):
+            continue
+        for tc in getattr(msg, "tool_calls", None) or []:
+            if normalize_tool_call_name(str(tc.get("name") or "")) != "final_answer":
+                continue
+            call_id = tc.get("id")
+            payload_empty = False
+            for follow in messages[i + 1 :]:
+                if not isinstance(follow, ToolMessage):
+                    continue
+                if getattr(follow, "tool_call_id", None) != call_id:
+                    continue
+                raw = str(follow.content or "").strip()
+                if not raw:
+                    payload_empty = True
+                    break
+                try:
+                    data = json.loads(raw)
+                except Exception:  # noqa: BLE001
+                    payload_empty = True
+                    break
+                if not isinstance(data, dict):
+                    payload_empty = True
+                    break
+                ans = data.get("answer")
+                payload_empty = not (isinstance(ans, str) and ans.strip())
+                break
+            else:
+                args = tc.get("args")
+                args_dict = args if isinstance(args, dict) else {}
+                ans_args = args_dict.get("answer")
+                payload_empty = not (isinstance(ans_args, str) and ans_args.strip())
+            if not payload_empty:
+                continue
+            vis = _stringify_ai_message_content(getattr(msg, "content", None))
+            if vis:
+                return vis[:20_000]
+    return ""
 
 
 def _salvage_substantial_ai_visible_content(messages: list[Any]) -> str:
@@ -239,6 +324,9 @@ def extract_langgraph_answer(
     if fallback_tool_args is not None:
         ans0, cites0 = fallback_tool_args
         return ans0, cites0, False, False
+    salvage_def = _salvage_visible_ai_after_defective_final_answer(messages)
+    if salvage_def.strip():
+        return salvage_def.strip(), None, False, False
     for msg in reversed(messages):
         if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
             text = str(msg.content or "").strip()
@@ -440,6 +528,8 @@ class AgentRunOutput:
     # Epic B: typed merge + claim verification artifacts.
     specialist_results_v3: dict[str, Any] | None = None
     claim_verification_results: list[dict[str, Any]] | None = None
+    corpus_explore_results: list[dict[str, Any]] | None = None
+    research_plan_results: list[dict[str, Any]] | None = None
 
 
 class RetrievalAgent:
@@ -594,6 +684,10 @@ class RetrievalAgent:
         answer, citations, graph_salvage, quote_salvage, draft_salvage = (
             resolve_langgraph_answer_with_salvage(final_state)
         )
+        fallback_answer_used = False
+        if not str(answer or "").strip():
+            answer = _RUNTIME_FALLBACK_ANSWER
+            fallback_answer_used = True
         typed_payloads = collect_typed_payloads(final_state)
         inv = typed_payloads.get("inventory")
         sr = final_state.get("specialist_results")
@@ -612,6 +706,8 @@ class RetrievalAgent:
             extra_warn_list.append("answer_salvaged_from_quote_candidates")
         if draft_salvage:
             extra_warn_list.append("answer_salvaged_from_assistant_draft")
+        if fallback_answer_used:
+            extra_warn_list.append("answer_salvaged_from_runtime_fallback")
         extra_warn: list[str] | None = extra_warn_list or None
         if graph_salvage:
             add_span_event(
@@ -640,8 +736,34 @@ class RetrievalAgent:
                 cv_warn.append("claim_verification_child_issues")
                 break
 
+        ce_warn: list[str] = []
+        for row in _collect_corpus_explore_results(messages):
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("terminal_state") or "") != "succeeded":
+                ce_warn.append("corpus_explore_child_non_success")
+                break
+            issues = row.get("issues")
+            if isinstance(issues, list) and any(str(x).strip() for x in issues):
+                ce_warn.append("corpus_explore_child_issues")
+                break
+
+        rp_warn: list[str] = []
+        for row in _collect_research_plan_results(messages):
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("terminal_state") or "") != "succeeded":
+                rp_warn.append("research_plan_child_non_success")
+                break
+            issues = row.get("issues")
+            if isinstance(issues, list) and any(str(x).strip() for x in issues):
+                rp_warn.append("research_plan_child_issues")
+                break
+
         merged_extra_warns = list(extra_warn or [])
         merged_extra_warns.extend(cv_warn)
+        merged_extra_warns.extend(ce_warn)
+        merged_extra_warns.extend(rp_warn)
         envelope = build_chat_envelope(
             state=final_state,
             answer=answer,
@@ -687,12 +809,16 @@ class RetrievalAgent:
             routing_log, parent_turn_id=parent_tid
         )
         raw_spawn = meta_final.get("subagent_spawn_rows") if isinstance(meta_final, dict) else None
-        spawned_rows = [x for x in raw_spawn if isinstance(x, dict)] if isinstance(raw_spawn, list) else []
+        spawned_rows = (
+            [x for x in raw_spawn if isinstance(x, dict)] if isinstance(raw_spawn, list) else []
+        )
         subagent_runs = merge_subagent_run_rows(
             routing_rows=routing_sub_rows, spawned_rows=spawned_rows
         )
         _tn = _collect_subagent_task_notifications(messages)
         _cv = _collect_claim_verification_results(messages)
+        _ce = _collect_corpus_explore_results(messages)
+        _rp = _collect_research_plan_results(messages)
         sr3_final = final_state.get("specialist_results_v3")
         sr3_out = sr3_final if isinstance(sr3_final, dict) else None
         _lane = (
@@ -750,6 +876,8 @@ class RetrievalAgent:
             hook_chain_events=hook_chain or None,
             specialist_results_v3=sr3_out,
             claim_verification_results=_cv or None,
+            corpus_explore_results=_ce or None,
+            research_plan_results=_rp or None,
         )
 
 

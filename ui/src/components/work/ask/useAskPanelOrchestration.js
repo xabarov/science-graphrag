@@ -14,7 +14,13 @@ import { useI18n } from "../../../i18n/useI18n.js";
 import { persistWorkId } from "../../../pages/WorkspacePage/utils/workContext.js";
 import { CHAT_PATH } from "../../../routes/paths.js";
 import { getWorkspace } from "../../../utils/workspaceStore.js";
-import { apiSessionsToBundle, entriesToApiTurns, isServerAskSessionId, readAskServerSyncPref } from "./askSessionServerBridge.js";
+import {
+  apiSessionsToBundle,
+  entriesToApiTurns,
+  isServerAskSessionId,
+  readAskServerSyncPref,
+} from "./askSessionServerBridge.js";
+import { extractOpenStructuredQuestion, extractResearchPlanStreamHint } from "./askStreamArtifacts.js";
 import { rememberAskHistory } from "./askHistoryState.js";
 import {
   appendAskSessionTurn,
@@ -344,7 +350,7 @@ export function useAskPanelOrchestration({
   }, [locked, workId]);
 
   const performAgentSubmit = useCallback(
-    async (queryText, { workIdForTurn } = {}) => {
+    async (queryText, { workIdForTurn, userStructuredAnswer } = {}) => {
       const q = String(queryText || "").trim();
       if (!q) return;
       const turnWorkId = workIdForTurn != null ? String(workIdForTurn).trim() : String(workId || "").trim();
@@ -362,6 +368,7 @@ export function useAskPanelOrchestration({
             query: q,
             threadId: submitSid || null,
             historyDigest,
+            userStructuredAnswer: userStructuredAnswer && typeof userStructuredAnswer === "object" ? userStructuredAnswer : null,
           });
         } catch (submitExc) {
           composerSuppressHydrateTurnIdRef.current = "";
@@ -407,6 +414,7 @@ export function useAskPanelOrchestration({
             product_markers: Array.isArray(nextNormalized.product_markers) ? nextNormalized.product_markers : [],
             stream_events: persistedStreamEvents.slice(-80),
             agent_tool_trace: persistedToolTrace,
+            open_structured_question: extractOpenStructuredQuestion(persistedStreamEvents),
           };
           const turn = {
             query: q,
@@ -483,6 +491,7 @@ export function useAskPanelOrchestration({
           product_markers: Array.isArray(nextNormalized.product_markers) ? nextNormalized.product_markers : [],
           stream_events: persistedStreamEvents.slice(-80),
           agent_tool_trace: persistedToolTrace,
+          open_structured_question: extractOpenStructuredQuestion(persistedStreamEvents),
         };
         const turn = {
           query: q,
@@ -550,12 +559,53 @@ export function useAskPanelOrchestration({
     ],
   );
 
+  const researchPlanForPanel = useMemo(() => {
+    const rm =
+      normalized && typeof normalized === "object" && normalized.run_metadata && typeof normalized.run_metadata === "object"
+        ? normalized.run_metadata
+        : null;
+    if (rm?.research_plan && typeof rm.research_plan === "object") return rm.research_plan;
+    const h0 = history[0];
+    const hrm = h0?.details?.run_metadata;
+    if (hrm && typeof hrm === "object" && hrm.research_plan && typeof hrm.research_plan === "object") return hrm.research_plan;
+    return null;
+  }, [normalized, history]);
+
+  const researchPlanStreamHint = useMemo(() => extractResearchPlanStreamHint(streamEvents), [streamEvents]);
+
+  const openStructuredQuestion = useMemo(() => {
+    const head = history[0];
+    const d = head?.details;
+    const fromEvents = Array.isArray(d?.stream_events) ? extractOpenStructuredQuestion(d.stream_events) : null;
+    if (fromEvents) return fromEvents;
+    if (d?.open_structured_question && typeof d.open_structured_question === "object") {
+      const rq = d.open_structured_question;
+      if (Array.isArray(rq.questions) && rq.questions.length && String(rq.request_id || "").trim()) {
+        return rq;
+      }
+    }
+    return null;
+  }, [history]);
+
+  const onStructuredAnswersSubmit = useCallback(
+    async (payload) => {
+      const rid = String(payload?.request_id || "").trim();
+      const answers = Array.isArray(payload?.answers) ? payload.answers : [];
+      if (!rid || !answers.length) return;
+      await performAgentSubmit(t("askPanel.userQuestion.continuePlaceholder"), {
+        userStructuredAnswer: { request_id: rid, answers },
+      });
+    },
+    [performAgentSubmit, t],
+  );
+
   const onSubmit = useCallback(
     async (e) => {
       e.preventDefault();
+      if (openStructuredQuestion) return;
       await performAgentSubmit(String(query || "").trim());
     },
-    [query, performAgentSubmit],
+    [query, performAgentSubmit, openStructuredQuestion],
   );
 
   const onRestartFromTurn = useCallback(
@@ -781,5 +831,9 @@ export function useAskPanelOrchestration({
     standaloneChatPath,
     scopeEyebrow,
     streamingHint,
+    researchPlanForPanel,
+    researchPlanStreamHint,
+    openStructuredQuestion,
+    onStructuredAnswersSubmit,
   };
 }

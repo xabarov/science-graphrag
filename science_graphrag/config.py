@@ -592,6 +592,127 @@ class Settings(BaseSettings):
         le=8,
         description="Max parallel claim_verification passes per retrieval hop (fanout research cap).",
     )
+    agent_corpus_explore_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true (supervisor v3), run read-only corpus_explore subagent after retrieval "
+            "with a cheap model + narrow tools (Train T4 §10.3)."
+        ),
+    )
+    agent_corpus_explore_chat_llm_model: str | None = Field(
+        default=None,
+        description=(
+            "Optional OpenRouter model id for corpus_explore child (defaults to chat model). "
+            "Use a small/fast model for cost/latency."
+        ),
+    )
+    agent_corpus_explore_chat_max_tokens: int = Field(
+        default=768,
+        ge=64,
+        le=4096,
+        description="Max tokens for corpus_explore assistant completion.",
+    )
+    agent_corpus_explore_chat_temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Temperature for corpus_explore subagent.",
+    )
+    agent_corpus_explore_max_tool_calls: int = Field(
+        default=10,
+        ge=1,
+        le=24,
+        description="Tool budget per corpus_explore child ReAct subgraph.",
+    )
+    agent_corpus_explore_step_timeout_seconds: float = Field(
+        default=90.0,
+        ge=5.0,
+        le=300.0,
+        description="Wall-clock invoke deadline per corpus_explore subgraph.",
+    )
+    agent_corpus_explore_recursion_limit: int = Field(
+        default=28,
+        ge=4,
+        le=64,
+        description="LangGraph recursion_limit for corpus_explore subgraph.",
+    )
+    agent_corpus_explore_fanout_max: int = Field(
+        default=1,
+        ge=1,
+        le=8,
+        description="Max corpus_explore passes per retrieval hop.",
+    )
+    agent_research_plan_subagent_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true (supervisor v3), run research-plan decomposition subagent "
+            "(corpus/graph/writer sections; optional research_plan_write)."
+        ),
+    )
+    agent_research_plan_subagent_chat_llm_model: str | None = Field(
+        default=None,
+        description="Optional model override for research-plan subagent (defaults to chat model).",
+    )
+    agent_research_plan_subagent_chat_max_tokens: int = Field(
+        default=1400,
+        ge=64,
+        le=8192,
+        description="Max tokens for research-plan subagent completion.",
+    )
+    agent_research_plan_subagent_chat_temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+    )
+    agent_research_plan_subagent_max_tool_calls: int = Field(
+        default=14,
+        ge=1,
+        le=32,
+        description="Tool budget per research-plan child subgraph.",
+    )
+    agent_research_plan_subagent_step_timeout_seconds: float = Field(
+        default=120.0,
+        ge=5.0,
+        le=600.0,
+        description="Wall-clock invoke deadline per research-plan subgraph.",
+    )
+    agent_research_plan_subagent_recursion_limit: int = Field(
+        default=36,
+        ge=4,
+        le=96,
+        description="LangGraph recursion_limit for research-plan subgraph.",
+    )
+    agent_research_plan_subagent_fanout_max: int = Field(
+        default=1,
+        ge=1,
+        le=8,
+        description="Max research-plan passes per retrieval hop.",
+    )
+    agent_tool_use_summary_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, compress oversized JSON tool results via cache-safe side-LLM summary "
+            "(§10.9), complementing token-budget compaction."
+        ),
+    )
+    agent_tool_use_summary_min_payload_chars: int = Field(
+        default=6000,
+        ge=500,
+        le=500_000,
+        description="Apply tool_use_summary only when ToolMessage JSON serialized length exceeds this.",
+    )
+    agent_tool_use_summary_max_output_chars: int = Field(
+        default=2800,
+        ge=200,
+        le=50_000,
+        description="Cap for summarized JSON embedded back into ToolMessage.",
+    )
+    agent_tool_use_summary_llm_temperature: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Temperature for tool_use_summary side-LLM.",
+    )
     agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
     agent_semantic_query_fast_route: bool = Field(
         default=False,
@@ -1255,7 +1376,12 @@ class Settings(BaseSettings):
     )
     agent_sidechain_transcripts_dir: str = Field(
         default=".agent_sidechains",
-        description="Directory (repo-relative or absolute) for JSONL sidechain logs.",
+        description=(
+            "Directory (repo-relative or absolute) for JSONL sidechain logs. "
+            "Must be writable by the API process; in Docker bind-mounts use e.g. `/tmp/...` or "
+            "set ``SCIENCE_GRAPHRAG_AGENT_SIDECHAIN_TRANSCRIPTS_ENABLED=0`` (see "
+            "``docker-compose.live-check.yml`` / ``scripts/live_check/README.md``)."
+        ),
     )
 
     gds_enabled: bool = Field(

@@ -111,6 +111,29 @@ def test_extract_salvages_from_cypher_tool_when_no_bare_ai() -> None:
     assert cites is None
 
 
+def test_extract_salvages_visible_ai_when_final_answer_json_answer_empty() -> None:
+    """Writer may emit final_answer with empty JSON answer but non-empty reasoning in AIMessage."""
+    msgs = [
+        HumanMessage(content="q"),
+        AIMessage(
+            content="CHECK_TURN_1",
+            tool_calls=[
+                {"name": "final_answer", "id": "c1", "args": {"answer": "", "citations": []}}
+            ],
+        ),
+        ToolMessage(
+            content=json.dumps({"answer": "", "citations": []}),
+            tool_call_id="c1",
+            name="final_answer",
+        ),
+    ]
+    answer, cites, graph_sv, draft_sv = extract_langgraph_answer(msgs)
+    assert answer == "CHECK_TURN_1"
+    assert cites is None
+    assert graph_sv is False
+    assert draft_sv is False
+
+
 def test_extract_salvages_long_visible_ai_content_with_tool_calls() -> None:
     long_body = "x" * 220
     msgs = [

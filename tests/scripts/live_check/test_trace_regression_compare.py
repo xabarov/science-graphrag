@@ -532,3 +532,105 @@ def test_regression_c3_latency_without_error_regress_warns(tmp_path: Path) -> No
     payload = json.loads(out_j.read_text())
     assert payload["status"] == "warn"
     assert any("c3_latency_without_error_regress" in x for x in payload["warn_reasons"])
+
+
+def test_regression_latency_p95_regress_ratio_fail(tmp_path: Path) -> None:
+    base = _minimal_review({"latency_p95_ms": 100.0, "missing_span_count": 0})
+    cand = _minimal_review({"latency_p95_ms": 120.0, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--max-latency-p95-regress-ratio",
+            "1.15",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("latency_p95_regress_ratio" in x for x in payload["fail_reasons"])
+
+
+def test_regression_subagent_lifecycle_missing_increase_fail_policy(tmp_path: Path) -> None:
+    base = _minimal_review({"subagent_lifecycle_missing_count": 0, "missing_span_count": 0})
+    cand = _minimal_review({"subagent_lifecycle_missing_count": 2, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--fail-on",
+            "new_missing_spans,tool_error_increase,final_answer_missing_increase,"
+            "compaction_churn_increase,subagent_lifecycle_missing_increase",
+            "--warn-on",
+            "",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any(
+        "subagent_lifecycle_missing_increase" in x for x in payload["fail_reasons"]
+    )
+
+
+def test_regression_min_live_trust_signal_delta_fail(tmp_path: Path) -> None:
+    base = _minimal_review(
+        {"live_trust_signal_avg": 0.9, "missing_span_count": 0}
+    )
+    cand = _minimal_review(
+        {"live_trust_signal_avg": 0.5, "missing_span_count": 0}
+    )
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--min-live-trust-signal-delta",
+            "0.0",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("live_trust_signal_delta" in x for x in payload["fail_reasons"])

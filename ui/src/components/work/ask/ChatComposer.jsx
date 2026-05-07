@@ -35,6 +35,7 @@ import { ChatContextPicker } from "./ChatContextPicker.jsx";
  *   streamingHint?: string,
  *   onClearChatClick?: () => void,
  *   clearChatDisabled?: boolean,
+ *   structuredAnswerPending?: boolean,
  * }} props
  */
 export function ChatComposer({
@@ -58,6 +59,7 @@ export function ChatComposer({
   streamingHint = "",
   onClearChatClick,
   clearChatDisabled = false,
+  structuredAnswerPending = false,
 }) {
   const tk = useTheme().appTokens;
 
@@ -74,11 +76,11 @@ export function ChatComposer({
       if (e.key !== "Enter" || e.shiftKey) return;
       if (e.nativeEvent.isComposing) return;
       e.preventDefault();
-      if (loading || !String(query || "").trim()) return;
+      if (loading || structuredAnswerPending || !String(query || "").trim()) return;
       const form = e.currentTarget.closest("form");
       if (form instanceof HTMLFormElement) form.requestSubmit();
     },
-    [loading, query],
+    [loading, query, structuredAnswerPending],
   );
 
   const composerShellSx = useMemo(
@@ -138,6 +140,9 @@ export function ChatComposer({
         {loading && streamingHint ? (
           <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, px: 0.5 }}>{streamingHint}</Typography>
         ) : null}
+        {structuredAnswerPending ? (
+          <Typography sx={{ fontSize: "0.72rem", color: tk.text.muted, px: 0.5 }}>{t("askPanel.userQuestion.composerBlocked")}</Typography>
+        ) : null}
         <TextField
           placeholder={t("chat.composer.placeholder")}
           value={query}
@@ -150,6 +155,7 @@ export function ChatComposer({
           size="small"
           variant="standard"
           InputProps={{ disableUnderline: true }}
+          disabled={structuredAnswerPending}
           sx={{ ...inputSx, px: 0.5 }}
         />
         <Box
@@ -215,7 +221,7 @@ export function ChatComposer({
             <IconButton
               type="submit"
               size="small"
-              disabled={loading || !String(query || "").trim()}
+              disabled={loading || structuredAnswerPending || !String(query || "").trim()}
               aria-label={loading ? t("chat.composer.sending") : t("chat.composer.sendAria")}
               title={loading ? t("chat.composer.sending") : t("chat.composer.sendAria")}
               sx={{

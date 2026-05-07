@@ -10,6 +10,7 @@ import { useFeedback } from "../../feedback/index.js";
 import ChatHistoryTurn from "./ChatHistoryTurn.jsx";
 import ChatPendingStreamBlock from "./ChatPendingStreamBlock.jsx";
 import ChatThreadMetadataDialog from "./ChatThreadMetadataDialog.jsx";
+import AskUserQuestionForm from "./AskUserQuestionForm.jsx";
 import { SCROLL_BOTTOM_THRESHOLD_PX, extractTurnMetadata } from "./chatThreadMetrics.js";
 
 /**
@@ -45,6 +46,8 @@ import { SCROLL_BOTTOM_THRESHOLD_PX, extractTurnMetadata } from "./chatThreadMet
  *   onDeleteTurn?: (turnId: string) => void | Promise<void>,
  *   restartDisabled?: boolean,
  *   deleteDisabled?: boolean,
+ *   openStructuredQuestion?: { request_id: string, questions: unknown[] } | null,
+ *   onStructuredAnswersSubmit?: (payload: { request_id: string, answers: unknown[] }) => void | Promise<void>,
  * }} props
  */
 export function ChatMessageThread({
@@ -73,6 +76,8 @@ export function ChatMessageThread({
   onDeleteTurn,
   restartDisabled = false,
   deleteDisabled = false,
+  openStructuredQuestion = null,
+  onStructuredAnswersSubmit,
 }) {
   const { confirm } = useFeedback();
   const tk = useTheme().appTokens;
@@ -132,6 +137,7 @@ export function ChatMessageThread({
     liveNormalized,
     streamEvents,
     streamForThisChat,
+    openStructuredQuestion,
   ]);
 
   const showJump = hasThreadContent && !stickToBottom;
@@ -244,6 +250,18 @@ export function ChatMessageThread({
           streamEvents={streamEvents}
           isLoading={isLoading}
         />
+      ) : null}
+
+      {openStructuredQuestion && !pendingUserQuery && !isLoading ? (
+        <Box sx={{ width: "100%", maxWidth: "min(920px, 100%)", mx: "auto", px: { xs: 0.5, sm: 0 } }}>
+          <AskUserQuestionForm
+            key={String(openStructuredQuestion.request_id || "")}
+            t={t}
+            envelope={openStructuredQuestion}
+            onSubmitAnswers={(p) => void onStructuredAnswersSubmit?.(p)}
+            disabled={isLoading}
+          />
+        </Box>
       ) : null}
 
       <ChatThreadMetadataDialog open={Boolean(metaEntry)} onClose={() => setMetaEntry(null)} tk={tk} t={t} meta={meta} />

@@ -97,4 +97,11 @@ export default {
   "askPanel.idea.noveltyHint": "Novelty hint:",
   "askPanel.idea.claims": "Claims:",
   "askPanel.idea.contradictionCandidates": "Contradiction candidates",
+  "askPanel.researchPlan.title": "Research plan",
+  "askPanel.researchPlan.empty": "No checklist items yet. The agent will populate this when it uses the research plan tool.",
+  "askPanel.researchPlan.updating": "Updating plan ({{count}} items)…",
+  "askPanel.userQuestion.title": "The agent needs your input",
+  "askPanel.userQuestion.submit": "Submit answers",
+  "askPanel.userQuestion.continuePlaceholder": "(structured answer — continue)",
+  "askPanel.userQuestion.composerBlocked": "Answer the structured questions above to continue. The text composer is paused until you submit.",
 };

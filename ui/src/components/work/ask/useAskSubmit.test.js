@@ -69,6 +69,31 @@ describe("useAskSubmit", () => {
     expect(norm.run_metadata?.compaction?.kinds).toContain("turn_digest");
   });
 
+  it("passes userStructuredAnswer to streamAgent", async () => {
+    const { useAskSubmit } = await import("./useAskSubmit.js");
+    const { result } = renderHook(() =>
+      useAskSubmit({
+        workspaceId: "ws-1",
+        onResult: vi.fn(),
+        useStreamingAgent: true,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.submit({
+        query: "(continue)",
+        threadId: "sess-1",
+        historyDigest: null,
+        userStructuredAnswer: { request_id: "r1", answers: [{ question_id: "q1", selected_option_ids: ["a"] }] },
+      });
+    });
+
+    expect(lastStreamPayload).toMatchObject({
+      question: "(continue)",
+      userStructuredAnswer: { request_id: "r1", answers: [{ question_id: "q1", selected_option_ids: ["a"] }] },
+    });
+  });
+
   it("exposes abort with submit hook", async () => {
     const { useAskSubmit } = await import("./useAskSubmit.js");
     const { result } = renderHook(() =>

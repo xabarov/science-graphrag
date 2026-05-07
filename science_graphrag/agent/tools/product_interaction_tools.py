@@ -23,11 +23,13 @@ def _research_plan_hint(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _user_question_hint(request_id: str, n_questions: int) -> dict[str, Any]:
+def _user_question_hint(request_id: str, n_questions: int, questions: list[dict[str, Any]]) -> dict[str, Any]:
+    """Include bounded ``questions`` so the Ask UI can render without an extra round-trip."""
     return {
         "type": "user_question_asked",
         "request_id": request_id,
         "question_count": int(n_questions),
+        "questions": list(questions[:8]),
     }
 
 
@@ -154,7 +156,7 @@ def build_product_interaction_tools(settings: Settings) -> list[BaseTool]:
                 "ok": True,
                 "request_id": request_id,
                 "questions": q_payload,
-                "sse_hint": _user_question_hint(request_id, len(q_payload)),
+                "sse_hint": _user_question_hint(request_id, len(q_payload), q_payload),
             }
 
         tools.append(ask_user_question)

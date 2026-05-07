@@ -23,6 +23,10 @@ from science_graphrag.agent.runtime import build_agent, current_otel_trace_id_he
 from science_graphrag.api.agent_v2_modules.deadline_otel import (
     record_agent_turn_deadline_exceeded,
 )
+from science_graphrag.api.agent_v2_modules.errors import (
+    classify_agent_stream_error,
+    is_retryable_provider_error_class,
+)
 from science_graphrag.api.agent_v2_modules.payloads import (
     AgentQueryRequestV2,
     AgentQueryResponseV2,
@@ -206,6 +210,43 @@ async def post_agent_query_v2(
             evidence_summary="agent recursion limit exceeded",
             warnings=["agent_graph_recursion_limit_exceeded"],
             product_markers=["agent_graph_recursion_limit_exceeded"],
+        )
+    except Exception as exc:  # noqa: BLE001
+        duration_ms = int((perf_counter() - started) * 1000)
+        error_class, short_msg = classify_agent_stream_error(exc)
+        markers = [error_class]
+        extra_warnings: list[str] = [error_class]
+        if is_retryable_provider_error_class(error_class):
+            markers.append("retryable_provider_flake")
+            extra_warnings.append("retryable_provider_flake")
+        meta_err = build_run_metadata_payload(
+            settings=settings,
+            max_tool_calls=max_tool_calls,
+            thread_id=thread_id,
+            extra={
+                "agent_sync_error": True,
+                "error_class": error_class,
+                "error_detail": str(exc)[:500],
+            },
+        )
+        logger.warning(
+            "agent v2 sync run failed error_class=%s type=%s",
+            error_class,
+            type(exc).__name__,
+            exc_info=error_class == "internal_error",
+        )
+        return AgentQueryResponseV2(
+            answer=short_msg,
+            citations=[],
+            tool_trace=[],
+            duration_ms=duration_ms,
+            phoenix_trace_id=current_otel_trace_id_hex(),
+            run_metadata=meta_err,
+            thread_id=thread_id,
+            answer_class="synthesis",
+            evidence_summary="agent run failed",
+            warnings=extra_warnings,
+            product_markers=markers,
         )
     duration_ms = int((perf_counter() - started) * 1000)
     excerpt: str | None = None

@@ -1,0 +1,24 @@
+# Stable API process for live_check / trace-review (no --reload).
+#
+# Uvicorn --reload restarts the worker when repo files change; long agent requests can then see
+# "Server disconnected without sending a response" while eval artifacts or the IDE touch the tree.
+#
+# Usage from repo root:
+#   COMPOSE_FILE=docker-compose.dev.yml:docker-compose.live-check.yml docker compose up -d api
+#
+# Then point AGENT_LIVE_BASE at the published host port (e.g. http://127.0.0.1:18787).
+
+services:
+  api:
+    environment:
+      # Bind-mounted repo is often non-writable inside the container; sidechain JSONL would spam logs.
+      SCIENCE_GRAPHRAG_AGENT_SIDECHAIN_TRANSCRIPTS_ENABLED: "0"
+    command:
+      - python
+      - -m
+      - uvicorn
+      - science_graphrag.api.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8787"

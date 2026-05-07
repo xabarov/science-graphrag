@@ -96,4 +96,13 @@ export default {
   "askPanel.idea.noveltyHint": "Подсказка по новизне:",
   "askPanel.idea.claims": "Утверждения:",
   "askPanel.idea.contradictionCandidates": "Кандидаты на противоречия",
+  "askPanel.researchPlan.title": "План исследования",
+  "askPanel.researchPlan.empty":
+    "Пока нет пунктов чеклиста. Они появятся, когда агент использует инструмент плана исследования.",
+  "askPanel.researchPlan.updating": "Обновление плана ({{count}} пунктов)…",
+  "askPanel.userQuestion.title": "Агенту нужен ваш выбор",
+  "askPanel.userQuestion.submit": "Отправить ответы",
+  "askPanel.userQuestion.continuePlaceholder": "(структурированный ответ — продолжить)",
+  "askPanel.userQuestion.composerBlocked":
+    "Ответьте на вопросы выше, чтобы продолжить. Текстовый ввод приостановлен до отправки формы.",
 };

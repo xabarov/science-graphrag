@@ -98,9 +98,26 @@ def test_verdict_fail_on_final_answer_missing(schema_module) -> None:
         e2e_ok=True,
         metrics=m,
         sse_missing_final_in_checks=False,
+        e2e_retryable_provider_flakes_only=False,
     )
     assert m.final_answer_missing_count == 1
     assert v.status == "fail"
+
+
+def test_metrics_skip_final_missing_when_e2e_http_failed_before_tools(schema_module) -> None:
+    row = schema_module.TimelineCase(case_id="x", tool_steps=(), e2e_http_ok=False)
+    m = schema_module.aggregate_metrics_from_timeline((row,))
+    assert m.final_answer_missing_count == 0
+
+
+def test_metrics_count_final_missing_when_http_ok_but_no_final(schema_module) -> None:
+    row = schema_module.TimelineCase(
+        case_id="x",
+        tool_steps=(schema_module.ToolStep(1, "find_works", True),),
+        e2e_http_ok=True,
+    )
+    m = schema_module.aggregate_metrics_from_timeline((row,))
+    assert m.final_answer_missing_count == 1
 
 
 def test_trace_review_round_trip_dict(schema_module) -> None:
@@ -215,7 +232,7 @@ def test_merge_e2e_counts_insight_circuit_open_fallback(schema_module) -> None:
 
 
 def test_subagent_lifecycle_missing_with_spawn_rows_and_task_notifications(schema_module) -> None:
-    """Routing legs + explicit spawns vs task-notification count (Epic B4 trace completeness)."""
+    """Routing legs do not require task notifications; only ``spawned`` rows do (v3 contract)."""
     case = {
         "case_id": "subagent_lc_spawn",
         "tool_trace": [{"tool": "final_answer", "ok": True}],
@@ -233,7 +250,56 @@ def test_subagent_lifecycle_missing_with_spawn_rows_and_task_notifications(schem
     assert len(tl) == 1
     assert tl[0].subagent_runs_count == 2
     assert tl[0].subagent_task_notification_count == 1
+    assert tl[0].subagent_lifecycle_missing_count == 0
+
+
+def test_subagent_lifecycle_missing_when_spawned_without_notifications(schema_module) -> None:
+    case = {
+        "case_id": "subagent_lc_spawn_missing",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "subagent_observability_lane": "fork_v3_enhanced",
+            "subagent_runs": [
+                {"subagent_id": "cv-1", "kind": "spawned"},
+                {"subagent_id": "cv-2", "kind": "spawned"},
+            ],
+            "subagent_task_notifications": [{"task_id": "t1"}],
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
     assert tl[0].subagent_lifecycle_missing_count == 1
+
+
+def test_verdict_warn_when_e2e_only_retryable_provider_flakes(schema_module) -> None:
+    row = schema_module.TimelineCase(
+        case_id="x", tool_steps=(schema_module.ToolStep(1, "final_answer", True),)
+    )
+    m = schema_module.aggregate_metrics_from_timeline((row,))
+    v = schema_module.verdict_from_signals(
+        checks_ok={"health": True, "agent_v2_sync_json": True, "agent_v2_sse": True},
+        required_checks=frozenset({"health", "agent_v2_sync_json", "agent_v2_sse"}),
+        e2e_ok=False,
+        metrics=m,
+        sse_missing_final_in_checks=False,
+        e2e_retryable_provider_flakes_only=True,
+    )
+    assert v.status == "warn"
+    assert "e2e_provider_flake_after_retry" in v.warn_reasons
+    assert "e2e_failed" not in v.fail_reasons
+
+
+def test_e2e_failures_are_retryable_provider_flakes_helper(schema_module) -> None:
+    report = {
+        "cases": [
+            {
+                "http_ok": False,
+                "final_answer_reached": False,
+                "answer_len": 0,
+                "retryable_provider_flake": True,
+            }
+        ]
+    }
+    assert schema_module.e2e_failures_are_retryable_provider_flakes(report) is True
 
 
 def test_merge_e2e_hook_chain_events_from_run_metadata(schema_module) -> None:
@@ -373,3 +439,58 @@ def test_reference_suite_tool_trace_span_alignment_contract(schema_module) -> No
         if row.phoenix_alignment and row.tool_steps:
             assert len(row.phoenix_alignment.missing) <= len(row.tool_steps)
     assert parsed.metrics.missing_span_count == total_missing
+
+
+def test_build_acceptance_summary_b1_gate_acceptance_lane(schema_module) -> None:
+    review = {
+        "metrics": {"subagent_lifecycle_missing_count": 1},
+        "trace_timeline": [],
+        "run_context": {"suite": "acceptance"},
+        "verdict": {"status": "warn"},
+        "e2e_audit": {},
+        "checks": [],
+    }
+    out = schema_module.build_acceptance_summary(review)
+    assert out["gates"]["§11.3_B1_subagent_lifecycle"].startswith("fail_")
+
+
+def test_build_acceptance_summary_live_proven_deduped(schema_module) -> None:
+    """live_proven must not repeat the same token when multiple sources match."""
+    review = {
+        "metrics": {"subagent_lifecycle_missing_count": 0},
+        "trace_timeline": [],
+        "run_context": {"suite": "default"},
+        "verdict": {"status": "pass"},
+        "e2e_audit": {"ok": True},
+        "checks": [
+            {"name": "agent_v2_fanout_probe", "ok": True},
+            {"name": "agent_v2_fanout_probe", "ok": True},
+        ],
+    }
+    out = schema_module.build_acceptance_summary(review)
+    assert out["live_proven"].count("b4_fanout_multi_tool_http_check_ok") == 1
+
+
+def test_build_acceptance_summary_http_b4_checks(schema_module) -> None:
+    review = {
+        "metrics": {
+            "subagent_lifecycle_missing_count": 0,
+            "claim_verification_verdict_parse_rate": 0.96,
+            "budget_cutoff_count": 1,
+            "mcp_audit_deny_total": 1,
+        },
+        "trace_timeline": [{"warnings": ["agent_turn_deadline_exceeded"]}],
+        "run_context": {"suite": "acceptance"},
+        "verdict": {"status": "pass"},
+        "e2e_audit": {"ok": True},
+        "checks": [
+            {"name": "agent_v2_fanout_probe", "ok": True},
+            {"name": "agent_v2_malicious_deny", "ok": True},
+        ],
+    }
+    out = schema_module.build_acceptance_summary(review)
+    assert "b4_fanout_multi_tool_http_check_ok" in out["live_proven"]
+    assert "b4_malicious_deny_http_check_ok" in out["live_proven"]
+    assert "b4_timeout_or_deadline_warning_in_e2e_timeline" in out["live_proven"]
+    assert "mcp_audit_deny_observed_in_timeline" in out["live_proven"]
+    assert "budget_cutoff_count_gt_0_in_timeline_aggregate" in out["live_proven"]

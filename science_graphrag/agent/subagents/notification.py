@@ -149,6 +149,38 @@ def task_notification_human_message(
     )
 
 
+def sse_payload_corpus_explore_from_human_message(msg: HumanMessage) -> dict[str, Any] | None:
+    """SSE dict from corpus_explore HumanMessage marker."""
+    if not isinstance(msg, HumanMessage):
+        return None
+    ak = getattr(msg, "additional_kwargs", None) or {}
+    if not isinstance(ak, dict):
+        return None
+    if str(ak.get("kind") or "") != "corpus_explore_result":
+        return None
+    inner = ak.get("corpus_explore_result")
+    if not isinstance(inner, dict):
+        return None
+    merged = {k: v for k, v in inner.items() if k != "type"}
+    return {**merged, "type": "corpus_explore_result"}
+
+
+def sse_payload_research_plan_from_human_message(msg: HumanMessage) -> dict[str, Any] | None:
+    """SSE dict from research_plan HumanMessage marker."""
+    if not isinstance(msg, HumanMessage):
+        return None
+    ak = getattr(msg, "additional_kwargs", None) or {}
+    if not isinstance(ak, dict):
+        return None
+    if str(ak.get("kind") or "") != "research_plan_result":
+        return None
+    inner = ak.get("research_plan_result")
+    if not isinstance(inner, dict):
+        return None
+    merged = {k: v for k, v in inner.items() if k != "type"}
+    return {**merged, "type": "research_plan_result"}
+
+
 def sse_payload_claim_verification_from_human_message(msg: HumanMessage) -> dict[str, Any] | None:
     """SSE ``claim_verification_result`` dict from a HumanMessage (mirrors task_notification pattern)."""
     if not isinstance(msg, HumanMessage):
@@ -217,6 +249,8 @@ __all__ = [
     "new_task_id",
     "parse_task_notification_xml",
     "sse_payload_claim_verification_from_human_message",
+    "sse_payload_corpus_explore_from_human_message",
     "sse_payload_from_human_message",
+    "sse_payload_research_plan_from_human_message",
     "task_notification_human_message",
 ]

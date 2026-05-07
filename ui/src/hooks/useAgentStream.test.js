@@ -72,6 +72,41 @@ describe("useAgentStream", () => {
     expect(result.current.isStreaming).toBe(false);
   });
 
+  it("POST JSON includes user_structured_answer when provided", async () => {
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      headers: { get: () => "application/json" },
+      text: async () =>
+        JSON.stringify({
+          type: "final_answer",
+          answer: "x",
+          citations: [],
+          tool_trace: [],
+          run_metadata: {},
+        }),
+    });
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError: vi.fn(),
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.stream({
+        question: "q",
+        userStructuredAnswer: { request_id: "r1", answers: [{ question_id: "q1", selected_option_ids: ["a"] }] },
+      });
+    });
+    expect(globalThis.fetch).toHaveBeenCalled();
+    const init = globalThis.fetch.mock.calls[0][1];
+    const body = JSON.parse(String(init.body));
+    expect(body.user_structured_answer).toEqual({
+      request_id: "r1",
+      answers: [{ question_id: "q1", selected_option_ids: ["a"] }],
+    });
+  });
+
   it("calls onError when SSE ends without final_answer", async () => {
     const enc = new TextEncoder();
     const sse = 'data: {"type":"intent_classified","answer_class":"inventory","source":"heuristic"}\n\n';

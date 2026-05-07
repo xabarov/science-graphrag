@@ -1,0 +1,251 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-07T09:58:47.489116+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18788",
+    "workspace_id": null,
+    "suite": "default",
+    "profile": "default",
+    "run_kind": null,
+    "graph_id": null,
+    "feature_flags": {
+      "agent_runtime": null,
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "false"
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "memory",
+          "agent_session_memory_configured": "memory"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 2855,
+        "warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "tools": [
+          "coordinator_gate",
+          "route_to_specialist"
+        ],
+        "answer_class": "grounded_explanation"
+      }
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": false,
+      "detail": "turn2_failed: empty_or_missing_answer",
+      "data": {
+        "turn1_answer_len": 12
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "product_step",
+          "specialist_selected",
+          "subagent_started",
+          "product_step",
+          "tool_call",
+          "subagent_progress",
+          "subagent_progress_label",
+          "tool_result",
+          "tool_search_result",
+          "subagent_finished",
+          "product_step",
+          "answer_synthesis_started",
+          "context_compacted",
+          "product_step",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 17
+      }
+    }
+  ],
+  "trace_timeline": [
+    {
+      "case_id": "catalog_resolution",
+      "thread_id": null,
+      "run_kind": null,
+      "graph_id": null,
+      "duration_ms": null,
+      "tool_steps": [],
+      "phoenix_alignment": null,
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 0
+    },
+    {
+      "case_id": "workspace_stats",
+      "thread_id": null,
+      "run_kind": null,
+      "graph_id": null,
+      "duration_ms": null,
+      "tool_steps": [],
+      "phoenix_alignment": null,
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 0
+    },
+    {
+      "case_id": "grounded_quote",
+      "thread_id": null,
+      "run_kind": null,
+      "graph_id": null,
+      "duration_ms": null,
+      "tool_steps": [],
+      "phoenix_alignment": null,
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 0
+    }
+  ],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 3,
+    "latency_p95_ms": null,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0,
+    "side_llm_cache_read_ratio_avg": null,
+    "latency_p50_ms": null,
+    "insight_recall_at_k": null,
+    "stale_summary_error_rate": 0.0,
+    "insight_stale_reason_rate": 0.0,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "ptl_retry_count_per_compaction_avg": null,
+    "compaction_circuit_breaker_trips": 0,
+    "unnecessary_tool_calls_avg": 0.0,
+    "hook_chain_event_count": 0,
+    "subagent_lifecycle_missing_count": 0,
+    "subagent_task_notification_count_avg": 0.0,
+    "tool_search_miss_due_to_no_discovery_total": 0,
+    "tool_schema_bytes_saved_total": 0,
+    "tool_loop_repeat_max": 0
+  },
+  "verdict": {
+    "status": "fail",
+    "fail_reasons": [
+      "e2e_failed",
+      "final_answer_missing_count:3"
+    ],
+    "warn_reasons": []
+  },
+  "e2e_audit": {
+    "ok": false,
+    "returncode": 1,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "default",
+      "--timeout",
+      "240.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_643ttb8i.json",
+      "--skip-phoenix",
+      "--skip-postgres"
+    ],
+    "stdout_tail": "{\n  \"suite\": \"default\",\n  \"workspace\": {\n    \"id\": \"2678c5f1-1b31-4aac-92c9-6bd0f4472b23\",\n    \"name\": \"Object Detection (clean ingested + claims)\",\n    \"work_count\": 32\n  },\n  \"llm\": {\n    \"chat_model\": \"qwen/qwen3-235b-a22b-2507\"\n  },\n  \"postgres_ingest_jobs\": {\n    \"ingest_jobs_total\": 3,\n    \"ingest_jobs_completed\": 1,\n    \"error\": null\n  },\n  \"cases\": [\n    {\n      \"case_id\": \"catalog_resolution\",\n      \"question\": \"In this workspace, find works whose titles mention 'Faster R-CNN' or 'Mask R-CNN' (use find_works with the workspace_id if titles are unknown). Pick one clear match and report year and venue using paper_profile. End with final_answer and citations.\",\n      \"http_ok\": false,\n      \"answer_len\": 0,\n      \"final_answer_reached\": false,\n      \"tool_names\": [],\n      \"tool_steps_non_session\": 0,\n      \"phoenix_trace_id\": null,\n      \"phoenix\": null,\n      \"notes\": [],\n      \"error\": \"Server disconnected without sending a response.\"\n    },\n    {\n      \"case_id\": \"workspace_stats\",\n      \"question\": \"How many works are in this workspace? Use workspace_inspect with mode=stats (and other tools only if needed). Summarize any claim-related or citation-related counts the tools return—do not invent numbers. Finish with final_answer.\",\n      \"http_ok\": false,\n      \"answer_len\": 0,\n      \"final_answer_reached\": false,\n      \"tool_names\": [],\n      \"tool_steps_non_session\": 0,\n      \"phoenix_trace_id\": null,\n      \"phoenix\": null,\n      \"notes\": [],\n      \"error\": \"[Errno 111] Connection refused\"\n    },\n    {\n      \"case_id\": \"grounded_quote\",\n      \"question\": \"Search this workspace for evidence about 'anchor-free' or 'anchor free' object detection (paper_quote_search and/or idea_search). Quote one short snippet with work_id in citations. Use final_answer when done.\",\n      \"http_ok\": false,\n      \"answer_len\": 0,\n      \"final_answer_reached\": false,\n      \"tool_names\": [],\n      \"tool_steps_non_session\": 0,\n      \"phoenix_trace_id\": null,\n      \"phoenix\": null,\n      \"notes\": [],\n      \"error\": \"[Errno 111] Connection refused\"\n    }\n  ]\n}\n",
+    "stderr_tail": "note: PHOENIX_TRACE_SCOPE=extraction_llm (agent.* spans still allowed); if Phoenix is empty, check PHOENIX_COLLECTOR_ENDPOINT on the API container.\nwrote full report json: /tmp/e2e_full_report_643ttb8i.json\n\n--- summary ---\ncatalog_resolution: steps=0 final_answer=False answer_len=0 phoenix_ok=None ok=False\nworkspace_stats: steps=0 final_answer=False answer_len=0 phoenix_ok=None ok=False\ngrounded_quote: steps=0 final_answer=False answer_len=0 phoenix_ok=None ok=False\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_643ttb8i.json"
+  },
+  "phoenix_snapshot_path": null
+}

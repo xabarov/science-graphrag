@@ -14,7 +14,7 @@ from science_graphrag.agent.context.user_structured_answer import (
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.runtime import extract_last_brief_from_messages
 from science_graphrag.agent.tools.mcp_surface import _server_denied
-from science_graphrag.agent.tools.product_interaction_tools import build_product_interaction_tools
+from science_graphrag.agent.tools.product_interaction_tools import AskUserQuestionArgs, build_product_interaction_tools
 from science_graphrag.agent.tools.runtime_monitor_surface import (
     clear_runtime_monitor_snapshots_for_tests,
     register_runtime_monitor_snapshot,
@@ -26,9 +26,6 @@ from science_graphrag.agent.tools.lsp_surface import (
     _decode_lsp_messages_from_text,
     _encode_lsp_message,
 )
-from science_graphrag.agent.tools.product_interaction_tools import AskUserQuestionArgs
-
-
 @pytest.fixture(autouse=True)
 def _clear_sessions():
     clear_session_store_for_tests()
@@ -206,3 +203,67 @@ def test_lsp_message_framing_roundtrip() -> None:
     raw = _encode_lsp_message({"jsonrpc": "2.0", "id": "1", "result": {"ok": True}})
     msgs = _decode_lsp_messages_from_text(raw)
     assert msgs == [{"jsonrpc": "2.0", "id": "1", "result": {"ok": True}}]
+
+
+def test_ask_user_question_sse_hint_lists_questions(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "science_graphrag.agent.tools.product_interaction_tools.get_agent_graph_thread_id",
+        lambda: "thr-ask-sse",
+    )
+    tools = build_product_interaction_tools(Settings(agent_ask_user_question_tool_enabled=True))
+    ask = next(t for t in tools if getattr(t, "name", "") == "ask_user_question")
+    out = ask.invoke(
+        {
+            "questions": [
+                {
+                    "id": "q1",
+                    "prompt": "Pick one",
+                    "options": [{"id": "a", "label": "A"}, {"id": "b", "label": "B"}],
+                }
+            ]
+        }
+    )
+    body = out if isinstance(out, dict) else json.loads(out)
+    hint = body.get("sse_hint") or {}
+    assert hint.get("type") == "user_question_asked"
+    assert isinstance(hint.get("questions"), list)
+    assert len(hint["questions"]) == 1
+    assert hint["questions"][0].get("id") == "q1"
+
+
+def test_mcp_call_tool_json_rpc_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    from science_graphrag.agent.tools.mcp_surface import build_mcp_surface_tools
+
+    class _FakeResp:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {"jsonrpc": "2.0", "id": "1", "result": {"items": []}}
+
+    class _FakeClient:
+        def __init__(self, *a, **k) -> None:  # noqa: ANN002, ANN003
+            return None
+
+        def __enter__(self) -> "_FakeClient":
+            return self
+
+        def __exit__(self, *a) -> None:  # noqa: ANN002
+            return None
+
+        def post(self, url, json=None):  # noqa: ANN001
+            return _FakeResp()
+
+    monkeypatch.setattr("science_graphrag.agent.tools.mcp_surface.httpx.Client", _FakeClient)
+    st = Settings(
+        agent_mcp_tools_enabled=True,
+        agent_mcp_http_base_url="http://fake-mcp/rpc",
+    )
+    tools = build_mcp_surface_tools(st)
+    call = next(t for t in tools if getattr(t, "name", "") == "call_mcp_tool")
+    raw = call.invoke({"server": "doc", "tool": "ping", "arguments": {}})
+    body = raw if isinstance(raw, dict) else json.loads(raw)
+    assert body.get("ok") is True
+    hint = body.get("sse_hint") or {}
+    assert hint.get("type") == "mcp_audit"
+    assert hint.get("phase") == "call"

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
+import uuid
 from typing import Any
 
-from langchain_core.messages import HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
+from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
 from science_graphrag.agent.graph.react_edges import (
     final_answer_nudge_state_update,
     react_after_tools_decrement_budget,
@@ -194,6 +196,74 @@ def _compile_writer_subgraph(
     return subgraph.compile()
 
 
+def _ensure_final_answer_tool(tools: list[BaseTool], all_tools: list[BaseTool]) -> list[BaseTool]:
+    """Guarantee writer subgraph always has ``final_answer`` terminal tool bound."""
+    if any(str(getattr(t, "name", "") or "") == "final_answer" for t in tools):
+        return tools
+    for t in all_tools:
+        if str(getattr(t, "name", "") or "") == "final_answer":
+            return [*tools, t]
+    return tools
+
+
+def _normalize_synthetic_final_answer_text(text: str) -> str:
+    """Strip literalized tool-name prefixes from bare writer output."""
+
+    out = str(text or "").strip()
+    lowered = out.lower()
+    for prefix in ("final_answer:", "final answer:"):
+        if lowered.startswith(prefix):
+            return out[len(prefix) :].lstrip()
+    return out
+
+
+def _ensure_terminal_final_answer_tool_call(
+    messages: list[Any],
+    *,
+    citations: list[dict[str, Any]] | None = None,
+) -> list[Any]:
+    """Close the writer leg with a synthetic ``final_answer`` when only bare text remains."""
+
+    if has_completed_final_answer_tool(messages):
+        return messages
+    visible_text = ""
+    for msg in reversed(messages):
+        if not isinstance(msg, AIMessage):
+            continue
+        if getattr(msg, "tool_calls", None):
+            continue
+        candidate = _normalize_synthetic_final_answer_text(str(msg.content or ""))
+        if candidate.strip():
+            visible_text = candidate.strip()
+            break
+    if not visible_text:
+        return messages
+    call_id = f"writer_final_answer_fallback_{uuid.uuid4().hex[:12]}"
+    payload = {
+        "answer": visible_text,
+        "citations": [c for c in list(citations or []) if isinstance(c, dict)],
+    }
+    return [
+        *messages,
+        AIMessage(
+            content="",
+            tool_calls=[
+                {
+                    "name": "final_answer",
+                    "id": call_id,
+                    "args": payload,
+                    "type": "tool_call",
+                }
+            ],
+        ),
+        ToolMessage(
+            content=json.dumps(payload, ensure_ascii=False),
+            tool_call_id=call_id,
+            name="final_answer",
+        ),
+    ]
+
+
 def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
     """Build writer specialist callable for supervisor graph."""
     subgraph_cache: dict[tuple[tuple[str, ...], str], Any] = {}
@@ -231,9 +301,18 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
             lc_messages=list(state.get("messages") or []),
         )
         tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
+        tools = _ensure_final_answer_tool(tools, all_tools)
         compiled = _cached_subgraph(tools, mode)
         next_state = compiled.invoke(state)
         messages = list(next_state.get("messages") or [])
+        messages = _ensure_terminal_final_answer_tool_call(
+            messages,
+            citations=[
+                c
+                for c in list(next_state.get("citations") or state.get("citations") or [])
+                if isinstance(c, dict)
+            ],
+        )
         combo: AgentState = dict(state)
         nsr = next_state.get("specialist_results")
         if isinstance(nsr, dict):

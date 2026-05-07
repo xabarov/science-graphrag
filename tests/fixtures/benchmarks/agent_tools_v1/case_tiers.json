@@ -91,5 +91,8 @@
   ],
   "agent_tools_adversarial_cypher": [
     "adversarial_cypher_01_drop_method_nodes"
+  ],
+  "agent_tools_lsp": [
+    "lsp_nav_symbol_stub"
   ]
 }

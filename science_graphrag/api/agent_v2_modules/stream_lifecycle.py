@@ -47,7 +47,9 @@ from science_graphrag.agent.runtime import (
 from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
 from science_graphrag.agent.subagents.notification import (
     sse_payload_claim_verification_from_human_message,
+    sse_payload_corpus_explore_from_human_message,
     sse_payload_from_human_message,
+    sse_payload_research_plan_from_human_message,
 )
 from science_graphrag.agent.subagents.runtime import (
     RoutingSubagentLegLedger,
@@ -191,7 +193,7 @@ def _deadline_error_payload(exc: AgentGraphDeadlineExceeded) -> dict[str, Any]:
     return {
         "detail": str(exc),
         "code": "agent_turn_deadline_exceeded",
-        "error_class": "provider_timeout",
+        "error_class": "agent_turn_deadline_exceeded",
         "message": (
             "The assistant hit the per-turn time limit before " "producing a final answer."
         ),
@@ -421,6 +423,8 @@ async def stream_agent_events(
     active_subagent_id: str | None = None
     seen_task_notification_markers: set[int] = set()
     seen_claim_verification_markers: set[int] = set()
+    seen_corpus_explore_markers: set[int] = set()
+    seen_research_plan_markers: set[int] = set()
     last_progress_label_emit_fp: str | None = None
     last_progress_label_mono = 0.0
     note_counter: dict[str, int] = {"emitted": 0}
@@ -717,6 +721,18 @@ async def stream_agent_events(
                                                 continue
                                             seen_claim_verification_markers.add(mid2)
                                             yield {"data": json.dumps(sse_cv)}
+                                        sse_ce = sse_payload_corpus_explore_from_human_message(msg2)
+                                        if sse_ce:
+                                            if mid2 in seen_corpus_explore_markers:
+                                                continue
+                                            seen_corpus_explore_markers.add(mid2)
+                                            yield {"data": json.dumps(sse_ce)}
+                                        sse_rp = sse_payload_research_plan_from_human_message(msg2)
+                                        if sse_rp:
+                                            if mid2 in seen_research_plan_markers:
+                                                continue
+                                            seen_research_plan_markers.add(mid2)
+                                            yield {"data": json.dumps(sse_rp)}
                             dev = list(payload.get("debug_events") or [])
                             if len(dev) > prev_debug_len:
                                 for ev in dev[prev_debug_len:]:
@@ -1222,6 +1238,44 @@ async def stream_agent_events(
                         _cv_collect.append(_inner_cv)
             if _cv_collect:
                 run_meta["claim_verification_results"] = _cv_collect
+            _ce_collect: list[dict[str, Any]] = []
+            if isinstance(latest_full_state, dict):
+                for _hm in latest_full_state.get("messages") or []:
+                    if not isinstance(_hm, HumanMessage):
+                        continue
+                    _ak = getattr(_hm, "additional_kwargs", None) or {}
+                    if not isinstance(_ak, dict):
+                        continue
+                    if _ak.get("kind") != "corpus_explore_result":
+                        continue
+                    _inner_ce = _ak.get("corpus_explore_result")
+                    if isinstance(_inner_ce, dict):
+                        _ce_collect.append(_inner_ce)
+            if _ce_collect:
+                run_meta["corpus_explore_results"] = _ce_collect
+            _rp_collect: list[dict[str, Any]] = []
+            if isinstance(latest_full_state, dict):
+                for _hm in latest_full_state.get("messages") or []:
+                    if not isinstance(_hm, HumanMessage):
+                        continue
+                    _ak = getattr(_hm, "additional_kwargs", None) or {}
+                    if not isinstance(_ak, dict):
+                        continue
+                    if _ak.get("kind") != "research_plan_result":
+                        continue
+                    _inner_rp = _ak.get("research_plan_result")
+                    if isinstance(_inner_rp, dict):
+                        _rp_collect.append(_inner_rp)
+            if _rp_collect:
+                run_meta["research_plan_results"] = _rp_collect
+            if thread_id and bool(getattr(settings, "agent_research_plan_tool_enabled", False)):
+                from science_graphrag.agent.context.research_plan_session import (
+                    get_research_plan_snapshot_for_thread,
+                )
+
+                _rp_live = get_research_plan_snapshot_for_thread(str(thread_id).strip())
+                if isinstance(_rp_live, dict):
+                    run_meta["research_plan"] = _rp_live
             _sr3 = (
                 latest_full_state.get("specialist_results_v3")
                 if isinstance(latest_full_state, dict)

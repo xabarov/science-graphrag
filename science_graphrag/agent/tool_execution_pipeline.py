@@ -25,10 +25,15 @@ from science_graphrag.agent.context.session_backend import get_session_memory_ba
 from science_graphrag.agent.debug_streamable_types import TOOL_SSE_HINT_STREAMABLE_TYPES
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.runtime_context import agent_graph_thread_id_scope
+from science_graphrag.agent.sidechain_paths import (
+    sidechain_transcripts_enabled,
+    sidechain_transcripts_root,
+)
 from science_graphrag.agent.tool_call_normalization import (
     normalize_tool_call_name,
     state_with_normalized_last_ai_tool_calls,
 )
+from science_graphrag.agent.tool_use_summary import apply_tool_use_summary_to_tool_json_content
 from science_graphrag.config import Settings
 
 logger = logging.getLogger(__name__)
@@ -69,7 +74,7 @@ _SIDECHAIN_LOCK = threading.Lock()
 
 
 def _sidechain_jsonl_path(settings: Settings, sidechain_id: str) -> Path:
-    root = Path(settings.agent_sidechain_transcripts_dir or ".agent_sidechains").expanduser()
+    root = sidechain_transcripts_root(settings)
     return root / f"{sidechain_id}.jsonl"
 
 
@@ -326,7 +331,7 @@ def build_tool_execution_node(
         )
 
         sidechain_path: Path | None = None
-        if settings.agent_sidechain_transcripts_enabled and sidechain_id:
+        if sidechain_transcripts_enabled(settings) and sidechain_id:
             sidechain_path = _sidechain_jsonl_path(settings, sidechain_id)
             _append_jsonl(
                 sidechain_path,
@@ -371,9 +376,19 @@ def build_tool_execution_node(
             out_msgs2 = list(inner_out.get("messages") or [])
         elif isinstance(inner_out, list):
             out_msgs2 = list(inner_out)
+        summary_rows: list[dict[str, Any]] = []
         for m in out_msgs2:
             if not isinstance(m, ToolMessage):
                 continue
+            nm = normalize_tool_call_name(str(getattr(m, "name", "") or ""))
+            raw = getattr(m, "content", None)
+            if isinstance(raw, str):
+                new_raw, meta = apply_tool_use_summary_to_tool_json_content(
+                    settings=settings, tool_name=nm, content=raw
+                )
+                if meta is not None:
+                    m.content = new_raw
+                    summary_rows.append(meta)
             try:
                 body = json.loads(str(m.content or ""))
             except (TypeError, ValueError, json.JSONDecodeError):
@@ -386,6 +401,15 @@ def build_tool_execution_node(
                 and str(hint.get("type") or "") in TOOL_SSE_HINT_STREAMABLE_TYPES
             ):
                 extra_sse.append({k: v for k, v in hint.items() if v is not None})
+        if summary_rows:
+            events.append(
+                {
+                    "type": "tool_use_summary_batch",
+                    "ok": True,
+                    "count": len(summary_rows),
+                    "rows": summary_rows[:32],
+                }
+            )
         events.extend(extra_sse)
 
         if isinstance(inner_out, dict) and isinstance(inner_out.get("messages"), list):

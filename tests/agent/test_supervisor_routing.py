@@ -188,6 +188,64 @@ def test_supervisor_invalid_router_token_routes_to_writer_not_retrieval(monkeypa
     assert routes[0].get("to") == "writer_agent"
 
 
+def test_supervisor_finish_token_remaps_to_writer_for_final_answer_contract(monkeypatch) -> None:
+    """Explicit FINISH must still pass through writer to emit terminal ``final_answer``."""
+
+    class _FinishRouter:
+        def invoke(self, _messages):
+            return AIMessage(content="FINISH")
+
+    class _FakeSpecialist:
+        def bind_tools(self, _tools):
+            return self
+
+        def invoke(self, _messages):
+            return AIMessage(content="done", tool_calls=[])
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.supervisor.build_chat_model",
+        lambda settings: _FinishRouter(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.graph_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.graph.nodes.writer_agent.build_chat_model",
+        lambda settings: _FakeSpecialist(),
+    )
+
+    from science_graphrag.agent.graph.state import build_initial_agent_state
+    from science_graphrag.agent.graph.supervisor import build_supervisor_graph
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+
+    settings = MagicMock()
+    settings.agent_max_tool_calls = 8
+    settings.agent_runtime = "langgraph_supervisor_v3"
+    settings.agent_supervisor_recursion_limit = 12
+    settings.agent_semantic_query_fast_route = False
+
+    graph = build_supervisor_graph(stores, settings)
+    state = build_initial_agent_state(
+        question="How many works are in this workspace?",
+        workspace_id="ws-1",
+        max_tool_calls=8,
+        agent_runtime="langgraph_supervisor_v3",
+    )
+    out = graph.invoke(state)
+    routes = list(out.get("routing_log") or [])
+    assert routes
+    assert routes[0].get("to") == "writer_agent"
+
+
 def test_supervisor_coordinator_gate_skips_llm_for_greeting(monkeypatch) -> None:
     """First-turn no_tools policy must not invoke supervisor routing LLM."""
 

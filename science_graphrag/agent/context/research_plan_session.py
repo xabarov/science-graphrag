@@ -51,6 +51,24 @@ def merge_research_plan_items(thread_id: str, items: list[dict[str, Any]]) -> di
     return plan
 
 
+def get_research_plan_snapshot_for_thread(thread_id: str | None) -> dict[str, Any] | None:
+    """Return persisted research plan dict when it has at least one item (for run_metadata / UI)."""
+    tid = (thread_id or "").strip()
+    if not tid:
+        return None
+    ent = get_session_for_thread(tid)
+    meta = ent.get("session_meta") or {}
+    if not isinstance(meta, dict):
+        return None
+    plan = meta.get("research_plan")
+    if not isinstance(plan, dict):
+        return None
+    items = plan.get("items")
+    if not isinstance(items, list) or not items:
+        return None
+    return dict(plan)
+
+
 def research_plan_prompt_block(thread_id: str | None) -> str | None:
     """Return XML block for prompt reinjection (re-attach after compaction)."""
     tid = (thread_id or "").strip()

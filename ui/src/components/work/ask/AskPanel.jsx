@@ -5,6 +5,7 @@ import { useFeedback } from "../../feedback/index.js";
 import { ChatComposer } from "./ChatComposer.jsx";
 import { ChatMessageThread } from "./ChatMessageThread.jsx";
 import { ChatSessionSidebar } from "./ChatSessionSidebar.jsx";
+import AskResearchPlanPanel from "./AskResearchPlanPanel.jsx";
 import { AskPanelChrome } from "./AskPanelChrome.jsx";
 import { useAskPanelOrchestration } from "./useAskPanelOrchestration.js";
 import { useChatDetailLevel } from "./useChatDetailLevel.js";
@@ -91,52 +92,70 @@ export default function AskPanel({
             detailLevel={detailLevel}
             onToggleDetailLevel={toggleDetailLevel}
           />
-          <ChatMessageThread
-            t={o.t}
-            chatDetailLevel={detailLevel}
-            scopeKey={o.scopeKey}
-            activeSessionId={o.activeSessionId}
-            streamingTarget={o.streamingTarget}
-            history={o.history}
-            pendingUserQuery={o.pendingUserQuery}
-            isLoading={o.isLoading}
-            streamEvents={o.streamEvents}
-            liveNormalized={o.normalized}
-            locked={o.locked}
-            inWorkspace={o.inWorkspace}
-            workId={o.workId}
-            workspaceWorkId={workspaceWorkId}
-            workspaceId={workspaceId}
-            agentToolTrace={o.agentToolTrace}
-            retrievalJsonOpen={o.retrievalJsonOpen}
-            onToggleRetrievalJson={() => o.setRetrievalJsonOpen((v) => !v)}
-            starterPromptKeys={o.starterPromptKeys}
-            onStarterPrompt={o.setQuery}
-            onCopyUserText={o.onCopyUserText}
-            onRestartFromTurn={o.onRestartFromTurn}
-            onCopyAssistantEntry={o.onCopyAssistantEntry}
-            restartDisabled={o.isLoading}
-          />
-          <ChatComposer
-            t={o.t}
-            query={o.query}
-            onQueryChange={o.setQuery}
-            loading={o.isLoading}
-            onSubmit={o.onSubmit}
-            inWorkspace={o.inWorkspace}
-            standaloneChatPath={o.standaloneChatPath}
-            locked={o.locked}
-            scopedWorkId={scopedWorkId}
-            workspaceId={workspaceId}
-            workId={o.workId}
-            onWorkIdChange={o.handleWorkIdChange}
-            onArticlePicked={o.onArticlePicked}
-            onWorkSearch={o.searchWorks}
-            resolvedWork={o.workDetailsForChip}
-            corpusWorkspaceOnly={o.corpusWorkspaceOnly}
-            standaloneMode={o.standaloneMode}
-            streamingHint={o.streamingHint}
-          />
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: { xs: 1, md: 1.25 },
+              alignItems: "stretch",
+            }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", gap: 0.5 }}>
+              <ChatMessageThread
+                t={o.t}
+                chatDetailLevel={detailLevel}
+                scopeKey={o.scopeKey}
+                activeSessionId={o.activeSessionId}
+                streamingTarget={o.streamingTarget}
+                history={o.history}
+                pendingUserQuery={o.pendingUserQuery}
+                isLoading={o.isLoading}
+                streamEvents={o.streamEvents}
+                liveNormalized={o.normalized}
+                locked={o.locked}
+                inWorkspace={o.inWorkspace}
+                workId={o.workId}
+                workspaceWorkId={workspaceWorkId}
+                workspaceId={workspaceId}
+                agentToolTrace={o.agentToolTrace}
+                retrievalJsonOpen={o.retrievalJsonOpen}
+                onToggleRetrievalJson={() => o.setRetrievalJsonOpen((v) => !v)}
+                starterPromptKeys={o.starterPromptKeys}
+                onStarterPrompt={o.setQuery}
+                onCopyUserText={o.onCopyUserText}
+                onRestartFromTurn={o.onRestartFromTurn}
+                onCopyAssistantEntry={o.onCopyAssistantEntry}
+                restartDisabled={o.isLoading}
+                openStructuredQuestion={o.openStructuredQuestion}
+                onStructuredAnswersSubmit={o.onStructuredAnswersSubmit}
+              />
+              <ChatComposer
+                t={o.t}
+                query={o.query}
+                onQueryChange={o.setQuery}
+                loading={o.isLoading}
+                onSubmit={o.onSubmit}
+                inWorkspace={o.inWorkspace}
+                standaloneChatPath={o.standaloneChatPath}
+                locked={o.locked}
+                scopedWorkId={scopedWorkId}
+                workspaceId={workspaceId}
+                workId={o.workId}
+                onWorkIdChange={o.handleWorkIdChange}
+                onArticlePicked={o.onArticlePicked}
+                onWorkSearch={o.searchWorks}
+                resolvedWork={o.workDetailsForChip}
+                corpusWorkspaceOnly={o.corpusWorkspaceOnly}
+                standaloneMode={o.standaloneMode}
+                streamingHint={o.streamingHint}
+                structuredAnswerPending={Boolean(o.openStructuredQuestion)}
+              />
+            </Box>
+            <AskResearchPlanPanel t={o.t} plan={o.researchPlanForPanel} streamHint={o.researchPlanStreamHint} />
+          </Box>
         </Box>
       </Box>
     </Box>

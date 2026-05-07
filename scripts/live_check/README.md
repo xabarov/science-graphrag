@@ -32,6 +32,25 @@ Use **`--skip-phoenix`** when validating only HTTP `tool_trace` / answer shape (
 | `AGENT_LIVE_TIMEOUT_SEC` | HTTP read timeout (default `240`) |
 | `AGENT_E2E_PHOENIX_SPAN_CAP` | Max Phoenix span names stored per case when using `--trace-audit` (default `400`) |
 
+## Stable API for long live gates (supervisor v3 / E2E)
+
+`docker-compose.dev.yml` runs the API with **`uvicorn --reload`** and bind-mounts the repo into `/app`. File writes under the repo (eval outputs, IDE saves) can restart the worker mid-request; clients then see **`Server disconnected without sending a response`** and the next call may get **`Connection refused`** until the process is listening again.
+
+For **`agent_trace_review --profile default`**, **`agent_od_workspace_e2e_audit`**, or any multi-minute probe, start API **without reload**:
+
+```bash
+COMPOSE_FILE=docker-compose.dev.yml:docker-compose.live-check.yml docker compose up -d api
+```
+
+The compose override also sets **`SCIENCE_GRAPHRAG_AGENT_SIDECHAIN_TRANSCRIPTS_ENABLED=0`** so the API does not try to append JSONL under a bind-mounted repo (often read-only in containers), which otherwise floods logs with **`Permission denied`** on `.agent_sidechains`. For local dev you can re-enable sidechains and point **`SCIENCE_GRAPHRAG_AGENT_SIDECHAIN_TRANSCRIPTS_DIR`** at a writable directory (e.g. under `/tmp`).
+
+### Classifying a disconnect (operator checklist)
+
+1. **`docker compose logs api`** (or the terminal running uvicorn): look for **"WatchFiles detected changes"** / **"Restarting"** → reload race; use the compose override above or pause writes to the mounted tree during the run.
+2. **Python traceback** right before exit → application bug; capture the stack and reproduce with a minimal `POST /v2/agent/query`.
+3. **OOM / signal** messages from the container runtime → raise memory limits or reduce concurrent suites.
+4. **No server log line** but client **ReadTimeout** → increase `AGENT_LIVE_TIMEOUT_SEC` / `SCIENCE_GRAPHRAG_AGENT_STEP_TIMEOUT_SECONDS` or narrow the question suite.
+
 ## CH4 strict gate (optional)
 
 Set **`AGENT_LIVE_GATE_CH4=1`** to require, on agent v2 calls that pass `thread_id`:

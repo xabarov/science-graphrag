@@ -11,6 +11,15 @@ import { useTheme } from "@mui/material/styles";
 
 import { CursorIconAction } from "../../common/index.js";
 
+/** @param {{ entries?: unknown[] }} session */
+function sessionListSecondaryLine(session) {
+  const e0 = Array.isArray(session?.entries) ? session.entries[0] : null;
+  const rm = e0?.details?.run_metadata;
+  const brief = rm && typeof rm === "object" && typeof rm.brief === "string" ? rm.brief.trim() : "";
+  if (brief) return brief.length > 120 ? `${brief.slice(0, 117)}…` : brief;
+  return e0?.query ? String(e0.query) : "";
+}
+
 /**
  * @param {{
  *   t: (key: string, vars?: Record<string, string>) => string,
@@ -119,7 +128,7 @@ export function ChatSessionSidebar({
               >
                 <ListItemText
                   primary={s.title}
-                  secondary={Array.isArray(s.entries) && s.entries[0]?.query ? String(s.entries[0].query) : ""}
+                  secondary={sessionListSecondaryLine(s)}
                   primaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.8125rem", color: tk.text.primary } }}
                   secondaryTypographyProps={{ noWrap: true, sx: { fontSize: "0.68rem", color: tk.text.faint, mt: 0.25 } }}
                 />

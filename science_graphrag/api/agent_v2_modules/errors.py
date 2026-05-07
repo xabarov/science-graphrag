@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Final
 
 from langchain_core.exceptions import OutputParserException
 from langgraph.errors import GraphRecursionError
@@ -12,6 +13,28 @@ from science_graphrag.agent.graph.errors import (
     AgentGraphDeadlineExceeded,
     AgentGraphRecursionLimitExceeded,
 )
+
+try:
+    import httpx
+except ImportError:  # pragma: no cover
+    httpx = None  # type: ignore[assignment]
+
+# HTTP status codes commonly returned by gateways / edge proxies on overload or upstream timeout.
+_PROVIDER_GATEWAY_HTTP_CODES: Final[frozenset[int]] = frozenset({502, 503, 504, 524})
+
+# Classes treated as external / transport flakes for live gates (not product regressions).
+RETRYABLE_PROVIDER_ERROR_CLASSES: Final[frozenset[str]] = frozenset(
+    {
+        "provider_gateway_error",
+        "provider_timeout",
+        "provider_unreachable",
+    }
+)
+
+
+def is_retryable_provider_error_class(error_class: str) -> bool:
+    """True when ``error_class`` is a known transient upstream/edge failure."""
+    return str(error_class or "").strip() in RETRYABLE_PROVIDER_ERROR_CLASSES
 
 
 def classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
@@ -26,7 +49,8 @@ def classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
     - ``provider_unauthorized`` — 401 from upstream LLM (bad / missing key).
     - ``provider_forbidden`` — 403 from upstream LLM (quota / region).
     - ``provider_rejected`` — other upstream LLM HTTP errors (4xx / 5xx with
-      explicit code).
+      explicit code), excluding gateway overload codes (see ``provider_gateway_error``).
+    - ``provider_gateway_error`` — edge/gateway overload or upstream timeout (502/503/504/524).
     - ``provider_timeout`` — request timed out before reaching us.
     - ``provider_unreachable`` — transport-level failure (DNS, refused).
     - ``agent_turn_deadline_exceeded`` — per-turn LangGraph / stream deadline.
@@ -58,6 +82,22 @@ def classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
     if isinstance(exc, json.JSONDecodeError):
         return ("llm_output_parse_error", "The model returned invalid JSON.")
 
+    if httpx is not None and isinstance(exc, httpx.HTTPStatusError):
+        code = int(exc.response.status_code)
+        if code in _PROVIDER_GATEWAY_HTTP_CODES:
+            return (
+                "provider_gateway_error",
+                f"Upstream gateway or edge error (HTTP {code}).",
+            )
+        if code == 401:
+            return "provider_unauthorized", "Upstream LLM rejected the API key (401)."
+        if code == 403:
+            return "provider_forbidden", "Upstream LLM access denied (403)."
+        return (
+            "provider_rejected",
+            f"Upstream HTTP error (HTTP {code}).",
+        )
+
     if isinstance(exc, ValueError) and exc.args:
         arg0 = exc.args[0]
         if isinstance(arg0, dict):
@@ -71,6 +111,11 @@ def classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
                 return "provider_unauthorized", "Upstream LLM rejected the API key (401)."
             if code_int == 403:
                 return "provider_forbidden", "Upstream LLM access denied (403)."
+            if code_int is not None and code_int in _PROVIDER_GATEWAY_HTTP_CODES:
+                return (
+                    "provider_gateway_error",
+                    f"Upstream gateway or edge error (HTTP {code_int}): {msg}",
+                )
             if code_int is not None:
                 return (
                     "provider_rejected",

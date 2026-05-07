@@ -7,7 +7,12 @@ UI can localize them via ``chat.errors.<error_class>`` keys.
 
 from __future__ import annotations
 
-from science_graphrag.api.agent_v2_modules.errors import classify_agent_stream_error
+import httpx
+
+from science_graphrag.api.agent_v2_modules.errors import (
+    classify_agent_stream_error,
+    is_retryable_provider_error_class,
+)
 
 
 def test_classify_provider_unauthorized_from_value_error_dict() -> None:
@@ -24,11 +29,25 @@ def test_classify_provider_forbidden_from_value_error_dict() -> None:
     assert "403" in msg
 
 
-def test_classify_provider_rejected_for_other_status_codes() -> None:
+def test_classify_provider_gateway_for_edge_status_codes() -> None:
     exc = ValueError({"code": 502, "message": "bad gateway"})
     cls, msg = classify_agent_stream_error(exc)
-    assert cls == "provider_rejected"
+    assert cls == "provider_gateway_error"
     assert "502" in msg
+
+
+def test_classify_provider_gateway_for_httpx_status_error() -> None:
+    req = httpx.Request("POST", "https://example.invalid/v1")
+    resp = httpx.Response(524, request=req)
+    exc = httpx.HTTPStatusError("edge timeout", request=req, response=resp)
+    cls, msg = classify_agent_stream_error(exc)
+    assert cls == "provider_gateway_error"
+    assert "524" in msg
+
+
+def test_is_retryable_provider_error_class() -> None:
+    assert is_retryable_provider_error_class("provider_gateway_error") is True
+    assert is_retryable_provider_error_class("provider_rejected") is False
 
 
 def test_classify_provider_rejected_when_no_status_code() -> None:

@@ -1,0 +1,1 @@
+You are in a code-navigation benchmark. Call the lsp_tool with operation "workspace_symbol" and query "main" on the configured workspace root, then answer with one sentence naming any symbol you found (or say none).

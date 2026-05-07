@@ -9,6 +9,10 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from science_graphrag.agent.sidechain_paths import (
+    sidechain_transcripts_enabled,
+    sidechain_transcripts_root,
+)
 from science_graphrag.config import Settings
 
 _LOCK = threading.Lock()
@@ -27,7 +31,7 @@ def subagent_sidechain_jsonl_path(
     subagent_id: str,
 ) -> Path:
     """Path: ``<agent_sidechain_transcripts_dir>/subagent/<parent>/<subagent>.jsonl``."""
-    root = Path(settings.agent_sidechain_transcripts_dir or ".agent_sidechains").expanduser()
+    root = sidechain_transcripts_root(settings)
     return root / "subagent" / _safe_segment(parent_turn_id) / f"{_safe_segment(subagent_id)}.jsonl"
 
 
@@ -39,7 +43,7 @@ def append_subagent_sidechain_event(
     event: dict[str, Any],
 ) -> Path | None:
     """Append one JSON line; returns path when sidechain transcripts are enabled."""
-    if not bool(getattr(settings, "agent_sidechain_transcripts_enabled", False)):
+    if not sidechain_transcripts_enabled(settings):
         return None
     if not parent_turn_id.strip() or not str(subagent_id or "").strip():
         return None

@@ -54,7 +54,14 @@ export function useAgentStream({
   }, [onEvent, onFinalAnswer, onError, onAbort, onStart, onFinish, onMalformedFrame]);
 
   const stream = useCallback(
-    async ({ question, maxToolCalls = 8, threadId = null, historyDigest = null, clientIdleMs = null }) => {
+    async ({
+      question,
+      maxToolCalls = 8,
+      threadId = null,
+      historyDigest = null,
+      clientIdleMs = null,
+      userStructuredAnswer = null,
+    }) => {
       if (!String(question || "").trim()) return;
 
       if (abortRef.current) {
@@ -83,6 +90,9 @@ export function useAgentStream({
             history_digest: historyDigest || null,
             ...(clientIdleMs != null && Number.isFinite(Number(clientIdleMs))
               ? { client_idle_ms: Math.max(0, Math.round(Number(clientIdleMs))) }
+              : {}),
+            ...(userStructuredAnswer && typeof userStructuredAnswer === "object"
+              ? { user_structured_answer: userStructuredAnswer }
               : {}),
           }),
           signal: controller.signal,

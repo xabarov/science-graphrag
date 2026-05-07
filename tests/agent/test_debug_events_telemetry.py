@@ -32,3 +32,28 @@ def test_tool_message_compact_audit_emits_microcompact_count() -> None:
     ]
     tel = extract_runtime_telemetry_from_debug_events(evs)
     assert tel.get("tool_message_microcompact_triggered_count") == 2
+
+
+def test_mcp_audit_summary_rollup() -> None:
+    evs = [
+        {"type": "mcp_audit", "phase": "deny", "server": "s1", "ok": False, "deny_reason": "denylist_hit:x"},
+        {"type": "mcp_audit", "phase": "call", "server": "s1", "tool": "t1", "ok": True},
+    ]
+    tel = extract_runtime_telemetry_from_debug_events(evs)
+    mc = tel.get("mcp_audit_summary")
+    assert isinstance(mc, dict)
+    assert mc.get("event_count") == 2
+    assert mc.get("deny_hits") == 1
+    assert mc.get("ok_false_hits") == 1
+
+
+def test_lsp_audit_summary_rollup() -> None:
+    evs = [
+        {"type": "lsp_audit", "operation": "definition", "ok": True, "degraded": False},
+        {"type": "lsp_audit", "operation": "references", "ok": False, "degraded": True},
+    ]
+    tel = extract_runtime_telemetry_from_debug_events(evs)
+    ls = tel.get("lsp_audit_summary")
+    assert isinstance(ls, dict)
+    assert ls.get("event_count") == 2
+    assert ls.get("degraded_hits") == 1

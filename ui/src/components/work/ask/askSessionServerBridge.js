@@ -15,6 +15,11 @@ function apiTurnToEntry(t) {
   const topK = Number.isFinite(Number(t.topK ?? t.top_k)) ? Number(t.topK ?? t.top_k) : 5;
   const savedAt = t.savedAt != null ? String(t.savedAt) : t.saved_at != null ? String(t.saved_at) : new Date().toISOString();
   const id = `${workId || "global"}::${query.toLowerCase()}`;
+  const detailsRaw = t.details ?? t.turn_details;
+  const details =
+    detailsRaw && typeof detailsRaw === "object" && !Array.isArray(detailsRaw)
+      ? { ...detailsRaw }
+      : null;
   return {
     id,
     query,
@@ -26,6 +31,7 @@ function apiTurnToEntry(t) {
       : 0,
     mode: String(t.mode || (workId ? "scoped" : "global")),
     savedAt,
+    ...(details ? { details } : {}),
   };
 }
 
@@ -54,18 +60,49 @@ export function apiSessionsToBundle(apiPayload) {
 }
 
 /**
- * @param {Array<{ query: string, workId: string, topK: number, answer: string, citationCount: number, mode: string, savedAt: string }>} entries
+ * @param {Record<string, unknown> | null | undefined} details
+ * @returns {Record<string, unknown> | undefined}
+ */
+export function compactAskTurnDetailsForSync(details) {
+  if (!details || typeof details !== "object") return undefined;
+  const rm = details.run_metadata && typeof details.run_metadata === "object" ? details.run_metadata : {};
+  /** @type {Record<string, unknown>} */
+  const slimRm = {};
+  if (rm.brief != null && String(rm.brief).trim()) slimRm.brief = String(rm.brief).trim();
+  if (rm.research_plan != null && typeof rm.research_plan === "object") slimRm.research_plan = rm.research_plan;
+  const se = Array.isArray(details.stream_events) ? details.stream_events.slice(-30) : [];
+  /** @type {Record<string, unknown>} */
+  const out = {};
+  if (Object.keys(slimRm).length) out.run_metadata = slimRm;
+  if (details.open_structured_question && typeof details.open_structured_question === "object") {
+    const osq = details.open_structured_question;
+    const qs = osq.questions;
+    if (Array.isArray(qs) && qs.length && String(osq.request_id || "").trim()) {
+      out.open_structured_question = osq;
+    }
+  }
+  if (se.length) out.stream_events = se;
+  return Object.keys(out).length ? out : undefined;
+}
+
+/**
+ * @param {Array<{ query: string, workId: string, topK: number, answer: string, citationCount: number, mode: string, savedAt: string, details?: unknown }>} entries
  */
 export function entriesToApiTurns(entries) {
-  return (entries || []).map((e) => ({
-    query: e.query,
-    workId: e.workId,
-    topK: e.topK,
-    answer: e.answer,
-    citationCount: e.citationCount,
-    mode: e.mode,
-    savedAt: e.savedAt,
-  }));
+  return (entries || []).map((e) => {
+    const row = {
+      query: e.query,
+      workId: e.workId,
+      topK: e.topK,
+      answer: e.answer,
+      citationCount: e.citationCount,
+      mode: e.mode,
+      savedAt: e.savedAt,
+    };
+    const slim = compactAskTurnDetailsForSync(e.details && typeof e.details === "object" ? e.details : null);
+    if (slim) row.details = slim;
+    return row;
+  });
 }
 
 const SYNC_PREF_KEY = "science-graphrag:askServerSync:v1";

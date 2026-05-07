@@ -17,6 +17,21 @@ class _TelemetryAccum:  # pylint: disable=too-few-public-methods
         "activation_rates",
         "microcompact_triggers",
         "schema_bytes_saved",
+        "tool_use_summary_batches",
+        "tool_use_summary_rows",
+        "tool_use_summary_ratios",
+        "runtime_monitor_events",
+        "runtime_monitor_degraded_hits",
+        "runtime_monitor_timeout_hits",
+        "runtime_monitor_last",
+        "mcp_audit_events",
+        "mcp_audit_denies",
+        "mcp_audit_failures",
+        "mcp_audit_last",
+        "lsp_audit_events",
+        "lsp_audit_degraded_hits",
+        "lsp_audit_timeout_hits",
+        "lsp_audit_last",
     )
 
     def __init__(self) -> None:
@@ -27,6 +42,21 @@ class _TelemetryAccum:  # pylint: disable=too-few-public-methods
         self.activation_rates: list[float] = []
         self.microcompact_triggers = 0
         self.schema_bytes_saved = 0
+        self.tool_use_summary_batches = 0
+        self.tool_use_summary_rows = 0
+        self.tool_use_summary_ratios: list[float] = []
+        self.runtime_monitor_events = 0
+        self.runtime_monitor_degraded_hits = 0
+        self.runtime_monitor_timeout_hits = 0
+        self.runtime_monitor_last: dict[str, Any] | None = None
+        self.mcp_audit_events = 0
+        self.mcp_audit_denies = 0
+        self.mcp_audit_failures = 0
+        self.mcp_audit_last: dict[str, Any] | None = None
+        self.lsp_audit_events = 0
+        self.lsp_audit_degraded_hits = 0
+        self.lsp_audit_timeout_hits = 0
+        self.lsp_audit_last: dict[str, Any] | None = None
 
 
 def _accum_tool_search_result(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
@@ -67,10 +97,79 @@ def _accum_tool_message_compact_audit(ev: dict[str, Any], acc: _TelemetryAccum) 
         pass
 
 
+def _accum_runtime_monitor(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
+    acc.runtime_monitor_events += 1
+    if bool(ev.get("degraded")):
+        acc.runtime_monitor_degraded_hits += 1
+    if bool(ev.get("timeout_hit")):
+        acc.runtime_monitor_timeout_hits += 1
+    acc.runtime_monitor_last = {
+        "task_id": ev.get("task_id"),
+        "state": ev.get("state"),
+        "source": ev.get("source"),
+        "degraded": bool(ev.get("degraded")) if ev.get("degraded") is not None else None,
+        "timeout_hit": bool(ev.get("timeout_hit")) if ev.get("timeout_hit") is not None else None,
+    }
+
+
+def _accum_mcp_audit(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
+    acc.mcp_audit_events += 1
+    phase = str(ev.get("phase") or "")
+    if phase == "deny" or ev.get("deny_reason"):
+        acc.mcp_audit_denies += 1
+    if ev.get("ok") is False:
+        acc.mcp_audit_failures += 1
+    acc.mcp_audit_last = {
+        "phase": phase or None,
+        "server": ev.get("server"),
+        "tool": ev.get("tool"),
+        "resource_uri": ev.get("resource_uri"),
+        "ok": ev.get("ok"),
+        "deny_reason": ev.get("deny_reason"),
+        "auth_status": ev.get("auth_status"),
+    }
+
+
+def _accum_lsp_audit(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
+    acc.lsp_audit_events += 1
+    if bool(ev.get("degraded")):
+        acc.lsp_audit_degraded_hits += 1
+    if bool(ev.get("timeout_hit")):
+        acc.lsp_audit_timeout_hits += 1
+    acc.lsp_audit_last = {
+        "operation": ev.get("operation"),
+        "ok": ev.get("ok"),
+        "payload_budget_items": ev.get("payload_budget_items"),
+        "degraded": ev.get("degraded"),
+        "timeout_hit": ev.get("timeout_hit"),
+    }
+
+
+def _accum_tool_use_summary_batch(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
+    acc.tool_use_summary_batches += 1
+    try:
+        acc.tool_use_summary_rows += int(ev.get("count") or 0)
+    except (TypeError, ValueError):
+        pass
+    rows = ev.get("rows")
+    if not isinstance(rows, list):
+        return
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        ratio = row.get("compression_ratio_vs_original")
+        if isinstance(ratio, (int, float)):
+            acc.tool_use_summary_ratios.append(float(ratio))
+
+
 _EVENT_HANDLERS: dict[str, Callable[[dict[str, Any], _TelemetryAccum], None]] = {
     "tool_search_result": _accum_tool_search_result,
     "budget_stop_decision": _accum_budget_stop_decision,
     "tool_message_compact_audit": _accum_tool_message_compact_audit,
+    "tool_use_summary_batch": _accum_tool_use_summary_batch,
+    "runtime_monitor": _accum_runtime_monitor,
+    "mcp_audit": _accum_mcp_audit,
+    "lsp_audit": _accum_lsp_audit,
 }
 
 
@@ -86,6 +185,15 @@ def extract_runtime_telemetry_from_debug_events(
         handler = _EVENT_HANDLERS.get(etype)
         if handler is not None:
             handler(ev, acc)
+            continue
+        # Legacy/alternate envelopes (keep tolerant).
+        if etype == "streamable_tool_hint":
+            inner = ev.get("hint") if isinstance(ev.get("hint"), dict) else ev
+            if isinstance(inner, dict):
+                it = str(inner.get("type") or "")
+                h2 = _EVENT_HANDLERS.get(it)
+                if h2 is not None:
+                    h2(inner, acc)
 
     telemetry: dict[str, Any] = {}
     if acc.shortlist_ratios:
@@ -106,4 +214,39 @@ def extract_runtime_telemetry_from_debug_events(
         telemetry["tool_message_microcompact_triggered_count"] = int(acc.microcompact_triggers)
     if acc.schema_bytes_saved > 0:
         telemetry["tool_schema_bytes_saved"] = int(acc.schema_bytes_saved)
+    if acc.tool_use_summary_batches > 0:
+        telemetry["tool_use_summary_batch_count"] = int(acc.tool_use_summary_batches)
+    if acc.tool_use_summary_rows > 0:
+        telemetry["tool_use_summary_row_count"] = int(acc.tool_use_summary_rows)
+    if acc.tool_use_summary_ratios:
+        telemetry["tool_use_summary_compression_ratio_avg"] = round(
+            sum(acc.tool_use_summary_ratios) / len(acc.tool_use_summary_ratios), 4
+        )
+    if acc.runtime_monitor_events:
+        rm: dict[str, Any] = {
+            "event_count": int(acc.runtime_monitor_events),
+            "degraded_hits": int(acc.runtime_monitor_degraded_hits),
+            "timeout_hits": int(acc.runtime_monitor_timeout_hits),
+        }
+        if acc.runtime_monitor_last:
+            rm["last"] = dict(acc.runtime_monitor_last)
+        telemetry["runtime_monitor_audit"] = rm
+    if acc.mcp_audit_events:
+        mc: dict[str, Any] = {
+            "event_count": int(acc.mcp_audit_events),
+            "deny_hits": int(acc.mcp_audit_denies),
+            "ok_false_hits": int(acc.mcp_audit_failures),
+        }
+        if acc.mcp_audit_last:
+            mc["last"] = dict(acc.mcp_audit_last)
+        telemetry["mcp_audit_summary"] = mc
+    if acc.lsp_audit_events:
+        ls: dict[str, Any] = {
+            "event_count": int(acc.lsp_audit_events),
+            "degraded_hits": int(acc.lsp_audit_degraded_hits),
+            "timeout_hits": int(acc.lsp_audit_timeout_hits),
+        }
+        if acc.lsp_audit_last:
+            ls["last"] = dict(acc.lsp_audit_last)
+        telemetry["lsp_audit_summary"] = ls
     return telemetry

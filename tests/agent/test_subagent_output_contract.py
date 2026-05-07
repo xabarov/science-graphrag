@@ -6,6 +6,8 @@ from science_graphrag.agent.subagent_output_contract import (
     SYNTHESIZE_NOT_DELEGATE_DIRECTIVE,
     detect_handoff_phrase,
     maybe_prepend_handoff_warning,
+    read_only_subagent_answer_matches_contract,
+    research_plan_subagent_answer_matches_contract,
     verification_answer_matches_contract,
     writer_system_prompt_suffix,
 )
@@ -50,3 +52,20 @@ def test_verification_contract_regex() -> None:
     assert verification_answer_matches_contract(good)
     bad = "Scope: x\nResult: y\nKey sources: z\n"
     assert not verification_answer_matches_contract(bad)
+
+
+def test_read_only_subagent_contract_rejects_verdict_line() -> None:
+    assert read_only_subagent_answer_matches_contract(
+        "Scope: explore\nResult: found papers.\nKey sources: w1\n"
+    )
+    assert not read_only_subagent_answer_matches_contract(
+        "Scope: x\nResult: y\nKey sources: z\nVERDICT: PASS\n"
+    )
+
+
+def test_research_plan_subagent_contract_requires_sections() -> None:
+    ok = (
+        "Scope: plan\nResult:\nCorpus sub-queries:\n- a\nGraph sub-queries:\n- b\n"
+        "Writer spec:\n- c\nKey sources: none\n"
+    )
+    assert research_plan_subagent_answer_matches_contract(ok)

@@ -47,6 +47,15 @@ def test_build_phoenix_structure_audit_sequence_hint_edge_without_reltypes() -> 
     assert any("edge_search_without_workspace_graph_reltypes" in h for h in audit["sequence_hints"])
 
 
+def test_build_phoenix_structure_audit_counts_v3_llm_span_names() -> None:
+    """Supervisor v3 uses ``llm.agent.supervisor_route`` / specialists, not only ``react_turn``."""
+    spans = ["llm.agent.supervisor_route", "tool.find_works"]
+    tools = ["find_works", "paper_profile", "idea_search", "final_answer"]
+    audit = build_phoenix_structure_audit(spans, tools)
+    assert audit["llm_agent_span_hits"] >= 1
+    assert "phoenix_span_sample_missing_llm_agent_span" not in audit["issues"]
+
+
 def test_cypher_query_error_count() -> None:
     trace = [
         {"tool": "cypher_query", "error": None},

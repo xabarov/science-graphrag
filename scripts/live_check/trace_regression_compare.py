@@ -162,6 +162,24 @@ def main() -> int:
         help="Optional FAIL when candidate metrics.latency_p95_ms is above absolute budget.",
     )
     parser.add_argument(
+        "--max-latency-p95-regress-ratio",
+        type=float,
+        default=None,
+        help=(
+            "Optional FAIL when baseline and candidate latency_p95_ms are both set and "
+            "candidate > baseline * ratio (e.g. 1.15 caps +15%% regress for claim_verification gate)."
+        ),
+    )
+    parser.add_argument(
+        "--min-live-trust-signal-delta",
+        type=float,
+        default=None,
+        help=(
+            "Optional FAIL when delta (candidate - baseline) metrics.live_trust_signal_avg "
+            "is strictly below this threshold (requires both artifacts to export the metric)."
+        ),
+    )
+    parser.add_argument(
         "--min-claim-grounding-precision",
         type=float,
         default=None,
@@ -232,6 +250,18 @@ def main() -> int:
         base, "tool_loop_repeat_max"
     )
 
+    b_tr = _metric_optional_float(base, "live_trust_signal_avg")
+    c_tr = _metric_optional_float(cand, "live_trust_signal_avg")
+    delta_live_trust: float | None = None
+    if b_tr is not None or c_tr is not None:
+        delta_live_trust = float(c_tr or 0.0) - float(b_tr or 0.0)
+
+    b_cvpr = _metric_optional_float(base, "claim_verification_verdict_parse_rate")
+    c_cvpr = _metric_optional_float(cand, "claim_verification_verdict_parse_rate")
+    delta_cv_parse: float | None = None
+    if b_cvpr is not None or c_cvpr is not None:
+        delta_cv_parse = float(c_cvpr or 0.0) - float(b_cvpr or 0.0)
+
     fail_reasons: list[str] = []
     if "new_missing_spans" in policies_fail and delta_missing_spans > 0:
         fail_reasons.append(f"new_missing_spans:+{delta_missing_spans:.0f}")
@@ -250,6 +280,13 @@ def main() -> int:
         args.c3_tool_loop_fail_delta
     ):
         fail_reasons.append(f"c3_tool_loop_instability:+{delta_tool_loop_repeat_max:.0f}")
+    if (
+        "subagent_lifecycle_missing_increase" in policies_fail
+        and delta_subagent_lifecycle_missing > 0
+    ):
+        fail_reasons.append(
+            f"subagent_lifecycle_missing_increase:+{delta_subagent_lifecycle_missing:.0f}"
+        )
 
     warn_reasons: list[str] = []
     base_lat = _metric(base, "latency_p95_ms")
@@ -329,6 +366,20 @@ def main() -> int:
                 f"claim_grounding_recall:{cand_rec:.4f}<{float(min_claim_recall):.4f}"
             )
 
+    max_lat_ratio = args.max_latency_p95_regress_ratio
+    if max_lat_ratio is not None and base_lat > 0 and cand_lat > 0:
+        if cand_lat > base_lat * float(max_lat_ratio) + 1e-9:
+            fail_reasons.append(
+                f"latency_p95_regress_ratio:{cand_lat:.4f}>{base_lat * float(max_lat_ratio):.4f}"
+            )
+
+    ltd = args.min_live_trust_signal_delta
+    if ltd is not None and delta_live_trust is not None:
+        if delta_live_trust + 1e-9 < float(ltd):
+            fail_reasons.append(
+                f"live_trust_signal_delta:{delta_live_trust:.6f}<{float(ltd):.6f}"
+            )
+
     base_verdict_rank = _verdict_rank(base)
     cand_verdict_rank = _verdict_rank(cand)
     if args.enforce_verdict_not_worse and cand_verdict_rank < base_verdict_rank:
@@ -382,6 +433,8 @@ def main() -> int:
             "subagent_lifecycle_missing_count": delta_subagent_lifecycle_missing,
             "tool_search_miss_due_to_no_discovery_total": delta_tool_search_miss,
             "tool_loop_repeat_max": delta_tool_loop_repeat_max,
+            "live_trust_signal_avg_delta": delta_live_trust,
+            "claim_verification_verdict_parse_rate_delta": delta_cv_parse,
         },
     }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -406,6 +459,8 @@ def main() -> int:
         f"- Delta unnecessary_tool_calls_avg: `{delta_unnecessary_tool_calls_avg}`",
         f"- Baseline verdict rank: `{base_verdict_rank}`",
         f"- Candidate verdict rank: `{cand_verdict_rank}`",
+        f"- Delta live_trust_signal_avg: `{delta_live_trust}`",
+        f"- Delta claim_verification_verdict_parse_rate: `{delta_cv_parse}`",
     ]
     if fail_reasons:
         md_lines.extend(["", "## Fail reasons"])

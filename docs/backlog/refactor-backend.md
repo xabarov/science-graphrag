@@ -54,6 +54,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [OPEN] Reduce supervisor route churn before writer handoff
+- **Area:** `science_graphrag/agent/graph/supervisor.py`, `science_graphrag/agent/graph/nodes/retrieval_agent.py`, routing/trace-review live gates
+- **Issue:** Dev `langgraph_supervisor_v3` live runs can bounce through repeated `route_to_specialist -> retrieval_agent` hops before the writer handoff (`tool_loop_repeat_max=11` in `trace-review-live-default-dev-v3-18787-postfix.md`). The terminal `final_answer` regression is fixed, but the route churn still wastes tokens/latency and makes traces noisy.
+- **Proposal:** Add a deterministic handoff rule once retrieval already produced the minimal catalog bundle for title-resolution tasks (`find_works` + `paper_profile` or equivalent), and/or feed stronger completion signals from retrieval into supervisor routing so the next hop prefers `writer_agent` instead of re-entering retrieval.
+- **Acceptance:** `catalog_resolution`-style live traces end with at most one retrieval leg before writer on stable runs; `tool_loop_repeat_max` for the default dev-v3 trace-review drops materially; no regression in `grounded_quote` / `workspace_stats`.
+- **Raised:** 2026-05-07 (post-fix follow-up after final_answer fallback)
+
 ### [OPEN] Persisted admin section `agent_tools` (runtime overrides without overloading LLM settings)
 - **Area:** `science_graphrag/settings/{service.py,runtime_overlay.py,repository.py}`, `science_graphrag/api/settings*.py`, `ui/src/pages/SettingsPage/`
 - **Issue:** Operator-facing tool toggles and safety caps (`agent_web_*`, MCP/LSP timeouts) live on `Settings` (env) but are not first-class in `/v1/settings`; stuffing them into `llm.runtime_overrides` mixes LLM provider config with tool policy.
@@ -478,6 +485,13 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Progress (2026-05-06, Train T1 C0):** `tool_search.shortlist_tools_for_specialist` принимает `lc_messages` и детерминированно мержит tool names из `AIMessage.tool_calls` / `ToolMessage` до session carry-over; метаданные `message_discovery_tools` / `message_discovery_merged` в SSE `tool_search_result`; флаги `SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_MESSAGE_DISCOVERY_ENABLED` (default true) и cap.
 - **Remaining:** C1 LLM rerank, C2 dynamic schema transport, C3 lanes + policy gate.
 - **Raised:** 2026-05-06 (roadmap §9 sync)
+
+### [OPEN] Deduplicate subagent runtime micro-helpers
+- **Area:** `science_graphrag/agent/subagents/*_runtime.py`
+- **Issue:** Repeated helpers (`_permission_denied_in_messages`, fanout suffix assembly, ReAct compile shape) across `claim_verification` / `corpus_explore` / `research_plan` increase drift risk.
+- **Proposal:** Extract one internal module (e.g. `subagents/react_subgraph_utils.py`) for shared pieces; keep public surfaces narrow.
+- **Acceptance:** All three subagent runtimes import shared helpers; no behavior change in contract tests.
+- **Raised:** 2026-05-07 (Train T4 implementation pass)
 
 ### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)
 - **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.

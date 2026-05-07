@@ -20,7 +20,8 @@ from science_graphrag.config import Settings, get_settings
 from science_graphrag.observability.spans.decorators import add_span_event
 
 # Stop looping after this many *bad* ``final_answer`` tool payloads (JSON empty/malformed).
-_MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS = 1
+# Two hops allows one repair chat turn after an empty payload (writer/supervisor subgraphs).
+_MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS = 2
 
 # Shared with supervisor + specialist subgraphs that can call ``final_answer`` (writer only).
 FINAL_ANSWER_NUDGE_TEXT = (

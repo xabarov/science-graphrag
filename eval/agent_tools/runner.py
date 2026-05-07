@@ -61,6 +61,9 @@ def _mock_case_report(
         elif tool in {"cypher_query", "edge_search"}:
             args_summary = {"query": question[:200]}
             row_count = 2
+        elif tool == "lsp_tool":
+            args_summary = {"operation": "workspace_symbol", "query": "main"}
+            row_count = 2
         else:
             args_summary = {"q": question[:80]}
             row_count = 3

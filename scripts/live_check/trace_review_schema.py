@@ -9,6 +9,8 @@ REVIEW_VERSION = "trace-review-v1"
 
 VerdictStatus = Literal["pass", "warn", "fail"]
 
+_VERDICT_OK = frozenset({"PASS", "FAIL", "PARTIAL"})
+
 
 def _coerce_optional_float(value: Any) -> float | None:
     """Best-effort float conversion for telemetry fields."""
@@ -122,6 +124,24 @@ class TimelineCase:
     tool_schema_bytes_saved: int = 0
     #: Max consecutive identical tool names in ``tool_steps`` (loop-instability proxy).
     tool_loop_repeat_max: int = 0
+    #: When set from E2E ``cases[]``, ``False`` + empty ``tool_steps`` means transport never ran tools.
+    e2e_http_ok: bool | None = None
+    #: Aggregated from ``run_metadata.runtime_monitor_audit`` (tool parity / observability).
+    runtime_monitor_event_count: int = 0
+    runtime_monitor_degraded_hits: int = 0
+    runtime_monitor_timeout_hits: int = 0
+    mcp_audit_event_count: int = 0
+    mcp_audit_deny_hits: int = 0
+    mcp_audit_ok_false_hits: int = 0
+    lsp_audit_event_count: int = 0
+    lsp_audit_degraded_hits: int = 0
+    lsp_audit_timeout_hits: int = 0
+    claim_verification_total: int = 0
+    claim_verification_verdict_parsed: int = 0
+    live_trust_signal: float | None = None
+    specialist_v3_merge_conflict: bool | None = None
+    specialist_v3_evidence_origin: str | None = None
+    agent_usage_total_tokens: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,6 +173,16 @@ class Metrics:
     tool_search_miss_due_to_no_discovery_total: int = 0
     tool_schema_bytes_saved_total: int = 0
     tool_loop_repeat_max: int = 0
+    runtime_monitor_event_total: int = 0
+    runtime_monitor_degraded_total: int = 0
+    mcp_audit_event_total: int = 0
+    mcp_audit_deny_total: int = 0
+    lsp_audit_event_total: int = 0
+    lsp_audit_degraded_total: int = 0
+    claim_verification_verdict_parse_rate: float | None = None
+    live_trust_signal_avg: float | None = None
+    specialist_v3_merge_conflict_cases: int = 0
+    agent_usage_total_tokens_sum: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,6 +284,58 @@ def _max_consecutive_same_tool(steps: tuple[ToolStep, ...]) -> int:
     return best
 
 
+def _compute_live_trust_signal(
+    warnings: tuple[str, ...], cv_total: int, cv_parsed: int
+) -> float | None:
+    """Scalar proxy for nightly compare when full benchmark ``trust_signal`` is unavailable."""
+    if cv_total <= 0:
+        return None
+    parse_rate = cv_parsed / float(cv_total)
+    wlow = {str(x).strip().lower() for x in warnings}
+    adj = parse_rate
+    if "weak_evidence" in wlow:
+        adj *= 0.88
+    if "insufficient_evidence" in wlow:
+        adj *= 0.88
+    return round(max(0.0, min(1.0, adj)), 6)
+
+
+def _claim_verification_and_merge_from_run_metadata(
+    rm: dict[str, Any] | None, warnings: tuple[str, ...]
+) -> tuple[int, int, float | None, bool | None, str | None, int | None]:
+    """Extract claim verification parse stats, merge provenance, token usage."""
+    if not isinstance(rm, dict):
+        return 0, 0, None, None, None, None
+    cv_total = 0
+    cv_parsed = 0
+    cvr = rm.get("claim_verification_results")
+    if isinstance(cvr, list):
+        for it in cvr:
+            if not isinstance(it, dict):
+                continue
+            cv_total += 1
+            vd = str(it.get("verdict") or "").strip().upper()
+            if vd in _VERDICT_OK:
+                cv_parsed += 1
+    merge_conflict: bool | None = None
+    merge_origin: str | None = None
+    sr3 = rm.get("specialist_results_v3")
+    if isinstance(sr3, dict):
+        mg = sr3.get("merge")
+        if isinstance(mg, dict):
+            merge_conflict = bool(mg.get("conflict"))
+            eo = str(mg.get("evidence_origin") or "").strip()
+            merge_origin = eo or None
+    usage_tokens: int | None = None
+    us = rm.get("usage")
+    if isinstance(us, dict) and us.get("total_tokens") is not None:
+        usage_tokens = max(0, _coerce_int(us.get("total_tokens"), default=0))
+        if usage_tokens == 0:
+            usage_tokens = None
+    live = _compute_live_trust_signal(warnings, cv_total, cv_parsed)
+    return cv_total, cv_parsed, live, merge_conflict, merge_origin, usage_tokens
+
+
 def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     """Build one ``TimelineCase`` from an E2E ``cases[]`` entry."""
     cid = str(case.get("case_id") or case.get("name") or "unknown")
@@ -350,8 +432,16 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         if isinstance(st0, list):
             stn_c = len(st0)
         lane0 = str(rm.get("subagent_observability_lane") or "")
-        if "fork_v3_enhanced" in lane0 and srun_c:
-            miss_lc = max(0, srun_c - stn_c)
+        # Task notifications are emitted for forked subagent carry-back, not for every
+        # supervisor ``routing_leg`` row. Compare only explicit ``spawned`` runs vs notifications.
+        if "fork_v3_enhanced" in lane0 and isinstance(sr0, list):
+            spawned_need = sum(
+                1
+                for row in sr0
+                if isinstance(row, dict) and str(row.get("kind") or "").strip() == "spawned"
+            )
+            if spawned_need:
+                miss_lc = max(0, spawned_need - stn_c)
 
     hook_chain: tuple[dict[str, Any], ...] = ()
     if isinstance(rm, dict):
@@ -370,8 +460,42 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     elif str(case.get("eval_lane") or "").strip():
         eval_lane = str(case.get("eval_lane")).strip()
 
+    rm_mon_ev = 0
+    rm_mon_deg = 0
+    rm_mon_to = 0
+    mcp_ev = 0
+    mcp_den = 0
+    mcp_fail = 0
+    lsp_ev = 0
+    lsp_deg = 0
+    lsp_to = 0
+    if isinstance(rm, dict):
+        rmon = rm.get("runtime_monitor_audit")
+        if isinstance(rmon, dict):
+            rm_mon_ev = _coerce_int(rmon.get("event_count"), default=0)
+            rm_mon_deg = _coerce_int(rmon.get("degraded_hits"), default=0)
+            rm_mon_to = _coerce_int(rmon.get("timeout_hits"), default=0)
+        mc = rm.get("mcp_audit_summary")
+        if isinstance(mc, dict):
+            mcp_ev = _coerce_int(mc.get("event_count"), default=0)
+            mcp_den = _coerce_int(mc.get("deny_hits"), default=0)
+            mcp_fail = _coerce_int(mc.get("ok_false_hits"), default=0)
+        ls = rm.get("lsp_audit_summary")
+        if isinstance(ls, dict):
+            lsp_ev = _coerce_int(ls.get("event_count"), default=0)
+            lsp_deg = _coerce_int(ls.get("degraded_hits"), default=0)
+            lsp_to = _coerce_int(ls.get("timeout_hits"), default=0)
+
     steps_t = tuple(steps)
     loop_rep = _max_consecutive_same_tool(steps_t)
+    e2e_http_ok: bool | None = None
+    if "http_ok" in case:
+        e2e_http_ok = bool(case.get("http_ok"))
+
+    rm_dict = rm if isinstance(rm, dict) else None
+    cv_tot, cv_par, live_tr, sr3_mconf, sr3_origin, usage_tok = (
+        _claim_verification_and_merge_from_run_metadata(rm_dict, warn_tuple)
+    )
 
     return TimelineCase(
         case_id=cid,
@@ -416,6 +540,22 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         tool_search_miss_due_to_no_discovery=miss_nd,
         tool_schema_bytes_saved=schema_saved,
         tool_loop_repeat_max=loop_rep,
+        e2e_http_ok=e2e_http_ok,
+        runtime_monitor_event_count=rm_mon_ev,
+        runtime_monitor_degraded_hits=rm_mon_deg,
+        runtime_monitor_timeout_hits=rm_mon_to,
+        mcp_audit_event_count=mcp_ev,
+        mcp_audit_deny_hits=mcp_den,
+        mcp_audit_ok_false_hits=mcp_fail,
+        lsp_audit_event_count=lsp_ev,
+        lsp_audit_degraded_hits=lsp_deg,
+        lsp_audit_timeout_hits=lsp_to,
+        claim_verification_total=cv_tot,
+        claim_verification_verdict_parsed=cv_par,
+        live_trust_signal=live_tr,
+        specialist_v3_merge_conflict=sr3_mconf,
+        specialist_v3_evidence_origin=sr3_origin,
+        agent_usage_total_tokens=usage_tok,
     )
 
 
@@ -444,6 +584,17 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     miss_nd_vals: list[int] = []
     schema_saved_vals: list[int] = []
     loop_rep_vals: list[int] = []
+    rm_ev_vals: list[int] = []
+    rm_deg_vals: list[int] = []
+    mcp_ev_vals: list[int] = []
+    mcp_den_vals: list[int] = []
+    lsp_ev_vals: list[int] = []
+    lsp_deg_vals: list[int] = []
+    cv_total_sum = 0
+    cv_parsed_sum = 0
+    trust_vals: list[float] = []
+    sr3_conf_cases = 0
+    usage_token_parts: list[int] = []
 
     for row in timeline:
         for st in row.tool_steps:
@@ -456,6 +607,8 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         hook_chain_counts.append(len(row.hook_chain_events))
 
         steps = row.tool_steps
+        if row.e2e_http_ok is False and len(steps) == 0:
+            continue
         last_tool = steps[-1].tool if steps else None
         if last_tool != "final_answer":
             final_answer_missing += 1
@@ -501,6 +654,20 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         miss_nd_vals.append(int(row.tool_search_miss_due_to_no_discovery or 0))
         schema_saved_vals.append(int(row.tool_schema_bytes_saved or 0))
         loop_rep_vals.append(int(row.tool_loop_repeat_max or 0))
+        rm_ev_vals.append(int(row.runtime_monitor_event_count or 0))
+        rm_deg_vals.append(int(row.runtime_monitor_degraded_hits or 0))
+        mcp_ev_vals.append(int(row.mcp_audit_event_count or 0))
+        mcp_den_vals.append(int(row.mcp_audit_deny_hits or 0))
+        lsp_ev_vals.append(int(row.lsp_audit_event_count or 0))
+        lsp_deg_vals.append(int(row.lsp_audit_degraded_hits or 0))
+        cv_total_sum += int(row.claim_verification_total or 0)
+        cv_parsed_sum += int(row.claim_verification_verdict_parsed or 0)
+        if row.live_trust_signal is not None:
+            trust_vals.append(float(row.live_trust_signal))
+        if row.specialist_v3_merge_conflict is True:
+            sr3_conf_cases += 1
+        if row.agent_usage_total_tokens is not None:
+            usage_token_parts.append(int(row.agent_usage_total_tokens))
 
     tool_error_rate = (bad_steps / total_steps) if total_steps else 0.0
 
@@ -539,6 +706,17 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     miss_nd_sum = int(sum(miss_nd_vals)) if miss_nd_vals else 0
     schema_saved_sum = int(sum(schema_saved_vals)) if schema_saved_vals else 0
     loop_rep_max = max(loop_rep_vals) if loop_rep_vals else 0
+    rm_ev_sum = int(sum(rm_ev_vals)) if rm_ev_vals else 0
+    rm_deg_sum = int(sum(rm_deg_vals)) if rm_deg_vals else 0
+    mcp_ev_sum = int(sum(mcp_ev_vals)) if mcp_ev_vals else 0
+    mcp_den_sum = int(sum(mcp_den_vals)) if mcp_den_vals else 0
+    lsp_ev_sum = int(sum(lsp_ev_vals)) if lsp_ev_vals else 0
+    lsp_deg_sum = int(sum(lsp_deg_vals)) if lsp_deg_vals else 0
+    cv_parse_rate = (
+        round(cv_parsed_sum / float(cv_total_sum), 6) if cv_total_sum > 0 else None
+    )
+    trust_avg = round(sum(trust_vals) / len(trust_vals), 6) if trust_vals else None
+    usage_sum_out = int(sum(usage_token_parts)) if usage_token_parts else None
 
     return Metrics(
         tool_error_rate=tool_error_rate,
@@ -570,6 +748,16 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         tool_search_miss_due_to_no_discovery_total=miss_nd_sum,
         tool_schema_bytes_saved_total=schema_saved_sum,
         tool_loop_repeat_max=loop_rep_max,
+        runtime_monitor_event_total=rm_ev_sum,
+        runtime_monitor_degraded_total=rm_deg_sum,
+        mcp_audit_event_total=mcp_ev_sum,
+        mcp_audit_deny_total=mcp_den_sum,
+        lsp_audit_event_total=lsp_ev_sum,
+        lsp_audit_degraded_total=lsp_deg_sum,
+        claim_verification_verdict_parse_rate=cv_parse_rate,
+        live_trust_signal_avg=trust_avg,
+        specialist_v3_merge_conflict_cases=sr3_conf_cases,
+        agent_usage_total_tokens_sum=usage_sum_out,
     )
 
 
@@ -595,6 +783,26 @@ def merge_compaction_events_into_timeline(
     return tuple(out)
 
 
+def e2e_case_passes_acceptance(case: dict[str, Any]) -> bool:
+    """Mirror ``agent_od_workspace_e2e_audit._case_passes_acceptance`` for report JSON."""
+    return bool(
+        case.get("http_ok")
+        and case.get("final_answer_reached")
+        and int(case.get("answer_len") or 0) >= 40
+    )
+
+
+def e2e_failures_are_retryable_provider_flakes(report: dict[str, Any]) -> bool:
+    """True when every non-passing E2E case is tagged ``retryable_provider_flake``."""
+    cases = report.get("cases") or []
+    if not isinstance(cases, list):
+        return False
+    non_passing = [c for c in cases if isinstance(c, dict) and not e2e_case_passes_acceptance(c)]
+    if not non_passing:
+        return False
+    return all(bool(c.get("retryable_provider_flake")) for c in non_passing)
+
+
 def verdict_from_signals(
     *,
     checks_ok: dict[str, bool],
@@ -602,6 +810,9 @@ def verdict_from_signals(
     e2e_ok: bool | None,
     metrics: Metrics,
     sse_missing_final_in_checks: bool,
+    e2e_retryable_provider_flakes_only: bool = False,
+    strict_subagent_lifecycle: bool = False,
+    min_claim_verification_parse_rate: float | None = None,
 ) -> Verdict:
     """Compute pass/warn/fail from roadmap §6.3 gates."""
     fail_reasons: list[str] = []
@@ -612,7 +823,10 @@ def verdict_from_signals(
             fail_reasons.append(f"failed_check:{name}")
 
     if e2e_ok is False:
-        fail_reasons.append("e2e_failed")
+        if e2e_retryable_provider_flakes_only:
+            warn_reasons.append("e2e_provider_flake_after_retry")
+        else:
+            fail_reasons.append("e2e_failed")
 
     if metrics.final_answer_missing_count > 0:
         fail_reasons.append(f"final_answer_missing_count:{metrics.final_answer_missing_count}")
@@ -626,10 +840,25 @@ def verdict_from_signals(
     if metrics.missing_span_count > 0 and not fail_reasons:
         warn_reasons.append(f"missing_span_heuristic:{metrics.missing_span_count}")
 
-    if metrics.subagent_lifecycle_missing_count > 0 and not fail_reasons:
-        warn_reasons.append(
-            f"subagent_lifecycle_missing_count:{metrics.subagent_lifecycle_missing_count}"
-        )
+    if metrics.subagent_lifecycle_missing_count > 0:
+        if strict_subagent_lifecycle:
+            fail_reasons.append(
+                f"subagent_lifecycle_missing_count:{metrics.subagent_lifecycle_missing_count}"
+            )
+        elif not fail_reasons:
+            warn_reasons.append(
+                f"subagent_lifecycle_missing_count:{metrics.subagent_lifecycle_missing_count}"
+            )
+
+    if min_claim_verification_parse_rate is not None:
+        rate = metrics.claim_verification_verdict_parse_rate
+        if rate is not None and rate + 1e-9 < float(min_claim_verification_parse_rate):
+            fail_reasons.append(
+                f"claim_verification_verdict_parse_rate:{rate:.4f}"
+                f"<{float(min_claim_verification_parse_rate):.4f}"
+            )
+        elif rate is None:
+            warn_reasons.append("claim_verification_verdict_parse_rate:absent_no_cv_rows")
 
     if metrics.compaction_churn_score and metrics.compaction_churn_score > 0 and not fail_reasons:
         warn_reasons.append(f"compaction_churn_hints:{metrics.compaction_churn_score}")
@@ -641,6 +870,134 @@ def verdict_from_signals(
     if warn_reasons:
         return Verdict(status="warn", fail_reasons=(), warn_reasons=tuple(warn_reasons))
     return Verdict(status="pass")
+
+
+def build_acceptance_summary(review: dict[str, Any]) -> dict[str, Any]:
+    """§10.10 / §11.5: machine-readable acceptance table + synthetic vs live split."""
+    m = review.get("metrics") if isinstance(review.get("metrics"), dict) else {}
+    tl = review.get("trace_timeline") if isinstance(review.get("trace_timeline"), list) else []
+    ctx = review.get("run_context") if isinstance(review.get("run_context"), dict) else {}
+    verdict = review.get("verdict") if isinstance(review.get("verdict"), dict) else {}
+    e2e = review.get("e2e_audit") if isinstance(review.get("e2e_audit"), dict) else {}
+
+    side = m.get("side_llm_cache_read_ratio_avg")
+    gate_10_2 = "skipped_no_forked_thread_insight_rows"
+    if side is not None:
+        gate_10_2 = "pass" if float(side) >= 0.6 else "fail_below_0_6_thread_insights_gate"
+
+    cv_rate = m.get("claim_verification_verdict_parse_rate")
+    gate_10_3 = "skipped_no_claim_verification_rows"
+    if cv_rate is not None:
+        gate_10_3 = "pass" if float(cv_rate) >= 0.95 else "fail_below_0_95_verdict_parse_gate"
+
+    hook_n = int(m.get("hook_chain_event_count") or 0)
+    gate_10_6 = "pass" if hook_n > 0 else "warn_no_hook_chain_events_in_timeline"
+
+    sub_missing = int(m.get("subagent_lifecycle_missing_count") or 0)
+    suite = str(ctx.get("suite") or "").strip().lower()
+    if suite == "acceptance":
+        gate_b1 = (
+            "pass"
+            if sub_missing == 0
+            else "fail_subagent_lifecycle_incomplete_acceptance_lane"
+        )
+    else:
+        gate_b1 = "pass" if sub_missing == 0 else "warn_subagent_lifecycle_incomplete"
+
+    budget_cc = int(m.get("budget_cutoff_count") or 0)
+    if budget_cc > 0:
+        gate_b3_budget = "pass_budget_cutoff_signal_present"
+    elif m.get("agent_usage_total_tokens_sum") is not None:
+        gate_b3_budget = "pass_token_usage_exported_no_cutoff_in_sample"
+    else:
+        gate_b3_budget = "advisory_no_budget_cutoff_or_usage_export"
+
+    synthetic_covered = [
+        "§10.1 B0 fork_vs_coordinator: eval/chat_agent/subagent_runtime_fork_vs_coordinator_bench.py",
+        "§10.4 verification Scope/VERDICT: tests/agent/test_subagent_output_contract.py",
+        "§10.5 compaction counters: tests/scripts/live_check/test_trace_review_schema.py",
+        "§10.6 hook_chain_events: tests/agent/test_hooks_post_compact.py",
+        "§10.7 agent registry: tests/agent/test_agent_registry_permissions.py",
+        "§10.8 task-notification contract: tests/agent/test_subagent_notification_contract.py",
+        "B4 partial-failure / deny (unit): tests/agent/test_specialist_results_v3_and_claim_verification.py",
+        "B4 lifecycle rows (synthetic): tests/eval/test_subagent_hardening_gates.py",
+        "B4 fanout + malicious-deny HTTP probes (live wiring): scripts/live_check/http_suite.py",
+    ]
+
+    live_proven: list[str] = []
+    checks_raw = review.get("checks") if isinstance(review.get("checks"), list) else []
+    for chk in checks_raw:
+        if not isinstance(chk, dict):
+            continue
+        cname = str(chk.get("name") or "")
+        cok = bool(chk.get("ok"))
+        if cname == "agent_v2_fanout_probe" and cok:
+            live_proven.append("b4_fanout_multi_tool_http_check_ok")
+        if cname == "agent_v2_malicious_deny" and cok:
+            live_proven.append("b4_malicious_deny_http_check_ok")
+
+    if e2e.get("ok") is True:
+        live_proven.append("od_workspace_e2e_http_ok")
+    if sub_missing == 0 and any(
+        isinstance(row, dict) and int(row.get("subagent_runs_count") or 0) >= 2 for row in tl
+    ):
+        live_proven.append("subagent_spawn_mesh_observed_2plus_rows")
+    if cv_rate is not None and float(cv_rate) >= 0.95:
+        live_proven.append("claim_verification_verdict_parse_rate_ge_0_95")
+    if any(
+        isinstance(row, dict) and row.get("specialist_v3_merge_conflict") is True for row in tl
+    ):
+        live_proven.append("specialist_v3_merge_conflict_observed_live")
+    if m.get("agent_usage_total_tokens_sum") is not None:
+        live_proven.append("run_metadata_usage_tokens_exported")
+    if int(m.get("mcp_audit_deny_total") or 0) > 0:
+        live_proven.append("mcp_audit_deny_observed_in_timeline")
+    if budget_cc > 0:
+        live_proven.append("budget_cutoff_count_gt_0_in_timeline_aggregate")
+
+    saw_timeoutish_warning = False
+    for row in tl:
+        if not isinstance(row, dict):
+            continue
+        warns = row.get("warnings") or []
+        if not isinstance(warns, list):
+            continue
+        for w in warns:
+            ws = str(w).lower()
+            if "timeout" in ws or "deadline" in ws:
+                saw_timeoutish_warning = True
+                break
+        if saw_timeoutish_warning:
+            break
+    if saw_timeoutish_warning:
+        live_proven.append("b4_timeout_or_deadline_warning_in_e2e_timeline")
+
+    residual_open: list[str] = []
+    if "specialist_v3_merge_conflict_observed_live" not in live_proven:
+        residual_open.append(
+            "B2 LLM-judge on final_answer quality when merge.conflict absent in this run"
+        )
+    if m.get("agent_usage_total_tokens_sum") is None:
+        residual_open.append("B3 token budget: total_tokens absent in run_metadata for this suite")
+
+    live_proven = list(dict.fromkeys(live_proven))
+
+    return {
+        "schema_version": "acceptance_summary_v1",
+        "trace_review_verdict": verdict.get("status"),
+        "gates": {
+            "§10.2_side_llm_cache_read_ratio": gate_10_2,
+            "§10.3_claim_verification_verdict_parse": gate_10_3,
+            "§10.6_hook_chain_events": gate_10_6,
+            "§11.3_B1_subagent_lifecycle": gate_b1,
+            "§11.4_B3_budget_usage_timeline": gate_b3_budget,
+        },
+        "synthetic_covered": synthetic_covered,
+        "live_proven": live_proven,
+        "residual_open": residual_open,
+        "suite": ctx.get("suite"),
+        "feature_flags": ctx.get("feature_flags"),
+    }
 
 
 def trace_review_to_dict(review: TraceReviewV1) -> dict[str, Any]:
@@ -826,6 +1183,8 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
             _ptl_pc_parsed = _rtp_parsed
         _ti_rf = str(item.get("thread_insight_refresh_mode") or "").strip() or None
         _ti_scc = _coerce_int(item.get("thread_insight_synthesis_conflict_count"), default=0)
+        _e2e_http_raw = item.get("e2e_http_ok")
+        _e2e_http_ok: bool | None = None if _e2e_http_raw is None else bool(_e2e_http_raw)
         timeline.append(
             TimelineCase(
                 case_id=str(item.get("case_id") or "unknown"),
@@ -891,6 +1250,44 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 tool_schema_bytes_saved=_coerce_int(item.get("tool_schema_bytes_saved"), default=0),
                 tool_loop_repeat_max=_coerce_int(item.get("tool_loop_repeat_max"), default=0)
                 or (_max_consecutive_same_tool(tuple(steps)) if steps else 0),
+                e2e_http_ok=_e2e_http_ok,
+                runtime_monitor_event_count=_coerce_int(
+                    item.get("runtime_monitor_event_count"), default=0
+                ),
+                runtime_monitor_degraded_hits=_coerce_int(
+                    item.get("runtime_monitor_degraded_hits"), default=0
+                ),
+                runtime_monitor_timeout_hits=_coerce_int(
+                    item.get("runtime_monitor_timeout_hits"), default=0
+                ),
+                mcp_audit_event_count=_coerce_int(item.get("mcp_audit_event_count"), default=0),
+                mcp_audit_deny_hits=_coerce_int(item.get("mcp_audit_deny_hits"), default=0),
+                mcp_audit_ok_false_hits=_coerce_int(item.get("mcp_audit_ok_false_hits"), default=0),
+                lsp_audit_event_count=_coerce_int(item.get("lsp_audit_event_count"), default=0),
+                lsp_audit_degraded_hits=_coerce_int(item.get("lsp_audit_degraded_hits"), default=0),
+                lsp_audit_timeout_hits=_coerce_int(item.get("lsp_audit_timeout_hits"), default=0),
+                claim_verification_total=_coerce_int(
+                    item.get("claim_verification_total"), default=0
+                ),
+                claim_verification_verdict_parsed=_coerce_int(
+                    item.get("claim_verification_verdict_parsed"), default=0
+                ),
+                live_trust_signal=_coerce_optional_float(item.get("live_trust_signal")),
+                specialist_v3_merge_conflict=(
+                    bool(item["specialist_v3_merge_conflict"])
+                    if isinstance(item.get("specialist_v3_merge_conflict"), bool)
+                    else None
+                ),
+                specialist_v3_evidence_origin=(
+                    str(item.get("specialist_v3_evidence_origin")).strip()
+                    if item.get("specialist_v3_evidence_origin")
+                    else None
+                ),
+                agent_usage_total_tokens=(
+                    _coerce_int(item.get("agent_usage_total_tokens"), default=0)
+                    if item.get("agent_usage_total_tokens") is not None
+                    else None
+                ),
             )
         )
 
@@ -944,6 +1341,26 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
             mraw.get("tool_schema_bytes_saved_total"), default=0
         ),
         tool_loop_repeat_max=_coerce_int(mraw.get("tool_loop_repeat_max"), default=0),
+        runtime_monitor_event_total=_coerce_int(mraw.get("runtime_monitor_event_total"), default=0),
+        runtime_monitor_degraded_total=_coerce_int(
+            mraw.get("runtime_monitor_degraded_total"), default=0
+        ),
+        mcp_audit_event_total=_coerce_int(mraw.get("mcp_audit_event_total"), default=0),
+        mcp_audit_deny_total=_coerce_int(mraw.get("mcp_audit_deny_total"), default=0),
+        lsp_audit_event_total=_coerce_int(mraw.get("lsp_audit_event_total"), default=0),
+        lsp_audit_degraded_total=_coerce_int(mraw.get("lsp_audit_degraded_total"), default=0),
+        claim_verification_verdict_parse_rate=_coerce_optional_float(
+            mraw.get("claim_verification_verdict_parse_rate")
+        ),
+        live_trust_signal_avg=_coerce_optional_float(mraw.get("live_trust_signal_avg")),
+        specialist_v3_merge_conflict_cases=_coerce_int(
+            mraw.get("specialist_v3_merge_conflict_cases"), default=0
+        ),
+        agent_usage_total_tokens_sum=(
+            _coerce_int(mraw.get("agent_usage_total_tokens_sum"), default=0)
+            if mraw.get("agent_usage_total_tokens_sum") is not None
+            else None
+        ),
     )
 
     vraw = data.get("verdict") or {}

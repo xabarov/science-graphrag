@@ -38,3 +38,22 @@ def test_should_not_retry_for_regular_logic_failure() -> None:
         "run_metadata": {},
     }
     assert audit_mod._should_retry_after_case_failure(case) is False
+
+
+def test_transport_flake_detects_http_524_in_error_string() -> None:
+    case = {
+        "http_ok": False,
+        "error": "Client error '524' for url 'http://127.0.0.1:8000/v2/agent/query'",
+    }
+    assert audit_mod._should_retry_after_transport_flake(case) is True
+
+
+def test_should_retry_after_provider_flake_from_warnings() -> None:
+    case = {
+        "http_ok": True,
+        "final_answer_reached": False,
+        "answer_len": 10,
+        "warnings": ["provider_gateway_error", "retryable_provider_flake"],
+        "run_metadata": {},
+    }
+    assert audit_mod._should_retry_after_provider_flake(case) is True

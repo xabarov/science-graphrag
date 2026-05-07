@@ -104,6 +104,74 @@ def append_parent_tool_leg(
     return base
 
 
+def append_corpus_explore_leg(
+    prev: dict[str, Any] | None,
+    *,
+    subagent_id: str,
+    text: str,
+    terminal_state: str,
+    failure_code: str | None,
+    issues: list[str],
+    salvage_used: bool = False,
+) -> dict[str, Any]:
+    """Append a corpus_explore child leg (read-only exploration fanout)."""
+    base = dict(prev) if isinstance(prev, dict) else empty_specialist_results_v3()
+    legs = list(base.get("legs") or [])
+    leg = {
+        "kind": "corpus_explore",
+        "subagent_id": str(subagent_id),
+        "spawn_reason": "corpus_explore",
+        "text_excerpt": str(text or "")[:8000],
+        "issues": list(issues or [])[:32],
+        "terminal_state": str(terminal_state),
+        "failure_code": failure_code,
+        "salvage_used": bool(salvage_used),
+        "evidence_origin": _evidence_origin_for_subagent_id(subagent_id),
+        "confidence": _confidence_for_child(terminal_state, failure_code, verdict=None),
+    }
+    legs.append(leg)
+    base["schema_version"] = _SCHEMA_VERSION
+    base["legs"] = legs
+    base["merge"] = _compute_merge(legs)
+    return base
+
+
+def append_research_plan_leg(
+    prev: dict[str, Any] | None,
+    *,
+    subagent_id: str,
+    text: str,
+    terminal_state: str,
+    failure_code: str | None,
+    issues: list[str],
+    salvage_used: bool = False,
+    research_plan_write_attempted: bool = False,
+    research_plan_write_ok: bool | None = None,
+) -> dict[str, Any]:
+    """Append a research-plan decomposition child leg."""
+    base = dict(prev) if isinstance(prev, dict) else empty_specialist_results_v3()
+    legs = list(base.get("legs") or [])
+    leg = {
+        "kind": "research_plan",
+        "subagent_id": str(subagent_id),
+        "spawn_reason": "research_plan",
+        "text_excerpt": str(text or "")[:8000],
+        "issues": list(issues or [])[:32],
+        "terminal_state": str(terminal_state),
+        "failure_code": failure_code,
+        "salvage_used": bool(salvage_used),
+        "research_plan_write_attempted": bool(research_plan_write_attempted),
+        "research_plan_write_ok": research_plan_write_ok,
+        "evidence_origin": _evidence_origin_for_subagent_id(subagent_id),
+        "confidence": _confidence_for_child(terminal_state, failure_code, verdict=None),
+    }
+    legs.append(leg)
+    base["schema_version"] = _SCHEMA_VERSION
+    base["legs"] = legs
+    base["merge"] = _compute_merge(legs)
+    return base
+
+
 def append_claim_verification_leg(
     prev: dict[str, Any] | None,
     *,
@@ -183,11 +251,20 @@ def _compute_merge(legs: list[dict[str, Any]]) -> dict[str, Any]:
     kinds = {str(x.get("kind") or "") for x in legs}
     has_parent = "parent_tool" in kinds
     has_cv = "claim_verification" in kinds
-    if has_parent and has_cv:
+    has_child_leg = bool(kinds & {"claim_verification", "corpus_explore", "research_plan"})
+    if has_parent and has_child_leg:
         origin = "mixed"
     elif has_cv:
-        cv_ids = [str(x.get("subagent_id") or "") for x in legs if x.get("kind") == "claim_verification"]
+        cv_ids = [
+            str(x.get("subagent_id") or "") for x in legs if x.get("kind") == "claim_verification"
+        ]
         origin = _evidence_origin_for_subagent_id(cv_ids[-1]) if cv_ids else "subagent:unknown"
+    elif "corpus_explore" in kinds:
+        sids = [str(x.get("subagent_id") or "") for x in legs if x.get("kind") == "corpus_explore"]
+        origin = _evidence_origin_for_subagent_id(sids[-1]) if sids else "subagent:unknown"
+    elif "research_plan" in kinds:
+        sids = [str(x.get("subagent_id") or "") for x in legs if x.get("kind") == "research_plan"]
+        origin = _evidence_origin_for_subagent_id(sids[-1]) if sids else "subagent:unknown"
     else:
         origin = "parent_tool"
 
@@ -212,11 +289,11 @@ def _compute_merge(legs: list[dict[str, Any]]) -> dict[str, Any]:
                 "by_subagent": [{"subagent_id": s, "verdict": v} for s, v in cv_verdicts],
             }
 
+    subagent_kinds = frozenset({"claim_verification", "corpus_explore", "research_plan"})
     partial_failure = any(
-        str(x.get("terminal_state") or "") not in ("", "succeeded")
-        or bool(x.get("failure_code"))
+        str(x.get("terminal_state") or "") not in ("", "succeeded") or bool(x.get("failure_code"))
         for x in legs
-        if x.get("kind") == "claim_verification"
+        if x.get("kind") in subagent_kinds
     )
 
     writer_directive = _build_writer_directive(origin, conflict, partial_failure, legs)
@@ -248,10 +325,11 @@ def _build_writer_directive(
             "Summarize each stance and recommend how the user should resolve ambiguity."
         )
     if partial_failure:
+        _sub_kinds = frozenset({"claim_verification", "corpus_explore", "research_plan"})
         bad = [
             f"{x.get('subagent_id')}: {x.get('failure_code') or x.get('terminal_state')}"
             for x in legs
-            if x.get("kind") == "claim_verification"
+            if x.get("kind") in _sub_kinds
             and (
                 str(x.get("terminal_state") or "") not in ("", "succeeded")
                 or bool(x.get("failure_code"))
@@ -271,7 +349,9 @@ def serialize_for_writer(prev: dict[str, Any] | None, *, max_chars: int = 12000)
 
 __all__ = [
     "append_claim_verification_leg",
+    "append_corpus_explore_leg",
     "append_parent_tool_leg",
+    "append_research_plan_leg",
     "empty_specialist_results_v3",
     "parse_verdict_from_text",
     "prior_specialist_results_v3",

@@ -56,7 +56,29 @@ Optional: `--with-compaction-turns N` runs `compaction_turn_review.py` after the
   --out-md eval/results/trace-regression.md
 ```
 
+**Runtime v3 / claim_verification nightly (optional stricter policies):**
+
+- `--max-latency-p95-regress-ratio 1.15` — FAIL if candidate `latency_p95_ms` > baseline × ratio (both must be > 0).
+- `--min-live-trust-signal-delta <float>` — FAIL if `(candidate - baseline) live_trust_signal_avg` is below threshold (requires metric in both JSONs).
+- Add `subagent_lifecycle_missing_increase` to `--fail-on` when enforcing Epic B1 completeness vs baseline.
+
 Exit codes: `0` pass, `1` fail policies, `2` schema version mismatch, `3` warn-only policies (use `--warn-is-pass` for CI if needed).
+
+## 4.1 Reference acceptance suite (`suite=acceptance`)
+
+Runs stricter HTTP gates (including **fanout** + **malicious-deny** probes), enables `strict_v3_lifecycle`, default `min_claim_verification_parse_rate=0.95`, embeds `acceptance_summary_v1` (§10.10), and pulls **OD E2E** with `--suite acceptance` (default + heavy + v3 prompts).
+
+```bash
+export AGENT_LIVE_BASE=dev
+export AGENT_LIVE_WORKSPACE_ID=<uuid>
+.venv/bin/python scripts/live_check/agent_trace_review.py \
+  --suite acceptance \
+  --with-trace-audit --with-phoenix --with-db-audit \
+  --out-json eval/results/trace-review-acceptance-v3.json \
+  --out-md eval/results/trace-review-acceptance-v3.md
+```
+
+Dual-run artifact + rollout notes: `eval/results/runtime-v3-rollout-decision-2026-05-07.md`.
 
 ## 5) Pull Phoenix snapshots for offline review
 

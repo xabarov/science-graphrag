@@ -29,5 +29,6 @@ STREAMABLE_DEBUG_EVENT_TYPES: frozenset[str] = TOOL_SSE_HINT_STREAMABLE_TYPES | 
         "tool_permissions",
         "budget_stop_decision",
         "user_answered",
+        "tool_use_summary_batch",
     }
 )

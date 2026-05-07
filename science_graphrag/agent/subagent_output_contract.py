@@ -91,3 +91,32 @@ def verification_answer_matches_contract(answer: str) -> bool:
         and re.search(r"(?m)^\s*Key sources\s*:", s)
         and re.search(r"(?m)^\s*VERDICT\s*:\s*(PASS|FAIL|PARTIAL)\b", s, re.IGNORECASE)
     )
+
+
+def read_only_subagent_answer_matches_contract(answer: str) -> bool:
+    """§10.4 strict layout without VERDICT (corpus-explore and similar read-only roles)."""
+    s = str(answer or "")
+    if not s.strip():
+        return False
+    if re.search(r"(?m)^\s*VERDICT\s*:", s, re.IGNORECASE):
+        return False
+    return bool(
+        re.search(r"(?m)^\s*Scope\s*:", s)
+        and re.search(r"(?m)^\s*Result\s*:", s)
+        and re.search(r"(?m)^\s*Key sources\s*:", s)
+    )
+
+
+_RESEARCH_PLAN_SECTIONS = (
+    r"(?is)Corpus\s+sub-queries\s*:",
+    r"(?is)Graph\s+sub-queries\s*:",
+    r"(?is)Writer\s+spec\s*:",
+)
+
+
+def research_plan_subagent_answer_matches_contract(answer: str) -> bool:
+    """Executable research-plan shape: Scope/Result/Key sources + three subsection headers."""
+    s = str(answer or "")
+    if not read_only_subagent_answer_matches_contract(s):
+        return False
+    return all(re.search(p, s) for p in _RESEARCH_PLAN_SECTIONS)

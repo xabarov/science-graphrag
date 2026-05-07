@@ -286,18 +286,32 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                 {"token": choice[:80]},
             )
             choice = WRITER_SPECIALIST
+        selected = choice
+        if selected == ROUTE_FINISH:
+            # Hard contract: writer emits ``final_answer``. Direct END here can leak tool-assisted
+            # answers without terminal ``final_answer`` in trace/e2e.
+            selected = WRITER_SPECIALIST
+            add_span_event(
+                "agent.supervisor.finish_remapped_to_writer",
+                {"budget_left": budget},
+            )
         add_span_event(
             "agent.supervisor.route_selected",
-            {"to": choice, "budget_left": budget},
+            {"to": selected, "budget_left": budget},
         )
         return merge_routing_leg_notifications_into_update(
             state,
             settings,
             {
-                "current_specialist": choice,
+                "current_specialist": selected,
                 "routing_log": [
                     *list(state.get("routing_log") or []),
-                    {"from": "supervisor", "to": choice, "budget_left": budget},
+                    {
+                        "from": "supervisor",
+                        "to": selected,
+                        "budget_left": budget,
+                        "reason": ("supervisor_finish_guard" if choice == ROUTE_FINISH else None),
+                    },
                 ],
             },
         )

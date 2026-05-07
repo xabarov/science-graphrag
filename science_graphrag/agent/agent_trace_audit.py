@@ -97,14 +97,19 @@ def build_phoenix_structure_audit(
     sn = [str(x).strip() for x in span_names if str(x).strip()]
     flat = [str(t).strip() for t in tool_trace_names if str(t).strip()]
     non_meta = [t for t in flat if t not in ("session_init", "route_to_specialist")]
-    llm_hits = sum(1 for n in sn if n == "llm.agent.react_turn")
+
+    def _is_agent_llm_span(name: str) -> bool:
+        s = str(name).strip()
+        return s.startswith("llm.agent.") and len(s) > len("llm.agent.")
+
+    llm_hits = sum(1 for n in sn if _is_agent_llm_span(n))
     tool_dot = [n for n in sn if n.startswith("tool.")]
     emb = sum(1 for n in sn if "embedding.agent" in n)
     retr = sum(1 for n in sn if n.startswith("retrieval."))
     noise = sum(1 for n in sn if "ChannelWrite" in n or n.startswith("route_"))
     issues: list[str] = []
     if len(non_meta) >= 4 and llm_hits == 0 and sn:
-        issues.append("phoenix_span_sample_missing_llm_react_turn")
+        issues.append("phoenix_span_sample_missing_llm_agent_span")
     if len(non_meta) >= 3 and not tool_dot and sn:
         issues.append("phoenix_span_sample_missing_tool_dot_spans")
     if len(non_meta) >= 8 and llm_hits > 0 and len(tool_dot) < 2:
@@ -127,7 +132,7 @@ def build_phoenix_structure_audit(
         )
     return {
         "span_sample_size": len(sn),
-        "llm_agent_react_turn_hits": llm_hits,
+        "llm_agent_span_hits": llm_hits,
         "tool_dot_span_hits": len(tool_dot),
         "embedding_span_hits": emb,
         "retrieval_span_hits": retr,
@@ -192,14 +197,14 @@ def build_tool_trace_audit(case: dict[str, Any]) -> dict[str, Any]:
             consecutive.append(flat[i])
     issues = _heuristic_issues_for_case(case, ctr)
     span_names = _phoenix_span_names(case.get("phoenix"))
-    llm_turns = sum(1 for n in span_names if n == "llm.agent.react_turn")
+    llm_turns = sum(1 for n in span_names if str(n).strip().startswith("llm.agent."))
     noise = sum(1 for n in span_names if "ChannelWrite" in n or n.startswith("route_"))
     tool_like = sum(1 for n in span_names if n.startswith("tool."))
     out: dict[str, Any] = {
         "tool_counts": dict(sorted(ctr.items(), key=lambda kv: (-kv[1], kv[0]))),
         "consecutive_duplicate_tools": consecutive,
         "tools_called_more_than_once": {k: v for k, v in ctr.items() if v > 1},
-        "phoenix_sample_llm_agent_react_turn_hits": llm_turns,
+        "phoenix_sample_llm_agent_span_hits": llm_turns,
         "phoenix_sample_channel_or_route_hits": noise,
         "phoenix_sample_tool_dot_hits": tool_like,
         "heuristic_issues": issues,
