@@ -4,6 +4,10 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.chunk_retrieval_defaults import (
+    DEFAULT_WORKSPACE_COMPOSITION_SAMPLE_WORKS,
+    MAX_WORKSPACE_COMPOSITION_SAMPLE_WORKS,
+)
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
@@ -14,14 +18,19 @@ class SummarizeWorkspaceTool(BaseAgentTool):
     def __init__(self, store: Neo4jGraphStore) -> None:
         self._store = store
 
-    def run(self, *, workspace_id: str, top_n_works: int = 8) -> ToolResult:
+    def run(
+        self,
+        *,
+        workspace_id: str,
+        top_n_works: int = DEFAULT_WORKSPACE_COMPOSITION_SAMPLE_WORKS,
+    ) -> ToolResult:
         ws = self._store.workspace_get(workspace_id)
         if not ws:
             return ToolResult(
                 payload={"summary": "Workspace not found.", "cited_work_ids": []}, row_count=0
             )
         work_ids = [str(x) for x in (ws.get("work_ids") or []) if x][
-            : max(1, min(int(top_n_works), 15))
+            : max(1, min(int(top_n_works), MAX_WORKSPACE_COMPOSITION_SAMPLE_WORKS))
         ]
         summary = (
             f"Workspace {ws.get('name') or workspace_id} currently contains {len(ws.get('work_ids') or [])} works. "
@@ -34,7 +43,12 @@ class SummarizeWorkspaceTool(BaseAgentTool):
 
 class SummarizeWorkspaceArgs(BaseModel):
     workspace_id: str = Field(..., description="Workspace id.")
-    top_n_works: int = Field(default=8, ge=1, le=15, description="How many work ids to include.")
+    top_n_works: int = Field(
+        default=DEFAULT_WORKSPACE_COMPOSITION_SAMPLE_WORKS,
+        ge=1,
+        le=MAX_WORKSPACE_COMPOSITION_SAMPLE_WORKS,
+        description="How many work ids to include.",
+    )
 
 
 def _make_summarize_workspace_tool(store: Neo4jGraphStore) -> BaseTool:
@@ -42,7 +56,8 @@ def _make_summarize_workspace_tool(store: Neo4jGraphStore) -> BaseTool:
 
     @tool("summarize_workspace", args_schema=SummarizeWorkspaceArgs, return_direct=False)
     def summarize_workspace_tool(
-        workspace_id: str, top_n_works: int = 8
+        workspace_id: str,
+        top_n_works: int = DEFAULT_WORKSPACE_COMPOSITION_SAMPLE_WORKS,
     ) -> dict[str, str | list[str] | int]:
         """Summarize workspace composition and sample work ids."""
         result = run_tool_result_with_span(

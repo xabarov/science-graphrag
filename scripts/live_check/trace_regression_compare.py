@@ -111,6 +111,15 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--c3-tool-loop-fail-delta",
+        type=float,
+        default=1.0,
+        help=(
+            "FAIL when fail policy includes ``c3_tool_loop_instability`` and "
+            "delta metrics.tool_loop_repeat_max >= this."
+        ),
+    )
+    parser.add_argument(
         "--warn-is-pass",
         action="store_true",
         help="Treat WARN policies as exit 0 (still printed).",
@@ -216,6 +225,12 @@ def main() -> int:
     delta_subagent_lifecycle_missing = _metric(cand, "subagent_lifecycle_missing_count") - _metric(
         base, "subagent_lifecycle_missing_count"
     )
+    delta_tool_search_miss = _metric(cand, "tool_search_miss_due_to_no_discovery_total") - _metric(
+        base, "tool_search_miss_due_to_no_discovery_total"
+    )
+    delta_tool_loop_repeat_max = _metric(cand, "tool_loop_repeat_max") - _metric(
+        base, "tool_loop_repeat_max"
+    )
 
     fail_reasons: list[str] = []
     if "new_missing_spans" in policies_fail and delta_missing_spans > 0:
@@ -229,6 +244,12 @@ def main() -> int:
         and delta_compaction_churn >= args.compaction_churn_fail_delta
     ):
         fail_reasons.append(f"compaction_churn_increase:+{delta_compaction_churn:.4f}")
+    if "tool_search_miss_increase" in policies_fail and delta_tool_search_miss > 0:
+        fail_reasons.append(f"tool_search_miss_increase:+{delta_tool_search_miss:.0f}")
+    if "c3_tool_loop_instability" in policies_fail and delta_tool_loop_repeat_max >= float(
+        args.c3_tool_loop_fail_delta
+    ):
+        fail_reasons.append(f"c3_tool_loop_instability:+{delta_tool_loop_repeat_max:.0f}")
 
     warn_reasons: list[str] = []
     base_lat = _metric(base, "latency_p95_ms")
@@ -236,6 +257,15 @@ def main() -> int:
     if "latency_p95_increase" in policies_warn and base_lat > 0 and cand_lat > 0:
         if cand_lat > base_lat * args.latency_warn_ratio:
             warn_reasons.append(f"latency_p95_increase:{base_lat}->{cand_lat}")
+
+    if (
+        "c3_latency_without_error_regress" in policies_warn
+        and base_lat > 0
+        and cand_lat > 0
+        and cand_lat > base_lat * args.latency_warn_ratio
+        and delta_tool_error <= 1e-12
+    ):
+        warn_reasons.append(f"c3_latency_without_error_regress:{base_lat}->{cand_lat}")
 
     if "shortlist_ratio_increase" in policies_warn and delta_shortlist_ratio > 0:
         warn_reasons.append(f"shortlist_ratio_increase:{delta_shortlist_ratio:.4f}")
@@ -350,6 +380,8 @@ def main() -> int:
             "candidate_verdict_rank": cand_verdict_rank,
             "unnecessary_tool_calls_avg": delta_unnecessary_tool_calls_avg,
             "subagent_lifecycle_missing_count": delta_subagent_lifecycle_missing,
+            "tool_search_miss_due_to_no_discovery_total": delta_tool_search_miss,
+            "tool_loop_repeat_max": delta_tool_loop_repeat_max,
         },
     }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)

@@ -52,6 +52,9 @@ def _last_ptl_retry_count(session_meta: dict[str, Any]) -> int:
     if not isinstance(inner, dict):
         return 0
     try:
+        raw_pc = inner.get("ptl_retry_count_per_compaction")
+        if raw_pc is not None and str(raw_pc).strip() != "":
+            return max(0, int(raw_pc))
         return max(0, int(inner.get("ptl_retry_count") or 0))
     except (TypeError, ValueError):
         return 0
@@ -149,6 +152,7 @@ class PromptMemoryResolution:
             "insight_conflict_resolved": bool(self.insight_conflict_resolved),
             "insight_fallback_reason": self.insight_fallback_reason,
             "ptl_retry_count": int(self.ptl_retry_count),
+            "ptl_retry_count_per_compaction": int(self.ptl_retry_count),
         }
         if self.thread_insight_text and str(self.thread_insight_text).strip():
             frag["thread_insight_prompt_injected"] = True

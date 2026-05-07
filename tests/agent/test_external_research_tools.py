@@ -175,7 +175,7 @@ def test_doi_resolver_graph_match_when_workspace_misses_global_hit(
     )
     monkeypatch.setattr(
         "science_graphrag.agent.tools.doi_resolver_tool._crossref_fallback",
-        lambda _doi, _mailto: {"doi": "10.1000/xyz", "title": "X"},
+        lambda _doi, _mailto, **_kw: {"doi": "10.1000/xyz", "title": "X"},
     )
     store = SimpleNamespace(
         find_work_id_by_doi_in_workspace=lambda _ws, _doi: None,
@@ -205,7 +205,7 @@ def test_doi_resolver_workspace_match_overrides_metadata_source(
     )
     monkeypatch.setattr(
         "science_graphrag.agent.tools.doi_resolver_tool._crossref_fallback",
-        lambda _doi, _mailto: {"doi": "10.1000/xyz", "title": "X"},
+        lambda _doi, _mailto, **_kw: {"doi": "10.1000/xyz", "title": "X"},
     )
     store = SimpleNamespace(
         find_work_id_by_doi_in_workspace=lambda _ws, _doi: "W-1",
@@ -235,7 +235,7 @@ def test_doi_resolver_crossref_fallback_source_name(
     )
     monkeypatch.setattr(
         "science_graphrag.agent.tools.doi_resolver_tool._crossref_fallback",
-        lambda _doi, _mailto: {"doi": "10.1000/abc", "title": "Crossref title"},
+        lambda _doi, _mailto, **_kw: {"doi": "10.1000/abc", "title": "Crossref title"},
     )
     store = SimpleNamespace(
         find_work_id_by_doi_in_workspace=lambda _ws, _doi: None,
@@ -257,7 +257,7 @@ def test_doi_resolver_preserves_openalex_error_detail(
     monkeypatch.setattr("science_graphrag.agent.tools.doi_resolver_tool.fetch_work_by_doi", _boom)
     monkeypatch.setattr(
         "science_graphrag.agent.tools.doi_resolver_tool._crossref_fallback",
-        lambda _doi, _mailto: None,
+        lambda _doi, _mailto, **_kw: None,
     )
     store = SimpleNamespace(
         find_work_id_by_doi_in_workspace=lambda _ws, _doi: None,

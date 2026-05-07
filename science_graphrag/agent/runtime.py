@@ -53,6 +53,20 @@ def _collect_subagent_task_notifications(messages: list[Any]) -> list[dict[str, 
     return out
 
 
+def _collect_claim_verification_results(messages: list[Any]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for m in messages:
+        if not isinstance(m, HumanMessage):
+            continue
+        ak = getattr(m, "additional_kwargs", None) or {}
+        if not isinstance(ak, dict) or ak.get("kind") != "claim_verification_result":
+            continue
+        inner = ak.get("claim_verification_result")
+        if isinstance(inner, dict):
+            out.append(inner)
+    return out
+
+
 def _coerce_optional_str(value: object) -> str | None:
     if not isinstance(value, str):
         return None
@@ -423,6 +437,9 @@ class AgentRunOutput:
     subagent_observability_lane: str | None = None
     # Train T3 §10.6: hook_chain_event rows for trace-review / JSON parity.
     hook_chain_events: list[dict[str, Any]] | None = None
+    # Epic B: typed merge + claim verification artifacts.
+    specialist_results_v3: dict[str, Any] | None = None
+    claim_verification_results: list[dict[str, Any]] | None = None
 
 
 class RetrievalAgent:
@@ -611,13 +628,27 @@ class RetrievalAgent:
                 "agent.assistant_draft_answer_salvage",
                 {"answer_chars": len(answer or "")},
             )
+        cv_warn: list[str] = []
+        for row in _collect_claim_verification_results(list(final_state.get("messages") or [])):
+            if not isinstance(row, dict):
+                continue
+            if str(row.get("terminal_state") or "") != "succeeded":
+                cv_warn.append("claim_verification_child_non_success")
+                break
+            issues = row.get("issues")
+            if isinstance(issues, list) and any(str(x).strip() for x in issues):
+                cv_warn.append("claim_verification_child_issues")
+                break
+
+        merged_extra_warns = list(extra_warn or [])
+        merged_extra_warns.extend(cv_warn)
         envelope = build_chat_envelope(
             state=final_state,
             answer=answer,
             citations=citations,
             tool_trace=trace,
             answer_class_hint=answer_class_hint,
-            extra_warnings=extra_warn,
+            extra_warnings=merged_extra_warns or None,
         )
         raw_q = (final_state.get("metadata") or {}).get("raw_user_question")
         if not isinstance(raw_q, str) or not raw_q.strip():
@@ -655,8 +686,15 @@ class RetrievalAgent:
         routing_sub_rows = build_subagent_runs_from_routing_log(
             routing_log, parent_turn_id=parent_tid
         )
-        subagent_runs = merge_subagent_run_rows(routing_rows=routing_sub_rows, spawned_rows=[])
+        raw_spawn = meta_final.get("subagent_spawn_rows") if isinstance(meta_final, dict) else None
+        spawned_rows = [x for x in raw_spawn if isinstance(x, dict)] if isinstance(raw_spawn, list) else []
+        subagent_runs = merge_subagent_run_rows(
+            routing_rows=routing_sub_rows, spawned_rows=spawned_rows
+        )
         _tn = _collect_subagent_task_notifications(messages)
+        _cv = _collect_claim_verification_results(messages)
+        sr3_final = final_state.get("specialist_results_v3")
+        sr3_out = sr3_final if isinstance(sr3_final, dict) else None
         _lane = (
             "fork_v3_enhanced"
             if str(self._settings.agent_runtime).strip() == "langgraph_supervisor_v3"
@@ -710,6 +748,8 @@ class RetrievalAgent:
             subagent_task_notifications=_tn or None,
             subagent_observability_lane=_lane,
             hook_chain_events=hook_chain or None,
+            specialist_results_v3=sr3_out,
+            claim_verification_results=_cv or None,
         )
 
 

@@ -7,6 +7,23 @@ from science_graphrag.agent.debug_events_telemetry import (
 )
 
 
+def test_tool_search_result_accumulates_schema_bytes_saved() -> None:
+    evs = [
+        {
+            "type": "tool_search_result",
+            "deferred_schema_refs": [{"tool": "x"}],
+            "tool_schema_bytes_saved": 120,
+        },
+        {
+            "type": "tool_search_result",
+            "deferred_schema_refs": [{"tool": "y"}],
+            "tool_schema_bytes_saved": 30,
+        },
+    ]
+    tel = extract_runtime_telemetry_from_debug_events(evs)
+    assert tel.get("tool_schema_bytes_saved") == 150
+
+
 def test_tool_message_compact_audit_emits_microcompact_count() -> None:
     """Summing microcompact triggers across multiple compact audit events."""
     evs = [

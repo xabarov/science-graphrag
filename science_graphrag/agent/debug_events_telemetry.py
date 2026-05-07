@@ -16,6 +16,7 @@ class _TelemetryAccum:  # pylint: disable=too-few-public-methods
         "miss_no_discovery",
         "activation_rates",
         "microcompact_triggers",
+        "schema_bytes_saved",
     )
 
     def __init__(self) -> None:
@@ -25,6 +26,7 @@ class _TelemetryAccum:  # pylint: disable=too-few-public-methods
         self.miss_no_discovery = 0
         self.activation_rates: list[float] = []
         self.microcompact_triggers = 0
+        self.schema_bytes_saved = 0
 
 
 def _accum_tool_search_result(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
@@ -41,10 +43,13 @@ def _accum_tool_search_result(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
     except (TypeError, ValueError):
         pass
     raw_ar = ev.get("deferred_tool_activation_rate")
-    if raw_ar is None:
-        return
+    if raw_ar is not None:
+        try:
+            acc.activation_rates.append(float(raw_ar))
+        except (TypeError, ValueError):
+            pass
     try:
-        acc.activation_rates.append(float(raw_ar))
+        acc.schema_bytes_saved += int(ev.get("tool_schema_bytes_saved") or 0)
     except (TypeError, ValueError):
         pass
 
@@ -99,4 +104,6 @@ def extract_runtime_telemetry_from_debug_events(
         )
     if acc.microcompact_triggers > 0:
         telemetry["tool_message_microcompact_triggered_count"] = int(acc.microcompact_triggers)
+    if acc.schema_bytes_saved > 0:
+        telemetry["tool_schema_bytes_saved"] = int(acc.schema_bytes_saved)
     return telemetry

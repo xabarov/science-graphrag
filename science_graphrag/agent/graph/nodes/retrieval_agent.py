@@ -9,6 +9,7 @@ from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
+from science_graphrag.agent.forked_runtime import run_claim_verification_fork_bundle
 from science_graphrag.agent.graph.react_edges import (
     react_after_tools_decrement_budget,
     react_chat_response_budget_cutoff,
@@ -16,10 +17,22 @@ from science_graphrag.agent.graph.react_edges import (
     route_react_tools_next,
 )
 from science_graphrag.agent.graph.state import AgentState
+from science_graphrag.agent.hooks.subagent_hooks import TerminalState as SubagentHookTerminalState
+from science_graphrag.agent.hooks.subagent_hooks import (
+    emit_subagent_start_hook,
+    emit_subagent_stop_hook,
+)
 from science_graphrag.agent.llm.chat import (
     agent_chat_transport_max_attempts,
     build_chat_model,
     ensure_messages_safe_for_generation,
+)
+from science_graphrag.agent.subagents.specialist_results_v3 import (
+    append_claim_verification_leg,
+    append_parent_tool_leg,
+    empty_specialist_results_v3,
+    parse_verdict_from_text,
+    prior_specialist_results_v3,
 )
 from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
@@ -36,6 +49,18 @@ from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import SpanAttributes, add_span_event, llm_span
 
 SPECIALIST_NAME = "retrieval_agent"
+
+
+def _hook_terminal_state(term: str) -> SubagentHookTerminalState:
+    if term == "timed_out":
+        return "timed_out"
+    if term == "cancelled":
+        return "cancelled"
+    if term == "succeeded":
+        return "succeeded"
+    return "failed"
+
+
 SYSTEM_PROMPT = (
     "You are a retrieval specialist for a research workspace. Callable tools: "
     "workspace_inspect (mode=stats|papers|blurb — stats for counts, papers for title list, blurb for "
@@ -210,13 +235,133 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
         new_payloads = _extract_tool_payloads(messages, before)
         prior = list(specialist_results.get(SPECIALIST_NAME) or [])
         specialist_results[SPECIALIST_NAME] = prior + new_payloads
+
+        prev_v3 = prior_specialist_results_v3(state, next_state)
+        if new_payloads:
+            sr3 = append_parent_tool_leg(
+                prev_v3,
+                specialist_id=SPECIALIST_NAME,
+                tool_payloads=new_payloads,
+            )
+        else:
+            sr3 = prev_v3 if isinstance(prev_v3, dict) else empty_specialist_results_v3()
+        extra_msgs: list[HumanMessage] = []
+        extra_debug: list[dict[str, Any]] = []
+        meta_out = dict(state.get("metadata") or {})
+        spawn_rows = list(meta_out.get("subagent_spawn_rows") or [])
+        parent_tid = str(meta_out.get("parent_turn_id") or "").strip()
+
+        if (
+            bool(getattr(settings, "agent_claim_verification_enabled", False))
+            and str(settings.agent_runtime or "").strip() == "langgraph_supervisor_v3"
+            and new_payloads
+        ):
+            cv_variants = meta_out.get("claim_verification_variant_suffixes")
+            variant_list = (
+                [str(x) for x in cv_variants if str(x).strip()]
+                if isinstance(cv_variants, list)
+                else None
+            )
+            cv_results = run_claim_verification_fork_bundle(
+                stores=stores,
+                settings=settings,
+                question=question,
+                retrieval_payloads=new_payloads,
+                workspace_id=state.get("workspace_id"),
+                thread_id=tid or None,
+                agent_runtime=str(meta_out.get("agent_runtime") or settings.agent_runtime),
+                variant_prompt_suffixes=variant_list,
+            )
+            cv_bucket = list(specialist_results.get("claim_verification") or [])
+            for cv in cv_results:
+                sid = str(cv.get("subagent_id") or "cv-unknown")
+                term = str(cv.get("terminal_state") or "failed")
+                fc = cv.get("failure_code")
+                lat = cv.get("latency_ms")
+                hook_local: list[dict[str, Any]] = []
+                if parent_tid:
+                    emit_subagent_start_hook(
+                        out=hook_local,
+                        subagent_id=sid,
+                        parent_turn_id=parent_tid,
+                        spawn_reason="claim_verification",
+                        leg_kind="spawned",
+                        execution_mode="sync",
+                    )
+                    emit_subagent_stop_hook(
+                        out=hook_local,
+                        subagent_id=sid,
+                        parent_turn_id=parent_tid,
+                        spawn_reason="claim_verification",
+                        terminal_state=_hook_terminal_state(term),
+                        leg_kind="spawned",
+                        latency_ms=int(lat) if isinstance(lat, int) else None,
+                        failure_code=str(fc) if fc is not None else None,
+                    )
+                    extra_debug.extend(hook_local)
+                spawn_rows.append(
+                    {
+                        "subagent_id": sid,
+                        "parent_turn_id": parent_tid,
+                        "spawn_reason": "claim_verification",
+                        "terminal_state": term,
+                        "latency_ms": int(lat) if isinstance(lat, int) else None,
+                        "failure_code": fc,
+                        "tokens": None,
+                        "cost_usd_estimate": None,
+                        "kind": "spawned",
+                    }
+                )
+                sr3 = append_claim_verification_leg(
+                    sr3,
+                    subagent_id=sid,
+                    text=str(cv.get("text") or ""),
+                    terminal_state=term,
+                    failure_code=str(fc) if fc is not None else None,
+                    issues=list(cv.get("issues") or []),
+                    salvage_used=bool(cv.get("salvage_used")),
+                )
+                verdict = parse_verdict_from_text(str(cv.get("text") or ""))
+                cv_bucket.append(
+                    {
+                        "subagent_id": sid,
+                        "text": str(cv.get("text") or "")[:8000],
+                        "issues": list(cv.get("issues") or [])[:24],
+                        "terminal_state": term,
+                        "failure_code": fc,
+                        "verdict": verdict,
+                    }
+                )
+                extra_msgs.append(
+                    HumanMessage(
+                        content="",
+                        additional_kwargs={
+                            "kind": "claim_verification_result",
+                            "claim_verification_result": {
+                                "schema_version": 1,
+                                "subagent_id": sid,
+                                "parent_turn_id": parent_tid or None,
+                                "verdict": verdict,
+                                "issues": list(cv.get("issues") or [])[:24],
+                                "terminal_state": term,
+                                "failure_code": fc,
+                                "latency_ms": lat,
+                            },
+                        },
+                    )
+                )
+            specialist_results["claim_verification"] = cv_bucket
+
+        meta_out["subagent_spawn_rows"] = spawn_rows
         out: dict[str, Any] = {
-            "messages": messages,
+            "messages": messages + extra_msgs,
             "budget_remaining": int(
                 next_state.get("budget_remaining", state.get("budget_remaining", 0))
             ),
             "specialist_results": specialist_results,
+            "specialist_results_v3": sr3,
             "current_specialist": SPECIALIST_NAME,
+            "metadata": meta_out,
         }
         out["debug_events"] = [
             build_tool_search_result_debug_event(specialist=SPECIALIST_NAME, meta=meta),
@@ -225,6 +370,7 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
                 if not bool(mtx.get("skipped"))
                 else []
             ),
+            *extra_debug,
         ]
         return out
 

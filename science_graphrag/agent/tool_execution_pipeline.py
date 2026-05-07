@@ -7,7 +7,9 @@ JSONL sidechain transcripts for specialist branches.
 
 from __future__ import annotations
 
+import functools
 import json
+import logging
 import threading
 import time
 from collections.abc import Callable
@@ -19,6 +21,7 @@ from langchain_core.tools import BaseTool
 from langgraph.prebuilt import ToolNode
 
 from science_graphrag.agent.can_use_tool_contract import CanUseTool
+from science_graphrag.agent.context.session_backend import get_session_memory_backend
 from science_graphrag.agent.debug_streamable_types import TOOL_SSE_HINT_STREAMABLE_TYPES
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.runtime_context import agent_graph_thread_id_scope
@@ -27,6 +30,27 @@ from science_graphrag.agent.tool_call_normalization import (
     state_with_normalized_last_ai_tool_calls,
 )
 from science_graphrag.config import Settings
+
+logger = logging.getLogger(__name__)
+
+
+@functools.lru_cache(maxsize=1)
+def _plan_mode_high_risk_tool_names() -> frozenset[str]:
+    """Tools with manifest risk ``high`` are blocked while plan_mode is active."""
+    from science_graphrag.agent.tool_manifest import manifest_by_name
+
+    return frozenset(n for n, e in manifest_by_name().items() if e.risk == "high")
+
+
+def _session_plan_mode_active(thread_id: str) -> bool:
+    ent = get_session_memory_backend().get_session_copy(thread_id)
+    meta = ent.get("session_meta") or {}
+    if not isinstance(meta, dict):
+        return False
+    pm = meta.get("plan_mode")
+    if not isinstance(pm, dict):
+        return False
+    return bool(pm.get("active"))
 
 
 def _thread_id_for_tool_context(st: AgentState) -> str | None:
@@ -53,9 +77,12 @@ def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
     """Append one JSON object as a single line (JSONL)."""
     path.parent.mkdir(parents=True, exist_ok=True)
     line = json.dumps(payload, ensure_ascii=False, default=str)
-    with _SIDECHAIN_LOCK:
-        with path.open("a", encoding="utf-8") as fh:
-            fh.write(line + "\n")
+    try:
+        with _SIDECHAIN_LOCK:
+            with path.open("a", encoding="utf-8") as fh:
+                fh.write(line + "\n")
+    except OSError as exc:
+        logger.warning("tool_execution_pipeline: skip sidechain append (path=%s): %s", path, exc)
 
 
 def effective_tool_policy(state: AgentState) -> str:
@@ -243,6 +270,16 @@ def build_tool_execution_node(
                 nm = normalize_tool_call_name(str(tc.get("name") or ""))
                 if nm and nm not in bound and nm not in denies:
                     denies[nm] = "not_in_bound_tool_surface"
+
+        tid_plan = _thread_id_for_tool_context(st0)
+        if tid_plan and _session_plan_mode_active(tid_plan):
+            hi = _plan_mode_high_risk_tool_names()
+            for tc in tcs:
+                if not isinstance(tc, dict):
+                    continue
+                nm = normalize_tool_call_name(str(tc.get("name") or ""))
+                if nm and nm in hi and nm not in denies:
+                    denies[nm] = "plan_mode:high_risk_tool_blocked"
 
         if can_use_tool is not None:
             for tc in tcs:

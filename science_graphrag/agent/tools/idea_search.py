@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
 from science_graphrag.agent.tools.chunk_retrieval_defaults import (
+    AGENT_CHUNK_SNIPPET_CHARS_IDEA_SEARCH,
+    AGENT_TOOL_QUERY_TRACE_CHARS,
     DEFAULT_AGENT_CHUNK_TOP_K,
     MAX_AGENT_CHUNK_TOP_K,
     normalize_agent_retrieval_query,
@@ -85,7 +87,7 @@ class IdeaSearchTool(BaseAgentTool):
                     for hit in self._chunk_store.search_similar(
                         vector=vector, limit=k, workspace_id=workspace_id
                     ):
-                        snippet = str(hit.get("text") or "")[:240]
+                        snippet = str(hit.get("text") or "")[:AGENT_CHUNK_SNIPPET_CHARS_IDEA_SEARCH]
                         wid = hit.get("work_id")
                         items.append(
                             {
@@ -188,7 +190,7 @@ def _make_idea_search_tool(
         result = run_tool_result_with_span(
             tool_name="idea_search",
             tool_parameters={
-                "query": query[:200],
+                "query": query[:AGENT_TOOL_QUERY_TRACE_CHARS],
                 "workspace_id": workspace_id or "",
                 "top_k": top_k,
             },

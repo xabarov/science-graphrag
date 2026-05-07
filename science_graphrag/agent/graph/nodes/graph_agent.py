@@ -21,6 +21,11 @@ from science_graphrag.agent.llm.chat import (
     build_chat_model,
     ensure_messages_safe_for_generation,
 )
+from science_graphrag.agent.subagents.specialist_results_v3 import (
+    append_parent_tool_leg,
+    empty_specialist_results_v3,
+    prior_specialist_results_v3,
+)
 from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
@@ -192,12 +197,22 @@ def build_graph_agent_node(stores: StoreRegistry, settings: Settings):
         new_payloads = _extract_tool_payloads(messages, before)
         prior = list(specialist_results.get(SPECIALIST_NAME) or [])
         specialist_results[SPECIALIST_NAME] = prior + new_payloads
+        prev_v3 = prior_specialist_results_v3(state, next_state)
+        if new_payloads:
+            sr3 = append_parent_tool_leg(
+                prev_v3,
+                specialist_id=SPECIALIST_NAME,
+                tool_payloads=new_payloads,
+            )
+        else:
+            sr3 = prev_v3 if isinstance(prev_v3, dict) else empty_specialist_results_v3()
         return {
             "messages": messages,
             "budget_remaining": int(
                 next_state.get("budget_remaining", state.get("budget_remaining", 0))
             ),
             "specialist_results": specialist_results,
+            "specialist_results_v3": sr3,
             "current_specialist": SPECIALIST_NAME,
             "debug_events": [
                 build_tool_search_result_debug_event(specialist=SPECIALIST_NAME, meta=meta),

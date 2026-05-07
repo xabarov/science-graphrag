@@ -148,6 +148,10 @@ def _evaluate_case(
             claim_grounding_ok and pm.insight_fallback_reason == "insight_stale_lag"
         )
 
+    conflict_audit = False
+    if case_id == "long_thread_conflict_marked":
+        conflict_audit = pm.thread_insight_status == "conflicted"
+
     case_out = {
         "case_id": case_id,
         "pass": ok,
@@ -156,6 +160,7 @@ def _evaluate_case(
         "thread_insight_prompt_status": pm.run_metadata_fragment().get(
             "thread_insight_prompt_status"
         ),
+        "thread_insight_synthesis_conflict_audit": conflict_audit,
     }
     stale_error = bool(case_id == "long_thread_stale_fallback" and pm.thread_insight_text)
     return case_out, ok, claim_grounding_ok, stale_error
@@ -219,11 +224,18 @@ def run_offline_long_thread_metrics(
 
     n = float(recall_total or 1)
     g = float(grounding_total or 1)
+    conflict_audit_hits = sum(
+        1
+        for c in cases_out
+        if isinstance(c.get("thread_insight_synthesis_conflict_audit"), bool)
+        and c["thread_insight_synthesis_conflict_audit"]
+    )
     metrics = {
         "insight_recall_at_k": round(recall_hits / n, 6),
         "stale_summary_error_rate": round(stale_errors / n, 6),
         "long_thread_eval_pass_rate": round(recall_hits / n, 6),
         "claim_grounding_precision": round(grounding_hits / g, 6),
         "claim_grounding_recall": round(grounding_hits / g, 6),
+        "insight_synthesis_conflict_audit_rate": round(conflict_audit_hits / n, 6),
     }
     return {"cases": cases_out, "metrics": metrics}

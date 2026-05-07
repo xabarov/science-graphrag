@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import functools
+import json
 import re
 from dataclasses import dataclass
 from typing import Any, Sequence
@@ -23,6 +24,34 @@ from science_graphrag.config import Settings
 def _manifest_map() -> dict[str, ToolManifestEntry]:
     """Frozen tool manifest keyed by name (cached for shortlist hot paths)."""
     return manifest_by_name()
+
+
+def _json_wire_bytes(obj: Any) -> int:
+    """UTF-8 byte length of a compact JSON serialization (telemetry / transport sizing)."""
+    try:
+        return len(
+            json.dumps(obj, ensure_ascii=False, separators=(",", ":"), default=str).encode("utf-8")
+        )
+    except (TypeError, ValueError):
+        return 0
+
+
+def _tool_args_json_schema(tool: BaseTool) -> dict[str, Any] | None:
+    """Best-effort Pydantic JSON Schema for a LangChain tool (for deferred transport)."""
+    asc = getattr(tool, "args_schema", None)
+    if asc is None:
+        return None
+    try:
+        if hasattr(asc, "model_json_schema"):
+            return asc.model_json_schema()  # type: ignore[no-any-return]
+        schema_fn = getattr(asc, "schema", None)
+        if callable(schema_fn):
+            legacy = schema_fn()
+            if isinstance(legacy, dict):
+                return legacy
+    except (TypeError, ValueError, AttributeError):
+        return None
+    return None
 
 
 _SESSION_MEMORY_RE = re.compile(
@@ -320,7 +349,9 @@ def _shortlist_build_rules_meta(
     """Assemble ``tool_search_result`` metadata for the rules path."""
     _sort_picked_like_registry_order(picked, tools)
     names = [getattr(t, "name", "") for t in picked]
-    reason = "hybrid_llm" if (selector_extra or {}).get("selector_stage") == "hybrid_llm" else "rules"
+    reason = (
+        "hybrid_llm" if (selector_extra or {}).get("selector_stage") == "hybrid_llm" else "rules"
+    )
     meta_out: dict[str, Any] = {
         "reason": reason,
         "matched": names,
@@ -336,14 +367,53 @@ def _shortlist_build_rules_meta(
     meta_out["catalog_preview"] = compact_catalog_lines(specialist=specialist_arg)[:8]
     if ctx.settings.agent_tool_search_deferred_schema_refs_enabled:
         by_meta = _manifest_map()
+        discovery = set(ctx.message_discovery_merged) | set(ctx.carryover_merged)
+        name_to_tool = {getattr(t, "name", ""): t for t in picked if getattr(t, "name", "")}
         refs: list[dict[str, Any]] = []
+        full_rows: list[dict[str, Any]] = []
+        hypothetical_wire = 0
+        actual_wire = 0
+        do_full = bool(
+            getattr(
+                ctx.settings, "agent_tool_search_deferred_schema_full_on_discovery_enabled", True
+            )
+        )
+        max_schema = int(
+            getattr(
+                ctx.settings, "agent_tool_search_deferred_schema_full_max_bytes_per_tool", 24_000
+            )
+        )
         for name in names:
-            meta = by_meta.get(name)
-            if meta is None:
+            meta_ent = by_meta.get(name)
+            if meta_ent is None or not meta_ent.strict_deferred_requires_discovery:
                 continue
-            refs.append({"tool": name, "schema_ref": meta.deferred_schema_ref})
-        meta_out["deferred_schema_refs"] = refs
-        meta_out["deferred_schema_mode"] = "shortlist_only"
+            ref_entry = {"tool": name, "schema_ref": meta_ent.deferred_schema_ref}
+            refs.append(ref_entry)
+            tool_obj = name_to_tool.get(name)
+            schema_dict = _tool_args_json_schema(tool_obj) if tool_obj is not None else None
+            raw_full = _json_wire_bytes(schema_dict) if isinstance(schema_dict, dict) else 0
+            hypothetical_wire += raw_full if raw_full else _json_wire_bytes(ref_entry)
+            if (
+                name in discovery
+                and do_full
+                and isinstance(schema_dict, dict)
+                and 0 < raw_full <= max_schema
+            ):
+                full_rows.append({"tool": name, "json_schema": schema_dict})
+                actual_wire += _json_wire_bytes({"tool": name, "json_schema": schema_dict})
+            else:
+                actual_wire += _json_wire_bytes(ref_entry)
+        if refs:
+            meta_out["deferred_schema_refs"] = refs
+            meta_out["deferred_schema_mode"] = (
+                "compact_default_full_on_discovery"
+                if full_rows
+                else "compact_only_deferred_shortlist"
+            )
+            if full_rows:
+                meta_out["deferred_schema_full_tools"] = full_rows
+            saved = max(0, int(hypothetical_wire - actual_wire))
+            meta_out["tool_schema_bytes_saved"] = saved
     if ctx.carryover_merged:
         meta_out["carryover_tools"] = ctx.carryover_merged
     elif ctx.carryover_names:
@@ -734,6 +804,8 @@ def build_tool_search_result_debug_event(
         "rules_candidate_tools",
         "llm_ranked_tools",
         "pre_llm_denied_tools",
+        "deferred_schema_full_tools",
+        "tool_schema_bytes_saved",
     )
     for k in optional_keys:
         if k not in meta:

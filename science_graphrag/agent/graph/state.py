@@ -33,6 +33,7 @@ class AgentState(TypedDict):
     budget_remaining: int
     metadata: dict
     specialist_results: dict[str, list[dict]]
+    specialist_results_v3: dict[str, Any]
     current_specialist: str | None
     routing_log: list[dict]
     debug_events: Annotated[list[dict[str, Any]], add]
@@ -58,6 +59,8 @@ def build_initial_agent_state(
     user_structured_answer: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Shared initial state for LangGraph agent runs (API v2 + RetrievalAgent runtime)."""
+    from science_graphrag.agent.subagents.specialist_results_v3 import empty_specialist_results_v3
+
     from science_graphrag.agent.context.post_compact_attachments import (
         clear_paper_sources_capsule,
         load_paper_sources_items,
@@ -211,6 +214,7 @@ def build_initial_agent_state(
             "budget_remaining": max_tool_calls,
             "metadata": meta,
             "specialist_results": {},
+            "specialist_results_v3": empty_specialist_results_v3(),
             "current_specialist": None,
             "routing_log": [],
             "debug_events": initial_debug,
@@ -279,6 +283,7 @@ def build_initial_agent_state(
         "budget_remaining": max_tool_calls,
         "metadata": meta,
         "specialist_results": {},
+        "specialist_results_v3": empty_specialist_results_v3(),
         "current_specialist": None,
         "routing_log": [],
         "debug_events": initial_debug,

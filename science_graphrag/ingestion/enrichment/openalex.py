@@ -8,6 +8,9 @@ import httpx
 from science_graphrag.domain.models import WorkDraft, WorkType
 from science_graphrag.ingestion.dedup import normalize_doi, title_fingerprint
 
+# Polite-pool contact when callers pass empty mailto; must match ``Settings.openalex_mailto`` default.
+OPENALEX_MAILTO_FALLBACK = "dev@localhost"
+
 _ARXIV_IN_URL_RE = re.compile(
     r"arxiv\.org/abs/(?P<id>\d{4}\.\d{4,5})(?:v\d+)?",
     re.IGNORECASE,

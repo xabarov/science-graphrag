@@ -149,6 +149,22 @@ def task_notification_human_message(
     )
 
 
+def sse_payload_claim_verification_from_human_message(msg: HumanMessage) -> dict[str, Any] | None:
+    """SSE ``claim_verification_result`` dict from a HumanMessage (mirrors task_notification pattern)."""
+    if not isinstance(msg, HumanMessage):
+        return None
+    ak = getattr(msg, "additional_kwargs", None) or {}
+    if not isinstance(ak, dict):
+        return None
+    if str(ak.get("kind") or "") != "claim_verification_result":
+        return None
+    inner = ak.get("claim_verification_result")
+    if not isinstance(inner, dict):
+        return None
+    merged = {k: v for k, v in inner.items() if k != "type"}
+    return {**merged, "type": "claim_verification_result"}
+
+
 def sse_payload_from_human_message(msg: HumanMessage) -> dict[str, Any] | None:
     """Extract SSE ``subagent_task_notification`` dict from a HumanMessage."""
     if not isinstance(msg, HumanMessage):
@@ -200,6 +216,7 @@ __all__ = [
     "build_task_notification_xml",
     "new_task_id",
     "parse_task_notification_xml",
+    "sse_payload_claim_verification_from_human_message",
     "sse_payload_from_human_message",
     "task_notification_human_message",
 ]

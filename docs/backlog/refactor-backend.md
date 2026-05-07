@@ -54,6 +54,13 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
 
+### [OPEN] Persisted admin section `agent_tools` (runtime overrides without overloading LLM settings)
+- **Area:** `science_graphrag/settings/{service.py,runtime_overlay.py,repository.py}`, `science_graphrag/api/settings*.py`, `ui/src/pages/SettingsPage/`
+- **Issue:** Operator-facing tool toggles and safety caps (`agent_web_*`, MCP/LSP timeouts) live on `Settings` (env) but are not first-class in `/v1/settings`; stuffing them into `llm.runtime_overrides` mixes LLM provider config with tool policy.
+- **Proposal:** Add persisted JSON bucket `agent_tools` + `PATCH /v1/settings/agent_tools` with allowlisted scalar merges into `Settings` (see design doc). Keep argv/denylist-heavy knobs env-only until validation story exists.
+- **Acceptance:** Round-trip for at least one scalar changes effective `get_settings()` after documented reload policy; schema version bump + UI card optional; no secrets in persisted JSON.
+- **Raised:** 2026-05-07 — design: [`docs/analysis/agent-tools-admin-settings-proposal-2026-05-07.md`](../analysis/agent-tools-admin-settings-proposal-2026-05-07.md)
+
 ### [OPEN] Split permission / validation phase out of `build_tool_execution_node` inner closure
 - **Area:** `science_graphrag/agent/tool_execution_pipeline.py` (`tools_node` closure)
 - **Issue:** pylint R0914/R0912/R0915 on the inner callable; permission batching (`bound` surface, `can_use_tool`, matrix interaction) is dense and will grow with registry / coordinator hooks.

@@ -1,0 +1,119 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-07T09:38:33.276508+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18788",
+    "workspace_id": null,
+    "suite": "default",
+    "profile": "quick",
+    "run_kind": null,
+    "graph_id": null,
+    "feature_flags": {
+      "agent_runtime": null,
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "false"
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "memory",
+          "agent_session_memory_configured": "memory"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 33406,
+        "warnings": [
+          "no_workspace"
+        ],
+        "tools": [
+          "coordinator_gate",
+          "route_to_specialist",
+          "route_to_specialist",
+          "find_works",
+          "paper_profile",
+          "paper_quote_search",
+          "final_answer"
+        ],
+        "answer_class": "quote_extraction"
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "product_step",
+          "specialist_selected",
+          "subagent_started",
+          "product_step",
+          "tool_call",
+          "subagent_progress",
+          "subagent_progress_label",
+          "tool_result",
+          "tool_search_result",
+          "subagent_finished",
+          "product_step",
+          "answer_synthesis_started",
+          "context_compacted",
+          "product_step",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 17
+      }
+    }
+  ],
+  "trace_timeline": [],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": null,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0,
+    "side_llm_cache_read_ratio_avg": null,
+    "latency_p50_ms": null,
+    "insight_recall_at_k": null,
+    "stale_summary_error_rate": null,
+    "insight_stale_reason_rate": null,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "ptl_retry_count_per_compaction_avg": null,
+    "compaction_circuit_breaker_trips": 0,
+    "unnecessary_tool_calls_avg": null,
+    "hook_chain_event_count": 0,
+    "subagent_lifecycle_missing_count": 0,
+    "subagent_task_notification_count_avg": null,
+    "tool_search_miss_due_to_no_discovery_total": 0,
+    "tool_schema_bytes_saved_total": 0,
+    "tool_loop_repeat_max": 0
+  },
+  "verdict": {
+    "status": "pass",
+    "fail_reasons": [],
+    "warn_reasons": []
+  },
+  "e2e_audit": null,
+  "phoenix_snapshot_path": null
+}

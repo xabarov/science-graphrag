@@ -130,4 +130,5 @@ def test_llm_compact_ptl_retries_on_context_limit(monkeypatch) -> None:
     )
     assert audit is not None
     assert audit.get("ptl_retry_count") == 1
+    assert audit.get("ptl_retry_count_per_compaction") == 1
     assert get_session_for_thread(tid)["session_summary"] == "PTL_OK_SUMMARY"

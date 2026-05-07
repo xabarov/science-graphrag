@@ -4,6 +4,9 @@ from langchain_core.tools import BaseTool, tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.chunk_retrieval_defaults import (
+    AGENT_TOOL_FIND_WORKS_QUERY_TRACE_CHARS,
+)
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
@@ -38,7 +41,7 @@ def _make_entity_search_tool(store: Neo4jGraphStore) -> BaseTool:
             tool_name="entity_search",
             tool_parameters={
                 "kind": kind,
-                "query": query[:240],
+                "query": query[:AGENT_TOOL_FIND_WORKS_QUERY_TRACE_CHARS],
                 "limit": limit,
             },
             fn=lambda: runtime_tool.run(kind=kind, q=query, limit=limit),

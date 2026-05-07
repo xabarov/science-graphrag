@@ -3,14 +3,19 @@
 API-round grouping follows the roadmap contract: preamble (group 0) + each assistant
 message block until the next assistant message. Dropping whole tail groups preserves
 ``AIMessage.tool_calls`` ↔ ``ToolMessage`` adjacency when truncating from the head.
+
+CH4 turn digests map to the same grouping contract for L4 PTL retries: a fixed preamble
+``HumanMessage`` plus one ``AIMessage`` JSON blob per digest round (see
+``digest_window_as_messages_for_api_rounds``).
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any, Sequence
 
-from langchain_core.messages import AIMessage, BaseMessage, ToolMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolMessage
 
 logger = logging.getLogger(__name__)
 
@@ -149,3 +154,55 @@ def messages_fit_token_budget(
         else:
             total += max(1, len(str(c)) // max(1, approx_chars_per_token))
     return total <= max_tokens
+
+
+_DIGEST_PREAMBLE_TEXT = "CH4_turn_digest_window_v1"
+
+
+def digest_window_as_messages_for_api_rounds(
+    digests: Sequence[dict[str, Any]],
+) -> list[BaseMessage]:
+    """Map CH4 digests to LC messages: fixed preamble + one AIMessage JSON blob per digest.
+
+    This aligns ``drop_oldest_api_round_groups`` with "drop oldest digest rounds" for L4
+    compaction PTL retries without fabricating tool adjacency.
+    """
+    out: list[BaseMessage] = [HumanMessage(content=_DIGEST_PREAMBLE_TEXT)]
+    for d in digests:
+        if not isinstance(d, dict):
+            continue
+        try:
+            blob = json.dumps(d, ensure_ascii=False, sort_keys=True, default=str)
+        except (TypeError, ValueError):
+            blob = str(d)
+        cap = 6000
+        if len(blob) > cap:
+            blob = blob[: max(cap - 12, 0)] + "\n…[truncated]"
+        out.append(AIMessage(content=blob))
+    return out
+
+
+def drop_oldest_digest_rounds_for_ptl(
+    digests: list[dict[str, Any]],
+    *,
+    groups_to_drop: int,
+) -> list[dict[str, Any]]:
+    """Drop the oldest digest rounds using API-round grouping (preamble + per-digest AI).
+
+    Each digest is one assistant-led round after the fixed preamble (see
+    ``digest_window_as_messages_for_api_rounds``). When grouping degenerates (e.g. empty
+    digest list filtered to preamble-only), fall back to dropping whole digests from the
+    head while keeping at least two rows so L4 can still retry.
+    """
+    if groups_to_drop <= 0 or not digests:
+        return list(digests)
+    msgs = digest_window_as_messages_for_api_rounds(digests)
+    groups = group_messages_by_api_round(msgs)
+    if len(groups) <= 1:
+        k = min(max(0, groups_to_drop), max(0, len(digests) - 2))
+        return digests[k:] if k else list(digests)
+    rest = groups[1:]
+    drop_n = min(max(0, groups_to_drop), len(rest))
+    if drop_n <= 0:
+        return list(digests)
+    return digests[drop_n:]

@@ -13,6 +13,10 @@ TOOL_SSE_HINT_STREAMABLE_TYPES: frozenset[str] = frozenset(
         "research_plan_updated",
         "user_question_asked",
         "brief_recorded",
+        "worktree_entered",
+        "worktree_exited",
+        "plan_mode_entered",
+        "plan_mode_exited",
     }
 )
 

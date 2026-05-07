@@ -1283,11 +1283,11 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
   - Комментарий: regression покрыт тестами `tests/test_tool_search.py`, `tests/eval/test_agent_tools_metrics.py`, `tests/scripts/live_check/test_trace_*`.
 
 - **§10.3 `claim_verification` subagent** (быстрый ROI, §9.5.1 P1.5)
-  - [ ] subagent на `forked_runtime.py` helper с deny-write policy (`createClaimVerificationCanUseTool(paper_ids)`)
-  - [ ] system prompt с strict output format `Scope/Result/Key sources/VERDICT` (§10.4)
-  - [ ] feature-flag `agent_claim_verification_enabled`
-  - [ ] SSE `claim_verification_result` с verdict + issues
-  - [ ] gate: trust_signal рост без latency регрессии > 15%
+  - [x] subagent на `forked_runtime.py` helper с deny-write policy (`create_claim_verification_can_use_tool` + `run_claim_verification_fork_bundle` в `forked_runtime.py`)
+  - [x] system prompt с strict output format `Scope/Result/Key sources/VERDICT` (§10.4) в `claim_verification_runtime.py`
+  - [x] feature-flag `agent_claim_verification_enabled` (+ таймауты/бюджет/fanout caps в Settings)
+  - [x] SSE `claim_verification_result` с verdict + issues + sync `run_metadata.claim_verification_results`
+  - [ ] gate: trust_signal рост без latency регрессии > 15% — **live / nightly**, не автоматизировано в этом PR
 
 - **§10.4 Subagent prompt discipline** (writer/specialist promptы)
   - [x] директива «synthesize-not-delegate» в `writer_agent.py` system prompt
@@ -1332,8 +1332,8 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
   - Комментарий (2026-05-07): foundation + v3 lifecycle extras; explicit parallel spawn graph всё ещё sequential routing — gate формулировать как trace completeness, не как настоящий параллельный mesh.
 
 - **A-advanced** (§9.6 Train T3)
-  - [ ] incremental insight updates (не пересобирать полностью при каждом triggere)
-  - [ ] contradiction-aware synthesis (если новый chunk противоречит previous insight — explicit conflict в audit)
+  - [x] incremental insight updates: append-only refresh path в `thread_insights.py` (`try_build_thread_insight_snapshot_incremental`) с `refresh_mode=incremental`, fingerprint окна и bounded tail-only synthesis
+  - [x] contradiction-aware synthesis: `synthesis_conflicts` / `synthesis_conflict` в audit при конфликте нового tail digest с prior insight; покрыто `tests/test_thread_insights.py`
 
 - **§10.6 Hooks layer baseline**
   - [x] `science_graphrag/agent/hooks/` модуль (immutable context → diff/decision контракт)
@@ -1356,22 +1356,23 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 **Цель:** merge node + writer contract, subagent isolation policies, dynamic schema transport, второй и третий production-subagent, компрессия больших tool results.
 
 - **B2. Merge node + writer contract** (§9.4 B2)
-  - [ ] merge-узел: child outputs → typed `specialist_results_v3`
-  - [ ] confidence ranking + provenance (`evidence_origin`: `parent_tool` / `subagent:<id>` / `mixed`)
-  - [ ] writer system prompt: явная работа с конфликтующими ответами двух subagents
-  - [ ] gate: при конфликтующих ответах финальный answer объяснимо выбирает/синтезирует, provenance виден
+  - [x] merge-узел (library): child/parent legs → typed `specialist_results_v3` (`specialist_results_v3.py` + append из `retrieval_agent` / `graph_agent`)
+  - [x] confidence ranking + provenance (`evidence_origin`: `parent_tool` / `subagent:<id>` / `mixed`) + `merge.conflict` при расходящихся VERDICT
+  - [x] writer context: `serialize_for_writer` + `merge.writer_directive` (явный конфликт / partial_failure)
+  - [ ] gate: при конфликтующих ответах финальный answer объяснимо выбирает/синтезирует, provenance виден — **LLM-judge live**, не закрыто автотестом
 
 - **B3. Tool/search/memory subagent isolation** (§9.4 B3)
-  - [ ] изолированный tool policy на subagent run
-  - [ ] локальный short-term memory (не carry-over в parent если не явно)
-  - [ ] controlled carry-back (структурированный summary, не полный transcript)
-  - [ ] квоты `max_subagent_hops_per_turn` / `max_subagent_tokens_per_turn` / hard timeout per child
-  - [ ] gate: subagent mode не ломает token budget policy и не создаёт runaway loops
+  - [x] изолированный tool policy на `claim_verification` child run (`build_claim_verification_tools` + `can_use_tool`)
+  - [ ] локальный short-term memory (не carry-over в parent если не явно) — **вне среза claim_verification**
+  - [x] controlled carry-back: transcript — только `HumanMessage` markers + `specialist_results["claim_verification"]` excerpts (без полного child dump)
+  - [x] квоты: `agent_claim_verification_max_tool_calls`, `agent_claim_verification_step_timeout_seconds`, `agent_claim_verification_fanout_max`, `agent_claim_verification_recursion_limit`
+  - [ ] gate: subagent mode не ломает token budget policy — **нужен live профиль**, не закрыто здесь
 
 - **C2. Dynamic schema transport** (§9.5 C2)
-  - [ ] компактные refs для deferred tools by default
-  - [ ] полная схема only-on-discovery
-  - [ ] метрики: `tool_schema_bytes_saved` / `deferred_tool_activation_rate` / `tool_search_miss_due_to_no_discovery`
+  - [x] компактные refs для deferred tools by default (`deferred_schema_refs`)
+  - [x] полная схема only-on-discovery (`deferred_schema_full_tools`, gated full transport)
+  - [x] метрики: `tool_schema_bytes_saved` / `deferred_tool_activation_rate` / `tool_search_miss_due_to_no_discovery` в `tool_search`, telemetry merge и `trace-review-v1`
+  - Комментарий (2026-05-07): контракт и telemetry покрыты `tests/test_tool_search.py`, `tests/test_tool_manifest_sync.py`, `tests/scripts/live_check/test_trace_review_schema.py`; rollout-policy lane остаётся в T5 C3.
 
 - **§10.3 corpus-explore subagent** (read-only fanout)
   - [ ] system prompt: read-only `workspace_inspect` → `find_works` → `paper_quote_search` → `idea_search` на дешёвой модели
@@ -1391,17 +1392,19 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 **Цель:** safety/eval gate multi-agent, eval lanes для tool search, PTL retry primitives, финальный rollout decision.
 
 - **B4. Safety/eval gate multi-agent** (§9.4 B4)
-  - [ ] eval scenarios: fanout research (N children) / one-child-fails / timeout + salvage / malicious tool request (permission deny)
-  - [ ] gate: failover без silent success + trace completeness 100% по lifecycle events
+  - [~] eval scenarios: synthetic unit coverage в `tests/agent/test_specialist_results_v3_and_claim_verification.py`, `tests/eval/test_subagent_hardening_gates.py`, расширен `test_trace_review_schema.py` (lifecycle + spawn rows); **full live** fanout/timeout/malicious-deny — следующий шаг
+  - [~] gate: partial-failure → `warnings` (`claim_verification_child_*`) + `subagent_lifecycle_missing_count` в trace-review; **100% completeness** — не заявлено без live suite
 
 - **C3. Eval + policy gate** (§9.5 C3)
-  - [ ] lanes: sparse-query / ambiguous intent / graph-heavy / bibliography-quote workflows
-  - [ ] policy: `warn` при росте latency без роста ошибок / `fail` при росте missed-tool или tool-loop instability
+  - [x] lanes: canonical fixture `eval/chat_agent/epic_c_eval_lanes.v1.json` + regression contract `tests/eval/test_epic_c_eval_lanes.py` (`sparse-query` / `ambiguous_intent` / `graph-heavy` / `bibliography-quote`)
+  - [x] policy: `trace_regression_compare.py` поддерживает `c3_latency_without_error_regress` (warn) и `c3_tool_loop_instability` (fail); покрыто `tests/scripts/live_check/test_trace_regression_compare.py`
+  - Комментарий (2026-05-07): это offline/policy baseline; corpus-populated live suite для этих lane'ов остаётся отдельным follow-up перед итоговым default-on решением.
 
 - **§10.5.3 PTL retry + group-by-API-round** (compaction hardening финал)
-  - [ ] `science_graphrag/agent/context/message_groups.py` с `group_messages_by_api_round`
-  - [ ] PTL retry policy в `compaction.py` (drop oldest API-round groups, retry до 3)
-  - [ ] метрика `ptl_retry_count_per_compaction` в trace-review
+  - [x] `science_graphrag/agent/context/message_groups.py` с `group_messages_by_api_round` + helpers для digest API-round mapping
+  - [x] PTL retry policy в `llm_history_compact.py` (drop oldest API-round digest groups, retry до лимита)
+  - [x] метрика `ptl_retry_count_per_compaction` в `run_metadata` / `trace-review-v1`
+  - Комментарий (2026-05-07): regression покрыт `tests/test_message_groups.py`, `tests/agent/test_llm_history_compact.py`, `tests/scripts/live_check/test_trace_review_schema.py`.
 
 - **§10.10 финальный acceptance check**
   - [ ] все §10 gate'ы проходят на reference suite
@@ -1421,7 +1424,7 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 - Комментарий: DOI bridge переиспользует `normalize_doi` + OpenAlex/Crossref fallback и workspace mapping, SSE: `doi_resolved`; post-fix: `paper_id_in_workspace` заполняется только для реального workspace-match, общий graph fallback отражается в `graph_work_id`.
 
 **P1 (целевой Train T2–T3):**
-- [ ] §9.5.1 P1.1 Worktree isolation tools (нужно для real multi-agent в Epic B B3)
+- [x] §9.5.1 P1.1 Worktree isolation tools — `enter_worktree` / `exit_worktree`, bounded sandbox root `agent_worktree_base_dir`, session meta + SSE `worktree_entered` / `worktree_exited`; regression `tests/agent/test_plan_worktree_surfaces.py`
 - [x] §9.5.1 P1.2 Runtime monitor tool — `runtime_monitor_get` + `SCIENCE_GRAPHRAG_AGENT_RUNTIME_MONITOR_TOOL_ENABLED`, единый status contract; snapshot через `register_runtime_monitor_snapshot` (tests) / дальнейший job-store seam.
 - [x] §9.5.1 P1.3 `research_plan_write` (TodoWrite-аналог) — `session_meta.research_plan`, reinject `<research_plan>`, SSE `research_plan_updated`; flag `SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_TOOL_ENABLED`.
 - [x] §9.5.1 P1.4 `ask_user_question` (structured multi-choice) — pending в `session_meta`, SSE `user_question_asked`, клиентский roundtrip поля `user_structured_answer` + debug `user_answered`; flag `SCIENCE_GRAPHRAG_AGENT_ASK_USER_QUESTION_TOOL_ENABLED`.
@@ -1430,7 +1433,7 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
 **P2 (только при явном продукт-сценарии):**
 - [ ] §9.5.1 P2.1 Task orchestration primitives (`task_create` / `task_get` / etc) — только если Epic B0 выбирает coordinator-mode
 - [ ] §9.5.1 P2.2 Scheduled automation (`cron_*`) — требует business case
-- [ ] §9.5.1 P2.3 Plan mode (`enter_plan_mode` / `exit_plan_mode`)
+- [x] §9.5.1 P2.3 Plan mode (`enter_plan_mode` / `exit_plan_mode`) — session toggle + SSE `plan_mode_entered` / `plan_mode_exited`, enforcement через deny high-risk tools в `tool_execution_pipeline.py`; regression `tests/agent/test_plan_worktree_surfaces.py`
 - [x] §9.5.1 P2.4 `brief` synthetic output — tool `brief` + `run_metadata.brief` (≤240 chars); `SCIENCE_GRAPHRAG_AGENT_BRIEF_OUTPUT_ENABLED`.
 
 - Комментарий (2026-05-07): детальное разделение **«seam закрыт» vs aspirational acceptance** (real MCP e2e, LSP eval lane, UI чеклиста/формы, Ask history для `brief`) — в **§9.5.1** под каждым пунктом (**«Статус SciGraph»**); quality-pass: Redis `patch_session_meta` без ключа = seed пустой сессии; sidechain JSONL не падает при `OSError`; `science_graphrag/agent/debug_streamable_types.py` — единый набор типов для SSE/debug; quick live `agent_trace_review.py` на `http://127.0.0.1:18787` + baseline compare — **pass**.

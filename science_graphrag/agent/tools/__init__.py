@@ -7,13 +7,18 @@ from science_graphrag.agent.tools.edge_search import EdgeSearchTool, _make_edge_
 from science_graphrag.agent.tools.entity_search import EntitySearchTool
 from science_graphrag.agent.tools.final_answer import FinalAnswerTool, _make_final_answer_tool
 from science_graphrag.agent.tools.idea_search import IdeaSearchTool, _make_idea_search_tool
+from science_graphrag.agent.tools.plan_mode_tools import build_plan_mode_tools
+from science_graphrag.agent.tools.product_interaction_tools import build_product_interaction_tools
 from science_graphrag.agent.tools.summarize_workspace import SummarizeWorkspaceTool
 from science_graphrag.agent.tools.workspace_paper_tools import build_workspace_paper_langchain_tools
+from science_graphrag.agent.tools.worktree_isolation_tools import build_worktree_isolation_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings, get_settings
 
 
-def _append_agent_surface_tools(out: list[BaseTool], stores: StoreRegistry, settings: Settings) -> None:
+def _append_agent_surface_tools(
+    out: list[BaseTool], stores: StoreRegistry, settings: Settings
+) -> None:
     """Feature-gated MCP/LSP/monitor + product interaction tools (shared by retrieval + full registry)."""
     if getattr(settings, "agent_mcp_tools_enabled", False):
         from science_graphrag.agent.tools.mcp_surface import build_mcp_surface_tools
@@ -27,9 +32,10 @@ def _append_agent_surface_tools(out: list[BaseTool], stores: StoreRegistry, sett
         from science_graphrag.agent.tools.runtime_monitor_surface import build_runtime_monitor_tools
 
         out.extend(build_runtime_monitor_tools(settings))
-    from science_graphrag.agent.tools.product_interaction_tools import build_product_interaction_tools
 
     out.extend(build_product_interaction_tools(settings))
+    out.extend(build_worktree_isolation_tools(settings))
+    out.extend(build_plan_mode_tools(settings))
     _ = stores  # reserved for future store-backed adapters
 
 

@@ -14,6 +14,7 @@ from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from science_graphrag.agent.context.message_groups import drop_oldest_digest_rounds_for_ptl
 from science_graphrag.agent.context.message_sanitizers import sanitize_digest_dict_for_compact
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
 from science_graphrag.agent.llm.chat import build_chat_model, effective_chat_llm_model
@@ -81,10 +82,11 @@ def _invoke_summary_llm(settings: Settings, *, user_blob: str) -> str:
         "Drop boilerplate. Use short bullets and sections if helpful. "
         "Output plain text only — no JSON, no markdown fences."
     )
+    max_out_chars = int(settings.agent_llm_full_history_compact_max_out_tokens) * 3
     human = (
         "Turn digests (JSON array of objects):\n"
         f"{user_blob}\n\n"
-        f"Max output characters (approx): {settings.agent_llm_full_history_compact_max_out_tokens * 3}"
+        f"Max output characters (approx): {max_out_chars}"
     )
     msg = llm.invoke([SystemMessage(content=system), HumanMessage(content=human)])
     text = str(getattr(msg, "content", "") or "").strip()
@@ -93,14 +95,53 @@ def _invoke_summary_llm(settings: Settings, *, user_blob: str) -> str:
     return text.strip()
 
 
-def maybe_llm_compact_session_after_turn(
+def _l4_invoke_summary_with_ptl_retries(
+    settings: Settings,
+    digests_work: list[dict[str, Any]],
+    *,
+    max_in: int,
+    max_ptl: int,
+) -> tuple[str, str, int, list[dict[str, Any]]] | None:
+    """Run L4 summary LLM.
+
+    On context-limit errors, drop oldest API-round groups up to ``max_ptl``.
+    """
+    work = list(digests_work)
+    ptl_retry_count = 0
+    blob = ""
+    for attempt in range(max_ptl + 1):
+        blob = _slim_digests_blob(work, max_chars=max_in, settings=settings)
+        try:
+            summary = _invoke_summary_llm(settings, user_blob=blob)
+            return summary, blob, ptl_retry_count, work
+        except Exception as exc:  # noqa: BLE001
+            if attempt >= max_ptl or not _is_context_limit_error(exc) or len(work) <= 2:
+                logger.warning("l4_llm_compact failed: %s", exc, exc_info=True)
+                return None
+            before = len(work)
+            work = drop_oldest_digest_rounds_for_ptl(work, groups_to_drop=1)
+            ptl_retry_count += 1
+            logger.info(
+                "l4_llm_compact PTL retry %s dropping oldest API-round digest group(s) "
+                "(before=%s after=%s)",
+                ptl_retry_count,
+                before,
+                len(work),
+            )
+    return None
+
+
+def maybe_llm_compact_session_after_turn(  # pylint: disable=too-many-return-statements
     settings: Settings,
     thread_id: str,
     *,
     digest_count: int,
     digest_cap: int,
 ) -> dict[str, Any] | None:
-    """If enabled and boundary satisfied, replace ``session_summary`` via LLM. Returns audit dict."""
+    """If enabled and boundary satisfied, replace ``session_summary`` via LLM.
+
+    Returns audit dict, or ``None`` when skipped or failed.
+    """
 
     if not settings.agent_llm_full_history_compact_enabled:
         return None
@@ -129,31 +170,19 @@ def maybe_llm_compact_session_after_turn(
         logger.info("l4_llm_compact skipped: compaction_lock held")
         return None
 
-    max_in = max(2000, int(settings.agent_llm_full_history_compact_max_digest_chars))
-    max_ptl = max(0, int(settings.agent_llm_full_history_compact_ptl_max_retries))
-    digests_work = list(digests)
-    ptl_retry_count = 0
-    summary = ""
-    blob = ""
     try:
-        for attempt in range(max_ptl + 1):
-            blob = _slim_digests_blob(digests_work, max_chars=max_in, settings=settings)
-            try:
-                summary = _invoke_summary_llm(settings, user_blob=blob)
-                break
-            except Exception as exc:  # noqa: BLE001
-                if attempt >= max_ptl or not _is_context_limit_error(exc) or len(digests_work) <= 2:
-                    logger.warning("l4_llm_compact failed: %s", exc, exc_info=True)
-                    return None
-                digests_work = digests_work[1:]
-                ptl_retry_count += 1
-                logger.info(
-                    "l4_llm_compact PTL retry %s dropping oldest digest (remaining=%s)",
-                    ptl_retry_count,
-                    len(digests_work),
-                )
+        packed = _l4_invoke_summary_with_ptl_retries(
+            settings,
+            digests,
+            max_in=max(2000, int(settings.agent_llm_full_history_compact_max_digest_chars)),
+            max_ptl=max(0, int(settings.agent_llm_full_history_compact_ptl_max_retries)),
+        )
     finally:
         backend.compaction_lock_release(thread_id, owner="l4")
+
+    if packed is None:
+        return None
+    summary, blob, ptl_retry_count, digests_work = packed
 
     if not summary.strip():
         return None
@@ -165,6 +194,7 @@ def maybe_llm_compact_session_after_turn(
         "turn_counter": turn_counter,
         "model": effective_chat_llm_model(settings),
         "ptl_retry_count": ptl_retry_count,
+        "ptl_retry_count_per_compaction": int(ptl_retry_count),
         "digest_blob_chars": len(blob),
         "summary_chars": len(summary),
     }

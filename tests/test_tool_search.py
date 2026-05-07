@@ -266,6 +266,38 @@ def test_shortlist_rules_meta_includes_score_band_from_settings() -> None:
     assert len(out) >= 3
 
 
+def test_deferred_schema_attaches_full_json_schema_on_carryover_discovery() -> None:
+    """C2: discovery via carry-over enables full json_schema transport for strict-deferred tools."""
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(
+        agent_rule_tool_search_enabled=True,
+        agent_discovered_tools_carryover_enabled=True,
+        agent_tool_search_deferred_schema_refs_enabled=True,
+        agent_tool_search_deferred_schema_full_on_discovery_enabled=True,
+    )
+    tools = build_retrieval_tools(stores, settings)
+    sess = {"capsules": {"discovered_tools": {"recent_tools": ["paper_quote_search"]}}}
+    _out, meta = shortlist_tools_for_specialist(
+        tools,
+        question="how many papers in this workspace",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        answer_class="inventory",
+        session=sess,
+    )
+    assert "paper_quote_search" in {getattr(t, "name", "") for t in _out}
+    full_tools = meta.get("deferred_schema_full_tools")
+    assert isinstance(full_tools, list) and full_tools
+    assert any(x.get("tool") == "paper_quote_search" for x in full_tools if isinstance(x, dict))
+    assert isinstance(meta.get("tool_schema_bytes_saved"), int)
+
+
 def test_shortlist_emits_deferred_schema_refs_when_enabled() -> None:
     from science_graphrag.agent.tools import build_retrieval_tools
 
@@ -286,7 +318,10 @@ def test_shortlist_emits_deferred_schema_refs_when_enabled() -> None:
         has_workspace=True,
         answer_class="inventory",
     )
-    assert meta.get("deferred_schema_mode") == "shortlist_only"
+    assert meta.get("deferred_schema_mode") in (
+        "compact_only_deferred_shortlist",
+        "compact_default_full_on_discovery",
+    )
     refs = meta.get("deferred_schema_refs")
     assert isinstance(refs, list) and refs
     assert all(isinstance(x.get("schema_ref"), str) for x in refs if isinstance(x, dict))

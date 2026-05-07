@@ -561,6 +561,37 @@ class Settings(BaseSettings):
             "does not enable real coordinator runtime."
         ),
     )
+    agent_claim_verification_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true (supervisor v3), run read-only claim_verification subagent after retrieval "
+            "tool payloads and merge into specialist_results_v3 + run_metadata."
+        ),
+    )
+    agent_claim_verification_max_tool_calls: int = Field(
+        default=6,
+        ge=1,
+        le=16,
+        description="Tool budget for each claim_verification child ReAct subgraph.",
+    )
+    agent_claim_verification_step_timeout_seconds: float = Field(
+        default=60.0,
+        ge=5.0,
+        le=300.0,
+        description="Wall-clock invoke deadline per claim_verification child subgraph.",
+    )
+    agent_claim_verification_recursion_limit: int = Field(
+        default=24,
+        ge=4,
+        le=64,
+        description="LangGraph recursion_limit for claim_verification subgraph.",
+    )
+    agent_claim_verification_fanout_max: int = Field(
+        default=1,
+        ge=1,
+        le=8,
+        description="Max parallel claim_verification passes per retrieval hop (fanout research cap).",
+    )
     agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
     agent_semantic_query_fast_route: bool = Field(
         default=False,
@@ -640,6 +671,23 @@ class Settings(BaseSettings):
         description=(
             "When true, tool_search debug metadata emits deferred schema refs for shortlist-picked "
             "tools (catalog-first prompt contract, full JSON schemas only for selected tools)."
+        ),
+    )
+    agent_tool_search_deferred_schema_full_on_discovery_enabled: bool = Field(
+        default=True,
+        description=(
+            "When true with deferred_schema_refs, attach full JSON Schema in tool_search_result "
+            "metadata only for strict-deferred tools merged via message discovery or session "
+            "carry-over (compact refs otherwise). See Epic C2 only-on-discovery transport."
+        ),
+    )
+    agent_tool_search_deferred_schema_full_max_bytes_per_tool: int = Field(
+        default=24_000,
+        ge=512,
+        le=200_000,
+        description=(
+            "Per-tool cap for embedded json_schema bytes in deferred_schema_full_tools "
+            "(skipped when larger)."
         ),
     )
     agent_tool_search_llm_rerank_enabled: bool = Field(
@@ -751,6 +799,27 @@ class Settings(BaseSettings):
         default=False,
         description="When true, register ``brief`` tool and surface ``run_metadata.brief`` (<=240 chars).",
     )
+    agent_worktree_tools_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, register bounded ``enter_worktree`` / ``exit_worktree`` session-scoped "
+            "sandbox tools (Epic P1.1)."
+        ),
+    )
+    agent_worktree_base_dir: str = Field(
+        default=".agent_worktrees",
+        description=(
+            "Directory root for per-thread worktree sandboxes (repo-relative or absolute). "
+            "Paths are validated to stay under this resolved root."
+        ),
+    )
+    agent_plan_mode_tools_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, register ``enter_plan_mode`` / ``exit_plan_mode`` session tools; "
+            "high-risk tools are denied while plan_mode is active (Epic P2.3)."
+        ),
+    )
     agent_web_fetch_max_bytes: int = Field(
         default=524_288,
         ge=8_192,
@@ -762,6 +831,18 @@ class Settings(BaseSettings):
         ge=60,
         le=3600,
         description="In-process TTL seconds for ``web_fetch`` URL body cache.",
+    )
+    agent_web_search_http_timeout_seconds: float = Field(
+        default=20.0,
+        ge=5.0,
+        le=120.0,
+        description="HTTP timeout seconds for ``web_search`` Crossref ``/works`` GET.",
+    )
+    agent_web_fetch_http_timeout_seconds: float = Field(
+        default=25.0,
+        ge=5.0,
+        le=120.0,
+        description="HTTP timeout seconds for streamed ``web_fetch`` GET (includes TLS/TTFB).",
     )
     agent_tool_history_compact_enabled: bool = Field(
         default=False,
@@ -1084,6 +1165,14 @@ class Settings(BaseSettings):
         ge=0.0,
         le=1.0,
         description="Sampling temperature for thread_insight LLM synthesis.",
+    )
+    agent_thread_insights_incremental_enabled: bool = Field(
+        default=True,
+        description=(
+            "When true, eligible thread_insight refreshes merge only new tail digests into the prior "
+            "snapshot (deterministic stub or LLM incremental path) instead of re-chunking the full "
+            "window; falls back to full rebuild when the digest window slides or fingerprints diverge."
+        ),
     )
     agent_llm_full_history_compact_ptl_max_retries: int = Field(
         default=3,

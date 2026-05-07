@@ -8,6 +8,10 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
+from science_graphrag.agent.tools.chunk_retrieval_defaults import (
+    DEFAULT_WORKSPACE_COMPOSITION_SAMPLE_WORKS,
+    MAX_WORKSPACE_COMPOSITION_SAMPLE_WORKS,
+)
 from science_graphrag.agent.tools.work_graph_schema import KNOWN_WORK_NEIGHBOR_REL_TYPES
 from science_graphrag.config import get_settings
 from science_graphrag.ingestion.dedup import normalize_doi
@@ -15,6 +19,10 @@ from science_graphrag.ingestion.enrichment.openalex import draft_from_openalex, 
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 logger = logging.getLogger(__name__)
+
+# Prefetch extra full-text hits when workspace-scoped, then filter to workspace work_ids
+# (recall heuristic; higher = more Neo4j work per query).
+_FIND_WORKS_SCOPED_FULLTEXT_PREFETCH_MULTIPLIER = 3
 
 
 def workspace_or_error(
@@ -136,8 +144,10 @@ class WorkspaceInspectTool(BaseAgentTool):
                 payload={"summary": "Workspace not found.", "cited_work_ids": [], "row_count": 0},
                 row_count=0,
             )
-        top_n = 8
-        work_ids = [str(x) for x in (ws.get("work_ids") or []) if x][: max(1, min(int(top_n), 15))]
+        top_n = DEFAULT_WORKSPACE_COMPOSITION_SAMPLE_WORKS
+        work_ids = [str(x) for x in (ws.get("work_ids") or []) if x][
+            : max(1, min(int(top_n), MAX_WORKSPACE_COMPOSITION_SAMPLE_WORKS))
+        ]
         summary = (
             f"Workspace {ws.get('name') or workspace_id} currently contains "
             f"{len(ws.get('work_ids') or [])} works. "
@@ -192,7 +202,9 @@ class FindWorksTool(BaseAgentTool):
             return err
         assert ws is not None
         allowed = {str(x) for x in (ws.get("work_ids") or []) if x}
-        hits = self._store.fulltext_search_work_ids(q, limit=lim * 3)
+        hits = self._store.fulltext_search_work_ids(
+            q, limit=lim * _FIND_WORKS_SCOPED_FULLTEXT_PREFETCH_MULTIPLIER
+        )
         matches: list[dict[str, Any]] = []
         for wid, score in hits:
             if wid not in allowed:

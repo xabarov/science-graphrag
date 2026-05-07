@@ -45,7 +45,10 @@ from science_graphrag.agent.runtime import (
     resolve_langgraph_answer_with_salvage,
 )
 from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
-from science_graphrag.agent.subagents.notification import sse_payload_from_human_message
+from science_graphrag.agent.subagents.notification import (
+    sse_payload_claim_verification_from_human_message,
+    sse_payload_from_human_message,
+)
 from science_graphrag.agent.subagents.runtime import (
     RoutingSubagentLegLedger,
     SubagentRuntime,
@@ -142,6 +145,10 @@ def product_step_code_for_tool(tool_name: str) -> str | None:
         "research_plan_write": "interpreting_question",
         "ask_user_question": "interpreting_question",
         "brief": "composing_answer",
+        "enter_worktree": "interpreting_question",
+        "exit_worktree": "interpreting_question",
+        "enter_plan_mode": "interpreting_question",
+        "exit_plan_mode": "interpreting_question",
     }
     return mapping.get(tool_name)
 
@@ -413,6 +420,7 @@ async def stream_agent_events(
     dig = list(history_digest or [])
     active_subagent_id: str | None = None
     seen_task_notification_markers: set[int] = set()
+    seen_claim_verification_markers: set[int] = set()
     last_progress_label_emit_fp: str | None = None
     last_progress_label_mono = 0.0
     note_counter: dict[str, int] = {"emitted": 0}
@@ -701,6 +709,14 @@ async def stream_agent_events(
                                         if sse_tn:
                                             seen_task_notification_markers.add(mid2)
                                             yield {"data": json.dumps(sse_tn)}
+                                        sse_cv = sse_payload_claim_verification_from_human_message(
+                                            msg2
+                                        )
+                                        if sse_cv:
+                                            if mid2 in seen_claim_verification_markers:
+                                                continue
+                                            seen_claim_verification_markers.add(mid2)
+                                            yield {"data": json.dumps(sse_cv)}
                             dev = list(payload.get("debug_events") or [])
                             if len(dev) > prev_debug_len:
                                 for ev in dev[prev_debug_len:]:
@@ -1160,9 +1176,16 @@ async def stream_agent_events(
                 run_metadata=run_meta,
                 state=latest_full_state if isinstance(latest_full_state, dict) else None,
             )
+            _meta_spawn: list[dict[str, Any]] = []
+            if isinstance(latest_full_state, dict):
+                _m = latest_full_state.get("metadata") or {}
+                if isinstance(_m, dict):
+                    _raw_sp = _m.get("subagent_spawn_rows")
+                    if isinstance(_raw_sp, list):
+                        _meta_spawn = [x for x in _raw_sp if isinstance(x, dict)]
             merged_subagent_runs = merge_subagent_run_rows(
                 routing_rows=routing_subagent_ledger.to_run_rows(),
-                spawned_rows=spawn_subagent_runtime.to_run_rows(),
+                spawned_rows=list(spawn_subagent_runtime.to_run_rows()) + _meta_spawn,
             )
             if merged_subagent_runs:
                 run_meta["subagent_runs"] = merged_subagent_runs
@@ -1184,6 +1207,28 @@ async def stream_agent_events(
                         _tn_collect.append(_inner)
             if _tn_collect:
                 run_meta["subagent_task_notifications"] = _tn_collect
+            _cv_collect: list[dict[str, Any]] = []
+            if isinstance(latest_full_state, dict):
+                for _hm in latest_full_state.get("messages") or []:
+                    if not isinstance(_hm, HumanMessage):
+                        continue
+                    _ak = getattr(_hm, "additional_kwargs", None) or {}
+                    if not isinstance(_ak, dict):
+                        continue
+                    if _ak.get("kind") != "claim_verification_result":
+                        continue
+                    _inner_cv = _ak.get("claim_verification_result")
+                    if isinstance(_inner_cv, dict):
+                        _cv_collect.append(_inner_cv)
+            if _cv_collect:
+                run_meta["claim_verification_results"] = _cv_collect
+            _sr3 = (
+                latest_full_state.get("specialist_results_v3")
+                if isinstance(latest_full_state, dict)
+                else None
+            )
+            if isinstance(_sr3, dict) and _sr3:
+                run_meta["specialist_results_v3"] = dict(_sr3)
             run_meta["subagent_observability_lane"] = (
                 "fork_v3_enhanced"
                 if str(settings.agent_runtime).strip() == "langgraph_supervisor_v3"

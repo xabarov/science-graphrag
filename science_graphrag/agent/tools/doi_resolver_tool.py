@@ -14,7 +14,11 @@ from science_graphrag.agent.tools.base import ToolResult
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.dedup import find_doi_in_text, normalize_doi
-from science_graphrag.ingestion.enrichment.openalex import draft_from_openalex, fetch_work_by_doi
+from science_graphrag.ingestion.enrichment.openalex import (
+    OPENALEX_MAILTO_FALLBACK,
+    draft_from_openalex,
+    fetch_work_by_doi,
+)
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 
 
@@ -26,11 +30,13 @@ class DoiResolverArgs(BaseModel):
     )
 
 
-def _crossref_fallback(doi: str, mailto: str) -> dict[str, Any] | None:
+def _crossref_fallback(
+    doi: str, mailto: str, *, http_timeout_seconds: float
+) -> dict[str, Any] | None:
     enc = quote(doi, safe="")
     url = f"https://api.crossref.org/works/{enc}"
     try:
-        with httpx.Client(timeout=20.0) as client:
+        with httpx.Client(timeout=float(http_timeout_seconds)) as client:
             r = client.get(
                 url,
                 headers={"User-Agent": f"science-graphrag/0.1 (mailto:{mailto})"},
@@ -96,7 +102,7 @@ def _doi_resolve_body(
 ) -> ToolResult:
     raw = (doi_or_url or "").strip()
     doi = normalize_doi(raw) or find_doi_in_text(raw)
-    mailto = (settings.openalex_mailto or "dev@localhost").strip()
+    mailto = (settings.openalex_mailto or OPENALEX_MAILTO_FALLBACK).strip()
     if not doi:
         pl = {
             "ok": False,
@@ -137,7 +143,11 @@ def _doi_resolve_body(
         }
         openalex_id = draft.openalex_id
     else:
-        cr = _crossref_fallback(doi, mailto)
+        cr = _crossref_fallback(
+            doi,
+            mailto,
+            http_timeout_seconds=float(settings.agent_web_search_http_timeout_seconds),
+        )
         if cr:
             meta_src = "crossref_fallback"
             meta = {k: v for k, v in cr.items() if k != "source"}

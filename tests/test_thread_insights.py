@@ -51,6 +51,10 @@ def test_maybe_refresh_thread_insight_writes_session_meta_and_audit() -> None:
     assert aud.get("schema_version") == "thread_insight_audit_v1"
     assert int(aud.get("chunk_count") or 0) >= 1
     assert aud.get("mode") == "deterministic_stub"
+    assert aud.get("refresh_mode") == "full"
+    assert isinstance(aud.get("digest_window_fingerprint"), str) and len(
+        str(aud.get("digest_window_fingerprint") or "")
+    ) >= 8
     assert aud.get("built_at_turn_counter") == 2
     assert aud.get("forked") is False
     cb = tip.get("compaction_boundary")
@@ -254,3 +258,111 @@ def test_llm_synthesis_empty_body_keeps_stub_and_side_telemetry() -> None:
     assert fork_meta["forked"] is True
     assert fork_meta["side_llm_cache_read_tokens"] == 80
     assert side_ms == 42
+
+
+def test_thread_insight_incremental_refresh_on_tail_digest() -> None:
+    clear_session_store_for_tests()
+    st = Settings(
+        agent_thread_insights_enabled=True,
+        agent_thread_insights_min_digests=2,
+        agent_thread_insights_max_chunks=2,
+        agent_thread_insights_stale_after_turn_delta=1,
+        agent_thread_insights_incremental_enabled=True,
+    )
+    be = get_session_memory_backend()
+    for i in range(2):
+        be.update_after_turn(
+            "tid-inc",
+            turn_digest={
+                "user_intent": f"qi{i}",
+                "answer_excerpt": f"ai{i}",
+                "answer_class": "inventory",
+                "tools_used": [],
+            },
+        )
+    maybe_refresh_thread_insight_after_turn("tid-inc", settings=st)
+    be.update_after_turn(
+        "tid-inc",
+        turn_digest={
+            "user_intent": "qi_tail",
+            "answer_excerpt": "ai_tail",
+            "answer_class": "inventory",
+            "tools_used": [],
+        },
+    )
+    maybe_refresh_thread_insight_after_turn("tid-inc", settings=st)
+    tip = (be.get_session_copy("tid-inc").get("session_meta") or {}).get("thread_insight")
+    assert tip.get("version") == 2
+    aud = tip.get("audit") or {}
+    assert aud.get("refresh_mode") == "incremental"
+    assert "## incremental_delta" in str(tip.get("current") or "")
+
+
+def test_thread_insight_synthesis_conflict_audit_on_incremental() -> None:
+    clear_session_store_for_tests()
+    st = Settings(
+        agent_thread_insights_enabled=True,
+        agent_thread_insights_min_digests=2,
+        agent_thread_insights_stale_after_turn_delta=1,
+        agent_thread_insights_incremental_enabled=True,
+    )
+    be = get_session_memory_backend()
+    be.update_after_turn(
+        "tid-conf",
+        turn_digest={
+            "user_intent": "q0",
+            "answer_excerpt": "a0",
+            "answer_class": "inventory",
+            "tools_used": [],
+        },
+    )
+    be.update_after_turn(
+        "tid-conf",
+        turn_digest={
+            "user_intent": "q1",
+            "answer_excerpt": "a1",
+            "answer_class": "inventory",
+            "tools_used": [],
+        },
+    )
+    maybe_refresh_thread_insight_after_turn("tid-conf", settings=st)
+    be.update_after_turn(
+        "tid-conf",
+        turn_digest={
+            "user_intent": "q2",
+            "answer_excerpt": "marker __INSIGHT_CONFLICT__ tail",
+            "answer_class": "inventory",
+            "tools_used": [],
+        },
+    )
+    maybe_refresh_thread_insight_after_turn("tid-conf", settings=st)
+    tip = (be.get_session_copy("tid-conf").get("session_meta") or {}).get("thread_insight")
+    aud = tip.get("audit") or {}
+    conflicts = aud.get("synthesis_conflicts") or []
+    assert any(isinstance(c, dict) and c.get("kind") == "explicit_marker" for c in conflicts)
+    assert aud.get("synthesis_conflict") is True
+
+
+def test_thread_insight_window_slide_forces_full_rebuild() -> None:
+    """When oldest digest drops off the window, fingerprint must diverge → full rebuild."""
+    clear_session_store_for_tests()
+    st = Settings(
+        agent_thread_insights_enabled=True,
+        agent_thread_insights_min_digests=2,
+        agent_thread_insights_stale_after_turn_delta=1,
+        agent_thread_insights_incremental_enabled=True,
+    )
+    be = get_session_memory_backend()
+    for i in range(11):
+        be.update_after_turn(
+            "tid-slide",
+            turn_digest={
+                "user_intent": f"slide-{i}",
+                "answer_excerpt": f"a{i}",
+                "answer_class": "inventory",
+                "tools_used": [],
+            },
+        )
+        maybe_refresh_thread_insight_after_turn("tid-slide", settings=st)
+    tip = (be.get_session_copy("tid-slide").get("session_meta") or {}).get("thread_insight")
+    assert tip.get("audit", {}).get("refresh_mode") == "full"

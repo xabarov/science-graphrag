@@ -424,3 +424,111 @@ def test_regression_claim_grounding_thresholds_fail(tmp_path: Path) -> None:
     payload = json.loads(out_j.read_text())
     assert any("claim_grounding_precision" in x for x in payload["fail_reasons"])
     assert any("claim_grounding_recall" in x for x in payload["fail_reasons"])
+
+
+def test_regression_tool_search_miss_increase_fail(tmp_path: Path) -> None:
+    base = _minimal_review({"tool_search_miss_due_to_no_discovery_total": 0})
+    cand = _minimal_review({"tool_search_miss_due_to_no_discovery_total": 3})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--fail-on",
+            "new_missing_spans,tool_error_increase,final_answer_missing_increase,"
+            "compaction_churn_increase,tool_search_miss_increase",
+            "--warn-on",
+            "",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("tool_search_miss_increase" in x for x in payload["fail_reasons"])
+
+
+def test_regression_c3_tool_loop_instability_fail(tmp_path: Path) -> None:
+    base = _minimal_review({"tool_loop_repeat_max": 1})
+    cand = _minimal_review({"tool_loop_repeat_max": 4})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--fail-on",
+            "new_missing_spans,tool_error_increase,final_answer_missing_increase,"
+            "compaction_churn_increase,c3_tool_loop_instability",
+            "--warn-on",
+            "",
+            "--c3-tool-loop-fail-delta",
+            "2",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("c3_tool_loop_instability" in x for x in payload["fail_reasons"])
+
+
+def test_regression_c3_latency_without_error_regress_warns(tmp_path: Path) -> None:
+    base = _minimal_review(
+        {"latency_p95_ms": 100.0, "tool_error_rate": 0.0, "missing_span_count": 0}
+    )
+    cand = _minimal_review(
+        {"latency_p95_ms": 200.0, "tool_error_rate": 0.0, "missing_span_count": 0}
+    )
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--warn-on",
+            "c3_latency_without_error_regress",
+            "--latency-warn-ratio",
+            "1.25",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 3
+    payload = json.loads(out_j.read_text())
+    assert payload["status"] == "warn"
+    assert any("c3_latency_without_error_regress" in x for x in payload["warn_reasons"])

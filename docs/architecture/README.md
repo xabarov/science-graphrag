@@ -14,6 +14,7 @@
 
 | Документ | Описание |
 |----------|----------|
+| [agent-runtime-overview-ru.md](agent-runtime-overview-ru.md) | Русскоязычный обзор архитектуры агентного рантайма: режимы, поток одного запроса, целевой `v3` контур |
 | [agent-chat-tools.md](agent-chat-tools.md) | Каталог LangChain tools для research chat: runtime modes, что видит модель, карта реализации в коде, планы `tool_search` и compaction |
 | [agent-tools-best-practices.md](agent-tools-best-practices.md) | Практики проектирования тулзов, согласованность промптов/схем, аудит бандла (`scripts/prompt_audit`), чеклист перед мержем |
 

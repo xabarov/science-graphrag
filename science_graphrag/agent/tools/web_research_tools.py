@@ -17,8 +17,10 @@ from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_sa
 from science_graphrag.agent.tools.base import ToolResult
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.config import Settings
+from science_graphrag.ingestion.enrichment.openalex import OPENALEX_MAILTO_FALLBACK
 from science_graphrag.llm.concurrency import invoke_chat_gated
 
+# --- Policy defaults (product / roadmap) ---
 _DEFAULT_ACADEMIC_HOST_SUFFIXES: tuple[str, ...] = (
     "arxiv.org",
     "pubmed.ncbi.nlm.nih.gov",
@@ -28,6 +30,31 @@ _DEFAULT_ACADEMIC_HOST_SUFFIXES: tuple[str, ...] = (
     "biorxiv.org",
     "api.crossref.org",
 )
+
+# --- Public schema alignment (keep in sync with WebFetchArgs.prompt max_length) ---
+_WEB_FETCH_CACHE_KEY_PROMPT_CHARS = 512
+
+# --- Trace / error preview (observability only, not LLM-facing) ---
+_WEB_SEARCH_TRACE_QUERY_PREVIEW_CHARS = 200
+_WEB_FETCH_TRACE_URL_PREVIEW_CHARS = 300
+_WEB_FETCH_ERROR_DETAIL_CHARS = 240
+
+# --- Crossref search ---
+_CROSSREF_WORKS_URL = "https://api.crossref.org/works"
+_WEB_SEARCH_MAX_RESULTS = 15
+
+# --- HTTP transport (redirect cap is defense-in-depth; not separately in Settings) ---
+_WEB_FETCH_MAX_REDIRECTS = 5
+
+# --- Raw body → text / LLM excerpt / output budgets (quality vs context window) ---
+_WEB_FETCH_DECODE_CHAR_CAP = 8000
+_WEB_FETCH_LLM_EXCERPT_CHAR_CAP = 6000
+_WEB_FETCH_SUMMARY_CHAR_CAP = 4000
+_WEB_FETCH_FALLBACK_TEXT_CHAR_CAP = 2000
+
+# --- Summarization LLM (chat pool); wall timeout independent of streamed GET (often shorter). ---
+_WEB_FETCH_SUMMARIZE_MAX_TOKENS = 512
+_WEB_FETCH_SUMMARIZE_TIMEOUT_SECONDS = 20.0
 
 _FETCH_CACHE_LOCK = threading.Lock()
 _FETCH_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
@@ -47,7 +74,7 @@ def _web_fetch_cache_key(
     )
     payload = {
         "url": (url or "").strip(),
-        "prompt": (prompt or "").strip()[:512],
+        "prompt": (prompt or "").strip()[:_WEB_FETCH_CACHE_KEY_PROMPT_CHARS],
         "allowed": allow,
         "blocked": blocked_sorted,
     }
@@ -102,14 +129,14 @@ class WebSearchArgs(BaseModel):
         description="Optional host suffix allowlist; defaults to academic-only set from roadmap.",
     )
     blocked_domains: list[str] | None = Field(default=None, description="Optional host denylist.")
-    max_results: int = Field(default=5, ge=1, le=15)
+    max_results: int = Field(default=5, ge=1, le=_WEB_SEARCH_MAX_RESULTS)
 
 
 class WebFetchArgs(BaseModel):
     url: str = Field(..., min_length=8, max_length=2048)
     prompt: str = Field(
         default="Summarize the scholarly content in 5 bullet points.",
-        max_length=512,
+        max_length=_WEB_FETCH_CACHE_KEY_PROMPT_CHARS,
     )
     allowed_domains: list[str] | None = Field(default=None)
     blocked_domains: list[str] | None = Field(default=None)
@@ -133,7 +160,7 @@ def build_web_research_tools(*, settings: Settings) -> list[Any]:
         res = run_tool_result_with_span(
             tool_name="web_search",
             tool_parameters={
-                "query": query[:200],
+                "query": query[:_WEB_SEARCH_TRACE_QUERY_PREVIEW_CHARS],
                 "max_results": max_results,
             },
             fn=lambda: _wrap_web_search(
@@ -156,7 +183,10 @@ def build_web_research_tools(*, settings: Settings) -> list[Any]:
         """Fetch a URL (GET, bounded size) and summarize with the chat LLM when allowed."""
         res = run_tool_result_with_span(
             tool_name="web_fetch",
-            tool_parameters={"url": url[:300], "prompt_len": len(prompt or "")},
+            tool_parameters={
+                "url": url[:_WEB_FETCH_TRACE_URL_PREVIEW_CHARS],
+                "prompt_len": len(prompt or ""),
+            },
             fn=lambda: _wrap_web_fetch(
                 url,
                 prompt,
@@ -231,12 +261,13 @@ def _web_search_impl(
                 "cache_hit": False,
             },
         }
-    mailto = (settings.openalex_mailto or "dev@localhost").strip()
-    rows = max(1, min(int(max_results), 15))
+    mailto = (settings.openalex_mailto or OPENALEX_MAILTO_FALLBACK).strip()
+    rows = max(1, min(int(max_results), _WEB_SEARCH_MAX_RESULTS))
     params = {"query": query.strip(), "rows": rows, "mailto": mailto}
-    url = "https://api.crossref.org/works"
+    url = _CROSSREF_WORKS_URL
+    search_timeout = float(settings.agent_web_search_http_timeout_seconds)
     try:
-        with httpx.Client(timeout=20.0) as client:
+        with httpx.Client(timeout=search_timeout) as client:
             r = client.get(
                 url,
                 params=params,
@@ -248,7 +279,7 @@ def _web_search_impl(
         return {
             "ok": False,
             "error": "web_search_failed",
-            "detail": str(exc)[:240],
+            "detail": str(exc)[:_WEB_FETCH_ERROR_DETAIL_CHARS],
             "row_count": 0,
             "items": [],
             "evidence_origin": "external_web",
@@ -332,7 +363,7 @@ def _web_fetch_impl(
                 "cache_hit": False,
             },
         }
-    ttl = int(getattr(settings, "agent_web_fetch_cache_ttl_seconds", 600))
+    ttl = int(settings.agent_web_fetch_cache_ttl_seconds)
     cache_key = _web_fetch_cache_key(
         url,
         prompt,
@@ -347,15 +378,16 @@ def _web_fetch_impl(
         out["sse_hint"] = {**hint, "cache_hit": True}
         return out
 
-    max_bytes = int(getattr(settings, "agent_web_fetch_max_bytes", 524_288))
+    max_bytes = int(settings.agent_web_fetch_max_bytes)
     text = ""
     status = 0
     final_url = url
+    fetch_timeout = float(settings.agent_web_fetch_http_timeout_seconds)
     try:
         with httpx.Client(
-            timeout=25.0,
+            timeout=fetch_timeout,
             follow_redirects=True,
-            max_redirects=5,
+            max_redirects=_WEB_FETCH_MAX_REDIRECTS,
         ) as client:
             with client.stream("GET", url, headers={"User-Agent": "science-graphrag/0.1"}) as r:
                 status = int(r.status_code)
@@ -373,13 +405,13 @@ def _web_fetch_impl(
                         break
                     chunks.append(blk)
                 raw = b"".join(chunks)
-                text = raw.decode("utf-8", errors="replace")[:8000]
+                text = raw.decode("utf-8", errors="replace")[:_WEB_FETCH_DECODE_CHAR_CAP]
                 final_url = str(r.url)
     except (httpx.HTTPError, OSError, ValueError) as exc:
         return {
             "ok": False,
             "error": "fetch_failed",
-            "detail": str(exc)[:240],
+            "detail": str(exc)[:_WEB_FETCH_ERROR_DETAIL_CHARS],
             "row_count": 0,
             "summary": "",
             "evidence_origin": "external_web",
@@ -413,20 +445,24 @@ def _web_fetch_impl(
     summary = ""
     if (settings.extraction_llm_api_key or "").strip():
         try:
-            llm = build_chat_model(settings, max_tokens=512, timeout_seconds=20.0)
+            llm = build_chat_model(
+                settings,
+                max_tokens=_WEB_FETCH_SUMMARIZE_MAX_TOKENS,
+                timeout_seconds=_WEB_FETCH_SUMMARIZE_TIMEOUT_SECONDS,
+            )
             msgs = ensure_messages_safe_for_generation(
                 [
                     HumanMessage(
                         content=(
                             "Summarize the following web page excerpt for a researcher. "
                             "Be factual; if content is not scholarly, say so.\n\n"
-                            f"URL: {final_url}\n\nEXCERPT:\n{text[:6000]}\n\nTASK:\n{prompt}"
+                            f"URL: {final_url}\n\nEXCERPT:\n{text[:_WEB_FETCH_LLM_EXCERPT_CHAR_CAP]}\n\nTASK:\n{prompt}"
                         )
                     ),
                 ]
             )
             resp = invoke_chat_gated(llm, msgs, pool_name="agent_chat", settings=settings)
-            summary = str(resp.content or "").strip()[:4000]
+            summary = str(resp.content or "").strip()[:_WEB_FETCH_SUMMARY_CHAR_CAP]
         except Exception as exc:  # noqa: BLE001
             summary = f"(summarization failed: {type(exc).__name__})"
 
@@ -434,7 +470,7 @@ def _web_fetch_impl(
         "ok": True,
         "row_count": 1,
         "url": final_url,
-        "summary": summary or text[:2000],
+        "summary": summary or text[:_WEB_FETCH_FALLBACK_TEXT_CHAR_CAP],
         "evidence_origin": "external_web",
         "sse_hint": {
             "type": "web_fetched",

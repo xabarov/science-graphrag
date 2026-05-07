@@ -1,0 +1,21 @@
+{
+  "schema_version": "epic_c_eval_lanes_v1",
+  "lanes": [
+    {
+      "id": "sparse-query",
+      "description": "Low-signal user text; stresses tool_search fallback and shortlist stability."
+    },
+    {
+      "id": "ambiguous_intent",
+      "description": "Under-specified goals; stresses discovery + optional ask_user_question paths."
+    },
+    {
+      "id": "graph-heavy",
+      "description": "Multi-hop graph questions; stresses graph_agent tools and routing."
+    },
+    {
+      "id": "bibliography-quote",
+      "description": "GOST bibliography and quote workflows; stresses paper_quote_search and format_bibliography_gost."
+    }
+  ]
+}

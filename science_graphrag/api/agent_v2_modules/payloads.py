@@ -388,6 +388,12 @@ def response_from_run(
     slane = getattr(out, "subagent_observability_lane", None)
     if isinstance(slane, str) and slane.strip():
         run_metadata["subagent_observability_lane"] = slane.strip()
+    sr3 = getattr(out, "specialist_results_v3", None)
+    if isinstance(sr3, dict) and sr3:
+        run_metadata["specialist_results_v3"] = dict(sr3)
+    cvr = getattr(out, "claim_verification_results", None)
+    if isinstance(cvr, list) and cvr:
+        run_metadata["claim_verification_results"] = list(cvr)
     brief = getattr(out, "brief", None)
     if isinstance(brief, str) and brief.strip():
         run_metadata["brief"] = brief.strip()[:240]

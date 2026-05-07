@@ -217,8 +217,16 @@ def synthesize_thread_insight_markdown(
     )
 
 
+def run_claim_verification_fork_bundle(**kwargs: Any) -> list[dict[str, Any]]:
+    """Side-isolated claim verification runs (tools + deny policy); see ``claim_verification_runtime``."""
+    from science_graphrag.agent.subagents.claim_verification_runtime import run_claim_verification_fanout
+
+    return run_claim_verification_fanout(**kwargs)
+
+
 __all__ = [
     "SideLlmRunResult",
+    "run_claim_verification_fork_bundle",
     "run_side_llm_chat",
     "side_llm_fork_metadata",
     "synthesize_thread_insight_markdown",

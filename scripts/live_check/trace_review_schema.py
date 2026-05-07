@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from typing import Any, Literal
 
 REVIEW_VERSION = "trace-review-v1"
@@ -109,10 +109,19 @@ class TimelineCase:
     insight_fallback_reason: str | None = None
     insight_conflict_resolved: bool | None = None
     run_ptl_retry_count: int | None = None
+    ptl_retry_count_per_compaction: int | None = None
+    thread_insight_refresh_mode: str | None = None
+    thread_insight_synthesis_conflict_count: int = 0
     unnecessary_tool_calls: int = 0
     subagent_runs_count: int = 0
     subagent_task_notification_count: int = 0
     subagent_lifecycle_missing_count: int = 0
+    #: Epic C3 lane label (``run_metadata.eval_lane`` or case top-level).
+    eval_lane: str | None = None
+    tool_search_miss_due_to_no_discovery: int = 0
+    tool_schema_bytes_saved: int = 0
+    #: Max consecutive identical tool names in ``tool_steps`` (loop-instability proxy).
+    tool_loop_repeat_max: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -135,11 +144,15 @@ class Metrics:
     insight_stale_reason_rate: float | None = None
     insight_conflict_resolved_rate: float | None = None
     ptl_retry_rate: float | None = None
+    ptl_retry_count_per_compaction_avg: float | None = None
     compaction_circuit_breaker_trips: int | None = None
     unnecessary_tool_calls_avg: float | None = None
     hook_chain_event_count: int = 0
     subagent_lifecycle_missing_count: int = 0
     subagent_task_notification_count_avg: float | None = None
+    tool_search_miss_due_to_no_discovery_total: int = 0
+    tool_schema_bytes_saved_total: int = 0
+    tool_loop_repeat_max: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -221,6 +234,26 @@ def _phoenix_alignment_from_trace_audit(ta: dict[str, Any] | None) -> PhoenixAli
     return PhoenixAlignment()
 
 
+def _max_consecutive_same_tool(steps: tuple[ToolStep, ...]) -> int:
+    """Longest run of the same non-empty tool name (instability / loop proxy)."""
+    best = 0
+    cur_name = ""
+    run = 0
+    for st in steps:
+        t = str(st.tool or "").strip()
+        if not t:
+            cur_name = ""
+            run = 0
+            continue
+        if t == cur_name:
+            run += 1
+        else:
+            cur_name = t
+            run = 1
+        best = max(best, run)
+    return best
+
+
 def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     """Build one ``TimelineCase`` from an E2E ``cases[]`` entry."""
     cid = str(case.get("case_id") or case.get("name") or "unknown")
@@ -263,6 +296,9 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     fb_reason: str | None = None
     conflict_res: bool | None = None
     ptl_n: int | None = None
+    ptl_pc: int | None = None
+    ti_refresh_mode: str | None = None
+    ti_syn_conflict_count = 0
     rm = case.get("run_metadata")
     if isinstance(rm, dict):
         tia = rm.get("thread_insight_audit")
@@ -271,6 +307,12 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
             fb = tia.get("forked")
             if isinstance(fb, bool):
                 ti_forked = fb
+            raw_mode = tia.get("refresh_mode")
+            if raw_mode is not None and str(raw_mode).strip():
+                ti_refresh_mode = str(raw_mode).strip()
+            sc_raw = tia.get("synthesis_conflicts")
+            if isinstance(sc_raw, list):
+                ti_syn_conflict_count = len(sc_raw)
         raw_ifb = rm.get("insight_fallback_reason")
         if raw_ifb is not None and str(raw_ifb).strip():
             fb_reason = str(raw_ifb).strip()
@@ -283,6 +325,14 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
                 ptl_n = max(0, int(ptl_raw))
         except (TypeError, ValueError):
             ptl_n = None
+        try:
+            ptl_pc_raw = rm.get("ptl_retry_count_per_compaction")
+            if ptl_pc_raw is not None:
+                ptl_pc = max(0, int(ptl_pc_raw))
+            elif ptl_n is not None:
+                ptl_pc = ptl_n
+        except (TypeError, ValueError):
+            ptl_pc = None
 
     unn = 0
     met = case.get("metrics")
@@ -309,6 +359,20 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         if isinstance(raw_hc, list):
             hook_chain = tuple(x for x in raw_hc if isinstance(x, dict))
 
+    eval_lane: str | None = None
+    miss_nd = 0
+    schema_saved = 0
+    if isinstance(rm, dict):
+        el = str(rm.get("eval_lane") or case.get("eval_lane") or "").strip()
+        eval_lane = el or None
+        miss_nd = _coerce_int(rm.get("tool_search_miss_due_to_no_discovery"), default=0)
+        schema_saved = _coerce_int(rm.get("tool_schema_bytes_saved"), default=0)
+    elif str(case.get("eval_lane") or "").strip():
+        eval_lane = str(case.get("eval_lane")).strip()
+
+    steps_t = tuple(steps)
+    loop_rep = _max_consecutive_same_tool(steps_t)
+
     return TimelineCase(
         case_id=cid,
         thread_id=thread_id,
@@ -323,7 +387,7 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
             or None
         ),
         duration_ms=duration_ms,
-        tool_steps=tuple(steps),
+        tool_steps=steps_t,
         phoenix_alignment=phoenix_alignment,
         compaction_events=(),
         hook_chain_events=hook_chain,
@@ -341,10 +405,17 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         insight_fallback_reason=fb_reason,
         insight_conflict_resolved=conflict_res,
         run_ptl_retry_count=ptl_n,
+        ptl_retry_count_per_compaction=ptl_pc,
+        thread_insight_refresh_mode=ti_refresh_mode,
+        thread_insight_synthesis_conflict_count=ti_syn_conflict_count,
         unnecessary_tool_calls=unn,
         subagent_runs_count=srun_c,
         subagent_task_notification_count=stn_c,
         subagent_lifecycle_missing_count=miss_lc,
+        eval_lane=eval_lane,
+        tool_search_miss_due_to_no_discovery=miss_nd,
+        tool_schema_bytes_saved=schema_saved,
+        tool_loop_repeat_max=loop_rep,
     )
 
 
@@ -365,10 +436,14 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     conflict_true = 0
     conflict_scored = 0
     ptl_vals: list[int] = []
+    ptl_pc_vals: list[int] = []
     unnecessary_vals: list[int] = []
     hook_chain_counts: list[int] = []
     subagent_missing_vals: list[int] = []
     stn_counts: list[int] = []
+    miss_nd_vals: list[int] = []
+    schema_saved_vals: list[int] = []
+    loop_rep_vals: list[int] = []
 
     for row in timeline:
         for st in row.tool_steps:
@@ -418,9 +493,14 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
                 conflict_true += 1
         if row.run_ptl_retry_count is not None:
             ptl_vals.append(int(row.run_ptl_retry_count))
+        if row.ptl_retry_count_per_compaction is not None:
+            ptl_pc_vals.append(int(row.ptl_retry_count_per_compaction))
         unnecessary_vals.append(int(row.unnecessary_tool_calls or 0))
         subagent_missing_vals.append(int(row.subagent_lifecycle_missing_count or 0))
         stn_counts.append(int(row.subagent_task_notification_count or 0))
+        miss_nd_vals.append(int(row.tool_search_miss_due_to_no_discovery or 0))
+        schema_saved_vals.append(int(row.tool_schema_bytes_saved or 0))
+        loop_rep_vals.append(int(row.tool_loop_repeat_max or 0))
 
     tool_error_rate = (bad_steps / total_steps) if total_steps else 0.0
 
@@ -449,12 +529,16 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     )
     conflict_rate = round(conflict_true / float(conflict_scored), 6) if conflict_scored else None
     ptl_rate = round(sum(ptl_vals) / float(len(ptl_vals)), 6) if ptl_vals else None
+    ptl_pc_rate = round(sum(ptl_pc_vals) / float(len(ptl_pc_vals)), 6) if ptl_pc_vals else None
     unn_avg = (
         round(sum(unnecessary_vals) / float(len(unnecessary_vals)), 6) if unnecessary_vals else None
     )
     hook_chain_event_count = int(sum(hook_chain_counts)) if hook_chain_counts else 0
     subagent_missing_sum = int(sum(subagent_missing_vals)) if subagent_missing_vals else 0
     stn_avg = round(sum(stn_counts) / float(len(stn_counts)), 4) if stn_counts else None
+    miss_nd_sum = int(sum(miss_nd_vals)) if miss_nd_vals else 0
+    schema_saved_sum = int(sum(schema_saved_vals)) if schema_saved_vals else 0
+    loop_rep_max = max(loop_rep_vals) if loop_rep_vals else 0
 
     return Metrics(
         tool_error_rate=tool_error_rate,
@@ -477,11 +561,15 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         insight_stale_reason_rate=stale_reason_rate_val,
         insight_conflict_resolved_rate=conflict_rate,
         ptl_retry_rate=ptl_rate,
+        ptl_retry_count_per_compaction_avg=ptl_pc_rate,
         compaction_circuit_breaker_trips=int(circuit_hits),
         unnecessary_tool_calls_avg=unn_avg,
         hook_chain_event_count=hook_chain_event_count,
         subagent_lifecycle_missing_count=subagent_missing_sum,
         subagent_task_notification_count_avg=stn_avg,
+        tool_search_miss_due_to_no_discovery_total=miss_nd_sum,
+        tool_schema_bytes_saved_total=schema_saved_sum,
+        tool_loop_repeat_max=loop_rep_max,
     )
 
 
@@ -501,33 +589,7 @@ def merge_compaction_events_into_timeline(
         if attach is None and fallback_key:
             attach = events_by_case.get(fallback_key)
         if attach:
-            out.append(
-                TimelineCase(
-                    case_id=row.case_id,
-                    thread_id=row.thread_id,
-                    run_kind=row.run_kind,
-                    graph_id=row.graph_id,
-                    duration_ms=row.duration_ms,
-                    tool_steps=row.tool_steps,
-                    phoenix_alignment=row.phoenix_alignment,
-                    compaction_events=attach,
-                    hook_chain_events=row.hook_chain_events,
-                    db_side_effects=row.db_side_effects,
-                    warnings=row.warnings,
-                    tool_search_shortlist_ratio_avg=row.tool_search_shortlist_ratio_avg,
-                    tool_search_deferred_schema_events=row.tool_search_deferred_schema_events,
-                    budget_stop_reasons=row.budget_stop_reasons,
-                    side_llm_cache_read_ratio=row.side_llm_cache_read_ratio,
-                    thread_insight_forked=row.thread_insight_forked,
-                    insight_fallback_reason=row.insight_fallback_reason,
-                    insight_conflict_resolved=row.insight_conflict_resolved,
-                    run_ptl_retry_count=row.run_ptl_retry_count,
-                    unnecessary_tool_calls=row.unnecessary_tool_calls,
-                    subagent_runs_count=row.subagent_runs_count,
-                    subagent_task_notification_count=row.subagent_task_notification_count,
-                    subagent_lifecycle_missing_count=row.subagent_lifecycle_missing_count,
-                )
-            )
+            out.append(replace(row, compaction_events=attach))
         else:
             out.append(row)
     return tuple(out)
@@ -753,6 +815,17 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 _rtp_parsed = int(_rtp_raw)
             except (TypeError, ValueError):
                 _rtp_parsed = None
+        _ptl_pc_raw = item.get("ptl_retry_count_per_compaction")
+        _ptl_pc_parsed: int | None = None
+        if _ptl_pc_raw is not None and str(_ptl_pc_raw).strip():
+            try:
+                _ptl_pc_parsed = max(0, int(_ptl_pc_raw))
+            except (TypeError, ValueError):
+                _ptl_pc_parsed = None
+        elif _rtp_parsed is not None:
+            _ptl_pc_parsed = _rtp_parsed
+        _ti_rf = str(item.get("thread_insight_refresh_mode") or "").strip() or None
+        _ti_scc = _coerce_int(item.get("thread_insight_synthesis_conflict_count"), default=0)
         timeline.append(
             TimelineCase(
                 case_id=str(item.get("case_id") or "unknown"),
@@ -800,6 +873,9 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                     else None
                 ),
                 run_ptl_retry_count=_rtp_parsed,
+                ptl_retry_count_per_compaction=_ptl_pc_parsed,
+                thread_insight_refresh_mode=_ti_rf,
+                thread_insight_synthesis_conflict_count=_ti_scc,
                 unnecessary_tool_calls=_coerce_int(item.get("unnecessary_tool_calls"), default=0),
                 subagent_runs_count=_coerce_int(item.get("subagent_runs_count"), default=0),
                 subagent_task_notification_count=_coerce_int(
@@ -808,6 +884,13 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 subagent_lifecycle_missing_count=_coerce_int(
                     item.get("subagent_lifecycle_missing_count"), default=0
                 ),
+                eval_lane=(str(item.get("eval_lane") or "").strip() or None),
+                tool_search_miss_due_to_no_discovery=_coerce_int(
+                    item.get("tool_search_miss_due_to_no_discovery"), default=0
+                ),
+                tool_schema_bytes_saved=_coerce_int(item.get("tool_schema_bytes_saved"), default=0),
+                tool_loop_repeat_max=_coerce_int(item.get("tool_loop_repeat_max"), default=0)
+                or (_max_consecutive_same_tool(tuple(steps)) if steps else 0),
             )
         )
 
@@ -840,6 +923,9 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
             mraw.get("insight_conflict_resolved_rate")
         ),
         ptl_retry_rate=_coerce_optional_float(mraw.get("ptl_retry_rate")),
+        ptl_retry_count_per_compaction_avg=_coerce_optional_float(
+            mraw.get("ptl_retry_count_per_compaction_avg")
+        ),
         compaction_circuit_breaker_trips=_ccb_trips,
         unnecessary_tool_calls_avg=_coerce_optional_float(
             mraw.get("unnecessary_tool_calls_avg"),
@@ -851,6 +937,13 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
         subagent_task_notification_count_avg=_coerce_optional_float(
             mraw.get("subagent_task_notification_count_avg")
         ),
+        tool_search_miss_due_to_no_discovery_total=_coerce_int(
+            mraw.get("tool_search_miss_due_to_no_discovery_total"), default=0
+        ),
+        tool_schema_bytes_saved_total=_coerce_int(
+            mraw.get("tool_schema_bytes_saved_total"), default=0
+        ),
+        tool_loop_repeat_max=_coerce_int(mraw.get("tool_loop_repeat_max"), default=0),
     )
 
     vraw = data.get("verdict") or {}
@@ -887,31 +980,7 @@ def merge_e2e_report_json_into_review(
         if workspace_postgres and row.db_side_effects is None:
             try:
                 ig = int((workspace_postgres or {}).get("ingest_jobs_total") or 0)
-                row = TimelineCase(
-                    case_id=row.case_id,
-                    thread_id=row.thread_id,
-                    run_kind=row.run_kind,
-                    graph_id=row.graph_id,
-                    duration_ms=row.duration_ms,
-                    tool_steps=row.tool_steps,
-                    phoenix_alignment=row.phoenix_alignment,
-                    compaction_events=row.compaction_events,
-                    hook_chain_events=row.hook_chain_events,
-                    db_side_effects=DbSideEffects(ingest_jobs_seen=ig),
-                    warnings=row.warnings,
-                    tool_search_shortlist_ratio_avg=row.tool_search_shortlist_ratio_avg,
-                    tool_search_deferred_schema_events=row.tool_search_deferred_schema_events,
-                    budget_stop_reasons=row.budget_stop_reasons,
-                    side_llm_cache_read_ratio=row.side_llm_cache_read_ratio,
-                    thread_insight_forked=row.thread_insight_forked,
-                    insight_fallback_reason=row.insight_fallback_reason,
-                    insight_conflict_resolved=row.insight_conflict_resolved,
-                    run_ptl_retry_count=row.run_ptl_retry_count,
-                    unnecessary_tool_calls=row.unnecessary_tool_calls,
-                    subagent_runs_count=row.subagent_runs_count,
-                    subagent_task_notification_count=row.subagent_task_notification_count,
-                    subagent_lifecycle_missing_count=row.subagent_lifecycle_missing_count,
-                )
+                row = replace(row, db_side_effects=DbSideEffects(ingest_jobs_seen=ig))
             except (TypeError, ValueError):
                 pass
         rows.append(row)

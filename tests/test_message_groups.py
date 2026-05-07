@@ -5,7 +5,9 @@ from types import SimpleNamespace
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from science_graphrag.agent.context.message_groups import (
+    digest_window_as_messages_for_api_rounds,
     drop_oldest_api_round_groups,
+    drop_oldest_digest_rounds_for_ptl,
     group_messages_by_api_round,
     tool_call_entry_id,
     validate_tool_message_integrity,
@@ -47,6 +49,28 @@ def test_validate_tool_message_integrity_orphan_tool() -> None:
     messages = [ToolMessage(content="{}", tool_call_id="orphan", name="t")]
     viol = validate_tool_message_integrity(messages)
     assert any("no preceding AIMessage" in v for v in viol)
+
+
+def test_digest_window_maps_to_api_round_groups() -> None:
+    digests = [
+        {"user_intent": "a", "answer_excerpt": "1", "answer_class": "x", "tools_used": []},
+        {"user_intent": "b", "answer_excerpt": "2", "answer_class": "x", "tools_used": []},
+    ]
+    msgs = digest_window_as_messages_for_api_rounds(digests)
+    groups = group_messages_by_api_round(msgs)
+    assert len(groups) >= 2
+    assert isinstance(groups[0][0], HumanMessage)
+
+
+def test_drop_oldest_digest_rounds_for_ptl_drops_oldest_digest() -> None:
+    digests = [
+        {"user_intent": "a", "answer_excerpt": "1", "answer_class": "x", "tools_used": []},
+        {"user_intent": "b", "answer_excerpt": "2", "answer_class": "x", "tools_used": []},
+        {"user_intent": "c", "answer_excerpt": "3", "answer_class": "x", "tools_used": []},
+    ]
+    out = drop_oldest_digest_rounds_for_ptl(list(digests), groups_to_drop=1)
+    assert len(out) == 2
+    assert out[0]["user_intent"] == "b"
 
 
 def test_drop_oldest_api_round_groups_preserves_preamble() -> None:

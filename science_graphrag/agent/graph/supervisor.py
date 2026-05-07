@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Literal
 
 from langchain_core.messages import HumanMessage
@@ -78,11 +79,20 @@ def _build_supervisor_route_messages(state: AgentState) -> list[HumanMessage]:
     """Build a provider-safe routing prompt without replaying tool-call transcripts."""
     specialist_context = str(state.get("specialist_results") or {})
     user_question = _first_user_plain_question(state)
-    return [
+    v3_merge = ""
+    v3 = state.get("specialist_results_v3")
+    if isinstance(v3, dict):
+        merge = v3.get("merge")
+        if isinstance(merge, dict):
+            v3_merge = json.dumps(merge, ensure_ascii=True, default=str)[:4000]
+    msgs = [
         HumanMessage(content=ROUTING_PROMPT),
         HumanMessage(content=f"user_question={user_question[:4000]}"),
         HumanMessage(content=f"specialist_results={specialist_context[:12000]}"),
     ]
+    if v3_merge:
+        msgs.append(HumanMessage(content=f"specialist_results_v3_merge={v3_merge}"))
+    return msgs
 
 
 ROUTING_PROMPT = """You are a supervisor for scholarly research agents.

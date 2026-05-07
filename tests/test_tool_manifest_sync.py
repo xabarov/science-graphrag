@@ -19,6 +19,8 @@ def _all_optional_surface_settings() -> Settings:
         agent_research_plan_tool_enabled=True,
         agent_ask_user_question_tool_enabled=True,
         agent_brief_output_enabled=True,
+        agent_plan_mode_tools_enabled=True,
+        agent_worktree_tools_enabled=True,
     )
 
 
@@ -53,6 +55,10 @@ def test_default_registry_subset_of_manifest() -> None:
         "research_plan_write",
         "ask_user_question",
         "brief",
+        "enter_plan_mode",
+        "exit_plan_mode",
+        "enter_worktree",
+        "exit_worktree",
     }
     assert man_names - reg_names <= optional
 

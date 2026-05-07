@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import BaseAgentTool, ToolResult
 from science_graphrag.agent.tools.chunk_retrieval_defaults import (
+    AGENT_CHUNK_QUOTE_TEXT_MAX_CHARS,
+    AGENT_CHUNK_SNIPPET_CHARS_PAPER_QUOTE,
     DEFAULT_AGENT_CHUNK_TOP_K,
     MAX_AGENT_CHUNK_TOP_K,
     normalize_agent_retrieval_query,
@@ -39,7 +41,7 @@ class PaperQuoteSearchTool(BaseAgentTool):
         query: str,
         workspace_id: str | None,
         work_id: str | None = None,
-        top_k: int = 5,
+        top_k: int = DEFAULT_AGENT_CHUNK_TOP_K,
     ) -> ToolResult:
         q = normalize_agent_retrieval_query(query or "")
         if not q:
@@ -108,7 +110,7 @@ class PaperQuoteSearchTool(BaseAgentTool):
                     {
                         "id": fp or h.get("id"),
                         "score": h.get("score"),
-                        "snippet": text[:400],
+                        "snippet": text[:AGENT_CHUNK_SNIPPET_CHARS_PAPER_QUOTE],
                         "work_id": w,
                         "chunk_fingerprint": fp,
                     }
@@ -144,13 +146,13 @@ class PaperQuoteSearchTool(BaseAgentTool):
                     "chunk_fingerprint": fp,
                     "work_id": w,
                     "score": h.get("score"),
-                    "snippet": text[:400],
+                    "snippet": text[:AGENT_CHUNK_SNIPPET_CHARS_PAPER_QUOTE],
                     "section_path": sec,
                 }
             )
             quote_candidates.append(
                 {
-                    "quote_text": text[:800],
+                    "quote_text": text[:AGENT_CHUNK_QUOTE_TEXT_MAX_CHARS],
                     "work_id": w,
                     "chunk_id": fp,
                     **({"chunk_fingerprint": fp} if fp else {}),

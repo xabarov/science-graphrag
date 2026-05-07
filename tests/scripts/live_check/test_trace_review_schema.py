@@ -154,6 +154,27 @@ def test_merge_compaction_into_review_dict(schema_module) -> None:
     assert merged["metrics"]["compaction_event_count"] >= 1
 
 
+def test_merge_e2e_extracts_ptl_per_compaction_and_insight_audit(schema_module) -> None:
+    case = {
+        "case_id": "ptl_pc_row",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "ptl_retry_count_per_compaction": 2,
+            "thread_insight_audit": {
+                "refresh_mode": "incremental",
+                "synthesis_conflicts": [{"kind": "explicit_marker"}],
+            },
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].ptl_retry_count_per_compaction == 2
+    assert tl[0].thread_insight_refresh_mode == "incremental"
+    assert tl[0].thread_insight_synthesis_conflict_count == 1
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.ptl_retry_count_per_compaction_avg == 2.0
+
+
 def test_merge_e2e_extracts_prompt_memory_run_metadata(schema_module) -> None:
     case = {
         "case_id": "pm_row",
@@ -191,6 +212,28 @@ def test_merge_e2e_counts_insight_circuit_open_fallback(schema_module) -> None:
     m = schema_module.aggregate_metrics_from_timeline(tl)
     assert m.insight_stale_reason_rate == 1.0
     assert m.compaction_circuit_breaker_trips == 1
+
+
+def test_subagent_lifecycle_missing_with_spawn_rows_and_task_notifications(schema_module) -> None:
+    """Routing legs + explicit spawns vs task-notification count (Epic B4 trace completeness)."""
+    case = {
+        "case_id": "subagent_lc_spawn",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "subagent_observability_lane": "fork_v3_enhanced",
+            "subagent_runs": [
+                {"subagent_id": "retrieval_agent", "kind": "routing_leg"},
+                {"subagent_id": "cv-1", "kind": "spawned"},
+            ],
+            "subagent_task_notifications": [{"task_id": "t1"}],
+            "claim_verification_results": [{"terminal_state": "succeeded", "verdict": "PASS"}],
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].subagent_runs_count == 2
+    assert tl[0].subagent_task_notification_count == 1
+    assert tl[0].subagent_lifecycle_missing_count == 1
 
 
 def test_merge_e2e_hook_chain_events_from_run_metadata(schema_module) -> None:
@@ -276,6 +319,7 @@ def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module)
             "deferred_schema_event_count": "bad",
             "budget_cutoff_count": "bad",
             "side_llm_cache_read_ratio_avg": "bad",
+            "ptl_retry_count_per_compaction_avg": "bad",
         },
         "verdict": {"status": "pass", "fail_reasons": [], "warn_reasons": []},
     }
@@ -285,6 +329,34 @@ def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module)
     assert parsed.metrics.deferred_schema_event_count == 0
     assert parsed.metrics.budget_cutoff_count == 0
     assert parsed.metrics.side_llm_cache_read_ratio_avg is None
+    assert parsed.metrics.ptl_retry_count_per_compaction_avg is None
+
+
+def test_merge_e2e_extracts_epic_c_run_metadata_counters(schema_module) -> None:
+    case = {
+        "case_id": "c3_lane_smoke",
+        "duration_ms": 500.0,
+        "eval_lane": "sparse-query",
+        "tool_trace": [
+            {"tool": "find_works", "ok": True},
+            {"tool": "find_works", "ok": True},
+            {"tool": "final_answer", "ok": True},
+        ],
+        "run_metadata": {
+            "tool_search_miss_due_to_no_discovery": 2,
+            "tool_schema_bytes_saved": 900,
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].eval_lane == "sparse-query"
+    assert tl[0].tool_search_miss_due_to_no_discovery == 2
+    assert tl[0].tool_schema_bytes_saved == 900
+    assert tl[0].tool_loop_repeat_max == 2
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.tool_search_miss_due_to_no_discovery_total == 2
+    assert m.tool_schema_bytes_saved_total == 900
+    assert m.tool_loop_repeat_max == 2
 
 
 def test_reference_suite_tool_trace_span_alignment_contract(schema_module) -> None:

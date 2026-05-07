@@ -66,6 +66,11 @@ CLARIFY_SYSTEM_PROMPT = (
 
 
 def _collect_writer_context(state: AgentState) -> str:
+    v3 = state.get("specialist_results_v3")
+    if isinstance(v3, dict) and (v3.get("legs") or v3.get("merge")):
+        from science_graphrag.agent.subagents.specialist_results_v3 import serialize_for_writer
+
+        return serialize_for_writer(v3, max_chars=12000)
     specialist_results = state.get("specialist_results") or {}
     return json.dumps(specialist_results, ensure_ascii=True)[:12000]
 
@@ -233,6 +238,11 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
         nsr = next_state.get("specialist_results")
         if isinstance(nsr, dict):
             combo["specialist_results"] = nsr
+        nsr3 = next_state.get("specialist_results_v3")
+        if isinstance(nsr3, dict):
+            combo["specialist_results_v3"] = nsr3
+        elif isinstance(state.get("specialist_results_v3"), dict):
+            combo["specialist_results_v3"] = state.get("specialist_results_v3")
         combo["current_specialist"] = SPECIALIST_NAME
         terminal_msgs = messages_for_completed_routing_leg(
             combo,

@@ -25,6 +25,7 @@
 | Документ | Описание |
 |----------|----------|
 | [architecture/README.md](architecture/README.md) | Индекс архитектурных заметок |
+| [architecture/agent-runtime-overview-ru.md](architecture/agent-runtime-overview-ru.md) | Наглядный обзор архитектуры агентного рантайма: текущие режимы, поток запроса, куда движется `v3` |
 | [architecture/agent-chat-tools.md](architecture/agent-chat-tools.md) | Чат-агент: каталог тулов, схемы для LLM, карта кода, планы (`tool_search`, compaction) |
 | [architecture/phase-1-backbone.md](architecture/phase-1-backbone.md) | Phase 1: ingestion MVP и стек |
 | [architecture/chunking-strategy.md](architecture/chunking-strategy.md) | Task-aware slices, section chunks, dedup |

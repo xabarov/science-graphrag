@@ -26,5 +26,8 @@ def test_tool_search_prep_metric_keys_documented() -> None:
         "latency_p95_ms",
         "tool_call_count_vs_budget",
         "unnecessary_tool_calls",
+        "tool_schema_bytes_saved",
+        "tool_search_miss_due_to_no_discovery",
+        "deferred_tool_activation_rate",
     )
-    assert len(expected_keys) == 5
+    assert len(expected_keys) == 8

@@ -10,7 +10,11 @@ from typing import Any
 
 from langchain_core.tools import BaseTool, tool
 
-from science_graphrag.agent.tools.chunk_retrieval_defaults import DEFAULT_AGENT_CHUNK_TOP_K
+from science_graphrag.agent.tools.chunk_retrieval_defaults import (
+    AGENT_TOOL_FIND_WORKS_QUERY_TRACE_CHARS,
+    AGENT_TOOL_QUERY_TRACE_CHARS,
+    DEFAULT_AGENT_CHUNK_TOP_K,
+)
 from science_graphrag.agent.tools.format_bibliography_gost_tool import (
     BibGostArgs,
     FormatBibliographyGostTool,
@@ -161,7 +165,7 @@ def build_workspace_paper_langchain_tools(
         r = run_tool_result_with_span(
             tool_name="find_works",
             tool_parameters={
-                "query": query[:240],
+                "query": query[:AGENT_TOOL_FIND_WORKS_QUERY_TRACE_CHARS],
                 "workspace_id": workspace_id or "",
                 "limit": limit,
             },
@@ -200,7 +204,7 @@ def build_workspace_paper_langchain_tools(
         r = run_tool_result_with_span(
             tool_name="paper_quote_search",
             tool_parameters={
-                "query": query[:200],
+                "query": query[:AGENT_TOOL_QUERY_TRACE_CHARS],
                 "workspace_id": workspace_id or "",
                 "work_id": work_id or "",
                 "top_k": top_k,

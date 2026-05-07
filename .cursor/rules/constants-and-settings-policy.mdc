@@ -1,0 +1,35 @@
+---
+description: Политика констант и runtime-настроек в agent/tools
+alwaysApply: true
+---
+
+# Constants & Settings Policy
+
+При изменениях в `science_graphrag/agent/tools` разделяй константы на три класса и не смешивай их.
+
+## 1) Runtime/operator settings (`Settings`)
+
+- Выноси в `science_graphrag/config.py` только operator-facing knobs:
+  feature flags, safety/timeouts/bytes/TTL, policy limits, которые нужно менять без релиза.
+- Для таких полей задавай `Field(default=..., ge/le, description=...)`.
+- Если это должно редактироваться из админки, планируй отдельную persisted секцию settings
+  (не перегружай `llm.runtime_overrides` случайными tool-полями).
+
+## 2) Public tool contract (`Pydantic args_schema`)
+
+- Лимиты аргументов инструмента (`max_length`, `ge/le`, default аргументов tool) держи в `args_schema`.
+- Эти значения считаются частью контракта между LLM и tool; меняй осторожно, с тестами.
+
+## 3) Internal guardrails (module-level constants)
+
+- Любые truncation/preview/prompt/output budgets, которые не являются operator-настройками,
+  оформляй как именованные module-level константы (без magic literals в теле логики).
+- Для общих значений между инструментами используй shared defaults-модуль
+  (например `chunk_retrieval_defaults.py`), а не копипасту.
+
+## Quality gates для таких изменений
+
+- Перед завершением проверяй соседние файлы на дубли/рассинхрон констант.
+- Обязательно прогоняй релевантные тесты tools/manifest/settings.
+- Если выявлен структурный долг и не закрывается в текущем шаге:
+  добавляй конкретный `[OPEN]` item в `docs/backlog/refactor-backend.md`.

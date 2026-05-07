@@ -7,6 +7,7 @@ prompt injection remain follow-ups (see ``docs/specs/agent-chat-v1.md``).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import time
@@ -340,6 +341,230 @@ def _merge_success_control_patch(
     }
 
 
+def _fingerprint_digest_window(digs: list[dict[str, Any]]) -> str:
+    """Stable fingerprint for the digest window (append-only incremental detection)."""
+    slim: list[dict[str, Any]] = []
+    for d in digs:
+        if not isinstance(d, dict):
+            continue
+        tools = d.get("tools_used") or []
+        tlist = [str(x) for x in tools if str(x).strip()][:16] if isinstance(tools, list) else []
+        slim.append(
+            {
+                "user_intent": str(d.get("user_intent") or "")[:240],
+                "answer_excerpt": str(d.get("answer_excerpt") or "")[:360],
+                "answer_class": str(d.get("answer_class") or ""),
+                "tools_used": tlist,
+            }
+        )
+    raw = json.dumps(slim, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:48]
+
+
+def _norm_conflict_text(text: str) -> str:
+    return "".join(ch.lower() for ch in str(text or "") if ch.isalnum())
+
+
+def _collect_synthesis_conflicts(
+    prev_insight_body: str,
+    new_digest: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Detect coarse contradictions between prior insight text and the newest digest."""
+    out: list[dict[str, Any]] = []
+    ae = str(new_digest.get("answer_excerpt") or "")
+    if "__INSIGHT_CONFLICT__" in ae:
+        out.append({"kind": "explicit_marker", "field": "answer_excerpt"})
+    pb = _norm_conflict_text(prev_insight_body)
+    an = _norm_conflict_text(ae)
+    if not an:
+        return out
+    # Short tokens like true/false match inside unrelated alnum-stripped text; keep longer pairs.
+    polarity_pairs = (
+        ("increased", "decreased"),
+        ("increase", "decrease"),
+        ("positive", "negative"),
+    )
+    seen: set[tuple[str, str]] = set()
+    for a, b in polarity_pairs:
+        if a in pb and b in an:
+            key = (a, b)
+            if key not in seen:
+                seen.add(key)
+                out.append({"kind": "polarity_mismatch", "pair": [a, b]})
+        elif b in pb and a in an:
+            key = (b, a)
+            if key not in seen:
+                seen.add(key)
+                out.append({"kind": "polarity_mismatch", "pair": [b, a]})
+    return out
+
+
+def _append_synthesis_cross_conflicts(
+    snap: dict[str, Any],
+    prev_insight: dict[str, Any] | None,
+    tail_digest: dict[str, Any],
+) -> None:
+    """Merge cross-turn conflicts into ``snap['audit']`` (non-incremental builds)."""
+    if not isinstance(snap, dict) or not isinstance(tail_digest, dict):
+        return
+    if not isinstance(prev_insight, dict):
+        return
+    prev_body = str(prev_insight.get("current") or "").strip()
+    if not prev_body:
+        return
+    found = _collect_synthesis_conflicts(prev_body, tail_digest)
+    if not found:
+        return
+    aud = dict(snap.get("audit") or {})
+    merged = [dict(x) for x in aud.get("synthesis_conflicts") or [] if isinstance(x, dict)]
+    merged.extend(found)
+    aud["synthesis_conflicts"] = merged
+    aud["synthesis_conflict"] = True
+    snap["audit"] = aud
+
+
+def _maybe_llm_synthesize_thread_insight_incremental(
+    prev_body: str,
+    delta_summary: str,
+    delta_blob: str,
+    *,
+    settings: Settings,
+) -> tuple[str, str, dict[str, Any], int | None, str | None]:
+    """Incremental variant: merge prior markdown with one new deterministic chunk summary."""
+    llm_on = bool(getattr(settings, "agent_thread_insights_llm_synthesis_enabled", False))
+    api_ok = bool(str(getattr(settings, "extraction_llm_api_key", None) or "").strip())
+    stub = (
+        str(prev_body).rstrip()
+        + "\n\n## incremental_delta\n\n"
+        + str(delta_summary).strip()
+    )
+    if not (llm_on and api_ok):
+        return (
+            stub,
+            "deterministic_stub_incremental",
+            side_llm_fork_metadata(forked=False),
+            None,
+            None,
+        )
+    combined = (
+        "Prior thread insight (markdown; factual anchor):\n"
+        f"{str(prev_body).strip()[:6000]}\n\n"
+        "New tail digest chunk summary (deterministic):\n"
+        f"{str(delta_summary).strip()}"
+    )
+    return _maybe_llm_synthesize_thread_insight(
+        [combined],
+        delta_blob,
+        settings=settings,
+    )
+
+
+def try_build_thread_insight_snapshot_incremental(  # pylint: disable=too-many-locals,too-many-return-statements
+    digests: list[dict[str, Any]],
+    *,
+    settings: Settings,
+    prev_insight: dict[str, Any],
+    prev_version: int,
+    turn_counter: int,
+    stale_reason: StaleReason | None,
+) -> dict[str, Any] | None:
+    """Append-only refresh: reuse prior insight body when digest window only grew by the tail."""
+    if not bool(getattr(settings, "agent_thread_insights_incremental_enabled", True)):
+        return None
+    if len(digests) < int(settings.agent_thread_insights_min_digests):
+        return None
+    prev_aud = prev_insight.get("audit") if isinstance(prev_insight.get("audit"), dict) else {}
+    prev_fp = str(prev_aud.get("digest_window_fingerprint") or "")
+    if not prev_fp or len(digests) < 2:
+        return None
+    prefix = digests[:-1]
+    if _fingerprint_digest_window(prefix) != prev_fp:
+        return None
+    prev_body = str(prev_insight.get("current") or "").strip()
+    if not prev_body:
+        return None
+    new_digest = digests[-1]
+    ext_to = float(getattr(settings, "extraction_llm_timeout_seconds", 60) or 60)
+    summaries, gen_ms, workers = _parallel_chunk_summaries(
+        [new_digest],
+        max_chunks=1,
+        max_workers_cap=1,
+        result_timeout_s=max(10.0, min(120.0, ext_to)),
+    )
+    if not summaries:
+        return None
+    delta_blob = _digest_blob_for_estimate([new_digest])
+    current, mode, fork_meta, side_llm_latency_ms, llm_synthesis_error = (
+        _maybe_llm_synthesize_thread_insight_incremental(
+            prev_body,
+            summaries[0],
+            delta_blob,
+            settings=settings,
+        )
+    )
+    n = len(digests)
+    conflicts = _collect_synthesis_conflicts(prev_body, new_digest)
+    pre_tokens = _approx_tokens(_digest_blob_for_estimate(digests)) + 32
+    boundary_trigger = _boundary_trigger_for_stale(stale_reason)
+    prev_chunks = int(prev_aud.get("chunk_count") or 1)
+    audit: dict[str, Any] = {
+        "schema_version": "thread_insight_audit_v1",
+        "chunk_count": prev_chunks + 1,
+        "worker_count": workers,
+        "generation_ms": gen_ms,
+        "source_turn_start": 0,
+        "source_turn_end": max(0, n - 1),
+        "digest_count": n,
+        "turn_counter": turn_counter,
+        "built_at_turn_counter": int(turn_counter),
+        "stale_reason": stale_reason,
+        "boundary_trigger": boundary_trigger,
+        "mode": mode,
+        "refresh_mode": "incremental",
+        "digest_window_fingerprint": _fingerprint_digest_window(digests),
+        "synthesis_conflicts": conflicts,
+        "synthesis_conflict": bool(conflicts),
+        **fork_meta,
+    }
+    if side_llm_latency_ms is not None:
+        audit["side_llm_latency_ms"] = side_llm_latency_ms
+    if llm_synthesis_error:
+        audit["llm_synthesis_error"] = llm_synthesis_error
+    prev_src = (
+        prev_insight.get("sources") if isinstance(prev_insight.get("sources"), dict) else {}
+    )
+    prev_chunk_ids = [str(x) for x in (prev_src.get("chunk_ids") or []) if str(x).strip()]
+    tail_id = f"incr_{int(turn_counter)}"
+    incremental_chunk_ids = [*prev_chunk_ids, tail_id] if prev_chunk_ids else [tail_id]
+    snapshot: dict[str, Any] = {
+        "current": current,
+        "version": int(prev_version) + 1,
+        "sources": {
+            "chunk_ids": incremental_chunk_ids,
+            "digest_count": n,
+            "turn_range": [0, max(0, n - 1)],
+        },
+        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "section_budgets": {
+            "max_chunks": int(settings.agent_thread_insights_max_chunks),
+            "max_workers": int(settings.agent_thread_insights_max_workers),
+        },
+        "compaction_boundary": {
+            "schema_version": "thread_insight_compaction_boundary_v1",
+            "trigger": boundary_trigger,
+            "pre_tokens": int(pre_tokens),
+            "source_range": {
+                "digest_index_start": 0,
+                "digest_index_end": max(0, n - 1),
+                "turn_counter": int(turn_counter),
+            },
+            "preserved_segment": _preserved_segment(digests),
+        },
+        "audit": audit,
+    }
+    return snapshot
+
+
 def _maybe_llm_synthesize_thread_insight(
     summaries: list[str],
     digest_blob: str,
@@ -440,6 +665,10 @@ def build_thread_insight_snapshot(  # pylint: disable=too-many-locals
         audit["side_llm_latency_ms"] = side_llm_latency_ms
     if llm_synthesis_error:
         audit["llm_synthesis_error"] = llm_synthesis_error
+    audit["digest_window_fingerprint"] = _fingerprint_digest_window(digests)
+    audit["refresh_mode"] = "full"
+    audit["synthesis_conflicts"] = []
+    audit["synthesis_conflict"] = False
     snapshot: dict[str, Any] = {
         "current": current,
         "version": int(prev_version) + 1,
@@ -520,13 +749,29 @@ def maybe_refresh_thread_insight_after_turn(thread_id: str, *, settings: Setting
                 prev_ver = int(prev_dict.get("version") or 0)
             except (TypeError, ValueError):
                 prev_ver = 0
-        snap = build_thread_insight_snapshot(
-            digests,
-            settings=settings,
-            prev_version=prev_ver,
-            turn_counter=turn_counter,
-            stale_reason=stale,
-        )
+        snap = None
+        if isinstance(prev_dict, dict):
+            snap = try_build_thread_insight_snapshot_incremental(
+                digests,
+                settings=settings,
+                prev_insight=prev_dict,
+                prev_version=prev_ver,
+                turn_counter=turn_counter,
+                stale_reason=stale,
+            )
+        if snap is None:
+            snap = build_thread_insight_snapshot(
+                digests,
+                settings=settings,
+                prev_version=prev_ver,
+                turn_counter=turn_counter,
+                stale_reason=stale,
+            )
+        if snap is not None and not (
+            isinstance(snap.get("audit"), dict)
+            and str((snap.get("audit") or {}).get("refresh_mode") or "") == "incremental"
+        ):
+            _append_synthesis_cross_conflicts(snap, prev_dict, digests[-1])
         if snap is None:
             _record_insight_control(
                 backend,

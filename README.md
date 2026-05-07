@@ -89,6 +89,7 @@ docker compose -f docker-compose.dev.yml up -d --build
 | Индекс всей документации | [docs/README.md](docs/README.md) |
 | Запуск стека, порты, compose | [docs/runbooks/deploy.md](docs/runbooks/deploy.md) |
 | Архитектура | [docs/architecture/README.md](docs/architecture/README.md) |
+| Архитектура агентного рантайма | [docs/architecture/agent-runtime-overview-ru.md](docs/architecture/agent-runtime-overview-ru.md) |
 | Чат-агент и инструменты | [docs/architecture/agent-chat-tools.md](docs/architecture/agent-chat-tools.md) |
 | Бенчмарки и eval | [docs/benchmarks/README.md](docs/benchmarks/README.md) · [eval/README.md](eval/README.md) |
 | Roadmap | [docs/roadmap.md](docs/roadmap.md) |
