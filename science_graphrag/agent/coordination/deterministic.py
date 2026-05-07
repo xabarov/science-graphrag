@@ -84,14 +84,27 @@ def _norm(q: str) -> str:
     return " ".join(str(q or "").strip().lower().split())
 
 
+_GRAPH_CITATION_RELATIONISH = re.compile(
+    r"(who\s+cited|whom\s+does|"
+    r"citation\s+(chain|graph|network|link)|"
+    r"\bcites\s+whom\b|\bcites\s+who\b|"
+    r"\bcited\s+by\b|"
+    r"\bcites\s+this\b|\bcites\s+that\b)",
+    re.IGNORECASE,
+)
+
+
 def _graph_intent_heuristic(text: str) -> bool:
     t = text.lower()
     if any(h in t for h in _GRAPH_INTENT_HINTS):
         return True
-    # Citation / influence questions without explicit "cypher" tokens (roadmap relation_tracing).
-    if "cite" in t and any(w in t for w in ("paper", "work", "article", "workspace", "who", "whom")):
+    # Citation / influence *relations* — avoid false positives on boilerplate like
+    # ``citations`` / ``Finish with ... citations`` (substring ``cite`` inside ``citations``).
+    if _GRAPH_CITATION_RELATIONISH.search(t):
         return True
-    if "citation" in t and any(w in t for w in ("paper", "work", "graph", "link", "chain")):
+    if re.search(r"\bcites\b", t) and any(
+        w in t for w in ("paper", "work", "article", "workspace", "who", "whom")
+    ):
         return True
     return False
 
@@ -127,6 +140,7 @@ def narrow_deterministic_classify(
     answer_class_hint: str | None,
 ) -> tuple[ConversationIntent, ToolPolicy, RouteHint, str, str] | None:
     """Return a policy tuple only for empty / small-talk / meta / explicit research; else None."""
+    _ = workspace_id  # reserved for future workspace-scoped narrow rules (callers pass it today)
     raw = str(question or "").strip()
     q_norm = _norm(raw)
     if not q_norm:

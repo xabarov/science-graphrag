@@ -32,6 +32,7 @@ from science_graphrag.agent.graph.react_edges import (
     route_react_tools_next,
 )
 from science_graphrag.agent.graph.state import AgentState
+from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
 from science_graphrag.agent.llm.chat import (
     agent_chat_transport_max_attempts,
     build_chat_model,
@@ -62,6 +63,95 @@ from science_graphrag.observability.spans import (
 
 ROUTE_FINISH = "finish"
 
+# OD acceptance `v3_cv_fanout_dual_evidence` + similar catalog-compare prompts (workspace-scoped).
+_DUAL_EVIDENCE_CATALOG_COMPARE_MARKERS: tuple[str, ...] = (
+    "compare evidence",
+    "compare two",
+    "two different",
+    "different title keywords",
+    "distinct work_ids",
+    "disagree on any factual point",
+)
+
+
+def _normalized_question(text: str) -> str:
+    return " ".join(str(text or "").strip().lower().split())
+
+
+def _maybe_force_writer_after_retrieval(state: AgentState) -> str | None:
+    """Deterministic writer handoff for simple retrieval-complete prompts.
+
+    This trims supervisor churn on prompts where retrieval already gathered the exact
+    requested evidence and another retrieval hop is usually redundant.
+    """
+
+    q_norm = _normalized_question(_first_user_plain_question(state))
+    if not q_norm:
+        return None
+    tool_counts: dict[str, int] = {}
+    for step in collect_tool_execution_steps(list(state.get("messages") or [])):
+        name = str(step.get("tool") or "").strip()
+        if not name:
+            continue
+        tool_counts[name] = tool_counts.get(name, 0) + 1
+    tool_names = set(tool_counts)
+    if "final_answer" in tool_names:
+        return None
+    if "workspace_inspect" in tool_names and any(
+        needle in q_norm
+        for needle in (
+            "how many works",
+            "how many papers",
+            "works are in this workspace",
+            "сколько",
+            "mode=stats",
+            "claim-related",
+            "citation-related counts",
+        )
+    ):
+        return "retrieval_completion_workspace_stats"
+    if (
+        {"find_works", "paper_profile"}.issubset(tool_names)
+        and "compare" not in q_norm
+        and any(
+            needle in q_norm
+            for needle in (
+                "titles mention",
+                "pick one clear match",
+                "clear match",
+                "year and venue",
+                "report year and venue",
+            )
+        )
+    ):
+        return "retrieval_completion_catalog_resolution"
+    if (
+        tool_counts.get("find_works", 0) >= 2
+        and tool_counts.get("paper_profile", 0) >= 2
+        and any(needle in q_norm for needle in _DUAL_EVIDENCE_CATALOG_COMPARE_MARKERS)
+    ):
+        if any(x in q_norm for x in ("gost", "bibliograph", "список литературы")) and (
+            tool_counts.get("format_bibliography_gost", 0) < 1
+        ):
+            return None
+        if any(x in q_norm for x in ("quote", "snippet", "verbatim", "цитат")) and not any(
+            tool_counts.get(t, 0) > 0 for t in ("paper_quote_search", "idea_search")
+        ):
+            return None
+        return "retrieval_completion_dual_evidence_compare"
+    if any(t in tool_names for t in ("paper_quote_search", "idea_search")) and any(
+        needle in q_norm
+        for needle in (
+            "quote one short snippet",
+            "quote one",
+            "short snippet",
+            "anchor-free",
+            "anchor free",
+        )
+    ):
+        return "retrieval_completion_quote_evidence"
+    return None
+
 
 def _first_user_plain_question(state: AgentState) -> str:
     meta = state.get("metadata") or {}
@@ -69,10 +159,27 @@ def _first_user_plain_question(state: AgentState) -> str:
     if isinstance(raw, str) and raw.strip():
         return raw.strip()
     for msg in reversed(state.get("messages") or []):
+        if not isinstance(msg, HumanMessage):
+            continue
         content = getattr(msg, "content", None)
         if isinstance(content, str) and content.strip():
             return content.strip()
     return ""
+
+
+def _should_force_retrieval_first_hop_workspace_dual_evidence(state: AgentState) -> bool:
+    """First-hop retrieval for workspace dual-paper catalog compare (skip LLM graph noise)."""
+    if not str(state.get("workspace_id") or "").strip():
+        return False
+    raw = _first_user_plain_question(state)
+    qn = _normalized_question(raw)
+    if not qn:
+        return False
+    if _graph_intent_heuristic(raw):
+        return False
+    if "workspace" not in qn and "workspace_id" not in qn:
+        return False
+    return any(needle in qn for needle in _DUAL_EVIDENCE_CATALOG_COMPARE_MARKERS)
 
 
 def _build_supervisor_route_messages(state: AgentState) -> list[HumanMessage]:
@@ -105,6 +212,10 @@ Available specialists:
 If the user needs to find papers by title, author name fragment, or keywords without a known work id,
 prefer retrieval_agent (find_works). Use graph_agent when the question is about relations, paths,
 or patterns between known entities.
+
+If the user compares two papers inside a workspace using catalog tools (find_works + paper_profile)
+without explicit graph vocabulary (neighbors, paths, cypher, edge_search), prefer retrieval_agent —
+do not start with graph_agent.
 
 When the question requires mixed corpus evidence (semantic chunks plus verbatim quotes), keep routing
 to retrieval_agent until idea_search / paper_quote_search have been tried unless specialist_results
@@ -164,13 +275,54 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                     ],
                 },
             )
+        if str(state.get("current_specialist") or "").strip() == RETRIEVAL_SPECIALIST:
+            ready_reason = _maybe_force_writer_after_retrieval(state)
+            if ready_reason:
+                return merge_routing_leg_notifications_into_update(
+                    state,
+                    settings,
+                    {
+                        "current_specialist": WRITER_SPECIALIST,
+                        "routing_log": [
+                            *list(state.get("routing_log") or []),
+                            {
+                                "from": "supervisor",
+                                "to": WRITER_SPECIALIST,
+                                "reason": ready_reason,
+                                "budget_left": budget,
+                            },
+                        ],
+                    },
+                )
         meta = state.get("metadata") or {}
         tp = meta.get("turn_policy") if isinstance(meta.get("turn_policy"), dict) else {}
         route_hint = str(tp.get("route_hint") or "").strip()
         ans_cls = str(state.get("answer_class") or "").strip()
 
-        # First hop: honor coordinator route_hint (single source of truth with TurnPolicy).
+        # First hop: honor coordinator route_hint, except OD dual-evidence catalog compare.
+        # hybrid_v1 LLM may set graph_agent; supervisor still starts with catalog tools (retrieval).
         if not prior and tool_policy == "allow_tools":
+            if (
+                route_hint != WRITER_SPECIALIST
+                and ans_cls != "relation_tracing"
+                and _should_force_retrieval_first_hop_workspace_dual_evidence(state)
+            ):
+                return merge_routing_leg_notifications_into_update(
+                    state,
+                    settings,
+                    {
+                        "current_specialist": RETRIEVAL_SPECIALIST,
+                        "routing_log": [
+                            {
+                                "from": "supervisor",
+                                "to": RETRIEVAL_SPECIALIST,
+                                "reason": "workspace_dual_evidence_first_hop",
+                                "budget_left": budget,
+                                "route_hint": route_hint or None,
+                            },
+                        ],
+                    },
+                )
             if route_hint == GRAPH_SPECIALIST or ans_cls == "relation_tracing":
                 reason = (
                     "coordinator_route_hint"

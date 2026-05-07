@@ -125,3 +125,41 @@ def test_hydrate_falls_back_to_chunk_store():
         chunk_store=FakeStore(),
     )
     assert out[0].get("excerpt") == "From Qdrant."
+
+
+def test_hydrate_synthesizes_citations_from_quote_candidates_when_empty() -> None:
+    out = hydrate_citations_for_ui(
+        [],
+        quote_candidates=[
+            {
+                "work_id": "w-q1",
+                "chunk_id": "fp-q1",
+                "quote_text": "Trade-off evidence.",
+            }
+        ],
+        chunk_store=None,
+    )
+    assert out == [
+        {
+            "work_id": "w-q1",
+            "chunk_id": "fp-q1",
+            "excerpt": "Trade-off evidence.",
+        }
+    ]
+
+
+def test_hydrate_synthesizes_citations_from_inventory_when_empty() -> None:
+    out = hydrate_citations_for_ui(
+        [],
+        quote_candidates=[],
+        chunk_store=None,
+        inventory={
+            "papers": [
+                {
+                    "work_id": "wid-graph",
+                    "title": "Graph Coverage Paper",
+                }
+            ]
+        },
+    )
+    assert out == [{"work_id": "wid-graph", "title": "Graph Coverage Paper"}]

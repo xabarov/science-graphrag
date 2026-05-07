@@ -157,6 +157,90 @@ def merge_paper_profile_abstracts_into_citations(
             c["excerpt"] = abstract.strip()
 
 
+def _inventory_work_rows(inventory: dict[str, Any] | None) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for key in ("papers", "paper_matches"):
+        block = (inventory or {}).get(key)
+        if isinstance(block, list):
+            rows.extend(x for x in block if isinstance(x, dict))
+    return rows
+
+
+def _collect_cited_work_ids_from_specialist_results(
+    specialist_results: dict[str, list[Any]] | None,
+) -> list[str]:
+    out: list[str] = []
+    for payloads in (specialist_results or {}).values():
+        for raw in payloads or []:
+            if not isinstance(raw, dict):
+                continue
+            cited = raw.get("cited_work_ids")
+            if isinstance(cited, list):
+                out.extend(_norm(x) for x in cited if _norm(x))
+    return out
+
+
+def synthesize_citations_from_available_evidence(
+    *,
+    quote_candidates: list[dict[str, Any]] | None,
+    inventory: dict[str, Any] | None,
+    messages: list[Any] | None,
+    specialist_results: dict[str, list[Any]] | None,
+    limit: int = 4,
+) -> list[dict[str, Any]]:
+    """Best-effort citations when writer omitted them despite grounded tool evidence."""
+
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+
+    def _push(row: dict[str, Any]) -> None:
+        wid = _norm(row.get("work_id"))
+        chunk = _norm(row.get("chunk_id") or row.get("chunk_fingerprint"))
+        if not wid:
+            return
+        key = (wid, chunk)
+        if key in seen:
+            return
+        seen.add(key)
+        payload: dict[str, Any] = {"work_id": wid}
+        if chunk:
+            payload["chunk_id"] = chunk
+        title = row.get("title")
+        if isinstance(title, str) and title.strip():
+            payload["title"] = title.strip()
+        excerpt = _quote_body(row)
+        if excerpt:
+            payload["excerpt"] = excerpt
+        out.append(payload)
+
+    for row in list(quote_candidates or []):
+        if isinstance(row, dict):
+            _push(row)
+        if len(out) >= limit:
+            return out[:limit]
+
+    for row in _inventory_work_rows(inventory):
+        _push(row)
+        if len(out) >= limit:
+            return out[:limit]
+
+    abstracts = collect_paper_profile_abstracts_by_work(
+        messages=list(messages or []),
+        specialist_results=specialist_results,
+    )
+    for wid, abstract in abstracts.items():
+        _push({"work_id": wid, "excerpt": abstract})
+        if len(out) >= limit:
+            return out[:limit]
+
+    for wid in _collect_cited_work_ids_from_specialist_results(specialist_results):
+        _push({"work_id": wid})
+        if len(out) >= limit:
+            return out[:limit]
+
+    return out[:limit]
+
+
 def _citation_chunk_key(citation: dict[str, Any]) -> str:
     """Stable chunk key from structured citations (model/tool shapes vary)."""
 
@@ -263,6 +347,13 @@ def hydrate_citations_for_ui(
     merged: list[dict[str, Any]] = []
     for raw in citations:
         merged.append(dict(raw) if isinstance(raw, dict) else {})
+    if not merged:
+        merged = synthesize_citations_from_available_evidence(
+            quote_candidates=list(quote_candidates or []),
+            inventory=inventory,
+            messages=list(messages or []),
+            specialist_results=specialist_results,
+        )
     inject_work_ids_from_inventory(merged, inventory)
     merge_quote_candidates_into_citations(merged, list(quote_candidates or []))
     if chunk_store is not None:

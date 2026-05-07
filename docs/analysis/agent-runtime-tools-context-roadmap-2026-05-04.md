@@ -13,6 +13,8 @@
 
 **Операционный guardrail 2026-05-07 (agent live/heavy e2e):** в локальной разработке базовый контур клиента фиксирован как `dev`; запускать тяжёлые live/e2e проверки только с явным `AGENT_LIVE_BASE=dev`, чтобы исключить ошибки неверного base URL.
 
+**Дополнение 2026-05-07 (orchestration efficiency — `v3_cv_fanout_dual_evidence`):** в [`supervisor.py`](../../science_graphrag/agent/graph/supervisor.py) добавлен узкий deterministic handoff `retrieval_completion_dual_evidence_compare` после `2× find_works + 2× paper_profile` на compare/dual-evidence промптах (с guard’ами против обязательного GOST/quote-path). Отдельно сужена `_graph_intent_heuristic` в [`deterministic.py`](../../science_graphrag/agent/coordination/deterministic.py): больше не считаем boilerplate `citations` / `Finish with … citations` за graph-intent (ложный первый hop в `graph_agent` на OD acceptance-промпте). Регрессии: `tests/agent/test_supervisor_routing.py`, `tests/agent/test_graph_intent_heuristic.py`.
+
 **Связанные документы (не дублировать детали):**
 
 | Документ | Роль |
@@ -1305,6 +1307,7 @@ You are an academic librarian. Read `<paper>` blocks carefully and produce GOST-
   - [x] anti-handoff guard (regex detector «please continue» / «I leave the rest to you» → warning prepend)
   - [x] контракт-тест `tests/agent/test_subagent_output_contract.py`
   - Комментарий (2026-05-07): единый контракт в [`science_graphrag/agent/subagent_output_contract.py`](../../science_graphrag/agent/subagent_output_contract.py) (`SYNTHESIZE_NOT_DELEGATE_DIRECTIVE`, `writer_system_prompt_suffix`, `maybe_prepend_handoff_warning`). Strict блок `Scope/Result/Key sources/VERDICT` подключается только при `SCIENCE_GRAPHRAG_AGENT_WRITER_VERIFICATION_OUTPUT_FORMAT_ENABLED=1` и writer-режиме `normal` (см. `writer_agent.py`). Тот же handoff-regex применяется в **`FinalAnswerTool.run`** (не только в `@tool`-обёртке), чтобы guard не обходился прямым вызовом `run`. Регрессия: `tests/agent/test_subagent_output_contract.py`, `tests/test_final_answer_args.py`.
+  - Комментарий (architecture note, 2026-05-07): **`writer_agent` пока оставляем**, но трактуем его как **узкий terminal synthesis seam**, а не как ещё одного «исследователя». Почему не переносим это обратно в `supervisor`: нам нужен стабильный последний hop для `final_answer`, единая точка для synthesis/citation-normalization/merge-directive, и изоляция user-facing phrasing от retrieval/graph orchestration. Направление следующего шага: **упростить** writer (меньше ReAct-поведения, без самостоятельного tool-discovery/reroute), а не удалять его; см. backlog item **[OPEN] Simplify writer_agent into terminal synthesis seam** в `docs/backlog/refactor-backend.md`.
 
 - **§10.5 Compaction hardening (часть 1)**
   - [x] §10.5.1 microcompact time-trigger в `tool_message_compact.py` (gap > N min → clear all but last K) + flag + метрика

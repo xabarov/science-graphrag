@@ -61,6 +61,13 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** `catalog_resolution`-style live traces end with at most one retrieval leg before writer on stable runs; `tool_loop_repeat_max` for the default dev-v3 trace-review drops materially; no regression in `grounded_quote` / `workspace_stats`.
 - **Raised:** 2026-05-07 (post-fix follow-up after final_answer fallback)
 
+### [OPEN] Simplify `writer_agent` into terminal synthesis seam
+- **Area:** `science_graphrag/agent/graph/nodes/writer_agent.py`, `science_graphrag/agent/graph/supervisor.py`, writer-facing prompts/contracts
+- **Issue:** `writer_agent` currently remains useful as the terminal `final_answer` seam, but its shape is still more agentic/ReAct-like than needed. That increases routing ambiguity, prompt surface area, and the chance of extra loops where synthesis should have been a deterministic last hop.
+- **Proposal:** Keep a dedicated writer boundary, but narrow its role to synthesis/citation-normalization/merge-explanation only; move any residual research/routing behavior back into supervisor or retrieval/graph specialists, and tighten the writer prompt/graph so the normal path is one terminal synthesis pass.
+- **Acceptance:** writer stays the only terminal `final_answer` owner, but does not independently expand tool search/routing in standard flows; prompt and tests explicitly describe it as a synthesis seam; live traces show fewer late-turn writer/retrieval oscillations.
+- **Raised:** 2026-05-07 (post architecture review on writer necessity)
+
 ### [OPEN] Persisted admin section `agent_tools` (runtime overrides without overloading LLM settings)
 - **Area:** `science_graphrag/settings/{service.py,runtime_overlay.py,repository.py}`, `science_graphrag/api/settings*.py`, `ui/src/pages/SettingsPage/`
 - **Issue:** Operator-facing tool toggles and safety caps (`agent_web_*`, MCP/LSP timeouts) live on `Settings` (env) but are not first-class in `/v1/settings`; stuffing them into `llm.runtime_overrides` mixes LLM provider config with tool policy.
