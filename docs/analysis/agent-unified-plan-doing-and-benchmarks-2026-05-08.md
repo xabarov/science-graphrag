@@ -242,14 +242,61 @@ Delivered:
 
 ### Wave C — promotion / rollout discipline
 
-1. Определить KPI для `v3`:
-   - `tool_loop_repeat_max`
-   - `latency_p95_ms`
-   - `final_answer_missing_count`
-   - `missing_span_count`
-   - judge score deltas vs ReAct
-2. Обновить decision-gate / benchmark-program-status при готовности promotion.
-3. После стабилизации judge lane решить, остаётся ли ReAct baseline обязательным compare-run'ом для каждой крупной волны.
+**Статус:** в работе как программа наблюдаемости и promotion review; lane по-прежнему **advisory-only** до явного решения мейнтейнеров (см. [`benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md)).
+
+Wave C **не** заменяет engineering gate (`trace-review-v1`, Wave R agent-tools): он задаёт, как измерять и продвигать **продуктовое** качество `v3` поверх уже зелёного runtime.
+
+#### C.1 Карта KPI (две оси)
+
+| Ось | Источник | Что меряем |
+|-----|----------|------------|
+| **Engineering health** | `trace-review-v1` / acceptance артефакты, [`agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) | `tool_loop_repeat_max`, `latency_p95_ms` (или эквивалент из summary), `final_answer_missing_count`, `missing_span_count`, регрессии trace/SSE/Phoenix |
+| **Product delta (pairwise vs ReAct)** | `agent_v3_quality_judge_v1` JSON `summary` + per-case rows | `mean_weighted_score_baseline` / `mean_weighted_score_candidate`, `mean_delta`, `pairwise_*_rate`, `hard_fail_count_*`, `cases_with_any_branch_non_ok`, `all_passed`, при необходимости `latency_ms` / `usage_total_tokens` по веткам |
+
+**Draft promotion thresholds (до calibration / стабилизации judge — ориентиры, не merge-blocking):**
+
+| Метрика (pilot, live subprocess, heuristic или согласованный LLM-judge) | Ориентир |
+|------------------------------------------------------------------------|----------|
+| `cases_with_any_branch_non_ok` | 0 на frozen `judge_pilot` для promotion-кандидата |
+| `all_passed` | `true` |
+| `mean_delta` | ≥ 0 (не хуже baseline по среднему weighted score) |
+| `pairwise_candidate_win_rate` | ≥ `pairwise_baseline_win_rate` или явное обоснование, если baseline выигрывает чаще при лучшем groundedness |
+| Judge variance | Нет «ломающего» расхождения heuristic vs LLM на calibration subset без смены промпта/модели (см. `scripts/run_agent_v3_quality_llm_calibration_subset.py`) |
+| Stabilization window | Серия pilot-прогонов без деградации branch outcomes и без роста hard-fail у candidate vs baseline (детали — checklist в `benchmark-family-promotion-review.md`) |
+
+Числа в **`benchmark-decision-gate.md` / `_decision_gate`** переносятся **только** после promotion review и явного PR (как для других advisory → core).
+
+#### C.2 Cadence (ритм прогонов)
+
+| Tier | Назначение | Типичный режим |
+|------|------------|----------------|
+| `judge_mini` | Быстрый контур; merge-safe **mock** (`--mock-agent`) | CI / без стека |
+| `judge_mini` | Контракт + stack smoke | live `subprocess`, при необходимости `--progress`, timeout по умолчанию |
+| `judge_pilot` | Основной **advisory KPI** для качества ответа vs ReAct | live `subprocess`, `--subprocess-timeout-s 600` (или выше), `--progress` |
+| `judge_holdout` | Защита от overfit на pilot | **weekly** или **только на promotion review**; не подбирать промпты под holdout |
+| Compare | Регрессия между снимками | `science-graphrag-agent-v3-quality-compare` → `current-agent-v3-quality-judge-compare.{json,md}` |
+
+#### C.3 Baseline / compare / fingerprint
+
+- **Frozen baseline:** хранить эталонный JSON (и MD) с фиксацией provenance: `run_metadata` (`tier`, `baseline_runtime`, `candidate_runtime`, `transport`, `mock_agent`, `judge_prompt_fingerprint`, `judge_prompt_sha256` / version).
+- **Compare:** каждый значимый PR по агенту — diff текущего `judge_pilot` (или release snapshot) против baseline; артефакт compare — часть promotion evidence.
+- **Judge fingerprint:** смена `judge_prompt_v1.md` или модели судьи → новый fingerprint → **сброс** stabilization window (как в checklist promotion review).
+- **HTTP:** pairwise на **двух** API base; `--allow-http-single-base` только для smoke, **не** для promotion evidence.
+
+#### C.4 Promotion review flow
+
+1. Engineering gate зелёный (`trace-review-v1` / acceptance на ветке).
+2. Прогон `judge_pilot` + зафиксированный compare vs baseline; при подготовке к усилению gate — `judge_holdout`.
+3. Заполнить checklist в [`benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md) (раздел Agent v3 quality judge).
+4. **Exit:** запись outcome в promotion review + обновление [`benchmark-program-status.md`](../runbooks/benchmark-program-status.md); включение в `_decision_gate` / изменение `GO/NO-GO` — **отдельный** PR в [`scripts/aggregate_benchmark_metrics.py`](../../scripts/aggregate_benchmark_metrics.py) + [`benchmark-decision-gate.md`](../runbooks/benchmark-decision-gate.md) по решению мейнтейнеров.
+
+#### C.5 Advisory visibility
+
+Сводка [`aggregate_benchmark_metrics.py`](../../scripts/aggregate_benchmark_metrics.py) включает блок **`agent_v3_quality_family`** (если лежат canonical `eval/results/current-agent-v3-quality-judge-*.json`) — **только наблюдаемость**, без участия в `decision_gate`, пока политика не изменена явно.
+
+#### C.6 ReAct baseline policy (зафиксировано для Wave C)
+
+**По умолчанию:** pairwise baseline остаётся **`langgraph_research_v1` (ReAct)** как в контракте lane; полный `judge_pilot` / `judge_holdout` compare-run **обязателен для release train и для promotion review**, не обязателен на каждый мелкий PR (достаточно `judge_mini` mock + при необходимости узкий live smoke). Крупная волна по агенту (runtime / graph / writer) — **рекомендуется** полный pilot + compare к baseline snapshot.
 
 ---
 
@@ -268,8 +315,9 @@ Delivered:
 - смотреть `orchestration-stabilization-closeout-2026-05-08.md`.
 
 **“Что меряет качество `v3` как продукта?”**
-- пока: engineering gates + live trace-review;
-- next wave: advisory `LLM-as-a-judge` benchmark для `v3-quality`.
+- engineering gates + live trace-review;
+- advisory pairwise lane `agent_v3_quality_judge_v1` + сводка `agent_v3_quality_family` в `benchmark-metrics-summary` (Wave C observability);
+- promotion thresholds и усиление gate — только после checklist в `benchmark-family-promotion-review.md`.
 
 ---
 

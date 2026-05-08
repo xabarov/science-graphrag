@@ -218,11 +218,12 @@ science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tie
 
 В GitHub Actions (workflow **Integration**) шаг `Layer-2 nightly_semantic` выполняется **только если** в secrets репозитория задан `MAIN_LLM_API_KEY` (он пробрасывается в `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`); иначе шаг пропускается.
 
-## Agent v3 quality judge (Wave B, advisory)
+## Agent v3 quality judge (Wave B / Wave C, advisory)
 
 - Код: [`eval/agent_v3_quality/`](./agent_v3_quality/) (`runner`, `judge`, `compare`, `one_shot`).
 - Фикстуры: `tests/fixtures/benchmarks/agent_v3_quality/`; тиры — `case_tiers.json` (`judge_mini` / `judge_pilot` / `judge_holdout`).
-- Спека: [`docs/analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](../docs/analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md); статус программы: [`docs/runbooks/benchmark-program-status.md`](../docs/runbooks/benchmark-program-status.md).
+- Спека: [`docs/analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](../docs/analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md); rollout / KPI: [`docs/analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../docs/analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) §Wave C; статус программы: [`docs/runbooks/benchmark-program-status.md`](../docs/runbooks/benchmark-program-status.md).
+- Сводка агрегатора: после прогонов `aggregate_benchmark_metrics.py` включает блок **`agent_v3_quality_family`** в `eval/results/benchmark-metrics-summary.{json,md}` (наблюдаемость; не меняет `decision_gate`).
 
 ```bash
 # Mock / contract smoke (без live стека)

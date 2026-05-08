@@ -15,6 +15,11 @@ references_resolution + concept_topic graph JSON lanes are listed in
 ``benchmark-decision-gate.md`` §8 and summarized under ``retrieval_family`` /
 ``claims_family`` / ``claims_production_family`` / ``references_resolution_family`` /
 ``concept_topic_family`` / ``contradictions_family`` when the default artifact paths exist.
+
+**Agent v3 quality judge** (Wave B/C) is summarized under ``agent_v3_quality_family`` when
+``eval/results/current-agent-v3-quality-judge-*.json`` exist; **advisory-only** and not part
+of ``decision_gate`` until an explicit promotion PR.
+
 **Claims paraphrase pilot + holdout** (BT6) are the **core** ``decision_gate`` claims lane
 when both artifacts exist; the legacy **claims production** pilot remains summarized under
 ``claims_production_family`` for observability (Wave 1 honest closure).

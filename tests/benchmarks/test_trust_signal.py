@@ -139,6 +139,22 @@ def test_build_trust_signal_multihop_infra_skipped_not_phantom() -> None:
     assert ts["is_phantom"] is False
 
 
+def test_detect_runtime_mode_v3_judge_mock() -> None:
+    block: dict = {"run_metadata": {"mock_agent": True}}
+    assert detect_runtime_mode("v3_judge_mini", block, []) == "mock_runtime"
+
+
+def test_detect_runtime_mode_v3_judge_live() -> None:
+    block: dict = {"run_metadata": {"mock_agent": False}}
+    assert detect_runtime_mode("v3_judge_pilot", block, [{"case_id": "x", "passed": True}]) == "live"
+
+
+def test_collect_individual_failures_v3_judge_branch() -> None:
+    cases = [{"case_id": "a", "passed": False, "weighted_score": 1.0}]
+    out = collect_individual_failures("v3_judge_pilot", cases)
+    assert len(out) == 1
+
+
 def test_judge_holdout_artifact_has_per_case_score_breakdown() -> None:
     p = REPO_ROOT / "eval/results/current-retrieval-judge-holdout.json"
     if not p.is_file():
@@ -379,6 +395,7 @@ def test_aggregator_smoke_runs(tmp_path: Path) -> None:
     assert proc.returncode == 0, proc.stderr
     data = json.loads(out_json.read_text(encoding="utf-8"))
     assert "decision_gate" in data
+    assert "agent_v3_quality_family" in data
     assert "trust_signal" in data["retrieval_family"]["workspace_scoped"]
 
 
@@ -395,6 +412,7 @@ def test_baseline_snapshot_idempotent() -> None:
         "references_resolution_family": {"trust_aggregate": {}},
         "concept_topic_family": {"trust_aggregate": {}},
         "agent_tools_family": {"trust_aggregate": {}},
+        "agent_v3_quality_family": {"trust_aggregate": {}},
     }
     a = json.dumps(trust_baseline_payload(payload), sort_keys=True, ensure_ascii=False)
     b = json.dumps(trust_baseline_payload(payload), sort_keys=True, ensure_ascii=False)
@@ -417,6 +435,7 @@ def test_trust_baseline_payload_replaces_advisory_rows_with_count() -> None:
         "references_resolution_family": {"trust_aggregate": {}},
         "concept_topic_family": {"trust_aggregate": {}},
         "agent_tools_family": {"trust_aggregate": {}},
+        "agent_v3_quality_family": {"trust_aggregate": {}},
     }
     slim = trust_baseline_payload(payload)
     crit = (slim.get("decision_gate") or {}).get("criteria") or {}
@@ -461,6 +480,7 @@ def test_compute_gate_trust_criteria_wires_judge_hard_block() -> None:
         references_resolution_family=empty,
         concept_topic_family=empty,
         agent_tools_family=empty,
+        agent_v3_quality_family={"role": "advisory"},
         chat_agent_family=empty,
         contradictions_family=empty,
     )

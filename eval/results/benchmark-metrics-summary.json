@@ -34,6 +34,9 @@
     "agent_tools_mini_suite": "eval/results/current-agent-tools-mini.json",
     "agent_tools_multiagent_suite": "eval/results/current-agent-tools-multiagent.json",
     "agent_tools_judge_suite": "eval/results/current-agent-tools-judge-pilot.json",
+    "agent_v3_quality_judge_mini": "eval/results/current-agent-v3-quality-judge-mini.json",
+    "agent_v3_quality_judge_pilot": "eval/results/current-agent-v3-quality-judge-pilot.json",
+    "agent_v3_quality_judge_holdout": "eval/results/current-agent-v3-quality-judge-holdout.json",
     "chat_agent_contract_suite": "eval/results/current-chat-agent-contract.json",
     "contradictions_v1_mini_suite": "eval/results/current-contradictions-v1-mini.json"
   },
@@ -2400,6 +2403,227 @@
       "mixed_validation_status_member_count": 2
     }
   },
+  "agent_v3_quality_family": {
+    "role": "advisory",
+    "v3_judge_mini": {
+      "artifact": "eval/results/current-agent-v3-quality-judge-mini.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673",
+        "judge_schema_version": null,
+        "mock_agent": true,
+        "baseline_runtime": "langgraph_research_v1",
+        "candidate_runtime": "langgraph_supervisor_v3",
+        "transport": "subprocess"
+      },
+      "summary": {
+        "case_count": 8,
+        "mean_weighted_score_baseline": 4.0,
+        "mean_weighted_score_candidate": 4.0,
+        "mean_delta": 0.0,
+        "pairwise_candidate_win_rate": 0.0,
+        "pairwise_baseline_win_rate": 0.0,
+        "pairwise_tie_rate": 1.0,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 0,
+        "family_breakdown": {
+          "catalog_resolution": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 2
+          },
+          "dual_evidence_compare": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "open_research": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "quote_evidence": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "relation_tracing": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "workspace_stats": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 2
+          }
+        },
+        "all_passed": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_weighted_score": null,
+      "mean_weighted_score_baseline": 4.0,
+      "mean_weighted_score_candidate": 4.0,
+      "mean_delta": 0.0,
+      "cases_with_any_branch_non_ok": null,
+      "branch_outcome_schema": null,
+      "trust_signal": {
+        "family": "agent_v3_quality_family",
+        "member_id": "v3_judge_mini",
+        "runtime_mode": "mock_runtime",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "v3_judge_mini: mock runtime answers detected"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
+    },
+    "v3_judge_pilot": {
+      "artifact": "eval/results/current-agent-v3-quality-judge-pilot.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673",
+        "judge_schema_version": null,
+        "mock_agent": true,
+        "baseline_runtime": "langgraph_research_v1",
+        "candidate_runtime": "langgraph_supervisor_v3",
+        "transport": "subprocess"
+      },
+      "summary": {
+        "case_count": 10,
+        "mean_weighted_score_baseline": 4.0,
+        "mean_weighted_score_candidate": 4.0,
+        "mean_delta": 0.0,
+        "pairwise_candidate_win_rate": 0.0,
+        "pairwise_baseline_win_rate": 0.0,
+        "pairwise_tie_rate": 1.0,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 0,
+        "family_breakdown": {
+          "catalog_resolution": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 2
+          },
+          "dual_evidence_compare": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 2
+          },
+          "open_research": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "quote_evidence": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "relation_tracing": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 2
+          },
+          "workspace_stats": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 2
+          }
+        },
+        "all_passed": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_weighted_score": null,
+      "mean_weighted_score_baseline": 4.0,
+      "mean_weighted_score_candidate": 4.0,
+      "mean_delta": 0.0,
+      "cases_with_any_branch_non_ok": null,
+      "branch_outcome_schema": null,
+      "trust_signal": {
+        "family": "agent_v3_quality_family",
+        "member_id": "v3_judge_pilot",
+        "runtime_mode": "mock_runtime",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "v3_judge_pilot: mock runtime answers detected"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
+    },
+    "v3_judge_holdout": {
+      "artifact": "eval/results/current-agent-v3-quality-judge-holdout.json",
+      "run_metadata": {
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673",
+        "judge_schema_version": null,
+        "mock_agent": true,
+        "baseline_runtime": "langgraph_research_v1",
+        "candidate_runtime": "langgraph_supervisor_v3",
+        "transport": "subprocess"
+      },
+      "summary": {
+        "case_count": 1,
+        "mean_weighted_score_baseline": 4.0,
+        "mean_weighted_score_candidate": 4.0,
+        "mean_delta": 0.0,
+        "pairwise_candidate_win_rate": 0.0,
+        "pairwise_baseline_win_rate": 0.0,
+        "pairwise_tie_rate": 1.0,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 0,
+        "family_breakdown": {
+          "open_research": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          }
+        },
+        "all_passed": true
+      },
+      "failed_count": 0,
+      "failed_cases": [],
+      "all_passed": true,
+      "mean_weighted_score": null,
+      "mean_weighted_score_baseline": 4.0,
+      "mean_weighted_score_candidate": 4.0,
+      "mean_delta": 0.0,
+      "cases_with_any_branch_non_ok": null,
+      "branch_outcome_schema": null,
+      "trust_signal": {
+        "family": "agent_v3_quality_family",
+        "member_id": "v3_judge_holdout",
+        "runtime_mode": "mock_runtime",
+        "validation_status_aggregate": null,
+        "validation_status_by_pack": null,
+        "last_known_real_run_at": null,
+        "consistency_warnings": [
+          "v3_judge_holdout: mock runtime answers detected"
+        ],
+        "individual_failures": [],
+        "is_phantom": true
+      }
+    },
+    "trust_aggregate": {
+      "phantom_member_count": 3,
+      "phantom_members": [
+        "agent_v3_quality_family.v3_judge_mini",
+        "agent_v3_quality_family.v3_judge_pilot",
+        "agent_v3_quality_family.v3_judge_holdout"
+      ],
+      "mixed_validation_status_member_count": 0
+    }
+  },
   "chat_agent_family": {
     "role": "advisory",
     "chat_agent_contract": {
@@ -2507,10 +2731,13 @@
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
       "claims_core_uses_paraphrase_pilot_holdout": true,
-      "advisory_phantom_count": 2,
+      "advisory_phantom_count": 5,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
-        "strict_pilot_mock"
+        "strict_pilot_mock",
+        "v3_judge_mini",
+        "v3_judge_pilot",
+        "v3_judge_holdout"
       ],
       "advisory_individual_failures": [
         {

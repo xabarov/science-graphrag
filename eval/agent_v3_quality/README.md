@@ -69,4 +69,15 @@ AGENT_LIVE_BASE=dev .venv/bin/python scripts/run_agent_v3_quality_llm_calibratio
 
 Optional: `AGENT_V3_QUALITY_CALIBRATION_TIMEOUT_S=600` — per-branch subprocess timeout for branches inside each case.
 
+## Wave C — baseline, holdout, judge fingerprint
+
+- **Frozen baseline:** keep a versioned JSON (and optional MD) snapshot for promotion; record `run_metadata` (`tier`, `baseline_runtime`, `candidate_runtime`, `transport`, `mock_agent`, `judge_prompt_fingerprint` / SHA).
+- **Compare:** use `science-graphrag-agent-v3-quality-compare` for regression evidence between two pilot/mini snapshots; store under `eval/results/current-agent-v3-quality-judge-compare.{json,md}` when publishing.
+- **Holdout:** run `judge_holdout` weekly or **only** at promotion review; do not tune prompts against holdout cases.
+- **Judge fingerprint:** any change to `judge_prompt_v1.md` or judge model starts a **new** stabilization window (see `docs/runbooks/benchmark-family-promotion-review.md`).
+
+## ReAct baseline policy (default)
+
+Pairwise baseline remains **`langgraph_research_v1` (ReAct)** unless you override `--baseline-runtime`. **Release trains and promotion reviews** should include full `judge_pilot` (and holdout when promoting) plus compare vs a frozen baseline artifact. Small PRs: `judge_mini --mock-agent` in CI is enough; add targeted live `judge_mini`/`pilot` when touching agent runtime, tools, or judge.
+
 This lane is **advisory only** and does not feed `decision_gate` until an explicit promotion review.

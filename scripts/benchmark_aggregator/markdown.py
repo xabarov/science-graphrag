@@ -77,6 +77,12 @@ def _md_family_section(title: str, role: str, block_map: list[tuple[str, dict[st
             lines.append(f"- artifact: `{block.get('artifact')}`")
             lines.append(f"- all_passed: **{block.get('all_passed')}**")
             lines.append(f"- failed_count: **{block.get('failed_count')}**")
+            if block.get("mean_weighted_score") is not None:
+                lines.append(f"- mean_weighted_score: **{block.get('mean_weighted_score')}**")
+            if block.get("mean_delta") is not None:
+                lines.append(f"- mean_delta: **{block.get('mean_delta')}**")
+            if block.get("cases_with_any_branch_non_ok") is not None:
+                lines.append(f"- cases_with_any_branch_non_ok: **{block.get('cases_with_any_branch_non_ok')}**")
         lines.append("")
     return lines
 
@@ -105,6 +111,7 @@ def render_markdown(payload: dict[str, Any]) -> str:
     refs = payload.get("references_resolution_family") or {}
     concept = payload.get("concept_topic_family") or {}
     agent = payload.get("agent_tools_family") or {}
+    v3q = payload.get("agent_v3_quality_family") or {}
     chat = payload.get("chat_agent_family") or {}
     contradictions = payload.get("contradictions_family") or {}
     parts = [
@@ -156,6 +163,15 @@ def render_markdown(payload: dict[str, Any]) -> str:
                 ("agent_tools_mini", agent.get("agent_tools_mini") or {}),
                 ("agent_tools_multiagent", agent.get("agent_tools_multiagent") or {}),
                 ("agent_tools_judge", agent.get("agent_tools_judge") or {}),
+            ],
+        ),
+        *_md_family_section(
+            "Agent v3 quality judge family (advisory, Wave C observability)",
+            v3q.get("role") or "advisory",
+            [
+                ("v3_judge_mini", v3q.get("v3_judge_mini") or {}),
+                ("v3_judge_pilot", v3q.get("v3_judge_pilot") or {}),
+                ("v3_judge_holdout", v3q.get("v3_judge_holdout") or {}),
             ],
         ),
         *_md_family_section(

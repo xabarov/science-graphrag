@@ -39,11 +39,11 @@ Record the outcome in the family spec header (status + policy) and, if applicabl
 | Claims | Mixed | Harness / merge contract — **advisory**; **Wave O** production pilot `current-claims-production-pilot.json` — **core** в `decision_gate` (см. `benchmark-decision-gate.md` §8.1) |
 | References resolution | Advisory | Synthetic + graph_stub harness in CI; **Neo4j `--resolver graph` lane** (Wave M) — advisory; **conditional core** после 7 зелёных ночей + promotion review (см. `benchmark-decision-gate.md` §8.2) |
 | Agent tools (`agent_tools_v1`) | Advisory | Wave R: `current-agent-tools-mini.json` + `current-agent-tools-judge-pilot.json`; promotion только после стабильного nightly и holdout |
-| Agent v3 quality judge (`agent_v3_quality_judge_v1`) | Advisory | Wave B: `current-agent-v3-quality-judge-{mini,pilot,holdout}.json`; pairwise lane поверх engineering gate; см. [`eval/agent_v3_quality/README.md`](../../eval/agent_v3_quality/README.md) |
+| Agent v3 quality judge (`agent_v3_quality_judge_v1`) | Advisory | Wave B: реализация lane; **Wave C:** rollout/KPI/baseline/compare — [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) §Wave C; артефакты `current-agent-v3-quality-judge-{mini,pilot,holdout}.json`; см. [`eval/agent_v3_quality/README.md`](../../eval/agent_v3_quality/README.md) |
 
-## Checklist: Agent v3 quality judge (Wave B → stronger gate)
+## Checklist: Agent v3 quality judge (Wave B / Wave C → stronger gate)
 
-Использовать только после стабилизации **engineering** gate (`trace-review-v1`) и отдельного решения мейнтейнеров. См. [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](../analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) §9.
+Использовать только после стабилизации **engineering** gate (`trace-review-v1`) и отдельного решения мейнтейнеров. Детальная программа Wave C (KPI, cadence, ReAct baseline policy): [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) §Wave C. Спека judge: [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](../analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) §9.
 
 ### Preconditions
 
@@ -52,9 +52,10 @@ Record the outcome in the family spec header (status + policy) and, if applicabl
 - [ ] **Runtime truth:** при `subprocess` transport оба `SCIENCE_GRAPHRAG_AGENT_RUNTIME` ветвления подтверждены в `run_metadata`/`agent_runtime_label`; при `http` — задокументированы один или два API base.
 - [ ] **Cost / variance:** judge LLM (`--llm-judge`) не даёт хронического drift на одном и том же snapshot без смены модели.
 
-### Stabilization window (рекомендация из spec)
+### Stabilization window (рекомендация из spec + Wave C draft thresholds)
 
 - [ ] Серия pilot-прогонов без «ломающей» judge-variance и без роста hard-fail у candidate относительно baseline (см. spec §9.2).
+- [ ] На frozen `judge_pilot` (live subprocess): `cases_with_any_branch_non_ok == 0`, `all_passed == true`, `mean_delta >= 0` и pairwise не хуже baseline без явного write-up (см. unified plan §Wave C.1 — ориентиры до финальной калибровки).
 
 ### Exit
 

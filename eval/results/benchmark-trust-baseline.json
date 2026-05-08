@@ -17,10 +17,13 @@
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
       "claims_core_uses_paraphrase_pilot_holdout": true,
-      "advisory_phantom_count": 2,
+      "advisory_phantom_count": 5,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
-        "strict_pilot_mock"
+        "strict_pilot_mock",
+        "v3_judge_mini",
+        "v3_judge_pilot",
+        "v3_judge_holdout"
       ],
       "hard_block_individual_failures": [],
       "advisory_individual_failure_count": 15
@@ -60,6 +63,15 @@
       "phantom_members": [],
       "mixed_validation_status_member_count": 2
     },
+    "agent_v3_quality_family": {
+      "phantom_member_count": 3,
+      "phantom_members": [
+        "agent_v3_quality_family.v3_judge_mini",
+        "agent_v3_quality_family.v3_judge_pilot",
+        "agent_v3_quality_family.v3_judge_holdout"
+      ],
+      "mixed_validation_status_member_count": 0
+    },
     "chat_agent_family": {
       "phantom_member_count": 0,
       "phantom_members": [],
@@ -71,9 +83,12 @@
       "mixed_validation_status_member_count": 1
     }
   },
-  "advisory_phantom_count": 2,
+  "advisory_phantom_count": 5,
   "advisory_phantom_families": [
     "merge_safe_contract_mock",
-    "strict_pilot_mock"
+    "strict_pilot_mock",
+    "v3_judge_mini",
+    "v3_judge_pilot",
+    "v3_judge_holdout"
   ]
 }

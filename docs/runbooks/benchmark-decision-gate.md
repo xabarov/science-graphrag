@@ -176,9 +176,11 @@ Single-case retest после правок gold (если лежат в `eval/re
 - `eval/results/current-agent-tools-multiagent.json` (BT9 tier summary)
 - `eval/results/current-agent-tools-judge-pilot.json`
 
-### 8.5 Agent v3 quality judge (`agent_v3_quality_judge_v1`, Wave B)
+### 8.5 Agent v3 quality judge (`agent_v3_quality_judge_v1`, Wave B / Wave C)
 
 Семья **advisory-only**: pairwise сравнение ответов `langgraph_research_v1` (baseline) и `langgraph_supervisor_v3` (candidate) с LLM- или эвристическим judge. **Не участвует** в `_decision_gate` и не должен подменять `trace-review-v1` / Wave R agent-tools как engineering gate.
+
+**Wave C (rollout discipline):** KPI split (engineering vs product delta), cadence (`judge_mini` mock CI → `judge_pilot` live advisory → `judge_holdout` weekly / promotion-only), baseline/compare/fingerprint rules и ReAct baseline policy — в [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) §Wave C и [`eval/agent_v3_quality/README.md`](../../eval/agent_v3_quality/README.md). Сводка агрегатора: блок `agent_v3_quality_family` в `benchmark-metrics-summary.{json,md}` (наблюдаемость; **не** влияет на `decision` до явного promotion PR).
 
 Артефакты по умолчанию:
 
@@ -201,7 +203,9 @@ CLI и операторские заметки: [`eval/agent_v3_quality/README.m
 | `multihop_mini` | ≥50%: `request_error` начинается с `[Errno 111]` | да → `broken_connection` |
 | `hybrid_ablation` | `extraction_llm_model is null` и идентичные triples MRR по всем кейсам | да → `synthetic_gold` |
 | `concept_topic_mini` | v1 mini harness (substring) | да → `harness_substring` |
-| `judge_pilot` | всегда живой judge | нет → `live` |
+| `judge_pilot` (в `retrieval_family`) | всегда живой judge | нет → `live` |
+| `v3_judge_mini` … `v3_judge_holdout` (в `agent_v3_quality_family`) | `run_metadata.mock_agent == true` | да → `mock_runtime` |
+| `v3_judge_mini` … `v3_judge_holdout` (в `agent_v3_quality_family`) | иначе (live subprocess / http) | нет → `live` |
 | `agent_tools_judge` | `error == missing_file` → `missing` (**phantom**); иначе при непустом `run_metadata.extraction_llm_model` и не `"mock"` → `live` (**не phantom**; смысл метрик всё равно зависит от того, live ли `agent_tools_mini`) | см. условие слева |
 
 `validation_status_aggregate` строится по большинству `meta.validation_status` из `tests/fixtures/benchmarks/**/gold.json` для соответствующего поддерева (≥80% одного статуса, иначе `mixed`).

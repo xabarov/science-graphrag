@@ -6,6 +6,9 @@ import argparse
 from pathlib import Path
 
 from benchmark_aggregator.paths import (
+    DEFAULT_AGENT_V3_QUALITY_JUDGE_HOLDOUT,
+    DEFAULT_AGENT_V3_QUALITY_JUDGE_MINI,
+    DEFAULT_AGENT_V3_QUALITY_JUDGE_PILOT,
     DEFAULT_AGENT_TOOLS_JUDGE,
     DEFAULT_AGENT_TOOLS_MINI,
     DEFAULT_AGENT_TOOLS_MULTIAGENT,
@@ -85,6 +88,21 @@ def build_parser(description: str) -> argparse.ArgumentParser:
         default=DEFAULT_AGENT_TOOLS_MULTIAGENT,
     )
     parser.add_argument("--agent-judge-json", type=str, default=DEFAULT_AGENT_TOOLS_JUDGE)
+    parser.add_argument(
+        "--agent-v3-quality-mini-json",
+        type=str,
+        default=DEFAULT_AGENT_V3_QUALITY_JUDGE_MINI,
+    )
+    parser.add_argument(
+        "--agent-v3-quality-pilot-json",
+        type=str,
+        default=DEFAULT_AGENT_V3_QUALITY_JUDGE_PILOT,
+    )
+    parser.add_argument(
+        "--agent-v3-quality-holdout-json",
+        type=str,
+        default=DEFAULT_AGENT_V3_QUALITY_JUDGE_HOLDOUT,
+    )
     parser.add_argument("--chat-agent-contract-json", type=str, default=DEFAULT_CHAT_AGENT_CONTRACT)
     parser.add_argument(
         "--contradictions-v1-json",

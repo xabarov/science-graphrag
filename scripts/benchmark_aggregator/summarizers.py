@@ -260,7 +260,12 @@ def summarize_retrieval_judge_suite(rel: str, *, root: Path) -> dict[str, Any]:
     p = root / rel
     if not p.is_file():
         return {"error": "missing_file", "artifact": rel}
-    data = _read_json(p)
+    return _judge_like_suite_dict(_read_json(p), rel)
+
+
+def _judge_like_suite_dict(data: dict[str, Any], rel: str) -> dict[str, Any]:
+    """Shared shape for retrieval judge JSON and agent_v3_quality judge JSON."""
+
     meta = data.get("run_metadata") or {}
     cases = data.get("cases") or []
     summary = data.get("summary") or {}
@@ -279,6 +284,30 @@ def summarize_retrieval_judge_suite(rel: str, *, root: Path) -> dict[str, Any]:
         "all_passed": bool(summary.get("all_passed")),
         "mean_weighted_score": summary.get("mean_weighted_score"),
     }
+
+
+def summarize_agent_v3_quality_judge_suite(rel: str, *, root: Path) -> dict[str, Any]:
+    """Summarize ``agent-v3-quality-judge-*.json`` (pairwise baseline vs candidate)."""
+
+    p = root / rel
+    if not p.is_file():
+        return {"error": "missing_file", "artifact": rel}
+    data = _read_json(p)
+    base = _judge_like_suite_dict(data, rel)
+    meta = data.get("run_metadata") or {}
+    summary = base.get("summary") if isinstance(base.get("summary"), dict) else {}
+    rm = dict(base.get("run_metadata") or {})
+    rm["mock_agent"] = meta.get("mock_agent")
+    rm["baseline_runtime"] = meta.get("baseline_runtime")
+    rm["candidate_runtime"] = meta.get("candidate_runtime")
+    rm["transport"] = meta.get("transport")
+    base["run_metadata"] = rm
+    base["mean_weighted_score_baseline"] = summary.get("mean_weighted_score_baseline")
+    base["mean_weighted_score_candidate"] = summary.get("mean_weighted_score_candidate")
+    base["mean_delta"] = summary.get("mean_delta")
+    base["cases_with_any_branch_non_ok"] = summary.get("cases_with_any_branch_non_ok")
+    base["branch_outcome_schema"] = summary.get("branch_outcome_schema")
+    return base
 
 
 def summarize_layer2_suite(rel: str, *, root: Path) -> dict[str, Any]:
@@ -367,6 +396,7 @@ def strip_suite_cases_from_payload(payload: dict[str, Any]) -> None:
         "references_resolution_family",
         "concept_topic_family",
         "agent_tools_family",
+        "agent_v3_quality_family",
         "chat_agent_family",
         "contradictions_family",
     ):

@@ -68,6 +68,9 @@ _GOLD_SUBDIR_BY_MEMBER: Final[dict[str, str | None]] = {
     "agent_tools_mini": "agent_tools_v1",
     "agent_tools_multiagent": "agent_tools_v1",
     "agent_tools_judge": None,
+    "v3_judge_mini": "agent_v3_quality",
+    "v3_judge_pilot": "agent_v3_quality",
+    "v3_judge_holdout": "agent_v3_quality",
     "contradictions_v1_mini": "contradictions_v1",
     "chat_agent_contract": None,
 }
@@ -103,6 +106,14 @@ def detect_runtime_mode(
 
     if member_id == "chat_agent_contract":
         return "contract_verified"
+
+    if member_id.startswith("v3_judge_"):
+        if block.get("error") == "missing_file":
+            return "missing"
+        meta_v3 = block.get("run_metadata") if isinstance(block.get("run_metadata"), dict) else {}
+        if meta_v3.get("mock_agent") is True:
+            return "mock_runtime"
+        return "live"
 
     if member_id == "workspace_scoped" and block.get("_workspace_scoped_delegated_to_live"):
         return "verified_by_sibling_live"
@@ -235,6 +246,17 @@ def collect_individual_failures(
     out: list[dict[str, Any]] = []
     for c in cases:
         cid = c.get("case_id")
+        if member_id.startswith("v3_judge_"):
+            if c.get("passed") is False:
+                out.append(
+                    {
+                        "case_id": cid,
+                        "passed": False,
+                        "weighted_score": c.get("weighted_score"),
+                        "error": c.get("error"),
+                    },
+                )
+            continue
         if member_id in {"judge_pilot", "judge_holdout"}:
             if c.get("passed") is False:
                 out.append(
@@ -328,7 +350,8 @@ def _consistency_warnings(
     if member_id not in _GOLD_SUBDIR_BY_MEMBER and runtime_mode == "live":
         warnings.append(f"{member_id}: unknown_member_fallback_live")
     summary = block.get("summary") if isinstance(block.get("summary"), dict) else {}
-    if summary.get("all_passed") is False and member_id not in {"judge_pilot", "judge_holdout"}:
+    judge_like = member_id in {"judge_pilot", "judge_holdout"} or member_id.startswith("v3_judge_")
+    if summary.get("all_passed") is False and not judge_like:
         fc = sum(1 for c in cases if (c.get("metrics") or {}).get("passed") is False)
         if fc:
             warnings.append(f"{member_id}: summary.all_passed=false with {fc} failed cases")
@@ -411,6 +434,7 @@ def trust_baseline_payload(full_summary: dict[str, Any]) -> dict[str, Any]:
         "references_resolution_family",
         "concept_topic_family",
         "agent_tools_family",
+        "agent_v3_quality_family",
         "chat_agent_family",
         "contradictions_family",
     ):
@@ -437,7 +461,7 @@ def trust_baseline_payload(full_summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def compute_gate_trust_criteria(
+def compute_gate_trust_criteria(  # pylint: disable=too-many-arguments
     *,
     retrieval_family: dict[str, Any],
     claims_family: dict[str, Any],
@@ -445,10 +469,15 @@ def compute_gate_trust_criteria(
     references_resolution_family: dict[str, Any],
     concept_topic_family: dict[str, Any],
     agent_tools_family: dict[str, Any],
+    agent_v3_quality_family: dict[str, Any] | None = None,
     chat_agent_family: dict[str, Any] | None = None,
     contradictions_family: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Derive phantom counts, phantom member labels, and hard-block family hits."""
+    """Derive phantom counts, phantom member labels, and hard-block family hits.
+
+    ``agent_v3_quality_family`` defaults to an empty advisory shell when omitted
+    (backward-compatible tests); missing ``v3_judge_*`` artifacts surface as phantoms.
+    """
 
     phantom_labels: list[str] = []
     individual_rows: list[dict[str, Any]] = []
@@ -481,6 +510,7 @@ def compute_gate_trust_criteria(
     walk("references_resolution_family", references_resolution_family)
     walk("concept_topic_family", concept_topic_family)
     walk("agent_tools_family", agent_tools_family)
+    walk("agent_v3_quality_family", agent_v3_quality_family or {"role": "advisory"})
     walk("chat_agent_family", chat_agent_family or {"role": "advisory"})
     walk("contradictions_family", contradictions_family or {"role": "advisory"})
 

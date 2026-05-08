@@ -1,6 +1,6 @@
-# Pilot / advisory benchmark runs (retrieval live + claims + references resolution)
+# Pilot / advisory benchmark runs (retrieval live + claims + references resolution + agent v3 quality)
 
-Чеклист для локального или CI-like прогона **advisory** lanes после изменений в retrieval, чанкинге или claims harness. Не влияет на `decision` в [`benchmark-decision-gate.md`](benchmark-decision-gate.md).
+Чеклист для локального или CI-like прогона **advisory** lanes после изменений в retrieval, чанкинге, claims harness или **agent v3 quality judge**. Не влияет на `decision` в [`benchmark-decision-gate.md`](benchmark-decision-gate.md) (кроме уже задокументированных core lanes). **Программа rollout / KPI для agent v3 quality (Wave C):** [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) §Wave C.
 
 ## Предусловия
 

@@ -8,6 +8,9 @@ from science_graphrag.benchmarks.decision_gate import evaluate_decision_gate
 from science_graphrag.benchmarks.trust_signal import compute_gate_trust_criteria
 
 from benchmark_aggregator.paths import (
+    DEFAULT_AGENT_V3_QUALITY_JUDGE_HOLDOUT,
+    DEFAULT_AGENT_V3_QUALITY_JUDGE_MINI,
+    DEFAULT_AGENT_V3_QUALITY_JUDGE_PILOT,
     DEFAULT_BASELINE_LAYER1,
     DEFAULT_BASELINE_LAYER2,
     DEFAULT_CLAIMS_CORPUS_V2_MINI_SUITE,
@@ -30,6 +33,7 @@ from benchmark_aggregator.summarizers import (
     compare_layer2_failures,
     compare_suite_failures,
     finalize_family_trust,
+    summarize_agent_v3_quality_judge_suite,
     summarize_case_metrics_suite,
     summarize_claims_suite,
     summarize_layer1_suite,
@@ -86,6 +90,9 @@ def build_payload(args: Any) -> dict[str, Any]:
             "agent_tools_mini_suite": args.agent_tools_json,
             "agent_tools_multiagent_suite": args.agent_tools_multiagent_json,
             "agent_tools_judge_suite": args.agent_judge_json,
+            "agent_v3_quality_judge_mini": args.agent_v3_quality_mini_json,
+            "agent_v3_quality_judge_pilot": args.agent_v3_quality_pilot_json,
+            "agent_v3_quality_judge_holdout": args.agent_v3_quality_holdout_json,
             "chat_agent_contract_suite": args.chat_agent_contract_json,
             "contradictions_v1_mini_suite": args.contradictions_v1_json,
         },
@@ -151,6 +158,21 @@ def build_payload(args: Any) -> dict[str, Any]:
             "agent_tools_multiagent": summarize_case_metrics_suite(args.agent_tools_multiagent_json, root=ROOT),
             "agent_tools_judge": summarize_retrieval_judge_suite(args.agent_judge_json, root=ROOT),
         },
+        "agent_v3_quality_family": {
+            "role": "advisory",
+            "v3_judge_mini": summarize_agent_v3_quality_judge_suite(
+                args.agent_v3_quality_mini_json,
+                root=ROOT,
+            ),
+            "v3_judge_pilot": summarize_agent_v3_quality_judge_suite(
+                args.agent_v3_quality_pilot_json,
+                root=ROOT,
+            ),
+            "v3_judge_holdout": summarize_agent_v3_quality_judge_suite(
+                args.agent_v3_quality_holdout_json,
+                root=ROOT,
+            ),
+        },
         "chat_agent_family": {
             "role": "advisory",
             "chat_agent_contract": summarize_case_metrics_suite(args.chat_agent_contract_json, root=ROOT),
@@ -171,6 +193,11 @@ def build_payload(args: Any) -> dict[str, Any]:
     )
     finalize_family_trust("concept_topic_family", payload["concept_topic_family"], gold_root=GOLD_ROOT)
     finalize_family_trust("agent_tools_family", payload["agent_tools_family"], gold_root=GOLD_ROOT)
+    finalize_family_trust(
+        "agent_v3_quality_family",
+        payload["agent_v3_quality_family"],
+        gold_root=GOLD_ROOT,
+    )
     finalize_family_trust("chat_agent_family", payload["chat_agent_family"], gold_root=GOLD_ROOT)
     finalize_family_trust("contradictions_family", payload["contradictions_family"], gold_root=GOLD_ROOT)
 
@@ -181,6 +208,7 @@ def build_payload(args: Any) -> dict[str, Any]:
         references_resolution_family=payload["references_resolution_family"],
         concept_topic_family=payload["concept_topic_family"],
         agent_tools_family=payload["agent_tools_family"],
+        agent_v3_quality_family=payload["agent_v3_quality_family"],
         chat_agent_family=payload["chat_agent_family"],
         contradictions_family=payload["contradictions_family"],
     )
