@@ -1,5 +1,7 @@
 # Orchestration stabilization plan — структурный долг и план работ (2026-05-07)
 
+**Статус:** historical rationale и детальный design-doc закрытой программы orchestration stabilization. Для текущего master-plan по остаточным работам и benchmark strategy используйте [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md). Closeout и acceptance evidence: [`orchestration-stabilization-closeout-2026-05-08.md`](./orchestration-stabilization-closeout-2026-05-08.md).
+
 **Связано с** [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md) и backlog [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md) (`[OPEN] Reduce supervisor route churn before writer handoff`, `[OPEN] Simplify writer_agent into terminal synthesis seam`, `[OPEN] Split permission / validation phase out of build_tool_execution_node`, `[OPEN] Split oversized tool_search.py`).
 
 **Зачем этот документ.** Точечные фиксы маршрутизации на v3 acceptance-промптах (`v3_cv_fanout_dual_evidence`, ложный graph-intent на «citations», force first-hop, handoff-rule после `2× find_works + 2× paper_profile`) закрыли симптомы, но **не корневые причины** нестабильности. Здесь зафиксированы:

@@ -10,6 +10,9 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 
 | Question | Source |
 |----------|--------|
+| **Agent unified plan: доработки + benchmark strategy** | [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md) |
+| **Agent v3 quality benchmark spec** | [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](./agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) |
+| **Agent v3 quality benchmark implementation plan** | [`agent-v3-quality-benchmark-implementation-plan-2026-05-08.md`](./agent-v3-quality-benchmark-implementation-plan-2026-05-08.md) |
 | **Ontology · extraction · benchmarks (one entry)** | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
 | Benchmark trust, BT1–BT12, advisory families | [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md) (§0 snapshot + §5); [`../benchmarks/`](../benchmarks/) |
 | Structural debt, `[OPEN]` items | [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md), [`../backlog/refactor-frontend.md`](../backlog/refactor-frontend.md) |
@@ -24,6 +27,9 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 
 | Theme | Canonical doc |
 |-------|----------------|
+| Agent master-plan: remaining work + benchmarks | [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md) |
+| Agent v3 quality benchmark spec | [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](./agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) |
+| Agent v3 quality benchmark implementation plan | [`agent-v3-quality-benchmark-implementation-plan-2026-05-08.md`](./agent-v3-quality-benchmark-implementation-plan-2026-05-08.md) |
 | Ontology · extraction · benchmarks | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
 | Master track table & principles | [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) |
 | Agent runtime · tools · context compaction | [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md) — rule-based **`tool_search` v1** shipped (`science_graphrag/agent/tool_search.py`); LLM shortlist + lazy schemas / L4 compaction — roadmap |
@@ -110,6 +116,9 @@ Stable URLs and backlinks may still point at these root paths — open the link,
 | `ontology-benchmarks-trust-audit-2026-04-25.md` | **Live** BT / trust queue |
 | `ontology-benchmarks-roadmap-2026-04-24.md` | Reference inventory (Wave M–T tables) |
 | `habr-article-narrative-and-measurement-plan-2026-07.md` | Publication spine |
+| `agent-unified-plan-doing-and-benchmarks-2026-05-08.md` | Agent master-plan |
+| `agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md` | Agent v3 quality benchmark spec |
+| `agent-v3-quality-benchmark-implementation-plan-2026-05-08.md` | Agent v3 quality benchmark implementation plan |
 | `agent-runtime-tools-context-roadmap-2026-05-04.md` | Agent · tools · context roadmap |
 | `agent-chat-frontend-ui-plan-2026-04-26.md` | Agent UI |
 | `agent-chat-frontend-verification-gaps-next-wave.md` | Stub → archive |

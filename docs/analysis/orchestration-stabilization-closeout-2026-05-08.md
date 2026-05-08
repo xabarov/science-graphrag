@@ -1,5 +1,7 @@
 # Orchestration stabilization — closeout (2026-05-08)
 
+**Статус:** closeout/evidence-документ завершённой программы. Для текущего master-plan по следующим доработкам и benchmark strategy используйте [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md).
+
 Финальный отчёт по плану [`orchestration-stabilization-plan-2026-05-07.md`](./orchestration-stabilization-plan-2026-05-07.md).
 Хвост и live-compare закрыты по [`/home/roman/.cursor/plans/orchestration-tail-and-live-compare_6dbe9922.plan.md`](../../../../.cursor/plans/orchestration-tail-and-live-compare_6dbe9922.plan.md).
 Baseline снимок (до WS1–WS4) — [`orchestration-stabilization-baseline-2026-05-08.md`](./orchestration-stabilization-baseline-2026-05-08.md).
