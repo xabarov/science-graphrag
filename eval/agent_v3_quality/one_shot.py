@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import threading
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -25,8 +26,21 @@ from typing import Any
 # Imports in ``_run`` are deferred (see module docstring).
 # pylint: disable=import-outside-toplevel
 
+HEARTBEAT_ENV = "SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_HEARTBEAT_S"
 
-def _run() -> dict[str, Any]:
+
+def _heartbeat_seconds() -> float:
+    raw = (os.environ.get(HEARTBEAT_ENV) or "").strip()
+    if not raw:
+        return 0.0
+    try:
+        val = float(raw)
+    except ValueError:
+        return 0.0
+    return val if val > 0 else 0.0
+
+
+def _run() -> dict[str, Any]:  # pylint: disable=too-many-locals
     if len(sys.argv) < 3:
         return {"error": "usage: python -m eval.agent_v3_quality.one_shot <runtime> <request.json>"}
     runtime = sys.argv[1].strip()
@@ -41,6 +55,26 @@ def _run() -> dict[str, Any]:
     workspace_id = str(ws).strip() if ws not in (None, "", "null") else None
     max_tool_calls = int(data.get("max_tool_calls") or 12)
     started = perf_counter()
+    heartbeat_s = _heartbeat_seconds()
+    stop_heartbeat = threading.Event()
+
+    def _heartbeat_loop() -> None:
+        while not stop_heartbeat.wait(heartbeat_s):
+            elapsed = perf_counter() - started
+            print(
+                f"[agent_v3_quality.one_shot] runtime={runtime} elapsed_s={elapsed:.1f}",
+                file=sys.stderr,
+                flush=True,
+            )
+
+    heartbeat_thread: threading.Thread | None = None
+    if heartbeat_s > 0:
+        heartbeat_thread = threading.Thread(
+            target=_heartbeat_loop,
+            name="agent_v3_quality_one_shot_heartbeat",
+            daemon=True,
+        )
+        heartbeat_thread.start()
     try:
         # Deferred imports so subprocess children pick up env overrides before graph deps load.
         from science_graphrag.agent.runtime import build_agent
@@ -71,6 +105,10 @@ def _run() -> dict[str, Any]:
             "error": f"{type(exc).__name__}: {exc}",
             "duration_ms": int((perf_counter() - started) * 1000),
         }
+    finally:
+        if heartbeat_thread is not None:
+            stop_heartbeat.set()
+            heartbeat_thread.join(timeout=0.1)
 
 
 def main() -> None:

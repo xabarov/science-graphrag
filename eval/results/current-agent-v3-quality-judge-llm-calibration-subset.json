@@ -1,0 +1,2622 @@
+{
+  "review_version": "agent-v3-quality-judge-v1",
+  "family": "agent_v3_quality_judge",
+  "tier": "llm_calibration_subset",
+  "case_ids": [
+    "mini_workspace_stats_01",
+    "mini_catalog_resolution_01",
+    "mini_dual_evidence_compare_01",
+    "mini_relation_tracing_01"
+  ],
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true,
+    "logical_family_id": "agent_v3_quality_judge_v1",
+    "benchmark_family_short": "agent_v3_quality_judge",
+    "tier": "llm_calibration_subset",
+    "baseline_runtime": "langgraph_research_v1",
+    "candidate_runtime": "langgraph_supervisor_v3",
+    "transport": "subprocess",
+    "mock_agent": false,
+    "judge_prompt_version": "judge_prompt_v1",
+    "judge_prompt_sha256": "sha256-20:5b68007c9ae3d6801673",
+    "judge_llm_model": "qwen/qwen3-235b-a22b-2507",
+    "llm_rubric": true,
+    "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673"
+  },
+  "agreement": [
+    {
+      "case_id": "mini_workspace_stats_01",
+      "heuristic_winner": "tie",
+      "llm_winner": "tie",
+      "winner_match": true,
+      "heuristic_passed": true,
+      "llm_passed": true
+    },
+    {
+      "case_id": "mini_catalog_resolution_01",
+      "heuristic_winner": "tie",
+      "llm_winner": "tie",
+      "winner_match": true,
+      "heuristic_passed": true,
+      "llm_passed": true
+    },
+    {
+      "case_id": "mini_dual_evidence_compare_01",
+      "heuristic_winner": "candidate",
+      "llm_winner": "baseline",
+      "winner_match": false,
+      "heuristic_passed": true,
+      "llm_passed": false
+    },
+    {
+      "case_id": "mini_relation_tracing_01",
+      "heuristic_winner": "tie",
+      "llm_winner": "baseline",
+      "winner_match": false,
+      "heuristic_passed": true,
+      "llm_passed": true
+    }
+  ],
+  "agreement_winner_rate": 0.5,
+  "summary_heuristic": {
+    "case_count": 4,
+    "mean_weighted_score_baseline": 4.0,
+    "mean_weighted_score_candidate": 4.0,
+    "mean_delta": 0.0,
+    "pairwise_candidate_win_rate": 0.25,
+    "pairwise_baseline_win_rate": 0.0,
+    "pairwise_tie_rate": 0.75,
+    "hard_fail_count_baseline": 0,
+    "hard_fail_count_candidate": 0,
+    "family_breakdown": {
+      "workspace_stats": {
+        "candidate_wins": 0,
+        "baseline_wins": 0,
+        "ties": 1
+      },
+      "catalog_resolution": {
+        "candidate_wins": 0,
+        "baseline_wins": 0,
+        "ties": 1
+      },
+      "dual_evidence_compare": {
+        "candidate_wins": 1,
+        "baseline_wins": 0,
+        "ties": 0
+      },
+      "relation_tracing": {
+        "candidate_wins": 0,
+        "baseline_wins": 0,
+        "ties": 1
+      }
+    },
+    "all_passed": true,
+    "branch_outcome_schema": "branch_outcome_v1",
+    "cases_with_any_branch_non_ok": 0,
+    "baseline_status_counts": {
+      "ok": 4
+    },
+    "candidate_status_counts": {
+      "ok": 4
+    },
+    "error_kind_counts": {},
+    "baseline_timeout_cases": [],
+    "candidate_timeout_cases": [],
+    "baseline_error_cases": [],
+    "candidate_error_cases": []
+  },
+  "summary_llm_judge": {
+    "case_count": 4,
+    "mean_weighted_score_baseline": 5.3375,
+    "mean_weighted_score_candidate": 4.1,
+    "mean_delta": -1.2375,
+    "pairwise_candidate_win_rate": 0.0,
+    "pairwise_baseline_win_rate": 0.5,
+    "pairwise_tie_rate": 0.5,
+    "hard_fail_count_baseline": 0,
+    "hard_fail_count_candidate": 1,
+    "family_breakdown": {
+      "workspace_stats": {
+        "candidate_wins": 0,
+        "baseline_wins": 0,
+        "ties": 1
+      },
+      "catalog_resolution": {
+        "candidate_wins": 0,
+        "baseline_wins": 0,
+        "ties": 1
+      },
+      "dual_evidence_compare": {
+        "candidate_wins": 0,
+        "baseline_wins": 1,
+        "ties": 0
+      },
+      "relation_tracing": {
+        "candidate_wins": 0,
+        "baseline_wins": 1,
+        "ties": 0
+      }
+    },
+    "all_passed": false,
+    "branch_outcome_schema": "branch_outcome_v1",
+    "cases_with_any_branch_non_ok": 0,
+    "baseline_status_counts": {
+      "ok": 4
+    },
+    "candidate_status_counts": {
+      "ok": 4
+    },
+    "error_kind_counts": {},
+    "baseline_timeout_cases": [],
+    "candidate_timeout_cases": [],
+    "baseline_error_cases": [],
+    "candidate_error_cases": []
+  },
+  "cases_heuristic": [
+    {
+      "case_id": "mini_workspace_stats_01",
+      "family": "workspace_stats",
+      "question": "How many works are in workspace ws-pilot-od, and list their count by type if the tool returns that breakdown?",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": false,
+      "notes": [
+        "judge_mode:heuristic"
+      ],
+      "timings": {
+        "baseline_wall_s": 12.783,
+        "candidate_wall_s": 10.877,
+        "judge_heuristic_wall_s": 0.0,
+        "judge_llm_wall_s": 3.087,
+        "case_wall_s": 26.747
+      },
+      "baseline": {
+        "answer": "The workspace \"Pilot: Object Detection (YOLOv1)\" (ID: ws-pilot-od) contains 1 work. A breakdown by type is not available due to permission restrictions on retrieving the detailed list.",
+        "citations": [],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['minimal_bundle_ready'], 'budget_hint': None, 'reason': 'workspace_stats_first_",
+              "question_features": "{'raw_question': 'How many works are in workspace ws-pilot-od, and list their count by type if the tool returns that breakdown?', 'normalized_question': 'how many works are in workspace ws-pilot-od, a"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "workspace_stats_first_hop",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "retrieval_completion_minimal_bundle",
+              "budget_left": 11
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "stats"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "list"
+            },
+            "row_count": null,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "The workspace \"Pilot: Object Detection (YOLOv1)\" (ID: ws-pilot-od) contains 1 work. A breakdown by type is not available due to permission restrictions on retrieving the detailed list.",
+              "citations": "[]"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → workspace_inspect → workspace_inspect → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 12337,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "candidate": {
+        "answer": "The workspace \"Pilot: Object Detection (YOLOv1)\" (ID: ws-pilot-od) contains 1 work. The available evidence does not include a breakdown by work type.",
+        "citations": [],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['minimal_bundle_ready'], 'budget_hint': None, 'reason': 'workspace_stats_first_",
+              "question_features": "{'raw_question': 'How many works are in workspace ws-pilot-od, and list their count by type if the tool returns that breakdown?', 'normalized_question': 'how many works are in workspace ws-pilot-od, a"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "workspace_stats_first_hop",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "retrieval_completion_minimal_bundle",
+              "budget_left": 11
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "stats"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "The workspace \"Pilot: Object Detection (YOLOv1)\" (ID: ws-pilot-od) contains 1 work. The available evidence does not include a breakdown by work type.",
+              "citations": "[]"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → workspace_inspect → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 10420,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "pairwise": {
+        "winner": "tie",
+        "confidence": "low",
+        "rationale": "heuristic_judge_no_llm: compare answer length, hard-fail heuristics, and gold requirements"
+      },
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    },
+    {
+      "case_id": "mini_catalog_resolution_01",
+      "family": "catalog_resolution",
+      "question": "Find the work in ws-pilot-od whose title is closest to \"You Only Look Once\" object detection and report title, year, venue if known, and work id.",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": false,
+      "notes": [
+        "judge_mode:heuristic"
+      ],
+      "timings": {
+        "baseline_wall_s": 12.538,
+        "candidate_wall_s": 11.912,
+        "judge_heuristic_wall_s": 0.0,
+        "judge_llm_wall_s": 3.096,
+        "case_wall_s": 27.547
+      },
+      "baseline": {
+        "answer": "- **Title**: You Only Look Once: Unified, Real-Time Object Detection\n- **Year**: Unknown (not available in metadata)\n- **Venue**: Unknown (no venue linked in metadata)\n- **Work ID**: da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "citations": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "excerpt": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork."
+          }
+        ],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+              "question_features": "{'raw_question': 'Find the work in ws-pilot-od whose title is closest to \"You Only Look Once\" object detection and report title, year, venue if known, and work id.', 'normalized_question': 'find the w"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "coordinator_route_hint:retrieval_agent",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "budget_left": 10,
+              "reason": null
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "You Only Look Once object detection",
+              "workspace_id": "ws-pilot-od"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "- **Title**: You Only Look Once: Unified, Real-Time Object Detection\n- **Year**: Unknown (not available in metadata)\n- **Venue**: Unknown (no venue linked in metadata)\n- **Work ID**: da37b10b-f5e6-4b7",
+              "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → find_works → paper_profile → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 12079,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "candidate": {
+        "answer": "- **Title**: You Only Look Once: Unified, Real-Time Object Detection\n- **Year**: Unknown (not available in metadata)\n- **Venue**: Unknown (not linked in metadata)\n- **Work ID**: da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "citations": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "excerpt": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork."
+          }
+        ],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+              "question_features": "{'raw_question': 'Find the work in ws-pilot-od whose title is closest to \"You Only Look Once\" object detection and report title, year, venue if known, and work id.', 'normalized_question': 'find the w"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "coordinator_route_hint:retrieval_agent",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "budget_left": 10,
+              "reason": null
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "You Only Look Once object detection",
+              "workspace_id": "ws-pilot-od"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "- **Title**: You Only Look Once: Unified, Real-Time Object Detection\n- **Year**: Unknown (not available in metadata)\n- **Venue**: Unknown (not linked in metadata)\n- **Work ID**: da37b10b-f5e6-4b74-965",
+              "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → find_works → paper_profile → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 11460,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "pairwise": {
+        "winner": "tie",
+        "confidence": "low",
+        "rationale": "heuristic_judge_no_llm: compare answer length, hard-fail heuristics, and gold requirements"
+      },
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    },
+    {
+      "case_id": "mini_dual_evidence_compare_01",
+      "family": "dual_evidence_compare",
+      "question": "Compare two distinct works in ws-pilot-od on their approach to real-time object detection: structure as balanced comparison (similarities and differences) and cite evidence for each side.",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": false,
+      "notes": [
+        "judge_mode:heuristic"
+      ],
+      "timings": {
+        "baseline_wall_s": 287.857,
+        "candidate_wall_s": 193.419,
+        "judge_heuristic_wall_s": 0.0,
+        "judge_llm_wall_s": 9.884,
+        "case_wall_s": 491.16
+      },
+      "baseline": {
+        "answer": "### Balanced Comparison of YOLO and RT-DETR on Real-Time Object Detection\n\n#### Similarities\n\nBoth YOLO and RT-DETR are designed to address the challenges of real-time object detection, aiming to balance speed and accuracy for practical deployment in applications such as autonomous driving and video surveillance. They both represent end-to-end trainable frameworks that unify the detection pipeline into a single model, eliminating the need for multi-stage processing typical in earlier systems like R-CNN variants.\n\n- **Unified Architecture**: YOLO frames object detection as a single regression problem, predicting bounding boxes and class probabilities directly from full images in one evaluation. This unified architecture allows for end-to-end optimization on detection performance.  \n  > *\"We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\"* (YOLO, Abstract)\n\n- **Real-Time Focus**: Both models emphasize real-time inference capabilities. YOLO achieves real-time speeds of up to 155 FPS with its Fast YOLO variant, while RT-DETR is explicitly designed as the first real-time end-to-end Transformer-based detector, achieving 108 FPS on a T4 GPU.  \n  > *\"Fast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection.\"* (YOLO, Conclusion)\n\n#### Differences\n\nThe core architectural and methodological differences between YOLO and RT-DETR stem from their underlying models—YOLO uses CNN-based single-shot detection, while RT-DETR leverages Transformer-based end-to-end detection without Non-Maximum Suppression (NMS).\n\n- **Detection Mechanism and NMS Dependency**:\n  - YOLO relies on a grid-based prediction system where each grid cell predicts multiple bounding boxes and class probabilities, followed by NMS to filter overlapping detections. This introduces post-processing latency and hyperparameter sensitivity.\n  - RT-DETR eliminates NMS entirely by using a set-based global reasoning approach via Transformers, which improves inference stability and reduces dependency on post-processing thresholds.\n    > *\"The YOLO series has become the most popular framework for real-time object detection due to its reasonable trade-off between speed and accuracy. However, we observe that the speed and accuracy of YOLOs are negatively affected by the NMS. Recently, end-to-end Transformer-based detectors (DETRs) have provided an alternative to eliminating NMS.\"* (RT-DETR, Abstract)\n\n- **Architecture and Speed-Accuracy Trade-off**:\n  - YOLO uses a single CNN backbone with spatial grid predictions, enabling very fast inference but suffering from localization errors.\n  - RT-DETR introduces an efficient hybrid encoder that decouples intra-scale interaction and cross-scale fusion, improving both speed and accuracy. It also supports flexible speed tuning by adjusting decoder layers without retraining.\n    > *\"RT-DETR includes two key enhancements: an efficient hybrid encoder that expeditiously processes multi-scale features, and the uncertainty-minimal query selection that improves the quality of initial object queries.\"* (RT-DETR, Conclusion)\n\n- **Performance and Generalization**:\n  - YOLO generalizes well to new domains (e.g., artwork) due to its simple, unified structure.\n  - RT-DETR outperforms YOLO in both accuracy (53.1% AP vs. prior YOLOs) and speed (108 FPS), while also surpassing other DETR variants significantly in efficiency.\n    > *\"RT-DETR-R50 / R101 achieves 53.1% / 54.3% AP on COCO and 108 / 74 FPS on T4 GPU, outperforming previously advanced YOLOs in both speed and accuracy.\"* (RT-DETR, Abstract)\n\n#### Summary\n\n| Aspect | YOLO | RT-DETR |\n|-------|------|--------|\n| **Architecture** | CNN-based, single-shot, grid prediction | Transformer-based, end-to-end, no NMS |\n| **Speed** | Up to 155 FPS (Fast YOLO) | Up to 108 FPS (RT-DETR-R50) |\n| **Accuracy (AP)** | Lower than RT-DETR on COCO | 53.1% AP (R50), outperforms YOLO |\n| **Post-processing** | Requires NMS | Eliminates NMS via set prediction |\n| **Flexibility** | Fixed pipeline | Adjustable decoder depth for speed tuning |\n| **Generalization** | Strong on non",
+        "citations": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+            "excerpt": "## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n\nOur unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared"
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+            "excerpt": "## 6. Conclusion\n\nWe introduce YOLO, a unified model for object detection. Our model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly corresponds to detection performance and the entire model is trained jointly.\n\nFast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection. YOLO also generalizes well to new domains making it ideal for applications that rely on fast, robust object detection.\n\nAcknowledgements: This work is partially supported by ONR N00014-13-1-0720, NSF IIS-1338054, and The Allen Distinguished Investigator Award."
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+            "excerpt": "## 1. Introduction\n\nHumans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general purpose, responsive robotic systems.\n\nCurrent detection systems repurpose classifiers to perform detection. To detect an object, these systems take a classifier for that object and evaluate it at various locations and scales in a test image. Systems like deformable parts models (DPM) use a sliding window appr"
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "dcc340b46e920a01b6f712ce6e6ec45174d4717c0afac48adc2cf491beea4f91",
+            "excerpt": "## 5. Real-Time Detection In The Wild\n\nYOLO is a fast, accurate object detector, making it ideal for computer vision applications. We connect YOLO to a webcam and verify that it maintains real-time performance,\n\nFigure 5: Generalization results on Picasso and People-Art datasets.\n\nFigure 6: Qualitative Results. YOLO running on sample artwork and natural images from the internet. It is mostly accurate although it does think one person is an airplane.\n\nincluding the time to fetch images from the camera and display the detections.\n\nThe resulting system is interactive and engaging. While YOLO processes images individually, when attached to a webcam it functions like a tracking system, detecting objects as they move around and change in appearance. A demo of the system and the source code can b"
+          }
+        ],
+        "warnings": [
+          "agent_finished_without_final_answer_tool",
+          "agent_turn_deadline_partial_salvage"
+        ],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['minimal_bundle_ready', 'any_specialist_payload'], 'budget_hint': None, 'reason",
+              "question_features": "{'raw_question': 'Compare two distinct works in ws-pilot-od on their approach to real-time object detection: structure as balanced comparison (similarities and differences) and cite evidence for each "
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "workspace_dual_evidence_first_hop",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "papers",
+              "list_limit": "20"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "real-time object detection",
+              "workspace_id": "ws-pilot-od",
+              "limit": "10"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "idea_search",
+            "args_summary": {
+              "query": "real-time object detection approaches",
+              "kinds": "['chunk']",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": true,
+            "error": null
+          },
+          {
+            "step": 4,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 5,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "real-time object detection",
+              "workspace_id": "None",
+              "limit": "10"
+            },
+            "row_count": 10,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 6,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 7,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "approach to real-time object detection in YOLO",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 8,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "approach to real-time object detection in RT-DETR",
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 9,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "differences between YOLO and RT-DETR in real-time object detection",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 10,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "similarities between YOLO and RT-DETR in real-time object detection",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → workspace_inspect → find_works → idea_search → paper_profile → find_works → paper_profile → paper_quote_search → paper_quote_search → paper_quote_search → paper_quote_search",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 241781,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "candidate": {
+        "answer": "**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ## Abstract\n> \n> We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n> \n> Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared\n\n---\n\n**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ## 6. Conclusion\n> \n> We introduce YOLO, a unified model for object detection. Our model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly corresponds to detection performance and the entire model is trained jointly.\n> \n> Fast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection. YOLO also generalizes well to new domains making it ideal for applications that rely on fast, robust object detection.\n> \n> Acknowledgements: This work is partially supported by ONR N00014-13-1-0720, NSF IIS-1338054, and The Allen Distinguished Investigator Award.\n\n---\n\n**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ## 1. Introduction\n> \n> Humans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general purpose, responsive robotic systems.\n> \n> Current detection systems repurpose classifiers to perform detection. To detect an object, these systems take a classifier for that object and evaluate it at various locations and scales in a test image. Systems like deformable parts models (DPM) use a sliding window appr\n\n---\n\n**b2bd5005-b3c6-4056-bee4-62344654e63e**\n\n> ## 7. Conclusion\n> \n> In this work, we propose a real-time end-to-end detector, called RT-DETR, which successfully extends DETR to the real-time detection scenario and achieves state-of-the-art performance. RT-DETR includes two key enhancements: an efficient hybrid encoder that expeditiously processes multi-scale features, and the uncertainty-minimal query selection that improves the quality of initial object queries. Furthermore, RT-DETR supports flexible speed tuning without retraining and eliminates the inconvenience caused by two NMS thresholds, facilitating its practical application. RT-DETR, along with its model scaling strategy, broadens the technical approach to real-time object detection, offering new possibilities beyond YOLO for diverse real-time scenarios. We hope that RT-DETR can\n\n---\n\n**b2bd5005-b3c6-4056-bee4-62344654e63e**\n\n> ## Abstract\n> \n> The YOLO series has become the most popular framework for real-time object detection due to its reasonable trade-off between speed and accuracy. However, we observe that the speed and accuracy of YOLOs are negatively affected by the NMS. Recently, end-to-end Transformer-based detectors (DETRs) have provided an alternative to eliminating NMS. Nevertheless, the high computational cost limits their practicality and hinders them from fully exploiting the advantage of excluding NMS. In this paper, we propose the Real-Time DEtection TRansformer (RT-DETR), the first real-time end-to-end object detector to our best knowledge that addresses the above dilemma. We build RT-DETR in two steps, drawing on the advanced DETR: first we focus on maintaining accuracy while improving speed, follo\n\n---\n\n**b2bd5005-b3c6-4056-bee4-62344654e63e**\n\n> ## 1. Introduction\n> \n> Real-time object detection is an important area of research and has a wide range of applications, such as object tracking [40], video surveillance [26], and autonomous driving [2], etc. Existing real-time detectors generally adopt the CNN-based architecture, the most famous of which is the YOLO detectors [1, 9–11, 14, 15, 24, 28, 35, 37] due to their reasonable trade-off between speed and accuracy. However, these detectors typically require Non-Maximum Suppression (NMS) for post-processing, which not only slows down the inference speed but also introduces hyperparameters that cause instability in both the speed and accuracy. Moreover, considering that different scenarios place different emphasis on recall and accuracy, it is necessary to carefully select the appropriate\n\n---\n\n**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ## 4. Experiments\n> \n> First we compare YOLO with other real-time detection systems on PASCAL VOC 2007. To understand the differences between YOLO and R-CNN variants we explore the errors on VOC 2007 made by YOLO and Fast R-CNN, one of the highest performing versions of R-CNN [14]. Based on the different error profiles we show that YOLO can be used to rescore Fast R-CNN detections and reduce the errors from background false positives, giving a significant performance boost. We also present VOC 2012 results and compare mAP to current state-of-the-art methods. Finally, we show that YOLO generalizes to new domains better than other detectors on two artwork datasets.\n> \n> ### 4.1. Comparison to Other Real-Time Systems\n> \n> Many research efforts in object detection focus on making standard detection pipeli\n\n---\n\n**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ### 4.1. Comparison to Other Real-Time Systems\n> \n> Many research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the other efforts don’t reach the real-time milestone we also compare their relative mAP and speed to examine the accuracy-performance tradeoffs available in object detection systems.\n> \n> Fast YOLO is the fastest object detection method on PASCAL; as far as we know, it is the fastest extant object detector. With 52.7% mAP, it is more than twice as accurate as prior work on real-time detection. YOLO pushes mAP",
+        "citations": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+            "excerpt": "## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n\nOur unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared"
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+            "excerpt": "## 6. Conclusion\n\nWe introduce YOLO, a unified model for object detection. Our model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly corresponds to detection performance and the entire model is trained jointly.\n\nFast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection. YOLO also generalizes well to new domains making it ideal for applications that rely on fast, robust object detection.\n\nAcknowledgements: This work is partially supported by ONR N00014-13-1-0720, NSF IIS-1338054, and The Allen Distinguished Investigator Award."
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+            "excerpt": "## 1. Introduction\n\nHumans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general purpose, responsive robotic systems.\n\nCurrent detection systems repurpose classifiers to perform detection. To detect an object, these systems take a classifier for that object and evaluate it at various locations and scales in a test image. Systems like deformable parts models (DPM) use a sliding window appr"
+          },
+          {
+            "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+            "chunk_id": "41b6ee18d8f45b56e94e869e932731a425c591b54e1ed8c9613eb29e720ccf84",
+            "excerpt": "## 7. Conclusion\n\nIn this work, we propose a real-time end-to-end detector, called RT-DETR, which successfully extends DETR to the real-time detection scenario and achieves state-of-the-art performance. RT-DETR includes two key enhancements: an efficient hybrid encoder that expeditiously processes multi-scale features, and the uncertainty-minimal query selection that improves the quality of initial object queries. Furthermore, RT-DETR supports flexible speed tuning without retraining and eliminates the inconvenience caused by two NMS thresholds, facilitating its practical application. RT-DETR, along with its model scaling strategy, broadens the technical approach to real-time object detection, offering new possibilities beyond YOLO for diverse real-time scenarios. We hope that RT-DETR can"
+          }
+        ],
+        "warnings": [
+          "agent_finished_without_final_answer_tool",
+          "answer_salvaged_from_quote_candidates"
+        ],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['minimal_bundle_ready', 'any_specialist_payload'], 'budget_hint': None, 'reason",
+              "question_features": "{'raw_question': 'Compare two distinct works in ws-pilot-od on their approach to real-time object detection: structure as balanced comparison (similarities and differences) and cite evidence for each "
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "workspace_dual_evidence_first_hop",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "budget_exhausted"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "papers",
+              "list_limit": "2"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "real-time object detection",
+              "workspace_id": "ws-pilot-od",
+              "limit": "2"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "idea_search",
+            "args_summary": {
+              "query": "real-time object detection approaches",
+              "kinds": "['chunk']",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": true,
+            "error": null
+          },
+          {
+            "step": 4,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 5,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "real-time object detection",
+              "limit": "2"
+            },
+            "row_count": 2,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 6,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 7,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "approach to real-time object detection in YOLO",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 8,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "approach to real-time object detection in RT-DETR",
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 9,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "differences in accuracy and speed between YOLO and RT-DETR",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 10,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "impact of NMS on YOLO and how RT-DETR eliminates it",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 11,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "RT-DETR hybrid encoder and query selection",
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 12,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "flexible speed tuning in RT-DETR",
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+              "top_k": "2"
+            },
+            "row_count": 2,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → workspace_inspect → find_works → idea_search → paper_profile → find_works → paper_profile → paper_quote_search → paper_quote_search → paper_quote_search → paper_quote_search → paper_quote_search → paper_quote_search",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 192968,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "pairwise": {
+        "winner": "candidate",
+        "confidence": "low",
+        "rationale": "heuristic_judge_no_llm: compare answer length, hard-fail heuristics, and gold requirements"
+      },
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    },
+    {
+      "case_id": "mini_relation_tracing_01",
+      "family": "relation_tracing",
+      "question": "In ws-pilot-od, what papers cite the YOLOv1 work and what relation path would you use to explain the citation chain briefly?",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": false,
+      "notes": [
+        "judge_mode:heuristic"
+      ],
+      "timings": {
+        "baseline_wall_s": 10.477,
+        "candidate_wall_s": 12.448,
+        "judge_heuristic_wall_s": 0.0,
+        "judge_llm_wall_s": 28.887,
+        "case_wall_s": 51.812
+      },
+      "baseline": {
+        "answer": "The requested information cannot be retrieved because the `find_works` tool is not accessible in this environment, preventing identification of the YOLOv1 paper by title. Without the Work ID of YOLOv1, citation analysis via `edge_search` or `cypher_query` is not possible. Please provide the Work ID or internal reference to proceed.",
+        "citations": [],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "graph_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'graph_agent', 'expected_completion': ['graph_traversal_needed', 'any_specialist_payload'], 'budget_hint': None, 'reason':",
+              "question_features": "{'raw_question': 'In ws-pilot-od, what papers cite the YOLOv1 work and what relation path would you use to explain the citation chain briefly?', 'normalized_question': 'in ws-pilot-od, what papers cit"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "graph_agent",
+              "reason": "coordinator_route_hint",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "graph_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "route_plan_step",
+              "budget_left": 11,
+              "decision_source": "route_plan"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "YOLOv1"
+            },
+            "row_count": null,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "The requested information cannot be retrieved because the `find_works` tool is not accessible in this environment, preventing identification of the YOLOv1 paper by title. Without the Work ID of YOLOv1",
+              "citations": "[]"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → find_works → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 10016,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "candidate": {
+        "answer": "Не удалось найти работы, цитирующие YOLOv1, поскольку инструмент `find_works` недоступен в текущей среде из-за ограничений прав доступа. Без возможности поиска по названию работы нельзя определить идентификатор YOLOv1 и проанализировать цепочку цитирований. Если вы предоставите внутренний идентификатор работы (Work ID) для YOLOv1, можно будет продолжить анализ.",
+        "citations": [],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "graph_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'graph_agent', 'expected_completion': ['graph_traversal_needed', 'any_specialist_payload'], 'budget_hint': None, 'reason':",
+              "question_features": "{'raw_question': 'In ws-pilot-od, what papers cite the YOLOv1 work and what relation path would you use to explain the citation chain briefly?', 'normalized_question': 'in ws-pilot-od, what papers cit"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "graph_agent",
+              "reason": "coordinator_route_hint",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "graph_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "route_plan_step",
+              "budget_left": 11,
+              "decision_source": "route_plan"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "YOLOv1"
+            },
+            "row_count": null,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "Не удалось найти работы, цитирующие YOLOv1, поскольку инструмент `find_works` недоступен в текущей среде из-за ограничений прав доступа. Без возможности поиска по названию работы нельзя определить иде",
+              "citations": "[]"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → find_works → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 12001,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "pairwise": {
+        "winner": "tie",
+        "confidence": "low",
+        "rationale": "heuristic_judge_no_llm: compare answer length, hard-fail heuristics, and gold requirements"
+      },
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    }
+  ],
+  "cases_llm_judge": [
+    {
+      "case_id": "mini_workspace_stats_01",
+      "family": "workspace_stats",
+      "question": "How many works are in workspace ws-pilot-od, and list their count by type if the tool returns that breakdown?",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": false,
+      "notes": [
+        "judge_mode:llm"
+      ],
+      "timings": {
+        "baseline_wall_s": 12.783,
+        "candidate_wall_s": 10.877,
+        "judge_heuristic_wall_s": 0.0,
+        "judge_llm_wall_s": 3.087,
+        "case_wall_s": 26.747
+      },
+      "baseline": {
+        "answer": "The workspace \"Pilot: Object Detection (YOLOv1)\" (ID: ws-pilot-od) contains 1 work. A breakdown by type is not available due to permission restrictions on retrieving the detailed list.",
+        "citations": [],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['minimal_bundle_ready'], 'budget_hint': None, 'reason': 'workspace_stats_first_",
+              "question_features": "{'raw_question': 'How many works are in workspace ws-pilot-od, and list their count by type if the tool returns that breakdown?', 'normalized_question': 'how many works are in workspace ws-pilot-od, a"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "workspace_stats_first_hop",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "retrieval_completion_minimal_bundle",
+              "budget_left": 11
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "stats"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "list"
+            },
+            "row_count": null,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "The workspace \"Pilot: Object Detection (YOLOv1)\" (ID: ws-pilot-od) contains 1 work. A breakdown by type is not available due to permission restrictions on retrieving the detailed list.",
+              "citations": "[]"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → workspace_inspect → workspace_inspect → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 12337,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 6,
+          "completeness": 5,
+          "groundedness": 5,
+          "synthesis_quality": 5,
+          "usefulness": 5,
+          "brevity_discipline": 6
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 5.35
+      },
+      "candidate": {
+        "answer": "The workspace \"Pilot: Object Detection (YOLOv1)\" (ID: ws-pilot-od) contains 1 work. The available evidence does not include a breakdown by work type.",
+        "citations": [],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['minimal_bundle_ready'], 'budget_hint': None, 'reason': 'workspace_stats_first_",
+              "question_features": "{'raw_question': 'How many works are in workspace ws-pilot-od, and list their count by type if the tool returns that breakdown?', 'normalized_question': 'how many works are in workspace ws-pilot-od, a"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "workspace_stats_first_hop",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "retrieval_completion_minimal_bundle",
+              "budget_left": 11
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "stats"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "The workspace \"Pilot: Object Detection (YOLOv1)\" (ID: ws-pilot-od) contains 1 work. The available evidence does not include a breakdown by work type.",
+              "citations": "[]"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → workspace_inspect → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 10420,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 6,
+          "completeness": 5,
+          "groundedness": 5,
+          "synthesis_quality": 5,
+          "usefulness": 5,
+          "brevity_discipline": 6
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 5.35
+      },
+      "pairwise": {
+        "winner": "tie",
+        "confidence": "high",
+        "rationale": "Both answers correctly state the workspace contains 1 work and acknowledge the lack of type breakdown due to insufficient evidence. They are equally correct, concise, and grounded. Neither provides a breakdown, but both transparently report the limitation. No hard failures are triggered, and the minor difference in phrasing ('permission restrictions' vs 'available evidence') does not affect overall quality."
+      },
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    },
+    {
+      "case_id": "mini_catalog_resolution_01",
+      "family": "catalog_resolution",
+      "question": "Find the work in ws-pilot-od whose title is closest to \"You Only Look Once\" object detection and report title, year, venue if known, and work id.",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": false,
+      "notes": [
+        "judge_mode:llm"
+      ],
+      "timings": {
+        "baseline_wall_s": 12.538,
+        "candidate_wall_s": 11.912,
+        "judge_heuristic_wall_s": 0.0,
+        "judge_llm_wall_s": 3.096,
+        "case_wall_s": 27.547
+      },
+      "baseline": {
+        "answer": "- **Title**: You Only Look Once: Unified, Real-Time Object Detection\n- **Year**: Unknown (not available in metadata)\n- **Venue**: Unknown (no venue linked in metadata)\n- **Work ID**: da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "citations": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "excerpt": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork."
+          }
+        ],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+              "question_features": "{'raw_question': 'Find the work in ws-pilot-od whose title is closest to \"You Only Look Once\" object detection and report title, year, venue if known, and work id.', 'normalized_question': 'find the w"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "coordinator_route_hint:retrieval_agent",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "budget_left": 10,
+              "reason": null
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "You Only Look Once object detection",
+              "workspace_id": "ws-pilot-od"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "- **Title**: You Only Look Once: Unified, Real-Time Object Detection\n- **Year**: Unknown (not available in metadata)\n- **Venue**: Unknown (no venue linked in metadata)\n- **Work ID**: da37b10b-f5e6-4b7",
+              "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → find_works → paper_profile → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 12079,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 6,
+          "completeness": 6,
+          "groundedness": 6,
+          "synthesis_quality": 6,
+          "usefulness": 6,
+          "brevity_discipline": 6
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 6.0
+      },
+      "candidate": {
+        "answer": "- **Title**: You Only Look Once: Unified, Real-Time Object Detection\n- **Year**: Unknown (not available in metadata)\n- **Venue**: Unknown (not linked in metadata)\n- **Work ID**: da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "citations": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "excerpt": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork."
+          }
+        ],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+              "question_features": "{'raw_question': 'Find the work in ws-pilot-od whose title is closest to \"You Only Look Once\" object detection and report title, year, venue if known, and work id.', 'normalized_question': 'find the w"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "coordinator_route_hint:retrieval_agent",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "budget_left": 10,
+              "reason": null
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "You Only Look Once object detection",
+              "workspace_id": "ws-pilot-od"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "- **Title**: You Only Look Once: Unified, Real-Time Object Detection\n- **Year**: Unknown (not available in metadata)\n- **Venue**: Unknown (not linked in metadata)\n- **Work ID**: da37b10b-f5e6-4b74-965",
+              "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26'}]"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → find_works → paper_profile → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 11460,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 6,
+          "completeness": 6,
+          "groundedness": 6,
+          "synthesis_quality": 6,
+          "usefulness": 6,
+          "brevity_discipline": 6
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 6.0
+      },
+      "pairwise": {
+        "winner": "tie",
+        "confidence": "high",
+        "rationale": "Both the baseline and candidate provide identical, accurate responses with the correct title, work ID, and transparently state that year and venue are unknown. Both include a relevant citation excerpt confirming the work's content. The tool traces are identical, indicating the same retrieval path. No differences in content, structure, or quality are observed."
+      },
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    },
+    {
+      "case_id": "mini_dual_evidence_compare_01",
+      "family": "dual_evidence_compare",
+      "question": "Compare two distinct works in ws-pilot-od on their approach to real-time object detection: structure as balanced comparison (similarities and differences) and cite evidence for each side.",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": false,
+      "notes": [
+        "judge_mode:llm"
+      ],
+      "timings": {
+        "baseline_wall_s": 287.857,
+        "candidate_wall_s": 193.419,
+        "judge_heuristic_wall_s": 0.0,
+        "judge_llm_wall_s": 9.884,
+        "case_wall_s": 491.16
+      },
+      "baseline": {
+        "answer": "### Balanced Comparison of YOLO and RT-DETR on Real-Time Object Detection\n\n#### Similarities\n\nBoth YOLO and RT-DETR are designed to address the challenges of real-time object detection, aiming to balance speed and accuracy for practical deployment in applications such as autonomous driving and video surveillance. They both represent end-to-end trainable frameworks that unify the detection pipeline into a single model, eliminating the need for multi-stage processing typical in earlier systems like R-CNN variants.\n\n- **Unified Architecture**: YOLO frames object detection as a single regression problem, predicting bounding boxes and class probabilities directly from full images in one evaluation. This unified architecture allows for end-to-end optimization on detection performance.  \n  > *\"We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\"* (YOLO, Abstract)\n\n- **Real-Time Focus**: Both models emphasize real-time inference capabilities. YOLO achieves real-time speeds of up to 155 FPS with its Fast YOLO variant, while RT-DETR is explicitly designed as the first real-time end-to-end Transformer-based detector, achieving 108 FPS on a T4 GPU.  \n  > *\"Fast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection.\"* (YOLO, Conclusion)\n\n#### Differences\n\nThe core architectural and methodological differences between YOLO and RT-DETR stem from their underlying models—YOLO uses CNN-based single-shot detection, while RT-DETR leverages Transformer-based end-to-end detection without Non-Maximum Suppression (NMS).\n\n- **Detection Mechanism and NMS Dependency**:\n  - YOLO relies on a grid-based prediction system where each grid cell predicts multiple bounding boxes and class probabilities, followed by NMS to filter overlapping detections. This introduces post-processing latency and hyperparameter sensitivity.\n  - RT-DETR eliminates NMS entirely by using a set-based global reasoning approach via Transformers, which improves inference stability and reduces dependency on post-processing thresholds.\n    > *\"The YOLO series has become the most popular framework for real-time object detection due to its reasonable trade-off between speed and accuracy. However, we observe that the speed and accuracy of YOLOs are negatively affected by the NMS. Recently, end-to-end Transformer-based detectors (DETRs) have provided an alternative to eliminating NMS.\"* (RT-DETR, Abstract)\n\n- **Architecture and Speed-Accuracy Trade-off**:\n  - YOLO uses a single CNN backbone with spatial grid predictions, enabling very fast inference but suffering from localization errors.\n  - RT-DETR introduces an efficient hybrid encoder that decouples intra-scale interaction and cross-scale fusion, improving both speed and accuracy. It also supports flexible speed tuning by adjusting decoder layers without retraining.\n    > *\"RT-DETR includes two key enhancements: an efficient hybrid encoder that expeditiously processes multi-scale features, and the uncertainty-minimal query selection that improves the quality of initial object queries.\"* (RT-DETR, Conclusion)\n\n- **Performance and Generalization**:\n  - YOLO generalizes well to new domains (e.g., artwork) due to its simple, unified structure.\n  - RT-DETR outperforms YOLO in both accuracy (53.1% AP vs. prior YOLOs) and speed (108 FPS), while also surpassing other DETR variants significantly in efficiency.\n    > *\"RT-DETR-R50 / R101 achieves 53.1% / 54.3% AP on COCO and 108 / 74 FPS on T4 GPU, outperforming previously advanced YOLOs in both speed and accuracy.\"* (RT-DETR, Abstract)\n\n#### Summary\n\n| Aspect | YOLO | RT-DETR |\n|-------|------|--------|\n| **Architecture** | CNN-based, single-shot, grid prediction | Transformer-based, end-to-end, no NMS |\n| **Speed** | Up to 155 FPS (Fast YOLO) | Up to 108 FPS (RT-DETR-R50) |\n| **Accuracy (AP)** | Lower than RT-DETR on COCO | 53.1% AP (R50), outperforms YOLO |\n| **Post-processing** | Requires NMS | Eliminates NMS via set prediction |\n| **Flexibility** | Fixed pipeline | Adjustable decoder depth for speed tuning |\n| **Generalization** | Strong on non",
+        "citations": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+            "excerpt": "## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n\nOur unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared"
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+            "excerpt": "## 6. Conclusion\n\nWe introduce YOLO, a unified model for object detection. Our model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly corresponds to detection performance and the entire model is trained jointly.\n\nFast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection. YOLO also generalizes well to new domains making it ideal for applications that rely on fast, robust object detection.\n\nAcknowledgements: This work is partially supported by ONR N00014-13-1-0720, NSF IIS-1338054, and The Allen Distinguished Investigator Award."
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+            "excerpt": "## 1. Introduction\n\nHumans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general purpose, responsive robotic systems.\n\nCurrent detection systems repurpose classifiers to perform detection. To detect an object, these systems take a classifier for that object and evaluate it at various locations and scales in a test image. Systems like deformable parts models (DPM) use a sliding window appr"
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "dcc340b46e920a01b6f712ce6e6ec45174d4717c0afac48adc2cf491beea4f91",
+            "excerpt": "## 5. Real-Time Detection In The Wild\n\nYOLO is a fast, accurate object detector, making it ideal for computer vision applications. We connect YOLO to a webcam and verify that it maintains real-time performance,\n\nFigure 5: Generalization results on Picasso and People-Art datasets.\n\nFigure 6: Qualitative Results. YOLO running on sample artwork and natural images from the internet. It is mostly accurate although it does think one person is an airplane.\n\nincluding the time to fetch images from the camera and display the detections.\n\nThe resulting system is interactive and engaging. While YOLO processes images individually, when attached to a webcam it functions like a tracking system, detecting objects as they move around and change in appearance. A demo of the system and the source code can b"
+          }
+        ],
+        "warnings": [
+          "agent_finished_without_final_answer_tool",
+          "agent_turn_deadline_partial_salvage"
+        ],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['minimal_bundle_ready', 'any_specialist_payload'], 'budget_hint': None, 'reason",
+              "question_features": "{'raw_question': 'Compare two distinct works in ws-pilot-od on their approach to real-time object detection: structure as balanced comparison (similarities and differences) and cite evidence for each "
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "workspace_dual_evidence_first_hop",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "papers",
+              "list_limit": "20"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "real-time object detection",
+              "workspace_id": "ws-pilot-od",
+              "limit": "10"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "idea_search",
+            "args_summary": {
+              "query": "real-time object detection approaches",
+              "kinds": "['chunk']",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": true,
+            "error": null
+          },
+          {
+            "step": 4,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 5,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "real-time object detection",
+              "workspace_id": "None",
+              "limit": "10"
+            },
+            "row_count": 10,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 6,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 7,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "approach to real-time object detection in YOLO",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 8,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "approach to real-time object detection in RT-DETR",
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 9,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "differences between YOLO and RT-DETR in real-time object detection",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 10,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "similarities between YOLO and RT-DETR in real-time object detection",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → workspace_inspect → find_works → idea_search → paper_profile → find_works → paper_profile → paper_quote_search → paper_quote_search → paper_quote_search → paper_quote_search",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 241781,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 6,
+          "completeness": 6,
+          "groundedness": 6,
+          "synthesis_quality": 6,
+          "usefulness": 6,
+          "brevity_discipline": 5
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 5.95
+      },
+      "candidate": {
+        "answer": "**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ## Abstract\n> \n> We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n> \n> Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared\n\n---\n\n**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ## 6. Conclusion\n> \n> We introduce YOLO, a unified model for object detection. Our model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly corresponds to detection performance and the entire model is trained jointly.\n> \n> Fast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection. YOLO also generalizes well to new domains making it ideal for applications that rely on fast, robust object detection.\n> \n> Acknowledgements: This work is partially supported by ONR N00014-13-1-0720, NSF IIS-1338054, and The Allen Distinguished Investigator Award.\n\n---\n\n**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ## 1. Introduction\n> \n> Humans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general purpose, responsive robotic systems.\n> \n> Current detection systems repurpose classifiers to perform detection. To detect an object, these systems take a classifier for that object and evaluate it at various locations and scales in a test image. Systems like deformable parts models (DPM) use a sliding window appr\n\n---\n\n**b2bd5005-b3c6-4056-bee4-62344654e63e**\n\n> ## 7. Conclusion\n> \n> In this work, we propose a real-time end-to-end detector, called RT-DETR, which successfully extends DETR to the real-time detection scenario and achieves state-of-the-art performance. RT-DETR includes two key enhancements: an efficient hybrid encoder that expeditiously processes multi-scale features, and the uncertainty-minimal query selection that improves the quality of initial object queries. Furthermore, RT-DETR supports flexible speed tuning without retraining and eliminates the inconvenience caused by two NMS thresholds, facilitating its practical application. RT-DETR, along with its model scaling strategy, broadens the technical approach to real-time object detection, offering new possibilities beyond YOLO for diverse real-time scenarios. We hope that RT-DETR can\n\n---\n\n**b2bd5005-b3c6-4056-bee4-62344654e63e**\n\n> ## Abstract\n> \n> The YOLO series has become the most popular framework for real-time object detection due to its reasonable trade-off between speed and accuracy. However, we observe that the speed and accuracy of YOLOs are negatively affected by the NMS. Recently, end-to-end Transformer-based detectors (DETRs) have provided an alternative to eliminating NMS. Nevertheless, the high computational cost limits their practicality and hinders them from fully exploiting the advantage of excluding NMS. In this paper, we propose the Real-Time DEtection TRansformer (RT-DETR), the first real-time end-to-end object detector to our best knowledge that addresses the above dilemma. We build RT-DETR in two steps, drawing on the advanced DETR: first we focus on maintaining accuracy while improving speed, follo\n\n---\n\n**b2bd5005-b3c6-4056-bee4-62344654e63e**\n\n> ## 1. Introduction\n> \n> Real-time object detection is an important area of research and has a wide range of applications, such as object tracking [40], video surveillance [26], and autonomous driving [2], etc. Existing real-time detectors generally adopt the CNN-based architecture, the most famous of which is the YOLO detectors [1, 9–11, 14, 15, 24, 28, 35, 37] due to their reasonable trade-off between speed and accuracy. However, these detectors typically require Non-Maximum Suppression (NMS) for post-processing, which not only slows down the inference speed but also introduces hyperparameters that cause instability in both the speed and accuracy. Moreover, considering that different scenarios place different emphasis on recall and accuracy, it is necessary to carefully select the appropriate\n\n---\n\n**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ## 4. Experiments\n> \n> First we compare YOLO with other real-time detection systems on PASCAL VOC 2007. To understand the differences between YOLO and R-CNN variants we explore the errors on VOC 2007 made by YOLO and Fast R-CNN, one of the highest performing versions of R-CNN [14]. Based on the different error profiles we show that YOLO can be used to rescore Fast R-CNN detections and reduce the errors from background false positives, giving a significant performance boost. We also present VOC 2012 results and compare mAP to current state-of-the-art methods. Finally, we show that YOLO generalizes to new domains better than other detectors on two artwork datasets.\n> \n> ### 4.1. Comparison to Other Real-Time Systems\n> \n> Many research efforts in object detection focus on making standard detection pipeli\n\n---\n\n**da37b10b-f5e6-4b74-9659-cc66e4abec26**\n\n> ### 4.1. Comparison to Other Real-Time Systems\n> \n> Many research efforts in object detection focus on making standard detection pipelines fast. [5] [38] [31] [14] [17] [28] However, only Sadeghi et al. actually produce a detection system that runs in real-time (30 frames per second or better) [31]. We compare YOLO to their GPU implementation of DPM which runs either at 30Hz or 100Hz. While the other efforts don’t reach the real-time milestone we also compare their relative mAP and speed to examine the accuracy-performance tradeoffs available in object detection systems.\n> \n> Fast YOLO is the fastest object detection method on PASCAL; as far as we know, it is the fastest extant object detector. With 52.7% mAP, it is more than twice as accurate as prior work on real-time detection. YOLO pushes mAP",
+        "citations": [
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+            "excerpt": "## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n\nOur unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared"
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+            "excerpt": "## 6. Conclusion\n\nWe introduce YOLO, a unified model for object detection. Our model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly corresponds to detection performance and the entire model is trained jointly.\n\nFast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection. YOLO also generalizes well to new domains making it ideal for applications that rely on fast, robust object detection.\n\nAcknowledgements: This work is partially supported by ONR N00014-13-1-0720, NSF IIS-1338054, and The Allen Distinguished Investigator Award."
+          },
+          {
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+            "excerpt": "## 1. Introduction\n\nHumans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general purpose, responsive robotic systems.\n\nCurrent detection systems repurpose classifiers to perform detection. To detect an object, these systems take a classifier for that object and evaluate it at various locations and scales in a test image. Systems like deformable parts models (DPM) use a sliding window appr"
+          },
+          {
+            "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+            "chunk_id": "41b6ee18d8f45b56e94e869e932731a425c591b54e1ed8c9613eb29e720ccf84",
+            "excerpt": "## 7. Conclusion\n\nIn this work, we propose a real-time end-to-end detector, called RT-DETR, which successfully extends DETR to the real-time detection scenario and achieves state-of-the-art performance. RT-DETR includes two key enhancements: an efficient hybrid encoder that expeditiously processes multi-scale features, and the uncertainty-minimal query selection that improves the quality of initial object queries. Furthermore, RT-DETR supports flexible speed tuning without retraining and eliminates the inconvenience caused by two NMS thresholds, facilitating its practical application. RT-DETR, along with its model scaling strategy, broadens the technical approach to real-time object detection, offering new possibilities beyond YOLO for diverse real-time scenarios. We hope that RT-DETR can"
+          }
+        ],
+        "warnings": [
+          "agent_finished_without_final_answer_tool",
+          "answer_salvaged_from_quote_candidates"
+        ],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['minimal_bundle_ready', 'any_specialist_payload'], 'budget_hint': None, 'reason",
+              "question_features": "{'raw_question': 'Compare two distinct works in ws-pilot-od on their approach to real-time object detection: structure as balanced comparison (similarities and differences) and cite evidence for each "
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "workspace_dual_evidence_first_hop",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "budget_exhausted"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "papers",
+              "list_limit": "2"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "real-time object detection",
+              "workspace_id": "ws-pilot-od",
+              "limit": "2"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "idea_search",
+            "args_summary": {
+              "query": "real-time object detection approaches",
+              "kinds": "['chunk']",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "5"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": true,
+            "error": null
+          },
+          {
+            "step": 4,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 5,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "real-time object detection",
+              "limit": "2"
+            },
+            "row_count": 2,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 6,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 7,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "approach to real-time object detection in YOLO",
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 8,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "approach to real-time object detection in RT-DETR",
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 9,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "differences in accuracy and speed between YOLO and RT-DETR",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 10,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "impact of NMS on YOLO and how RT-DETR eliminates it",
+              "workspace_id": "ws-pilot-od",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 11,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "RT-DETR hybrid encoder and query selection",
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+              "top_k": "3"
+            },
+            "row_count": 3,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 12,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "flexible speed tuning in RT-DETR",
+              "work_id": "b2bd5005-b3c6-4056-bee4-62344654e63e",
+              "top_k": "2"
+            },
+            "row_count": 2,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → workspace_inspect → find_works → idea_search → paper_profile → find_works → paper_profile → paper_quote_search → paper_quote_search → paper_quote_search → paper_quote_search → paper_quote_search → paper_quote_search",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 192968,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 3,
+          "completeness": 3,
+          "groundedness": 4,
+          "synthesis_quality": 2,
+          "usefulness": 2,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [
+          "ignored_requested_compare"
+        ],
+        "weighted_score": 3.0
+      },
+      "pairwise": {
+        "winner": "baseline",
+        "confidence": "high",
+        "rationale": "The baseline provides a well-structured, balanced comparison of YOLO and RT-DETR with clear sections on similarities and differences, supported by relevant quoted evidence from both works. It synthesizes information into a coherent analysis, fulfilling the user's request for a comparative structure. The candidate merely lists raw excerpts from both papers without any synthesis, structure, or explicit comparison, failing to meet the required compare structure. While it includes citations, it does not integrate them into a narrative, making it significantly less useful and incomplete as a comparative analysis."
+      },
+      "passed": false,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    },
+    {
+      "case_id": "mini_relation_tracing_01",
+      "family": "relation_tracing",
+      "question": "In ws-pilot-od, what papers cite the YOLOv1 work and what relation path would you use to explain the citation chain briefly?",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": false,
+      "notes": [
+        "judge_mode:llm"
+      ],
+      "timings": {
+        "baseline_wall_s": 10.477,
+        "candidate_wall_s": 12.448,
+        "judge_heuristic_wall_s": 0.0,
+        "judge_llm_wall_s": 28.887,
+        "case_wall_s": 51.812
+      },
+      "baseline": {
+        "answer": "The requested information cannot be retrieved because the `find_works` tool is not accessible in this environment, preventing identification of the YOLOv1 paper by title. Without the Work ID of YOLOv1, citation analysis via `edge_search` or `cypher_query` is not possible. Please provide the Work ID or internal reference to proceed.",
+        "citations": [],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "graph_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'graph_agent', 'expected_completion': ['graph_traversal_needed', 'any_specialist_payload'], 'budget_hint': None, 'reason':",
+              "question_features": "{'raw_question': 'In ws-pilot-od, what papers cite the YOLOv1 work and what relation path would you use to explain the citation chain briefly?', 'normalized_question': 'in ws-pilot-od, what papers cit"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "graph_agent",
+              "reason": "coordinator_route_hint",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "graph_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "route_plan_step",
+              "budget_left": 11,
+              "decision_source": "route_plan"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "YOLOv1"
+            },
+            "row_count": null,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "The requested information cannot be retrieved because the `find_works` tool is not accessible in this environment, preventing identification of the YOLOv1 paper by title. Without the Work ID of YOLOv1",
+              "citations": "[]"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → find_works → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 10016,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 5
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.05
+      },
+      "candidate": {
+        "answer": "Не удалось найти работы, цитирующие YOLOv1, поскольку инструмент `find_works` недоступен в текущей среде из-за ограничений прав доступа. Без возможности поиска по названию работы нельзя определить идентификатор YOLOv1 и проанализировать цепочку цитирований. Если вы предоставите внутренний идентификатор работы (Work ID) для YOLOv1, можно будет продолжить анализ.",
+        "citations": [],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "graph_agent",
+              "reason": "explicit_research_signal",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'graph_agent', 'expected_completion': ['graph_traversal_needed', 'any_specialist_payload'], 'budget_hint': None, 'reason':",
+              "question_features": "{'raw_question': 'In ws-pilot-od, what papers cite the YOLOv1 work and what relation path would you use to explain the citation chain briefly?', 'normalized_question': 'in ws-pilot-od, what papers cit"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "graph_agent",
+              "reason": "coordinator_route_hint",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "graph_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "reason": "route_plan_step",
+              "budget_left": 11,
+              "decision_source": "route_plan"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "find_works",
+            "args_summary": {
+              "query": "YOLOv1"
+            },
+            "row_count": null,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "Не удалось найти работы, цитирующие YOLOv1, поскольку инструмент `find_works` недоступен в текущей среде из-за ограничений прав доступа. Без возможности поиска по названию работы нельзя определить иде",
+              "citations": "[]"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          }
+        ],
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → find_works → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 12001,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 2,
+          "completeness": 2,
+          "groundedness": 2,
+          "synthesis_quality": 2,
+          "usefulness": 2,
+          "brevity_discipline": 3
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 2.05
+      },
+      "pairwise": {
+        "winner": "baseline",
+        "confidence": "high",
+        "rationale": "The baseline response is in English, clearly explaining the blocker (unavailable `find_works` tool) and the need for a Work ID to proceed. The candidate response is in Russian, which is inappropriate given the English user query, reducing its accessibility and usefulness. Both provide similar technical reasoning, but the baseline's language alignment and clarity make it significantly more useful and correct in context."
+      },
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    }
+  ]
+}

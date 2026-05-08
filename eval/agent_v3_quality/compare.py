@@ -25,11 +25,15 @@ def compare_reports(baseline_path: Path, candidate_path: Path) -> dict[str, Any]
         "pairwise_tie_rate",
         "hard_fail_count_baseline",
         "hard_fail_count_candidate",
+        "cases_with_any_branch_non_ok",
+        "all_passed",
     )
     deltas: dict[str, Any] = {}
     for k in keys:
         va, vb = sa.get(k), sb.get(k)
-        if isinstance(va, (int, float)) and isinstance(vb, (int, float)):
+        if isinstance(va, bool) or isinstance(vb, bool):
+            deltas[k] = {"before": va, "after": vb}
+        elif isinstance(va, (int, float)) and isinstance(vb, (int, float)):
             deltas[k] = round(float(vb) - float(va), 4)
         else:
             deltas[k] = {"before": va, "after": vb}

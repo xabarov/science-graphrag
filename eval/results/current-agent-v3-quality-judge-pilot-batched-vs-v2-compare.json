@@ -1,0 +1,25 @@
+{
+  "review_version": "agent-v3-quality-judge-v1",
+  "baseline_artifact": "eval/results/current-agent-v3-quality-judge-pilot-live-batched.json",
+  "candidate_artifact": "eval/results/current-agent-v3-quality-judge-pilot-live-v2.json",
+  "deltas": {
+    "mean_weighted_score_baseline": 0.4,
+    "mean_weighted_score_candidate": 0.2,
+    "mean_delta": -0.2,
+    "pairwise_candidate_win_rate": -0.1,
+    "pairwise_baseline_win_rate": 0.2,
+    "pairwise_tie_rate": -0.1,
+    "hard_fail_count_baseline": -2.0,
+    "hard_fail_count_candidate": -1.0,
+    "cases_with_any_branch_non_ok": {
+      "before": null,
+      "after": 0
+    },
+    "all_passed": {
+      "before": false,
+      "after": true
+    }
+  },
+  "case_count_before": 10,
+  "case_count_after": 10
+}

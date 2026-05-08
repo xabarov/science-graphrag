@@ -9,11 +9,16 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
 import httpx
 import typer
 
+from eval.agent_v3_quality.branch_outcome import (
+    aggregate_branch_outcomes,
+    branch_outcome_from_branch,
+)
 from eval.agent_v3_quality.case_loader import (
     discover_agent_v3_quality_case_dirs,
     load_case_gold,
@@ -33,6 +38,26 @@ from eval.agent_v3_quality.judge_metrics import summarize_suite
 from eval.bench_common import benchmark_run_metadata
 from science_graphrag.artifacts.benchmark_paths import REPO_ROOT
 from science_graphrag.config import get_settings
+
+PROGRESS_ENV = "SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_PROGRESS"
+HEARTBEAT_ENV = "SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_HEARTBEAT_S"
+DEFAULT_SUBPROCESS_HEARTBEAT_S = 20.0
+
+
+def _progress_enabled(explicit: bool) -> bool:
+    if explicit:
+        return True
+    return (os.environ.get(PROGRESS_ENV) or "").strip().lower() in {"1", "true", "yes"}
+
+
+def _progress_log(case_id: str, phase: str, **fields: Any) -> None:
+    """Stderr line for live suite runs (``--progress`` or env)."""
+
+    extra = " ".join(f"{k}={fields[k]!r}" for k in sorted(fields))
+    line = f"[agent_v3_quality] case={case_id} phase={phase}"
+    if extra:
+        line += f" {extra}"
+    print(line, file=sys.stderr, flush=True)
 
 
 def _agent_live_headers() -> dict[str, str]:
@@ -89,6 +114,7 @@ def _run_subprocess_agent(
     max_tool_calls: int,
     *,
     timeout_s: float,
+    heartbeat_s: float | None = None,
 ) -> dict[str, Any]:
     req = {
         "question": question,
@@ -111,6 +137,9 @@ def _run_subprocess_agent(
             runtime,
             tmp_path,
         ]
+        child_env = os.environ.copy()
+        if isinstance(heartbeat_s, (int, float)) and heartbeat_s > 0:
+            child_env[HEARTBEAT_ENV] = str(float(heartbeat_s))
         proc = subprocess.run(
             cmd,
             capture_output=True,
@@ -118,7 +147,7 @@ def _run_subprocess_agent(
             cwd=str(REPO_ROOT),
             timeout=timeout_s,
             check=False,
-            env=os.environ.copy(),
+            env=child_env,
         )
     except subprocess.TimeoutExpired as exc:
         return {
@@ -200,7 +229,7 @@ def _mock_branches(
     return baseline, candidate
 
 
-def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
+def run_agent_branches_for_case(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
     case_dir: Path,
     *,
     baseline_runtime: str,
@@ -212,9 +241,22 @@ def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
     allow_http_single_base: bool = False,
     max_tool_calls: int,
     subprocess_timeout_s: float,
-    llm_judge: bool,
-) -> dict[str, Any]:
-    """Execute baseline and candidate branches, then attach pairwise judge output."""
+    progress: bool = False,
+) -> tuple[
+    dict[str, Any],
+    str,
+    str,
+    str | None,
+    dict[str, Any],
+    dict[str, Any],
+    list[str],
+    dict[str, float],
+]:
+    """Run baseline and candidate agent branches only (no pairwise judge).
+
+    Returns ``(gold, question, case_id, workspace_id, baseline, candidate, notes, timings)``
+    where ``timings`` includes ``baseline_wall_s`` / ``candidate_wall_s`` when applicable.
+    """
 
     gold = load_case_gold(case_dir)
     question = load_case_question(case_dir)
@@ -222,7 +264,10 @@ def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
     ws_raw = gold.get("workspace_id")
     workspace_id = str(ws_raw).strip() if ws_raw not in (None, "", "null") else None
 
+    prog = _progress_enabled(progress)
+
     notes: list[str] = []
+    timings: dict[str, float] = {}
     if mock_agent:
         baseline, candidate = _mock_branches(case_id, baseline_runtime, candidate_runtime)
     elif transport == "http":
@@ -236,9 +281,21 @@ def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
                 "pass --candidate-api-base-url (preferred) or explicitly allow this mode via "
                 "--allow-http-single-base",
             )
+        if prog:
+            _progress_log(case_id, "baseline_start", branch="baseline", runtime=baseline_runtime)
+        t_b0 = perf_counter()
         b_data = _run_http_agent(
             api_base_url, question, workspace_id, timeout_s=subprocess_timeout_s
         )
+        timings["baseline_wall_s"] = round(perf_counter() - t_b0, 3)
+        if prog:
+            _progress_log(
+                case_id,
+                "baseline_done",
+                branch="baseline",
+                elapsed_s=timings["baseline_wall_s"],
+                has_error=bool(b_data.get("error")),
+            )
         if same_base:
             notes.append(
                 "transport_http_single_base: baseline and candidate hit the same server; "
@@ -246,10 +303,35 @@ def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
                 "SCIENCE_GRAPHRAG_AGENT_RUNTIME or pass --candidate-api-base-url.",
             )
             c_data = copy.deepcopy(b_data)
+            timings["candidate_wall_s"] = 0.0
+            if prog:
+                _progress_log(
+                    case_id,
+                    "candidate_skipped",
+                    reason="http_single_base_deepcopy",
+                    elapsed_s=0.0,
+                )
         else:
+            if prog:
+                _progress_log(
+                    case_id,
+                    "candidate_start",
+                    branch="candidate",
+                    runtime=candidate_runtime,
+                )
+            t_c0 = perf_counter()
             c_data = _run_http_agent(
                 cand_base, question, workspace_id, timeout_s=subprocess_timeout_s
             )
+            timings["candidate_wall_s"] = round(perf_counter() - t_c0, 3)
+            if prog:
+                _progress_log(
+                    case_id,
+                    "candidate_done",
+                    branch="candidate",
+                    elapsed_s=timings["candidate_wall_s"],
+                    has_error=bool(c_data.get("error")),
+                )
         baseline = _branch_from_agent_payload(
             b_data, runtime_label=baseline_runtime, error=b_data.get("error")
         )
@@ -267,23 +349,98 @@ def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
                 return br
             return _branch_from_agent_payload(raw, runtime_label=runtime_label)
 
+        if prog:
+            _progress_log(case_id, "baseline_start", branch="baseline", runtime=baseline_runtime)
+        t_b0 = perf_counter()
         b_raw = _run_subprocess_agent(
             baseline_runtime,
             question,
             workspace_id,
             max_tool_calls,
             timeout_s=subprocess_timeout_s,
+            heartbeat_s=(DEFAULT_SUBPROCESS_HEARTBEAT_S if prog else None),
         )
+        timings["baseline_wall_s"] = round(perf_counter() - t_b0, 3)
+        if prog:
+            _progress_log(
+                case_id,
+                "baseline_done",
+                branch="baseline",
+                elapsed_s=timings["baseline_wall_s"],
+                has_error=bool((b_raw.get("error") or "").strip()),
+            )
+        if prog:
+            _progress_log(case_id, "candidate_start", branch="candidate", runtime=candidate_runtime)
+        t_c0 = perf_counter()
         c_raw = _run_subprocess_agent(
             candidate_runtime,
             question,
             workspace_id,
             max_tool_calls,
             timeout_s=subprocess_timeout_s,
+            heartbeat_s=(DEFAULT_SUBPROCESS_HEARTBEAT_S if prog else None),
         )
+        timings["candidate_wall_s"] = round(perf_counter() - t_c0, 3)
+        if prog:
+            _progress_log(
+                case_id,
+                "candidate_done",
+                branch="candidate",
+                elapsed_s=timings["candidate_wall_s"],
+                has_error=bool((c_raw.get("error") or "").strip()),
+            )
         baseline = _pack_subprocess(b_raw, baseline_runtime)
         candidate = _pack_subprocess(c_raw, candidate_runtime)
 
+    return gold, question, case_id, workspace_id, baseline, candidate, notes, timings
+
+
+def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
+    case_dir: Path,
+    *,
+    baseline_runtime: str,
+    candidate_runtime: str,
+    mock_agent: bool,
+    transport: str,
+    api_base_url: str | None,
+    candidate_api_base_url: str | None = None,
+    allow_http_single_base: bool = False,
+    max_tool_calls: int,
+    subprocess_timeout_s: float,
+    llm_judge: bool,
+    progress: bool = False,
+) -> dict[str, Any]:
+    """Execute baseline and candidate branches, then attach pairwise judge output."""
+
+    prog = _progress_enabled(progress)
+    t_case0 = perf_counter()
+    if prog:
+        _progress_log(
+            case_dir.name,
+            "case_start",
+            transport=transport,
+            mock_agent=mock_agent,
+        )
+
+    gold, question, case_id, workspace_id, baseline, candidate, notes, timings = (
+        run_agent_branches_for_case(
+            case_dir,
+            baseline_runtime=baseline_runtime,
+            candidate_runtime=candidate_runtime,
+            mock_agent=mock_agent,
+            transport=transport,
+            api_base_url=api_base_url,
+            candidate_api_base_url=candidate_api_base_url,
+            allow_http_single_base=allow_http_single_base,
+            max_tool_calls=max_tool_calls,
+            subprocess_timeout_s=subprocess_timeout_s,
+            progress=progress,
+        )
+    )
+
+    if prog:
+        _progress_log(case_id, "judge_start", llm_judge=llm_judge)
+    t_j0 = perf_counter()
     judged = run_pairwise_judge_for_case(
         question=question,
         gold=gold,
@@ -291,6 +448,18 @@ def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
         candidate=candidate,
         use_llm=llm_judge,
     )
+    timings["judge_wall_s"] = round(perf_counter() - t_j0, 3)
+    timings["case_wall_s"] = round(perf_counter() - t_case0, 3)
+    if prog:
+        _progress_log(
+            case_id,
+            "judge_done",
+            elapsed_s=timings["judge_wall_s"],
+            passed=judged["passed"],
+            winner=(judged.get("pairwise") or {}).get("winner"),
+        )
+        _progress_log(case_id, "case_done", elapsed_s=timings["case_wall_s"])
+
     row: dict[str, Any] = {
         "case_id": case_id,
         "family": gold.get("family"),
@@ -301,10 +470,13 @@ def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
         "transport": transport,
         "mock_agent": mock_agent,
         "notes": notes,
+        "timings": timings,
         "baseline": judged["baseline"],
         "candidate": judged["candidate"],
         "pairwise": judged["pairwise"],
         "passed": judged["passed"],
+        "baseline_outcome": branch_outcome_from_branch(judged["baseline"]),
+        "candidate_outcome": branch_outcome_from_branch(judged["candidate"]),
     }
     err_note = baseline.get("error") or candidate.get("error")
     if err_note:
@@ -318,10 +490,18 @@ def _summarize_case(row: dict[str, Any]) -> str:
     cid = row.get("case_id")
     pw = row.get("pairwise") or {}
     passed = row.get("passed")
+    frag = {
+        "pairwise": pw,
+        "baseline_outcome": row.get("baseline_outcome"),
+        "candidate_outcome": row.get("candidate_outcome"),
+        "timings": row.get("timings"),
+    }
+    if row.get("execution_error"):
+        frag["execution_error"] = row.get("execution_error")
     return (
         f"## {cid} — {'PASS' if passed else 'FAIL'}\n\n"
         f"winner={pw.get('winner')} confidence={pw.get('confidence')}\n\n"
-        f"```json\n{json.dumps({'pairwise': pw}, indent=2)}\n```\n"
+        f"```json\n{json.dumps(frag, indent=2)}\n```\n"
     )
 
 
@@ -370,6 +550,14 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
             "(requires SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY)."
         ),
     ),
+    progress: bool = typer.Option(
+        False,
+        "--progress",
+        help=(
+            "Log per-case stderr phases (baseline/candidate/judge). "
+            f"Also enabled when {PROGRESS_ENV}=1."
+        ),
+    ),
     max_tool_calls: int = typer.Option(12, "--max-tool-calls"),
     subprocess_timeout_s: float = typer.Option(600.0, "--subprocess-timeout-s"),
     json_out: Path | None = typer.Option(None, "--json-out"),
@@ -409,10 +597,12 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
                 max_tool_calls=max_tool_calls,
                 subprocess_timeout_s=subprocess_timeout_s,
                 llm_judge=llm_judge,
+                progress=progress,
             ),
         )
 
     summary = summarize_suite(reports)
+    summary.update(aggregate_branch_outcomes(reports))
     meta = benchmark_run_metadata(settings)
     meta.update(
         {

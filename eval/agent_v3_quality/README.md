@@ -27,6 +27,16 @@ science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_q
   --tier judge_mini --transport subprocess \
   --json-out eval/results/current-agent-v3-quality-judge-mini.json
 
+# Live with stderr progress (per case: baseline / candidate / judge phases)
+science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite \
+  --tier judge_mini --transport subprocess --progress \
+  --json-out eval/results/current-agent-v3-quality-judge-mini.json
+# Same via env: SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_PROGRESS=1
+# In progress mode subprocess children also emit heartbeat lines while agent.run is executing.
+
+# Heavier tiers: raise per-branch timeout (default 600s CLI) to cut subprocess_timeout noise
+#   --tier judge_pilot --subprocess-timeout-s 600 --progress
+
 # Optional LLM rubric judge
 science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite \
   --tier judge_mini --mock-agent --llm-judge \
@@ -48,5 +58,15 @@ science-graphrag-agent-v3-quality-compare \
   --json-out eval/results/current-agent-v3-quality-judge-compare.json \
   --md-out eval/results/current-agent-v3-quality-judge-compare.md
 ```
+
+## LLM vs heuristic calibration (small subset)
+
+From repo root (requires live stack + `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`; one agent run per case, then heuristic + LLM judge):
+
+```bash
+AGENT_LIVE_BASE=dev .venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py
+```
+
+Optional: `AGENT_V3_QUALITY_CALIBRATION_TIMEOUT_S=600` — per-branch subprocess timeout for branches inside each case.
 
 This lane is **advisory only** and does not feed `decision_gate` until an explicit promotion review.

@@ -565,12 +565,21 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** All three subagent runtimes import shared helpers; no behavior change in contract tests.
 - **Raised:** 2026-05-07 (Train T4 implementation pass)
 
-### [OPEN] Add heartbeat/progress telemetry to `agent_v3_quality` live runner
+### [DONE] Add heartbeat/progress telemetry to `agent_v3_quality` live runner
 - **Area:** `eval/agent_v3_quality/runner.py`, `eval/agent_v3_quality/one_shot.py`
 - **Issue:** Live suite runs can stay silent for minutes on slow cases; при деградации upstream (наблюдались `CLOSE_WAIT` в child `one_shot`) оператор не видит progress до самого конца и сложно отличить «долго считает» от hang.
 - **Proposal:** Add per-case start/finish logs (case_id + runtime + elapsed), optional heartbeat every N seconds while subprocess branch is running, and structured timeout/error counters in top-level summary.
 - **Acceptance:** During live `--suite` runs terminal output updates at least once per case (or heartbeat interval), hangs are observable without manual `ps/lsof`, and JSON summary contains explicit timeout/hang diagnostics.
+- **Done (2026-05-09, Wave B validation slice):** `--progress` / `SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_PROGRESS=1` stderr phases per case (`baseline_start` / `baseline_done` / `candidate_*` / `judge_*`); per-row `timings`; `baseline_outcome` / `candidate_outcome` (`branch_outcome_v1`) + `aggregate_branch_outcomes` merged into suite `summary`.
+- **Done (2026-05-09, completion):** in-process heartbeat inside `one_shot` via `SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_HEARTBEAT_S` (прокидывается из runner при `--progress`) — во время долгой ветки subprocess пишет stderr heartbeat с elapsed, что делает зависания наблюдаемыми до общего timeout.
 - **Raised:** 2026-05-08 (Wave B live-run audit)
+
+### [OPEN] Split `agent_v3_quality/runner.py` orchestration and reporting seams
+- **Area:** `eval/agent_v3_quality/runner.py`, `eval/agent_v3_quality/branch_outcome.py`
+- **Issue:** После validation hardening `runner.py` вырос до ~650 LoC и смешивает branch transport execution, progress/heartbeat policy, case row assembly, suite summary merge и CLI rendering.
+- **Proposal:** Вынести `run_agent_branches_for_case` + subprocess/http adapters в `runner_branches.py`, markdown/json rendering в `runner_report.py`, оставив в `runner.py` thin CLI orchestration.
+- **Acceptance:** `runner.py` < ~400 LoC; поведение CLI и артефактов не меняется (golden tests на summary keys + compare output).
+- **Raised:** 2026-05-09 (Wave B validation quality pass)
 
 ### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)
 - **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.

@@ -62,8 +62,11 @@ science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_q
   --md-out eval/results/current-agent-v3-quality-judge-mini.md
 # Live subprocess (нужны Neo4j/Qdrant/ключи; каждый runtime — отдельный процесс):
 # science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite \
-#   --tier judge_mini --transport subprocess \
+#   --tier judge_mini --transport subprocess --progress \
 #   --json-out eval/results/current-agent-v3-quality-judge-mini.json
+# Для judge_pilot рекомендуется больший per-branch timeout (например 600s) и stderr-фазы:
+#   ... --tier judge_pilot --transport subprocess --progress --subprocess-timeout-s 600 ...
+# Либо без флага: SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_PROGRESS=1
 # Сравнение двух снимков:
 # science-graphrag-agent-v3-quality-compare \
 #   eval/results/current-agent-v3-quality-judge-pilot-prev.json \

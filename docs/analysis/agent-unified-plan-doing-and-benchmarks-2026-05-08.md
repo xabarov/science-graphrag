@@ -217,6 +217,12 @@ Delivered:
 
 **Статус:** реализовано в репозитории (advisory lane `agent_v3_quality_judge_v1`); live прогон — по runbook.
 
+**Validation step (2026-05-09, operator evidence)**
+
+- **Runner hardening:** `--progress` / `SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_PROGRESS=1` — stderr-фазы по кейсу (`baseline_*`, `candidate_*`, `judge_*`) + in-process heartbeat в `one_shot` для долгих веток; в JSON suite — `baseline_outcome` / `candidate_outcome` (`branch_outcome_v1`) и rollup `cases_with_any_branch_non_ok` + счётчики статусов в `summary` (см. `eval/agent_v3_quality/branch_outcome.py`).
+- **Повторный live `judge_pilot`:** `eval/results/current-agent-v3-quality-judge-pilot-live-v2.json` при `--subprocess-timeout-s 600` — `all_passed=true`, **0** веток с non-ok (против 3 execution-error кейсов в более раннем batched snapshot `…-pilot-live-batched.json` на timeout 120s). Сводка сравнения: `eval/results/current-agent-v3-quality-judge-pilot-batched-vs-v2-compare.{json,md}` — метрики pairwise/weighted **варьируются** между прогонами (ожидаемо при live LLM), зато **наблюдаемость и отсутствие batch-abort** подтверждены.
+- **LLM-judge calibration subset (4 кейса):** `scripts/run_agent_v3_quality_llm_calibration_subset.py` → `eval/results/current-agent-v3-quality-judge-llm-calibration-subset.{json,md}`. На текущем срезе `agreement_winner_rate=0.5` (расхождение на `mini_dual_evidence_compare_01` и `mini_relation_tracing_01`) — **heuristic lane остаётся быстрым smoke**, LLM-judge — для продуктового среза и калибровки; promotion до жёсткого gate без стабилизации judge-variance не делаем.
+
 **Код и фикстуры**
 
 - Пакет: [`eval/agent_v3_quality/`](../../eval/agent_v3_quality/) (`runner`, `judge`, `judge_metrics`, `compare`, `one_shot`, `judge_prompt_v1.md`, [`README.md`](../../eval/agent_v3_quality/README.md)).
