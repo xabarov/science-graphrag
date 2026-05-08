@@ -5,16 +5,28 @@ from __future__ import annotations
 import functools
 import json
 import re
-from dataclasses import dataclass
 from typing import Any, Sequence
 
-from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.tools import BaseTool
 
 from science_graphrag.agent.tool_manifest import (
     ToolManifestEntry,
     compact_catalog_lines,
     manifest_by_name,
+)
+from science_graphrag.agent.tool_search_discovery_carryover import (
+    discovered_tool_names_from_lc_messages as _discovered_tool_names_from_lc_messages,
+)
+from science_graphrag.agent.tool_search_discovery_carryover import (
+    shortlist_apply_discovery_and_session_carryover,
+)
+from science_graphrag.agent.tool_search_discovery_carryover import (
+    tool_call_entry_name as _tool_call_entry_name,
+)
+from science_graphrag.agent.tool_search_strict_deferred import (
+    RulesShortlistMetaCtx,
+    apply_strict_deferred_activation_filter,
+    extend_rules_meta_strict_telemetry,
 )
 from science_graphrag.agent.tool_selector_hybrid import maybe_llm_rerank_shortlist
 from science_graphrag.config import Settings
@@ -86,60 +98,6 @@ _USER_STRUCTURED_ANSWER_RE = re.compile(
 # Low-signal gate: below this top score, use full catalog (Habr Jun 2026 ablation baseline).
 _RULE_TOOL_SEARCH_LOW_SIGNAL_FLOOR = 1.5
 
-# Meta / routing tools: never treat as catalog discoveries from message history (Epic C0).
-_MESSAGE_DISCOVERY_EXCLUDE = frozenset(
-    {
-        "route_to_specialist",
-        "session_init",
-        "coordinator_gate",
-        "coordinator_gate_v0",
-    }
-)
-
-
-def _tool_call_entry_name(tc: Any) -> str:
-    """Resolve tool name from ``AIMessage.tool_calls`` entry (dict or LangChain object)."""
-    if isinstance(tc, dict):
-        return str(tc.get("name") or "").strip()
-    return str(getattr(tc, "name", "") or "").strip()
-
-
-def discovered_tool_names_from_lc_messages(
-    messages: Sequence[Any] | None,
-    *,
-    cap: int,
-) -> list[str]:
-    """Collect tool names from LangGraph history in message order (deduped, capped).
-
-    Reads ``AIMessage.tool_calls`` and ``ToolMessage.name``. Deterministic: first
-    occurrence wins; caps at ``cap`` names.
-    """
-    if not messages or cap <= 0:
-        return []
-    seen: set[str] = set()
-    ordered: list[str] = []
-    for msg in messages:
-        if isinstance(msg, AIMessage):
-            for tc in getattr(msg, "tool_calls", None) or []:
-                name = _tool_call_entry_name(tc)
-                if not name or name in _MESSAGE_DISCOVERY_EXCLUDE:
-                    continue
-                if name not in seen:
-                    seen.add(name)
-                    ordered.append(name)
-                if len(ordered) >= cap:
-                    return ordered
-        elif isinstance(msg, ToolMessage):
-            name = str(getattr(msg, "name", "") or "").strip()
-            if not name or name in _MESSAGE_DISCOVERY_EXCLUDE:
-                continue
-            if name not in seen:
-                seen.add(name)
-                ordered.append(name)
-            if len(ordered) >= cap:
-                return ordered
-    return ordered
-
 
 def strip_tool_search_context_wrappers(text: str) -> str:
     """Strip CH4 memory/digest XML blocks so scoring uses the user's question only."""
@@ -158,6 +116,15 @@ def _norm_question(q: str) -> str:
     return (q or "").strip().lower()
 
 
+def discovered_tool_names_from_lc_messages(
+    messages: Sequence[Any] | None,
+    *,
+    cap: int,
+) -> list[str]:
+    """Backward-compatible re-export for tests and external callers."""
+    return _discovered_tool_names_from_lc_messages(messages, cap=cap)
+
+
 _RETRIEVAL_CORE_CATALOG = (
     "workspace_inspect",
     "paper_profile",
@@ -165,11 +132,6 @@ _RETRIEVAL_CORE_CATALOG = (
 )
 _RETRIEVAL_OPTIONAL_BASELINE = ("idea_search", "paper_quote_search")
 _RETRIEVAL_CORE_EXEMPT: frozenset[str] = frozenset(_RETRIEVAL_CORE_CATALOG)
-
-
-def _strict_deferred_requires_discovery(name: str) -> bool:
-    meta = _manifest_map().get(name)
-    return bool(meta and meta.strict_deferred_requires_discovery)
 
 
 def _ensure_final_answer_in_picked(picked: list[BaseTool], tools: list[BaseTool]) -> None:
@@ -207,72 +169,9 @@ def _merge_retrieval_catalog_baseline(
     return skipped
 
 
-def _carryover_tool_names_from_session(session: dict[str, Any] | None, *, cap: int) -> list[str]:
-    if not isinstance(session, dict):
-        return []
-    caps = session.get("capsules") or {}
-    if not isinstance(caps, dict):
-        return []
-    dt = caps.get("discovered_tools")
-    if not isinstance(dt, dict):
-        return []
-    raw = [str(x).strip() for x in (dt.get("recent_tools") or []) if str(x).strip()]
-    cap_n = max(0, int(cap))
-    if cap_n <= 0:
-        return []
-    return raw[-cap_n:]
-
-
-def _merge_carryover_into_picked(
-    picked: list[BaseTool],
-    tools: list[BaseTool],
-    carryover: list[str],
-) -> list[str]:
-    """Return list of carryover tool names that were merged into ``picked``."""
-    if not carryover:
-        return []
-    have = {getattr(t, "name", "") for t in picked}
-    merged: list[str] = []
-    by_name = {getattr(t, "name", ""): t for t in tools}
-    for nm in carryover:
-        if nm in have:
-            continue
-        hit = by_name.get(nm)
-        if hit is None:
-            continue
-        picked.append(hit)
-        have.add(nm)
-        merged.append(nm)
-    return merged
-
-
 def _sort_picked_like_registry_order(picked: list[BaseTool], tools: list[BaseTool]) -> None:
     index_by_name = {getattr(t, "name", ""): i for i, t in enumerate(tools)}
     picked.sort(key=lambda t: index_by_name.get(getattr(t, "name", ""), 10**9))
-
-
-def _shortlist_try_message_discovery_merge(
-    picked: list[BaseTool],
-    tools: list[BaseTool],
-    *,
-    lc_messages: Sequence[Any] | None,
-    settings: Settings,
-) -> tuple[list[str], list[str]]:
-    """Merge tools discovered in LangGraph history into ``picked`` (Epic C0)."""
-    if (
-        lc_messages is None
-        or not settings.agent_tool_search_message_discovery_enabled
-        or int(settings.agent_tool_search_message_discovery_cap) <= 0
-    ):
-        return [], []
-    names = discovered_tool_names_from_lc_messages(
-        lc_messages,
-        cap=int(settings.agent_tool_search_message_discovery_cap),
-    )
-    if not names:
-        return [], []
-    merged = _merge_carryover_into_picked(picked, tools, names)
-    return names, merged
 
 
 def _shortlist_needs_full_catalog_fallback(
@@ -291,59 +190,11 @@ def _shortlist_needs_full_catalog_fallback(
     return False, ""
 
 
-@dataclass(frozen=True, slots=True)
-class _RulesShortlistMetaCtx:
-    """Bundled knobs for ``tool_search_result`` metadata (rules path)."""
-
-    settings: Settings
-    top_score: float
-    score_band: float
-    specialist: str
-    for_single_agent: bool
-    carryover_merged: list[str]
-    carryover_names: list[str]
-    message_discovery_tools: list[str]
-    message_discovery_merged: list[str]
-    rules_matched_tools: list[str]
-    skipped_optional_baseline: list[str]
-    strict_removed_tools: list[str]
-    activation_policy: str
-
-
-def _extend_rules_meta_strict_telemetry(
-    meta_out: dict[str, Any],
-    ctx: _RulesShortlistMetaCtx,
-    names: list[str],
-) -> None:
-    """Append Train T1 strict-deferred diagnostics and activation counters."""
-    meta_out["activation_policy"] = ctx.activation_policy
-    deferred_candidates = [n for n in names if _strict_deferred_requires_discovery(n)]
-    if deferred_candidates:
-        meta_out["deferred_strict_candidates"] = deferred_candidates
-    msg_set = set(ctx.message_discovery_merged)
-    carry_set = set(ctx.carryover_merged)
-    rules_set = set(ctx.rules_matched_tools)
-    strict_in_picked = [n for n in names if _strict_deferred_requires_discovery(n)]
-    via_discovery = [
-        n for n in strict_in_picked if (n in msg_set or n in carry_set) and n not in rules_set
-    ]
-    meta_out["deferred_strict_in_shortlist_count"] = len(strict_in_picked)
-    meta_out["deferred_activated_via_message_or_carryover_count"] = len(via_discovery)
-    miss = len(ctx.skipped_optional_baseline) + len(ctx.strict_removed_tools)
-    meta_out["tool_search_miss_due_to_no_discovery"] = int(miss)
-    if strict_in_picked:
-        meta_out["deferred_tool_activation_rate"] = round(
-            len(via_discovery) / max(1, len(strict_in_picked)), 4
-        )
-    else:
-        meta_out["deferred_tool_activation_rate"] = None
-
-
 def _shortlist_build_rules_meta(
     picked: list[BaseTool],
     tools: list[BaseTool],
     *,
-    ctx: _RulesShortlistMetaCtx,
+    ctx: RulesShortlistMetaCtx,
     selector_extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Assemble ``tool_search_result`` metadata for the rules path."""
@@ -428,59 +279,13 @@ def _shortlist_build_rules_meta(
         meta_out["deferred_strict_skipped_optional_baseline"] = list(ctx.skipped_optional_baseline)
     if ctx.strict_removed_tools:
         meta_out["deferred_strict_removed_from_picked"] = list(ctx.strict_removed_tools)
-    _extend_rules_meta_strict_telemetry(meta_out, ctx, names)
+    extend_rules_meta_strict_telemetry(meta_out, ctx, names)
     if selector_extra:
         for k, v in selector_extra.items():
             if v is None:
                 continue
             meta_out[k] = v
     return meta_out
-
-
-def _shortlist_apply_discovery_and_session_carryover(
-    picked: list[BaseTool],
-    tools: list[BaseTool],
-    *,
-    lc_messages: Sequence[Any] | None,
-    session: dict[str, Any] | None,
-    settings: Settings,
-) -> tuple[list[str], list[str], list[str], list[str]]:
-    """Message-history merge then session carry-over; returns discovery + carryover lists."""
-    msg_tools, msg_merged = _shortlist_try_message_discovery_merge(
-        picked,
-        tools,
-        lc_messages=lc_messages,
-        settings=settings,
-    )
-    carryover_names = _carryover_tool_names_from_session(
-        session,
-        cap=int(settings.agent_discovered_tools_carryover_max),
-    )
-    carry_merged: list[str] = []
-    if settings.agent_discovered_tools_carryover_enabled and carryover_names:
-        carry_merged = _merge_carryover_into_picked(picked, tools, carryover_names)
-    return msg_tools, msg_merged, carryover_names, carry_merged
-
-
-def _apply_strict_deferred_activation_filter(
-    picked: list[BaseTool],
-    *,
-    rules_names: set[str],
-    message_merged: set[str],
-    carry_merged: set[str],
-    retrieval_core_exempt: frozenset[str],
-) -> tuple[list[BaseTool], list[str]]:
-    """Drop strict-deferred tools that lack a discovery/rule/core baseline path."""
-    allowed = rules_names | message_merged | carry_merged | retrieval_core_exempt
-    removed: list[str] = []
-    kept: list[BaseTool] = []
-    for t in picked:
-        nm = getattr(t, "name", "") or ""
-        if _strict_deferred_requires_discovery(nm) and nm not in allowed:
-            removed.append(nm)
-            continue
-        kept.append(t)
-    return kept, removed
 
 
 def _build_scored_tools_for_shortlist(
@@ -516,9 +321,7 @@ def _build_scored_tools_for_shortlist(
 from science_graphrag.agent.tool_search_scoring import (
     answer_class_tool_boost as _answer_class_tool_boost,
 )
-from science_graphrag.agent.tool_search_scoring import (
-    score_tool as _score_tool,
-)
+from science_graphrag.agent.tool_search_scoring import score_tool as _score_tool
 from science_graphrag.agent.tool_search_scoring import (
     score_tool_name_family_patterns as _score_tool_name_family_patterns,
 )
@@ -587,7 +390,7 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
         message_discovery_merged,
         carryover_names,
         carryover_merged,
-    ) = _shortlist_apply_discovery_and_session_carryover(
+    ) = shortlist_apply_discovery_and_session_carryover(
         picked,
         tools,
         lc_messages=lc_messages,
@@ -608,7 +411,7 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
         else frozenset()
     )
     if strict_on:
-        picked, strict_removed_tools = _apply_strict_deferred_activation_filter(
+        picked, strict_removed_tools = apply_strict_deferred_activation_filter(
             picked,
             rules_names=rules_names,
             message_merged=set(message_discovery_merged),
@@ -644,7 +447,7 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
     meta_out = _shortlist_build_rules_meta(
         picked,
         tools,
-        ctx=_RulesShortlistMetaCtx(
+        ctx=RulesShortlistMetaCtx(
             settings=settings,
             top_score=top_score,
             score_band=score_band,

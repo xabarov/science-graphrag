@@ -1,11 +1,15 @@
+"""Agent runtime facade.
+
+Wave A keeps this file as a thin orchestration layer while delegating
+answer-salvage, deadline handling, envelope warning synthesis, and post-turn
+hooks to dedicated seam modules.
+"""
+
 from __future__ import annotations
 
-import json
 import uuid
 from dataclasses import dataclass, field, replace
 from typing import Any
-
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 from science_graphrag.agent.chat_envelope import (
     build_chat_envelope,
@@ -13,22 +17,34 @@ from science_graphrag.agent.chat_envelope import (
     heuristic_answer_class,
 )
 from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
-from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
-from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
-from science_graphrag.agent.graph.errors import AgentGraphDeadlineExceeded
-from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadline
-from science_graphrag.agent.graph.partial_state_checkpoint import pop_latest_partial_state
+from science_graphrag.agent.deadline_salvage import invoke_agent_graph_with_deadline_partial
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
-from science_graphrag.agent.hooks import run_post_compact_hooks
+from science_graphrag.agent.runtime_answer_salvage import (
+    RUNTIME_FALLBACK_ANSWER,
+    agent_query_output_summary,
+    aggregate_agent_llm_usage,
+    coerce_optional_str,
+    extract_langgraph_answer,
+    extract_last_brief_from_messages,
+    resolve_langgraph_answer_with_salvage,
+    salvage_markdown_from_quote_candidates,
+)
+from science_graphrag.agent.runtime_envelope import collect_subagent_fork_warning_codes
+from science_graphrag.agent.runtime_post_turn import run_agent_post_turn_digest_and_hooks
+from science_graphrag.agent.runtime_subagent_collectors import (
+    collect_claim_verification_results,
+    collect_corpus_explore_results,
+    collect_research_plan_results,
+    collect_subagent_task_notifications,
+)
 from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
 from science_graphrag.agent.subagents.runtime import (
     build_subagent_runs_from_routing_log,
     merge_subagent_run_rows,
 )
-from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -40,452 +56,14 @@ from science_graphrag.observability.spans import (
 )
 from science_graphrag.observability.spans.decorators import MIME_TYPE_JSON
 
-
-def _collect_subagent_task_notifications(messages: list[Any]) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    for m in messages:
-        if not isinstance(m, HumanMessage):
-            continue
-        ak = getattr(m, "additional_kwargs", None) or {}
-        if not isinstance(ak, dict) or ak.get("kind") != "task_notification":
-            continue
-        inner = ak.get("task_notification")
-        if isinstance(inner, dict):
-            out.append(inner)
-    return out
-
-
-def _collect_claim_verification_results(messages: list[Any]) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    for m in messages:
-        if not isinstance(m, HumanMessage):
-            continue
-        ak = getattr(m, "additional_kwargs", None) or {}
-        if not isinstance(ak, dict) or ak.get("kind") != "claim_verification_result":
-            continue
-        inner = ak.get("claim_verification_result")
-        if isinstance(inner, dict):
-            out.append(inner)
-    return out
-
-
-def _collect_corpus_explore_results(messages: list[Any]) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    for m in messages:
-        if not isinstance(m, HumanMessage):
-            continue
-        ak = getattr(m, "additional_kwargs", None) or {}
-        if not isinstance(ak, dict) or ak.get("kind") != "corpus_explore_result":
-            continue
-        inner = ak.get("corpus_explore_result")
-        if isinstance(inner, dict):
-            out.append(inner)
-    return out
-
-
-def _collect_research_plan_results(messages: list[Any]) -> list[dict[str, Any]]:
-    out: list[dict[str, Any]] = []
-    for m in messages:
-        if not isinstance(m, HumanMessage):
-            continue
-        ak = getattr(m, "additional_kwargs", None) or {}
-        if not isinstance(ak, dict) or ak.get("kind") != "research_plan_result":
-            continue
-        inner = ak.get("research_plan_result")
-        if isinstance(inner, dict):
-            out.append(inner)
-    return out
-
-
-def _coerce_optional_str(value: object) -> str | None:
-    if not isinstance(value, str):
-        return None
-    s = value.strip()
-    return s or None
-
-
-def _agent_query_output_summary(
-    *,
-    answer_class: str,
-    tool_trace: list[ToolCallTrace],
-    warnings: list[str],
-    citations: list[dict[str, Any]],
-    routing_log: list[dict[str, Any]] | None,
-    budget_exhausted_hint: bool | None = None,
-) -> dict[str, Any]:
-    routing = routing_log or []
-    budget_exhausted = bool(budget_exhausted_hint) or any(
-        isinstance(x, dict) and str(x.get("reason") or "") == "budget_exhausted" for x in routing
-    )
-    return {
-        "answer_class": answer_class,
-        "tool_call_count": len(tool_trace),
-        "warning_codes": [str(w) for w in warnings][:24],
-        "citation_count": len(citations),
-        "budget_exhausted": budget_exhausted,
-    }
-
-
-_GRAPH_TOOL_SALVAGE_PREFIX = (
-    "[Graph tool output; call final_answer to complete the turn for the user.]\n"
-)
-_RUNTIME_FALLBACK_ANSWER = (
-    "I could not produce a complete final answer for this turn. "
-    "Please rephrase the request or narrow the scope."
-)
-
-
-def _tool_message_payload_dict(msg: ToolMessage) -> dict[str, Any] | None:
-    raw = msg.content
-    if not isinstance(raw, str):
-        return None
-    try:
-        parsed = json.loads(raw)
-    except Exception:  # noqa: BLE001
-        return None
-    return parsed if isinstance(parsed, dict) else None
-
-
-def _salvage_answer_from_last_graph_tool(messages: list[Any], *, max_chars: int = 4000) -> str:
-    """Build a short user-visible string from the latest ``cypher_query`` / ``edge_search`` JSON."""
-    for msg in reversed(messages):
-        if not isinstance(msg, ToolMessage):
-            continue
-        name = normalize_tool_call_name(str(getattr(msg, "name", "") or ""))
-        if name not in {"cypher_query", "edge_search"}:
-            continue
-        data = _tool_message_payload_dict(msg)
-        if data is None:
-            continue
-        if name == "cypher_query":
-            err = data.get("error")
-            if isinstance(err, str) and err.strip():
-                return f"{_GRAPH_TOOL_SALVAGE_PREFIX}Cypher error: {err.strip()[:800]}"
-            rows = data.get("rows")
-            if not isinstance(rows, list) or not rows:
-                continue
-            snippet = json.dumps(rows, ensure_ascii=False, default=str)[:max_chars]
-            if not snippet.strip():
-                continue
-            nrows = data.get("row_count", len(rows))
-            return (
-                f"{_GRAPH_TOOL_SALVAGE_PREFIX}Cypher returned {nrows} row(s). Preview:\n{snippet}"
-            )
-        items = data.get("items")
-        if not isinstance(items, list) or not items:
-            continue
-        snippet = json.dumps(items, ensure_ascii=False, default=str)[:max_chars]
-        if not snippet.strip():
-            continue
-        return (
-            f"{_GRAPH_TOOL_SALVAGE_PREFIX}edge_search returned {len(items)} edge(s). "
-            f"Preview:\n{snippet}"
-        )
-    return ""
-
-
-_MIN_DRAFT_ASSISTANT_CHARS = 200
-
-
-def _stringify_ai_message_content(content: Any) -> str:
-    """Flatten AIMessage.content (str or provider-specific multimodal lists) for salvage."""
-    if isinstance(content, str):
-        return content.strip()
-    if content is None:
-        return ""
-    return str(content).strip()
-
-
-def _salvage_visible_ai_after_defective_final_answer(messages: list[Any]) -> str:
-    """Use same-turn AIMessage visible text when ``final_answer`` JSON has an empty ``answer``."""
-    for i in range(len(messages) - 1, -1, -1):
-        msg = messages[i]
-        if not isinstance(msg, AIMessage):
-            continue
-        for tc in getattr(msg, "tool_calls", None) or []:
-            if normalize_tool_call_name(str(tc.get("name") or "")) != "final_answer":
-                continue
-            call_id = tc.get("id")
-            payload_empty = False
-            for follow in messages[i + 1 :]:
-                if not isinstance(follow, ToolMessage):
-                    continue
-                if getattr(follow, "tool_call_id", None) != call_id:
-                    continue
-                raw = str(follow.content or "").strip()
-                if not raw:
-                    payload_empty = True
-                    break
-                try:
-                    data = json.loads(raw)
-                except Exception:  # noqa: BLE001
-                    payload_empty = True
-                    break
-                if not isinstance(data, dict):
-                    payload_empty = True
-                    break
-                ans = data.get("answer")
-                payload_empty = not (isinstance(ans, str) and ans.strip())
-                break
-            else:
-                args = tc.get("args")
-                args_dict = args if isinstance(args, dict) else {}
-                ans_args = args_dict.get("answer")
-                payload_empty = not (isinstance(ans_args, str) and ans_args.strip())
-            if not payload_empty:
-                continue
-            vis = _stringify_ai_message_content(getattr(msg, "content", None))
-            if vis:
-                return vis[:20_000]
-    return ""
-
-
-def _salvage_substantial_ai_visible_content(messages: list[Any]) -> str:
-    """Use substantial ``AIMessage.content`` when ``final_answer`` tool not completed."""
-    if has_completed_final_answer_tool(messages):
-        return ""
-    for msg in reversed(messages):
-        if not isinstance(msg, AIMessage):
-            continue
-        tcs = getattr(msg, "tool_calls", None) or []
-        if not tcs:
-            continue
-        text = str(msg.content or "").strip()
-        if len(text) < _MIN_DRAFT_ASSISTANT_CHARS:
-            continue
-        if text.startswith("{") and text.endswith("}"):
-            try:
-                json.loads(text)
-            except Exception:  # noqa: BLE001
-                pass
-            else:
-                continue
-        return text[:20_000]
-    return ""
-
-
-def extract_langgraph_answer(
-    messages: list[Any],
-) -> tuple[str, list[dict[str, Any]] | None, bool, bool]:
-    # pylint: disable=too-many-locals,too-many-branches
-    """Prefer ``final_answer`` tool JSON over a bare assistant string.
-
-    Returns ``(answer, citations_or_none, graph_tool_salvage_used, draft_content_salvage)``.
-    ``citations_or_none`` is ``None`` when citations should come from graph state; otherwise it
-    replaces envelope citations from the ``final_answer`` payload. ``graph_tool_salvage_used`` is
-    True when ``answer`` was built from ``cypher_query`` / ``edge_search`` JSON. The fourth flag is
-    True when ``answer`` was taken from substantial visible ``AIMessage.content`` while tool calls
-    were still present (no completed ``final_answer``).
-    """
-    fallback_tool_args: tuple[str, list[dict[str, Any]] | None] | None = None
-    for i in range(len(messages) - 1, -1, -1):
-        msg = messages[i]
-        if not isinstance(msg, AIMessage):
-            continue
-        for tc in getattr(msg, "tool_calls", None) or []:
-            if normalize_tool_call_name(str(tc.get("name") or "")) != "final_answer":
-                continue
-            args = tc.get("args")
-            args_dict = args if isinstance(args, dict) else {}
-            ans_from_args = args_dict.get("answer")
-            if (
-                isinstance(ans_from_args, str)
-                and ans_from_args.strip()
-                and fallback_tool_args is None
-            ):
-                cites_from_args = args_dict.get("citations")
-                fallback_tool_args = (
-                    ans_from_args.strip(),
-                    (
-                        [c for c in cites_from_args if isinstance(c, dict)]
-                        if isinstance(cites_from_args, list)
-                        else []
-                    ),
-                )
-            call_id = tc.get("id")
-            for follow in messages[i + 1 :]:
-                if not isinstance(follow, ToolMessage):
-                    continue
-                if getattr(follow, "tool_call_id", None) != call_id:
-                    continue
-                raw = follow.content
-                if not isinstance(raw, str):
-                    continue
-                try:
-                    data = json.loads(raw)
-                except Exception:  # noqa: BLE001
-                    continue
-                if not isinstance(data, dict):
-                    continue
-                ans = data.get("answer")
-                if isinstance(ans, str) and ans.strip():
-                    cites = data.get("citations")
-                    if isinstance(cites, list):
-                        return ans.strip(), [c for c in cites if isinstance(c, dict)], False, False
-                    return ans.strip(), [], False, False
-    if fallback_tool_args is not None:
-        ans0, cites0 = fallback_tool_args
-        return ans0, cites0, False, False
-    salvage_def = _salvage_visible_ai_after_defective_final_answer(messages)
-    if salvage_def.strip():
-        return salvage_def.strip(), None, False, False
-    for msg in reversed(messages):
-        if isinstance(msg, AIMessage) and not getattr(msg, "tool_calls", None):
-            text = str(msg.content or "").strip()
-            if text:
-                return text, None, False, False
-    salvaged = _salvage_answer_from_last_graph_tool(messages)
-    if salvaged.strip():
-        return salvaged.strip(), None, True, False
-    draft = _salvage_substantial_ai_visible_content(messages)
-    if draft.strip():
-        return draft.strip(), None, False, True
-    return "", None, False, False
-
-
-def resolve_langgraph_answer_with_salvage(
-    final_state: dict[str, Any],
-) -> tuple[str, list[dict[str, Any]], bool, bool, bool]:
-    """Apply ``extract_langgraph_answer`` then ``salvage_markdown_from_quote_candidates``.
-
-    Returns ``(answer, citations, graph_salvage, quote_salvage, draft_salvage)``.
-    """
-
-    messages = list(final_state.get("messages", []))
-    answer, fa_citations, graph_salvage, draft_salvage = extract_langgraph_answer(messages)
-    quote_salvage = False
-    if not (answer or "").strip():
-        salv = salvage_markdown_from_quote_candidates(final_state)
-        if salv:
-            answer = salv
-            quote_salvage = True
-    citations = list(final_state.get("citations", []))
-    if fa_citations is not None:
-        citations = list(fa_citations)
-    return answer, citations, graph_salvage, quote_salvage, draft_salvage
-
-
-def salvage_markdown_from_quote_candidates(state: dict[str, Any]) -> str:
-    """When ``final_answer`` is missing, surface merged quote candidates as markdown blockquotes."""
-    typed = collect_typed_payloads(state)
-    rows = typed.get("quote_candidates") or []
-    if not isinstance(rows, list) or not rows:
-        return ""
-    chunks: list[str] = []
-    for raw in rows[:8]:
-        if not isinstance(raw, dict):
-            continue
-        text = str(raw.get("quote_text") or raw.get("text") or raw.get("snippet") or "").strip()
-        if not text:
-            continue
-        wid = str(raw.get("work_id") or "").strip()
-        head = f"**{wid}**\n\n" if wid else ""
-        quoted = "\n".join(f"> {line}" for line in text.splitlines())
-        chunks.append(f"{head}{quoted}".strip())
-    return "\n\n---\n\n".join(chunks).strip()
-
-
-def extract_last_brief_from_messages(messages: list[Any]) -> str | None:
-    """Return last successful ``brief`` tool text (<=240 chars) if present."""
-    for msg in reversed(messages):
-        if not isinstance(msg, ToolMessage):
-            continue
-        if normalize_tool_call_name(str(getattr(msg, "name", "") or "")) != "brief":
-            continue
-        raw = msg.content
-        if not isinstance(raw, str):
-            continue
-        try:
-            data = json.loads(raw)
-        except Exception:  # noqa: BLE001
-            continue
-        if not isinstance(data, dict) or not data.get("ok"):
-            continue
-        b = data.get("brief")
-        if isinstance(b, str) and b.strip():
-            return b.strip()[:240]
-    return None
-
-
-def _coerce_non_negative_int(value: object) -> int | None:
-    if value is None:
-        return None
-    try:
-        n = int(value)
-    except (TypeError, ValueError):
-        return None
-    if n < 0:
-        return None
-    return n
-
-
-def _token_triple_from_ai_message(msg: AIMessage) -> tuple[int | None, int | None, int | None]:
-    """Return (prompt_tokens, completion_tokens, total_tokens) from LangChain message metadata."""
-
-    prompt = completion = total = None
-    usage_meta = getattr(msg, "usage_metadata", None)
-    if isinstance(usage_meta, dict):
-        prompt = _coerce_non_negative_int(usage_meta.get("input_tokens"))
-        if prompt is None:
-            prompt = _coerce_non_negative_int(usage_meta.get("prompt_tokens"))
-        completion = _coerce_non_negative_int(usage_meta.get("output_tokens"))
-        if completion is None:
-            completion = _coerce_non_negative_int(usage_meta.get("completion_tokens"))
-        total = _coerce_non_negative_int(usage_meta.get("total_tokens"))
-    elif usage_meta is not None:
-        prompt = _coerce_non_negative_int(getattr(usage_meta, "input_tokens", None))
-        if prompt is None:
-            prompt = _coerce_non_negative_int(getattr(usage_meta, "prompt_tokens", None))
-        completion = _coerce_non_negative_int(getattr(usage_meta, "output_tokens", None))
-        if completion is None:
-            completion = _coerce_non_negative_int(getattr(usage_meta, "completion_tokens", None))
-        total = _coerce_non_negative_int(getattr(usage_meta, "total_tokens", None))
-    if prompt is None and completion is None and total is None:
-        resp_meta = getattr(msg, "response_metadata", None)
-        if isinstance(resp_meta, dict):
-            token_usage = resp_meta.get("token_usage")
-            if isinstance(token_usage, dict):
-                prompt = _coerce_non_negative_int(token_usage.get("prompt_tokens"))
-                completion = _coerce_non_negative_int(token_usage.get("completion_tokens"))
-                total = _coerce_non_negative_int(token_usage.get("total_tokens"))
-    return prompt, completion, total
-
-
-def aggregate_agent_llm_usage(messages: list[Any]) -> dict[str, int] | None:
-    """Sum token usage across ``AIMessage`` nodes (LangGraph state messages).
-
-    OpenAI-shaped keys are included for API clients; ``input_tokens`` / ``output_tokens`` mirror
-    LangChain ``usage_metadata`` naming for the UI extractor.
-    """
-
-    prompt_sum = 0
-    completion_sum = 0
-    total_only_sum = 0
-    for msg in messages:
-        if not isinstance(msg, AIMessage):
-            continue
-        pt, ct, tt = _token_triple_from_ai_message(msg)
-        if pt is None and ct is None and tt is None:
-            continue
-        parts = int(pt or 0) + int(ct or 0)
-        if parts > 0:
-            prompt_sum += int(pt or 0)
-            completion_sum += int(ct or 0)
-        elif tt is not None:
-            total_only_sum += int(tt)
-    if prompt_sum == 0 and completion_sum == 0 and total_only_sum == 0:
-        return None
-    combined_total = prompt_sum + completion_sum + total_only_sum
-    return {
-        "prompt_tokens": prompt_sum,
-        "completion_tokens": completion_sum,
-        "total_tokens": combined_total,
-        "input_tokens": prompt_sum,
-        "output_tokens": completion_sum,
-    }
+# Backward-compatible names for imports expecting private symbols on this module.
+_coerce_optional_str = coerce_optional_str
+_agent_query_output_summary = agent_query_output_summary
+_RUNTIME_FALLBACK_ANSWER = RUNTIME_FALLBACK_ANSWER
 
 
 def current_otel_trace_id_hex() -> str | None:
+    """Return current OTEL trace id as 32-char hex string, when available."""
     try:
         from opentelemetry import trace as trace_api
     except Exception:  # noqa: BLE001
@@ -498,6 +76,8 @@ def current_otel_trace_id_hex() -> str | None:
 
 @dataclass
 class AgentRunOutput:
+    """Normalized runtime output returned by both sync and SSE agent paths."""
+
     answer: str
     citations: list[dict[str, Any]]
     tool_trace: list[ToolCallTrace]
@@ -611,6 +191,8 @@ class RetrievalAgent:
                 )
                 if tid:
                     ac = heuristic_answer_class(question, answer_class_hint)
+                    from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
+
                     apply_turn_digest_to_thread(
                         thread_id=tid,
                         raw_user_question=question,
@@ -673,32 +255,17 @@ class RetrievalAgent:
                 pm_meta["post_compact_paper_sources_restored_count"] = int(rpc0)
         assert self._graph is not None
         cfg = {"recursion_limit": self._settings.agent_supervisor_recursion_limit}
-        parent_turn_id_from_init = str(
-            (initial_state.get("metadata") or {}).get("parent_turn_id") or ""
-        ).strip() or None
-        deadline_partial_used = False
-        try:
-            final_state = invoke_graph_with_deadline(
-                self._graph,
-                initial_state,
-                config=cfg,
-                timeout_seconds=float(self._settings.agent_step_timeout_seconds),
-                settings=self._settings,
-            )
-        except AgentGraphDeadlineExceeded:
-            partial = pop_latest_partial_state(parent_turn_id_from_init)
-            if partial is None:
-                raise
-            final_state = partial
-            deadline_partial_used = True
-            add_span_event(
-                "agent.runtime_partial_state_salvage",
-                {
-                    "parent_turn_id": parent_turn_id_from_init or "",
-                    "deadline_kind": "response_only",
-                    "messages": int(len(list(partial.get("messages") or []))),
-                },
-            )
+        parent_turn_id_from_init = (
+            str((initial_state.get("metadata") or {}).get("parent_turn_id") or "").strip() or None
+        )
+        final_state, deadline_partial_used = invoke_agent_graph_with_deadline_partial(
+            self._graph,
+            initial_state,
+            config=cfg,
+            timeout_seconds=float(self._settings.agent_step_timeout_seconds),
+            settings=self._settings,
+            parent_turn_id=parent_turn_id_from_init,
+        )
         messages = list(final_state.get("messages", []))
         llm_usage = aggregate_agent_llm_usage(messages)
         trace = collect_tool_trace(final_state)
@@ -707,7 +274,7 @@ class RetrievalAgent:
         )
         fallback_answer_used = False
         if not str(answer or "").strip():
-            answer = _RUNTIME_FALLBACK_ANSWER
+            answer = RUNTIME_FALLBACK_ANSWER
             fallback_answer_used = True
         typed_payloads = collect_typed_payloads(final_state)
         inv = typed_payloads.get("inventory")
@@ -747,46 +314,8 @@ class RetrievalAgent:
                 "agent.assistant_draft_answer_salvage",
                 {"answer_chars": len(answer or "")},
             )
-        cv_warn: list[str] = []
-        for row in _collect_claim_verification_results(list(final_state.get("messages") or [])):
-            if not isinstance(row, dict):
-                continue
-            if str(row.get("terminal_state") or "") != "succeeded":
-                cv_warn.append("claim_verification_child_non_success")
-                break
-            issues = row.get("issues")
-            if isinstance(issues, list) and any(str(x).strip() for x in issues):
-                cv_warn.append("claim_verification_child_issues")
-                break
-
-        ce_warn: list[str] = []
-        for row in _collect_corpus_explore_results(messages):
-            if not isinstance(row, dict):
-                continue
-            if str(row.get("terminal_state") or "") != "succeeded":
-                ce_warn.append("corpus_explore_child_non_success")
-                break
-            issues = row.get("issues")
-            if isinstance(issues, list) and any(str(x).strip() for x in issues):
-                ce_warn.append("corpus_explore_child_issues")
-                break
-
-        rp_warn: list[str] = []
-        for row in _collect_research_plan_results(messages):
-            if not isinstance(row, dict):
-                continue
-            if str(row.get("terminal_state") or "") != "succeeded":
-                rp_warn.append("research_plan_child_non_success")
-                break
-            issues = row.get("issues")
-            if isinstance(issues, list) and any(str(x).strip() for x in issues):
-                rp_warn.append("research_plan_child_issues")
-                break
-
         merged_extra_warns = list(extra_warn or [])
-        merged_extra_warns.extend(cv_warn)
-        merged_extra_warns.extend(ce_warn)
-        merged_extra_warns.extend(rp_warn)
+        merged_extra_warns.extend(collect_subagent_fork_warning_codes(messages))
         envelope = build_chat_envelope(
             state=final_state,
             answer=answer,
@@ -800,22 +329,16 @@ class RetrievalAgent:
             raw_q = question
         hook_chain: list[dict[str, Any]] = []
         if thread_id:
-            apply_turn_digest_to_thread(
+            hook_chain = run_agent_post_turn_digest_and_hooks(
                 thread_id=thread_id,
                 raw_user_question=raw_q,
                 answer=answer,
                 answer_class=str(envelope.get("answer_class") or "grounded_explanation"),
                 tool_trace=trace,
                 workspace_id=workspace_id,
-            )
-            run_post_compact_hooks(
-                thread_id=thread_id,
                 messages=messages,
                 settings=self._settings,
-                out_events=hook_chain,
             )
-        else:
-            hook_chain = []
 
         ac = str(envelope.get("answer_class") or "grounded_explanation")
         raw_routing = final_state.get("routing_log")
@@ -838,10 +361,10 @@ class RetrievalAgent:
         subagent_runs = merge_subagent_run_rows(
             routing_rows=routing_sub_rows, spawned_rows=spawned_rows
         )
-        _tn = _collect_subagent_task_notifications(messages)
-        _cv = _collect_claim_verification_results(messages)
-        _ce = _collect_corpus_explore_results(messages)
-        _rp = _collect_research_plan_results(messages)
+        _tn = collect_subagent_task_notifications(messages)
+        _cv = collect_claim_verification_results(messages)
+        _ce = collect_corpus_explore_results(messages)
+        _rp = collect_research_plan_results(messages)
         sr3_final = final_state.get("specialist_results_v3")
         sr3_out = sr3_final if isinstance(sr3_final, dict) else None
         _lane = (
@@ -910,3 +433,16 @@ def build_agent(
     stores: StoreRegistry,
 ) -> RetrievalAgent:
     return RetrievalAgent(settings=settings, stores=stores)
+
+
+__all__ = [
+    "AgentRunOutput",
+    "RetrievalAgent",
+    "aggregate_agent_llm_usage",
+    "build_agent",
+    "current_otel_trace_id_hex",
+    "extract_langgraph_answer",
+    "extract_last_brief_from_messages",
+    "resolve_langgraph_answer_with_salvage",
+    "salvage_markdown_from_quote_candidates",
+]

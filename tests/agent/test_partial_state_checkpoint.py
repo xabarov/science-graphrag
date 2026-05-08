@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import MagicMock
 
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import AIMessage, HumanMessage
 
 from science_graphrag.agent.graph.partial_state_checkpoint import (
     clear_for_tests,
@@ -93,7 +93,7 @@ def test_supervisor_node_records_partial_state_for_each_hop(monkeypatch) -> None
         lambda _settings: _FakeRouter(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda _settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(

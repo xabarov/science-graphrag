@@ -304,7 +304,7 @@ def test_compute_first_hop_decision_rebuilds_transient_plan_when_state_has_no_pl
                 "suggested_answer_class": "grounded_explanation",
                 "classifier": "llm",
                 "confidence": 0.91,
-            }
+            },
         },
     }
     settings_stub = MagicMock()
@@ -351,7 +351,7 @@ def test_supervisor_uses_route_plan_first_step_when_attached(monkeypatch) -> Non
         lambda settings: _CountingRouter(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(
@@ -433,7 +433,7 @@ def test_supervisor_replan_only_skips_llm_for_writer_step(monkeypatch) -> None:
         lambda settings: _NeverCalledRouter(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(

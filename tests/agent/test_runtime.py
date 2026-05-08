@@ -71,7 +71,7 @@ def test_build_agent_and_run_smoke(monkeypatch) -> None:
         lambda _settings: _FakeSupervisorLLM(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda _settings: _FakeSpecialistLLM(),
     )
     monkeypatch.setattr(

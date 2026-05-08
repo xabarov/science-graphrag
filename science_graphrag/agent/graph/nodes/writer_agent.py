@@ -1,4 +1,9 @@
-"""Writer specialist node for multi-agent supervisor."""
+"""Writer specialist node for multi-agent supervisor.
+
+Terminal synthesis seam: the writer subgraph only binds ``final_answer`` (see
+``build_writer_tools``). It does not run tool_search shortlisting or expand a
+research catalog; routing and evidence gathering stay in supervisor + retrieval/graph.
+"""
 
 from __future__ import annotations
 
@@ -33,10 +38,7 @@ from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
 )
-from science_graphrag.agent.tool_search import (
-    build_tool_search_result_debug_event,
-    shortlist_tools_for_specialist,
-)
+from science_graphrag.agent.tool_search import build_tool_search_result_debug_event
 from science_graphrag.agent.tools import build_writer_tools
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
@@ -45,10 +47,12 @@ from science_graphrag.observability.spans import SpanAttributes, add_span_event,
 
 SPECIALIST_NAME = "writer_agent"
 SYSTEM_PROMPT = (
-    "You are a writer specialist. You receive findings from retrieval and graph specialists. "
-    "Synthesize a concise, grounded answer and call final_answer with citations. "
-    "Always call the final_answer tool (do not reply with plain text only). "
-    "Match the user's language (e.g. Russian question → Russian answer) when specialist_results allow."
+    "You are a writer specialist (terminal synthesis only). You receive findings from retrieval "
+    "and graph specialists via specialist_results; you do not run workspace or search tools — "
+    "only final_answer is available. Synthesize a concise, grounded answer and call final_answer "
+    "with citations. Always call the final_answer tool (do not reply with plain text only). "
+    "Match the user's language (e.g. Russian question → Russian answer) when "
+    "specialist_results allow."
 )
 
 DIRECT_SYSTEM_PROMPT = (
@@ -56,11 +60,13 @@ DIRECT_SYSTEM_PROMPT = (
     "The user's message is conversational (greeting, thanks, or small talk) OR asks who you are / "
     "what you can do. Reply briefly and warmly in the user's language. "
     "Do NOT invent paper titles, workspace inventory, citations, or graph facts — specialist_results "
-    "below are empty for this turn. Always call final_answer with citations=[] (no fabricated sources)."
+    "below are empty for this turn. Always call final_answer with citations=[] "
+    "(no fabricated sources)."
 )
 
 CLARIFY_SYSTEM_PROMPT = (
-    "You are a helpful research assistant. The user's request is ambiguous or too short to run tools. "
+    "You are a helpful research assistant. The user's request is ambiguous or "
+    "too short to run tools. "
     "Ask one short clarifying question in the user's language (e.g. list papers, search ideas, "
     "graph relations, quotes). Do NOT call workspace or search tools yourself. "
     "Always call final_answer with citations=[]."
@@ -282,24 +288,15 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
 
     def writer_agent_node(state: AgentState) -> dict:
         all_tools = build_writer_tools(stores)
-        sess = None
-        tid = str((state.get("metadata") or {}).get("thread_id") or "").strip()
-        if tid:
-            from science_graphrag.agent.context.session_store import get_session_for_thread
-
-            sess = get_session_for_thread(tid)
-        question = _last_user_text(state)
-        has_ws = bool((state.get("workspace_id") or "").strip())
         mode = _writer_mode_from_state(state)
-        tools, meta = shortlist_tools_for_specialist(
-            all_tools,
-            question=question,
-            specialist=SPECIALIST_NAME,
-            settings=settings,
-            has_workspace=has_ws,
-            session=sess,
-            lc_messages=list(state.get("messages") or []),
-        )
+        # Terminal seam: catalog is only ``final_answer`` — skip rule-based shortlist
+        # (see also ``shortlist_tools_for_specialist`` fast-path for writer_agent).
+        tools = list(all_tools)
+        meta = {
+            "skipped": True,
+            "reason": "writer_terminal_synthesis_seam",
+            "catalog_size": len(tools),
+        }
         tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
         tools = _ensure_final_answer_tool(tools, all_tools)
         compiled = _cached_subgraph(tools, mode)

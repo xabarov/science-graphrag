@@ -202,13 +202,16 @@
 
 ## 6. Следующий план работ
 
-### Wave A — structural hardening after stabilisation
+### Wave A — structural hardening after stabilisation (**DONE**, 2026-05-08)
 
-1. `writer_agent` -> terminal synthesis seam.
-2. `runtime.py` split.
-3. `retrieval_agent.py` split.
-4. `tool_search.py` deeper split.
-5. Проверка новых seam'ов через `tests/agent/` + live `trace-review-v1`.
+Execution checklist and closeout: [`wave-a-residual-structural-hardening-2026-05-08.md`](./wave-a-residual-structural-hardening-2026-05-08.md).
+
+Delivered:
+1. `writer_agent` narrowed to terminal synthesis seam.
+2. `runtime.py` split into dedicated seams (`deadline_salvage`, `runtime_answer_salvage`, `runtime_post_turn`, `runtime_envelope`).
+3. `retrieval_agent.py` split into specialist seams (`retrieval_subgraph`, `retrieval_completion`, `retrieval_fork_legs`).
+4. `tool_search.py` deeper split (`tool_search_discovery_carryover`, `tool_search_strict_deferred`).
+5. Verification: `tests/agent/` pass on Wave A patchset; live `trace-review-v1` remains operator runbook gate when dev stack is up.
 
 ### Wave B — v3 quality benchmark
 

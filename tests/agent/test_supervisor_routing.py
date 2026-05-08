@@ -44,9 +44,7 @@ def _force_writer_after_retrieval(state: dict) -> str | None:
     return planner_post_retrieval_handoff(features=feats, tool_counts=tool_counts)
 
 
-def _build_state_without_plan(
-    *, question: str, workspace_id: str, agent_runtime: str
-) -> dict:
+def _build_state_without_plan(*, question: str, workspace_id: str, agent_runtime: str) -> dict:
     """Build initial agent state with the planner explicitly disabled.
 
     Used by LLM-router safety-net tests that need ``supervisor_node`` to
@@ -145,7 +143,7 @@ def test_supervisor_routes_to_retrieval_agent(monkeypatch) -> None:
         lambda settings: _FakeRouter(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(
@@ -194,7 +192,7 @@ def test_supervisor_router_prompt_excludes_tool_transcript(monkeypatch) -> None:
         lambda settings: _CapturingRouter(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(
@@ -244,7 +242,9 @@ def test_first_user_plain_question_ignores_tool_payload_suffix() -> None:
     state = {
         "messages": [
             HumanMessage(content="How many works are in this workspace?"),
-            AIMessage(content="", tool_calls=[{"name": "workspace_inspect", "id": "c1", "args": {}}]),
+            AIMessage(
+                content="", tool_calls=[{"name": "workspace_inspect", "id": "c1", "args": {}}]
+            ),
             ToolMessage(content='{"row_count": 32}', tool_call_id="c1", name="workspace_inspect"),
         ]
     }
@@ -285,7 +285,7 @@ def test_supervisor_invalid_router_token_routes_to_writer_not_retrieval(monkeypa
         lambda settings: _BadRouter(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(
@@ -348,7 +348,7 @@ def test_supervisor_finish_token_remaps_to_writer_for_final_answer_contract(monk
         lambda settings: _FinishRouter(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(
@@ -410,7 +410,7 @@ def test_supervisor_coordinator_gate_skips_llm_for_greeting(monkeypatch) -> None
         lambda settings: type("_B", (), {"invoke": staticmethod(_boom)})(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(
@@ -474,9 +474,7 @@ def test_retrieval_completion_fast_handoff_for_catalog_resolution() -> None:
             ToolMessage(content=json.dumps({"row_count": 2}), tool_call_id="c1", name="find_works"),
             AIMessage(
                 content="",
-                tool_calls=[
-                    {"name": "paper_profile", "id": "c2", "args": {"work_id": "w1"}}
-                ],
+                tool_calls=[{"name": "paper_profile", "id": "c2", "args": {"work_id": "w1"}}],
             ),
             ToolMessage(
                 content=json.dumps({"title": "Mask R-CNN", "row_count": 1}),
@@ -504,7 +502,9 @@ def test_retrieval_completion_fast_handoff_for_workspace_stats() -> None:
                     }
                 ],
             ),
-            ToolMessage(content=json.dumps({"row_count": 1}), tool_call_id="c1", name="workspace_inspect"),
+            ToolMessage(
+                content=json.dumps({"row_count": 1}), tool_call_id="c1", name="workspace_inspect"
+            ),
         ],
     }
 
@@ -560,9 +560,7 @@ def test_retrieval_completion_fast_handoff_for_dual_evidence_compare() -> None:
             ToolMessage(content=json.dumps({"row_count": 3}), tool_call_id="c1", name="find_works"),
             AIMessage(
                 content="",
-                tool_calls=[
-                    {"name": "find_works", "id": "c2", "args": {"query": "Faster R-CNN"}}
-                ],
+                tool_calls=[{"name": "find_works", "id": "c2", "args": {"query": "Faster R-CNN"}}],
             ),
             ToolMessage(content=json.dumps({"row_count": 2}), tool_call_id="c2", name="find_works"),
             AIMessage(
@@ -656,10 +654,12 @@ def test_dual_evidence_first_hop_overrides_graph_route_hint(monkeypatch) -> None
     )
     monkeypatch.setattr(
         "science_graphrag.agent.graph.supervisor.build_chat_model",
-        lambda settings: type("_B", (), {"invoke": staticmethod(lambda _m: AIMessage(content="writer_agent"))})(),
+        lambda settings: type(
+            "_B", (), {"invoke": staticmethod(lambda _m: AIMessage(content="writer_agent"))}
+        )(),
     )
     monkeypatch.setattr(
-        "science_graphrag.agent.graph.nodes.retrieval_agent.build_chat_model",
+        "science_graphrag.agent.graph.nodes.retrieval_subgraph.build_chat_model",
         lambda settings: _FakeSpecialist(),
     )
     monkeypatch.setattr(
@@ -722,9 +722,7 @@ def test_dual_evidence_compare_waits_for_requested_bibliography() -> None:
             ToolMessage(content=json.dumps({"row_count": 3}), tool_call_id="c1", name="find_works"),
             AIMessage(
                 content="",
-                tool_calls=[
-                    {"name": "find_works", "id": "c2", "args": {"query": "Faster R-CNN"}}
-                ],
+                tool_calls=[{"name": "find_works", "id": "c2", "args": {"query": "Faster R-CNN"}}],
             ),
             ToolMessage(content=json.dumps({"row_count": 2}), tool_call_id="c2", name="find_works"),
             AIMessage(

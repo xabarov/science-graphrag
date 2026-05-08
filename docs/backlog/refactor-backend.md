@@ -108,11 +108,12 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Plan ref:** [`docs/analysis/orchestration-stabilization-plan-2026-05-07.md`](../analysis/orchestration-stabilization-plan-2026-05-07.md) §6 acceptance gate; closeout — [`docs/analysis/orchestration-stabilization-closeout-2026-05-08.md`](../analysis/orchestration-stabilization-closeout-2026-05-08.md).
 - **Raised:** 2026-05-07 (post-fix follow-up after final_answer fallback)
 
-### [OPEN] Simplify `writer_agent` into terminal synthesis seam
+### [PARTIAL] Simplify `writer_agent` into terminal synthesis seam
 - **Area:** `science_graphrag/agent/graph/nodes/writer_agent.py`, `science_graphrag/agent/graph/supervisor.py`, writer-facing prompts/contracts
 - **Issue:** `writer_agent` currently remains useful as the terminal `final_answer` seam, but its shape is still more agentic/ReAct-like than needed. That increases routing ambiguity, prompt surface area, and the chance of extra loops where synthesis should have been a deterministic last hop.
 - **Proposal:** Keep a dedicated writer boundary, but narrow its role to synthesis/citation-normalization/merge-explanation only; move any residual research/routing behavior back into supervisor or retrieval/graph specialists, and tighten the writer prompt/graph so the normal path is one terminal synthesis pass.
 - **Acceptance:** writer stays the only terminal `final_answer` owner, but does not independently expand tool search/routing in standard flows; prompt and tests explicitly describe it as a synthesis seam; live traces show fewer late-turn writer/retrieval oscillations.
+- **Done (Wave A 2026-05-08, slice):** module docstring + system prompt state terminal-only catalog; writer node skips `shortlist_tools_for_specialist` (explicit `writer_terminal_synthesis_seam` meta); unit `test_build_writer_tools_catalog_is_final_answer_only`. **Remaining:** live trace-review evidence on oscillation delta vs baseline.
 - **Raised:** 2026-05-07 (post architecture review on writer necessity)
 
 ### [OPEN] Persisted admin section `agent_tools` (runtime overrides without overloading LLM settings)
@@ -133,21 +134,24 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Area:** `science_graphrag/agent/tool_search.py`, `tool_selector_hybrid.py`, optional `agent/tools/web_research_tools.py` call-sites
 - **Issue:** `tool_search.py` was ~840+ LoC mixing rules scoring, discovery merge, strict-deferred telemetry, и hybrid rerank orchestration.
 - **Done (2026-05-08, scoring slice):** скоринг вынесен в [`science_graphrag/agent/tool_search_scoring.py`](../../science_graphrag/agent/tool_search_scoring.py): `score_tool_tags_and_catalog_families`, `score_tool_name_family_patterns`, `answer_class_tool_boost`, `score_tool` (pure). `tool_search.py` 842 → 744 LoC; backward-compatible aliases (`_score_tool` и др.) сохранены для существующих импортов.
-- **Remaining:** further split `discovery_merge` и `strict_deferred_telemetry` в собственные модули (или подпакет `tool_search/`) когда размер снова станет > 700 LoC; не блокирует orchestration program.
+- **Done (Wave A 2026-05-08, discovery + strict slice):** [`tool_search_discovery_carryover.py`](../../science_graphrag/agent/tool_search_discovery_carryover.py) (message discovery + session carryover), [`tool_search_strict_deferred.py`](../../science_graphrag/agent/tool_search_strict_deferred.py) (strict filter + rules-meta telemetry + `RulesShortlistMetaCtx`). `tool_search.py` ~535 LoC. `discovered_tool_names_from_lc_messages` / `_tool_call_entry_name` re-export через `tool_search` для тестов.
+- **Remaining:** при росте >700 LoC — дальнейший подпакет или вынесение hybrid glue; не блокирует orchestration program.
 - **Raised:** 2026-05-06 (hybrid selector + external research slice)
 
-### [OPEN] Split `runtime.py` salvage/envelope pipeline after orchestration stabilization
+### [DONE] Split `runtime.py` salvage/envelope pipeline after orchestration stabilization
 - **Area:** `science_graphrag/agent/runtime.py`
 - **Issue:** `runtime.py` уже ~900+ LoC и смешивает graph invoke/deadline handling, partial-state salvage, final-answer fallback recovery, envelope assembly, post-turn context updates и subagent lifecycle merge. После wave orchestration файл стал ещё важнее и сложнее для безопасных правок.
 - **Proposal:** Вынести минимум три seam'а: `deadline_salvage.py` (global deadline + `pop_latest_partial_state` + fallback answer selection), `runtime_envelope.py` (chat envelope / citations / warnings / typed payload aggregation), `runtime_post_turn.py` (digest/session/subagent merge hooks). Оставить в `runtime.py` только orchestration порядка вызовов.
 - **Acceptance:** `runtime.py` < ~550 LoC; те же `tests/agent/` green; deadline-salvage и fallback-answer правила покрыты отдельными unit tests без полного graph invoke harness.
+- **Done (2026-05-08):** [`deadline_salvage.py`](../../science_graphrag/agent/deadline_salvage.py) (`invoke_agent_graph_with_deadline_partial`), [`runtime_answer_salvage.py`](../../science_graphrag/agent/runtime_answer_salvage.py) (extract/salvage/usage/brief + `RUNTIME_FALLBACK_ANSWER`), [`runtime_post_turn.py`](../../science_graphrag/agent/runtime_post_turn.py), [`runtime_envelope.py`](../../science_graphrag/agent/runtime_envelope.py) (fork warning codes), [`runtime_subagent_collectors.py`](../../science_graphrag/agent/runtime_subagent_collectors.py). `runtime.py` ~439 LoC; публичный API (`extract_langgraph_answer`, `resolve_langgraph_answer_with_salvage`, …) реэкспорт из `runtime.py`. `pytest tests/agent/` green.
 - **Raised:** 2026-05-08 (post-closeout structural quality pass)
 
-### [OPEN] Split `retrieval_agent.py` specialist orchestration from side-effects
+### [DONE] Split `retrieval_agent.py` specialist orchestration from side-effects
 - **Area:** `science_graphrag/agent/graph/nodes/retrieval_agent.py`
 - **Issue:** `retrieval_agent.py` уже ~600+ LoC и одновременно держит prompt, tool shortlist, subgraph compile/cache, fork bundles (claim verification / corpus explore / research plan), v3 merge plumbing и completion-state annotation. Это делает retrieval specialist слишком “центральным” и затрудняет дальнейшую настройку handoff/salvage.
 - **Proposal:** Вынести `retrieval_subgraph.py` (compile/cache/prompt wiring), `retrieval_forks.py` (claim verification / corpus explore / research plan legs), `retrieval_completion.py` (tool-count aggregation + `annotate_completion_state` glue). В `retrieval_agent.py` оставить only node assembly + return payload contract.
 - **Acceptance:** `retrieval_agent.py` < ~400 LoC; completion-state logic тестируется отдельно от fork bundles; правки в retrieval handoff не требуют читать fork/runtime plumbing.
+- **Done (2026-05-08):** [`retrieval_subgraph.py`](../../science_graphrag/agent/graph/nodes/retrieval_subgraph.py), [`retrieval_fork_legs.py`](../../science_graphrag/agent/graph/nodes/retrieval_fork_legs.py), [`retrieval_completion.py`](../../science_graphrag/agent/graph/nodes/retrieval_completion.py); `retrieval_agent.py` ~154 LoC. Тесты monkeypatch `retrieval_subgraph.build_chat_model` (вместо `retrieval_agent`).
 - **Raised:** 2026-05-08 (post-closeout structural quality pass)
 
 ### [DONE] Cache-safe forked side-LLM helper (§10.2) — Train T1 slice

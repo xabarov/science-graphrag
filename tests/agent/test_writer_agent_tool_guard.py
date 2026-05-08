@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 from langchain_core.messages import AIMessage, ToolMessage
 
@@ -9,6 +10,7 @@ from science_graphrag.agent.graph.nodes.writer_agent import (
     _ensure_final_answer_tool,
     _ensure_terminal_final_answer_tool_call,
 )
+from science_graphrag.agent.tools import build_writer_tools
 
 
 def _tool(name: str) -> SimpleNamespace:
@@ -38,6 +40,11 @@ def test_writer_bare_text_gets_synthetic_final_answer_tool_call() -> None:
     payload = json.loads(str(out[-1].content))
     assert payload["answer"] == "Hello from writer"
     assert payload["citations"] == [{"work_id": "w1"}]
+
+
+def test_build_writer_tools_catalog_is_final_answer_only() -> None:
+    tools = build_writer_tools(MagicMock())
+    assert [getattr(t, "name", "") for t in tools] == ["final_answer"]
 
 
 def test_existing_final_answer_tool_call_is_not_duplicated() -> None:
