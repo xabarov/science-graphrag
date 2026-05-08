@@ -17,7 +17,7 @@
     "baseline_runtime": "langgraph_research_v1",
     "candidate_runtime": "langgraph_supervisor_v3",
     "transport": "subprocess",
-    "mock_agent": true,
+    "mock_agent": false,
     "judge_prompt_version": "judge_prompt_v1",
     "judge_prompt_sha256": "sha256-20:5b68007c9ae3d6801673",
     "judge_llm_model": null,
@@ -29,19 +29,32 @@
     "mean_weighted_score_baseline": 4.0,
     "mean_weighted_score_candidate": 4.0,
     "mean_delta": 0.0,
-    "pairwise_candidate_win_rate": 0.0,
+    "pairwise_candidate_win_rate": 1.0,
     "pairwise_baseline_win_rate": 0.0,
-    "pairwise_tie_rate": 1.0,
+    "pairwise_tie_rate": 0.0,
     "hard_fail_count_baseline": 0,
     "hard_fail_count_candidate": 0,
     "family_breakdown": {
       "open_research": {
-        "candidate_wins": 0,
+        "candidate_wins": 1,
         "baseline_wins": 0,
-        "ties": 1
+        "ties": 0
       }
     },
-    "all_passed": true
+    "all_passed": true,
+    "branch_outcome_schema": "branch_outcome_v1",
+    "cases_with_any_branch_non_ok": 0,
+    "baseline_status_counts": {
+      "ok": 1
+    },
+    "candidate_status_counts": {
+      "ok": 1
+    },
+    "error_kind_counts": {},
+    "baseline_timeout_cases": [],
+    "candidate_timeout_cases": [],
+    "baseline_error_cases": [],
+    "candidate_error_cases": []
   },
   "cases": [
     {
@@ -52,33 +65,128 @@
       "baseline_runtime": "langgraph_research_v1",
       "candidate_runtime": "langgraph_supervisor_v3",
       "transport": "subprocess",
-      "mock_agent": true,
+      "mock_agent": false,
       "notes": [],
+      "timings": {
+        "baseline_wall_s": 18.346,
+        "candidate_wall_s": 22.178,
+        "judge_wall_s": 0.0,
+        "case_wall_s": 40.524
+      },
       "baseline": {
-        "answer": "[mock_baseline:langgraph_research_v1] Summary for holdout_open_01 (ReAct-style stub).",
+        "answer": "One-stage detectors like YOLO face several documented limitations. They impose strong spatial constraints because each grid cell predicts only two bounding boxes and one class, which limits the detection of closely spaced objects. This design causes difficulties with small objects that appear in groups, such as flocks of birds. The model also struggles to generalize to objects with unusual aspect ratios or configurations due to its learned priors. Additionally, YOLO uses relatively coarse features for bounding box prediction, a result of multiple downsampling layers in its architecture. Finally, its loss function treats localization errors in small and large bounding boxes equally, which can degrade performance on smaller objects.\n\nThese points are directly reported in the source and reflect the authors' own evaluation of their model. There is no speculation about unverified weaknesses or comparisons beyond the study’s scope.",
         "citations": [
           {
-            "work_id": "mock-baseline-holdout_open_01"
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "0a6dfab1a7ac6cf6fd6d22551c228b8aeddafa9b35bacbaf981da4cb2c6ab874",
+            "quote": "YOLO imposes strong spatial constraints on bounding box predictions since each grid cell only predicts two boxes and can only have one class. This spatial constraint limits the number of nearby objects that our model can predict. Our model struggles with small objects that appear in groups, such as flocks of birds.\\n\\nSince our model learns to predict bounding boxes from data, it struggles to generalize to objects in new or unusual aspect ratios or configurations. Our model also uses relatively coarse features for predicting bounding boxes since our architecture has multiple downsampling layers from the input image.\\n\\nFinally, while we train on a loss function that approximates detection performance, our loss function treats errors the same in small bounding boxes",
+            "excerpt": "### 2.4. Limitations of YOLO\n\nYOLO imposes strong spatial constraints on bounding box predictions since each grid cell only predicts two boxes and can only have one class. This spatial constraint limits the number of nearby objects that our model can predict. Our model struggles with small objects that appear in groups, such as flocks of birds.\n\nSince our model learns to predict bounding boxes from data, it struggles to generalize to objects in new or unusual aspect ratios or configurations. Our model also uses relatively coarse features for predicting bounding boxes since our architecture has multiple downsampling layers from the input image.\n\nFinally, while we train on a loss function that approximates detection performance, our loss function treats errors the same in small bounding boxe"
           }
         ],
         "warnings": [],
         "tool_trace": [
           {
-            "tool": "idea_search"
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "default_research_assumption",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+              "question_features": "{'raw_question': 'What are the main limitations of one-stage detectors mentioned across ws-pilot-od works? Answer in 4–6 sentences and separate facts vs speculation.', 'normalized_question': 'what are"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
           },
           {
-            "tool": "final_answer"
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "coordinator_route_hint:retrieval_agent",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "budget_left": 9,
+              "reason": null
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "papers",
+              "list_limit": "20"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "limitations of one-stage object detectors like YOLO",
+              "workspace_id": "ws-pilot-od"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 4,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "One-stage detectors like YOLO face several documented limitations. They impose strong spatial constraints because each grid cell predicts only two bounding boxes and one class, which limits the detect",
+              "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': '0a6dfab1a7ac6cf6fd6d22551c228b8aeddafa9b35bacbaf981da4cb2c6ab874', 'quote': 'YOLO imposes strong spatial constraints on bounding box p"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
           }
         ],
-        "tool_trace_summary": "idea_search → final_answer",
-        "run_metadata": {
-          "agent_runtime": "langgraph_research_v1",
-          "usage": {
-            "total_tokens": 100
-          }
-        },
-        "usage_total_tokens": 100,
-        "latency_ms": 50,
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → workspace_inspect → paper_profile → paper_quote_search → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 17950,
         "agent_runtime_label": "langgraph_research_v1",
         "error": null,
         "scores": {
@@ -93,30 +201,118 @@
         "weighted_score": 4.0
       },
       "candidate": {
-        "answer": "[mock_candidate:langgraph_supervisor_v3] Summary for holdout_open_01 (supervisor-style stub with synthesis and citations placeholder).",
+        "answer": "The main limitations of one-stage detectors like YOLO, as documented in the source, are factual and explicitly stated. YOLO imposes strong spatial constraints because each grid cell predicts only two bounding boxes and is limited to one class, which restricts its ability to detect multiple nearby objects. The model struggles with small objects that appear in groups, such as flocks of birds. It also has difficulty generalizing to objects with unusual aspect ratios or configurations and relies on relatively coarse features for bounding box prediction due to multiple downsampling layers in the network. Additionally, the loss function treats errors in small and large bounding boxes equally, which can lead to poorer localization accuracy for smaller objects.\n\nThere is no speculation in the provided material about limitations of other one-stage detectors beyond YOLO, nor are there claims about training instability or computational inefficiency. All identified limitations are specific to the YOLO architecture as described in the paper.",
         "citations": [
           {
-            "work_id": "mock-candidate-holdout_open_01"
+            "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "chunk_id": "0a6dfab1a7ac6cf6fd6d22551c228b8aeddafa9b35bacbaf981da4cb2c6ab874",
+            "quote": "YOLO imposes strong spatial constraints on bounding box predictions since each grid cell only predicts two boxes and can only have one class. This spatial constraint limits the number of nearby objects that our model can predict. Our model struggles with small objects that appear in groups, such as flocks of birds.\\n\\nSince our model learns to predict bounding boxes from data, it struggles to generalize to objects in new or unusual aspect ratios or configurations. Our model also uses relatively coarse features for predicting bounding boxes since our architecture has multiple downsampling layers from the input image.\\n\\nFinally, while we train on a loss function that approximates detection performance, our loss function treats errors the same in small bounding boxes as large ones.",
+            "excerpt": "### 2.4. Limitations of YOLO\n\nYOLO imposes strong spatial constraints on bounding box predictions since each grid cell only predicts two boxes and can only have one class. This spatial constraint limits the number of nearby objects that our model can predict. Our model struggles with small objects that appear in groups, such as flocks of birds.\n\nSince our model learns to predict bounding boxes from data, it struggles to generalize to objects in new or unusual aspect ratios or configurations. Our model also uses relatively coarse features for predicting bounding boxes since our architecture has multiple downsampling layers from the input image.\n\nFinally, while we train on a loss function that approximates detection performance, our loss function treats errors the same in small bounding boxe"
           }
         ],
         "warnings": [],
         "tool_trace": [
           {
-            "tool": "route_to_specialist"
+            "step": 0,
+            "tool": "coordinator_gate",
+            "args_summary": {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "default_research_assumption",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": "1.0",
+              "classifier": "deterministic",
+              "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+              "question_features": "{'raw_question': 'What are the main limitations of one-stage detectors mentioned across ws-pilot-od works? Answer in 4–6 sentences and separate facts vs speculation.', 'normalized_question': 'what are"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
           },
           {
-            "tool": "final_answer"
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "coordinator_route_hint:retrieval_agent",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": -1,
+            "tool": "route_to_specialist",
+            "args_summary": {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "budget_left": 9,
+              "reason": null
+            },
+            "row_count": 0,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 1,
+            "tool": "workspace_inspect",
+            "args_summary": {
+              "workspace_id": "ws-pilot-od",
+              "mode": "blurb"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 2,
+            "tool": "paper_profile",
+            "args_summary": {
+              "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 3,
+            "tool": "paper_quote_search",
+            "args_summary": {
+              "query": "limitations of one-stage object detectors like YOLO",
+              "workspace_id": "ws-pilot-od"
+            },
+            "row_count": 5,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
+          },
+          {
+            "step": 4,
+            "tool": "final_answer",
+            "args_summary": {
+              "answer": "The main limitations of one-stage detectors like YOLO, as documented in the source, are factual and explicitly stated. YOLO imposes strong spatial constraints because each grid cell predicts only two ",
+              "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'chunk_id': '0a6dfab1a7ac6cf6fd6d22551c228b8aeddafa9b35bacbaf981da4cb2c6ab874', 'quote': 'YOLO imposes strong spatial constraints on bounding box p"
+            },
+            "row_count": 1,
+            "duration_ms": 0,
+            "truncated": false,
+            "error": null
           }
         ],
-        "tool_trace_summary": "route_to_specialist → final_answer",
-        "run_metadata": {
-          "agent_runtime": "langgraph_supervisor_v3",
-          "usage": {
-            "total_tokens": 180
-          }
-        },
-        "usage_total_tokens": 180,
-        "latency_ms": 120,
+        "tool_trace_summary": "coordinator_gate → route_to_specialist → route_to_specialist → workspace_inspect → paper_profile → paper_quote_search → final_answer",
+        "run_metadata": {},
+        "usage_total_tokens": null,
+        "latency_ms": 21748,
         "agent_runtime_label": "langgraph_supervisor_v3",
         "error": null,
         "scores": {
@@ -131,11 +327,23 @@
         "weighted_score": 4.0
       },
       "pairwise": {
-        "winner": "tie",
+        "winner": "candidate",
         "confidence": "low",
         "rationale": "heuristic_judge_no_llm: compare answer length, hard-fail heuristics, and gold requirements"
       },
-      "passed": true
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
     }
   ]
 }

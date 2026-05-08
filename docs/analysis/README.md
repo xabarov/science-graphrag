@@ -2,6 +2,16 @@
 
 Planning hub for engineering tracks, deep dives, and measurement spines. **Product phases (0–7):** [`../roadmap.md`](../roadmap.md). **Operational benchmark waves (gate, CI):** [`../runbooks/roadmap-next-waves.md`](../runbooks/roadmap-next-waves.md) and [`../runbooks/benchmark-decision-gate.md`](../runbooks/benchmark-decision-gate.md).
 
+## How this folder is organized
+
+| Role | Meaning |
+|------|---------|
+| **Entry points / live plans** | Weekly navigation and canonical roadmaps still in flight |
+| **Closeout / evidence** | Finished program outputs with artifact pointers (full text usually stays in root) |
+| **Stub → `_archive/`** | Stable URL in root; historical body stored under `_archive/` |
+| **Reference-only** | Large inventories — not the live BT queue |
+| **`_snippets/`** | Prompt dumps, trace JSON excerpts — not roadmaps ([`_snippets/README.md`](./_snippets/README.md)) |
+
 ---
 
 ## Where to look first (weekly / “what do we do now?”)
@@ -66,6 +76,33 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 
 ---
 
+## Closeout / evidence (program anchors)
+
+| Doc | Role |
+|-----|------|
+| [`orchestration-stabilization-closeout-2026-05-08.md`](./orchestration-stabilization-closeout-2026-05-08.md) | Orchestration stabilization — artifacts, verification, links to plan/baseline stubs |
+| [`phoenix-closeout-evidence-2026-04-27.md`](./phoenix-closeout-evidence-2026-04-27.md) | Phoenix Wave X — reproducibility commands and UI/API evidence |
+
+OD corpus closeouts live under [OD workspace](#od-workspace--chat-agent-proving-ground-paired-docs).
+
+---
+
+## Agent tools & settings companions
+
+| Doc | Role |
+|-----|------|
+| [`agent-tools-constants-inventory-2026-05-07.md`](./agent-tools-constants-inventory-2026-05-07.md) | R/P/G classification for `science_graphrag/agent/tools` knobs |
+| [`agent-tools-admin-settings-proposal-2026-05-07.md`](./agent-tools-admin-settings-proposal-2026-05-07.md) | Design-only: persisted `agent_tools` admin surface |
+| [`p0-graph-canvas-perf-baseline-2026-05.md`](./p0-graph-canvas-perf-baseline-2026-05.md) | Graph canvas perf baseline (pairs with [`refactor-frontend.md`](../backlog/refactor-frontend.md) P0) |
+
+---
+
+## Snippets & raw artifacts
+
+Prompt dumps and JSON excerpts live under [`_snippets/`](./_snippets/README.md) — not weekly roadmaps.
+
+---
+
 ## Reference-only (large inventory / completed gold — not the live BT queue)
 
 | Doc | Role |
@@ -86,6 +123,11 @@ Stable URLs and backlinks may still point at these root paths — open the link,
 | [`graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](./graph-work-vs-workspace-unification-dry-plan-2026-04-28.md) | [`_archive/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md`](./_archive/graph-work-vs-workspace-unification-dry-plan-2026-04-28.md) — Phases 0–5 **DONE** |
 | [`graph-navigation-hash-router-remediation-plan-2026-04-28.md`](./graph-navigation-hash-router-remediation-plan-2026-04-28.md) | [`_archive/graph-navigation-hash-router-remediation-plan-2026-04-28.md`](./_archive/graph-navigation-hash-router-remediation-plan-2026-04-28.md) — **DONE** |
 | [`workspace-graph-methods-citations-root-cause-2026-04-27.md`](./workspace-graph-methods-citations-root-cause-2026-04-27.md) | [`_archive/workspace-graph-methods-citations-root-cause-2026-04-27.md`](./_archive/workspace-graph-methods-citations-root-cause-2026-04-27.md) — P0 **DONE** |
+| [`orchestration-stabilization-plan-2026-05-07.md`](./orchestration-stabilization-plan-2026-05-07.md) | [`_archive/orchestration-stabilization-plan-2026-05-07.md`](./_archive/orchestration-stabilization-plan-2026-05-07.md) — **CLOSED** program; closeout [`orchestration-stabilization-closeout-2026-05-08.md`](./orchestration-stabilization-closeout-2026-05-08.md) |
+| [`orchestration-stabilization-baseline-2026-05-08.md`](./orchestration-stabilization-baseline-2026-05-08.md) | [`_archive/orchestration-stabilization-baseline-2026-05-08.md`](./_archive/orchestration-stabilization-baseline-2026-05-08.md) — pre-WS snapshot |
+| [`wave-a-residual-structural-hardening-2026-05-08.md`](./wave-a-residual-structural-hardening-2026-05-08.md) | [`_archive/wave-a-residual-structural-hardening-2026-05-08.md`](./_archive/wave-a-residual-structural-hardening-2026-05-08.md) — Wave A checklist **DONE** |
+| [`agent-runtime-train-t1-acceptance-2026-05-06.md`](./agent-runtime-train-t1-acceptance-2026-05-06.md) | [`_archive/agent-runtime-train-t1-acceptance-2026-05-06.md`](./_archive/agent-runtime-train-t1-acceptance-2026-05-06.md) — Train T1 milestone **DONE** |
+| [`agent-note-cost-eval-2026-05-06.md`](./agent-note-cost-eval-2026-05-06.md) | [`_archive/agent-note-cost-eval-2026-05-06.md`](./_archive/agent-note-cost-eval-2026-05-06.md) — `agent_note` cost evaluation snapshot **DONE** |
 
 **Reader authorship contract** (implemented Phases 0–3): [`work-graph-authorship-reader-contract-2026-04-28.md`](./work-graph-authorship-reader-contract-2026-04-28.md) — closed as a delivery plan; keep for contract text.
 
@@ -101,57 +143,70 @@ Stable URLs and backlinks may still point at these root paths — open the link,
 
 ## Archive index
 
-[`_archive/`](./_archive/) — completed waves (ingest async U–W, Wave 4–6 write-ups, full chat roadmap, gold phase log, historical UX), plus **full copies** of closed plans listed above.
+[`_archive/`](./_archive/) — completed waves (ingest async U–W, Wave 4–6 write-ups, full chat roadmap, gold phase log, historical UX), orchestration stabilization program artifacts, Train T1 / `agent_note` milestone notes, plus **full copies** of closed plans listed under `Closed / superseded`.
 
 ---
 
-## Root `.md` files (complete inventory)
+## Root markdown inventory (catalog)
+
+Sorted alphabetically. See sections above for roles; stubs point into `_archive/`.
 
 | File | Bucket |
 |------|--------|
 | `README.md` | This index |
-| `completed-work-snapshot.md` | Shipped / closed summary |
-| `master-roadmap-and-refactor-plan-2026-04-25.md` | Master tracks |
-| `ontology-extraction-benchmarks-plan.md` | **Entry point** ontology / extraction / benchmarks |
-| `ontology-benchmarks-trust-audit-2026-04-25.md` | **Live** BT / trust queue |
-| `ontology-benchmarks-roadmap-2026-04-24.md` | Reference inventory (Wave M–T tables) |
-| `habr-article-narrative-and-measurement-plan-2026-07.md` | Publication spine |
-| `agent-unified-plan-doing-and-benchmarks-2026-05-08.md` | Agent master-plan |
-| `agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md` | Agent v3 quality benchmark spec |
-| `agent-v3-quality-benchmark-implementation-plan-2026-05-08.md` | Agent v3 quality benchmark implementation plan |
-| `agent-runtime-tools-context-roadmap-2026-05-04.md` | Agent · tools · context roadmap |
 | `agent-chat-frontend-ui-plan-2026-04-26.md` | Agent UI |
-| `agent-chat-frontend-verification-gaps-next-wave.md` | Stub → archive |
-| `agent-chat-tools-and-trace-audit-master-2026-04-28.md` | Eval / trace audit |
+| `agent-chat-frontend-verification-gaps-next-wave.md` | Stub → archived frontend verification checklist |
 | `agent-chat-prod-rollout-2026-04-27.md` | Prod rollout |
-| `chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md` | OD eval |
+| `agent-chat-tools-and-trace-audit-master-2026-04-28.md` | Eval / trace audit |
 | `agent-graph-subprocess-isolation-spike-2026-04-27.md` | Spike |
-| `langgraph-migration-plan-2026-04-25.md` | Y5/Y6 |
-| `graph-readability-followup-2026-04-25.md` | Graph UX |
-| `graph-communities-and-gds-roadmap-2026-04-27.md` | Graph structural UX |
-| `graph-force-simulation-performance-analysis-2026-04-29.md` | Perf analysis |
-| `workspace-ux-redesign-2026-04-25.md` | Workspace UX |
-| `reader-ux-and-translation-roadmap-2026-04-25.md` | Reader / LX |
-| `light-theme-roadmap-2026-04-27.md` | Light theme |
-| `ingestion-llm-architecture-and-instructor-standardization-2026-04-27.md` | Ingest LLM |
-| `ingest-entity-extraction-and-dedup-complexity-analysis-2026-04-27.md` | Ingest analysis |
-| `instructor-adoption-dual-validate-2026-04-25.md` | dual_validate |
-| `logging-system-deep-dive-and-improvement-plan-2026-04-28.md` | Logging |
-| `llm-concurrency-semaphore-and-timeout-hardening-plan-2026-04-27.md` | LLM pools |
-| `llm-distributed-quota-phase5b-advanced-scope.md` | Quota 5B |
-| `minio-integration-and-artifact-storage-roadmap-2026-04-27.md` | Artifacts |
-| `method-ontology-rich-description-and-dedup-roadmap-2026-04-27.md` | Method ontology |
+| `agent-note-cost-eval-2026-05-06.md` | Stub → archived `agent_note` cost evaluation |
+| `agent-runtime-tools-context-roadmap-2026-05-04.md` | Agent · tools · context roadmap |
+| `agent-runtime-train-t1-acceptance-2026-05-06.md` | Stub → archived Train T1 acceptance |
+| `agent-tools-admin-settings-proposal-2026-05-07.md` | Design proposal (`agent_tools` admin) |
+| `agent-tools-constants-inventory-2026-05-07.md` | Reference inventory (tool knob classes) |
+| `agent-unified-plan-doing-and-benchmarks-2026-05-08.md` | Agent master-plan |
+| `agent-v3-quality-benchmark-implementation-plan-2026-05-08.md` | Agent v3 quality benchmark implementation plan |
+| `agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md` | Agent v3 quality benchmark spec |
 | `benchmark-panel-research-redesign-plan-2026-04-27.md` | Benchmark UI |
+| `chat-agent-od-workspace-restoration-and-eval-plan-2026-04-27.md` | OD eval |
+| `completed-work-snapshot.md` | Shipped / closed summary |
 | `contradicts-ontology-and-evidence-gap-2026-04-27.md` | CONTRADICTS gap |
 | `corpus-gold-pack-v1-2026-04-25.md` | Gold reference |
 | `dedup-ingest-parity-matrix-2026-04-26.md` | Dedup matrix |
-| `od-corpus-claims-methods-trust-audit-2026-04-27.md` | OD audit |
+| `graph-communities-and-gds-roadmap-2026-04-27.md` | Graph structural UX |
+| `graph-force-simulation-performance-analysis-2026-04-29.md` | Perf analysis |
+| `graph-navigation-hash-router-remediation-plan-2026-04-28.md` | Stub → archived hash router plan |
+| `graph-readability-followup-2026-04-25.md` | Graph UX |
+| `graph-work-vs-workspace-unification-dry-plan-2026-04-28.md` | Stub → archived DRY plan |
+| `habr-article-narrative-and-measurement-plan-2026-07.md` | Publication spine |
+| `ingest-entity-extraction-and-dedup-complexity-analysis-2026-04-27.md` | Ingest analysis |
+| `ingestion-llm-architecture-and-instructor-standardization-2026-04-27.md` | Ingest LLM |
+| `instructor-adoption-dual-validate-2026-04-25.md` | dual_validate |
+| `langgraph-migration-plan-2026-04-25.md` | Y5/Y6 |
+| `light-theme-roadmap-2026-04-27.md` | Light theme |
+| `llm-concurrency-semaphore-and-timeout-hardening-plan-2026-04-27.md` | LLM pools |
+| `llm-distributed-quota-phase5b-advanced-scope.md` | Quota 5B |
+| `logging-system-deep-dive-and-improvement-plan-2026-04-28.md` | Logging |
+| `master-roadmap-and-refactor-plan-2026-04-25.md` | Master tracks |
+| `method-ontology-rich-description-and-dedup-roadmap-2026-04-27.md` | Method ontology |
+| `minio-integration-and-artifact-storage-roadmap-2026-04-27.md` | Artifacts |
 | `od-corpus-claims-methods-post-restore-closeout-2026-04-27.md` | OD closeout |
+| `od-corpus-claims-methods-trust-audit-2026-04-27.md` | OD audit |
+| `ontology-benchmarks-roadmap-2026-04-24.md` | Reference inventory (Wave M–T tables) |
+| `ontology-benchmarks-trust-audit-2026-04-25.md` | **Live** BT / trust queue |
+| `ontology-extraction-benchmarks-plan.md` | **Entry point** ontology / extraction / benchmarks |
+| `orchestration-stabilization-baseline-2026-05-08.md` | Stub → archived pre-program baseline |
+| `orchestration-stabilization-closeout-2026-05-08.md` | Closeout (orchestration stabilization program) |
+| `orchestration-stabilization-plan-2026-05-07.md` | Stub → archived orchestration stabilization plan |
+| `p0-graph-canvas-perf-baseline-2026-05.md` | Frontend graph canvas perf baseline |
 | `phoenix-closeout-evidence-2026-04-27.md` | Phoenix evidence |
 | `phoenix-tracing-coverage-2026-04-25.md` | Stub → archived Phoenix plan |
-| `graph-work-vs-workspace-unification-dry-plan-2026-04-28.md` | Stub → archived DRY plan |
-| `graph-navigation-hash-router-remediation-plan-2026-04-28.md` | Stub → archived hash router |
-| `workspace-graph-methods-citations-root-cause-2026-04-27.md` | Stub → archived RCA |
+| `reader-ux-and-translation-roadmap-2026-04-25.md` | Reader / LX |
+| `wave-a-residual-structural-hardening-2026-05-08.md` | Stub → archived Wave A checklist |
 | `work-graph-authorship-reader-contract-2026-04-28.md` | Authorship contract |
+| `workspace-graph-methods-citations-root-cause-2026-04-27.md` | Stub → archived workspace graph RCA |
+| `workspace-ux-redesign-2026-04-25.md` | Workspace UX |
+
+Non-markdown snippets: [`_snippets/phoenix-trace-multistep-excerpt.json`](./_snippets/phoenix-trace-multistep-excerpt.json) (see [`_snippets/README.md`](./_snippets/README.md)).
 
 **Backlog (structural debt):** [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md), [`../backlog/refactor-frontend.md`](../backlog/refactor-frontend.md).

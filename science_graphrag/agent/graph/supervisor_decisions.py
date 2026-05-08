@@ -5,7 +5,7 @@ Each function in this module is **side-effect free**: it only reads
 string. All I/O (LangGraph state mutation, LLM calls, span events) stays in
 ``science_graphrag.agent.graph.supervisor``.
 
-Boundaries (matches orchestration-stabilization-plan-2026-05-07):
+Boundaries (historical design ref: ``docs/analysis/_archive/orchestration-stabilization-plan-2026-05-07.md`` §4):
 
 * ``compute_first_hop_decision``       — replaces inline ``if not prior``
   block in ``supervisor_node`` and resolves the first hop via the same

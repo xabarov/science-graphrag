@@ -70,7 +70,7 @@ Prioritized for **credibility** and **reader memory** (not feature sprawl).
    Command block in article §6 (clone → venv → `config-check` → holdout BT6).
 
 6. **Visual: one Phoenix or JSON excerpt** — **Done (JSON excerpt path).**  
-   [`docs/analysis/phoenix-trace-multistep-excerpt.json`](./phoenix-trace-multistep-excerpt.json) + links in §3 (Observability) and §7.4 of the Habr draft.
+   [`docs/analysis/_snippets/phoenix-trace-multistep-excerpt.json`](./_snippets/phoenix-trace-multistep-excerpt.json) + links in §3 (Observability) and §7.4 of the Habr draft.
 
 7. **Habr-specific polish** — **Done.**  
    Method-first paragraph before TL;DR; title unchanged (already states honest eval).

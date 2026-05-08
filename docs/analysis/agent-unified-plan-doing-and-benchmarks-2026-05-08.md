@@ -242,9 +242,18 @@ Delivered:
 
 ### Wave C — promotion / rollout discipline
 
-**Статус:** в работе как программа наблюдаемости и promotion review; lane по-прежнему **advisory-only** до явного решения мейнтейнеров (см. [`benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md)).
+**Статус:** **DONE** (2026-05-09) — карта KPI, cadence, baseline/compare/fingerprint policy, promotion review flow и advisory visibility (`agent_v3_quality_family` в сводке) зафиксированы в runbook’ах и коде агрегатора; lane `agent_v3_quality_judge_v1` остаётся **advisory-only** до явного решения мейнтейнеров (см. [`benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md)).
 
 Wave C **не** заменяет engineering gate (`trace-review-v1`, Wave R agent-tools): он задаёт, как измерять и продвигать **продуктовое** качество `v3` поверх уже зелёного runtime.
+
+**Operator evidence (2026-05-09, live `subprocess`, `AGENT_LIVE_BASE=dev`, `--subprocess-timeout-s 600`, `--progress`):**
+
+- `judge_mini` → `eval/results/current-agent-v3-quality-judge-mini.{json,md}` — `all_passed=true`, `cases_with_any_branch_non_ok=0`
+- `judge_pilot` → `eval/results/current-agent-v3-quality-judge-pilot.{json,md}` — то же (10 кейсов, wall ~11.5 min)
+- `judge_holdout` → `eval/results/current-agent-v3-quality-judge-holdout.{json,md}` — то же (`holdout_open_01`)
+- Пересборка сводки и trust baseline: `scripts/aggregate_benchmark_metrics.py … --write-trust-baseline eval/results/benchmark-trust-baseline.json` → `eval/results/benchmark-metrics-summary.{json,md}`; регрессия `tests/benchmarks/test_trust_baseline_regression.py` — зелёная
+
+P0/P1 по коду агента (§3) остаётся отдельным backlog и **не** входит в закрытие Wave C.
 
 #### C.1 Карта KPI (две оси)
 

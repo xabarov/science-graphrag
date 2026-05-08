@@ -2411,7 +2411,7 @@
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
         "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673",
         "judge_schema_version": null,
-        "mock_agent": true,
+        "mock_agent": false,
         "baseline_runtime": "langgraph_research_v1",
         "candidate_runtime": "langgraph_supervisor_v3",
         "transport": "subprocess"
@@ -2421,31 +2421,31 @@
         "mean_weighted_score_baseline": 4.0,
         "mean_weighted_score_candidate": 4.0,
         "mean_delta": 0.0,
-        "pairwise_candidate_win_rate": 0.0,
-        "pairwise_baseline_win_rate": 0.0,
-        "pairwise_tie_rate": 1.0,
+        "pairwise_candidate_win_rate": 0.25,
+        "pairwise_baseline_win_rate": 0.375,
+        "pairwise_tie_rate": 0.375,
         "hard_fail_count_baseline": 0,
         "hard_fail_count_candidate": 0,
         "family_breakdown": {
           "catalog_resolution": {
             "candidate_wins": 0,
-            "baseline_wins": 0,
-            "ties": 2
+            "baseline_wins": 1,
+            "ties": 1
           },
           "dual_evidence_compare": {
-            "candidate_wins": 0,
+            "candidate_wins": 1,
             "baseline_wins": 0,
-            "ties": 1
+            "ties": 0
           },
           "open_research": {
-            "candidate_wins": 0,
+            "candidate_wins": 1,
             "baseline_wins": 0,
-            "ties": 1
+            "ties": 0
           },
           "quote_evidence": {
             "candidate_wins": 0,
-            "baseline_wins": 0,
-            "ties": 1
+            "baseline_wins": 1,
+            "ties": 0
           },
           "relation_tracing": {
             "candidate_wins": 0,
@@ -2454,11 +2454,24 @@
           },
           "workspace_stats": {
             "candidate_wins": 0,
-            "baseline_wins": 0,
-            "ties": 2
+            "baseline_wins": 1,
+            "ties": 1
           }
         },
-        "all_passed": true
+        "all_passed": true,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 8
+        },
+        "candidate_status_counts": {
+          "ok": 8
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
       },
       "failed_count": 0,
       "failed_cases": [],
@@ -2467,20 +2480,18 @@
       "mean_weighted_score_baseline": 4.0,
       "mean_weighted_score_candidate": 4.0,
       "mean_delta": 0.0,
-      "cases_with_any_branch_non_ok": null,
-      "branch_outcome_schema": null,
+      "cases_with_any_branch_non_ok": 0,
+      "branch_outcome_schema": "branch_outcome_v1",
       "trust_signal": {
         "family": "agent_v3_quality_family",
         "member_id": "v3_judge_mini",
-        "runtime_mode": "mock_runtime",
+        "runtime_mode": "live",
         "validation_status_aggregate": null,
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "v3_judge_mini: mock runtime answers detected"
-        ],
+        "consistency_warnings": [],
         "individual_failures": [],
-        "is_phantom": true
+        "is_phantom": false
       }
     },
     "v3_judge_pilot": {
@@ -2489,7 +2500,7 @@
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
         "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673",
         "judge_schema_version": null,
-        "mock_agent": true,
+        "mock_agent": false,
         "baseline_runtime": "langgraph_research_v1",
         "candidate_runtime": "langgraph_supervisor_v3",
         "transport": "subprocess"
@@ -2499,36 +2510,36 @@
         "mean_weighted_score_baseline": 4.0,
         "mean_weighted_score_candidate": 4.0,
         "mean_delta": 0.0,
-        "pairwise_candidate_win_rate": 0.0,
-        "pairwise_baseline_win_rate": 0.0,
-        "pairwise_tie_rate": 1.0,
+        "pairwise_candidate_win_rate": 0.2,
+        "pairwise_baseline_win_rate": 0.4,
+        "pairwise_tie_rate": 0.4,
         "hard_fail_count_baseline": 0,
         "hard_fail_count_candidate": 0,
         "family_breakdown": {
           "catalog_resolution": {
-            "candidate_wins": 0,
+            "candidate_wins": 1,
             "baseline_wins": 0,
-            "ties": 2
+            "ties": 1
           },
           "dual_evidence_compare": {
             "candidate_wins": 0,
-            "baseline_wins": 0,
-            "ties": 2
+            "baseline_wins": 2,
+            "ties": 0
           },
           "open_research": {
             "candidate_wins": 0,
-            "baseline_wins": 0,
-            "ties": 1
+            "baseline_wins": 1,
+            "ties": 0
           },
           "quote_evidence": {
-            "candidate_wins": 0,
+            "candidate_wins": 1,
             "baseline_wins": 0,
-            "ties": 1
+            "ties": 0
           },
           "relation_tracing": {
             "candidate_wins": 0,
-            "baseline_wins": 0,
-            "ties": 2
+            "baseline_wins": 1,
+            "ties": 1
           },
           "workspace_stats": {
             "candidate_wins": 0,
@@ -2536,7 +2547,20 @@
             "ties": 2
           }
         },
-        "all_passed": true
+        "all_passed": true,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 10
+        },
+        "candidate_status_counts": {
+          "ok": 10
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
       },
       "failed_count": 0,
       "failed_cases": [],
@@ -2545,20 +2569,18 @@
       "mean_weighted_score_baseline": 4.0,
       "mean_weighted_score_candidate": 4.0,
       "mean_delta": 0.0,
-      "cases_with_any_branch_non_ok": null,
-      "branch_outcome_schema": null,
+      "cases_with_any_branch_non_ok": 0,
+      "branch_outcome_schema": "branch_outcome_v1",
       "trust_signal": {
         "family": "agent_v3_quality_family",
         "member_id": "v3_judge_pilot",
-        "runtime_mode": "mock_runtime",
+        "runtime_mode": "live",
         "validation_status_aggregate": null,
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "v3_judge_pilot: mock runtime answers detected"
-        ],
+        "consistency_warnings": [],
         "individual_failures": [],
-        "is_phantom": true
+        "is_phantom": false
       }
     },
     "v3_judge_holdout": {
@@ -2567,7 +2589,7 @@
         "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
         "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673",
         "judge_schema_version": null,
-        "mock_agent": true,
+        "mock_agent": false,
         "baseline_runtime": "langgraph_research_v1",
         "candidate_runtime": "langgraph_supervisor_v3",
         "transport": "subprocess"
@@ -2577,19 +2599,32 @@
         "mean_weighted_score_baseline": 4.0,
         "mean_weighted_score_candidate": 4.0,
         "mean_delta": 0.0,
-        "pairwise_candidate_win_rate": 0.0,
+        "pairwise_candidate_win_rate": 1.0,
         "pairwise_baseline_win_rate": 0.0,
-        "pairwise_tie_rate": 1.0,
+        "pairwise_tie_rate": 0.0,
         "hard_fail_count_baseline": 0,
         "hard_fail_count_candidate": 0,
         "family_breakdown": {
           "open_research": {
-            "candidate_wins": 0,
+            "candidate_wins": 1,
             "baseline_wins": 0,
-            "ties": 1
+            "ties": 0
           }
         },
-        "all_passed": true
+        "all_passed": true,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 1
+        },
+        "candidate_status_counts": {
+          "ok": 1
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
       },
       "failed_count": 0,
       "failed_cases": [],
@@ -2598,29 +2633,23 @@
       "mean_weighted_score_baseline": 4.0,
       "mean_weighted_score_candidate": 4.0,
       "mean_delta": 0.0,
-      "cases_with_any_branch_non_ok": null,
-      "branch_outcome_schema": null,
+      "cases_with_any_branch_non_ok": 0,
+      "branch_outcome_schema": "branch_outcome_v1",
       "trust_signal": {
         "family": "agent_v3_quality_family",
         "member_id": "v3_judge_holdout",
-        "runtime_mode": "mock_runtime",
+        "runtime_mode": "live",
         "validation_status_aggregate": null,
         "validation_status_by_pack": null,
         "last_known_real_run_at": null,
-        "consistency_warnings": [
-          "v3_judge_holdout: mock runtime answers detected"
-        ],
+        "consistency_warnings": [],
         "individual_failures": [],
-        "is_phantom": true
+        "is_phantom": false
       }
     },
     "trust_aggregate": {
-      "phantom_member_count": 3,
-      "phantom_members": [
-        "agent_v3_quality_family.v3_judge_mini",
-        "agent_v3_quality_family.v3_judge_pilot",
-        "agent_v3_quality_family.v3_judge_holdout"
-      ],
+      "phantom_member_count": 0,
+      "phantom_members": [],
       "mixed_validation_status_member_count": 0
     }
   },
@@ -2731,13 +2760,10 @@
       "claims_production_all_passed": true,
       "claims_production_mean_claim_recall": 1.0,
       "claims_core_uses_paraphrase_pilot_holdout": true,
-      "advisory_phantom_count": 5,
+      "advisory_phantom_count": 2,
       "advisory_phantom_families": [
         "merge_safe_contract_mock",
-        "strict_pilot_mock",
-        "v3_judge_mini",
-        "v3_judge_pilot",
-        "v3_judge_holdout"
+        "strict_pilot_mock"
       ],
       "advisory_individual_failures": [
         {
