@@ -19,13 +19,9 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from langchain_core.messages import AIMessage, ToolMessage
+from langchain_core.messages import ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.prebuilt import ToolNode
-
-# When the per-tool deadline fires, surface the failure as a ToolMessage with
-# this stable error code. Callers (planner, salvage) can pattern-match on it.
-PER_TOOL_DEADLINE_REASON = "per_tool_deadline_exceeded"
 
 from science_graphrag.agent.can_use_tool_contract import CanUseTool
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
@@ -40,8 +36,18 @@ from science_graphrag.agent.tool_call_normalization import (
     normalize_tool_call_name,
     state_with_normalized_last_ai_tool_calls,
 )
+from science_graphrag.agent.tool_execution_phases import (
+    ValidatedToolBatch,
+    ValidationFailure,
+    compute_tool_denies,
+    validate_tool_call_batch,
+)
 from science_graphrag.agent.tool_use_summary import apply_tool_use_summary_to_tool_json_content
 from science_graphrag.config import Settings
+
+# When the per-tool deadline fires, surface the failure as a ToolMessage with
+# this stable error code. Callers (planner, salvage) can pattern-match on it.
+PER_TOOL_DEADLINE_REASON = "per_tool_deadline_exceeded"
 
 logger = logging.getLogger(__name__)
 
@@ -247,33 +253,6 @@ def _react_bound_tool_names_from_state(state: AgentState) -> set[str] | None:
     return out or None
 
 
-def _deny_maps_for_ai_tool_calls(
-    *,
-    policy: str,
-    tcs: list[Any],
-    allowed_names: set[str],
-) -> dict[str, str]:
-    """Compute permission denials for the pending tool_calls batch."""
-    denies: dict[str, str] = {}
-    if policy in {"no_tools", "clarify"}:
-        for tc in tcs:
-            if not isinstance(tc, dict):
-                continue
-            nm = normalize_tool_call_name(str(tc.get("name") or ""))
-            if nm:
-                denies[nm] = f"tool_policy:{policy}"
-
-    for tc in tcs:
-        if not isinstance(tc, dict):
-            continue
-        nm = normalize_tool_call_name(str(tc.get("name") or ""))
-        if not nm:
-            continue
-        if nm not in allowed_names and nm not in denies:
-            denies[nm] = "not_in_bound_tool_surface"
-    return denies
-
-
 def _permission_denial_messages_from_ai(
     tcs: list[Any], *, denies: dict[str, str]
 ) -> list[ToolMessage]:
@@ -312,73 +291,40 @@ def build_tool_execution_node(
         """Execute tool calls for the latest AIMessage with explicit stages + sidechain logs."""
         st0 = state_with_normalized_last_ai_tool_calls(state)
         policy = effective_tool_policy(st0)
-        msgs = list(st0.get("messages") or [])
-        last = msgs[-1] if msgs else None
 
         events: list[dict[str, Any]] = []
-        if not isinstance(last, AIMessage):
+        validated = validate_tool_call_batch(st0)
+        if isinstance(validated, ValidationFailure):
             events.append(
                 {
                     "type": "tool_execution",
                     "phase": "validate",
                     "ok": False,
-                    "code": "no_ai_message",
+                    "code": validated.code,
                 }
             )
             return {"debug_events": events}
-
-        tcs = getattr(last, "tool_calls", None) or []
-        if not tcs:
-            events.append(
-                {
-                    "type": "tool_execution",
-                    "phase": "validate",
-                    "ok": False,
-                    "code": "no_tool_calls",
-                }
-            )
-            return {"debug_events": events}
+        assert isinstance(validated, ValidatedToolBatch)
+        tcs = validated.tool_calls
 
         allowed_names = {normalize_tool_call_name(getattr(t, "name", "") or "") for t in tools}
-
-        denies = _deny_maps_for_ai_tool_calls(policy=policy, tcs=tcs, allowed_names=allowed_names)
-
         bound = _react_bound_tool_names_from_state(st0)
-        if bound:
-            for tc in tcs:
-                if not isinstance(tc, dict):
-                    continue
-                nm = normalize_tool_call_name(str(tc.get("name") or ""))
-                if nm and nm not in bound and nm not in denies:
-                    denies[nm] = "not_in_bound_tool_surface"
-
         tid_plan = _thread_id_for_tool_context(st0)
-        if tid_plan and _session_plan_mode_active(tid_plan):
-            hi = _plan_mode_high_risk_tool_names()
-            for tc in tcs:
-                if not isinstance(tc, dict):
-                    continue
-                nm = normalize_tool_call_name(str(tc.get("name") or ""))
-                if nm and nm in hi and nm not in denies:
-                    denies[nm] = "plan_mode:high_risk_tool_blocked"
+        plan_mode_active = bool(tid_plan and _session_plan_mode_active(tid_plan))
+        plan_mode_hi = _plan_mode_high_risk_tool_names() if plan_mode_active else frozenset()
 
-        if can_use_tool is not None:
-            for tc in tcs:
-                if not isinstance(tc, dict):
-                    continue
-                nm = normalize_tool_call_name(str(tc.get("name") or ""))
-                if not nm or nm in denies:
-                    continue
-                try:
-                    reason = can_use_tool(st0, nm, tc)
-                except Exception as exc:  # pylint: disable=broad-exception-caught
-                    denies[nm] = f"can_use_tool_callback_error:{type(exc).__name__}"
-                else:
-                    if reason:
-                        denies[nm] = str(reason).strip() or "tool_denied_by_policy"
-
-        if denies:
-            # Permission phase — synthesize ToolMessage errors without invoking tools.
+        deny_decision = compute_tool_denies(
+            state=st0,
+            tcs=tcs,
+            policy=policy,
+            allowed_names=allowed_names,
+            bound=bound,
+            plan_mode_active=plan_mode_active,
+            plan_mode_high_risk=set(plan_mode_hi),
+            can_use_tool=can_use_tool,
+        )
+        if deny_decision.is_blocked():
+            denies = deny_decision.denies
             out_msgs = _permission_denial_messages_from_ai(tcs, denies=denies)
             events.append(
                 {

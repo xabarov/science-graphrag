@@ -256,8 +256,52 @@ def question_features_from_state(*, question: str, workspace_id: str | None) -> 
     return extract_question_features(question=question, workspace_id=workspace_id)
 
 
+def derive_retrieval_completion_state(
+    *,
+    features: QuestionFeatures,
+    tool_counts: dict[str, int],
+    has_payloads: bool,
+) -> CompletionSignalId:
+    """Pick a typed ``completion_state`` for a retrieval-specialist hop.
+
+    Reuses :func:`planner_post_retrieval_handoff` so the producer-side signal
+    and the consumer-side handoff cannot drift apart. When the planner would
+    deterministically hand off to writer for this combination of features +
+    tool counts, the specialist marks its leg as ``minimal_bundle_ready``.
+    Otherwise, the leg is generic ``any_specialist_payload`` (or
+    ``evidence_insufficient`` when the hop produced no usable payloads).
+    """
+    if not has_payloads:
+        if features.asks_for_workspace_stats and tool_counts.get("workspace_inspect", 0) > 0:
+            return "any_specialist_payload"
+        return "evidence_insufficient"
+    handoff = planner_post_retrieval_handoff(
+        features=features,
+        tool_counts=tool_counts,
+    )
+    if handoff is not None:
+        return "minimal_bundle_ready"
+    return "any_specialist_payload"
+
+
+def derive_graph_completion_state(
+    *,
+    has_payloads: bool,
+    edge_search_count: int,
+    cypher_query_count: int,
+) -> CompletionSignalId:
+    """Pick a typed ``completion_state`` for a graph-specialist hop."""
+    if not has_payloads and edge_search_count == 0 and cypher_query_count == 0:
+        return "evidence_insufficient"
+    if edge_search_count > 0 or cypher_query_count > 0:
+        return "graph_traversal_needed"
+    return "any_specialist_payload"
+
+
 __all__ = [
     "build_route_plan",
+    "derive_graph_completion_state",
+    "derive_retrieval_completion_state",
     "planner_post_retrieval_handoff",
     "question_features_from_state",
 ]

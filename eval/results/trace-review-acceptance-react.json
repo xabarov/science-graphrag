@@ -1,0 +1,1179 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-07T22:18:32.229983+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+    "suite": "acceptance",
+    "profile": "default",
+    "run_kind": "single_agent_research",
+    "graph_id": "single_agent_react",
+    "feature_flags": {
+      "agent_runtime": "langgraph_research_v1",
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "true",
+      "agent_claim_verification_enabled": null,
+      "agent_subagent_lifecycle_enhanced_enabled": null
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "redis",
+          "agent_session_memory_configured": "redis"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 1768,
+        "warnings": [
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "tools": [
+          "coordinator_gate"
+        ],
+        "answer_class": "grounded_explanation",
+        "run_metadata": {
+          "agent_runtime": "langgraph_research_v1",
+          "agent_max_tool_calls": 12,
+          "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+          "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+          "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+          "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+          "usage": {
+            "prompt_tokens": 5246,
+            "completion_tokens": 12,
+            "total_tokens": 5258,
+            "input_tokens": 5246,
+            "output_tokens": 12
+          },
+          "debug_events": [
+            {
+              "type": "intent_classified",
+              "source": "single_agent_research_v1",
+              "run_kind": "single_agent_research",
+              "graph_id": "single_agent_react",
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "single_agent_research_runtime",
+              "confidence": 1.0,
+              "classifier": "deterministic",
+              "answer_class": "grounded_explanation",
+              "suggested_answer_class": "grounded_explanation"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "single_agent_react",
+              "tools": null,
+              "reason": "low_signal",
+              "top_score": 0.1,
+              "score_band": null,
+              "catalog_size": 10,
+              "shortlist_size": null,
+              "shortlist_ratio": null,
+              "deferred_schema_mode": null,
+              "deferred_schema_refs": null,
+              "skipped": false,
+              "carryover_tools": null,
+              "message_discovery_tools": null,
+              "message_discovery_merged": null,
+              "activation_policy": "relaxed_low_signal"
+            }
+          ],
+          "subagent_observability_lane": "legacy_routing_sse_only",
+          "specialist_results_v3": {
+            "schema_version": 1,
+            "legs": [],
+            "merge": {
+              "evidence_origin": "parent_tool",
+              "confidence": 1.0,
+              "conflict": null,
+              "writer_directive": "",
+              "partial_failure": false
+            }
+          }
+        },
+        "answer_stripped": "Hello! How can I assist you with your research today?",
+        "answer_len": 53
+      }
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "thread_id": "live_check_a082963a12f6",
+        "turn2_warnings": [
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "turn2_tools": [
+          "coordinator_gate",
+          "session_init"
+        ]
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "product_step",
+          "tool_call",
+          "tool_search_result",
+          "tool_result",
+          "tool_execution",
+          "tool_execution",
+          "product_step",
+          "answer_synthesis_started",
+          "context_compacted",
+          "product_step",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 13
+      }
+    },
+    {
+      "name": "agent_v2_fanout_probe",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "tools": [
+          "coordinator_gate",
+          "workspace_inspect",
+          "find_works",
+          "paper_profile",
+          "final_answer"
+        ],
+        "non_session_tool_count": 5
+      }
+    },
+    {
+      "name": "agent_v2_malicious_deny",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "answer_len": 253,
+        "warnings": [
+          "weak_evidence",
+          "insufficient_evidence"
+        ]
+      }
+    }
+  ],
+  "trace_timeline": [
+    {
+      "case_id": "catalog_resolution",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 11244.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.6,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 20311
+    },
+    {
+      "case_id": "workspace_stats",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 5552.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.6,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 1,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 8185
+    },
+    {
+      "case_id": "grounded_quote",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 13562.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.6,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 1,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 14447
+    },
+    {
+      "case_id": "multi_compare_bibliography",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 14859.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "format_bibliography_gost",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.7,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 23300
+    },
+    {
+      "case_id": "graph_ego_methods",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 10277.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "edge_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [
+        "graph_only"
+      ],
+      "tool_search_shortlist_ratio_avg": 0.7333,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 1,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 14779
+    },
+    {
+      "case_id": "multi_evidence_speed_accuracy",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 28323.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.6,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 27944
+    },
+    {
+      "case_id": "v3_cv_fanout_dual_evidence",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 16282.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.6,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 18166
+    },
+    {
+      "case_id": "v3_subagent_mesh_multi_tool",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 26299.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.6,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 29126
+    },
+    {
+      "case_id": "b2_merge_provenance_probe",
+      "thread_id": null,
+      "run_kind": "single_agent_research",
+      "graph_id": "single_agent_react",
+      "duration_ms": 23427.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": {
+        "covered": 100,
+        "missing": []
+      },
+      "compaction_events": [],
+      "hook_chain_events": [],
+      "db_side_effects": {
+        "ingest_jobs_seen": 3
+      },
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.6,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 0,
+      "subagent_task_notification_count": 0,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 44064
+    }
+  ],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": 26299.0,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": 0.6259,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0,
+    "side_llm_cache_read_ratio_avg": null,
+    "latency_p50_ms": 13562.0,
+    "insight_recall_at_k": 1.0,
+    "stale_summary_error_rate": 0.0,
+    "insight_stale_reason_rate": 0.0,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "ptl_retry_count_per_compaction_avg": null,
+    "compaction_circuit_breaker_trips": 0,
+    "unnecessary_tool_calls_avg": 0.0,
+    "hook_chain_event_count": 0,
+    "subagent_lifecycle_missing_count": 0,
+    "subagent_task_notification_count_avg": 0.0,
+    "tool_search_miss_due_to_no_discovery_total": 0,
+    "tool_schema_bytes_saved_total": 0,
+    "tool_loop_repeat_max": 2,
+    "runtime_monitor_event_total": 0,
+    "runtime_monitor_degraded_total": 0,
+    "mcp_audit_event_total": 0,
+    "mcp_audit_deny_total": 0,
+    "lsp_audit_event_total": 0,
+    "lsp_audit_degraded_total": 0,
+    "claim_verification_verdict_parse_rate": null,
+    "live_trust_signal_avg": null,
+    "specialist_v3_merge_conflict_cases": 0,
+    "agent_usage_total_tokens_sum": 200322,
+    "long_thread_eval_pass_rate": 1.0,
+    "claim_grounding_precision": 1.0,
+    "claim_grounding_recall": 1.0,
+    "insight_synthesis_conflict_audit_rate": 0.333333
+  },
+  "verdict": {
+    "status": "warn",
+    "fail_reasons": [],
+    "warn_reasons": [
+      "claim_verification_verdict_parse_rate:absent_no_cv_rows"
+    ]
+  },
+  "e2e_audit": {
+    "ok": true,
+    "returncode": 0,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "acceptance",
+      "--timeout",
+      "240.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_sabtaff8.json",
+      "--trace-audit"
+    ],
+    "stdout_tail": "quote_search\",\n              \"idea_search\",\n              \"final_answer\"\n            ],\n            \"reason\": \"rules\",\n            \"top_score\": 9.5,\n            \"score_band\": 1.35,\n            \"catalog_size\": 10,\n            \"shortlist_size\": 6,\n            \"shortlist_ratio\": 0.6,\n            \"deferred_schema_mode\": null,\n            \"deferred_schema_refs\": null,\n            \"skipped\": false,\n            \"carryover_tools\": null,\n            \"message_discovery_tools\": [\n              \"workspace_inspect\",\n              \"find_works\",\n              \"paper_profile\"\n            ],\n            \"message_discovery_merged\": [\n              \"workspace_inspect\",\n              \"paper_profile\"\n            ],\n            \"activation_policy\": \"default\",\n            \"rules_matched_tools\": [\n              \"find_works\"\n            ],\n            \"deferred_strict_candidates\": [\n              \"paper_quote_search\",\n              \"idea_search\"\n            ],\n            \"deferred_strict_in_shortlist_count\": 2,\n            \"deferred_activated_via_message_or_carryover_count\": 0,\n            \"tool_search_miss_due_to_no_discovery\": 0,\n            \"deferred_tool_activation_rate\": 0.0,\n            \"selector_stage\": \"rules_only\",\n            \"selector_reason_codes\": [\n              \"llm_rerank_disabled\"\n            ]\n          },\n          {\n            \"type\": \"tool_execution\",\n            \"phase\": \"pre_hooks\",\n            \"ok\": true,\n            \"tools\": [\n              \"final_answer\"\n            ]\n          },\n          {\n            \"type\": \"tool_execution\",\n            \"phase\": \"post_hooks\",\n            \"ok\": true,\n            \"elapsed_ms\": 8\n          }\n        ],\n        \"tool_search_shortlist_ratio_avg\": 0.6,\n        \"deferred_tool_activation_rate\": 0.0,\n        \"subagent_observability_lane\": \"legacy_routing_sse_only\",\n        \"specialist_results_v3\": {\n          \"schema_version\": 1,\n          \"legs\": [],\n          \"merge\": {\n            \"evidence_origin\": \"parent_tool\",\n            \"confidence\": 1.0,\n            \"conflict\": null,\n            \"writer_directive\": \"\",\n            \"partial_failure\": false\n          }\n        }\n      },\n      \"run_kind\": \"single_agent_research\",\n      \"graph_id\": \"single_agent_react\",\n      \"tool_search_shortlist_ratio_avg\": 0.6,\n      \"tool_search_deferred_schema_events\": null,\n      \"budget_stop_reasons\": [],\n      \"answer_class\": \"inventory\",\n      \"citations_count\": 2,\n      \"phoenix_ui_url\": \"http://127.0.0.1:16006/projects/science-graphrag/traces/4bd9d97f50abcde2a4fea1af94cde4b5\",\n      \"trace_audit\": {\n        \"tool_counts\": {\n          \"find_works\": 2,\n          \"paper_profile\": 2,\n          \"coordinator_gate\": 1,\n          \"final_answer\": 1,\n          \"workspace_inspect\": 1\n        },\n        \"consecutive_duplicate_tools\": [\n          \"find_works\",\n          \"paper_profile\"\n        ],\n        \"tools_called_more_than_once\": {\n          \"find_works\": 2,\n          \"paper_profile\": 2\n        },\n        \"phoenix_sample_llm_agent_span_hits\": 8,\n        \"phoenix_sample_channel_or_route_hits\": 40,\n        \"phoenix_sample_tool_dot_hits\": 8,\n        \"heuristic_issues\": [],\n        \"phoenix_structure_audit\": {\n          \"span_sample_size\": 100,\n          \"llm_agent_span_hits\": 8,\n          \"tool_dot_span_hits\": 8,\n          \"embedding_span_hits\": 1,\n          \"retrieval_span_hits\": 1,\n          \"channel_or_route_noise_hits\": 40,\n          \"tool_dot_sample\": [\n            \"tool.final_answer\",\n            \"tool.paper_profile\",\n            \"tool.paper_profile\",\n            \"tool.find_works\",\n            \"tool.find_works\",\n            \"tool.workspace_inspect\",\n            \"tool.final_answer\",\n            \"tool.paper_quote_search\"\n          ],\n          \"issues\": [],\n          \"sequence_hints\": [\n            \"duplicate_tool_calls_in_trace: ['find_works', 'paper_profile'] — check fan-out rules.\"\n          ],\n          \"coverage\": {\n            \"covered\": 100,\n            \"missing\": []\n          }\n        }\n      }\n    }\n  ]\n}\n",
+    "stderr_tail": "note: PHOENIX_TRACE_SCOPE=extraction_llm (agent.* spans still allowed); if Phoenix is empty, check PHOENIX_COLLECTOR_ENDPOINT on the API container.\nwrote full report json: /tmp/e2e_full_report_sabtaff8.json\n\n--- summary ---\ncatalog_resolution: steps=5 final_answer=True answer_len=436 phoenix_ok=True ok=True\nworkspace_stats: steps=3 final_answer=True answer_len=114 phoenix_ok=True ok=True\ngrounded_quote: steps=4 final_answer=True answer_len=616 phoenix_ok=True ok=True\nmulti_compare_bibliography: steps=7 final_answer=True answer_len=664 phoenix_ok=True ok=True\ngraph_ego_methods: steps=4 final_answer=True answer_len=316 phoenix_ok=True ok=True\nmulti_evidence_speed_accuracy: steps=7 final_answer=True answer_len=1655 phoenix_ok=True ok=True\nv3_cv_fanout_dual_evidence: steps=6 final_answer=True answer_len=1793 phoenix_ok=True ok=True\nv3_subagent_mesh_multi_tool: steps=7 final_answer=True answer_len=1343 phoenix_ok=True ok=True\nb2_merge_provenance_probe: steps=7 final_answer=True answer_len=1296 phoenix_ok=True ok=True\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_sabtaff8.json"
+  },
+  "phoenix_snapshot_path": "eval/results/trace-review-acceptance-react_phoenix_spans.jsonl",
+  "long_thread_eval": {
+    "cases": [
+      {
+        "case_id": "long_thread_fresh_insight",
+        "pass": true,
+        "claim_grounding_ok": true,
+        "insight_fallback_reason": null,
+        "thread_insight_prompt_status": "conflicted",
+        "thread_insight_synthesis_conflict_audit": false
+      },
+      {
+        "case_id": "long_thread_stale_fallback",
+        "pass": true,
+        "claim_grounding_ok": true,
+        "insight_fallback_reason": "insight_stale_lag",
+        "thread_insight_prompt_status": "omitted",
+        "thread_insight_synthesis_conflict_audit": false
+      },
+      {
+        "case_id": "long_thread_conflict_marked",
+        "pass": true,
+        "claim_grounding_ok": true,
+        "insight_fallback_reason": null,
+        "thread_insight_prompt_status": "conflicted",
+        "thread_insight_synthesis_conflict_audit": true
+      }
+    ],
+    "metrics": {
+      "insight_recall_at_k": 1.0,
+      "stale_summary_error_rate": 0.0,
+      "long_thread_eval_pass_rate": 1.0,
+      "claim_grounding_precision": 1.0,
+      "claim_grounding_recall": 1.0,
+      "insight_synthesis_conflict_audit_rate": 0.333333
+    }
+  },
+  "phoenix_pull": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-acceptance-react_phoenix_spans.jsonl",
+    "stderr_tail": ""
+  },
+  "acceptance_summary": {
+    "schema_version": "acceptance_summary_v1",
+    "trace_review_verdict": "warn",
+    "gates": {
+      "§10.2_side_llm_cache_read_ratio": "skipped_no_forked_thread_insight_rows",
+      "§10.3_claim_verification_verdict_parse": "skipped_no_claim_verification_rows",
+      "§10.6_hook_chain_events": "warn_no_hook_chain_events_in_timeline",
+      "§11.3_B1_subagent_lifecycle": "pass",
+      "§11.4_B3_budget_usage_timeline": "pass_token_usage_exported_no_cutoff_in_sample"
+    },
+    "synthetic_covered": [
+      "§10.1 B0 fork_vs_coordinator: eval/chat_agent/subagent_runtime_fork_vs_coordinator_bench.py",
+      "§10.4 verification Scope/VERDICT: tests/agent/test_subagent_output_contract.py",
+      "§10.5 compaction counters: tests/scripts/live_check/test_trace_review_schema.py",
+      "§10.6 hook_chain_events: tests/agent/test_hooks_post_compact.py",
+      "§10.7 agent registry: tests/agent/test_agent_registry_permissions.py",
+      "§10.8 task-notification contract: tests/agent/test_subagent_notification_contract.py",
+      "B4 partial-failure / deny (unit): tests/agent/test_specialist_results_v3_and_claim_verification.py",
+      "B4 lifecycle rows (synthetic): tests/eval/test_subagent_hardening_gates.py",
+      "B4 fanout + malicious-deny HTTP probes (live wiring): scripts/live_check/http_suite.py"
+    ],
+    "live_proven": [
+      "b4_fanout_multi_tool_http_check_ok",
+      "b4_malicious_deny_http_check_ok",
+      "od_workspace_e2e_http_ok",
+      "run_metadata_usage_tokens_exported"
+    ],
+    "residual_open": [
+      "B2 LLM-judge on final_answer quality when merge.conflict absent in this run"
+    ],
+    "suite": "acceptance",
+    "feature_flags": {
+      "agent_runtime": "langgraph_research_v1",
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "true",
+      "agent_claim_verification_enabled": null,
+      "agent_subagent_lifecycle_enhanced_enabled": null
+    }
+  }
+}

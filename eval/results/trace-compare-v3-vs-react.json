@@ -1,0 +1,39 @@
+{
+  "review_version": "trace-review-v1",
+  "status": "pass",
+  "fail_reasons": [],
+  "warn_reasons": [
+    "latency_p95_increase:26299.0->34856.0",
+    "shortlist_ratio_increase:0.1063"
+  ],
+  "delta": {
+    "missing_span_count": 0.0,
+    "tool_error_rate": 0.0,
+    "final_answer_missing_count": 0.0,
+    "latency_p95_ms": 8557.0,
+    "compaction_churn_score": 0.0,
+    "compaction_churn_delta": 0.0,
+    "shortlist_ratio_avg": 0.10629999999999995,
+    "deferred_schema_event_count": 0.0,
+    "budget_cutoff_count": 0.0,
+    "side_llm_cache_read_ratio_avg": null,
+    "insight_recall_at_k": 1.0,
+    "stale_summary_error_rate": 0.0,
+    "latency_p50_ms": 25985.0,
+    "latency_p95_ms_candidate": 34856.0,
+    "insight_stale_reason_rate": 0.0,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "compaction_circuit_breaker_trips": 0.0,
+    "claim_grounding_precision": 1.0,
+    "claim_grounding_recall": 1.0,
+    "baseline_verdict_rank": 1,
+    "candidate_verdict_rank": 1,
+    "unnecessary_tool_calls_avg": 0.0,
+    "subagent_lifecycle_missing_count": 0.0,
+    "tool_search_miss_due_to_no_discovery_total": 0.0,
+    "tool_loop_repeat_max": 1.0,
+    "live_trust_signal_avg_delta": null,
+    "claim_verification_verdict_parse_rate_delta": null
+  }
+}

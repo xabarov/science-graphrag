@@ -8,11 +8,12 @@ string. All I/O (LangGraph state mutation, LLM calls, span events) stays in
 Boundaries (matches orchestration-stabilization-plan-2026-05-07):
 
 * ``compute_first_hop_decision``       — replaces inline ``if not prior``
-  block in ``supervisor_node`` (route_hint, dual-evidence force, fast route).
-* ``compute_post_retrieval_handoff``   — wraps both legacy
-  ``_maybe_force_writer_after_retrieval`` and the new planner-based
-  ``planner_post_retrieval_handoff``; flag ``agent_route_plan_post_retrieval_handoff_enabled``
-  selects which one.
+  block in ``supervisor_node`` and resolves the first hop via the same
+  planner contract whether the plan came from state metadata or was
+  reconstructed on demand for older/no-plan states.
+* ``compute_post_retrieval_handoff``   — asks the planner-based
+  ``planner_post_retrieval_handoff`` over typed question features and
+  completion-state markers.
 * ``compute_round_cap_decision``       — replaces the supervisor round cap
   branch.
 * ``should_skip_llm_router``           — answers Phase 4: did the plan
@@ -21,12 +22,12 @@ Boundaries (matches orchestration-stabilization-plan-2026-05-07):
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 from langchain_core.messages import HumanMessage
 
-from science_graphrag.agent.coordination.deterministic import graph_intent_heuristic
 from science_graphrag.agent.coordination.question_features import (
     QuestionFeatures,
     extract_question_features,
@@ -36,10 +37,23 @@ from science_graphrag.agent.coordination.route_plan import (
     route_plan_from_metadata,
 )
 from science_graphrag.agent.coordination.route_planner import (
+    build_route_plan,
     planner_post_retrieval_handoff as _planner_post_retrieval_handoff,
 )
+from science_graphrag.agent.coordination.turn_policy import TurnPolicy
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
+from science_graphrag.agent.llm.chat import (
+    agent_chat_transport_max_attempts,
+    ensure_messages_safe_for_generation,
+)
+from science_graphrag.llm.concurrency import invoke_chat_gated
+from science_graphrag.observability.spans import (
+    SpanAttributes,
+    add_span_event,
+    chain_span,
+    llm_span,
+)
 
 # --- Specialist names -------------------------------------------------------
 RETRIEVAL_SPECIALIST = "retrieval_agent"
@@ -110,6 +124,39 @@ def _route_plan(state: AgentState) -> RoutePlan | None:
     return route_plan_from_metadata(state.get("metadata"))
 
 
+def _turn_policy_from_state_inputs(
+    *,
+    state: AgentState,
+    tool_policy: str,
+    route_hint: str,
+    answer_class: str,
+) -> TurnPolicy:
+    """Reconstruct a minimal ``TurnPolicy`` for no-plan states."""
+    meta = state.get("metadata") or {}
+    raw_tp = meta.get("turn_policy") if isinstance(meta, dict) else None
+    tp = raw_tp if isinstance(raw_tp, dict) else {}
+    conversation_intent = str(tp.get("conversation_intent") or "research_task").strip()
+    if conversation_intent not in {"research_task", "small_talk", "meta", "ambiguous"}:
+        conversation_intent = "research_task"
+    classifier = str(tp.get("classifier") or "fallback").strip()
+    if classifier not in {"deterministic", "llm", "fallback"}:
+        classifier = "fallback"
+    try:
+        confidence = float(tp.get("confidence", 1.0) or 1.0)
+    except Exception:  # noqa: BLE001
+        confidence = 1.0
+    return TurnPolicy(
+        conversation_intent=conversation_intent,  # type: ignore[arg-type]
+        tool_policy=str(tool_policy or "allow_tools").strip() or "allow_tools",  # type: ignore[arg-type]
+        route_hint=str(route_hint or "").strip() or "retrieval_agent",  # type: ignore[arg-type]
+        reason=str(tp.get("reason") or "planner_fallback_from_state").strip()
+        or "planner_fallback_from_state",
+        suggested_answer_class=str(answer_class or "").strip() or "grounded_explanation",
+        confidence=confidence,
+        classifier=classifier,  # type: ignore[arg-type]
+    )
+
+
 def _tool_counts(state: AgentState) -> dict[str, int]:
     counts: dict[str, int] = {}
     for step in collect_tool_execution_steps(list(state.get("messages") or [])):
@@ -137,15 +184,24 @@ def compute_first_hop_decision(  # pylint: disable=too-many-return-statements,to
 
     Order of precedence:
 
-    1. RoutePlan (when ``agent_route_plan_enabled``) — first step wins.
-    2. Workspace dual-evidence catalog compare override (legacy heuristic).
-    3. Coordinator ``route_hint`` (graph_agent / writer_agent / retrieval_agent).
-    4. Semantic fast-route flag.
+    1. Persisted RoutePlan from ``metadata.turn_policy.route_plan``.
+    2. If the state has no persisted plan, rebuild a transient RoutePlan from
+       the same ``QuestionFeatures`` + ``TurnPolicy`` inputs.
+    3. Only when the planner yields no step do we fall through to the LLM router.
     """
     if tool_policy != "allow_tools":
         return None
 
     plan = _route_plan(state)
+    if plan is None and bool(getattr(settings, "agent_route_plan_enabled", False)):
+        feats = _features_from_state(state)
+        transient_tp = _turn_policy_from_state_inputs(
+            state=state,
+            tool_policy=tool_policy,
+            route_hint=route_hint,
+            answer_class=answer_class,
+        )
+        plan = build_route_plan(features=feats, turn_policy=transient_tp, settings=settings)
     if plan is not None and plan.steps:
         first = plan.first_step()
         if first is not None:
@@ -154,90 +210,40 @@ def compute_first_hop_decision(  # pylint: disable=too-many-return-statements,to
                 reason=first.reason or "route_plan_first_step",
                 extra={"route_hint": route_hint or None, "from_route_plan": True},
             )
-
-    feats = _features_from_state(state)
-
-    # Legacy: workspace dual-evidence first-hop force (overrides graph route_hint).
-    if (
-        feats.has_workspace
-        and feats.asks_for_dual_evidence
-        and "workspace" in feats.normalized_question
-        and route_hint != WRITER_SPECIALIST
-        and answer_class != "relation_tracing"
-        and not graph_intent_heuristic(feats.raw_question)
-    ):
-        return FirstHopDecision(
-            specialist=RETRIEVAL_SPECIALIST,
-            reason="workspace_dual_evidence_first_hop",
-            extra={"route_hint": route_hint or None},
-        )
-
-    if route_hint == GRAPH_SPECIALIST or answer_class == "relation_tracing":
-        reason = (
-            "coordinator_route_hint"
-            if route_hint == GRAPH_SPECIALIST
-            else "answer_class_relation_tracing"
-        )
-        return FirstHopDecision(
-            specialist=GRAPH_SPECIALIST,
-            reason=reason,
-            extra={"route_hint": route_hint or None},
-        )
-
-    if route_hint == WRITER_SPECIALIST:
-        return FirstHopDecision(
-            specialist=WRITER_SPECIALIST,
-            reason="coordinator_route_hint",
-        )
-
-    if route_hint == RETRIEVAL_SPECIALIST and bool(
-        getattr(settings, "agent_semantic_query_fast_route", False)
-    ):
-        if feats.raw_question and not feats.asks_for_relations:
-            return FirstHopDecision(
-                specialist=RETRIEVAL_SPECIALIST,
-                reason="semantic_fast_route",
-            )
     return None
 
 
 def compute_post_retrieval_handoff(
     *,
     state: AgentState,
-    settings: Any,
-    legacy_fn: Any,
+    settings: Any,  # pylint: disable=unused-argument  # reserved for future per-flag overrides
 ) -> str | None:
     """Decide whether retrieval finished and writer can take over.
 
-    ``legacy_fn`` is the (still-present) imperative
-    ``_maybe_force_writer_after_retrieval`` from supervisor.py — called for
-    backward compatibility when the planner-based path is not enabled.
+    Always reads features through :func:`extract_question_features` and asks
+    :func:`planner_post_retrieval_handoff` — the same path the planner uses
+    when a ``RoutePlan`` is attached. The legacy `legacy_fn` parameter and
+    the parallel substring tables in ``supervisor.py`` are gone as of
+    2026-05-08; substring rules live in
+    :mod:`science_graphrag.agent.coordination.question_features` only.
     """
     if str(state.get("current_specialist") or "").strip() != RETRIEVAL_SPECIALIST:
         return None
 
-    use_planner = bool(getattr(settings, "agent_route_plan_post_retrieval_handoff_enabled", False))
-    plan_attached = _route_plan(state) is not None
-
-    if use_planner and plan_attached:
-        feats = _features_from_state(state)
-        v3 = state.get("specialist_results_v3")
-        cs: str | None = None
-        if isinstance(v3, dict):
-            merge = v3.get("merge")
-            if isinstance(merge, dict):
-                raw = merge.get("completion_state")
-                if isinstance(raw, str) and raw.strip():
-                    cs = raw.strip()
-        return _planner_post_retrieval_handoff(
-            features=feats,
-            tool_counts=_tool_counts(state),
-            completion_state=cs,
-        )
-
-    if callable(legacy_fn):
-        return legacy_fn(state)
-    return None
+    feats = _features_from_state(state)
+    v3 = state.get("specialist_results_v3")
+    cs: str | None = None
+    if isinstance(v3, dict):
+        merge = v3.get("merge")
+        if isinstance(merge, dict):
+            raw = merge.get("completion_state")
+            if isinstance(raw, str) and raw.strip():
+                cs = raw.strip()
+    return _planner_post_retrieval_handoff(
+        features=feats,
+        tool_counts=_tool_counts(state),
+        completion_state=cs,
+    )
 
 
 def compute_round_cap_decision(*, state: AgentState, settings: Any) -> RoundCapDecision:
@@ -293,13 +299,148 @@ def should_skip_llm_router(  # pylint: disable=too-many-return-statements
     return str(step.specialist)
 
 
+_LLM_ROUTING_PROMPT = """You are a supervisor for scholarly research agents.
+Available specialists:
+- retrieval_agent: workspace inventory (workspace_inspect), full-text work search (find_works),
+  paper profiles, semantic idea_search / paper_quote_search, bibliography formatting
+- graph_agent: structural graph only — edge neighborhoods and read-only Cypher (no full-text work search)
+- writer_agent: synthesize final answer with citations
+
+If the user needs to find papers by title, author name fragment, or keywords without a known work id,
+prefer retrieval_agent (find_works). Use graph_agent when the question is about relations, paths,
+or patterns between known entities.
+
+If the user compares two papers inside a workspace using catalog tools (find_works + paper_profile)
+without explicit graph vocabulary (neighbors, paths, cypher, edge_search), prefer retrieval_agent —
+do not start with graph_agent.
+
+When the question requires mixed corpus evidence (semantic chunks plus verbatim quotes), keep routing
+to retrieval_agent until idea_search / paper_quote_search have been tried unless specialist_results
+already show those paths failed.
+
+Given the user question and accumulated specialist_results, decide the next specialist.
+Respond with exactly one token:
+retrieval_agent | graph_agent | writer_agent | FINISH
+"""
+
+_ROUTE_FINISH_TOKEN = "finish"
+
+
+@dataclass(frozen=True)
+class ReplanDecision:
+    """Result of ``maybe_replan_via_llm``."""
+
+    specialist: str
+    finish_remapped: bool
+    invalid_token: bool
+
+
+def _build_llm_route_messages(state: AgentState) -> list[HumanMessage]:
+    """Provider-safe routing prompt assembled without tool-call replay.
+
+    Mirrors the previous private helper in ``supervisor.py``; lives here
+    to keep the LLM-routing seam self-contained.
+    """
+    specialist_context = str(state.get("specialist_results") or {})
+    user_question = first_user_plain_question(state)
+    v3_merge = ""
+    v3 = state.get("specialist_results_v3")
+    if isinstance(v3, dict):
+        merge = v3.get("merge")
+        if isinstance(merge, dict):
+            v3_merge = json.dumps(merge, ensure_ascii=True, default=str)[:4000]
+    msgs = [
+        HumanMessage(content=_LLM_ROUTING_PROMPT),
+        HumanMessage(content=f"user_question={user_question[:4000]}"),
+        HumanMessage(content=f"specialist_results={specialist_context[:12000]}"),
+    ]
+    if v3_merge:
+        msgs.append(HumanMessage(content=f"specialist_results_v3_merge={v3_merge}"))
+    return msgs
+
+
+def maybe_replan_via_llm(
+    *,
+    state: AgentState,
+    settings: Any,
+    llm: Any,
+    invoke: Callable[..., Any] = invoke_chat_gated,
+    budget_left: int,
+) -> ReplanDecision:
+    """Invoke the LLM router and normalize its single-token output.
+
+    Encapsulates everything that used to live inline in ``supervisor_node``:
+    prompt assembly, span emission, transport policy attributes, the FINISH
+    -> writer remap (writer must own the terminal ``final_answer`` contract),
+    and the invalid-token fallback. Returns a typed :class:`ReplanDecision`
+    so the supervisor only deals with routing-log emission.
+    """
+    valid = {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST, _ROUTE_FINISH_TOKEN}
+    route_msgs = _build_llm_route_messages(state)
+    transport = float(getattr(settings, "extraction_llm_timeout_seconds", 60.0))
+    max_attempts = agent_chat_transport_max_attempts(settings)
+    with chain_span(
+        "agent.supervisor.route",
+        {"agent.budget_remaining": int(budget_left)},
+    ):
+        with llm_span(
+            "llm.agent.supervisor_route",
+            {
+                **SpanAttributes.llm_runtime_policy_attributes(
+                    pool_name="agent_chat",
+                    transport_timeout_seconds=transport,
+                    timeout_contract="transport_with_operation_deadline",
+                    retry_extra_budget=0,
+                    operation_deadline_seconds=min(900.0, transport * float(max_attempts)),
+                    transport_max_attempts=max_attempts,
+                ),
+                "llm.invocation_name": "agent_supervisor_route",
+            },
+        ):
+            response = invoke(
+                llm,
+                ensure_messages_safe_for_generation(route_msgs),
+                pool_name="agent_chat",
+                settings=settings,
+            )
+    choice = str(getattr(response, "content", "") or "").strip().lower()
+    invalid_token = choice not in valid
+    if invalid_token:
+        add_span_event(
+            "agent.supervisor.invalid_route_token",
+            {"token": choice[:80]},
+        )
+        choice = WRITER_SPECIALIST
+    selected = choice
+    finish_remapped = False
+    if selected == _ROUTE_FINISH_TOKEN:
+        # Writer owns the terminal ``final_answer`` contract; END skips that.
+        selected = WRITER_SPECIALIST
+        finish_remapped = True
+        add_span_event(
+            "agent.supervisor.finish_remapped_to_writer",
+            {"budget_left": int(budget_left)},
+        )
+    add_span_event(
+        "agent.supervisor.route_selected",
+        {"to": selected, "budget_left": int(budget_left)},
+    )
+    return ReplanDecision(
+        specialist=selected,
+        finish_remapped=finish_remapped,
+        invalid_token=invalid_token,
+    )
+
+
 __all__ = [
     "FirstHopDecision",
+    "ReplanDecision",
     "RoundCapDecision",
     "compute_first_hop_decision",
     "compute_post_retrieval_handoff",
     "compute_round_cap_decision",
     "first_user_plain_question",
+    "maybe_replan_via_llm",
     "normalized_question",
     "should_skip_llm_router",
 ]

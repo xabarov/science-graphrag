@@ -16,7 +16,9 @@ from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
 from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
+from science_graphrag.agent.graph.errors import AgentGraphDeadlineExceeded
 from science_graphrag.agent.graph.invoke_timeout import invoke_graph_with_deadline
+from science_graphrag.agent.graph.partial_state_checkpoint import pop_latest_partial_state
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
@@ -671,13 +673,32 @@ class RetrievalAgent:
                 pm_meta["post_compact_paper_sources_restored_count"] = int(rpc0)
         assert self._graph is not None
         cfg = {"recursion_limit": self._settings.agent_supervisor_recursion_limit}
-        final_state = invoke_graph_with_deadline(
-            self._graph,
-            initial_state,
-            config=cfg,
-            timeout_seconds=float(self._settings.agent_step_timeout_seconds),
-            settings=self._settings,
-        )
+        parent_turn_id_from_init = str(
+            (initial_state.get("metadata") or {}).get("parent_turn_id") or ""
+        ).strip() or None
+        deadline_partial_used = False
+        try:
+            final_state = invoke_graph_with_deadline(
+                self._graph,
+                initial_state,
+                config=cfg,
+                timeout_seconds=float(self._settings.agent_step_timeout_seconds),
+                settings=self._settings,
+            )
+        except AgentGraphDeadlineExceeded:
+            partial = pop_latest_partial_state(parent_turn_id_from_init)
+            if partial is None:
+                raise
+            final_state = partial
+            deadline_partial_used = True
+            add_span_event(
+                "agent.runtime_partial_state_salvage",
+                {
+                    "parent_turn_id": parent_turn_id_from_init or "",
+                    "deadline_kind": "response_only",
+                    "messages": int(len(list(partial.get("messages") or []))),
+                },
+            )
         messages = list(final_state.get("messages", []))
         llm_usage = aggregate_agent_llm_usage(messages)
         trace = collect_tool_trace(final_state)
@@ -708,6 +729,8 @@ class RetrievalAgent:
             extra_warn_list.append("answer_salvaged_from_assistant_draft")
         if fallback_answer_used:
             extra_warn_list.append("answer_salvaged_from_runtime_fallback")
+        if deadline_partial_used:
+            extra_warn_list.append("agent_turn_deadline_partial_salvage")
         extra_warn: list[str] | None = extra_warn_list or None
         if graph_salvage:
             add_span_event(

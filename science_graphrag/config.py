@@ -504,12 +504,15 @@ class Settings(BaseSettings):
         description="When true, expose GET /metrics (Prometheus text) on the API.",
     )
     agent_runtime: str = Field(
-        default="langgraph_research_v1",
+        default="langgraph_supervisor_v3",
         description=(
-            "LangGraph agent wiring: ``langgraph_research_v1`` (single-agent ReAct + tools, default), "
-            "``langgraph_supervisor_v1`` (legacy multi-specialist), ``langgraph_supervisor_v3`` "
-            "(v3 subagent observability; same supervisor graph until split), or ``retrieval_v1`` "
-            "(legacy non-graph harness)."
+            "LangGraph agent wiring (default ``langgraph_supervisor_v3`` per ADR-029, "
+            "2026-05-08 single-supervisor backbone): "
+            "``langgraph_supervisor_v3`` (multi-agent supervisor with v3 subagent observability, "
+            "default), ``langgraph_supervisor_v1`` (legacy multi-specialist, kept for "
+            "regression baselines), ``langgraph_research_v1`` (single-agent ReAct + tools, used "
+            "for explicit ReAct comparison runs), or ``retrieval_v1`` (legacy non-graph "
+            "harness)."
         ),
     )
     agent_max_parallel_subagents: int = Field(
@@ -715,35 +718,36 @@ class Settings(BaseSettings):
     )
     agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
     agent_route_plan_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "Phase 1 (orchestration stabilization 2026-05-07): when true, "
             "``build_initial_agent_state`` writes a deterministic ``RoutePlan`` "
             "(see ``science_graphrag.agent.coordination.route_planner``) into "
             "``metadata.turn_policy.route_plan`` and the supervisor reads it for "
-            "first-hop / writer-handoff decisions. When false, supervisor stays on "
-            "the legacy imperative force-rules. Off by default until Phase 1.4 "
-            "regression sweep is complete."
+            "first-hop / writer-handoff decisions. Default-on as of 2026-05-08 "
+            "(orchestration tail closure). Setting to false disables the new "
+            "planner path and relies entirely on the legacy compatibility shims."
         ),
     )
     agent_route_plan_post_retrieval_handoff_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "Phase 1.4: when true and a RoutePlan is attached, ``supervisor_node`` "
             "uses the planner's ``planner_post_retrieval_handoff`` (consumer of "
             "QuestionFeatures + tool_counts) instead of the legacy "
-            "``_maybe_force_writer_after_retrieval`` heuristic. Migration flag — "
-            "enable for canary, then default-on after acceptance soak."
+            "``_maybe_force_writer_after_retrieval`` heuristic. Default-on as of "
+            "2026-05-08 (orchestration tail closure)."
         ),
     )
     agent_supervisor_replan_only_llm_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "Phase 4: when true and a RoutePlan is attached, the supervisor only "
             "invokes the LLM router when the plan raises ``replan_signal`` (or "
             "terminates without a next step). Otherwise it follows the plan steps "
-            "deterministically. Off by default until per-specialist completion "
-            "signals are wired through ``specialist_results_v3``."
+            "deterministically. Default-on as of 2026-05-08 (orchestration tail "
+            "closure); open-ended ``default_supervisor_round_cap`` plans still "
+            "defer to the LLM router after step 0."
         ),
     )
     agent_per_tool_call_timeout_seconds: float = Field(

@@ -278,6 +278,52 @@ def test_state_omits_route_plan_when_flag_off(monkeypatch) -> None:
     assert "route_plan" not in tp
 
 
+def test_compute_first_hop_decision_rebuilds_transient_plan_when_state_has_no_plan() -> None:
+    from science_graphrag.agent.graph.supervisor_decisions import compute_first_hop_decision
+
+    state = {
+        "messages": [
+            HumanMessage(
+                content=(
+                    "Compare evidence for two object-detection works in this workspace and "
+                    "use find_works twice before paper_profile."
+                )
+            )
+        ],
+        "workspace_id": "ws-1",
+        "metadata": {
+            "raw_user_question": (
+                "Compare evidence for two object-detection works in this workspace and "
+                "use find_works twice before paper_profile."
+            ),
+            "turn_policy": {
+                "conversation_intent": "research_task",
+                "tool_policy": "allow_tools",
+                "route_hint": "graph_agent",
+                "reason": "hybrid_route_hint",
+                "suggested_answer_class": "grounded_explanation",
+                "classifier": "llm",
+                "confidence": 0.91,
+            }
+        },
+    }
+    settings_stub = MagicMock()
+    settings_stub.agent_semantic_query_fast_route = False
+
+    decision = compute_first_hop_decision(
+        state=state,
+        settings=settings_stub,
+        tool_policy="allow_tools",
+        route_hint="graph_agent",
+        answer_class="grounded_explanation",
+    )
+
+    assert decision is not None
+    assert decision.specialist == "retrieval_agent"
+    assert decision.reason == "workspace_dual_evidence_first_hop"
+    assert decision.extra == {"route_hint": "graph_agent", "from_route_plan": True}
+
+
 # ---------------------------------------------------------------------------
 # supervisor + RoutePlan integration
 # ---------------------------------------------------------------------------
@@ -501,7 +547,7 @@ def test_route_plan_default_research_when_route_hint_writer_only() -> None:
     assert [s.specialist for s in plan.steps] == ["writer_agent"]
 
 
-def test_question_features_used_for_round_trip(monkeypatch) -> None:
+def test_question_features_used_for_round_trip() -> None:
     feats = extract_question_features(question="привет", workspace_id="ws-1")
     feats2 = QuestionFeatures(**{**feats.__dict__})
     assert feats2.normalized_question == feats.normalized_question

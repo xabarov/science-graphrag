@@ -194,7 +194,5 @@ def test_supervisor_decision_uses_completion_state() -> None:
     settings = MagicMock()
     settings.agent_route_plan_post_retrieval_handoff_enabled = True
 
-    reason = compute_post_retrieval_handoff(
-        state=state, settings=settings, legacy_fn=lambda _s: None
-    )
+    reason = compute_post_retrieval_handoff(state=state, settings=settings)
     assert reason == "retrieval_completion_minimal_bundle"

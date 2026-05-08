@@ -26,6 +26,26 @@
 4. Перед heavy/full — readiness workspace:  
    `.venv/bin/python scripts/chat_agent_workspace_readiness_audit.py`
 
+### 1.1) Runtime alignment (важно с 2026-05-08, ADR-029)
+
+Default dev runtime теперь — **`langgraph_supervisor_v3`** (multi-agent supervisor).
+Trace shape ожидаем supervisor-form: spans `agent.supervisor.route_selected`,
+`agent.supervisor.route_plan_step`, `route_to_specialist` edges.
+
+```bash
+export SCIENCE_GRAPHRAG_AGENT_RUNTIME=langgraph_supervisor_v3   # default; задавать явно при ручных live-прогонах
+```
+
+Для **ReAct compare baseline** (regression gate против single-agent поведения):
+
+```bash
+export SCIENCE_GRAPHRAG_AGENT_RUNTIME=langgraph_research_v1
+```
+
+Никогда не комбинировать ветки в одном trace-review артефакте — собирайте отдельные
+JSON/MD под `eval/results/trace-review-acceptance-{v3,react}.{json,md}` и сравнивайте
+через `scripts/live_check/trace_regression_compare.py`.
+
 **Baseline:** для regression gate в git закреплён снимок  
 [`eval/results/baseline-trace-review.json`](../../eval/results/baseline-trace-review.json).  
 Обновлять его осознанно после успешного полного прогона на локальном стеке и merge в `main`,

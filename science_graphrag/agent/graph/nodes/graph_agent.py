@@ -9,6 +9,9 @@ from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
+from science_graphrag.agent.coordination.route_planner import (
+    derive_graph_completion_state,
+)
 from science_graphrag.agent.graph.react_edges import (
     react_after_tools_decrement_budget,
     react_chat_response_budget_cutoff,
@@ -16,12 +19,14 @@ from science_graphrag.agent.graph.react_edges import (
     route_react_tools_next,
 )
 from science_graphrag.agent.graph.state import AgentState
+from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
 from science_graphrag.agent.llm.chat import (
     agent_chat_transport_max_attempts,
     build_chat_model,
     ensure_messages_safe_for_generation,
 )
 from science_graphrag.agent.subagents.specialist_results_v3 import (
+    annotate_completion_state,
     append_parent_tool_leg,
     empty_specialist_results_v3,
     prior_specialist_results_v3,
@@ -206,6 +211,27 @@ def build_graph_agent_node(stores: StoreRegistry, settings: Settings):
             )
         else:
             sr3 = prev_v3 if isinstance(prev_v3, dict) else empty_specialist_results_v3()
+
+        # Annotate typed ``completion_state`` so downstream consumers
+        # (planner / writer) can react to graph-traversal-specific signals
+        # without re-deriving the leg shape from raw payload dicts.
+        try:
+            edge_ct = 0
+            cypher_ct = 0
+            for step in collect_tool_execution_steps(messages):
+                tname = str(step.get("tool") or "").strip()
+                if tname == "edge_search":
+                    edge_ct += 1
+                elif tname == "cypher_query":
+                    cypher_ct += 1
+            cs = derive_graph_completion_state(
+                has_payloads=bool(new_payloads or specialist_results.get(SPECIALIST_NAME)),
+                edge_search_count=edge_ct,
+                cypher_query_count=cypher_ct,
+            )
+            sr3 = annotate_completion_state(sr3, completion_state=str(cs))
+        except Exception:  # noqa: BLE001
+            pass
         return {
             "messages": messages,
             "budget_remaining": int(

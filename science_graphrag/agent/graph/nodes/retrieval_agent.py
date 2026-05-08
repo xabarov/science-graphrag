@@ -9,6 +9,10 @@ from langchain_core.messages import HumanMessage, ToolMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
+from science_graphrag.agent.coordination.question_features import extract_question_features
+from science_graphrag.agent.coordination.route_planner import (
+    derive_retrieval_completion_state,
+)
 from science_graphrag.agent.forked_runtime import (
     run_claim_verification_fork_bundle,
     run_corpus_explore_fork_bundle,
@@ -32,6 +36,7 @@ from science_graphrag.agent.llm.chat import (
     ensure_messages_safe_for_generation,
 )
 from science_graphrag.agent.subagents.specialist_results_v3 import (
+    annotate_completion_state,
     append_claim_verification_leg,
     append_corpus_explore_leg,
     append_parent_tool_leg,
@@ -40,6 +45,7 @@ from science_graphrag.agent.subagents.specialist_results_v3 import (
     parse_verdict_from_text,
     prior_specialist_results_v3,
 )
+from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
 from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
@@ -251,6 +257,31 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             )
         else:
             sr3 = prev_v3 if isinstance(prev_v3, dict) else empty_specialist_results_v3()
+
+        # Annotate typed ``completion_state`` so the planner-side post-retrieval
+        # handoff can short-circuit to writer without re-deriving features.
+        # This is the producer side; consumer is
+        # ``compute_post_retrieval_handoff`` -> ``planner_post_retrieval_handoff``.
+        try:
+            tool_counts: dict[str, int] = {}
+            for step in collect_tool_execution_steps(messages):
+                tname = str(step.get("tool") or "").strip()
+                if tname:
+                    tool_counts[tname] = tool_counts.get(tname, 0) + 1
+            features = extract_question_features(
+                question=question,
+                workspace_id=str(state.get("workspace_id") or "").strip() or None,
+            )
+            cs = derive_retrieval_completion_state(
+                features=features,
+                tool_counts=tool_counts,
+                has_payloads=bool(new_payloads or specialist_results.get(SPECIALIST_NAME)),
+            )
+            sr3 = annotate_completion_state(sr3, completion_state=str(cs))
+        except Exception:  # noqa: BLE001
+            # Annotation must never break the turn; fall back to the implicit
+            # ``_infer_completion_state`` heuristic in v3 readers.
+            pass
         extra_msgs: list[HumanMessage] = []
         extra_debug: list[dict[str, Any]] = []
         meta_out = dict(state.get("metadata") or {})

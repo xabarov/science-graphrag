@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any, Literal
 
 from langchain_core.messages import HumanMessage
 from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.chat_envelope import heuristic_answer_class
-from science_graphrag.agent.coordination.question_features import extract_question_features
-from science_graphrag.agent.coordination.route_planner import planner_post_retrieval_handoff
 from science_graphrag.agent.graph.nodes.graph_agent import SPECIALIST_NAME as GRAPH_SPECIALIST
 from science_graphrag.agent.graph.nodes.graph_agent import (
     build_graph_agent_node,
@@ -25,6 +22,7 @@ from science_graphrag.agent.graph.nodes.writer_agent import SPECIALIST_NAME as W
 from science_graphrag.agent.graph.nodes.writer_agent import (
     build_writer_agent_node,
 )
+from science_graphrag.agent.graph.partial_state_checkpoint import record_partial_state
 from science_graphrag.agent.graph.react_edges import (
     final_answer_nudge_state_update,
     react_after_tools_decrement_budget,
@@ -37,9 +35,10 @@ from science_graphrag.agent.graph.supervisor_decisions import (
     compute_first_hop_decision,
     compute_post_retrieval_handoff,
     compute_round_cap_decision,
+    first_user_plain_question,
+    maybe_replan_via_llm,
     should_skip_llm_router,
 )
-from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
 from science_graphrag.agent.llm.chat import (
     agent_chat_transport_max_attempts,
     build_chat_model,
@@ -72,109 +71,8 @@ ROUTE_FINISH = "finish"
 
 
 def _first_user_plain_question(state: AgentState) -> str:
-    meta = state.get("metadata") or {}
-    raw = meta.get("raw_user_question")
-    if isinstance(raw, str) and raw.strip():
-        return raw.strip()
-    for msg in reversed(state.get("messages") or []):
-        if not isinstance(msg, HumanMessage):
-            continue
-        content = getattr(msg, "content", None)
-        if isinstance(content, str) and content.strip():
-            return content.strip()
-    return ""
-
-
-def _maybe_force_writer_after_retrieval(state: AgentState) -> str | None:
-    """Deterministic writer handoff for simple retrieval-complete prompts.
-
-    This is a thin compatibility shim over :func:`planner_post_retrieval_handoff`
-    so the legacy code path (planner-handoff flag off) still uses the
-    centralized marker tables in ``coordination.question_features``. All
-    substring rules live in one place; no parallel tables.
-    """
-    raw = _first_user_plain_question(state)
-    if not raw:
-        return None
-    feats = extract_question_features(
-        question=raw,
-        workspace_id=str(state.get("workspace_id") or "").strip() or None,
-    )
-    tool_counts: dict[str, int] = {}
-    for step in collect_tool_execution_steps(list(state.get("messages") or [])):
-        name = str(step.get("tool") or "").strip()
-        if not name:
-            continue
-        tool_counts[name] = tool_counts.get(name, 0) + 1
-    return planner_post_retrieval_handoff(features=feats, tool_counts=tool_counts)
-
-
-def _should_force_retrieval_first_hop_workspace_dual_evidence(state: AgentState) -> bool:
-    """First-hop retrieval for workspace dual-paper catalog compare (skip LLM graph noise).
-
-    Compatibility shim over :class:`QuestionFeatures` so the legacy fallback
-    (route-plan flag off) reads the same marker tables as the planner.
-    """
-    raw = _first_user_plain_question(state)
-    if not raw:
-        return False
-    feats = extract_question_features(
-        question=raw,
-        workspace_id=str(state.get("workspace_id") or "").strip() or None,
-    )
-    if not feats.has_workspace:
-        return False
-    if feats.asks_for_relations:
-        return False
-    qn = feats.normalized_question
-    if "workspace" not in qn and "workspace_id" not in qn:
-        return False
-    return feats.asks_for_dual_evidence
-
-
-def _build_supervisor_route_messages(state: AgentState) -> list[HumanMessage]:
-    """Build a provider-safe routing prompt without replaying tool-call transcripts."""
-    specialist_context = str(state.get("specialist_results") or {})
-    user_question = _first_user_plain_question(state)
-    v3_merge = ""
-    v3 = state.get("specialist_results_v3")
-    if isinstance(v3, dict):
-        merge = v3.get("merge")
-        if isinstance(merge, dict):
-            v3_merge = json.dumps(merge, ensure_ascii=True, default=str)[:4000]
-    msgs = [
-        HumanMessage(content=ROUTING_PROMPT),
-        HumanMessage(content=f"user_question={user_question[:4000]}"),
-        HumanMessage(content=f"specialist_results={specialist_context[:12000]}"),
-    ]
-    if v3_merge:
-        msgs.append(HumanMessage(content=f"specialist_results_v3_merge={v3_merge}"))
-    return msgs
-
-
-ROUTING_PROMPT = """You are a supervisor for scholarly research agents.
-Available specialists:
-- retrieval_agent: workspace inventory (workspace_inspect), full-text work search (find_works),
-  paper profiles, semantic idea_search / paper_quote_search, bibliography formatting
-- graph_agent: structural graph only — edge neighborhoods and read-only Cypher (no full-text work search)
-- writer_agent: synthesize final answer with citations
-
-If the user needs to find papers by title, author name fragment, or keywords without a known work id,
-prefer retrieval_agent (find_works). Use graph_agent when the question is about relations, paths,
-or patterns between known entities.
-
-If the user compares two papers inside a workspace using catalog tools (find_works + paper_profile)
-without explicit graph vocabulary (neighbors, paths, cypher, edge_search), prefer retrieval_agent —
-do not start with graph_agent.
-
-When the question requires mixed corpus evidence (semantic chunks plus verbatim quotes), keep routing
-to retrieval_agent until idea_search / paper_quote_search have been tried unless specialist_results
-already show those paths failed.
-
-Given the user question and accumulated specialist_results, decide the next specialist.
-Respond with exactly one token:
-retrieval_agent | graph_agent | writer_agent | FINISH
-"""
+    """Re-export of :func:`first_user_plain_question` for legacy single-agent fallback."""
+    return first_user_plain_question(state)
 
 
 def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
@@ -185,6 +83,10 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
     writer_node = build_writer_agent_node(stores, settings)
 
     def supervisor_node(state: AgentState) -> dict:
+        # Snapshot the latest accumulated state for runtime salvage. This is
+        # the only place that runs between every specialist hop, so it is
+        # the right seam for partial-state checkpointing on global deadline.
+        record_partial_state(dict(state))
         budget = int(state.get("budget_remaining", settings.agent_max_tool_calls))
         prior = list(state.get("routing_log") or [])
         tool_policy = effective_tool_policy(state)
@@ -228,7 +130,6 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
         ready_reason = compute_post_retrieval_handoff(
             state=state,
             settings=settings,
-            legacy_fn=_maybe_force_writer_after_retrieval,
         )
         if ready_reason:
             return merge_routing_leg_notifications_into_update(
@@ -330,68 +231,24 @@ def build_supervisor_graph(stores: StoreRegistry, settings: Settings):
                 },
             )
 
-        route_msgs = _build_supervisor_route_messages(state)
-        with chain_span(
-            "agent.supervisor.route",
-            {"agent.budget_remaining": budget},
-        ):
-            with llm_span(
-                "llm.agent.supervisor_route",
-                {
-                    **SpanAttributes.llm_runtime_policy_attributes(
-                        pool_name="agent_chat",
-                        transport_timeout_seconds=float(settings.extraction_llm_timeout_seconds),
-                        timeout_contract="transport_with_operation_deadline",
-                        retry_extra_budget=0,
-                        operation_deadline_seconds=min(
-                            900.0,
-                            float(settings.extraction_llm_timeout_seconds)
-                            * float(agent_chat_transport_max_attempts(settings)),
-                        ),
-                        transport_max_attempts=agent_chat_transport_max_attempts(settings),
-                    ),
-                    "llm.invocation_name": "agent_supervisor_route",
-                },
-            ):
-                response = invoke_chat_gated(
-                    llm,
-                    ensure_messages_safe_for_generation(route_msgs),
-                    pool_name="agent_chat",
-                    settings=settings,
-                )
-        choice = str(response.content or "").strip().lower()
-        if choice not in {RETRIEVAL_SPECIALIST, GRAPH_SPECIALIST, WRITER_SPECIALIST, ROUTE_FINISH}:
-            # Old unsafe default was retrieval; prefer writer on non-exact route tokens.
-            add_span_event(
-                "agent.supervisor.invalid_route_token",
-                {"token": choice[:80]},
-            )
-            choice = WRITER_SPECIALIST
-        selected = choice
-        if selected == ROUTE_FINISH:
-            # Hard contract: writer emits ``final_answer``. Direct END here can leak tool-assisted
-            # answers without terminal ``final_answer`` in trace/e2e.
-            selected = WRITER_SPECIALIST
-            add_span_event(
-                "agent.supervisor.finish_remapped_to_writer",
-                {"budget_left": budget},
-            )
-        add_span_event(
-            "agent.supervisor.route_selected",
-            {"to": selected, "budget_left": budget},
+        replan = maybe_replan_via_llm(
+            state=state,
+            settings=settings,
+            llm=llm,
+            budget_left=budget,
         )
         return merge_routing_leg_notifications_into_update(
             state,
             settings,
             {
-                "current_specialist": selected,
+                "current_specialist": replan.specialist,
                 "routing_log": [
                     *list(state.get("routing_log") or []),
                     {
                         "from": "supervisor",
-                        "to": selected,
+                        "to": replan.specialist,
                         "budget_left": budget,
-                        "reason": ("supervisor_finish_guard" if choice == ROUTE_FINISH else None),
+                        "reason": ("supervisor_finish_guard" if replan.finish_remapped else None),
                     },
                 ],
             },

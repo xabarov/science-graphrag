@@ -7,6 +7,127 @@ from unittest.mock import MagicMock
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 
 
+def _force_writer_after_retrieval(state: dict) -> str | None:
+    """Test helper: planner-based post-retrieval handoff for legacy shim cases.
+
+    Mirrors what the retired ``_maybe_force_writer_after_retrieval`` shim used
+    to do — extract features and ask :func:`planner_post_retrieval_handoff`.
+    """
+    from science_graphrag.agent.coordination.question_features import (
+        extract_question_features,
+    )
+    from science_graphrag.agent.coordination.route_planner import (
+        planner_post_retrieval_handoff,
+    )
+    from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
+
+    raw = ""
+    for msg in reversed(state.get("messages") or []):
+        if not isinstance(msg, HumanMessage):
+            continue
+        content = getattr(msg, "content", None)
+        if isinstance(content, str) and content.strip():
+            raw = content.strip()
+            break
+    if not raw:
+        return None
+    feats = extract_question_features(
+        question=raw,
+        workspace_id=str(state.get("workspace_id") or "").strip() or None,
+    )
+    tool_counts: dict[str, int] = {}
+    for step in collect_tool_execution_steps(list(state.get("messages") or [])):
+        name = str(step.get("tool") or "").strip()
+        if not name:
+            continue
+        tool_counts[name] = tool_counts.get(name, 0) + 1
+    return planner_post_retrieval_handoff(features=feats, tool_counts=tool_counts)
+
+
+def _build_state_without_plan(
+    *, question: str, workspace_id: str, agent_runtime: str
+) -> dict:
+    """Build initial agent state with the planner explicitly disabled.
+
+    Used by LLM-router safety-net tests that need ``supervisor_node`` to
+    actually invoke the LLM router (otherwise the deterministic planner
+    short-circuits the first hop). Mirrors :func:`build_initial_agent_state`
+    minimally — only the parts the supervisor reads.
+    """
+    from time import perf_counter
+
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    from science_graphrag.agent.subagents.specialist_results_v3 import (
+        empty_specialist_results_v3,
+    )
+
+    return {
+        "messages": [
+            SystemMessage(content="test_supervisor_routing system stub"),
+            HumanMessage(content=question),
+        ],
+        "workspace_id": workspace_id,
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 8,
+        "metadata": {
+            "agent_runtime": agent_runtime,
+            "agent_max_tool_calls": 8,
+            "raw_user_question": question,
+            "turn_policy": {
+                "tool_policy": "allow_tools",
+                "route_hint": "",
+                "reason": "test_router_safety_net",
+            },
+            "agent_response_deadline_perf_start": perf_counter(),
+            "agent_response_deadline_seconds": 240.0,
+        },
+        "specialist_results": {},
+        "specialist_results_v3": empty_specialist_results_v3(),
+        "current_specialist": None,
+        "routing_log": [],
+        "answer_class": "grounded_explanation",
+        "history_digest": [],
+        "session_summary": "",
+    }
+
+
+def _force_retrieval_first_hop_workspace_dual_evidence(state: dict) -> bool:
+    """Test helper: features-based first-hop check for legacy shim cases.
+
+    Mirrors what the retired ``_should_force_retrieval_first_hop_workspace_dual_evidence``
+    shim used to do — extract :class:`QuestionFeatures` and apply the
+    workspace dual-evidence rule.
+    """
+    from science_graphrag.agent.coordination.question_features import (
+        extract_question_features,
+    )
+
+    raw = ""
+    for msg in reversed(state.get("messages") or []):
+        if not isinstance(msg, HumanMessage):
+            continue
+        content = getattr(msg, "content", None)
+        if isinstance(content, str) and content.strip():
+            raw = content.strip()
+            break
+    if not raw:
+        return False
+    feats = extract_question_features(
+        question=raw,
+        workspace_id=str(state.get("workspace_id") or "").strip() or None,
+    )
+    if not feats.has_workspace:
+        return False
+    if feats.asks_for_relations:
+        return False
+    qn = feats.normalized_question
+    if "workspace" not in qn and "workspace_id" not in qn:
+        return False
+    return feats.asks_for_dual_evidence
+
+
 def test_supervisor_routes_to_retrieval_agent(monkeypatch) -> None:
     class _FakeRouter:
         def invoke(self, _messages):
@@ -85,7 +206,7 @@ def test_supervisor_router_prompt_excludes_tool_transcript(monkeypatch) -> None:
         lambda settings: _FakeSpecialist(),
     )
 
-    from science_graphrag.agent.graph.supervisor import _build_supervisor_route_messages
+    from science_graphrag.agent.graph.supervisor_decisions import _build_llm_route_messages
 
     state = {
         "messages": [
@@ -106,7 +227,7 @@ def test_supervisor_router_prompt_excludes_tool_transcript(monkeypatch) -> None:
         "metadata": {"raw_user_question": "How is paper A related to paper B?"},
         "specialist_results": {"graph_agent": [{"path_count": 1}]},
     }
-    route_messages = _build_supervisor_route_messages(state)
+    route_messages = _build_llm_route_messages(state)
     response = _CapturingRouter().invoke(route_messages)
 
     assert response.content == "writer_agent"
@@ -189,12 +310,17 @@ def test_supervisor_invalid_router_token_routes_to_writer_not_retrieval(monkeypa
     settings.agent_runtime = "langgraph_supervisor_v1"
     settings.agent_supervisor_recursion_limit = 12
     settings.agent_semantic_query_fast_route = False
+    # This test pins the LLM-router safety net (invalid token → writer);
+    # disable the deterministic planner so the supervisor actually invokes
+    # the LLM router under test.
+    settings.agent_route_plan_enabled = False
+    settings.agent_supervisor_replan_only_llm_enabled = False
+    settings.agent_route_plan_post_retrieval_handoff_enabled = False
 
     graph = build_supervisor_graph(stores, settings)
-    state = build_initial_agent_state(
+    state = _build_state_without_plan(
         question="Explain attention mechanism in transformers briefly",
         workspace_id="ws-1",
-        max_tool_calls=8,
         agent_runtime="langgraph_supervisor_v1",
     )
     out = graph.invoke(state)
@@ -247,12 +373,17 @@ def test_supervisor_finish_token_remaps_to_writer_for_final_answer_contract(monk
     settings.agent_runtime = "langgraph_supervisor_v3"
     settings.agent_supervisor_recursion_limit = 12
     settings.agent_semantic_query_fast_route = False
+    # This test pins the LLM-router safety net (FINISH → writer remap);
+    # disable the deterministic planner so the supervisor actually invokes
+    # the LLM router under test.
+    settings.agent_route_plan_enabled = False
+    settings.agent_supervisor_replan_only_llm_enabled = False
+    settings.agent_route_plan_post_retrieval_handoff_enabled = False
 
     graph = build_supervisor_graph(stores, settings)
-    state = build_initial_agent_state(
+    state = _build_state_without_plan(
         question="How many works are in this workspace?",
         workspace_id="ws-1",
-        max_tool_calls=8,
         agent_runtime="langgraph_supervisor_v3",
     )
     out = graph.invoke(state)
@@ -320,7 +451,6 @@ def test_supervisor_coordinator_gate_skips_llm_for_greeting(monkeypatch) -> None
 
 
 def test_retrieval_completion_fast_handoff_for_catalog_resolution() -> None:
-    from science_graphrag.agent.graph.supervisor import _maybe_force_writer_after_retrieval
 
     state = {
         "messages": [
@@ -356,11 +486,10 @@ def test_retrieval_completion_fast_handoff_for_catalog_resolution() -> None:
         ],
     }
 
-    assert _maybe_force_writer_after_retrieval(state) == "retrieval_completion_catalog_resolution"
+    assert _force_writer_after_retrieval(state) == "retrieval_completion_catalog_resolution"
 
 
 def test_retrieval_completion_fast_handoff_for_workspace_stats() -> None:
-    from science_graphrag.agent.graph.supervisor import _maybe_force_writer_after_retrieval
 
     state = {
         "messages": [
@@ -379,11 +508,10 @@ def test_retrieval_completion_fast_handoff_for_workspace_stats() -> None:
         ],
     }
 
-    assert _maybe_force_writer_after_retrieval(state) == "retrieval_completion_workspace_stats"
+    assert _force_writer_after_retrieval(state) == "retrieval_completion_workspace_stats"
 
 
 def test_retrieval_completion_fast_handoff_is_not_triggered_for_partial_compare() -> None:
-    from science_graphrag.agent.graph.supervisor import _maybe_force_writer_after_retrieval
 
     state = {
         "messages": [
@@ -410,11 +538,10 @@ def test_retrieval_completion_fast_handoff_is_not_triggered_for_partial_compare(
         ],
     }
 
-    assert _maybe_force_writer_after_retrieval(state) is None
+    assert _force_writer_after_retrieval(state) is None
 
 
 def test_retrieval_completion_fast_handoff_for_dual_evidence_compare() -> None:
-    from science_graphrag.agent.graph.supervisor import _maybe_force_writer_after_retrieval
 
     state = {
         "messages": [
@@ -459,11 +586,10 @@ def test_retrieval_completion_fast_handoff_for_dual_evidence_compare() -> None:
         ],
     }
 
-    assert _maybe_force_writer_after_retrieval(state) == "retrieval_completion_dual_evidence_compare"
+    assert _force_writer_after_retrieval(state) == "retrieval_completion_dual_evidence_compare"
 
 
 def test_should_force_retrieval_first_hop_for_od_dual_evidence_prompt() -> None:
-    from science_graphrag.agent.graph.supervisor import _should_force_retrieval_first_hop_workspace_dual_evidence
 
     state = {
         "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
@@ -478,11 +604,10 @@ def test_should_force_retrieval_first_hop_for_od_dual_evidence_prompt() -> None:
             ),
         ],
     }
-    assert _should_force_retrieval_first_hop_workspace_dual_evidence(state) is True
+    assert _force_retrieval_first_hop_workspace_dual_evidence(state) is True
 
 
 def test_should_force_retrieval_first_hop_requires_workspace_id() -> None:
-    from science_graphrag.agent.graph.supervisor import _should_force_retrieval_first_hop_workspace_dual_evidence
 
     state = {
         "workspace_id": "",
@@ -495,7 +620,7 @@ def test_should_force_retrieval_first_hop_requires_workspace_id() -> None:
             ),
         ],
     }
-    assert _should_force_retrieval_first_hop_workspace_dual_evidence(state) is False
+    assert _force_retrieval_first_hop_workspace_dual_evidence(state) is False
 
 
 def test_dual_evidence_first_hop_overrides_graph_route_hint(monkeypatch) -> None:
@@ -580,7 +705,6 @@ def test_dual_evidence_first_hop_overrides_graph_route_hint(monkeypatch) -> None
 
 
 def test_dual_evidence_compare_waits_for_requested_bibliography() -> None:
-    from science_graphrag.agent.graph.supervisor import _maybe_force_writer_after_retrieval
 
     state = {
         "messages": [
@@ -624,7 +748,7 @@ def test_dual_evidence_compare_waits_for_requested_bibliography() -> None:
         ],
     }
 
-    assert _maybe_force_writer_after_retrieval(state) is None
+    assert _force_writer_after_retrieval(state) is None
 
 
 def test_score_agent_case_specialist_sequence() -> None:
