@@ -176,6 +176,19 @@ Single-case retest после правок gold (если лежат в `eval/re
 - `eval/results/current-agent-tools-multiagent.json` (BT9 tier summary)
 - `eval/results/current-agent-tools-judge-pilot.json`
 
+### 8.5 Agent v3 quality judge (`agent_v3_quality_judge_v1`, Wave B)
+
+Семья **advisory-only**: pairwise сравнение ответов `langgraph_research_v1` (baseline) и `langgraph_supervisor_v3` (candidate) с LLM- или эвристическим judge. **Не участвует** в `_decision_gate` и не должен подменять `trace-review-v1` / Wave R agent-tools как engineering gate.
+
+Артефакты по умолчанию:
+
+- `eval/results/current-agent-v3-quality-judge-mini.json`
+- `eval/results/current-agent-v3-quality-judge-pilot.json`
+- `eval/results/current-agent-v3-quality-judge-holdout.json`
+- (опционально) `eval/results/current-agent-v3-quality-judge-compare.json` — дельта между двумя снимками pilot/mini
+
+CLI и операторские заметки: [`eval/agent_v3_quality/README.md`](../../eval/agent_v3_quality/README.md).
+
 ## 9. Trust signal: что считается «фантомом»
 
 Источник правил: `science_graphrag/benchmarks/trust_signal.py` (`detect_runtime_mode`, `build_trust_signal_dict`). Для каждого member-блока в `benchmark-metrics-summary.json` пишется `trust_signal`:

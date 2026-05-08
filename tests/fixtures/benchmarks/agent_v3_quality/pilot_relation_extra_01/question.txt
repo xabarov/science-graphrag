@@ -1,0 +1,1 @@
+Explain one concrete citation relationship in ws-pilot-od involving YOLOv1 (who cites whom) and how you verified it from workspace evidence.

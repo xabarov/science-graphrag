@@ -1,0 +1,1 @@
+Summarize what is known in ws-pilot-od about one-stage detectors vs two-stage detectors, in 5–8 bullet points, and say what is uncertain.

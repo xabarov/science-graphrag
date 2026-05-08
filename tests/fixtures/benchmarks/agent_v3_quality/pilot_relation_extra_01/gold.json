@@ -1,0 +1,11 @@
+{
+  "schema_version": "agent_v3_quality_case_v1",
+  "family": "relation_tracing",
+  "workspace_id": "ws-pilot-od",
+  "tags": ["pilot", "graph"],
+  "requires_quotes": false,
+  "requires_compare_structure": false,
+  "requires_relation_reasoning": true,
+  "forbidden_fail_modes": ["final_answer_missing"],
+  "notes": "Pilot-only relation case"
+}

@@ -215,11 +215,24 @@ Delivered:
 
 ### Wave B — v3 quality benchmark
 
-1. Собрать frozen prompt set для `v3-quality`.
-2. Определить JSON schema judge output.
-3. Запустить advisory `LLM-as-a-judge` lane для `react` vs `v3`.
-4. Добавить compare script / summary artifact.
-5. Вписать lane в `benchmark-program-status.md` как advisory family.
+**Статус:** реализовано в репозитории (advisory lane `agent_v3_quality_judge_v1`); live прогон — по runbook.
+
+**Код и фикстуры**
+
+- Пакет: [`eval/agent_v3_quality/`](../../eval/agent_v3_quality/) (`runner`, `judge`, `judge_metrics`, `compare`, `one_shot`, `judge_prompt_v1.md`, [`README.md`](../../eval/agent_v3_quality/README.md)).
+- Фикстуры: [`tests/fixtures/benchmarks/agent_v3_quality/`](../../tests/fixtures/benchmarks/agent_v3_quality/) + `case_tiers.json` (`judge_mini` / `judge_pilot` / `judge_holdout`, holdout не пересекается с pilot).
+- CLI: `science-graphrag-agent-v3-quality-benchmark` (suite + `--mock-agent` для CI / `--transport subprocess|http` + `--llm-judge` опционально); `science-graphrag-agent-v3-quality-compare` для snapshot diff.
+- Канонические артефакты: `eval/results/current-agent-v3-quality-judge-{mini,pilot,holdout,compare}.{json,md}`; пути в [`science_graphrag/artifacts/benchmark_paths.py`](../../science_graphrag/artifacts/benchmark_paths.py).
+
+**Чеклист оператора (live)**
+
+1. Pre-flight: `trace-review-v1` / acceptance зелёные на текущей ветке (engineering gate).
+2. Поднять стек + `ws-pilot-od` (как для agent-tools / retrieval pilot).
+3. `judge_mini`: `science-graphrag-agent-v3-quality-benchmark … --suite --tier judge_mini --transport subprocess --json-out eval/results/current-agent-v3-quality-judge-mini.json` (или два API base через `--candidate-api-base-url` при `--transport http`).
+4. По расписанию: `judge_pilot` (основной advisory KPI), `judge_holdout` weekly; compare через `science-graphrag-agent-v3-quality-compare`.
+5. Политика: lane **advisory-only** до promotion review; не меняет `decision_gate` автоматически.
+
+**Документация runbook:** [`docs/runbooks/benchmark-program-status.md`](../runbooks/benchmark-program-status.md), [`docs/runbooks/benchmark-pilot-advisory-runs.md`](../runbooks/benchmark-pilot-advisory-runs.md), [`docs/runbooks/benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md), [`docs/runbooks/benchmark-decision-gate.md`](../runbooks/benchmark-decision-gate.md) §8.x.
 
 ### Wave C — promotion / rollout discipline
 

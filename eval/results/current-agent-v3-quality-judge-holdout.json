@@ -1,0 +1,141 @@
+{
+  "review_version": "agent-v3-quality-judge-v1",
+  "family": "agent_v3_quality_judge",
+  "tier": "judge_holdout",
+  "baseline_runtime": "langgraph_research_v1",
+  "candidate_runtime": "langgraph_supervisor_v3",
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true,
+    "logical_family_id": "agent_v3_quality_judge_v1",
+    "benchmark_family_short": "agent_v3_quality_judge",
+    "tier": "judge_holdout",
+    "baseline_runtime": "langgraph_research_v1",
+    "candidate_runtime": "langgraph_supervisor_v3",
+    "transport": "subprocess",
+    "mock_agent": true,
+    "judge_prompt_version": "judge_prompt_v1",
+    "judge_prompt_sha256": "sha256-20:5b68007c9ae3d6801673",
+    "judge_llm_model": null,
+    "llm_rubric": false,
+    "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673"
+  },
+  "summary": {
+    "case_count": 1,
+    "mean_weighted_score_baseline": 4.0,
+    "mean_weighted_score_candidate": 4.0,
+    "mean_delta": 0.0,
+    "pairwise_candidate_win_rate": 0.0,
+    "pairwise_baseline_win_rate": 0.0,
+    "pairwise_tie_rate": 1.0,
+    "hard_fail_count_baseline": 0,
+    "hard_fail_count_candidate": 0,
+    "family_breakdown": {
+      "open_research": {
+        "candidate_wins": 0,
+        "baseline_wins": 0,
+        "ties": 1
+      }
+    },
+    "all_passed": true
+  },
+  "cases": [
+    {
+      "case_id": "holdout_open_01",
+      "family": "open_research",
+      "question": "What are the main limitations of one-stage detectors mentioned across ws-pilot-od works? Answer in 4–6 sentences and separate facts vs speculation.",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": true,
+      "notes": [],
+      "baseline": {
+        "answer": "[mock_baseline:langgraph_research_v1] Summary for holdout_open_01 (ReAct-style stub).",
+        "citations": [
+          {
+            "work_id": "mock-baseline-holdout_open_01"
+          }
+        ],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "tool": "idea_search"
+          },
+          {
+            "tool": "final_answer"
+          }
+        ],
+        "tool_trace_summary": "idea_search → final_answer",
+        "run_metadata": {
+          "agent_runtime": "langgraph_research_v1",
+          "usage": {
+            "total_tokens": 100
+          }
+        },
+        "usage_total_tokens": 100,
+        "latency_ms": 50,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "candidate": {
+        "answer": "[mock_candidate:langgraph_supervisor_v3] Summary for holdout_open_01 (supervisor-style stub with synthesis and citations placeholder).",
+        "citations": [
+          {
+            "work_id": "mock-candidate-holdout_open_01"
+          }
+        ],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "tool": "route_to_specialist"
+          },
+          {
+            "tool": "final_answer"
+          }
+        ],
+        "tool_trace_summary": "route_to_specialist → final_answer",
+        "run_metadata": {
+          "agent_runtime": "langgraph_supervisor_v3",
+          "usage": {
+            "total_tokens": 180
+          }
+        },
+        "usage_total_tokens": 180,
+        "latency_ms": 120,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "pairwise": {
+        "winner": "tie",
+        "confidence": "low",
+        "rationale": "heuristic_judge_no_llm: compare answer length, hard-fail heuristics, and gold requirements"
+      },
+      "passed": true
+    }
+  ]
+}

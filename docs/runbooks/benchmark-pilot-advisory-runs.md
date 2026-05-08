@@ -53,6 +53,23 @@ science-graphrag-references-resolution-benchmark tests/fixtures/benchmarks/refer
 
 # 5) Сводка метрик (включает advisory секции, если JSON на месте)
 .venv/bin/python scripts/aggregate_benchmark_metrics.py
+
+# 6) Agent v3 quality judge (Wave B, advisory — pairwise ReAct vs supervisor v3)
+# Детерминированный mock (CI / без стека):
+science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite \
+  --tier judge_mini --mock-agent \
+  --json-out eval/results/current-agent-v3-quality-judge-mini.json \
+  --md-out eval/results/current-agent-v3-quality-judge-mini.md
+# Live subprocess (нужны Neo4j/Qdrant/ключи; каждый runtime — отдельный процесс):
+# science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite \
+#   --tier judge_mini --transport subprocess \
+#   --json-out eval/results/current-agent-v3-quality-judge-mini.json
+# Сравнение двух снимков:
+# science-graphrag-agent-v3-quality-compare \
+#   eval/results/current-agent-v3-quality-judge-pilot-prev.json \
+#   eval/results/current-agent-v3-quality-judge-pilot.json \
+#   --json-out eval/results/current-agent-v3-quality-judge-compare.json \
+#   --md-out eval/results/current-agent-v3-quality-judge-compare.md
 ```
 
 ## Если live tier красный

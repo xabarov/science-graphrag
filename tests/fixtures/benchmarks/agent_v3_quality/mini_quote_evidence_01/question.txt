@@ -1,0 +1,1 @@
+Give one or two short verbatim quotes from the main paper in ws-pilot-od about YOLOv1 that support the claim that it is a real-time detector, with citations.

@@ -1,0 +1,1 @@
+Resolve which work in ws-pilot-od best matches "Faster R-CNN" style two-stage detection and give DOI or arXiv id if present in the profile.

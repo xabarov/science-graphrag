@@ -1,0 +1,25 @@
+{
+  "judge_mini": [
+    "mini_workspace_stats_01",
+    "mini_catalog_resolution_01",
+    "mini_quote_evidence_01",
+    "mini_dual_evidence_compare_01",
+    "mini_relation_tracing_01",
+    "mini_open_research_01",
+    "mini_workspace_stats_02",
+    "mini_catalog_resolution_02"
+  ],
+  "judge_pilot": [
+    "mini_workspace_stats_01",
+    "mini_catalog_resolution_01",
+    "mini_quote_evidence_01",
+    "mini_dual_evidence_compare_01",
+    "mini_relation_tracing_01",
+    "mini_open_research_01",
+    "mini_workspace_stats_02",
+    "mini_catalog_resolution_02",
+    "pilot_catalog_extra_01",
+    "pilot_relation_extra_01"
+  ],
+  "judge_holdout": ["holdout_open_01"]
+}

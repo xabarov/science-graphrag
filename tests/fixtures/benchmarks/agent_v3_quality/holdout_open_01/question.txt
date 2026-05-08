@@ -1,0 +1,1 @@
+What are the main limitations of one-stage detectors mentioned across ws-pilot-od works? Answer in 4–6 sentences and separate facts vs speculation.

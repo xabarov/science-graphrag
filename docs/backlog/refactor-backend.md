@@ -565,6 +565,13 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** All three subagent runtimes import shared helpers; no behavior change in contract tests.
 - **Raised:** 2026-05-07 (Train T4 implementation pass)
 
+### [OPEN] Add heartbeat/progress telemetry to `agent_v3_quality` live runner
+- **Area:** `eval/agent_v3_quality/runner.py`, `eval/agent_v3_quality/one_shot.py`
+- **Issue:** Live suite runs can stay silent for minutes on slow cases; при деградации upstream (наблюдались `CLOSE_WAIT` в child `one_shot`) оператор не видит progress до самого конца и сложно отличить «долго считает» от hang.
+- **Proposal:** Add per-case start/finish logs (case_id + runtime + elapsed), optional heartbeat every N seconds while subprocess branch is running, and structured timeout/error counters in top-level summary.
+- **Acceptance:** During live `--suite` runs terminal output updates at least once per case (or heartbeat interval), hangs are observable without manual `ps/lsof`, and JSON summary contains explicit timeout/hang diagnostics.
+- **Raised:** 2026-05-08 (Wave B live-run audit)
+
 ### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)
 - **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.
 

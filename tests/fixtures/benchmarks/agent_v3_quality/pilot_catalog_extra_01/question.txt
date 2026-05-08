@@ -1,0 +1,1 @@
+In ws-pilot-od, pick two works that discuss region proposal networks and compare how each uses proposals (balanced bullets, cite sources).

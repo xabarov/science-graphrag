@@ -218,6 +218,20 @@ science-graphrag-layer2-benchmark tests/fixtures/benchmarks/layer2 --suite --tie
 
 В GitHub Actions (workflow **Integration**) шаг `Layer-2 nightly_semantic` выполняется **только если** в secrets репозитория задан `MAIN_LLM_API_KEY` (он пробрасывается в `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`); иначе шаг пропускается.
 
+## Agent v3 quality judge (Wave B, advisory)
+
+- Код: [`eval/agent_v3_quality/`](./agent_v3_quality/) (`runner`, `judge`, `compare`, `one_shot`).
+- Фикстуры: `tests/fixtures/benchmarks/agent_v3_quality/`; тиры — `case_tiers.json` (`judge_mini` / `judge_pilot` / `judge_holdout`).
+- Спека: [`docs/analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](../docs/analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md); статус программы: [`docs/runbooks/benchmark-program-status.md`](../docs/runbooks/benchmark-program-status.md).
+
+```bash
+# Mock / contract smoke (без live стека)
+science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite \
+  --tier judge_mini --mock-agent \
+  --json-out eval/results/current-agent-v3-quality-judge-mini.json \
+  --md-out eval/results/current-agent-v3-quality-judge-mini.md
+```
+
 ## Chat agent — roadmap use-case harness
 
 - Код: `eval/chat_agent/roadmap_runner.py`, `roadmap_metrics.py`, `workspace_audit.py`.
