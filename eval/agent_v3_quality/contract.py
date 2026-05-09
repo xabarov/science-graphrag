@@ -34,3 +34,7 @@ RUBRIC_WEIGHTS: dict[str, float] = {
 }
 
 RUBRIC_AXES: tuple[str, ...] = tuple(RUBRIC_WEIGHTS.keys())
+
+# Must match ``judge_prompt_fingerprint()`` for ``eval/agent_v3_quality/judge_prompt_v1.md``.
+# Bump when the judge prompt file changes (starts a new stabilization window).
+EXPECTED_JUDGE_PROMPT_FINGERPRINT = "sha256-20:5b68007c9ae3d6801673"

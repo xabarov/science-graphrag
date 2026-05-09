@@ -12,6 +12,7 @@ Advisory benchmark: same frozen prompts executed under **baseline** (`langgraph_
 - `question.txt` — single user prompt.
 - `gold.json` — scope + behavioral requirements + `forbidden_fail_modes` (no reference answer text).
 - `case_tiers.json` — `judge_mini` / `judge_pilot` / `judge_holdout` lists; **holdout must not overlap pilot**.
+- `calibration_window_case_ids.json` — Wave D frozen subset (6–10 ids from `judge_pilot` only).
 
 ## CLI
 
@@ -59,6 +60,15 @@ science-graphrag-agent-v3-quality-compare \
   --md-out eval/results/current-agent-v3-quality-judge-compare.md
 ```
 
+Release-train gate (Wave D, advisory — exits non-zero on regression). Both artifacts must include numeric ``summary.mean_delta`` and candidate ``summary.cases_with_any_branch_non_ok`` (missing branch field is treated as ``0``):
+
+```bash
+science-graphrag-agent-v3-quality-compare \
+  eval/results/baseline-agent-v3-quality-judge-pilot-embedded.json \
+  eval/results/current-agent-v3-quality-judge-pilot.json \
+  --release-train-gate
+```
+
 ## LLM vs heuristic calibration (small subset)
 
 From repo root (requires live stack + `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`; one agent run per case, then heuristic + LLM judge):
@@ -68,6 +78,13 @@ AGENT_LIVE_BASE=dev .venv/bin/python scripts/run_agent_v3_quality_llm_calibratio
 ```
 
 Optional: `AGENT_V3_QUALITY_CALIBRATION_TIMEOUT_S=600` — per-branch subprocess timeout for branches inside each case.
+
+## Wave D — calibration window + variance + release-train compare
+
+- **Window (6–10 `judge_pilot` cases, default 3 runs):** `tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json` + `scripts/run_agent_v3_quality_llm_calibration_subset.py --window [--runs N] [--strict] [--write-variance-baseline] [--date YYYY-MM-DD]`.
+- **Narrative / operator commands:** [`docs/analysis/agent-v3-quality-judge-calibration-2026-05.md`](../../docs/analysis/agent-v3-quality-judge-calibration-2026-05.md).
+- **Frozen prompt fingerprint:** bump `EXPECTED_JUDGE_PROMPT_FINGERPRINT` in [`contract.py`](contract.py) when `judge_prompt_v1.md` changes (see `tests/scripts/test_judge_prompt_fingerprint_guard.py`).
+- **Release train (advisory, not merge `decision_gate`):** `science-graphrag-agent-v3-quality-compare <baseline.json> <candidate.json> --release-train-gate` — optional `--gate-mean-delta-margin` / `--gate-max-branch-non-ok`. Example baseline: `eval/results/baseline-agent-v3-quality-judge-pilot-embedded.json`.
 
 ## Wave C — baseline, holdout, judge fingerprint
 

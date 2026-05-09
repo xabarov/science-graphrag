@@ -21,6 +21,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 | Question | Source |
 |----------|--------|
 | **Agent unified plan: доработки + benchmark strategy** | [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md) |
+| **Agent engine + benchmarks — следующие волны (D / E / F / G / H)** | [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) |
 | **Agent v3 quality benchmark spec** | [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](./agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) |
 | **Agent v3 quality benchmark implementation plan** | [`agent-v3-quality-benchmark-implementation-plan-2026-05-08.md`](./agent-v3-quality-benchmark-implementation-plan-2026-05-08.md) |
 | **Ontology · extraction · benchmarks (one entry)** | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
@@ -38,6 +39,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 | Theme | Canonical doc |
 |-------|----------------|
 | Agent master-plan: remaining work + benchmarks | [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md) |
+| Agent engine + benchmarks — next waves D/E/F/G/H | [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) |
 | Agent v3 quality benchmark spec | [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](./agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) |
 | Agent v3 quality benchmark implementation plan | [`agent-v3-quality-benchmark-implementation-plan-2026-05-08.md`](./agent-v3-quality-benchmark-implementation-plan-2026-05-08.md) |
 | Ontology · extraction · benchmarks | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
@@ -158,6 +160,7 @@ Sorted alphabetically. See sections above for roles; stubs point into `_archive/
 | `agent-chat-frontend-verification-gaps-next-wave.md` | Stub → archived frontend verification checklist |
 | `agent-chat-prod-rollout-2026-04-27.md` | Prod rollout |
 | `agent-chat-tools-and-trace-audit-master-2026-04-28.md` | Eval / trace audit |
+| `agent-engine-and-benchmarks-next-waves-2026-05-09.md` | Agent engine + benchmarks — next waves |
 | `agent-graph-subprocess-isolation-spike-2026-04-27.md` | Spike |
 | `agent-note-cost-eval-2026-05-06.md` | Stub → archived `agent_note` cost evaluation |
 | `agent-runtime-tools-context-roadmap-2026-05-04.md` | Agent · tools · context roadmap |

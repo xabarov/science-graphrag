@@ -73,6 +73,11 @@ science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_q
 #   eval/results/current-agent-v3-quality-judge-pilot.json \
 #   --json-out eval/results/current-agent-v3-quality-judge-compare.json \
 #   --md-out eval/results/current-agent-v3-quality-judge-compare.md
+#
+# Wave D — calibration window (6–10 pilot cases, 3 runs) + optional variance file:
+# AGENT_LIVE_BASE=dev .venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py \
+#   --window --runs 3 --write-variance-baseline
+# Release-train gate (не decision_gate): см. docs/analysis/agent-v3-quality-judge-calibration-2026-05.md
 ```
 
 ## Если live tier красный

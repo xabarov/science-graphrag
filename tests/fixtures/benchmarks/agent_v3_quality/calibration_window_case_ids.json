@@ -1,0 +1,16 @@
+{
+  "description": "Wave D (P1) LLM-judge calibration window: subset of judge_pilot, no holdout overlap.",
+  "tier_source": "judge_pilot",
+  "case_ids": [
+    "mini_workspace_stats_01",
+    "mini_catalog_resolution_01",
+    "mini_quote_evidence_01",
+    "mini_dual_evidence_compare_01",
+    "mini_relation_tracing_01",
+    "mini_open_research_01",
+    "mini_workspace_stats_02",
+    "mini_catalog_resolution_02",
+    "pilot_catalog_extra_01",
+    "pilot_relation_extra_01"
+  ]
+}

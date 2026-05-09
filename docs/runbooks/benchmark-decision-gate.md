@@ -191,6 +191,8 @@ Single-case retest после правок gold (если лежат в `eval/re
 
 CLI и операторские заметки: [`eval/agent_v3_quality/README.md`](../../eval/agent_v3_quality/README.md).
 
+**Wave D (release-train quality, вне `_decision_gate`):** калибровочное окно, fingerprint guard, variance baseline и опциональный `science-graphrag-agent-v3-quality-compare … --release-train-gate` — [`agent-v3-quality-judge-calibration-2026-05.md`](../analysis/agent-v3-quality-judge-calibration-2026-05.md); не добавляет семью в merge CI `decision`.
+
 ## 9. Trust signal: что считается «фантомом»
 
 Источник правил: `science_graphrag/benchmarks/trust_signal.py` (`detect_runtime_mode`, `build_trust_signal_dict`). Для каждого member-блока в `benchmark-metrics-summary.json` пишется `trust_signal`:
