@@ -125,6 +125,8 @@ class TimelineCase:
     run_kind: str | None = None
     graph_id: str | None = None
     duration_ms: float | int | None = None
+    #: Wall time for post-graph compaction + post-compact hooks (ms); excludes core agent graph.
+    post_turn_compaction_wall_ms: float | int | None = None
     tool_steps: tuple[ToolStep, ...] = field(default_factory=tuple)
     phoenix_alignment: PhoenixAlignment | None = None
     compaction_events: tuple[CompactionEvent, ...] = field(default_factory=tuple)
@@ -186,6 +188,8 @@ class Metrics:
     compaction_event_count: int = 0
     final_answer_missing_count: int = 0
     latency_p95_ms: float | None = None
+    #: p95 of per-case ``post_turn_compaction_wall_ms`` (E2E / merged timeline).
+    post_turn_compaction_wall_ms_p95: float | None = None
     compaction_churn_score: float | None = None
     shortlist_ratio_avg: float | None = None
     deferred_schema_event_count: int = 0
@@ -626,8 +630,15 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         w_osc = _writer_oscillation_count_from_routing_log(rm.get("routing_log"))
 
     paper_restored = 0
+    post_turn_compaction_wall_ms: float | int | None = None
     if isinstance(rm, dict):
         paper_restored = _coerce_int(rm.get("post_compact_paper_sources_restored_count"), default=0)
+        pt_raw = rm.get("post_turn_compaction_wall_ms")
+        if pt_raw is not None:
+            try:
+                post_turn_compaction_wall_ms = float(pt_raw)
+            except (TypeError, ValueError):
+                post_turn_compaction_wall_ms = None
 
     return TimelineCase(
         case_id=cid,
@@ -643,6 +654,7 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
             or None
         ),
         duration_ms=duration_ms,
+        post_turn_compaction_wall_ms=post_turn_compaction_wall_ms,
         tool_steps=steps_t,
         phoenix_alignment=phoenix_alignment,
         compaction_events=(),
@@ -733,6 +745,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     usage_token_parts: list[int] = []
     tus_row_counts: list[int] = []
     paper_restored_vals: list[int] = []
+    post_turn_wall_vals: list[float] = []
 
     for row in timeline:
         for st in row.tool_steps:
@@ -809,6 +822,13 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
             usage_token_parts.append(int(row.agent_usage_total_tokens))
         tus_row_counts.append(int(row.tool_use_summary_row_count or 0))
         paper_restored_vals.append(int(row.post_compact_paper_sources_restored_count or 0))
+        if row.post_turn_compaction_wall_ms is not None:
+            try:
+                ptw = float(row.post_turn_compaction_wall_ms)
+                if ptw >= 0:
+                    post_turn_wall_vals.append(ptw)
+            except (TypeError, ValueError):
+                pass
 
     tool_error_rate = (bad_steps / total_steps) if total_steps else 0.0
 
@@ -821,6 +841,12 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         latency_p95 = float(sorted_lat[min(idx, len(sorted_lat) - 1)])
         idx50 = max(0, int(len(sorted_lat) * 0.50) - 1)
         latency_p50 = float(sorted_lat[min(idx50, len(sorted_lat) - 1)])
+
+    post_turn_wall_p95: float | None = None
+    if post_turn_wall_vals:
+        sorted_pt = sorted(post_turn_wall_vals)
+        idx_pt = max(0, int(len(sorted_pt) * 0.95) - 1)
+        post_turn_wall_p95 = float(sorted_pt[min(idx_pt, len(sorted_pt) - 1)])
 
     churn_score = float(churn_hints) if churn_hints else None
 
@@ -867,6 +893,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         compaction_event_count=compaction_event_count,
         final_answer_missing_count=final_answer_missing,
         latency_p95_ms=latency_p95,
+        post_turn_compaction_wall_ms_p95=post_turn_wall_p95,
         compaction_churn_score=churn_score,
         shortlist_ratio_avg=(
             round(sum(shortlist_ratios) / len(shortlist_ratios), 4) if shortlist_ratios else None
@@ -912,17 +939,13 @@ def merge_compaction_events_into_timeline(
     timeline: tuple[TimelineCase, ...],
     events_by_case: dict[str, tuple[CompactionEvent, ...]],
 ) -> tuple[TimelineCase, ...]:
-    """Attach compaction events to timeline rows by ``case_id`` (or single-key fallback)."""
+    """Attach compaction events to timeline rows only when ``case_id`` matches a dict key."""
     if not events_by_case:
         return timeline
-    keys = list(events_by_case.keys())
-    fallback_key = keys[0] if len(keys) == 1 else None
 
     out: list[TimelineCase] = []
     for row in timeline:
         attach = events_by_case.get(row.case_id)
-        if attach is None and fallback_key:
-            attach = events_by_case.get(fallback_key)
         if attach:
             out.append(replace(row, compaction_events=attach))
         else:
@@ -1266,9 +1289,13 @@ def merge_compaction_into_review_dict(
     events = parse_compaction_event_dicts(compaction_event_dicts)
     if not events:
         return data
+    tl_rows = tr.trace_timeline
+    bucket_key = "compaction_multi_turn_probe"
+    if len(tl_rows) == 1:
+        bucket_key = tl_rows[0].case_id
     new_tl = merge_compaction_events_into_timeline(
-        tr.trace_timeline,
-        {"compaction_multi_turn_probe": events},
+        tl_rows,
+        {bucket_key: events},
     )
     new_metrics = aggregate_metrics_from_timeline(new_tl)
     tr2 = TraceReviewV1(
@@ -1384,6 +1411,9 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 run_kind=(str(item.get("run_kind") or "").strip() or None),
                 graph_id=(str(item.get("graph_id") or "").strip() or None),
                 duration_ms=item.get("duration_ms"),
+                post_turn_compaction_wall_ms=(
+                    _coerce_optional_float(item.get("post_turn_compaction_wall_ms"))
+                ),
                 tool_steps=tuple(steps),
                 phoenix_alignment=pa,
                 compaction_events=tuple(ces),
@@ -1506,6 +1536,9 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
         compaction_event_count=int(mraw.get("compaction_event_count") or 0),
         final_answer_missing_count=int(mraw.get("final_answer_missing_count") or 0),
         latency_p95_ms=_coerce_optional_float(mraw.get("latency_p95_ms")),
+        post_turn_compaction_wall_ms_p95=_coerce_optional_float(
+            mraw.get("post_turn_compaction_wall_ms_p95")
+        ),
         compaction_churn_score=_coerce_optional_float(mraw.get("compaction_churn_score")),
         shortlist_ratio_avg=_coerce_optional_float(mraw.get("shortlist_ratio_avg")),
         deferred_schema_event_count=_coerce_int(mraw.get("deferred_schema_event_count"), default=0),

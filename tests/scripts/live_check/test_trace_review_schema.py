@@ -324,6 +324,61 @@ def test_merge_compaction_into_review_dict(schema_module) -> None:
     assert merged["metrics"]["compaction_event_count"] >= 1
 
 
+def test_merge_compaction_events_no_single_key_broadcast(schema_module) -> None:
+    """Compaction events must not attach to every row when case_id keys do not match."""
+    ev = (
+        schema_module.CompactionEvent(
+            type="context_compacted",
+            kinds=("turn_digest",),
+            turn=1,
+            thread_id="tid",
+        ),
+    )
+    tl = (
+        schema_module.TimelineCase(case_id="case-a", tool_steps=()),
+        schema_module.TimelineCase(case_id="case-b", tool_steps=()),
+    )
+    out = schema_module.merge_compaction_events_into_timeline(
+        tl,
+        {"compaction_multi_turn_probe": ev},
+    )
+    assert out[0].compaction_events == ()
+    assert out[1].compaction_events == ()
+
+
+def test_merge_compaction_into_review_dict_multi_row_no_probe_id(schema_module) -> None:
+    """With multiple timeline rows, probe events stay unmerged unless a row matches the key."""
+    base = {
+        "review_version": schema_module.REVIEW_VERSION,
+        "generated_at": "t",
+        "checks": [],
+        "trace_timeline": [
+            {
+                "case_id": "x1",
+                "tool_steps": [{"idx": 1, "tool": "final_answer", "ok": True}],
+                "warnings": [],
+            },
+            {
+                "case_id": "x2",
+                "tool_steps": [{"idx": 1, "tool": "final_answer", "ok": True}],
+                "warnings": [],
+            },
+        ],
+        "metrics": {
+            "tool_error_rate": 0.0,
+            "missing_span_count": 0,
+            "compaction_event_count": 0,
+            "final_answer_missing_count": 0,
+        },
+        "verdict": {"status": "pass", "fail_reasons": [], "warn_reasons": []},
+    }
+    merged = schema_module.merge_compaction_into_review_dict(
+        base,
+        [{"type": "context_compacted", "kinds": ["turn_digest"], "turn": 3, "thread_id": "tid"}],
+    )
+    assert merged["metrics"]["compaction_event_count"] == 0
+
+
 def test_merge_e2e_extracts_ptl_per_compaction_and_insight_audit(schema_module) -> None:
     case = {
         "case_id": "ptl_pc_row",
@@ -513,6 +568,21 @@ def test_aggregate_metrics_from_timeline_p2_roi_counters(schema_module) -> None:
     assert m.side_llm_cache_read_ratio_avg is None
 
 
+def test_merge_e2e_extracts_post_turn_compaction_wall_ms(schema_module) -> None:
+    case = {
+        "case_id": "post_turn_wall",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "post_turn_compaction_wall_ms": 123.4,
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].post_turn_compaction_wall_ms == 123.4
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.post_turn_compaction_wall_ms_p95 == 123.4
+
+
 def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module) -> None:
     payload = {
         "review_version": schema_module.REVIEW_VERSION,
@@ -525,6 +595,7 @@ def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module)
                 "tool_search_shortlist_ratio_avg": "not-a-number",
                 "tool_search_deferred_schema_events": "nan",
                 "budget_stop_reasons": ["agent_response_budget_cutoff"],
+                "post_turn_compaction_wall_ms": "bad",
             }
         ],
         "metrics": {
@@ -533,6 +604,7 @@ def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module)
             "compaction_event_count": 0,
             "final_answer_missing_count": 0,
             "latency_p95_ms": "bad",
+            "post_turn_compaction_wall_ms_p95": "bad",
             "compaction_churn_score": "bad",
             "shortlist_ratio_avg": "bad",
             "deferred_schema_event_count": "bad",
@@ -544,11 +616,13 @@ def test_trace_review_from_dict_tolerates_invalid_telemetry_types(schema_module)
     }
     parsed = schema_module.trace_review_from_dict(payload)
     assert parsed.metrics.latency_p95_ms is None
+    assert parsed.metrics.post_turn_compaction_wall_ms_p95 is None
     assert parsed.metrics.shortlist_ratio_avg is None
     assert parsed.metrics.deferred_schema_event_count == 0
     assert parsed.metrics.budget_cutoff_count == 0
     assert parsed.metrics.side_llm_cache_read_ratio_avg is None
     assert parsed.metrics.ptl_retry_count_per_compaction_avg is None
+    assert parsed.trace_timeline[0].post_turn_compaction_wall_ms is None
 
 
 def test_merge_e2e_extracts_epic_c_run_metadata_counters(schema_module) -> None:

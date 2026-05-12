@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import types
@@ -147,6 +148,40 @@ def test_agent_trace_review_subprocess_quick_profile_fail_path_contract(
     verdict = payload.get("verdict") or {}
     assert verdict.get("status") == "fail"
     assert verdict.get("fail_reasons")
+
+
+def test_agent_trace_review_acceptance_requires_workspace_id(tmp_path: Path) -> None:
+    """Acceptance suite must fail fast when fanout probe cannot run (no workspace_id)."""
+    out_json = tmp_path / "trace-review-no-ws.json"
+    out_md = tmp_path / "trace-review-no-ws.md"
+    env = {k: v for k, v in os.environ.items()}
+    env.pop("AGENT_LIVE_WORKSPACE_ID", None)
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(_SCRIPT),
+            "--suite",
+            "acceptance",
+            "--profile",
+            "quick",
+            "--skip-e2e",
+            "--base-url",
+            "http://127.0.0.1:65535",
+            "--timeout",
+            "0.5",
+            "--out-json",
+            str(out_json),
+            "--out-md",
+            str(out_md),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert completed.returncode == 2
+    err = (completed.stderr or "").lower()
+    assert "workspace" in err and ("--workspace-id" in err or "agent_live_workspace_id" in err)
 
 
 def test_agent_trace_review_subprocess_default_profile_fail_path_contract(

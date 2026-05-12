@@ -460,6 +460,14 @@ def main() -> int:
         if args.suite == "default":
             args.suite = "heavy"
 
+    if args.suite == "acceptance" and not (str(args.workspace_id or "").strip()):
+        print(
+            "trace-review: suite=acceptance requires a non-empty --workspace-id or "
+            "AGENT_LIVE_WORKSPACE_ID (required for agent_v2_fanout_probe).",
+            file=sys.stderr,
+        )
+        return 2
+
     checks = _run_http_suite(
         base_url=args.base_url.rstrip("/"),
         workspace_id=args.workspace_id,

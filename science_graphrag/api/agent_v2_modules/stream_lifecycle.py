@@ -964,6 +964,7 @@ async def stream_agent_events(
                     yield sse_warning_event(warning_payload)
 
             duration_ms = int((perf_counter() - started) * 1000)
+            post_turn_compaction_wall_ms = 0
 
             trace_for_run: list[Any] = []
             graph_salvage_stream = False
@@ -1070,6 +1071,7 @@ async def stream_agent_events(
 
             compact_payload: dict[str, Any] | None = None
             if thread_id:
+                _post_turn_wall0 = perf_counter()
                 raw_q = question
                 if latest_full_state is not None:
                     rq = (latest_full_state.get("metadata") or {}).get("raw_user_question")
@@ -1133,6 +1135,7 @@ async def stream_agent_events(
                 yield {
                     "data": json.dumps({"type": "product_step", "code": "updating_session_memory"})
                 }
+                post_turn_compaction_wall_ms = int((perf_counter() - _post_turn_wall0) * 1000)
 
             phx = current_otel_trace_id_hex()
             stream_usage: dict[str, int] | None = None
@@ -1307,6 +1310,8 @@ async def stream_agent_events(
             ti_frag = thread_insight_audit_fragment(thread_id=thread_id, settings=settings)
             if ti_frag:
                 run_meta.update(ti_frag)
+            if thread_id:
+                run_meta["post_turn_compaction_wall_ms"] = post_turn_compaction_wall_ms
 
             final_warnings = list(envelope.get("warnings") or [])
             if history_digest_invalid and "history_digest_invalid" not in final_warnings:

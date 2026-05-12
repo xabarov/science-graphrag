@@ -607,6 +607,13 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Acceptance:** `runner.py` < ~400 LoC; поведение CLI и артефактов не меняется (golden tests на summary keys + compare output).
 - **Raised:** 2026-05-09 (Wave B validation quality pass)
 
+### [OPEN] Add heartbeat / timeout diagnostics for `agent_trace_review` live suite
+- **Area:** `scripts/live_check/agent_trace_review.py`, `scripts/live_check/agent_od_workspace_e2e_audit.py`, `scripts/live_check/http_suite.py`
+- **Issue:** During Wave H reruns on 2026-05-12, `agent_trace_review.py --suite acceptance` could remain silent for 5-10+ minutes (including `--skip-e2e` runs), making hangs indistinguishable from slow progress and forcing manual `ps/kill` intervention. This repeats the known long-running observability gap from ingest/benchmark tooling.
+- **Proposal:** add per-stage heartbeat logs (start/finish + elapsed for HTTP suite, optional E2E, compaction review), explicit per-stage timeout diagnostics in JSON (`run_context.execution_diagnostics`), and a fail-fast path when a stage exceeds configured SLA without output.
+- **Acceptance:** live `agent_trace_review` prints progress at least once per stage within 60s; hung stage reports machine-readable timeout/hang reason in artifact; operator can detect stuck run without manual process inspection.
+- **Raised:** 2026-05-12 (Wave H paired rerun hang incident)
+
 ### [DONE] LX1 integration: translation SSE + ingest/agent threading pools (2026-04-27)
 - **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.
 

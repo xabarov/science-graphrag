@@ -62,6 +62,39 @@ Long-thread harness, 50 turns, digest_cap=10:
 | `side_llm_cache_read_ratio_avg ≥ 0.4` | ✅ harness candidate = 0.844; live-acceptance числа ждут от ближайшего acceptance suite |
 | optional OpenRouter `cache_control` hint | ⏸ не активировано, текущий ratio выше порога без него |
 
+## Trace-review / fanout + latency signals (2026-05-12 follow-up)
+
+- **Fanout false fail:** live `trace-review` с `suite=acceptance` и `workspace_id=null`
+  давал `agent_v2_fanout_probe: missing_workspace_id` (проверка намеренно fail-fast в
+  `http_suite.py`). Исправление: **fail-fast** в
+  `scripts/live_check/agent_trace_review.py` (exit **2**) + тест + пункт preflight в
+  [`agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) §1.
+- **Latency vs orchestration:** в `POST /v2/agent/query` (sync) и SSE `final_answer`
+  добавлен аудит **`run_metadata.post_turn_compaction_wall_ms`** — wall time блока
+  digest + LLM compact + post-compact hooks после основного graph latency
+  (`duration_ms`). В `trace-review-v1` агрегируется **`post_turn_compaction_wall_ms_p95`**
+  по таймлайну (см. `trace_review_schema.py`).
+- **Compaction merge:** убран single-key fallback, размножавший compaction events на
+  все строки таймлайна; `merge_compaction_into_review_dict` для однострочного
+  таймлайна биндит probe к единственному `case_id`.
+- **Paired live compare:** регрессия `verdict`+`latency` на смешанных прогонах
+  (разный `workspace_id` / неявный fanout) трактуется как **конфигурационный шум**;
+  повторять baseline/candidate только с явным workspace и одинаковыми gate-флагами.
+
+### Paired rerun (2026-05-12, post-fix)
+
+- Артефакты:
+  - baseline: `eval/results/trace-review-wave-h-2026-05-12-rerun-baseline.{json,md}`
+  - candidate: `eval/results/trace-review-wave-h-2026-05-12-rerun-candidate.{json,md}`
+  - compare: `eval/results/trace-regression-wave-h-2026-05-12-rerun.{json,md}`
+- Оба прогона выполнены с явным `--workspace-id ws-pilot-od` (без `workspace_id=null`);
+  ложный fail `agent_v2_fanout_probe: missing_workspace_id` **не воспроизводится**.
+- Compare status: `pass` (без `verdict_regressed`).
+- Operational note: часть запусков `agent_trace_review` зависала без heartbeat-логов;
+  для фиксации follow-up добавлен structural backlog item
+  `[OPEN] Add heartbeat / timeout diagnostics for agent_trace_review live suite`
+  в `docs/backlog/refactor-backend.md`.
+
 ## Что дальше — переходит в backlog (не блокирует Wave H closeout)
 
 1. **Live trace-review long-thread acceptance** — провести один acceptance run с
@@ -87,14 +120,20 @@ Long-thread harness, 50 turns, digest_cap=10:
 Backend:
 - `science_graphrag/agent/context/llm_history_compact.py`
 - `science_graphrag/agent/context/message_sanitizers.py`
+- `science_graphrag/api/agent_v2.py` (post-turn compaction wall audit)
+- `science_graphrag/api/agent_v2_modules/stream_lifecycle.py` (SSE `run_metadata.post_turn_compaction_wall_ms`)
 
 Тесты:
 - `tests/agent/test_llm_history_compact.py`
 - `tests/agent/test_message_sanitizers.py`
 - `tests/agent/test_paper_sources_restore_regression.py` (новый)
 - `tests/scripts/live_check/test_long_thread_compaction_eval.py` (новый)
+- `tests/scripts/live_check/test_agent_trace_review.py` (acceptance workspace guard)
+- `tests/scripts/live_check/test_trace_review_schema.py` (compaction merge)
+- `tests/test_api_agent_v2_json_thread.py` (run_metadata audit)
 
 Скрипты / observability:
+- `scripts/live_check/agent_trace_review.py` (acceptance workspace fail-fast)
 - `scripts/live_check/long_thread_compaction_eval.py` (новый)
 - `scripts/live_check/trace_review_schema.py`
 - `scripts/live_check/trace_regression_compare.py`
@@ -102,9 +141,11 @@ Backend:
 Документация / артефакты:
 - `docs/analysis/wave-h-side-llm-inventory-2026-05-12.md` (новый)
 - `docs/analysis/wave-h-rollout-decision-2026-05-12.md` (этот файл)
+- `docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md` (Wave H rollout row)
 - `docs/runbooks/agent-trace-review-sop.md` (обновлён под §H1 / §H2)
 - `eval/results/wave_h/baseline-long-thread-2026-05-12.{json,md}` (новый)
 - `eval/results/wave_h/candidate-long-thread-2026-05-12.{json,md}` (новый)
+- `eval/results/trace-regression-wave-h-2026-05-12-self-pair.{json,md}` — sanity: `trace_regression_compare` baseline=candidate на одном артефакте (exit 0)
 
 ## Резюме
 

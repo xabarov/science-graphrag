@@ -1,0 +1,1862 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-12T16:36:10.552091+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": null,
+    "suite": "acceptance",
+    "profile": "default",
+    "run_kind": "supervisor_specialists_v3",
+    "graph_id": "supervisor_graph_v3",
+    "feature_flags": {
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "true",
+      "agent_claim_verification_enabled": null,
+      "agent_subagent_lifecycle_enhanced_enabled": null,
+      "agent_corpus_explore_enabled": null,
+      "agent_research_plan_subagent_enabled": null,
+      "agent_tool_use_summary_enabled": null,
+      "agent_writer_terminal_single_pass_shadow_enabled": null
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "redis",
+          "agent_session_memory_configured": "redis"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 4011,
+        "warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "tools": [
+          "coordinator_gate",
+          "route_to_specialist",
+          "route_to_specialist",
+          "final_answer"
+        ],
+        "answer_class": "grounded_explanation",
+        "run_metadata": {
+          "agent_runtime": "langgraph_supervisor_v3",
+          "agent_max_tool_calls": 12,
+          "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+          "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+          "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+          "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+          "usage": {
+            "prompt_tokens": 3120,
+            "completion_tokens": 20,
+            "total_tokens": 3140,
+            "input_tokens": 3120,
+            "output_tokens": 20
+          },
+          "debug_events": [
+            {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "default_research_assumption",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": 1.0,
+              "classifier": "deterministic",
+              "type": "intent_classified",
+              "source": "coordinator_gate_v0",
+              "answer_class": "grounded_explanation",
+              "run_kind": "supervisor_specialists_v3",
+              "graph_id": "supervisor_graph_v3"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "retrieval_agent",
+              "tools": null,
+              "reason": "low_signal",
+              "top_score": 0.0,
+              "score_band": null,
+              "catalog_size": 7,
+              "shortlist_size": null,
+              "shortlist_ratio": null,
+              "deferred_schema_mode": null,
+              "deferred_schema_refs": null,
+              "skipped": false,
+              "carryover_tools": null,
+              "message_discovery_tools": null,
+              "message_discovery_merged": null,
+              "activation_policy": "relaxed_low_signal"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "writer_agent",
+              "tools": null,
+              "reason": "writer_terminal_synthesis_seam",
+              "top_score": null,
+              "score_band": null,
+              "catalog_size": 1,
+              "shortlist_size": null,
+              "shortlist_ratio": null,
+              "deferred_schema_mode": null,
+              "deferred_schema_refs": null,
+              "skipped": true,
+              "carryover_tools": null,
+              "message_discovery_tools": null,
+              "message_discovery_merged": null,
+              "writer_mode": "normal"
+            }
+          ],
+          "subagent_runs": [
+            {
+              "subagent_id": "retrieval_agent",
+              "parent_turn_id": "ed32dfab-8476-4bc7-88e6-f1c434e1794d",
+              "spawn_reason": "coordinator_route_hint:retrieval_agent",
+              "terminal_state": "succeeded",
+              "latency_ms": null,
+              "failure_code": null,
+              "tokens": null,
+              "cost_usd_estimate": null,
+              "kind": "routing_leg"
+            },
+            {
+              "subagent_id": "writer_agent",
+              "parent_turn_id": "ed32dfab-8476-4bc7-88e6-f1c434e1794d",
+              "spawn_reason": "routing",
+              "terminal_state": "succeeded",
+              "latency_ms": null,
+              "failure_code": null,
+              "tokens": null,
+              "cost_usd_estimate": null,
+              "kind": "routing_leg"
+            }
+          ],
+          "subagent_task_notifications": [
+            {
+              "schema_version": 1,
+              "task_id": "65394d7c-a8bf-4745-a742-d3dc327cf4bb",
+              "subagent_id": "retrieval_agent",
+              "parent_turn_id": "ed32dfab-8476-4bc7-88e6-f1c434e1794d",
+              "status": "completed",
+              "carry_back": {
+                "summary": "No structured specialist payload recorded.",
+                "result_excerpt": null,
+                "key_sources": [],
+                "verdict": null
+              },
+              "usage": {}
+            },
+            {
+              "schema_version": 1,
+              "task_id": "889acae9-993b-4033-a7ab-cb46233e2cac",
+              "subagent_id": "writer_agent",
+              "parent_turn_id": "ed32dfab-8476-4bc7-88e6-f1c434e1794d",
+              "status": "completed",
+              "carry_back": {
+                "summary": "No structured specialist payload recorded.",
+                "result_excerpt": null,
+                "key_sources": [],
+                "verdict": null
+              },
+              "usage": {}
+            }
+          ],
+          "subagent_observability_lane": "fork_v3_enhanced",
+          "specialist_results_v3": {
+            "schema_version": 1,
+            "legs": [],
+            "merge": {
+              "evidence_origin": "parent_tool",
+              "confidence": 1.0,
+              "conflict": null,
+              "writer_directive": "",
+              "partial_failure": false,
+              "completion_state": "evidence_insufficient"
+            }
+          },
+          "routing_log": [
+            {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "coordinator_route_hint:retrieval_agent",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "budget_left": 12,
+              "reason": null
+            }
+          ]
+        },
+        "answer_stripped": "Hello! How can I assist you today?",
+        "answer_len": 34
+      }
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "thread_id": "live_check_7e5a0978982f",
+        "turn2_warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "turn2_tools": [
+          "coordinator_gate",
+          "session_init",
+          "route_to_specialist",
+          "route_to_specialist",
+          "final_answer"
+        ]
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "product_step",
+          "specialist_selected",
+          "subagent_started",
+          "product_step",
+          "tool_search_result",
+          "subagent_finished",
+          "specialist_selected",
+          "subagent_started",
+          "product_step",
+          "subagent_task_notification",
+          "tool_call",
+          "subagent_progress",
+          "subagent_progress_label",
+          "tool_result",
+          "tool_search_result",
+          "subagent_finished",
+          "product_step",
+          "answer_synthesis_started",
+          "context_compacted",
+          "product_step",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 23
+      }
+    },
+    {
+      "name": "agent_v2_fanout_probe",
+      "ok": false,
+      "detail": "missing_workspace_id",
+      "data": {}
+    },
+    {
+      "name": "agent_v2_malicious_deny",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "answer_len": 77,
+        "warnings": [
+          "no_workspace",
+          "weak_evidence",
+          "insufficient_evidence"
+        ]
+      }
+    }
+  ],
+  "trace_timeline": [
+    {
+      "case_id": "catalog_resolution",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 48628.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 8,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 9,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.7143,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 51646,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "case_id": "workspace_stats",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 5187.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.7143,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 5872,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "case_id": "grounded_quote",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 20344.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.7143,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 16703,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "case_id": "multi_compare_bibliography",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 70972.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 8,
+          "tool": "format_bibliography_gost",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 9,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.8571,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 37893,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "case_id": "graph_ego_methods",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 9093.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": null,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 2447,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "case_id": "multi_evidence_speed_accuracy",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 56037.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 8,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 9,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.7143,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 42279,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "case_id": "v3_cv_fanout_dual_evidence",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 68536.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 8,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 9,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 10,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.7143,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 38392,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "case_id": "v3_subagent_mesh_multi_tool",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 60248.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 8,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 9,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.7143,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 29424,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "case_id": "b2_merge_provenance_probe",
+      "thread_id": null,
+      "run_kind": "supervisor_specialists_v3",
+      "graph_id": "supervisor_graph_v3",
+      "duration_ms": 104961.0,
+      "tool_steps": [
+        {
+          "idx": 1,
+          "tool": "coordinator_gate",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 2,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 3,
+          "tool": "route_to_specialist",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 4,
+          "tool": "workspace_inspect",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 5,
+          "tool": "find_works",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 6,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 7,
+          "tool": "paper_profile",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 8,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 9,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 10,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 11,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 12,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 13,
+          "tool": "idea_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 14,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 15,
+          "tool": "paper_quote_search",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        },
+        {
+          "idx": 16,
+          "tool": "final_answer",
+          "ok": true,
+          "duration_ms": 0,
+          "error": null
+        }
+      ],
+      "phoenix_alignment": null,
+      "compaction_events": [
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 1,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest"
+          ],
+          "turn": 2,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 3,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 4,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 5,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        },
+        {
+          "type": "context_compacted",
+          "kinds": [
+            "turn_digest",
+            "rolling_memory"
+          ],
+          "turn": 6,
+          "thread_id": "compaction_review_7fc8408ff6bf"
+        }
+      ],
+      "hook_chain_events": [],
+      "db_side_effects": null,
+      "warnings": [],
+      "tool_search_shortlist_ratio_avg": 0.7143,
+      "tool_search_deferred_schema_events": 0,
+      "budget_stop_reasons": [],
+      "side_llm_cache_read_ratio": null,
+      "thread_insight_forked": null,
+      "insight_fallback_reason": null,
+      "insight_conflict_resolved": null,
+      "run_ptl_retry_count": null,
+      "ptl_retry_count_per_compaction": null,
+      "thread_insight_refresh_mode": null,
+      "thread_insight_synthesis_conflict_count": 0,
+      "unnecessary_tool_calls": 0,
+      "subagent_runs_count": 2,
+      "subagent_task_notification_count": 2,
+      "subagent_lifecycle_missing_count": 0,
+      "eval_lane": null,
+      "tool_search_miss_due_to_no_discovery": 0,
+      "tool_schema_bytes_saved": 0,
+      "tool_loop_repeat_max": 2,
+      "writer_oscillation_count": 0,
+      "e2e_http_ok": true,
+      "runtime_monitor_event_count": 0,
+      "runtime_monitor_degraded_hits": 0,
+      "runtime_monitor_timeout_hits": 0,
+      "mcp_audit_event_count": 0,
+      "mcp_audit_deny_hits": 0,
+      "mcp_audit_ok_false_hits": 0,
+      "lsp_audit_event_count": 0,
+      "lsp_audit_degraded_hits": 0,
+      "lsp_audit_timeout_hits": 0,
+      "claim_verification_total": 0,
+      "claim_verification_verdict_parsed": 0,
+      "live_trust_signal": null,
+      "specialist_v3_merge_conflict": false,
+      "specialist_v3_evidence_origin": "parent_tool",
+      "agent_usage_total_tokens": 164484,
+      "tool_use_summary_row_count": 0,
+      "post_compact_paper_sources_restored_count": 0
+    }
+  ],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 54,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": 70972.0,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": 0.7322,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0,
+    "side_llm_cache_read_ratio_avg": null,
+    "latency_p50_ms": 48628.0,
+    "insight_recall_at_k": null,
+    "stale_summary_error_rate": 0.0,
+    "insight_stale_reason_rate": 0.0,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "ptl_retry_count_per_compaction_avg": null,
+    "compaction_circuit_breaker_trips": 0,
+    "unnecessary_tool_calls_avg": 0.0,
+    "hook_chain_event_count": 0,
+    "subagent_lifecycle_missing_count": 0,
+    "subagent_task_notification_count_avg": 2.0,
+    "tool_search_miss_due_to_no_discovery_total": 0,
+    "tool_schema_bytes_saved_total": 0,
+    "tool_loop_repeat_max": 2,
+    "runtime_monitor_event_total": 0,
+    "runtime_monitor_degraded_total": 0,
+    "mcp_audit_event_total": 0,
+    "mcp_audit_deny_total": 0,
+    "lsp_audit_event_total": 0,
+    "lsp_audit_degraded_total": 0,
+    "claim_verification_verdict_parse_rate": null,
+    "live_trust_signal_avg": null,
+    "specialist_v3_merge_conflict_cases": 0,
+    "agent_usage_total_tokens_sum": 389140,
+    "writer_oscillation_count_max": 0,
+    "tool_use_summary_row_count_total": 0,
+    "post_compact_paper_sources_restored_cases": 0,
+    "post_compact_paper_sources_restored_total": 0
+  },
+  "verdict": {
+    "status": "fail",
+    "fail_reasons": [
+      "failed_check:agent_v2_fanout_probe"
+    ],
+    "warn_reasons": [
+      "claim_verification_verdict_parse_rate:absent_no_cv_rows"
+    ]
+  },
+  "e2e_audit": {
+    "ok": true,
+    "returncode": 0,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "acceptance",
+      "--timeout",
+      "240.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_1x18tjp7.json",
+      "--skip-phoenix",
+      "--skip-postgres"
+    ],
+    "stdout_tail": "he following part, we will walk through the whole system designs in YOLOX step by step.\\n\\n**Implementation details** Our training settings are mostly consistent from the baseline to our final model. We train the models for a total of 300 epochs with 5 epochs warm-up on COCO train2017 [17]. We use stochastic gradient descent (SGD) for training. We use a learning rate of $lr \\\\times BatchSize/64$ (linear scaling [8]), with an initial $lr = 0.01$ and the cosine lr schedule. The weight decay is 0.0005 and the SGD momentum is 0.9. The batch size is 128 by default to typical 8-GPU devices. Other batch sizes include single GPU training also work well. The input size is evenly drawn from 448 to 832 with \",\n                      \"work_id\": \"52e5de2a-32ef-4e74-86b1-7fc97c7e2de8\",\n                      \"chunk_id\": \"6293031b9bae72a6f73dcfe6c53f4bec59f65aad2d48f1431f62ca982365983a\",\n                      \"chunk_fingerprint\": \"6293031b9bae72a6f73dcfe6c53f4bec59f65aad2d48f1431f62ca982365983a\",\n                      \"section\": \"YOLOX: Exceeding YOLO Series in 2021 / 2. YOLOX\"\n                    },\n                    {\n                      \"quote_text\": \"# YOLOX: Exceeding YOLO Series in 2021\\n\\nZheng Ge* Songtao Liu*† Feng Wang Zeming Li Jian Sun \\nMegvii Technology \\n{gezheng, liusongtao, wangfeng02, lizeming, sunjian}@megvii.com\\n\\n![Figure 1: Speed-accuracy trade-off of accurate models (top) and Size-accuracy curve of lite models on mobile devices (bottom) for YOLOX and other state-of-the-art object detectors.](image_url)\\n\\n## Abstract\\n\\nIn this report, we present some experienced improvements to YOLO series, forming a new high-performance detector—YOLOX. We switch the YOLO detector to an anchor-free manner and conduct other advanced detection techniques, i.e., a decoupled head and the leading label assignment strategy SimOTA to achieve state-of-the-art results across a large scale range of models: For YOLO-Nano with only 0.91M parameters and \",\n                      \"work_id\": \"52e5de2a-32ef-4e74-86b1-7fc97c7e2de8\",\n                      \"chunk_id\": \"8962c1fd1ab017a3bc987024585129e708606b2e018f41b93887ee82101eb6fa\",\n                      \"chunk_fingerprint\": \"8962c1fd1ab017a3bc987024585129e708606b2e018f41b93887ee82101eb6fa\",\n                      \"section\": \"YOLOX: Exceeding YOLO Series in 2021\"\n                    }\n                  ],\n                  \"row_count\": 5,\n                  \"truncated\": false\n                }\n              ],\n              \"evidence_origin\": \"parent_tool\",\n              \"confidence\": 0.9,\n              \"terminal_state\": \"succeeded\",\n              \"failure_code\": null\n            }\n          ],\n          \"merge\": {\n            \"evidence_origin\": \"parent_tool\",\n            \"confidence\": 0.9,\n            \"conflict\": null,\n            \"writer_directive\": \"Evidence merge (v3): synthesize a single grounded answer. evidence_origin='parent_tool'. Do not hide tool denials, timeouts, or conflicting VERDICT lines; state them explicitly.\",\n            \"partial_failure\": false,\n            \"completion_state\": \"any_specialist_payload\"\n          }\n        },\n        \"routing_log\": [\n          {\n            \"from\": \"supervisor\",\n            \"to\": \"retrieval_agent\",\n            \"reason\": \"workspace_dual_evidence_first_hop\",\n            \"budget_left\": 12,\n            \"decision_source\": \"route_plan\",\n            \"route_hint\": \"retrieval_agent\"\n          },\n          {\n            \"from\": \"supervisor\",\n            \"to\": \"writer_agent\",\n            \"reason\": \"budget_exhausted\"\n          }\n        ]\n      },\n      \"run_kind\": \"supervisor_specialists_v3\",\n      \"graph_id\": \"supervisor_graph_v3\",\n      \"tool_search_shortlist_ratio_avg\": 0.7143,\n      \"tool_search_deferred_schema_events\": null,\n      \"budget_stop_reasons\": [],\n      \"answer_class\": \"grounded_explanation\",\n      \"citations_count\": 2,\n      \"phoenix_ui_url\": \"http://127.0.0.1:16006/projects/science-graphrag/traces/3ba15bfcfd59c070c2762ea00ba9a3a0\"\n    }\n  ]\n}\n",
+    "stderr_tail": "note: PHOENIX_TRACE_SCOPE=extraction_llm (agent.* spans still allowed); if Phoenix is empty, check PHOENIX_COLLECTOR_ENDPOINT on the API container.\nwrote full report json: /tmp/e2e_full_report_1x18tjp7.json\n\n--- summary ---\ncatalog_resolution: steps=9 final_answer=True answer_len=407 phoenix_ok=None ok=True\nworkspace_stats: steps=5 final_answer=True answer_len=77 phoenix_ok=None ok=True\ngrounded_quote: steps=7 final_answer=True answer_len=455 phoenix_ok=None ok=True\nmulti_compare_bibliography: steps=9 final_answer=True answer_len=759 phoenix_ok=None ok=True\ngraph_ego_methods: steps=4 final_answer=True answer_len=309 phoenix_ok=None ok=True\nmulti_evidence_speed_accuracy: steps=9 final_answer=True answer_len=889 phoenix_ok=None ok=True\nv3_cv_fanout_dual_evidence: steps=10 final_answer=True answer_len=1534 phoenix_ok=None ok=True\nv3_subagent_mesh_multi_tool: steps=9 final_answer=True answer_len=940 phoenix_ok=None ok=True\nb2_merge_provenance_probe: steps=16 final_answer=True answer_len=577 phoenix_ok=None ok=True\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_1x18tjp7.json"
+  },
+  "phoenix_snapshot_path": null,
+  "acceptable_warns": [
+    "^claim_verification_verdict_parse_rate:absent_no_cv_rows$"
+  ],
+  "compaction_turn_review": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-wave-h-2026-05-12-live_compaction_review.json",
+    "stdout_tail": "[compaction-review] merged into: eval/results/trace-review-wave-h-2026-05-12-live.json\n[compaction-review] json: eval/results/trace-review-wave-h-2026-05-12-live_compaction_review.json\n[compaction-review] md:   eval/results/trace-review-wave-h-2026-05-12-live_compaction_review.md\n",
+    "stderr_tail": ""
+  }
+}

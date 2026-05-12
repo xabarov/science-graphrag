@@ -76,6 +76,7 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
             thread_id: str | None,
             history_digest: list | None,
             client_idle_ms: int | None = None,  # noqa: ARG002 — parity with real agent.run()
+            user_structured_answer: dict | None = None,  # noqa: ARG002
         ) -> AgentRunOutput:
             state = build_initial_agent_state(
                 question=question,
@@ -154,6 +155,7 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
     comp = (data.get("run_metadata") or {}).get("compaction")
     assert isinstance(comp, dict) and comp.get("kind") == "turn_digest"
     assert "kinds" in comp
+    assert "post_turn_compaction_wall_ms" in (data.get("run_metadata") or {})
 
 
 def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> None:
@@ -174,6 +176,7 @@ def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> Non
             thread_id: str | None,
             history_digest: list | None,
             client_idle_ms: int | None = None,  # noqa: ARG002 — parity with real agent.run()
+            user_structured_answer: dict | None = None,  # noqa: ARG002
         ) -> AgentRunOutput:
             state = build_initial_agent_state(
                 question=question,

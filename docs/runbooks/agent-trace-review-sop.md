@@ -82,6 +82,10 @@ by-design warning reasons. Любой `verdict.warn_reasons[]`, который �
    (обёртка над `http_suite`: `/health` + sync/SSE agent v2).
 4. Перед heavy/full — readiness workspace:  
    `.venv/bin/python scripts/chat_agent_workspace_readiness_audit.py`
+5. Для **`--suite acceptance`** (и любых проверок с `agent_v2_fanout_probe`): задайте
+   непустой **`--workspace-id`** или экспорт **`AGENT_LIVE_WORKSPACE_ID`**. Иначе
+   `agent_trace_review.py` завершится с кодом **2** до HTTP-суиты (fail-fast), а
+   fanout/malicious deny проверки не имеют смысла без workspace.
 
 ### 1.1) Runtime alignment (важно с 2026-05-08, ADR-029)
 

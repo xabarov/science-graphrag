@@ -252,6 +252,7 @@ async def post_agent_query_v2(
     excerpt: str | None = None
     extra_meta: dict[str, Any] | None = None
     if thread_id:
+        post_compact_wall0 = perf_counter()
         ent_sync = get_session_for_thread(thread_id)
         dcount = len(ent_sync.get("digests") or [])
         llm_audit_sync = maybe_llm_compact_session_after_turn(
@@ -287,6 +288,11 @@ async def post_agent_query_v2(
         ti_frag = thread_insight_audit_fragment(thread_id=thread_id, settings=settings)
         if ti_frag:
             extra_meta = {**(extra_meta or {}), **ti_frag}
+        post_wall_ms = int((perf_counter() - post_compact_wall0) * 1000)
+        extra_meta = {
+            **(extra_meta or {}),
+            "post_turn_compaction_wall_ms": post_wall_ms,
+        }
     extra_warnings = ["history_digest_invalid"] if history_digest_invalid else None
     return response_from_run_payload(
         out,
