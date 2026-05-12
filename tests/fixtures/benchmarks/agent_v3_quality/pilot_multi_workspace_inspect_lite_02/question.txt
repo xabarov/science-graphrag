@@ -1,0 +1,1 @@
+If workspace ws-pilot-alt exists alongside ws-pilot-od, which one has more documents according to workspace stats tools? If stats are unavailable for either, explain the limitation briefly.

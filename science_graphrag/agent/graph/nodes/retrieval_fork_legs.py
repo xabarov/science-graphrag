@@ -1,4 +1,7 @@
-"""Retrieval specialist optional fork bundles (claim verification, corpus explore, research plan)."""
+"""Retrieval specialist optional fork bundles.
+
+Claim verification, corpus explore, research plan.
+"""
 
 from __future__ import annotations
 
@@ -25,6 +28,15 @@ from science_graphrag.agent.subagents.specialist_results_v3 import (
 )
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
+
+
+def e1_subagents_allowed_for_retrieval_hop(*, settings: Settings, new_payloads: list[dict]) -> bool:
+    """Wave E1: avoid corpus_explore / research_plan on low-evidence retrieval hops."""
+    if not bool(getattr(settings, "agent_e1_retrieval_hop_evidence_gate_enabled", True)):
+        return True
+    min_n = int(getattr(settings, "agent_e1_retrieval_hop_min_payloads", 2) or 2)
+    min_n = max(1, min(10, min_n))
+    return len(new_payloads) >= min_n
 
 
 def _hook_terminal_state(term: str) -> SubagentHookTerminalState:
@@ -166,6 +178,7 @@ def run_retrieval_fork_bundles(
         bool(getattr(settings, "agent_corpus_explore_enabled", False))
         and str(settings.agent_runtime or "").strip() == "langgraph_supervisor_v3"
         and new_payloads
+        and e1_subagents_allowed_for_retrieval_hop(settings=settings, new_payloads=new_payloads)
     ):
         ce_results = run_corpus_explore_fork_bundle(
             stores=stores,
@@ -260,6 +273,7 @@ def run_retrieval_fork_bundles(
         bool(getattr(settings, "agent_research_plan_subagent_enabled", False))
         and str(settings.agent_runtime or "").strip() == "langgraph_supervisor_v3"
         and new_payloads
+        and e1_subagents_allowed_for_retrieval_hop(settings=settings, new_payloads=new_payloads)
     ):
         rp_results = run_research_plan_fork_bundle(
             stores=stores,
@@ -362,4 +376,4 @@ def run_retrieval_fork_bundles(
     return extra_msgs, extra_debug, spawn_rows
 
 
-__all__ = ["run_retrieval_fork_bundles"]
+__all__ = ["e1_subagents_allowed_for_retrieval_hop", "run_retrieval_fork_bundles"]

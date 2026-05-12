@@ -1,0 +1,1 @@
+List workspace ids you can access right now (from context or tools). If exactly two pilot workspaces are visible, name both; if only one, name it and state that the second is unavailable.

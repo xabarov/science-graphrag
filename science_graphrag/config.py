@@ -596,7 +596,7 @@ class Settings(BaseSettings):
         description="Max parallel claim_verification passes per retrieval hop (fanout research cap).",
     )
     agent_corpus_explore_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "When true (supervisor v3), run read-only corpus_explore subagent after retrieval "
             "with a cheap model + narrow tools (Train T4 §10.3)."
@@ -646,7 +646,7 @@ class Settings(BaseSettings):
         description="Max corpus_explore passes per retrieval hop.",
     )
     agent_research_plan_subagent_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "When true (supervisor v3), run research-plan decomposition subagent "
             "(corpus/graph/writer sections; optional research_plan_write)."
@@ -691,8 +691,22 @@ class Settings(BaseSettings):
         le=8,
         description="Max research-plan passes per retrieval hop.",
     )
+    agent_e1_retrieval_hop_evidence_gate_enabled: bool = Field(
+        default=True,
+        description=(
+            "When true with supervisor v3, skip corpus_explore and research_plan fork legs on "
+            "retrieval hops with fewer than ``agent_e1_retrieval_hop_min_payloads`` payloads "
+            "(Wave E1 default-on latency guard)."
+        ),
+    )
+    agent_e1_retrieval_hop_min_payloads: int = Field(
+        default=2,
+        ge=1,
+        le=10,
+        description="Minimum retrieval tool payloads to spawn corpus_explore / research_plan legs.",
+    )
     agent_tool_use_summary_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "When true, compress oversized JSON tool results via cache-safe side-LLM summary "
             "(§10.9), complementing token-budget compaction."
@@ -715,6 +729,13 @@ class Settings(BaseSettings):
         ge=0.0,
         le=1.0,
         description="Temperature for tool_use_summary side-LLM.",
+    )
+    agent_side_llm_openrouter_cache_control_enabled: bool = Field(
+        default=True,
+        description=(
+            "When true, mark the static side-LLM system message with OpenRouter-style "
+            "``cache_control`` metadata (best-effort prompt-cache hint for run_side_llm_chat)."
+        ),
     )
     agent_writer_terminal_single_pass_shadow_enabled: bool = Field(
         default=False,
@@ -1042,7 +1063,7 @@ class Settings(BaseSettings):
         description="Max characters retained per truncated ToolMessage body.",
     )
     agent_tool_message_microcompact_time_trigger_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "When true with agent_tool_history_compact_enabled, clear older ToolMessage bodies "
             "after a long client idle gap (see tool_message_compact)."
@@ -1210,7 +1231,7 @@ class Settings(BaseSettings):
         description="CH5: digest window size (matches store cap); boundary_candidate when full.",
     )
     agent_llm_full_history_compact_enabled: bool = Field(
-        default=False,
+        default=True,
         description=(
             "L4: when digest window is full (count >= agent_compaction_digest_cap), optionally "
             "call the chat LLM once per cooldown to replace rolling session_summary with a denser "

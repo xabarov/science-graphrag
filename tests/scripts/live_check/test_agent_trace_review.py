@@ -133,6 +133,10 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
     assert payload["review_version"] == "trace-review-v1"
     run_ctx = payload.get("run_context") or {}
     assert run_ctx.get("profile") == "quick"
+    diag = run_ctx.get("execution_diagnostics") or {}
+    assert diag.get("heartbeat_interval_sec") == 60.0
+    stages = diag.get("stages") or []
+    assert any(s.get("stage") == "http_suite" for s in stages)
     assert run_ctx.get("run_kind") == "single_agent_research"
     assert run_ctx.get("graph_id") == "single_agent_react"
 
@@ -145,6 +149,7 @@ def test_agent_trace_review_subprocess_quick_profile_fail_path_contract(
     assert payload["review_version"] == "trace-review-v1"
     run_ctx = payload.get("run_context") or {}
     assert run_ctx.get("profile") == "quick"
+    assert isinstance(run_ctx.get("execution_diagnostics"), dict)
     verdict = payload.get("verdict") or {}
     assert verdict.get("status") == "fail"
     assert verdict.get("fail_reasons")

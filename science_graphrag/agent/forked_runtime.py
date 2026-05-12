@@ -157,7 +157,12 @@ def run_side_llm_chat(
         max_tokens=max_tokens,
         model=model,
     )
-    messages: list[BaseMessage] = [SystemMessage(content=parent_system)]
+    sys_add_kw: dict[str, Any] = {}
+    if bool(getattr(settings, "agent_side_llm_openrouter_cache_control_enabled", False)):
+        sys_add_kw["cache_control"] = {"type": "ephemeral"}
+    messages: list[BaseMessage] = [
+        SystemMessage(content=parent_system, additional_kwargs=sys_add_kw)
+    ]
     if parent_messages_prefix:
         messages.extend(list(parent_messages_prefix))
     messages.append(HumanMessage(content=fork_prompt))
@@ -224,7 +229,10 @@ def synthesize_thread_insight_markdown(
 
 
 def run_claim_verification_fork_bundle(**kwargs: Any) -> list[dict[str, Any]]:
-    """Side-isolated claim verification runs (tools + deny policy); see ``claim_verification_runtime``."""
+    """Side-isolated claim verification runs (tools + deny policy).
+
+    See ``claim_verification_runtime``.
+    """
     from science_graphrag.agent.subagents.claim_verification_runtime import (
         run_claim_verification_fanout,
     )

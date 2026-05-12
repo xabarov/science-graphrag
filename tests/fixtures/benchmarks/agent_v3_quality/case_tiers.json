@@ -22,7 +22,9 @@
     "pilot_relation_extra_01",
     "pilot_quote_grounding_01",
     "pilot_negative_refusal_01",
-    "pilot_multi_workspace_01"
+    "pilot_multi_workspace_01",
+    "pilot_multi_workspace_inspect_lite_01",
+    "pilot_multi_workspace_inspect_lite_02"
   ],
   "judge_holdout": ["holdout_open_01"]
 }

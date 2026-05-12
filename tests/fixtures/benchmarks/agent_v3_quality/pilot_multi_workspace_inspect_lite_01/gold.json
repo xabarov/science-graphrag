@@ -1,0 +1,11 @@
+{
+  "schema_version": "agent_v3_quality_case_v1",
+  "family": "multi_workspace_inspect",
+  "workspace_id": "ws-pilot-od",
+  "tags": ["routing", "multi_workspace", "f3_slice2"],
+  "requires_quotes": false,
+  "requires_compare_structure": false,
+  "requires_relation_reasoning": false,
+  "forbidden_fail_modes": ["final_answer_missing", "hallucinated_workspace_ids"],
+  "notes": "F3-slice2+: lightweight multi-workspace visibility probe (controlled expansion)"
+}

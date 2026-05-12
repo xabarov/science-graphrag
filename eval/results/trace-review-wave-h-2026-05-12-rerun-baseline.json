@@ -1,6 +1,6 @@
 {
   "review_version": "trace-review-v1",
-  "generated_at": "2026-05-12T17:53:54.311897+00:00",
+  "generated_at": "2026-05-12T20:51:21.242579+00:00",
   "run_context": {
     "base_url": "http://127.0.0.1:18787",
     "workspace_id": "ws-pilot-od",
@@ -8,6 +8,37 @@
     "profile": "quick",
     "run_kind": "supervisor_specialists_v3",
     "graph_id": "supervisor_graph_v3",
+    "execution_diagnostics": {
+      "heartbeat_interval_sec": 60.0,
+      "e2e_subprocess_timeout_sec": null,
+      "stages": [
+        {
+          "stage": "http_suite",
+          "elapsed_ms": 85971.45,
+          "ok": true
+        },
+        {
+          "stage": "e2e_audit_subprocess",
+          "elapsed_ms": 0.045,
+          "ok": true
+        },
+        {
+          "stage": "merge_e2e_report_json",
+          "elapsed_ms": 0.069,
+          "ok": true
+        },
+        {
+          "stage": "long_thread_offline_eval",
+          "elapsed_ms": 1471.371,
+          "ok": true
+        },
+        {
+          "stage": "compaction_turn_review",
+          "elapsed_ms": 107869.378,
+          "ok": true
+        }
+      ]
+    },
     "feature_flags": {
       "agent_runtime": "langgraph_supervisor_v3",
       "agent_rule_tool_search_enabled": null,
@@ -22,6 +53,11 @@
       "agent_corpus_explore_enabled": null,
       "agent_research_plan_subagent_enabled": null,
       "agent_tool_use_summary_enabled": null,
+      "agent_side_llm_openrouter_cache_control_enabled": null,
+      "agent_llm_full_history_compact_enabled": "0",
+      "agent_tool_message_microcompact_time_trigger_enabled": "0",
+      "agent_e1_retrieval_hop_evidence_gate_enabled": null,
+      "agent_e1_retrieval_hop_min_payloads": null,
       "agent_writer_terminal_single_pass_shadow_enabled": null
     }
   },
@@ -43,7 +79,7 @@
       "ok": true,
       "detail": "ok",
       "data": {
-        "duration_ms": 3594,
+        "duration_ms": 9992,
         "warnings": [
           "weak_evidence",
           "insufficient_evidence"
@@ -63,11 +99,11 @@
           "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
           "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
           "usage": {
-            "prompt_tokens": 3169,
-            "completion_tokens": 59,
-            "total_tokens": 3228,
-            "input_tokens": 3169,
-            "output_tokens": 59
+            "prompt_tokens": 3162,
+            "completion_tokens": 27,
+            "total_tokens": 3189,
+            "input_tokens": 3162,
+            "output_tokens": 27
           },
           "debug_events": [
             {
@@ -124,7 +160,7 @@
           "subagent_runs": [
             {
               "subagent_id": "retrieval_agent",
-              "parent_turn_id": "2d053603-3c15-435a-9011-deb7c36bf753",
+              "parent_turn_id": "846590e4-000f-48cc-8a78-83e58cadf806",
               "spawn_reason": "coordinator_route_hint:retrieval_agent",
               "terminal_state": "succeeded",
               "latency_ms": null,
@@ -135,8 +171,8 @@
             },
             {
               "subagent_id": "writer_agent",
-              "parent_turn_id": "2d053603-3c15-435a-9011-deb7c36bf753",
-              "spawn_reason": "routing",
+              "parent_turn_id": "846590e4-000f-48cc-8a78-83e58cadf806",
+              "spawn_reason": "supervisor_finish_guard",
               "terminal_state": "succeeded",
               "latency_ms": null,
               "failure_code": null,
@@ -148,9 +184,9 @@
           "subagent_task_notifications": [
             {
               "schema_version": 1,
-              "task_id": "a56d5669-4e28-4444-994f-d94b8b691e70",
+              "task_id": "0bf585c3-5e09-4226-94a2-eb0d34246cfa",
               "subagent_id": "retrieval_agent",
-              "parent_turn_id": "2d053603-3c15-435a-9011-deb7c36bf753",
+              "parent_turn_id": "846590e4-000f-48cc-8a78-83e58cadf806",
               "status": "completed",
               "carry_back": {
                 "summary": "No structured specialist payload recorded.",
@@ -162,9 +198,9 @@
             },
             {
               "schema_version": 1,
-              "task_id": "0d711dcc-ede5-482b-80cf-e9ce760ac7e3",
+              "task_id": "bdd3d44c-99d9-49e7-98b8-d2b9d1fedd3f",
               "subagent_id": "writer_agent",
-              "parent_turn_id": "2d053603-3c15-435a-9011-deb7c36bf753",
+              "parent_turn_id": "846590e4-000f-48cc-8a78-83e58cadf806",
               "status": "completed",
               "carry_back": {
                 "summary": "No structured specialist payload recorded.",
@@ -201,12 +237,12 @@
               "from": "supervisor",
               "to": "writer_agent",
               "budget_left": 12,
-              "reason": null
+              "reason": "supervisor_finish_guard"
             }
           ]
         },
-        "answer_stripped": "No relevant sources were found to address the query.",
-        "answer_len": 52
+        "answer_stripped": "Hello! I'm ready to help you with any questions or tasks you have.",
+        "answer_len": 66
       }
     },
     {
@@ -225,12 +261,7 @@
           "specialist_selected",
           "subagent_started",
           "product_step",
-          "subagent_task_notification",
-          "tool_call",
-          "subagent_progress",
-          "subagent_progress_label",
-          "tool_result",
-          "tool_search_result",
+          "subagent_heartbeat",
           "subagent_finished",
           "product_step",
           "answer_synthesis_started",
@@ -239,7 +270,7 @@
           "answer_synthesis_finished",
           "final_answer"
         ],
-        "event_count": 23
+        "event_count": 18
       }
     },
     {
@@ -253,11 +284,10 @@
           "route_to_specialist",
           "workspace_inspect",
           "find_works",
-          "find_works",
           "paper_profile",
           "final_answer"
         ],
-        "non_session_tool_count": 8
+        "non_session_tool_count": 7
       }
     },
     {
@@ -265,7 +295,7 @@
       "ok": true,
       "detail": "ok",
       "data": {
-        "answer_len": 58,
+        "answer_len": 237,
         "warnings": [
           "weak_evidence",
           "insufficient_evidence"
@@ -287,8 +317,8 @@
     "budget_cutoff_count": 0,
     "side_llm_cache_read_ratio_avg": null,
     "latency_p50_ms": null,
-    "insight_recall_at_k": 1.0,
-    "stale_summary_error_rate": 0.0,
+    "insight_recall_at_k": null,
+    "stale_summary_error_rate": null,
     "insight_stale_reason_rate": null,
     "insight_conflict_resolved_rate": null,
     "ptl_retry_rate": null,
@@ -314,11 +344,7 @@
     "writer_oscillation_count_max": 0,
     "tool_use_summary_row_count_total": 0,
     "post_compact_paper_sources_restored_cases": 0,
-    "post_compact_paper_sources_restored_total": 0,
-    "long_thread_eval_pass_rate": 1.0,
-    "claim_grounding_precision": 1.0,
-    "claim_grounding_recall": 1.0,
-    "insight_synthesis_conflict_audit_rate": 0.333333
+    "post_compact_paper_sources_restored_total": 0
   },
   "verdict": {
     "status": "warn",
@@ -332,95 +358,11 @@
   "acceptable_warns": [
     "^claim_verification_verdict_parse_rate:absent_no_cv_rows$"
   ],
-  "long_thread_eval": {
-    "cases": [
-      {
-        "case_id": "long_thread_fresh_insight",
-        "pass": true,
-        "claim_grounding_ok": true,
-        "insight_fallback_reason": null,
-        "thread_insight_prompt_status": "conflicted",
-        "thread_insight_synthesis_conflict_audit": false
-      },
-      {
-        "case_id": "long_thread_stale_fallback",
-        "pass": true,
-        "claim_grounding_ok": true,
-        "insight_fallback_reason": "insight_stale_lag",
-        "thread_insight_prompt_status": "omitted",
-        "thread_insight_synthesis_conflict_audit": false
-      },
-      {
-        "case_id": "long_thread_conflict_marked",
-        "pass": true,
-        "claim_grounding_ok": true,
-        "insight_fallback_reason": null,
-        "thread_insight_prompt_status": "conflicted",
-        "thread_insight_synthesis_conflict_audit": true
-      }
-    ],
-    "metrics": {
-      "insight_recall_at_k": 1.0,
-      "stale_summary_error_rate": 0.0,
-      "long_thread_eval_pass_rate": 1.0,
-      "claim_grounding_precision": 1.0,
-      "claim_grounding_recall": 1.0,
-      "insight_synthesis_conflict_audit_rate": 0.333333
-    }
-  },
-  "acceptance_summary": {
-    "schema_version": "acceptance_summary_v1",
-    "trace_review_verdict": "warn",
-    "gates": {
-      "§10.2_side_llm_cache_read_ratio": "skipped_no_side_llm_rows",
-      "§10.3_claim_verification_verdict_parse": "skipped_no_claim_verification_rows",
-      "§10.6_hook_chain_events": "warn_no_hook_chain_events_in_timeline",
-      "§11.3_B1_subagent_lifecycle": "pass",
-      "§11.4_B3_budget_usage_timeline": "advisory_no_budget_cutoff_or_usage_export",
-      "§G2_acceptable_warns": "pass",
-      "§G2_tool_loop_repeat_max": "pass",
-      "§G3_writer_oscillation_count": "pass",
-      "§H1_post_compact_paper_sources_restore": "skipped_no_compaction_events"
-    },
-    "acceptable_warns": [
-      "^claim_verification_verdict_parse_rate:absent_no_cv_rows$"
-    ],
-    "unacceptable_warns": [],
-    "synthetic_covered": [
-      "§10.1 B0 fork_vs_coordinator: eval/chat_agent/subagent_runtime_fork_vs_coordinator_bench.py",
-      "§10.4 verification Scope/VERDICT: tests/agent/test_subagent_output_contract.py",
-      "§10.5 compaction counters: tests/scripts/live_check/test_trace_review_schema.py",
-      "§10.6 hook_chain_events: tests/agent/test_hooks_post_compact.py",
-      "§10.7 agent registry: tests/agent/test_agent_registry_permissions.py",
-      "§10.8 task-notification contract: tests/agent/test_subagent_notification_contract.py",
-      "B4 partial-failure / deny (unit): tests/agent/test_specialist_results_v3_and_claim_verification.py",
-      "B4 lifecycle rows (synthetic): tests/eval/test_subagent_hardening_gates.py",
-      "B4 fanout + malicious-deny HTTP probes (live wiring): scripts/live_check/http_suite.py"
-    ],
-    "live_proven": [
-      "b4_fanout_multi_tool_http_check_ok",
-      "b4_malicious_deny_http_check_ok"
-    ],
-    "residual_open": [
-      "B2 LLM-judge on final_answer quality when merge.conflict absent in this run",
-      "B3 token budget: total_tokens absent in run_metadata for this suite"
-    ],
-    "suite": "acceptance",
-    "feature_flags": {
-      "agent_runtime": "langgraph_supervisor_v3",
-      "agent_rule_tool_search_enabled": null,
-      "agent_tool_search_deferred_schema_refs_enabled": null,
-      "agent_budget_stop_reasoning_enabled": null,
-      "agent_thread_insights_enabled": null,
-      "agent_thread_insights_llm_synthesis_enabled": null,
-      "agent_tool_search_strict_deferred_activation_enabled": null,
-      "long_thread_eval_offline": "true",
-      "agent_claim_verification_enabled": null,
-      "agent_subagent_lifecycle_enhanced_enabled": null,
-      "agent_corpus_explore_enabled": null,
-      "agent_research_plan_subagent_enabled": null,
-      "agent_tool_use_summary_enabled": null,
-      "agent_writer_terminal_single_pass_shadow_enabled": null
-    }
+  "compaction_turn_review": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-wave-h-2026-05-12-rerun-baseline_compaction_review.json",
+    "stdout_tail": "[compaction-review] merged into: eval/results/trace-review-wave-h-2026-05-12-rerun-baseline.json\n[compaction-review] json: eval/results/trace-review-wave-h-2026-05-12-rerun-baseline_compaction_review.json\n[compaction-review] md:   eval/results/trace-review-wave-h-2026-05-12-rerun-baseline_compaction_review.md\n",
+    "stderr_tail": ""
   }
 }

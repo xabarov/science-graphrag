@@ -1,6 +1,6 @@
 # Agent Trace Review
 
-- Generated: `2026-05-12T17:53:54.311897+00:00`
+- Generated: `2026-05-12T20:51:21.242579+00:00`
 - Base URL: `http://127.0.0.1:18787`
 - Workspace: `ws-pilot-od`
 - Suite: `acceptance`
@@ -21,8 +21,6 @@
 
 - `agent_usage_total_tokens_sum`: `None`
 - `budget_cutoff_count`: `0`
-- `claim_grounding_precision`: `1.0`
-- `claim_grounding_recall`: `1.0`
 - `claim_verification_verdict_parse_rate`: `None`
 - `compaction_churn_score`: `None`
 - `compaction_circuit_breaker_trips`: `0`
@@ -31,13 +29,11 @@
 - `final_answer_missing_count`: `0`
 - `hook_chain_event_count`: `0`
 - `insight_conflict_resolved_rate`: `None`
-- `insight_recall_at_k`: `1.0`
+- `insight_recall_at_k`: `None`
 - `insight_stale_reason_rate`: `None`
-- `insight_synthesis_conflict_audit_rate`: `0.333333`
 - `latency_p50_ms`: `None`
 - `latency_p95_ms`: `None`
 - `live_trust_signal_avg`: `None`
-- `long_thread_eval_pass_rate`: `1.0`
 - `lsp_audit_degraded_total`: `0`
 - `lsp_audit_event_total`: `0`
 - `mcp_audit_deny_total`: `0`
@@ -53,7 +49,7 @@
 - `shortlist_ratio_avg`: `None`
 - `side_llm_cache_read_ratio_avg`: `None`
 - `specialist_v3_merge_conflict_cases`: `0`
-- `stale_summary_error_rate`: `0.0`
+- `stale_summary_error_rate`: `None`
 - `subagent_lifecycle_missing_count`: `0`
 - `subagent_task_notification_count_avg`: `None`
 - `tool_error_rate`: `0.0`
@@ -63,6 +59,11 @@
 - `tool_use_summary_row_count_total`: `0`
 - `unnecessary_tool_calls_avg`: `None`
 - `writer_oscillation_count_max`: `0`
+
+## Compaction turn review
+
+- OK: `True`
+- Path: `eval/results/trace-review-wave-h-2026-05-12-rerun-baseline_compaction_review.json`
 
 ## Verdict
 

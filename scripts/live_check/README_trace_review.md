@@ -29,6 +29,14 @@ For hotspot PRs, choose the exact `profile` / `suite` from
 `docs/runbooks/agent-trace-review-sop.md` §0.2. This README is the quick command
 reference; the SOP is the source of truth for Wave G blocking vs advisory policy.
 
+### Stage heartbeat + JSON diagnostics
+
+`agent_trace_review.py` emits stderr `[trace-review] heartbeat …` while long stages run
+and writes `run_context.execution_diagnostics` into the JSON artifact:
+
+- `AGENT_LIVE_TRACE_REVIEW_HEARTBEAT_SEC` — heartbeat interval (default `60`, minimum `5`).
+- `AGENT_LIVE_E2E_SUBPROCESS_TIMEOUT_SEC` — optional hard cap (seconds) for the OD E2E subprocess (`agent_od_workspace_e2e_audit.py`); unset keeps prior “no Python-level cap” behavior.
+
 ## 2) Compaction-focused multi-turn review
 
 ```bash

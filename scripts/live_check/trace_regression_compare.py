@@ -13,49 +13,16 @@ _SCRIPT_DIR = Path(__file__).resolve().parent
 if str(_SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPT_DIR))
 
+from trace_regression_metrics import (
+    load_review as _load,  # pylint: disable=import-error, wrong-import-position
+)
+from trace_regression_metrics import metric as _metric
+from trace_regression_metrics import metric_optional_any as _metric_optional_any
+from trace_regression_metrics import metric_optional_float as _metric_optional_float
+from trace_regression_metrics import verdict_rank as _verdict_rank
 from trace_review_schema import (  # pylint: disable=import-error, wrong-import-position
     REVIEW_VERSION,
 )
-
-
-def _load(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _metric(doc: dict[str, Any], key: str) -> float:
-    metrics = doc.get("metrics") if isinstance(doc, dict) else {}
-    raw = metrics.get(key) if isinstance(metrics, dict) else None
-    try:
-        return float(raw or 0.0)
-    except Exception:  # noqa: BLE001
-        return 0.0
-
-
-def _metric_optional_float(doc: dict[str, Any], key: str) -> float | None:
-    metrics = doc.get("metrics") if isinstance(doc, dict) else {}
-    if not isinstance(metrics, dict) or key not in metrics:
-        return None
-    raw = metrics.get(key)
-    if raw is None:
-        return None
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return None
-
-
-def _metric_optional_any(doc: dict[str, Any], keys: tuple[str, ...]) -> float | None:
-    for key in keys:
-        val = _metric_optional_float(doc, key)
-        if val is not None:
-            return val
-    return None
-
-
-def _verdict_rank(doc: dict[str, Any]) -> int:
-    verdict = doc.get("verdict") if isinstance(doc, dict) else {}
-    status = str((verdict or {}).get("status") or "pass").strip().lower()
-    return {"fail": 0, "warn": 1, "pass": 2}.get(status, -1)
 
 
 def _require_version(doc: dict[str, Any], label: str) -> None:

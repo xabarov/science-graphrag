@@ -47,6 +47,14 @@ Command used (warn-only on latency delta; hard fail on spans/tool_error/final_an
 - [x] **keep gated** — ship subagent + summary opt-in via compose/env; do not flip repo defaults to forced-on for all dev stacks without a narrower routing story or cheaper subagent path.
 - [ ] **needs narrower routing** — optional follow-up if we want corpus_explore only on specific answer classes (not decided in this run).
 
-**Recorded by:** live automation (Cursor agent) **Date:** 2026-05-13
+| optional OpenRouter `cache_control` hint | ✅ default-on via `agent_side_llm_openrouter_cache_control_enabled` (`Settings`) for `run_side_llm_chat` static system prefix |
 
-**API restore:** after the candidate run, `api` was recreated with `CORPUS_EXPLORE=0`, `RESEARCH_PLAN=0`, `TOOL_USE_SUMMARY=0` again for a neutral dev default.
+## Supplement — 2026-05-12 programmatic default-on closure
+
+After roadmap **Close Remaining Waves** execution:
+
+- `Settings.agent_corpus_explore_enabled` / `agent_research_plan_subagent_enabled` default **True**.
+- Latency guard: `agent_e1_retrieval_hop_evidence_gate_enabled` (default **True**) skips `corpus_explore` / `research_plan` when `len(retrieval_payloads) < agent_e1_retrieval_hop_min_payloads` (default **2**). See `science_graphrag/agent/graph/nodes/retrieval_fork_legs.py`.
+- Historical **keep gated** evidence (2026-05-13 live) remains valid for the *un-gated* behavior; operators should treat the new gate as the mitigation path before disabling defaults repo-wide.
+
+**Recorded by:** engineering closure batch **Date:** 2026-05-12

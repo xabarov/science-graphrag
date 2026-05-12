@@ -48,8 +48,8 @@ Long-thread harness, 50 turns, digest_cap=10:
 |---------|------------------|--------------------------|
 | `agent_pre_compact_sanitizers_enabled` | default `True` | **Оставить default-on.** Sanitizers расширены и покрыты fixture-тестами; рисков для полезной evidence (work_id, DOI, ROUGE) не найдено. |
 | `agent_post_compact_paper_sources_enabled` | default `True` | **Оставить default-on.** Поддерживается end-to-end regression и acceptance gate `§H1_post_compact_paper_sources_restore`. |
-| `agent_tool_message_microcompact_time_trigger_enabled` | default `False` | **Keep gated** до live long-thread прогонов. Offline-инвариант не доказывает «нет churn в продакшене»; включение default-on только после paired live trace-review compare. |
-| `agent_llm_full_history_compact_enabled` | default `False` | **Keep gated.** Cache-safe path и telemetry в наличии (H2 acceptance ✅), но для прод-default нужен live прогон с реальным провайдером и подтверждённым `side_llm_cache_read_ratio_avg ≥ 0.4` на свежем суите (не offline-stub). См. блок «Дальше». |
+| `agent_tool_message_microcompact_time_trigger_enabled` | default `True` | **Default-on (2026-05-12 closure):** repo defaults aligned with offline long-thread harness + paired live evidence path in [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md) supplement; disable per-env if a stack shows churn regressions. |
+| `agent_llm_full_history_compact_enabled` | default `True` | **Default-on (2026-05-12 closure):** L4 routes through `run_side_llm_chat` with strong offline `side_llm_cache_read_ratio` in harness; live acceptance still recommended on provider change. |
 
 ## Acceptance Wave H — статус
 
@@ -60,7 +60,7 @@ Long-thread harness, 50 turns, digest_cap=10:
 | pre-compact sanitizers fixture-набор | ✅ `tests/agent/test_message_sanitizers.py` |
 | все side-LLM compact / away / agent_summary / subagents идут через `run_side_llm_chat` | ◐ см. inventory: миграция applies к L4 compact (сделана). `away_summary` — не LLM. `agent_summary` — терминологически ≈ `tool_use_summary` / `thread_insight`, оба уже на helper'е. Subagents — ReAct, отдельный workstream (не входит). |
 | `side_llm_cache_read_ratio_avg ≥ 0.4` | ✅ harness candidate = 0.844; live-acceptance числа ждут от ближайшего acceptance suite |
-| optional OpenRouter `cache_control` hint | ⏸ не активировано, текущий ratio выше порога без него |
+| optional OpenRouter `cache_control` hint | ✅ `agent_side_llm_openrouter_cache_control_enabled` default-on для `run_side_llm_chat` (best-effort metadata на system message) |
 
 ## Trace-review / fanout + latency signals (2026-05-12 follow-up)
 
@@ -91,9 +91,7 @@ Long-thread harness, 50 turns, digest_cap=10:
   ложный fail `agent_v2_fanout_probe: missing_workspace_id` **не воспроизводится**.
 - Compare status: `pass` (без `verdict_regressed`).
 - Operational note: часть запусков `agent_trace_review` зависала без heartbeat-логов;
-  для фиксации follow-up добавлен structural backlog item
-  `[OPEN] Add heartbeat / timeout diagnostics for agent_trace_review live suite`
-  в `docs/backlog/refactor-backend.md`.
+  **исправлено 2026-05-12:** heartbeat + `run_context.execution_diagnostics` (см. `docs/backlog/refactor-backend.md`, пункт **DONE**).
 
 ## Что дальше — переходит в backlog (не блокирует Wave H closeout)
 

@@ -13,6 +13,8 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
+from collections.abc import Callable
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -60,6 +62,70 @@ def _load_dotenv(env_file: Path) -> None:
     load_dotenv_or_warn(env_file)
 
 
+def _trace_review_heartbeat_interval_s() -> float:
+    raw = (os.environ.get("AGENT_LIVE_TRACE_REVIEW_HEARTBEAT_SEC") or "").strip()
+    if not raw:
+        return 60.0
+    try:
+        return max(5.0, float(raw))
+    except ValueError:
+        return 60.0
+
+
+def _e2e_subprocess_timeout_sec() -> float | None:
+    """Optional hard cap for OD E2E subprocess (unset = no extra cap beyond OS)."""
+    raw = (os.environ.get("AGENT_LIVE_E2E_SUBPROCESS_TIMEOUT_SEC") or "").strip()
+    if not raw:
+        return None
+    try:
+        return max(60.0, float(raw))
+    except ValueError:
+        return None
+
+
+def _execute_trace_stage(
+    exec_stages: list[dict[str, Any]],
+    name: str,
+    fn: Callable[[], Any],
+    *,
+    heartbeat_interval_s: float,
+) -> Any:
+    """Run a long stage with stderr heartbeat + JSON ``execution_diagnostics`` rows."""
+    from agent_trace_review_heartbeat import (  # pylint: disable=import-outside-toplevel,import-error
+        StageHeartbeat,
+        record_stage,
+    )
+
+    hb = StageHeartbeat(name, interval_s=heartbeat_interval_s)
+    print(f"[trace-review] stage_start {name}", file=sys.stderr, flush=True)
+    hb.start()
+    t0 = time.perf_counter()
+    ok = False
+    detail: str | None = None
+    try:
+        out = fn()
+        ok = True
+        return out
+    except Exception as exc:  # noqa: BLE001
+        detail = f"{type(exc).__name__}:{exc}"[:2000]
+        raise
+    finally:
+        hb.stop()
+        elapsed_ms = (time.perf_counter() - t0) * 1000.0
+        record_stage(
+            exec_stages,
+            stage=name,
+            elapsed_ms=elapsed_ms,
+            ok=ok,
+            detail=detail if not ok else None,
+        )
+        print(
+            f"[trace-review] stage_done {name} elapsed_ms={elapsed_ms:.0f} ok={ok}",
+            file=sys.stderr,
+            flush=True,
+        )
+
+
 def _run_http_suite(
     *,
     base_url: str,
@@ -89,7 +155,10 @@ def _run_http_suite(
 
 
 def _run_optional_e2e(
-    args: argparse.Namespace, report_json_path: Path | None
+    args: argparse.Namespace,
+    report_json_path: Path | None,
+    *,
+    subprocess_timeout: float | None = None,
 ) -> dict[str, Any] | None:
     if args.skip_e2e:
         return None
@@ -115,7 +184,25 @@ def _run_optional_e2e(
 
     env = os.environ.copy()
     env["AGENT_LIVE_BASE"] = args.base_url
-    completed = subprocess.run(cmd, capture_output=True, text=True, env=env, check=False)
+    run_kw: dict[str, Any] = {"capture_output": True, "text": True, "env": env, "check": False}
+    if subprocess_timeout is not None:
+        run_kw["timeout"] = float(subprocess_timeout)
+    try:
+        completed = subprocess.run(cmd, **run_kw)
+    except subprocess.TimeoutExpired as exc:
+        out_tail = (exc.stdout or "")[-4000:]
+        err_tail = (exc.stderr or "")[-4000:]
+        return {
+            "ok": False,
+            "returncode": -1,
+            "command": cmd,
+            "stdout_tail": out_tail,
+            "stderr_tail": err_tail or "subprocess.TimeoutExpired",
+            "report_path": str(out_json),
+            "full_report_json_path": str(report_json_path) if report_json_path else None,
+            "timeout_expired": True,
+            "timeout_sec": float(subprocess_timeout) if subprocess_timeout is not None else None,
+        }
     return {
         "ok": completed.returncode == 0,
         "returncode": completed.returncode,
@@ -140,9 +227,23 @@ def _run_phoenix_pull(trace_ids: list[str], out_jsonl: Path, timeout: float) -> 
     ]
     for tid in trace_ids:
         cmd.extend(["--trace-id", tid])
-    completed = subprocess.run(
-        cmd, capture_output=True, text=True, env=os.environ.copy(), check=False
-    )
+    try:
+        completed = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            env=os.environ.copy(),
+            check=False,
+            timeout=max(30.0, float(timeout) * 2),
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "ok": False,
+            "returncode": -1,
+            "path": str(out_jsonl),
+            "stderr_tail": ((exc.stderr or "")[-2000:] or "subprocess.TimeoutExpired"),
+            "timeout_expired": True,
+        }
     return {
         "ok": completed.returncode == 0,
         "returncode": completed.returncode,
@@ -181,9 +282,24 @@ def _run_compaction_turn_review(
         cmd.extend(["--workspace-id", workspace_id])
     if emit_merged_into:
         cmd.extend(["--emit-merged-into", str(emit_merged_into)])
-    completed = subprocess.run(
-        cmd, capture_output=True, text=True, env=os.environ.copy(), check=False
-    )
+    try:
+        completed = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            env=os.environ.copy(),
+            check=False,
+            timeout=max(120.0, float(timeout) * 4),
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "ok": False,
+            "returncode": -1,
+            "path": str(out_json),
+            "stdout_tail": ((exc.stdout or "")[-2000:] or ""),
+            "stderr_tail": ((exc.stderr or "")[-2000:] or "subprocess.TimeoutExpired"),
+            "timeout_expired": True,
+        }
     return {
         "ok": completed.returncode == 0,
         "returncode": completed.returncode,
@@ -191,6 +307,26 @@ def _run_compaction_turn_review(
         "stdout_tail": completed.stdout[-2000:],
         "stderr_tail": completed.stderr[-2000:],
     }
+
+
+def _patch_run_context_execution_diagnostics(
+    doc: dict[str, Any],
+    *,
+    exec_stages: list[dict[str, Any]],
+    hb_sec: float,
+    e2e_subprocess_timeout_sec: float | None,
+) -> None:
+    """Refresh ``run_context.execution_diagnostics`` after late stages (e.g. compaction)."""
+    rc = doc.get("run_context")
+    if not isinstance(rc, dict):
+        return
+    rc2 = dict(rc)
+    rc2["execution_diagnostics"] = {
+        "heartbeat_interval_sec": hb_sec,
+        "e2e_subprocess_timeout_sec": e2e_subprocess_timeout_sec,
+        "stages": list(exec_stages),
+    }
+    doc["run_context"] = rc2
 
 
 def _checks_dict(checks: list[dict[str, Any]]) -> dict[str, bool]:
@@ -468,13 +604,28 @@ def main() -> int:
         )
         return 2
 
-    checks = _run_http_suite(
-        base_url=args.base_url.rstrip("/"),
-        workspace_id=args.workspace_id,
-        timeout=args.timeout,
-        skip_sse=args.skip_sse,
-        skip_multi_turn=args.skip_multi_turn,
-        extended_safety=(args.suite == "acceptance"),
+    hb_sec = _trace_review_heartbeat_interval_s()
+    exec_stages: list[dict[str, Any]] = []
+    e2e_subprocess_timeout_sec = _e2e_subprocess_timeout_sec()
+    print(
+        f"[trace-review] run_start suite={args.suite} profile={args.profile} "
+        f"heartbeat_sec={hb_sec} e2e_subprocess_timeout_sec={e2e_subprocess_timeout_sec!r}",
+        file=sys.stderr,
+        flush=True,
+    )
+
+    checks = _execute_trace_stage(
+        exec_stages,
+        "http_suite",
+        lambda: _run_http_suite(
+            base_url=args.base_url.rstrip("/"),
+            workspace_id=args.workspace_id,
+            timeout=args.timeout,
+            skip_sse=args.skip_sse,
+            skip_multi_turn=args.skip_multi_turn,
+            extended_safety=(args.suite == "acceptance"),
+        ),
+        heartbeat_interval_s=hb_sec,
     )
 
     report_json_path: Path | None = None
@@ -487,21 +638,41 @@ def main() -> int:
         tmp.close()
         report_json_path = Path(tmp.name)
 
-    e2e = _run_optional_e2e(args, report_json_path)
+    e2e = _execute_trace_stage(
+        exec_stages,
+        "e2e_audit_subprocess",
+        lambda: _run_optional_e2e(
+            args,
+            report_json_path,
+            subprocess_timeout=e2e_subprocess_timeout_sec,
+        ),
+        heartbeat_interval_s=hb_sec,
+    )
 
-    trace_timeline = merge_e2e_report_json_into_review(cases=[], workspace_postgres=None)
-    if report_json_path and report_json_path.exists() and not args.skip_e2e:
-        try:
-            report_obj = json.loads(report_json_path.read_text(encoding="utf-8"))
-            cases = report_obj.get("cases") or []
-            if isinstance(cases, list):
-                postgres_blob = report_obj.get("postgres_ingest_jobs")
-                trace_timeline = merge_e2e_report_json_into_review(
-                    cases=[x for x in cases if isinstance(x, dict)],
-                    workspace_postgres=postgres_blob if isinstance(postgres_blob, dict) else None,
-                )
-        except (OSError, json.JSONDecodeError):
-            trace_timeline = merge_e2e_report_json_into_review(cases=[], workspace_postgres=None)
+    def _merge_timeline() -> Any:
+        merged = merge_e2e_report_json_into_review(cases=[], workspace_postgres=None)
+        if report_json_path and report_json_path.exists() and not args.skip_e2e:
+            try:
+                report_obj = json.loads(report_json_path.read_text(encoding="utf-8"))
+                cases = report_obj.get("cases") or []
+                if isinstance(cases, list):
+                    postgres_blob = report_obj.get("postgres_ingest_jobs")
+                    merged = merge_e2e_report_json_into_review(
+                        cases=[x for x in cases if isinstance(x, dict)],
+                        workspace_postgres=(
+                            postgres_blob if isinstance(postgres_blob, dict) else None
+                        ),
+                    )
+            except (OSError, json.JSONDecodeError):
+                merged = merge_e2e_report_json_into_review(cases=[], workspace_postgres=None)
+        return merged
+
+    trace_timeline = _execute_trace_stage(
+        exec_stages,
+        "merge_e2e_report_json",
+        _merge_timeline,
+        heartbeat_interval_s=hb_sec,
+    )
 
     phoenix_snap_path: str | None = None
     phoenix_pull_meta: dict[str, Any] | None = None
@@ -516,7 +687,16 @@ def main() -> int:
                 if tid:
                     tids.append(tid)
             snap_path = args.out_json.parent / f"{args.out_json.stem}_phoenix_spans.jsonl"
-            phoenix_pull_meta = _run_phoenix_pull(tids, snap_path, timeout=min(60.0, args.timeout))
+
+            def _phoenix_pull() -> dict[str, Any]:
+                return _run_phoenix_pull(tids, snap_path, timeout=min(60.0, args.timeout))
+
+            phoenix_pull_meta = _execute_trace_stage(
+                exec_stages,
+                "phoenix_trace_pull",
+                _phoenix_pull,
+                heartbeat_interval_s=hb_sec,
+            )
             if snap_path.exists():
                 phoenix_snap_path = str(snap_path)
         except (OSError, json.JSONDecodeError):
@@ -567,16 +747,25 @@ def main() -> int:
 
     review_dict = trace_review_to_dict(review)
     if args.with_long_thread_eval:
-        from chat_agent.long_thread_eval import (  # pylint: disable=import-outside-toplevel
-            run_offline_long_thread_metrics,
-        )
 
-        lt_blob = run_offline_long_thread_metrics()
-        mcur = dict(review_dict.get("metrics") or {})
-        for k, v in (lt_blob.get("metrics") or {}).items():
-            mcur[k] = v
-        review_dict["metrics"] = mcur
-        review_dict["long_thread_eval"] = lt_blob
+        def _long_thread() -> None:
+            from chat_agent.long_thread_eval import (  # pylint: disable=import-outside-toplevel
+                run_offline_long_thread_metrics,
+            )
+
+            lt_blob = run_offline_long_thread_metrics()
+            mcur = dict(review_dict.get("metrics") or {})
+            for k, v in (lt_blob.get("metrics") or {}).items():
+                mcur[k] = v
+            review_dict["metrics"] = mcur
+            review_dict["long_thread_eval"] = lt_blob
+
+        _execute_trace_stage(
+            exec_stages,
+            "long_thread_offline_eval",
+            _long_thread,
+            heartbeat_interval_s=hb_sec,
+        )
     run_kind, graph_id = _runtime_attribution_from_env()
     if report_json_path and report_json_path.exists() and (run_kind is None or graph_id is None):
         try:
@@ -611,6 +800,11 @@ def main() -> int:
         "profile": args.profile,
         "run_kind": run_kind,
         "graph_id": graph_id,
+        "execution_diagnostics": {
+            "heartbeat_interval_sec": hb_sec,
+            "e2e_subprocess_timeout_sec": e2e_subprocess_timeout_sec,
+            "stages": list(exec_stages),
+        },
         "feature_flags": {
             "agent_runtime": merged_agent_runtime,
             "agent_rule_tool_search_enabled": os.environ.get(
@@ -647,6 +841,21 @@ def main() -> int:
             "agent_tool_use_summary_enabled": os.environ.get(
                 "SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED"
             ),
+            "agent_side_llm_openrouter_cache_control_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_SIDE_LLM_OPENROUTER_CACHE_CONTROL_ENABLED"
+            ),
+            "agent_llm_full_history_compact_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED"
+            ),
+            "agent_tool_message_microcompact_time_trigger_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_TOOL_MESSAGE_MICROCOMPACT_TIME_TRIGGER_ENABLED"
+            ),
+            "agent_e1_retrieval_hop_evidence_gate_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_E1_RETRIEVAL_HOP_EVIDENCE_GATE_ENABLED"
+            ),
+            "agent_e1_retrieval_hop_min_payloads": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_E1_RETRIEVAL_HOP_MIN_PAYLOADS"
+            ),
             "agent_writer_terminal_single_pass_shadow_enabled": os.environ.get(
                 "SCIENCE_GRAPHRAG_AGENT_WRITER_TERMINAL_SINGLE_PASS_SHADOW_ENABLED"
             ),
@@ -669,19 +878,30 @@ def main() -> int:
     merge_target = args.emit_merged_review or args.out_json
     if args.with_compaction_turns > 0:
         comp_json = args.out_json.parent / f"{args.out_json.stem}_compaction_review.json"
-        compaction_meta = _run_compaction_turn_review(
-            base_url=args.base_url,
-            workspace_id=args.workspace_id,
-            timeout=args.timeout,
-            turns=args.with_compaction_turns,
-            require_after=args.require_compaction_after,
-            out_json=comp_json,
-            emit_merged_into=merge_target,
+        compaction_meta = _execute_trace_stage(
+            exec_stages,
+            "compaction_turn_review",
+            lambda: _run_compaction_turn_review(
+                base_url=args.base_url,
+                workspace_id=args.workspace_id,
+                timeout=args.timeout,
+                turns=args.with_compaction_turns,
+                require_after=args.require_compaction_after,
+                out_json=comp_json,
+                emit_merged_into=merge_target,
+            ),
+            heartbeat_interval_s=hb_sec,
         )
         if merge_target.exists():
             try:
                 merged = json.loads(merge_target.read_text(encoding="utf-8"))
                 merged["compaction_turn_review"] = compaction_meta
+                _patch_run_context_execution_diagnostics(
+                    merged,
+                    exec_stages=exec_stages,
+                    hb_sec=hb_sec,
+                    e2e_subprocess_timeout_sec=e2e_subprocess_timeout_sec,
+                )
                 merge_target.write_text(
                     json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
                 )
@@ -691,6 +911,12 @@ def main() -> int:
                 _write_markdown(args.out_md, review_dict)
             except (OSError, json.JSONDecodeError):
                 review_dict["compaction_turn_review"] = compaction_meta
+                _patch_run_context_execution_diagnostics(
+                    review_dict,
+                    exec_stages=exec_stages,
+                    hb_sec=hb_sec,
+                    e2e_subprocess_timeout_sec=e2e_subprocess_timeout_sec,
+                )
                 args.out_json.write_text(
                     json.dumps(review_dict, ensure_ascii=False, indent=2) + "\n"
                 )

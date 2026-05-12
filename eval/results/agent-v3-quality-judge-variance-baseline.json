@@ -3,17 +3,17 @@
   "contract": "judge_variance_baseline_v1",
   "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673",
   "mean_delta_by_run": [
-    -0.545,
-    -0.895,
-    -0.06
+    -1.005,
+    -1.01,
+    0.52
   ],
-  "mean_delta_min": -0.895,
-  "mean_delta_max": -0.06,
-  "mean_delta_spread": 0.835,
+  "mean_delta_min": -1.01,
+  "mean_delta_max": 0.52,
+  "mean_delta_spread": 1.53,
   "spread_threshold_max": 0.15,
   "mean_delta_runs_expected": 3,
   "mean_delta_runs_observed": 3,
   "ok": false,
-  "generated_at_utc": "2026-05-12T08:54:41.933733+00:00",
-  "source_calibration_window": "eval/results/agent-v3-quality-judge-calibration-window-2026-05-13.json"
+  "generated_at_utc": "2026-05-12T22:01:31.558579+00:00",
+  "source_calibration_window": "eval/results/agent-v3-quality-judge-calibration-window-2026-05-12.json"
 }

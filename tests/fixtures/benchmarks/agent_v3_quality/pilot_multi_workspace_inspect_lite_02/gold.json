@@ -1,0 +1,11 @@
+{
+  "schema_version": "agent_v3_quality_case_v1",
+  "family": "multi_workspace_inspect",
+  "workspace_id": "ws-pilot-od",
+  "tags": ["routing", "multi_workspace", "compare", "f3_slice2"],
+  "requires_quotes": false,
+  "requires_compare_structure": true,
+  "requires_relation_reasoning": false,
+  "forbidden_fail_modes": ["final_answer_missing", "ignored_requested_compare"],
+  "notes": "F3-slice2+: compare-style multi_workspace_inspect (paired with lite_01)"
+}
