@@ -273,6 +273,27 @@ Wave F выполняется **поверх** уже известных, но �
 - Выполнен **минимум один** controlled `F3-slice1` (новый срез + пересчёт baseline со stale-маркировкой старого).
 - `F4` либо выполнен и оформлен как research note, либо явно отложен с причиной (не смешивать с core gate).
 
+### 4.0.6 Статус live evidence (2026-05-12)
+
+✅ **Wave F implementation + live operator artifacts получены** (mock-only этап закрыт, есть live evidence на `judge_mini` и `judge_pilot`):
+
+- **F1/F2 (`judge_pilot`, DeepSeek, `--seeds 3`)**:
+  - `eval/results/current-agent-v3-quality-judge-pilot-wavef-live-deepseek-s3-full.{json,md}`;
+  - frozen baseline range: `eval/results/baseline-agent-v3-quality-judge-pilot-multiseed.json`
+    и dated copy `eval/results/baseline-agent-v3-quality-judge-pilot-multiseed-2026-05-12.json`;
+  - summary snapshot: `case_count=13`, `mean_delta=0.2577`, `multiseed.mean_delta_median=0.3808`,
+    `multiseed.mean_delta_spread=0.1346`, `cases_with_any_branch_non_ok=0`,
+    `cost_delta.latency_p95_ratio=0.9668`.
+- **F4 (`judge_pilot`, cross-family advisory)**:
+  - source artifacts:
+    - `eval/results/current-agent-v3-quality-judge-pilot-wavef-live-anthropic-s1-full.{json,md}`
+    - `eval/results/current-agent-v3-quality-judge-pilot-wavef-live-openai-s1-full.{json,md}`
+    - `eval/results/current-agent-v3-quality-judge-pilot-wavef-live-deepseek-s3-full.{json,md}`
+  - aggregate: `eval/results/agent-v3-quality-judge-cross-family-pilot-2026-05-12.{json,md}`;
+  - `inter_judge_agreement_rate=0.0769` (`cases_compared=13`) → exploratory signal остаётся шумным, promotion-выводы не делать без дополнительной калибровки D1/D2.
+
+⚠️ **Operator note:** в live subprocess-run'ах `usage_total_tokens` часто `null`, поэтому `cost_delta.tokens_total_ratio` может быть `null`; основная cost-ось на этих прогонах — `latency_p95_ratio`.
+
 ---
 
 ### 4.1 F1: Latency / token cost ось рядом с pairwise
