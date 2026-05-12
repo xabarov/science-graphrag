@@ -145,7 +145,8 @@ Backend:
 - `docs/runbooks/agent-trace-review-sop.md` (обновлён под §H1 / §H2)
 - `eval/results/wave_h/baseline-long-thread-2026-05-12.{json,md}` (новый)
 - `eval/results/wave_h/candidate-long-thread-2026-05-12.{json,md}` (новый)
-- `eval/results/trace-regression-wave-h-2026-05-12-self-pair.{json,md}` — sanity: `trace_regression_compare` baseline=candidate на одном артефакте (exit 0)
+- `eval/results/trace-review-wave-h-2026-05-12-rerun-{baseline,candidate}.{json,md}` (paired live rerun)
+- `eval/results/trace-regression-wave-h-2026-05-12-rerun.{json,md}` (paired compare result)
 
 ## Резюме
 
