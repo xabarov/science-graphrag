@@ -25,6 +25,10 @@ Use `--skip-e2e` for fast smoke (still runs HTTP suite checks against `--base-ur
 
 Optional: `--with-compaction-turns N` runs `compaction_turn_review.py` after the main artifact is written and merges `compaction_events` into `--out-json` via `--emit-merged-into` (defaults to the same path).
 
+For hotspot PRs, choose the exact `profile` / `suite` from
+`docs/runbooks/agent-trace-review-sop.md` §0.2. This README is the quick command
+reference; the SOP is the source of truth for Wave G blocking vs advisory policy.
+
 ## 2) Compaction-focused multi-turn review
 
 ```bash
@@ -35,6 +39,26 @@ Optional: `--with-compaction-turns N` runs `compaction_turn_review.py` after the
   --out-json eval/results/compaction-turn-review.json \
   --out-md eval/results/compaction-turn-review.md
 ```
+
+### 2.1 Wave H offline long-thread harness (50 turns)
+
+```bash
+.venv/bin/python scripts/live_check/long_thread_compaction_eval.py \
+  --profile baseline \
+  --turns 50 \
+  --digest-cap 10 \
+  --out-json eval/results/wave_h/baseline-long-thread-DATE.json \
+  --out-md eval/results/wave_h/baseline-long-thread-DATE.md
+
+.venv/bin/python scripts/live_check/long_thread_compaction_eval.py \
+  --profile candidate \
+  --turns 50 \
+  --digest-cap 10 \
+  --out-json eval/results/wave_h/candidate-long-thread-DATE.json \
+  --out-md eval/results/wave_h/candidate-long-thread-DATE.md
+```
+
+Use this as a deterministic preflight before expensive live acceptance runs.
 
 ## 3) Timeline extraction from roadmap artifacts
 
@@ -56,10 +80,13 @@ Optional: `--with-compaction-turns N` runs `compaction_turn_review.py` after the
   --out-md eval/results/trace-regression.md
 ```
 
-**Runtime v3 / claim_verification nightly (optional stricter policies):**
+**Runtime v3 / trace-review gates:**
 
-- `--max-latency-p95-regress-ratio 1.15` — FAIL if candidate `latency_p95_ms` > baseline × ratio (both must be > 0).
+- `--latency-warn-ratio 1.25` — WARN if candidate `latency_p95_ms` is at least 25% above baseline (both must be > 0).
+- `--max-latency-p95-regress-ratio 1.5` — default Wave G FAIL if candidate `latency_p95_ms` is more than 50% above baseline (both must be > 0).
+- `--max-writer-oscillation-count 1` — default Wave G FAIL if candidate exceeds the acceptance writer oscillation cap.
 - `--min-live-trust-signal-delta <float>` — FAIL if `(candidate - baseline) live_trust_signal_avg` is below threshold (requires metric in both JSONs).
+- `--paper-sources-restored-fail-on-loss` — Wave H hard fail when baseline had non-zero `post_compact_paper_sources_restored_total` but candidate drops to zero with non-lower compaction count.
 - Add `subagent_lifecycle_missing_increase` to `--fail-on` when enforcing Epic B1 completeness vs baseline.
 
 Exit codes: `0` pass, `1` fail policies, `2` schema version mismatch, `3` warn-only policies (use `--warn-is-pass` for CI if needed).

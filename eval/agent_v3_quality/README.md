@@ -84,6 +84,11 @@ science-graphrag-agent-v3-quality-cross-family-aggregate \
   --md-out eval/results/agent-v3-quality-judge-cross-family.md
 ```
 
+## Wave E2 — `tool_use_summary` cache prefix preflight (optional live)
+
+- **Offline (no API):** `.venv/bin/python scripts/live_check/tool_use_summary_cache_preflight.py` — validates canonical JSON stability (no LLM calls).
+- **Live:** `.venv/bin/python scripts/live_check/tool_use_summary_cache_preflight.py --repeat 5 --live` after pre-flight keys/stack per [`long-running-ops.mdc`](../../.cursor/rules/long-running-ops.mdc); prints per-run `side_llm_cache_read_ratio` metadata from `summarize_tool_result_payload_dict`.
+
 ## LLM vs heuristic calibration (small subset)
 
 From repo root (requires live stack + `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`; one agent run per case, then heuristic + LLM judge):

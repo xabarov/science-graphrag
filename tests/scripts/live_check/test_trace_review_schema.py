@@ -232,6 +232,31 @@ def test_verdict_fail_on_final_answer_missing(schema_module) -> None:
     assert v.status == "fail"
 
 
+def test_verdict_fail_on_tool_loop_repeat_max(schema_module) -> None:
+    row = schema_module.TimelineCase(
+        case_id="x",
+        tool_loop_repeat_max=4,
+        tool_steps=(
+            schema_module.ToolStep(1, "find_works", True),
+            schema_module.ToolStep(2, "find_works", True),
+            schema_module.ToolStep(3, "find_works", True),
+            schema_module.ToolStep(4, "find_works", True),
+            schema_module.ToolStep(5, "final_answer", True),
+        ),
+    )
+    m = schema_module.aggregate_metrics_from_timeline((row,))
+    v = schema_module.verdict_from_signals(
+        checks_ok={"health": True, "agent_v2_sync_json": True, "agent_v2_sse": True},
+        required_checks=frozenset({"health", "agent_v2_sync_json", "agent_v2_sse"}),
+        e2e_ok=True,
+        metrics=m,
+        sse_missing_final_in_checks=False,
+    )
+    assert m.tool_loop_repeat_max == 4
+    assert v.status == "fail"
+    assert any("tool_loop_repeat_max" in x for x in v.fail_reasons)
+
+
 def test_metrics_skip_final_missing_when_e2e_http_failed_before_tools(schema_module) -> None:
     row = schema_module.TimelineCase(case_id="x", tool_steps=(), e2e_http_ok=False)
     m = schema_module.aggregate_metrics_from_timeline((row,))
@@ -580,6 +605,129 @@ def test_build_acceptance_summary_b1_gate_acceptance_lane(schema_module) -> None
     }
     out = schema_module.build_acceptance_summary(review)
     assert out["gates"]["§11.3_B1_subagent_lifecycle"].startswith("fail_")
+
+
+def test_build_acceptance_summary_wave_g_gates_and_warn_allowlist(schema_module) -> None:
+    review = {
+        "metrics": {
+            "tool_loop_repeat_max": 4,
+            "writer_oscillation_count_max": 2,
+            "subagent_lifecycle_missing_count": 0,
+        },
+        "trace_timeline": [],
+        "run_context": {"suite": "acceptance"},
+        "verdict": {
+            "status": "warn",
+            "warn_reasons": [
+                "claim_verification_verdict_parse_rate:absent_no_cv_rows",
+                "missing_span_heuristic:1",
+            ],
+        },
+        "acceptable_warns": [
+            "^claim_verification_verdict_parse_rate:absent_no_cv_rows$",
+        ],
+        "e2e_audit": {},
+        "checks": [],
+    }
+    out = schema_module.build_acceptance_summary(review)
+    assert out["acceptable_warns"] == ["^claim_verification_verdict_parse_rate:absent_no_cv_rows$"]
+    assert out["unacceptable_warns"] == ["missing_span_heuristic:1"]
+    assert out["gates"]["§G2_acceptable_warns"] == "warn_unacceptable_verdict_warns"
+    assert out["gates"]["§G2_tool_loop_repeat_max"].startswith("fail_")
+    assert out["gates"]["§G3_writer_oscillation_count"].startswith("fail_")
+
+
+def test_build_acceptance_summary_warn_allowlist_tolerates_string_and_bad_regex(
+    schema_module,
+) -> None:
+    review = {
+        "metrics": {"subagent_lifecycle_missing_count": 0},
+        "trace_timeline": [],
+        "run_context": {"suite": "acceptance"},
+        "verdict": {
+            "status": "warn",
+            "warn_reasons": ["known_warn", "unknown_warn"],
+        },
+        "acceptable_warns": ["[", "^known_warn$"],
+        "e2e_audit": {},
+        "checks": [],
+    }
+    out = schema_module.build_acceptance_summary(review)
+    assert out["unacceptable_warns"] == ["unknown_warn"]
+
+    review["acceptable_warns"] = "^known_warn$"
+    out = schema_module.build_acceptance_summary(review)
+    assert out["acceptable_warns"] == ["^known_warn$"]
+    assert out["unacceptable_warns"] == ["unknown_warn"]
+
+
+def test_timeline_extracts_post_compact_paper_restore_count(schema_module) -> None:
+    case = {
+        "case_id": "paper-restore",
+        "run_metadata": {
+            "post_compact_paper_sources_restored_count": 3,
+        },
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+    }
+    row = schema_module.timeline_case_from_e2e_case(case)
+    assert row.post_compact_paper_sources_restored_count == 3
+
+
+def test_metrics_and_acceptance_gate_for_paper_restore(schema_module) -> None:
+    row = schema_module.TimelineCase(
+        case_id="paper-row",
+        post_compact_paper_sources_restored_count=2,
+        compaction_events=(schema_module.CompactionEvent(type="context_compacted"),),
+        tool_steps=(schema_module.ToolStep(1, "final_answer", True),),
+    )
+    metrics = schema_module.aggregate_metrics_from_timeline((row,))
+    assert metrics.post_compact_paper_sources_restored_total == 2
+    assert metrics.post_compact_paper_sources_restored_cases == 1
+
+    serialized = schema_module.trace_review_to_dict(
+        schema_module.TraceReviewV1(
+            metrics=metrics,
+            trace_timeline=(row,),
+            run_context=schema_module.RunContext(
+                base_url="http://x",
+                workspace_id=None,
+                suite="acceptance",
+            ),
+            verdict=schema_module.Verdict(status="pass"),
+        )
+    )
+    review = {
+        "metrics": serialized["metrics"],
+        "trace_timeline": serialized["trace_timeline"],
+        "run_context": serialized["run_context"],
+        "verdict": serialized["verdict"],
+        "e2e_audit": {},
+        "checks": [],
+    }
+    out = schema_module.build_acceptance_summary(review)
+    assert out["gates"]["§H1_post_compact_paper_sources_restore"] == "pass"
+    assert "post_compact_paper_sources_restored_in_timeline" in out["live_proven"]
+
+
+def test_acceptance_gate_warns_when_compaction_without_paper_restore(schema_module) -> None:
+    review = {
+        "metrics": {
+            "compaction_event_count": 2,
+            "post_compact_paper_sources_restored_total": 0,
+            "post_compact_paper_sources_restored_cases": 0,
+            "subagent_lifecycle_missing_count": 0,
+        },
+        "trace_timeline": [],
+        "run_context": {"suite": "acceptance"},
+        "verdict": {"status": "warn", "warn_reasons": []},
+        "e2e_audit": {},
+        "checks": [],
+    }
+    out = schema_module.build_acceptance_summary(review)
+    assert (
+        out["gates"]["§H1_post_compact_paper_sources_restore"]
+        == "warn_no_paper_sources_restored_after_compaction"
+    )
 
 
 def test_build_acceptance_summary_live_proven_deduped(schema_module) -> None:

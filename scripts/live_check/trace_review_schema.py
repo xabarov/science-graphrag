@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass, field, replace
 from typing import Any, Literal
 
 REVIEW_VERSION = "trace-review-v1"
+TOOL_LOOP_REPEAT_FAIL_THRESHOLD = 3
+WRITER_OSCILLATION_ACCEPTANCE_MAX = 1
+DEFAULT_ACCEPTABLE_WARN_PATTERNS = (r"^claim_verification_verdict_parse_rate:absent_no_cv_rows$",)
 
 VerdictStatus = Literal["pass", "warn", "fail"]
 
@@ -28,6 +32,30 @@ def _coerce_int(value: Any, default: int = 0) -> int:
         return int(value)
     except (TypeError, ValueError):
         return default
+
+
+def _warn_is_acceptable(warn: str, patterns: tuple[str, ...]) -> bool:
+    """Return whether a verdict warning is explicitly allowed by Wave G policy."""
+    for pattern in patterns:
+        try:
+            if re.search(pattern, warn):
+                return True
+        except re.error:
+            continue
+    return False
+
+
+def _acceptable_warn_patterns_from_review(review: dict[str, Any]) -> tuple[str, ...]:
+    """Normalize Wave G warn allowlist from trace-review artifacts."""
+    raw = review.get("acceptable_warns")
+    if raw is None:
+        return DEFAULT_ACCEPTABLE_WARN_PATTERNS
+    if isinstance(raw, str):
+        return (raw,) if raw.strip() else DEFAULT_ACCEPTABLE_WARN_PATTERNS
+    if not isinstance(raw, (list, tuple)):
+        return DEFAULT_ACCEPTABLE_WARN_PATTERNS
+    patterns = tuple(str(x) for x in raw if str(x).strip())
+    return patterns or DEFAULT_ACCEPTABLE_WARN_PATTERNS
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +173,8 @@ class TimelineCase:
     specialist_v3_evidence_origin: str | None = None
     agent_usage_total_tokens: int | None = None
     tool_use_summary_row_count: int = 0
+    #: Wave H §H1: number of paper-evidence items restored from session_meta on this turn.
+    post_compact_paper_sources_restored_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -188,6 +218,10 @@ class Metrics:
     agent_usage_total_tokens_sum: int | None = None
     writer_oscillation_count_max: int = 0
     tool_use_summary_row_count_total: int = 0
+    #: Wave H §H1: case-count where post-compact paper sources were restored.
+    post_compact_paper_sources_restored_cases: int = 0
+    #: Wave H §H1: total restored items across the timeline (paper-evidence carry-over).
+    post_compact_paper_sources_restored_total: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -591,6 +625,10 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     if isinstance(rm, dict):
         w_osc = _writer_oscillation_count_from_routing_log(rm.get("routing_log"))
 
+    paper_restored = 0
+    if isinstance(rm, dict):
+        paper_restored = _coerce_int(rm.get("post_compact_paper_sources_restored_count"), default=0)
+
     return TimelineCase(
         case_id=cid,
         thread_id=thread_id,
@@ -652,6 +690,7 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         specialist_v3_evidence_origin=sr3_origin,
         agent_usage_total_tokens=usage_tok,
         tool_use_summary_row_count=tus_row_count,
+        post_compact_paper_sources_restored_count=paper_restored,
     )
 
 
@@ -693,6 +732,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     sr3_conf_cases = 0
     usage_token_parts: list[int] = []
     tus_row_counts: list[int] = []
+    paper_restored_vals: list[int] = []
 
     for row in timeline:
         for st in row.tool_steps:
@@ -768,6 +808,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         if row.agent_usage_total_tokens is not None:
             usage_token_parts.append(int(row.agent_usage_total_tokens))
         tus_row_counts.append(int(row.tool_use_summary_row_count or 0))
+        paper_restored_vals.append(int(row.post_compact_paper_sources_restored_count or 0))
 
     tool_error_rate = (bad_steps / total_steps) if total_steps else 0.0
 
@@ -817,6 +858,8 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     trust_avg = round(sum(trust_vals) / len(trust_vals), 6) if trust_vals else None
     usage_sum_out = int(sum(usage_token_parts)) if usage_token_parts else None
     tus_rows_total = int(sum(tus_row_counts)) if tus_row_counts else 0
+    paper_restored_total = int(sum(paper_restored_vals)) if paper_restored_vals else 0
+    paper_restored_cases = int(sum(1 for v in paper_restored_vals if v > 0))
 
     return Metrics(
         tool_error_rate=tool_error_rate,
@@ -860,6 +903,8 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         agent_usage_total_tokens_sum=usage_sum_out,
         writer_oscillation_count_max=writer_osc_max,
         tool_use_summary_row_count_total=tus_rows_total,
+        post_compact_paper_sources_restored_cases=paper_restored_cases,
+        post_compact_paper_sources_restored_total=paper_restored_total,
     )
 
 
@@ -952,6 +997,11 @@ def verdict_from_signals(
                 f"subagent_lifecycle_missing_count:{metrics.subagent_lifecycle_missing_count}"
             )
 
+    if metrics.tool_loop_repeat_max > TOOL_LOOP_REPEAT_FAIL_THRESHOLD:
+        fail_reasons.append(
+            f"tool_loop_repeat_max:{metrics.tool_loop_repeat_max}>{TOOL_LOOP_REPEAT_FAIL_THRESHOLD}"
+        )
+
     if min_claim_verification_parse_rate is not None:
         rate = metrics.claim_verification_verdict_parse_rate
         if rate is not None and rate + 1e-9 < float(min_claim_verification_parse_rate):
@@ -1006,6 +1056,39 @@ def build_acceptance_summary(review: dict[str, Any]) -> dict[str, Any]:
     else:
         gate_b1 = "pass" if sub_missing == 0 else "warn_subagent_lifecycle_incomplete"
 
+    tool_loop_max = int(m.get("tool_loop_repeat_max") or 0)
+    gate_g2_tool_loop = (
+        "pass"
+        if tool_loop_max <= TOOL_LOOP_REPEAT_FAIL_THRESHOLD
+        else f"fail_tool_loop_repeat_max_gt_{TOOL_LOOP_REPEAT_FAIL_THRESHOLD}"
+    )
+
+    writer_osc_max = int(m.get("writer_oscillation_count_max") or 0)
+    gate_g3_writer = (
+        "pass"
+        if writer_osc_max <= WRITER_OSCILLATION_ACCEPTANCE_MAX
+        else f"fail_writer_oscillation_count_max_gt_{WRITER_OSCILLATION_ACCEPTANCE_MAX}"
+    )
+
+    # Wave H §H1: when at least one compaction event was observed, paper-source
+    # restoration must surface at least one carry-over (otherwise grounding leaks).
+    compaction_n = int(m.get("compaction_event_count") or 0)
+    paper_restored_total = int(m.get("post_compact_paper_sources_restored_total") or 0)
+    paper_restored_cases = int(m.get("post_compact_paper_sources_restored_cases") or 0)
+    if compaction_n <= 0:
+        gate_h1_paper_restore = "skipped_no_compaction_events"
+    elif paper_restored_total > 0:
+        gate_h1_paper_restore = "pass"
+    else:
+        gate_h1_paper_restore = "warn_no_paper_sources_restored_after_compaction"
+
+    acceptable_warns = _acceptable_warn_patterns_from_review(review)
+    warn_reasons = tuple(str(x) for x in (verdict.get("warn_reasons") or []))
+    unacceptable_warns = tuple(
+        warn for warn in warn_reasons if not _warn_is_acceptable(warn, acceptable_warns)
+    )
+    gate_g2_warns = "pass" if not unacceptable_warns else "warn_unacceptable_verdict_warns"
+
     budget_cc = int(m.get("budget_cutoff_count") or 0)
     if budget_cc > 0:
         gate_b3_budget = "pass_budget_cutoff_signal_present"
@@ -1054,6 +1137,8 @@ def build_acceptance_summary(review: dict[str, Any]) -> dict[str, Any]:
         live_proven.append("mcp_audit_deny_observed_in_timeline")
     if budget_cc > 0:
         live_proven.append("budget_cutoff_count_gt_0_in_timeline_aggregate")
+    if paper_restored_cases > 0:
+        live_proven.append("post_compact_paper_sources_restored_in_timeline")
 
     saw_timeoutish_warning = False
     for row in tl:
@@ -1091,7 +1176,13 @@ def build_acceptance_summary(review: dict[str, Any]) -> dict[str, Any]:
             "§10.6_hook_chain_events": gate_10_6,
             "§11.3_B1_subagent_lifecycle": gate_b1,
             "§11.4_B3_budget_usage_timeline": gate_b3_budget,
+            "§G2_acceptable_warns": gate_g2_warns,
+            "§G2_tool_loop_repeat_max": gate_g2_tool_loop,
+            "§G3_writer_oscillation_count": gate_g3_writer,
+            "§H1_post_compact_paper_sources_restore": gate_h1_paper_restore,
         },
+        "acceptable_warns": list(acceptable_warns),
+        "unacceptable_warns": list(unacceptable_warns),
         "synthetic_covered": synthetic_covered,
         "live_proven": live_proven,
         "residual_open": residual_open,
@@ -1120,6 +1211,7 @@ def trace_review_to_dict(review: TraceReviewV1) -> dict[str, Any]:
     base = _serialize(review)
     if isinstance(base, dict):
         base.setdefault("review_version", REVIEW_VERSION)
+        base.setdefault("acceptable_warns", list(DEFAULT_ACCEPTABLE_WARN_PATTERNS))
     return base if isinstance(base, dict) else {}
 
 
@@ -1394,6 +1486,9 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 tool_use_summary_row_count=_coerce_int(
                     item.get("tool_use_summary_row_count"), default=0
                 ),
+                post_compact_paper_sources_restored_count=_coerce_int(
+                    item.get("post_compact_paper_sources_restored_count"), default=0
+                ),
             )
         )
 
@@ -1472,6 +1567,12 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
         ),
         tool_use_summary_row_count_total=_coerce_int(
             mraw.get("tool_use_summary_row_count_total"), default=0
+        ),
+        post_compact_paper_sources_restored_cases=_coerce_int(
+            mraw.get("post_compact_paper_sources_restored_cases"), default=0
+        ),
+        post_compact_paper_sources_restored_total=_coerce_int(
+            mraw.get("post_compact_paper_sources_restored_total"), default=0
         ),
     )
 

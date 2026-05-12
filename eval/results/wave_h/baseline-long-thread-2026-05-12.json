@@ -1,0 +1,531 @@
+{
+  "schema_version": "wave_h_long_thread_eval_v1",
+  "generated_at": "2026-05-12T15:51:10.080378+00:00",
+  "profile": "baseline",
+  "thread_id": "wave_h_long_baseline_6e73bb6e",
+  "params": {
+    "turns": 50,
+    "digest_cap": 10,
+    "min_side_llm_cache_read_ratio": 0.4
+  },
+  "metrics": {
+    "turns_total": 50,
+    "compaction_event_count": 41,
+    "side_llm_cache_read_ratio_avg": 0.0,
+    "side_llm_cache_read_ratio_min": 0.0,
+    "side_llm_cache_read_ratio_max": 0.0,
+    "post_compact_paper_sources_restored_total": 82,
+    "post_compact_paper_sources_restored_cases": 41,
+    "ptl_retry_total": 0,
+    "forked_compactions": 41
+  },
+  "verdict": {
+    "status": "warn",
+    "fail_reasons": [],
+    "warn_reasons": [
+      "side_llm_cache_read_ratio_avg:0.0000<0.4000"
+    ]
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "digest_count_before": 1,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 2,
+      "digest_count_before": 2,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 3,
+      "digest_count_before": 3,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 4,
+      "digest_count_before": 4,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 5,
+      "digest_count_before": 5,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 6,
+      "digest_count_before": 6,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 7,
+      "digest_count_before": 7,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 8,
+      "digest_count_before": 8,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 9,
+      "digest_count_before": 9,
+      "compact_triggered": false,
+      "paper_sources_saved": 0,
+      "paper_sources_restored": 0,
+      "side_llm_cache_read_ratio": null,
+      "forked": false,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 10,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 11,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 12,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 13,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 14,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 15,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 16,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 17,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 18,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 19,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 20,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 21,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 22,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 23,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 24,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 25,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 26,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 27,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 28,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 29,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 30,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 31,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 32,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 33,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 34,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 35,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 36,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 37,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 38,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 39,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 40,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 41,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 42,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 43,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 44,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 45,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 46,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 47,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 48,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 49,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    },
+    {
+      "turn": 50,
+      "digest_count_before": 10,
+      "compact_triggered": true,
+      "paper_sources_saved": 2,
+      "paper_sources_restored": 2,
+      "side_llm_cache_read_ratio": 0.0,
+      "forked": true,
+      "ptl_retry_count": 0
+    }
+  ]
+}

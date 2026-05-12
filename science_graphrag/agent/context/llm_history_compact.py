@@ -10,19 +10,40 @@ from __future__ import annotations
 import json
 import logging
 import re
+from dataclasses import dataclass
 from typing import Any
-
-from langchain_core.messages import HumanMessage, SystemMessage
 
 from science_graphrag.agent.context.message_groups import drop_oldest_digest_rounds_for_ptl
 from science_graphrag.agent.context.message_sanitizers import sanitize_digest_dict_for_compact
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
-from science_graphrag.agent.llm.chat import build_chat_model, effective_chat_llm_model
+from science_graphrag.agent.forked_runtime import (
+    SideLlmRunResult,
+    run_side_llm_chat,
+    side_llm_fork_metadata,
+)
+from science_graphrag.agent.llm.chat import effective_chat_llm_model
 from science_graphrag.config import Settings
 
 logger = logging.getLogger(__name__)
 
 _L4_PROMPT_VERSION = "l4_llm_compact_v1"
+
+_L4_SUMMARY_SYSTEM = (
+    "You consolidate multi-turn research assistant memory. Given JSON objects with "
+    "user_intent, answer_excerpt, tools_used, answer_class per turn, produce ONE dense "
+    "third-person memory block the assistant will see as <session_memory>. "
+    "Preserve: named papers/methods/Dataset IDs/user goals/constraints/open questions. "
+    "Drop boilerplate. Use short bullets and sections if helpful. "
+    "Output plain text only — no JSON, no markdown fences."
+)
+
+
+@dataclass(frozen=True, slots=True)
+class L4SummaryResult:
+    """One side-LLM summary completion plus cache telemetry for ``audit``."""
+
+    text: str
+    fork: SideLlmRunResult
 
 
 def _is_context_limit_error(exc: BaseException) -> bool:
@@ -67,32 +88,31 @@ def _slim_digests_blob(
     return raw[: max_chars - 10] + "\n…[truncated]"
 
 
-def _invoke_summary_llm(settings: Settings, *, user_blob: str) -> str:
-    llm = build_chat_model(
-        settings,
-        temperature=0.15,
-        max_tokens=min(4096, max(512, settings.agent_llm_full_history_compact_max_out_tokens)),
-        timeout_seconds=float(settings.extraction_llm_timeout_seconds),
-    )
-    system = (
-        "You consolidate multi-turn research assistant memory. Given JSON objects with "
-        "user_intent, answer_excerpt, tools_used, answer_class per turn, produce ONE dense "
-        "third-person memory block the assistant will see as <session_memory>. "
-        "Preserve: named papers/methods/Dataset IDs/user goals/constraints/open questions. "
-        "Drop boilerplate. Use short bullets and sections if helpful. "
-        "Output plain text only — no JSON, no markdown fences."
-    )
+def _invoke_summary_llm(settings: Settings, *, user_blob: str) -> L4SummaryResult:
+    """Cache-safe side-LLM consolidation of digest blob (Wave H §H2).
+
+    Routes through ``run_side_llm_chat`` so prompt-cache token telemetry is captured
+    for trace-review (``side_llm_cache_read_ratio_avg``). Output sanitization (markdown
+    fence stripping) stays here — it is L4-specific.
+    """
     max_out_chars = int(settings.agent_llm_full_history_compact_max_out_tokens) * 3
     human = (
         "Turn digests (JSON array of objects):\n"
         f"{user_blob}\n\n"
         f"Max output characters (approx): {max_out_chars}"
     )
-    msg = llm.invoke([SystemMessage(content=system), HumanMessage(content=human)])
-    text = str(getattr(msg, "content", "") or "").strip()
+    fork = run_side_llm_chat(
+        settings=settings,
+        parent_system=_L4_SUMMARY_SYSTEM,
+        fork_prompt=human,
+        model=effective_chat_llm_model(settings),
+        max_tokens=min(4096, max(512, settings.agent_llm_full_history_compact_max_out_tokens)),
+        temperature=0.15,
+    )
+    text = fork.text.strip()
     text = re.sub(r"^```[a-z]*\s*", "", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*```$", "", text)
-    return text.strip()
+    return L4SummaryResult(text=text.strip(), fork=fork)
 
 
 def _l4_invoke_summary_with_ptl_retries(
@@ -101,7 +121,7 @@ def _l4_invoke_summary_with_ptl_retries(
     *,
     max_in: int,
     max_ptl: int,
-) -> tuple[str, str, int, list[dict[str, Any]]] | None:
+) -> tuple[L4SummaryResult, str, int, list[dict[str, Any]]] | None:
     """Run L4 summary LLM.
 
     On context-limit errors, drop oldest API-round groups up to ``max_ptl``.
@@ -112,8 +132,8 @@ def _l4_invoke_summary_with_ptl_retries(
     for attempt in range(max_ptl + 1):
         blob = _slim_digests_blob(work, max_chars=max_in, settings=settings)
         try:
-            summary = _invoke_summary_llm(settings, user_blob=blob)
-            return summary, blob, ptl_retry_count, work
+            result = _invoke_summary_llm(settings, user_blob=blob)
+            return result, blob, ptl_retry_count, work
         except Exception as exc:  # noqa: BLE001
             if attempt >= max_ptl or not _is_context_limit_error(exc) or len(work) <= 2:
                 logger.warning("l4_llm_compact failed: %s", exc, exc_info=True)
@@ -131,7 +151,7 @@ def _l4_invoke_summary_with_ptl_retries(
     return None
 
 
-def maybe_llm_compact_session_after_turn(  # pylint: disable=too-many-return-statements
+def maybe_llm_compact_session_after_turn(  # pylint: disable=too-many-return-statements,too-many-locals
     settings: Settings,
     thread_id: str,
     *,
@@ -182,11 +202,18 @@ def maybe_llm_compact_session_after_turn(  # pylint: disable=too-many-return-sta
 
     if packed is None:
         return None
-    summary, blob, ptl_retry_count, digests_work = packed
+    result, blob, ptl_retry_count, digests_work = packed
+    summary = result.text
 
     if not summary.strip():
         return None
 
+    fork_meta = side_llm_fork_metadata(
+        forked=result.fork.forked,
+        side_llm_cache_read_tokens=result.fork.side_llm_cache_read_tokens,
+        side_llm_cache_creation_tokens=result.fork.side_llm_cache_creation_tokens,
+        side_llm_cache_read_ratio=result.fork.side_llm_cache_read_ratio,
+    )
     audit = {
         "schema_version": _L4_PROMPT_VERSION,
         "digest_count": len(digests),
@@ -197,6 +224,8 @@ def maybe_llm_compact_session_after_turn(  # pylint: disable=too-many-return-sta
         "ptl_retry_count_per_compaction": int(ptl_retry_count),
         "digest_blob_chars": len(blob),
         "summary_chars": len(summary),
+        "side_llm_latency_ms": int(result.fork.latency_ms),
+        **fork_meta,
     }
     backend.apply_llm_session_compact(thread_id, new_summary=summary, audit_fragment=audit)
     return audit

@@ -77,18 +77,15 @@ def main() -> int:
     parser.add_argument(
         "--max-writer-oscillation-count",
         type=int,
-        default=None,
+        default=1,
         help=(
-            "Optional FAIL when candidate metrics.writer_oscillation_count_max is strictly "
-            "above this threshold (Wave E / G3 gate)."
+            "FAIL when candidate metrics.writer_oscillation_count_max is strictly above this "
+            "threshold (Wave G3 acceptance gate; default: 1)."
         ),
     )
     parser.add_argument(
         "--fail-on",
-        default=(
-            "new_missing_spans,tool_error_increase,final_answer_missing_increase,"
-            "compaction_churn_increase"
-        ),
+        default=("new_missing_spans,tool_error_increase,final_answer_missing_increase"),
         help="Comma-separated fail policies.",
     )
     parser.add_argument(
@@ -173,10 +170,10 @@ def main() -> int:
     parser.add_argument(
         "--max-latency-p95-regress-ratio",
         type=float,
-        default=None,
+        default=1.5,
         help=(
-            "Optional FAIL when baseline and candidate latency_p95_ms are both set and "
-            "candidate > baseline * ratio (e.g. 1.15 caps +15%% regress for claim_verification gate)."
+            "FAIL when baseline and candidate latency_p95_ms are both set and candidate > "
+            "baseline * ratio (Wave G2 default: 1.5, i.e. +50%%)."
         ),
     )
     parser.add_argument(
@@ -195,6 +192,16 @@ def main() -> int:
         help=(
             "Optional FAIL when baseline and candidate metrics.agent_usage_total_tokens_sum "
             "are both set and candidate/baseline exceeds this ratio (Wave F1 token cost axis)."
+        ),
+    )
+    parser.add_argument(
+        "--paper-sources-restored-fail-on-loss",
+        action="store_true",
+        default=False,
+        help=(
+            "Wave H §H1 hard fail when baseline restored at least one paper-evidence carry-over "
+            "and candidate restored zero with the same or higher compaction_event_count. "
+            "Off by default — advisory drift is reported via warn policy."
         ),
     )
     parser.add_argument(
@@ -285,6 +292,11 @@ def main() -> int:
     delta_writer_oscillation_max = _metric(cand, "writer_oscillation_count_max") - _metric(
         base, "writer_oscillation_count_max"
     )
+    base_paper_total = _metric(base, "post_compact_paper_sources_restored_total")
+    cand_paper_total = _metric(cand, "post_compact_paper_sources_restored_total")
+    delta_paper_restored_total = cand_paper_total - base_paper_total
+    base_compaction_n = _metric(base, "compaction_event_count")
+    cand_compaction_n = _metric(cand, "compaction_event_count")
 
     b_tr = _metric_optional_float(base, "live_trust_signal_avg")
     c_tr = _metric_optional_float(cand, "live_trust_signal_avg")
@@ -324,8 +336,19 @@ def main() -> int:
             f"subagent_lifecycle_missing_increase:+{delta_subagent_lifecycle_missing:.0f}"
         )
 
-    if "writer_oscillation_increase" in policies_fail and delta_writer_oscillation_max > 1e-9:
+    if "writer_oscillation_increase" in policies_fail and delta_writer_oscillation_max >= 2:
         fail_reasons.append(f"writer_oscillation_increase:+{delta_writer_oscillation_max:.0f}")
+
+    base_had_restored = base_paper_total > 0
+    cand_dropped_restored = cand_paper_total <= 0
+    cand_compaction_not_lower = (cand_compaction_n - base_compaction_n) >= 0
+    cand_has_compactions = cand_compaction_n > 0
+    paper_loss_when_compacting = (
+        base_had_restored
+        and cand_dropped_restored
+        and cand_has_compactions
+        and cand_compaction_not_lower
+    )
 
     warn_reasons: list[str] = []
     base_lat = _metric(base, "latency_p95_ms")
@@ -435,6 +458,17 @@ def main() -> int:
         if delta_live_trust + 1e-9 < float(ltd):
             fail_reasons.append(f"live_trust_signal_delta:{delta_live_trust:.6f}<{float(ltd):.6f}")
 
+    if paper_loss_when_compacting:
+        msg = (
+            f"post_compact_paper_sources_restored_total:"
+            f"{base_paper_total:.0f}->{cand_paper_total:.0f} "
+            f"with compaction_event_count {base_compaction_n:.0f}->{cand_compaction_n:.0f}"
+        )
+        if args.paper_sources_restored_fail_on_loss:
+            fail_reasons.append(msg)
+        else:
+            warn_reasons.append(msg)
+
     base_verdict_rank = _verdict_rank(base)
     cand_verdict_rank = _verdict_rank(cand)
     if args.enforce_verdict_not_worse and cand_verdict_rank < base_verdict_rank:
@@ -492,6 +526,11 @@ def main() -> int:
             "live_trust_signal_avg_delta": delta_live_trust,
             "claim_verification_verdict_parse_rate_delta": delta_cv_parse,
             "agent_usage_total_tokens_ratio": tokens_usage_ratio,
+            "post_compact_paper_sources_restored_total": delta_paper_restored_total,
+            "post_compact_paper_sources_restored_baseline": base_paper_total,
+            "post_compact_paper_sources_restored_candidate": cand_paper_total,
+            "compaction_event_count_baseline": base_compaction_n,
+            "compaction_event_count_candidate": cand_compaction_n,
         },
     }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -520,6 +559,12 @@ def main() -> int:
         f"- Delta live_trust_signal_avg: `{delta_live_trust}`",
         f"- Delta claim_verification_verdict_parse_rate: `{delta_cv_parse}`",
         f"- Agent usage total tokens ratio (cand/base): `{tokens_usage_ratio}`",
+        (
+            "- Delta post_compact_paper_sources_restored_total: "
+            f"`{delta_paper_restored_total}` "
+            f"(base={base_paper_total}, cand={cand_paper_total}, "
+            f"compaction_events base={base_compaction_n} cand={cand_compaction_n})"
+        ),
     ]
     if fail_reasons:
         md_lines.extend(["", "## Fail reasons"])

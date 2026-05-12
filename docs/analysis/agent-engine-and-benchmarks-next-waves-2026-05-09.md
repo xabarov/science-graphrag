@@ -1,6 +1,6 @@
 # Agent engine & benchmarks — next waves (2026-05-09)
 
-**Статус:** действующий план. Канонический верхнеуровневый entrypoint остаётся [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md); этот документ — детальная очередь работ **после** Wave A (structural hardening) / B (judge benchmark shipped) / C (advisory observability + promotion review flow), все три закрыты.
+**Статус:** действующий план (синхронизировано **2026-05-12** с [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md), [`wave-f-f3-slice1-closure-2026-05-12.md`](./wave-f-f3-slice1-closure-2026-05-12.md), Wave E2 PR1–2 в коде). Канонический верхнеуровневый entrypoint остаётся [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md); этот документ — детальная очередь работ **после** Wave A (structural hardening) / B (judge benchmark shipped) / C (advisory observability + promotion review flow), все три закрыты.
 
 **Зачем этот документ:**
 
@@ -29,7 +29,7 @@
 | `runtime.py` распилен (`deadline_salvage`, `runtime_answer_salvage`, `runtime_post_turn`, `runtime_envelope`, `runtime_subagent_collectors`) | [`refactor-backend.md`](../backlog/refactor-backend.md) |
 | `retrieval_agent.py` распилен (`retrieval_subgraph`, `retrieval_fork_legs`, `retrieval_completion`) | то же |
 | `tool_search.py` дальнейший split (`tool_search_discovery_carryover`, `tool_search_strict_deferred`) | то же |
-| `writer_agent` сужен до terminal synthesis seam (slice; live evidence по oscillation delta — open) | то же |
+| `writer_agent` сужен до terminal synthesis seam; live oscillation closure **DONE** (Wave E 2026-05-12) | [`refactor-backend.md`](../backlog/refactor-backend.md) |
 
 ### 1.2 Product quality observability (закрыто Wave B + C)
 
@@ -43,25 +43,18 @@
 
 ### 1.3 Что осталось открытым (P0 → P3)
 
-Базовый источник — [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN]` / `[PARTIAL]` + §3 / §4 unified plan + Wave B/C residuals.
+Базовый источник — [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN]` / `[PARTIAL]` + §3 / §4 unified plan. **Structural refactor** (распил trace-review CLI и т.п.) ведётся только в backlog — см. §9.
 
 | ID | Тема | Приоритет | Ось |
 |----|------|-----------|-----|
-| **D1–D3** | **Wave D (judge calibration → promotion):** инструментарий в репозитории закрыт; **live окно 2026-05-13** зафиксировано в `eval/results/agent-v3-quality-judge-calibration-window-2026-05-13.{json,md}` + обновлён `agent-v3-quality-judge-variance-baseline.json` — **`strict_agreement_ok=false`**, spread **0.835** > 0.15, т.е. §8.1 **ещё не** закрыт (нужны промпт/модель/кейсы до `--strict`). Чеклист: [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md). | P1 | benchmark |
-| **E1** | Глубже декомпозировать heavy retrieval-ветки (`corpus_explore`, `research_plan` под supervisor) — calibration + live trace-review | P1 | engine |
-| **E2** | `tool_use_summary` для длинных батчей `ToolMessage` — стабилизация side-LLM cache, измерение `side_llm_cache_read_ratio_avg` | P1 | engine |
-| **E3** | `writer_agent` oscillation-risk live evidence + дожать backlog `[PARTIAL]` | P1 | engine |
-| **E4** | Persisted admin-секция `agent_tools` (operator knobs vs LLM runtime overrides vs internal guardrails) | P2 | engine |
-| **F1** | Latency / token cost benchmark axis рядом с judge pairwise (`latency_p95_v3 vs latency_p95_react`, `usage_total_tokens_delta`) | P1 | benchmark |
-| **F2** | Multi-seed pilot run (3 seed × frozen prompts) — judge variance baseline | P2 | benchmark |
-| **F3** | Расширение judge rubric / новые продуктовые срезы (`open_research`, `dual_evidence_compare`, `relation_tracing` уже есть; добавить `quote_evidence_grounding` отдельно) | P2 | benchmark |
-| **F4** | LLM-judge replacement / cross-family judge (DeepSeek vs Mistral vs Anthropic — корреляция с heuristic) | P3 | benchmark |
-| **G1** | Trace-review-v1 на каждое касание `agent/graph/*` / `agent/tool_*` / `agent_v2.py` — runbook автоматизация | P1 | discipline |
-| **G2** | `tool_loop_repeat_max` / `latency_p95_ms` / `subagent_lifecycle_missing_count` — alert thresholds в decision_gate (явные, не неявные) | P2 | discipline |
-| **H1** | Контекст: micro-compact по idle, restore paper sources после compact, pre-compact sanitizers — продакшен-режим | P2 | context |
-| **H2** | L4 LLM-history compact: cache-safe forked side-LLM helper для всех side-LLM вызовов (compact / away / memory / agent_summary) | P2 | context |
+| **D §8.1** | **Wave D (promotion-ready gate):** live окно **2026-05-13** зафиксировано; **`strict_agreement_ok=false`**, spread **> 0.15** — §8.1 **не** закрыт. Формальный **advisory-only defer** и next trigger: [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md) §6. | P1 | benchmark |
+| **E1** | `corpus_explore` / `research_plan` — **keep gated** (p95 latency); артефакты **2026-05-13**; default-on не доказан — [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md). | P1 | engine |
+| **E2** | `tool_use_summary` — **PR1+PR2 закрыты в коде (2026-05-12):** канонический `fork_prompt` (`canonical_tool_json_for_side_llm`), тесты стабильности префикса, `scripts/live_check/tool_use_summary_cache_preflight.py`. **PR3 (operator):** default-on по-прежнему только после live `side_llm_cache_read_ratio_avg ≥ 0.4` или явной policy «держим off». | P1 | engine |
+| **F3-slice2+** | Опционально: расширение pilot дальше slice1 — только при дисциплине baseline; `multi_workspace_inspect` не трактовать как routing gate при E1 keep gated. | P2 | benchmark |
+| **Wave H rollout** | **Live** long-thread acceptance для `agent_llm_full_history_compact_enabled` + отдельное решение по idle `agent_tool_message_microcompact_time_trigger_enabled` — см. [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md), runbook [`agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) §9. | P2 | context |
+| **Structural** | Распил `trace_review_schema.py` / `trace_regression_compare.py` — **не** волна плана; только [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN]`. | P2 | discipline |
 
----
+**Закрыто волнами / срезами (не дублировать как open queue):** E3 writer oscillation, E4 `agent_tools` thin slice, G1–G3, F1/F2/F4 live artifacts (2026-05-12), **F3-slice1** (`quote_evidence_grounding` + `negative_case_refusal`) — см. [`wave-f-f3-slice1-closure-2026-05-12.md`](./wave-f-f3-slice1-closure-2026-05-12.md); Wave H **implementation** (H1 tests/harness, H2 L4 → `run_side_llm_chat`, inventory) — см. [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md).
 
 ## 2. Wave D — judge calibration → promotion candidate
 
@@ -144,26 +137,18 @@
 - `trace_regression_compare.py --min-side-llm-cache-read-ratio 0.4` зелёный на acceptance suite;
 - если ratio < 0.4 — feature flag `agent_tool_use_summary_enabled` остаётся **off** до устранения причины.
 
-**Статус на 2026-05-13:** 🟡 **PARTIAL (telemetry closure + heavy live evidence, product gate open)**
+**Статус на 2026-05-13:** 🟡 **PARTIAL (telemetry + cache-prefix code done; product default-on still gated)**
 - done: cache-safe regression tests + telemetry merge improvements (`debug_events` full aggregation, `specialist_results_v3` fallback extraction в `trace_review_schema`);
 - done: live acceptance показывает `tool_use_summary_row_count_total > 0` (summary реально применялся);
 - done (code): нормализация ratio при явных нулевых cache-read токенах без creation — `side_llm_cache_read_ratio_avg` больше не `null` **только из-за** `0`+`null` пары; gate §10.2 уходит в `fail_below_0_4_*`, если среднее &lt; 0.4 (см. [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md));
 - done (live E2 heavy): `trace-review-wave-e-e2-tool-summary-acceptance-2026-05-13-v5.json` дал `tool_use_summary_row_count_total=28` и non-null `side_llm_cache_read_ratio_avg=0.1`; compare gate `--min-side-llm-cache-read-ratio 0.4` зафейлен (`trace-regression-wave-e-2026-05-13-e2-v5.md`).
-- open (product): default-on `agent_tool_use_summary_enabled` остаётся заблокированным до улучшения cache hit ratio (или явной policy-оговорки «держим off»).
+- done (code, **2026-05-12 Wave E2 PR1+PR2**): канонический сериализатор payload для идентичного cache-prefix (`science_graphrag/agent/tool_use_summary.py::canonical_tool_json_for_side_llm`), регрессии `tests/agent/test_tool_use_summary_canonical_cache_prefix.py`, опциональный live probe `scripts/live_check/tool_use_summary_cache_preflight.py`.
+- open (product / **PR3**): default-on `agent_tool_use_summary_enabled` только после **нового** heavy live с `side_llm_cache_read_ratio_avg ≥ 0.4` на свежем коде **или** явной policy-оговорки «держим off».
 
 **Мини-план, если целимся в `side_llm_cache_read_ratio_avg >= 0.4`:**
-1. **PR1: canonical cache prefix**
-   - вынести сборку side-LLM summary payload в один deterministic helper;
-   - зафиксировать стабильный порядок `system / tools / messages / metadata`;
-   - убрать из cache-prefix дрейфующие поля (timestamp-like/debug-only/volatile counters), которые не нужны для качества summary;
-   - добавить regression на byte-stable prefix для повторных одинаковых summary-batches.
-2. **PR2: targeted cache benchmark**
-   - добавить узкий benchmark/smoke-suite на повторяющиеся батчи `tool_use_summary` (не full acceptance, а controlled repeated workload);
-   - мерить `cache_read_tokens`, `cache_creation_tokens`, `side_llm_cache_read_ratio` по кейсам и на агрегате;
-   - использовать этот прогон как быстрый pre-flight перед дорогим heavy live.
-3. **PR3: provider/model decision**
-   - если после canonical prefix ratio всё ещё `< 0.4`, зафиксировать, что текущий provider/model/payload-shape не даёт нужного prompt-cache эффекта;
-   - дальше либо менять provider/model для side-LLM summary, либо оставлять `agent_tool_use_summary_enabled=off` как продуктовое решение.
+1. **PR1: canonical cache prefix** — ✅ **DONE (2026-05-12):** `canonical_tool_json_for_side_llm` + стабильный `fork_prompt` в `summarize_tool_result_payload_dict`.
+2. **PR2: targeted cache benchmark** — ✅ **DONE (2026-05-12):** unit-regression на byte-stable fork_prompt; `scripts/live_check/tool_use_summary_cache_preflight.py` (`--live` после checklist).
+3. **PR3: provider/model decision** — **OPEN (operator):** если после повторного heavy live ratio всё ещё `< 0.4`, зафиксировать provider/model/payload-shape follow-up **или** оставить `agent_tool_use_summary_enabled=off` как продуктовое решение.
 
 **Порядок работ / stop condition:**
 - до завершения PR1+PR2 не повторять full heavy acceptance ради «надежды на зелёный»;
@@ -206,7 +191,7 @@
 
 ### 3.5 Что осталось закрыть до Wave F
 
-Перед переходом к F остаются хвосты не по коду, а по gate-доказательствам (сводка: [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md)):
+> **Update 2026-05-12:** Wave F **F-core** (F1/F2 + F3-slice1 evidence) уже зафиксированы артефактами; блок ниже — исторический pre-F чеклист; актуальные хвосты см. §1.3 и [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md).
 
 1. **E1 decision artifact:** ✅ live **2026-05-13** — пара `agent-corpus-explore-research-plan-acceptance-2026-05-13-{baseline,candidate}.*` + [`trace-regression-wave-e-2026-05-13-e1.*`](../../eval/results/trace-regression-wave-e-2026-05-13-e1.md); итог **keep gated** (p95 latency) — [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md).
 
@@ -270,7 +255,7 @@ Wave F выполняется **поверх** уже известных, но �
 
 - В одном pilot-артефакте видны **pairwise quality** и **`cost_delta`** (latency + tokens); есть **хотя бы один** live (или эквивалентный operator `subprocess`) compare с краткой текстовой интерпретацией обеих осей (см. §4.1 таблица интерпретации).
 - Для того же frozen набора кейсов зафиксирован **multiseed range** (`mean_delta_min` / `max` / `median`), baseline JSON заморожен.
-- Выполнен **минимум один** controlled `F3-slice1` (новый срез + пересчёт baseline со stale-маркировкой старого).
+- Выполнен **минимум один** controlled `F3-slice1` (новый срез + пересчёт baseline со stale-маркировкой старого). — ✅ **Closure:** [`wave-f-f3-slice1-closure-2026-05-12.md`](./wave-f-f3-slice1-closure-2026-05-12.md) (фикстуры + `baseline-agent-v3-quality-judge-pilot-multiseed.json` + live pilot JSON).
 - `F4` либо выполнен и оформлен как research note, либо явно отложен с причиной (не смешивать с core gate).
 
 ### 4.0.6 Статус live evidence (2026-05-12)
@@ -284,6 +269,7 @@ Wave F выполняется **поверх** уже известных, но �
   - summary snapshot: `case_count=13`, `mean_delta=0.2577`, `multiseed.mean_delta_median=0.3808`,
     `multiseed.mean_delta_spread=0.1346`, `cases_with_any_branch_non_ok=0`,
     `cost_delta.latency_p95_ratio=0.9668`.
+- **F3-slice1:** ✅ closure note — [`wave-f-f3-slice1-closure-2026-05-12.md`](./wave-f-f3-slice1-closure-2026-05-12.md) (`pilot_quote_grounding_01`, `pilot_negative_refusal_01` в `judge_pilot`, `family_breakdown` в multiseed baseline).
 - **F4 (`judge_pilot`, cross-family advisory)**:
   - source artifacts:
     - `eval/results/current-agent-v3-quality-judge-pilot-wavef-live-anthropic-s1-full.{json,md}`
@@ -385,31 +371,44 @@ Wave F выполняется **поверх** уже известных, но �
 
 **Цель:** не «runbook есть, иногда запускаем», а measurable gate на каждое касание агентного кода.
 
+**Статус (2026-05-12):** ✅ **DONE**.
+
+- `G1`: закрыт через CI-only hotspot reminder в `.github/workflows/agent-sse-contract.yml` и SOP-матрицу выбора `profile` / `suite`; локальный git hook сознательно не вводился.
+- `G2`: закрыт через machine-readable warn allowlist (`acceptable_warns`, `acceptance_summary.unacceptable_warns`), hard gate `tool_loop_repeat_max > 3`, baseline latency policy (`>=25%` warn, `>50%` fail) и явное документирование lifecycle thresholds.
+- `G3`: закрыт без новой writer-метрики: существующий `writer_oscillation_count` доведён до strict acceptance policy (`writer_oscillation_count_max <= 1`, regression delta `>= 2` fail), отражён в `acceptance_summary` и покрыт compare tests.
+- Quality gate: `tests/scripts/live_check/test_trace_review_schema.py`, `tests/scripts/live_check/test_trace_regression_compare.py`, `tests/scripts/live_check/test_agent_trace_review.py` — **63 passed**; `black --check`, `isort --check-only`, IDE lints — clean.
+
 ### 5.1 G1: Auto-trigger trace-review на изменения hotspot путей
 
+**Статус:** ✅ **DONE 2026-05-12** — реализован CI reminder/job без локального hook; фактический hotspot scope и profile/suite matrix закреплены в [`agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md).
+
 **Acceptance:**
-- pre-commit hook (advisory) или CI job: при изменении `science_graphrag/agent/graph/**`, `science_graphrag/agent/tool_*`, `science_graphrag/agent_v2.py`, `science_graphrag/agent/runtime*.py` — выводить reminder про `trace-review-v1` acceptance run;
-- runbook section в [`agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) обновлён: какой profile (`quick` / `default` / `heavy`) под какой класс правок;
-- разделение «merge-блокирующих» полей (`final_answer_missing_count`, `missing_span_count`, `tool_loop_repeat_max`) и «advisory drift» (`compaction_churn_score`, `shortlist_ratio_avg`) — формально в runbook.
+- CI job (`agent-sse-contract`) при изменении hotspot-путей выводит reminder про `trace-review-v1` acceptance run; фактический `agent_v2` путь — `science_graphrag/api/agent_v2.py`;
+- runbook section в [`agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) обновлён: какой profile (`quick` / `default` / `heavy`) и suite (`default` / `acceptance`) под какой класс правок;
+- разделение «merge-блокирующих» полей (`final_answer_missing_count`, `missing_span_count`, `tool_loop_repeat_max`, `writer_oscillation_count_max`, `latency_p95_ms` hard drift) и «advisory drift» (`compaction_churn_score`, `shortlist_ratio_avg`) — формально в runbook.
 
 ### 5.2 G2: Explicit alert thresholds в decision_gate / acceptance
 
-Сейчас acceptance verdict: `pass` / `warn`. Warn от `claim_verification_verdict_parse_rate:absent_no_cv_rows` is by-design; нужен явный список acceptable warns.
+**Статус:** ✅ **DONE 2026-05-12** — acceptance verdict получил явный allowlist/summary для warn reasons; `tool_loop_repeat_max`, latency drift и lifecycle thresholds стали явными gates/policies.
+
+Warn от `claim_verification_verdict_parse_rate:absent_no_cv_rows` is by-design; теперь он оформлен как `acceptable_warns`, а остальные warn reasons вне allowlist попадают в `acceptance_summary.unacceptable_warns`.
 
 **Acceptance:**
 - `eval/results/trace-review-acceptance-*.json` schema получает поле `acceptable_warns` (список регулярок);
-- любой warn вне списка → `pass` понижается до `warn` или ниже в release runbook;
-- `tool_loop_repeat_max > 3` → `fail` (сейчас warn, по факту нарушение цели плана);
-- `latency_p95_ms` drift ≥ 25 % от baseline → `warn`; ≥ 50 % → `fail`.
+- любой warn вне списка попадает в `acceptance_summary.unacceptable_warns` и требует explicit waiver/release note;
+- `tool_loop_repeat_max > 3` → `fail` в single-run verdict и отдельный `acceptance_summary` gate;
+- `latency_p95_ms` drift ≥ 25 % от baseline → `warn`; ≥ 50 % → `fail` в `trace_regression_compare.py` default policy.
 
 ### 5.3 G3: writer_oscillation_count metric (новая)
+
+**Статус:** ✅ **DONE 2026-05-12** — метрика уже существовала; закрытие Wave G довело её до строгого acceptance/compare contract и тестового покрытия.
 
 **Зачем:** для E3 нужна явная метрика, не просто наблюдение.
 
 **Acceptance:**
 - в `trace-review-v1` добавлена `writer_oscillation_count` per case — число поворотов «writer → not-writer → writer» в одном turn;
-- baseline на acceptance suite ≤ 1;
-- регрессия: при росте baseline ≥ 2 — fail.
+- baseline на acceptance suite ≤ 1; `acceptance_summary` получает отдельный `§G3_writer_oscillation_count` gate;
+- регрессия: при росте baseline ≥ 2 — fail через `writer_oscillation_increase`; candidate cap `writer_oscillation_count_max > 1` — fail.
 
 ---
 
@@ -417,26 +416,21 @@ Wave F выполняется **поверх** уже известных, но �
 
 **Цель:** L3 / L4 продакшен-готовность, чтобы длинные сессии не «тонули» в `ToolMessage` истории.
 
+**Статус (2026-05-12):** implementation + offline harness + regression tests **закрыты**; operator default-on остаётся только для gated knobs — каноническое решение и артефакты: [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md), inventory scope §H2: [`wave-h-side-llm-inventory-2026-05-12.md`](./wave-h-side-llm-inventory-2026-05-12.md).
+
 ### 6.1 H1: Production-ready microcompact / restore / sanitizers
 
-Текущее: частично есть (Train T2 closeout), но без production switch-on.
+**Acceptance (код + offline):** ✅ — 50-turn harness, restore paper sources regression, sanitizer fixtures; default-on см. rollout table (**microcompact time trigger — keep gated** до live).
 
-**Acceptance:**
-- microcompact по `client_idle_ms` threshold (есть, но default off) → eval suite на 50-turn workspace разговоре;
-- `restore paper sources after compact` — explicit eval, что после compaction ссылки на использованные `paper_quote_search` / `paper_profile` НЕ теряются (regression тест);
-- pre-compact sanitizers для PII / secrets — sanity-check набор фикстур.
+### 6.2 H2: Cache-safe forked side-LLM (L4 compact)
 
-### 6.2 H2: Cache-safe forked side-LLM unified helper
+**Acceptance (минимальный честный scope):** ✅ L4 `llm_history_compact` → `run_side_llm_chat` + telemetry; «все субагенты ReAct» **вне** H2 по inventory.
 
-Текущее ([`refactor-backend.md`](../backlog/refactor-backend.md) `[DONE] Cache-safe forked side-LLM helper — Train T1 slice`):
-- helper существует;
-- `thread_insights` использует его;
-- **остальные side-LLM** (`llm_history_compact`, `away_summary`, subagents) — пока **не** мигрированы.
+### 6.3 Остаток только operator rollout
 
-**Acceptance:**
-- все side-LLM вызовы (compact / away / agent_summary / subagents) идут через `run_side_llm_chat`;
-- `side_llm_cache_read_ratio_avg ≥ 0.4` на acceptance — стало правилом (см. E2);
-- `optional` OpenRouter `cache_control` transport hint, если без него ratio проседает.
+- **`agent_llm_full_history_compact_enabled`:** live long-thread trace-review + compare (`--min-side-llm-cache-read-ratio 0.4`, `--paper-sources-restored-fail-on-loss`) — см. [`agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) §9.3–9.5.
+- **`agent_tool_message_microcompact_time_trigger_enabled`:** paired live compare перед default-on.
+- **OpenRouter `cache_control`:** только если live ratio &lt; 0.4 без hint.
 
 ---
 
@@ -446,25 +440,19 @@ Wave F выполняется **поверх** уже известных, но �
 Wave A (DONE 2026-05-08)
    └─ Wave B (DONE 2026-05-08)
       └─ Wave C (DONE 2026-05-09)
-         ├─ Wave D (tooling DONE 2026-05-10; live evidence + §8.1 open)
-         │   └─ enables F1 / F2 numbers grounded in stable judge
-         ├─ Wave E (E1, E2, E3 параллельно; E4 независимо)
-         │   └─ feeds D3 baseline (после default-on флагов)
-         ├─ Wave F (F1 параллельно D; F2 после D2; F3 после E1; F4 — research)
-         ├─ Wave G (G1 / G2 / G3 параллельно остальному)
-         └─ Wave H (H1 / H2 после E2 / G3, чтобы variance не съел сигнал)
+         ├─ Wave D (tooling DONE; §8.1 strict gate open → advisory defer)
+         ├─ Wave E (E1 keep gated; E2 PR1–2 code done / PR3 operator; E3/E4 done)
+         ├─ Wave F (F-core evidence done; F3-slice2+ optional)
+         ├─ Wave G (DONE)
+         └─ Wave H (implementation DONE; live rollout for gated defaults)
 ```
 
 | Неделя (примерная, не CI) | Фокус |
 |---------------------------|-------|
-| W1 | D1 calibration window, E3 writer oscillation evidence, G3 metric |
-| W2 | D2 fingerprint guard, F1 cost delta в runner, G2 thresholds |
-| W3 | D3 frozen baseline, E1 corpus_explore live evidence |
-| W4 | F2 multi-seed variance, E2 tool_use_summary cache ratio, G1 SOP polish |
-| W5 | F3 rubric expansion (judge_pilot resize + new baseline), E4 admin section P0 slice |
-| W6+ | F4 cross-family research, H1 / H2 production switch-on |
+| Now | Закрыть Wave D §8.1 **или** держать advisory defer; повторить E2 heavy live после PR1+2; Wave H live rollout по SOP §9 |
+| Next | F3-slice2+ только при управляемой baseline-дисциплине; structural split trace-review (backlog) |
 
-Wave H ставится **после** D / E / G — нет смысла двигать compaction defaults, пока baseline judge / acceptance / oscillation не стабильны.
+Wave H live rollout логично **после** свежего E2/D сигнала, но **не** блокируется ими для read-only evidence run.
 
 ---
 
@@ -473,6 +461,8 @@ Wave H ставится **после** D / E / G — нет смысла дви�
 Чтобы план не превратился в «новые волны без закрытия предыдущих», два явных gate:
 
 ### 8.1 Gate «Wave D готов к промоушн review»
+
+**Статус на 2026-05-12:** gate **не** выполнен на live окне 2026-05-13; зафиксирован **advisory-only defer** — см. [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md) §6.
 
 - D1, D2, D3 **в смысле gate** = live артефакты и стабилизация (не только наличие CLI в репозитории; инструментарий уже см. §1.2 / §2);
 - 3 stable pilot прогона `judge_pilot` без `cases_with_any_branch_non_ok ≥ 1`;
@@ -497,7 +487,7 @@ Wave H ставится **после** D / E / G — нет смысла дви�
 - **E4:** `PATCH /v1/settings/agent_tools` + overlay `agent_supervisor_max_rounds` (см. тесты в `tests/test_*`).
 - **E1 / решение default-on:** шаблон и критерии — [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md); финальный вывод фиксируется оператором после двух live прогонов (артефакты под `eval/results/agent-corpus-explore-research-plan-acceptance-<date>.*`).
 
-После этого backlog по агентскому графу можно считать на 80 % закрытым; следующая волна — F2/F3/F4 (research) и продуктовые направления.
+После этого backlog по агентскому графу находится в основном в **operator gates** (Wave D §8.1, E2 PR3, E1 default-on, Wave H live) и в **[OPEN] structural** задачах в [`refactor-backend.md`](../backlog/refactor-backend.md) — не путать с волнами F/H выше.
 
 ---
 
@@ -519,3 +509,8 @@ Wave H ставится **после** D / E / G — нет смысла дви�
 | Long-running ops policy | [`../../.cursor/rules/long-running-ops.mdc`](../../.cursor/rules/long-running-ops.mdc) |
 | Pre-F closure readiness (2026-05-12) | [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md) |
 | Pre-F Wave D operator evidence | [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md) |
+| Wave D §8.1 advisory defer | [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md) §6 |
+| Wave F F3-slice1 closure | [`wave-f-f3-slice1-closure-2026-05-12.md`](./wave-f-f3-slice1-closure-2026-05-12.md) |
+| Wave H rollout decision | [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md) |
+| Wave H side-LLM inventory | [`wave-h-side-llm-inventory-2026-05-12.md`](./wave-h-side-llm-inventory-2026-05-12.md) |
+| **Structural debt (не waves):** split trace-review / compare monoliths | [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN] Split trace-review CLI…` |

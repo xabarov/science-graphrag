@@ -1,4 +1,15 @@
-"""Pre-compact sanitizers (Train T2 §10.5.4): drop images and duplicate reinjected blocks."""
+"""Pre-compact sanitizers (Train T2 §10.5.4 / Wave H §H1).
+
+Two layers:
+
+* Structural — drop images and duplicate reinjected XML blocks
+  (``<paper_sources_restored>`` / ``<client_history_digest>``) so L4 compact
+  does not double-include carry-over evidence into ``session_summary``.
+* Sensitive material — redact API key shapes, bearer tokens, AWS access keys,
+  and emails before they reach ``_invoke_summary_llm``. The redaction is
+  string-level on the digest blob to avoid leaking secrets into a
+  long-lived, model-readable ``<session_memory>`` block.
+"""
 
 from __future__ import annotations
 
@@ -15,6 +26,53 @@ _RE_CLIENT_DIGEST = re.compile(
     r"<client_history_digest>[\s\S]*?</client_history_digest>",
     re.IGNORECASE,
 )
+
+# Wave H §H1: secret/PII redaction patterns. Each entry is a (regex, replacement)
+# pair. Patterns are intentionally loose — a small false-positive on a benign
+# blob is preferable to a leaked credential surviving into ``session_summary``.
+_RE_OPENAI_KEY = re.compile(r"\bsk-[A-Za-z0-9_-]{16,}\b")
+_RE_ANTHROPIC_KEY = re.compile(r"\bsk-ant-[A-Za-z0-9_-]{16,}\b")
+_RE_OPENROUTER_KEY = re.compile(r"\bsk-or-[A-Za-z0-9_-]{16,}\b")
+_RE_BEARER = re.compile(r"\b[Bb]earer\s+[A-Za-z0-9._\-]{16,}\b")
+_RE_AWS_ACCESS_KEY = re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b")
+_RE_AWS_SECRET = re.compile(r"\baws_secret_access_key\s*[:=]\s*[\"']?([A-Za-z0-9/+=]{30,})[\"']?")
+_RE_GENERIC_API_KEY = re.compile(
+    r"\b(?:api[_-]?key|api_token|access_token)\s*[:=]\s*[\"']?([A-Za-z0-9._\-]{16,})[\"']?",
+    re.IGNORECASE,
+)
+_RE_GITHUB_TOKEN = re.compile(r"\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}\b")
+_RE_EMAIL = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+
+
+def _redact_generic_api_key_match(match: re.Match[str]) -> str:
+    """Keep the ``api_key=`` lvalue verbatim, redact only the captured value."""
+    full = match.group(0)
+    secret = match.group(1)
+    if not secret:
+        return full
+    return full.replace(secret, "[REDACTED:api_key]")
+
+
+def redact_sensitive_material(text: str) -> str:
+    """Replace API key / bearer / AWS / email shapes with stable ``[REDACTED:<kind>]``.
+
+    Stability matters: the helper is invoked **before** ``run_side_llm_chat`` so the
+    cache-stable prefix property of L4 compact is preserved across turns even when
+    secrets briefly leaked into a single digest.
+    """
+    s = str(text or "")
+    if not s:
+        return s
+    s = _RE_ANTHROPIC_KEY.sub("[REDACTED:anthropic_api_key]", s)
+    s = _RE_OPENROUTER_KEY.sub("[REDACTED:openrouter_api_key]", s)
+    s = _RE_GITHUB_TOKEN.sub("[REDACTED:github_token]", s)
+    s = _RE_OPENAI_KEY.sub("[REDACTED:openai_api_key]", s)
+    s = _RE_BEARER.sub("Bearer [REDACTED:bearer_token]", s)
+    s = _RE_AWS_ACCESS_KEY.sub("[REDACTED:aws_access_key]", s)
+    s = _RE_AWS_SECRET.sub("aws_secret_access_key=[REDACTED:aws_secret]", s)
+    s = _RE_GENERIC_API_KEY.sub(_redact_generic_api_key_match, s)
+    s = _RE_EMAIL.sub("[REDACTED:email]", s)
+    return s
 
 
 def _strip_reinjected_markers(text: str) -> str:
@@ -82,11 +140,19 @@ def sanitize_messages_for_summary(messages: Sequence[BaseMessage]) -> list[BaseM
 
 
 def sanitize_digest_dict_for_compact(d: dict[str, Any]) -> dict[str, Any]:
-    """Return a shallow copy with long text fields scrubbed for L4 digest compaction."""
+    """Return a shallow copy with long text fields scrubbed for L4 digest compaction.
+
+    Scrubs (in this order):
+
+    1. Reinjected XML markers (Train T2) so digest does not double-include them.
+    2. API keys / bearer tokens / AWS keys / emails (Wave H §H1) so secrets that
+       briefly appeared in a tool payload do not survive into ``session_summary``.
+    """
     out = dict(d)
     for key in ("user_intent", "answer_excerpt"):
         if key in out and isinstance(out[key], str):
-            out[key] = _strip_reinjected_markers(out[key])
+            cleaned = _strip_reinjected_markers(out[key])
+            out[key] = redact_sensitive_material(cleaned)
     return out
 
 

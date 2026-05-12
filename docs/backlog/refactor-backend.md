@@ -132,7 +132,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Proposal:** normalize token-derived ratio when at least one of read/create is present; mirror logic in trace-review merge and debug-event aggregation.
 - **Acceptance:** non-null `side_llm_cache_read_ratio_avg` when summary rows include explicit zero read tokens; §10.2 uses `fail_below_0_4_*` when ratio is numeric `< 0.4`, not `fail_missing_*` for that shape.
 - **Done (pre-F 2026-05-12):** `forked_runtime._cache_read_ratio` returns `0.0` for explicit zero-cache accounting; `trace_review_schema._tool_use_summary_audit_from_specialist_results_v3` and `debug_events_telemetry._accum_tool_use_summary_batch` derive ratio from token fields when `side_llm_cache_read_ratio` is absent; tests `tests/test_forked_runtime.py`, `tests/agent/test_debug_events_telemetry.py`, `tests/scripts/live_check/test_trace_review_schema.py`.
-- **Remaining (product / operator):** default-on for `agent_tool_use_summary_enabled` still needs a live run with `side_llm_cache_read_ratio_avg >= 0.4` or a documented policy exception — see [`pre-f-closure-readiness-2026-05-12.md`](../analysis/pre-f-closure-readiness-2026-05-12.md).
+- **Remaining (product / operator):** Wave E2 **PR1+PR2 (code, 2026-05-12):** canonical cache-prefix for side-LLM HumanMessage (`canonical_tool_json_for_side_llm` in `tool_use_summary.py`), regression tests `tests/agent/test_tool_use_summary_canonical_cache_prefix.py`, optional live probe `scripts/live_check/tool_use_summary_cache_preflight.py --live`. **PR3:** default-on for `agent_tool_use_summary_enabled` still requires a **post-PR1+2** heavy live acceptance run with `side_llm_cache_read_ratio_avg >= 0.4`, or a documented policy exception to keep the flag off — see [`pre-f-closure-readiness-2026-05-12.md`](../analysis/pre-f-closure-readiness-2026-05-12.md) and [`docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md) §3.2.
 - **Raised:** 2026-05-12 (Wave E closeout follow-up)
 
 ### [DONE] Split permission / validation phase out of `build_tool_execution_node` inner closure
@@ -182,6 +182,20 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Done (follow-up 2026-05-06):** добавлена классификация `OutputParserException` → `llm_output_parse_error`; усилены эвристики `validation/parse` по строковым маркерам (fallback path).
 - **Remaining:** замер доли non-`internal_error` на фиксированном live/trace наборе (критерий приёмки ≥80%); при необходимости отдельный `chat-errors.md`.
 - **Raised:** 2026-05-05 (readable-stream-events plan)
+
+### [OPEN] Split trace-review CLI monoliths (`trace_review_schema.py`, `trace_regression_compare.py`)
+- **Cross-ref:** execution waves track only operator gates in [`docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md) §9 — this item is **structural refactor debt**, not a benchmark wave deliverable.
+- **Area:** `scripts/live_check/trace_review_schema.py` (~1600 LoC), `scripts/live_check/trace_regression_compare.py` (~580 LoC, single `main()` ≈ 200 statements)
+- **Issue:** Both files accumulate every new acceptance gate / metric in one giant function (Wave G writer oscillation, Wave H §H1 paper sources restore, Wave H §H2 cache telemetry). Pylint reports `R0914` / `R0912` / `R0915` at multiple anchors (`case_to_timeline_row`, `aggregate_metrics_from_timeline`, `acceptance_summary_from_review`, `_timeline_case_from_dict`, `main()` of compare). Adding the next wave is a copy-paste, not a refinement.
+- **Proposal:**
+  - Split `trace_review_schema.py` per concern: `metrics_aggregation.py` (per-row → metric reducers), `acceptance_gates.py` (one function per gate, returning a structured result), `serde.py` (round-trip JSON ↔ dataclass), and keep `trace_review_schema.py` as a thin facade.
+  - Split `trace_regression_compare.py::main()` into argument parsing + `compute_deltas(base, cand)` + per-axis policy modules (`policies/latency.py`, `policies/cache_telemetry.py`, `policies/paper_sources.py`, ...). `main()` then orchestrates and renders.
+  - Keep CLI surface backward compatible (no flag renames in this slice).
+- **Acceptance:**
+  - No file in `scripts/live_check/` exceeds ~600 LoC; no single function exceeds pylint `R0915` threshold without an explicit suppression note.
+  - Each Wave-* gate added in 2026 (G/H/...) lives in its own module/file rather than as another branch in one giant function.
+  - Existing tests under `tests/scripts/live_check/test_trace_review_schema.py` and `test_trace_regression_compare.py` keep passing without behaviour changes.
+- **Raised:** 2026-05-12 (Wave H closeout)
 
 ### [OPEN] Extend `_product_step_code_for_tool` coverage
 - **Area:** `science_graphrag/api/agent_v2_modules/stream_lifecycle.py` (`product_step_code_for_tool`)

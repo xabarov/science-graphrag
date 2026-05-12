@@ -112,6 +112,29 @@ def _deterministic_tool_summary_v1(payload: dict[str, Any], tool_name: str) -> d
     }
 
 
+def canonical_tool_json_for_side_llm(
+    payload: dict[str, Any],
+    *,
+    max_chars: int = 24000,
+) -> str:
+    """Serialize tool payload for side-LLM HumanMessage (Wave E2 PR1).
+
+    Uses sorted keys and compact separators so identical logical payloads produce
+    identical strings regardless of insertion order — improves prompt-cache hit
+    rate for repeated ``tool_use_summary`` batches.
+    """
+    dumped = json.dumps(
+        payload,
+        ensure_ascii=True,
+        default=str,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    if len(dumped) <= max_chars:
+        return dumped
+    return dumped[:max_chars]
+
+
 def _shrink_heavy_lists(payload: dict[str, Any], *, max_items: int = 8) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for k, v in payload.items():
@@ -131,10 +154,11 @@ def summarize_tool_result_payload_dict(
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Attach structured ``_tool_use_summary`` + shrink large lists (§10.9)."""
     orig_chars = len(json.dumps(payload, ensure_ascii=True, default=str))
+    fork_prompt = "Tool JSON:\n" + canonical_tool_json_for_side_llm(payload, max_chars=24000)
     fork = run_side_llm_chat(
         settings=settings,
         parent_system=_TOOL_USE_SUMMARY_SYSTEM,
-        fork_prompt="Tool JSON:\n" + json.dumps(payload, ensure_ascii=True, default=str)[:24000],
+        fork_prompt=fork_prompt,
         model=effective_chat_llm_model(settings),
         max_tokens=min(
             900,
@@ -225,5 +249,6 @@ def apply_tool_use_summary_to_tool_json_content(
 
 __all__ = [
     "apply_tool_use_summary_to_tool_json_content",
+    "canonical_tool_json_for_side_llm",
     "summarize_tool_result_payload_dict",
 ]

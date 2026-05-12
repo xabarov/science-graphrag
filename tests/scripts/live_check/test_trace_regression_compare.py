@@ -7,8 +7,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 _REPO = Path(__file__).resolve().parents[3]
 _COMPARE = _REPO / "scripts" / "live_check" / "trace_regression_compare.py"
 
@@ -130,6 +128,8 @@ def test_regression_compaction_churn_increase_fail(tmp_path: Path) -> None:
             str(b),
             "--candidate",
             str(c),
+            "--fail-on",
+            "compaction_churn_increase",
             "--out-json",
             str(out_j),
             "--out-md",
@@ -141,6 +141,35 @@ def test_regression_compaction_churn_increase_fail(tmp_path: Path) -> None:
     payload = json.loads(out_j.read_text())
     assert payload["status"] == "fail"
     assert any("compaction_churn_increase" in x for x in payload["fail_reasons"])
+
+
+def test_regression_compaction_churn_increase_not_default_fail(tmp_path: Path) -> None:
+    base = _minimal_review({"compaction_churn_score": 0.0, "missing_span_count": 0})
+    cand = _minimal_review({"compaction_churn_score": 2.0, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 0
+    payload = json.loads(out_j.read_text())
+    assert payload["status"] == "pass"
 
 
 def test_regression_min_side_llm_cache_read_ratio_fail(tmp_path: Path) -> None:
@@ -501,7 +530,7 @@ def test_regression_c3_latency_without_error_regress_warns(tmp_path: Path) -> No
         {"latency_p95_ms": 100.0, "tool_error_rate": 0.0, "missing_span_count": 0}
     )
     cand = _minimal_review(
-        {"latency_p95_ms": 200.0, "tool_error_rate": 0.0, "missing_span_count": 0}
+        {"latency_p95_ms": 130.0, "tool_error_rate": 0.0, "missing_span_count": 0}
     )
     b = tmp_path / "b.json"
     c = tmp_path / "c.json"
@@ -532,6 +561,35 @@ def test_regression_c3_latency_without_error_regress_warns(tmp_path: Path) -> No
     payload = json.loads(out_j.read_text())
     assert payload["status"] == "warn"
     assert any("c3_latency_without_error_regress" in x for x in payload["warn_reasons"])
+
+
+def test_regression_latency_p95_default_wave_g_fail_ratio(tmp_path: Path) -> None:
+    base = _minimal_review({"latency_p95_ms": 100.0, "missing_span_count": 0})
+    cand = _minimal_review({"latency_p95_ms": 151.0, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("latency_p95_regress_ratio" in x for x in payload["fail_reasons"])
 
 
 def test_regression_latency_p95_regress_ratio_fail(tmp_path: Path) -> None:
@@ -565,6 +623,190 @@ def test_regression_latency_p95_regress_ratio_fail(tmp_path: Path) -> None:
     assert any("latency_p95_regress_ratio" in x for x in payload["fail_reasons"])
 
 
+def test_regression_writer_oscillation_cap_fails_by_default(tmp_path: Path) -> None:
+    base = _minimal_review({"writer_oscillation_count_max": 0, "missing_span_count": 0})
+    cand = _minimal_review({"writer_oscillation_count_max": 2, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("writer_oscillation_count_max" in x for x in payload["fail_reasons"])
+
+
+def test_regression_writer_oscillation_increase_fails_at_delta_two(tmp_path: Path) -> None:
+    base = _minimal_review({"writer_oscillation_count_max": 0, "missing_span_count": 0})
+    cand = _minimal_review({"writer_oscillation_count_max": 2, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--max-writer-oscillation-count",
+            "99",
+            "--fail-on",
+            "writer_oscillation_increase",
+            "--warn-on",
+            "",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("writer_oscillation_increase" in x for x in payload["fail_reasons"])
+
+
+def test_regression_writer_oscillation_allows_delta_one_under_cap(tmp_path: Path) -> None:
+    base = _minimal_review({"writer_oscillation_count_max": 0, "missing_span_count": 0})
+    cand = _minimal_review({"writer_oscillation_count_max": 1, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--fail-on",
+            "writer_oscillation_increase",
+            "--warn-on",
+            "",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 0
+
+
+def test_regression_paper_sources_restore_loss_warn_by_default(tmp_path: Path) -> None:
+    base = _minimal_review(
+        {
+            "post_compact_paper_sources_restored_total": 5,
+            "compaction_event_count": 5,
+            "missing_span_count": 0,
+        }
+    )
+    cand = _minimal_review(
+        {
+            "post_compact_paper_sources_restored_total": 0,
+            "compaction_event_count": 5,
+            "missing_span_count": 0,
+        }
+    )
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--warn-on",
+            "latency_p95_increase",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 3
+    payload = json.loads(out_j.read_text())
+    assert payload["status"] == "warn"
+    assert any("post_compact_paper_sources_restored_total" in x for x in payload["warn_reasons"])
+
+
+def test_regression_paper_sources_restore_loss_can_hard_fail(tmp_path: Path) -> None:
+    base = _minimal_review(
+        {
+            "post_compact_paper_sources_restored_total": 7,
+            "compaction_event_count": 7,
+            "missing_span_count": 0,
+        }
+    )
+    cand = _minimal_review(
+        {
+            "post_compact_paper_sources_restored_total": 0,
+            "compaction_event_count": 8,
+            "missing_span_count": 0,
+        }
+    )
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--paper-sources-restored-fail-on-loss",
+            "--warn-on",
+            "latency_p95_increase",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert payload["status"] == "fail"
+    assert any("post_compact_paper_sources_restored_total" in x for x in payload["fail_reasons"])
+
+
 def test_regression_subagent_lifecycle_missing_increase_fail_policy(tmp_path: Path) -> None:
     base = _minimal_review({"subagent_lifecycle_missing_count": 0, "missing_span_count": 0})
     cand = _minimal_review({"subagent_lifecycle_missing_count": 2, "missing_span_count": 0})
@@ -596,18 +838,12 @@ def test_regression_subagent_lifecycle_missing_increase_fail_policy(tmp_path: Pa
     )
     assert r.returncode == 1
     payload = json.loads(out_j.read_text())
-    assert any(
-        "subagent_lifecycle_missing_increase" in x for x in payload["fail_reasons"]
-    )
+    assert any("subagent_lifecycle_missing_increase" in x for x in payload["fail_reasons"])
 
 
 def test_regression_min_live_trust_signal_delta_fail(tmp_path: Path) -> None:
-    base = _minimal_review(
-        {"live_trust_signal_avg": 0.9, "missing_span_count": 0}
-    )
-    cand = _minimal_review(
-        {"live_trust_signal_avg": 0.5, "missing_span_count": 0}
-    )
+    base = _minimal_review({"live_trust_signal_avg": 0.9, "missing_span_count": 0})
+    cand = _minimal_review({"live_trust_signal_avg": 0.5, "missing_span_count": 0})
     b = tmp_path / "b.json"
     c = tmp_path / "c.json"
     b.write_text(json.dumps(base), encoding="utf-8")
