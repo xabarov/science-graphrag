@@ -1,0 +1,755 @@
+{
+  "review_version": "agent-v3-quality-judge-v1",
+  "family": "agent_v3_quality_judge",
+  "tier": "llm_calibration_window",
+  "case_ids": [
+    "mini_workspace_stats_01",
+    "mini_catalog_resolution_01",
+    "mini_quote_evidence_01",
+    "mini_dual_evidence_compare_01",
+    "mini_relation_tracing_01",
+    "mini_open_research_01",
+    "mini_workspace_stats_02",
+    "mini_catalog_resolution_02",
+    "pilot_catalog_extra_01",
+    "pilot_relation_extra_01"
+  ],
+  "window_date": "2026-05-13",
+  "runs": 3,
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true,
+    "logical_family_id": "agent_v3_quality_judge_v1",
+    "benchmark_family_short": "agent_v3_quality_judge",
+    "tier": "llm_calibration_window",
+    "calibration_window_runs": 3,
+    "calibration_window_date": "2026-05-13",
+    "case_ids": [
+      "mini_workspace_stats_01",
+      "mini_catalog_resolution_01",
+      "mini_quote_evidence_01",
+      "mini_dual_evidence_compare_01",
+      "mini_relation_tracing_01",
+      "mini_open_research_01",
+      "mini_workspace_stats_02",
+      "mini_catalog_resolution_02",
+      "pilot_catalog_extra_01",
+      "pilot_relation_extra_01"
+    ],
+    "baseline_runtime": "langgraph_research_v1",
+    "candidate_runtime": "langgraph_supervisor_v3",
+    "transport": "subprocess",
+    "mock_agent": false,
+    "judge_prompt_version": "judge_prompt_v1",
+    "judge_prompt_sha256": "sha256-20:5b68007c9ae3d6801673",
+    "judge_llm_model": "qwen/qwen3-235b-a22b-2507",
+    "llm_rubric": true,
+    "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673"
+  },
+  "runs_detail": [
+    {
+      "run_index": 1,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true,
+        "logical_family_id": "agent_v3_quality_judge_v1",
+        "benchmark_family_short": "agent_v3_quality_judge",
+        "tier": "llm_calibration_window",
+        "calibration_window_run_index": 1,
+        "calibration_window_runs_total": 3,
+        "baseline_runtime": "langgraph_research_v1",
+        "candidate_runtime": "langgraph_supervisor_v3",
+        "transport": "subprocess",
+        "mock_agent": false,
+        "judge_prompt_version": "judge_prompt_v1",
+        "judge_prompt_sha256": "sha256-20:5b68007c9ae3d6801673",
+        "judge_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "llm_rubric": true,
+        "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673"
+      },
+      "agreement_winner_rate": 0.4,
+      "agreement": [
+        {
+          "case_id": "mini_workspace_stats_01",
+          "heuristic_winner": "tie",
+          "llm_winner": "candidate",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_catalog_resolution_01",
+          "heuristic_winner": "tie",
+          "llm_winner": "tie",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_quote_evidence_01",
+          "heuristic_winner": "baseline",
+          "llm_winner": "tie",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_dual_evidence_compare_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "candidate",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_relation_tracing_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_open_research_01",
+          "heuristic_winner": "tie",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_workspace_stats_02",
+          "heuristic_winner": "baseline",
+          "llm_winner": "baseline",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_catalog_resolution_02",
+          "heuristic_winner": "tie",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "pilot_catalog_extra_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": false
+        },
+        {
+          "case_id": "pilot_relation_extra_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "candidate",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        }
+      ],
+      "summary_heuristic": {
+        "case_count": 10,
+        "mean_weighted_score_baseline": 4.0,
+        "mean_weighted_score_candidate": 4.0,
+        "mean_delta": 0.0,
+        "pairwise_candidate_win_rate": 0.4,
+        "pairwise_baseline_win_rate": 0.2,
+        "pairwise_tie_rate": 0.4,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 0,
+        "family_breakdown": {
+          "workspace_stats": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 1
+          },
+          "catalog_resolution": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 2
+          },
+          "quote_evidence": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "dual_evidence_compare": {
+            "candidate_wins": 2,
+            "baseline_wins": 0,
+            "ties": 0
+          },
+          "relation_tracing": {
+            "candidate_wins": 2,
+            "baseline_wins": 0,
+            "ties": 0
+          },
+          "open_research": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          }
+        },
+        "all_passed": true,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 10
+        },
+        "candidate_status_counts": {
+          "ok": 10
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
+      },
+      "summary_llm_judge": {
+        "case_count": 10,
+        "mean_weighted_score_baseline": 5.765,
+        "mean_weighted_score_candidate": 5.22,
+        "mean_delta": -0.545,
+        "pairwise_candidate_win_rate": 0.3,
+        "pairwise_baseline_win_rate": 0.5,
+        "pairwise_tie_rate": 0.2,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 1,
+        "family_breakdown": {
+          "workspace_stats": {
+            "candidate_wins": 1,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "catalog_resolution": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 1
+          },
+          "quote_evidence": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "dual_evidence_compare": {
+            "candidate_wins": 1,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "relation_tracing": {
+            "candidate_wins": 1,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "open_research": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 0
+          }
+        },
+        "all_passed": false,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 10
+        },
+        "candidate_status_counts": {
+          "ok": 10
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
+      }
+    },
+    {
+      "run_index": 2,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true,
+        "logical_family_id": "agent_v3_quality_judge_v1",
+        "benchmark_family_short": "agent_v3_quality_judge",
+        "tier": "llm_calibration_window",
+        "calibration_window_run_index": 2,
+        "calibration_window_runs_total": 3,
+        "baseline_runtime": "langgraph_research_v1",
+        "candidate_runtime": "langgraph_supervisor_v3",
+        "transport": "subprocess",
+        "mock_agent": false,
+        "judge_prompt_version": "judge_prompt_v1",
+        "judge_prompt_sha256": "sha256-20:5b68007c9ae3d6801673",
+        "judge_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "llm_rubric": true,
+        "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673"
+      },
+      "agreement_winner_rate": 0.6,
+      "agreement": [
+        {
+          "case_id": "mini_workspace_stats_01",
+          "heuristic_winner": "tie",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_catalog_resolution_01",
+          "heuristic_winner": "tie",
+          "llm_winner": "tie",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_quote_evidence_01",
+          "heuristic_winner": "baseline",
+          "llm_winner": "baseline",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_dual_evidence_compare_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": false
+        },
+        {
+          "case_id": "mini_relation_tracing_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "candidate",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_open_research_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "candidate",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_workspace_stats_02",
+          "heuristic_winner": "tie",
+          "llm_winner": "tie",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_catalog_resolution_02",
+          "heuristic_winner": "candidate",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "pilot_catalog_extra_01",
+          "heuristic_winner": "baseline",
+          "llm_winner": "baseline",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": false
+        },
+        {
+          "case_id": "pilot_relation_extra_01",
+          "heuristic_winner": "baseline",
+          "llm_winner": "candidate",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        }
+      ],
+      "summary_heuristic": {
+        "case_count": 10,
+        "mean_weighted_score_baseline": 4.0,
+        "mean_weighted_score_candidate": 4.0,
+        "mean_delta": 0.0,
+        "pairwise_candidate_win_rate": 0.4,
+        "pairwise_baseline_win_rate": 0.3,
+        "pairwise_tie_rate": 0.3,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 0,
+        "family_breakdown": {
+          "workspace_stats": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 2
+          },
+          "catalog_resolution": {
+            "candidate_wins": 1,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "quote_evidence": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "dual_evidence_compare": {
+            "candidate_wins": 1,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "relation_tracing": {
+            "candidate_wins": 1,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "open_research": {
+            "candidate_wins": 1,
+            "baseline_wins": 0,
+            "ties": 0
+          }
+        },
+        "all_passed": true,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 10
+        },
+        "candidate_status_counts": {
+          "ok": 10
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
+      },
+      "summary_llm_judge": {
+        "case_count": 10,
+        "mean_weighted_score_baseline": 5.625,
+        "mean_weighted_score_candidate": 4.73,
+        "mean_delta": -0.895,
+        "pairwise_candidate_win_rate": 0.3,
+        "pairwise_baseline_win_rate": 0.5,
+        "pairwise_tie_rate": 0.2,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 5,
+        "family_breakdown": {
+          "workspace_stats": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 1
+          },
+          "catalog_resolution": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 1
+          },
+          "quote_evidence": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "dual_evidence_compare": {
+            "candidate_wins": 0,
+            "baseline_wins": 2,
+            "ties": 0
+          },
+          "relation_tracing": {
+            "candidate_wins": 2,
+            "baseline_wins": 0,
+            "ties": 0
+          },
+          "open_research": {
+            "candidate_wins": 1,
+            "baseline_wins": 0,
+            "ties": 0
+          }
+        },
+        "all_passed": false,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 10
+        },
+        "candidate_status_counts": {
+          "ok": 10
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
+      }
+    },
+    {
+      "run_index": 3,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true,
+        "logical_family_id": "agent_v3_quality_judge_v1",
+        "benchmark_family_short": "agent_v3_quality_judge",
+        "tier": "llm_calibration_window",
+        "calibration_window_run_index": 3,
+        "calibration_window_runs_total": 3,
+        "baseline_runtime": "langgraph_research_v1",
+        "candidate_runtime": "langgraph_supervisor_v3",
+        "transport": "subprocess",
+        "mock_agent": false,
+        "judge_prompt_version": "judge_prompt_v1",
+        "judge_prompt_sha256": "sha256-20:5b68007c9ae3d6801673",
+        "judge_llm_model": "qwen/qwen3-235b-a22b-2507",
+        "llm_rubric": true,
+        "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673"
+      },
+      "agreement_winner_rate": 0.3,
+      "agreement": [
+        {
+          "case_id": "mini_workspace_stats_01",
+          "heuristic_winner": "baseline",
+          "llm_winner": "candidate",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_catalog_resolution_01",
+          "heuristic_winner": "tie",
+          "llm_winner": "tie",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_quote_evidence_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "tie",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_dual_evidence_compare_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_relation_tracing_01",
+          "heuristic_winner": "tie",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_open_research_01",
+          "heuristic_winner": "tie",
+          "llm_winner": "baseline",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_workspace_stats_02",
+          "heuristic_winner": "tie",
+          "llm_winner": "tie",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "mini_catalog_resolution_02",
+          "heuristic_winner": "baseline",
+          "llm_winner": "candidate",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "pilot_catalog_extra_01",
+          "heuristic_winner": "candidate",
+          "llm_winner": "candidate",
+          "winner_match": true,
+          "heuristic_passed": true,
+          "llm_passed": true
+        },
+        {
+          "case_id": "pilot_relation_extra_01",
+          "heuristic_winner": "baseline",
+          "llm_winner": "candidate",
+          "winner_match": false,
+          "heuristic_passed": true,
+          "llm_passed": true
+        }
+      ],
+      "summary_heuristic": {
+        "case_count": 10,
+        "mean_weighted_score_baseline": 4.0,
+        "mean_weighted_score_candidate": 4.0,
+        "mean_delta": 0.0,
+        "pairwise_candidate_win_rate": 0.3,
+        "pairwise_baseline_win_rate": 0.3,
+        "pairwise_tie_rate": 0.4,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 0,
+        "family_breakdown": {
+          "workspace_stats": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 1
+          },
+          "catalog_resolution": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 1
+          },
+          "quote_evidence": {
+            "candidate_wins": 1,
+            "baseline_wins": 0,
+            "ties": 0
+          },
+          "dual_evidence_compare": {
+            "candidate_wins": 2,
+            "baseline_wins": 0,
+            "ties": 0
+          },
+          "relation_tracing": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 1
+          },
+          "open_research": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          }
+        },
+        "all_passed": true,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 10
+        },
+        "candidate_status_counts": {
+          "ok": 10
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
+      },
+      "summary_llm_judge": {
+        "case_count": 10,
+        "mean_weighted_score_baseline": 5.395,
+        "mean_weighted_score_candidate": 5.335,
+        "mean_delta": -0.06,
+        "pairwise_candidate_win_rate": 0.4,
+        "pairwise_baseline_win_rate": 0.3,
+        "pairwise_tie_rate": 0.3,
+        "hard_fail_count_baseline": 0,
+        "hard_fail_count_candidate": 0,
+        "family_breakdown": {
+          "workspace_stats": {
+            "candidate_wins": 1,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "catalog_resolution": {
+            "candidate_wins": 1,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "quote_evidence": {
+            "candidate_wins": 0,
+            "baseline_wins": 0,
+            "ties": 1
+          },
+          "dual_evidence_compare": {
+            "candidate_wins": 1,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "relation_tracing": {
+            "candidate_wins": 1,
+            "baseline_wins": 1,
+            "ties": 0
+          },
+          "open_research": {
+            "candidate_wins": 0,
+            "baseline_wins": 1,
+            "ties": 0
+          }
+        },
+        "all_passed": true,
+        "branch_outcome_schema": "branch_outcome_v1",
+        "cases_with_any_branch_non_ok": 0,
+        "baseline_status_counts": {
+          "ok": 10
+        },
+        "candidate_status_counts": {
+          "ok": 10
+        },
+        "error_kind_counts": {},
+        "baseline_timeout_cases": [],
+        "candidate_timeout_cases": [],
+        "baseline_error_cases": [],
+        "candidate_error_cases": []
+      }
+    }
+  ],
+  "agreement_winner_rate_by_run": [
+    0.4,
+    0.6,
+    0.3
+  ],
+  "agreement_winner_rate_min": 0.3,
+  "strict_agreement_threshold": 0.7,
+  "strict_agreement_ok": false,
+  "disagreement_cases_any_run": [
+    "mini_catalog_resolution_02",
+    "mini_dual_evidence_compare_01",
+    "mini_open_research_01",
+    "mini_quote_evidence_01",
+    "mini_relation_tracing_01",
+    "mini_workspace_stats_01",
+    "pilot_catalog_extra_01",
+    "pilot_relation_extra_01"
+  ],
+  "variance": {
+    "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673",
+    "mean_delta_by_run": [
+      -0.545,
+      -0.895,
+      -0.06
+    ],
+    "mean_delta_min": -0.895,
+    "mean_delta_max": -0.06,
+    "mean_delta_spread": 0.835,
+    "spread_threshold_max": 0.15,
+    "mean_delta_runs_expected": 3,
+    "mean_delta_runs_observed": 3,
+    "ok": false,
+    "generated_at_utc": "2026-05-12T08:54:41.933733+00:00"
+  }
+}

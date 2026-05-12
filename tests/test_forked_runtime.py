@@ -55,6 +55,29 @@ def test_cache_read_ratio_none_when_no_cache_fields() -> None:
     assert _cache_read_ratio(cr, cc) is None
 
 
+def test_cache_read_ratio_explicit_zero_when_provider_reports_zero_read() -> None:
+    """OpenRouter may emit ``cache_read_input_tokens: 0`` without creation; ratio must be non-null."""
+    assert _cache_read_ratio(0, None) == 0.0
+    assert _cache_read_ratio(None, 0) == 0.0
+    assert _cache_read_ratio(0, 0) == 0.0
+
+
+def test_cache_tokens_from_ai_message_zero_read_openrouter_shaped() -> None:
+    msg = AIMessage(
+        content="ok",
+        usage_metadata={
+            "input_tokens": 500,
+            "output_tokens": 30,
+            "total_tokens": 530,
+            "cache_read_input_tokens": 0,
+        },
+    )
+    cr, cc = _cache_tokens_from_ai_message(msg)
+    assert cr == 0
+    assert cc is None
+    assert _cache_read_ratio(cr, cc) == 0.0
+
+
 def test_run_side_llm_chat_non_ai_message_marks_not_forked() -> None:
     settings = Settings()
     with patch(

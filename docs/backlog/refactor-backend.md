@@ -126,11 +126,13 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Done (Wave E 2026-05-10, thin slice):** allowlisted `agent_supervisor_max_rounds` (2–32) via `runtime_overlay.build_non_secret_overrides`, snapshot section `agent_tools` separate from `llm`, `PATCH /v1/settings/agent_tools`; tests `tests/test_runtime_overlay.py`, `tests/test_settings_service.py`, `tests/test_api_smoke.py::test_settings_agent_tools_patch_smoke`.
 - **Raised:** 2026-05-07 — design: [`docs/analysis/agent-tools-admin-settings-proposal-2026-05-07.md`](../analysis/agent-tools-admin-settings-proposal-2026-05-07.md)
 
-### [OPEN] Normalize side-LLM cache telemetry for `tool_use_summary` E2 gate
+### [DONE] Normalize side-LLM cache telemetry for `tool_use_summary` E2 gate
 - **Area:** `science_graphrag/agent/{forked_runtime.py,tool_use_summary.py,debug_events_telemetry.py}`, `scripts/live_check/trace_review_schema.py`
-- **Issue:** Wave E live runs show `tool_use_summary_row_count_total > 0`, but `side_llm_cache_read_ratio_avg` stays `null` because provider returns `side_llm_cache_*` as null/0 for summary forks. E2 gate now reports `fail_missing_side_llm_cache_telemetry`, so ratio threshold (`>=0.4`) cannot be validated.
-- **Proposal:** make cache telemetry source explicit and stable for summary forks: (1) normalize provider usage metadata extraction in `forked_runtime`, (2) emit a dedicated `tool_use_summary_side_llm_cache_*` audit fragment in `run_metadata`, (3) keep acceptance gate strict (`missing telemetry` = fail) but document provider-specific fallback policy.
-- **Acceptance:** at least one live acceptance artifact has both `tool_use_summary_row_count_total > 0` and non-null `side_llm_cache_read_ratio_avg`; `§10.2_side_llm_cache_read_ratio` is no longer `skipped_*`/`fail_missing_*` on that run.
+- **Issue:** Wave E live runs show `tool_use_summary_row_count_total > 0`, but `side_llm_cache_read_ratio_avg` stayed `null` when the provider reported `cache_read_input_tokens: 0` without creation fields — `_cache_read_ratio` returned `None`, so §10.2 surfaced `fail_missing_side_llm_cache_telemetry` instead of an explicit low-cache verdict.
+- **Proposal:** normalize token-derived ratio when at least one of read/create is present; mirror logic in trace-review merge and debug-event aggregation.
+- **Acceptance:** non-null `side_llm_cache_read_ratio_avg` when summary rows include explicit zero read tokens; §10.2 uses `fail_below_0_4_*` when ratio is numeric `< 0.4`, not `fail_missing_*` for that shape.
+- **Done (pre-F 2026-05-12):** `forked_runtime._cache_read_ratio` returns `0.0` for explicit zero-cache accounting; `trace_review_schema._tool_use_summary_audit_from_specialist_results_v3` and `debug_events_telemetry._accum_tool_use_summary_batch` derive ratio from token fields when `side_llm_cache_read_ratio` is absent; tests `tests/test_forked_runtime.py`, `tests/agent/test_debug_events_telemetry.py`, `tests/scripts/live_check/test_trace_review_schema.py`.
+- **Remaining (product / operator):** default-on for `agent_tool_use_summary_enabled` still needs a live run with `side_llm_cache_read_ratio_avg >= 0.4` or a documented policy exception — see [`pre-f-closure-readiness-2026-05-12.md`](../analysis/pre-f-closure-readiness-2026-05-12.md).
 - **Raised:** 2026-05-12 (Wave E closeout follow-up)
 
 ### [DONE] Split permission / validation phase out of `build_tool_execution_node` inner closure

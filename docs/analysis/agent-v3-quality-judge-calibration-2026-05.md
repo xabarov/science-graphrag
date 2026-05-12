@@ -2,6 +2,8 @@
 
 **Статус документа (2026-05-10):** актуален; отражает закрытый в репозитории **инструментарий** Wave D; live acceptance — по [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §8.1.
 
+**Pre-F operator bundle (2026-05-12):** consolidated checklist + artifact index — [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md).
+
 This note complements Wave D in [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md).
 
 ## Calibration window (6–10 pilot cases, 3 runs)

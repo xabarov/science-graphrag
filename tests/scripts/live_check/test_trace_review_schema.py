@@ -132,6 +132,37 @@ def test_merge_e2e_extracts_tool_use_summary_row_count_from_specialist_results(
     assert m.side_llm_cache_read_ratio_avg == 0.5
 
 
+def test_merge_e2e_derives_side_llm_ratio_from_tokens_when_ratio_null(
+    schema_module,
+) -> None:
+    """Wave E2: provider may omit ratio but emit zero cache-read tokens."""
+    case = {
+        "case_id": "tus_tokens_only",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "specialist_results_v3": {
+                "legs": [
+                    {
+                        "tool_results": [
+                            {
+                                "_tool_use_summary_meta": {
+                                    "side_llm_cache_read_ratio": None,
+                                    "side_llm_cache_read_tokens": 0,
+                                    "side_llm_cache_creation_tokens": None,
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert tl[0].side_llm_cache_read_ratio == 0.0
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.side_llm_cache_read_ratio_avg == 0.0
+
+
 def test_merge_e2e_writer_oscillation_from_routing_log(schema_module) -> None:
     case = {
         "case_id": "osc",

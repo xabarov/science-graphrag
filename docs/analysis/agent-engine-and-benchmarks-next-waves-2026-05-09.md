@@ -47,7 +47,7 @@
 
 | ID | Тема | Приоритет | Ось |
 |----|------|-----------|-----|
-| **D1–D3** | **Wave D (judge calibration → promotion):** инструментарий и процесс **в репозитории закрыты** (см. §2 и строку выше в §1.2). **Остаётся операторски / для gate §8.1:** live calibration window с `agreement_winner_rate ≥ 0.7` на каждом из 3 прогонов (`--strict`), заполненный variance baseline после реальных окон, замена `baseline-agent-v3-quality-judge-pilot-embedded.json` на frozen LLM-judge pilot по commit при согласовании | P1 | benchmark |
+| **D1–D3** | **Wave D (judge calibration → promotion):** инструментарий в репозитории закрыт; **live окно 2026-05-13** зафиксировано в `eval/results/agent-v3-quality-judge-calibration-window-2026-05-13.{json,md}` + обновлён `agent-v3-quality-judge-variance-baseline.json` — **`strict_agreement_ok=false`**, spread **0.835** > 0.15, т.е. §8.1 **ещё не** закрыт (нужны промпт/модель/кейсы до `--strict`). Чеклист: [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md). | P1 | benchmark |
 | **E1** | Глубже декомпозировать heavy retrieval-ветки (`corpus_explore`, `research_plan` под supervisor) — calibration + live trace-review | P1 | engine |
 | **E2** | `tool_use_summary` для длинных батчей `ToolMessage` — стабилизация side-LLM cache, измерение `side_llm_cache_read_ratio_avg` | P1 | engine |
 | **E3** | `writer_agent` oscillation-risk live evidence + дожать backlog `[PARTIAL]` | P1 | engine |
@@ -124,10 +124,9 @@
 - сводный compare → `eval/results/agent-corpus-explore-research-plan-acceptance-<date>.{json,md}`;
 - follow-up evidence для churn: см. уже закрытый `[DONE] Reduce supervisor route churn before writer handoff`; новые прогоны дополняют картину по subagent-флагам.
 
-**Статус на 2026-05-12:** 🟡 **PARTIAL**
-- harness + rollout template готовы (`docs/runbooks/agent-trace-review-sop.md` §5.1, `wave-e-e1-rollout-decision-2026-05-10.md`);
-- есть live acceptance прогоны Wave E;
-- финальный операторский `off vs on` compare под `agent-corpus-explore-research-plan-acceptance-<date>.*` и решение `default-on / keep gated` ещё не зафиксированы отдельным артефактом.
+**Статус на 2026-05-13:** ✅ **Live paired + compare (keep gated)**
+- артефакты: `eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-{baseline,candidate}.{json,md}`, `eval/results/trace-regression-wave-e-2026-05-13-e1.{json,md}`;
+- итог: **keep gated** — `latency_p95_ms` 43865 → 69112 при включённых subagent+summary (регрессия по p95, compare `pass` с warn); см. [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md).
 
 ### 3.2 E2: tool_use_summary maturity
 
@@ -145,10 +144,11 @@
 - `trace_regression_compare.py --min-side-llm-cache-read-ratio 0.4` зелёный на acceptance suite;
 - если ratio < 0.4 — feature flag `agent_tool_use_summary_enabled` остаётся **off** до устранения причины.
 
-**Статус на 2026-05-12:** 🟡 **PARTIAL**
+**Статус на 2026-05-12:** 🟡 **PARTIAL (telemetry closure, product gate open)**
 - done: cache-safe regression tests + telemetry merge improvements (`debug_events` full aggregation, `specialist_results_v3` fallback extraction в `trace_review_schema`);
 - done: live acceptance показывает `tool_use_summary_row_count_total > 0` (summary реально применялся);
-- blocker: provider-side cache telemetry для summary fork остаётся пустой (`side_llm_cache_read_ratio_avg = null`), gate §10.2 теперь явно фиксируется как `fail_missing_side_llm_cache_telemetry`.
+- done (code): нормализация ratio при явных нулевых cache-read токенах без creation — `side_llm_cache_read_ratio_avg` больше не `null` **только из-за** `0`+`null` пары; gate §10.2 уходит в `fail_below_0_4_*`, если среднее &lt; 0.4 (см. [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md));
+- open (product): default-on `agent_tool_use_summary_enabled` по-прежнему требует live доказательства `>= 0.4` **или** политики «держим off».
 
 ### 3.3 E3: writer_agent oscillation closure
 
@@ -187,18 +187,13 @@
 
 ### 3.5 Что осталось закрыть до Wave F
 
-Перед переходом к F остаются хвосты не по коду, а по gate-доказательствам:
+Перед переходом к F остаются хвосты не по коду, а по gate-доказательствам (сводка: [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md)):
 
-1. **E1 decision artifact (обязательно):**
-   - провести и зафиксировать отдельный `off vs on` compare для `corpus_explore/research_plan`;
-   - заполнить `wave-e-e1-rollout-decision-2026-05-10.md` итогом (`default-on` / `keep gated` / `needs narrower routing`).
+1. **E1 decision artifact:** ✅ live **2026-05-13** — пара `agent-corpus-explore-research-plan-acceptance-2026-05-13-{baseline,candidate}.*` + [`trace-regression-wave-e-2026-05-13-e1.*`](../../eval/results/trace-regression-wave-e-2026-05-13-e1.md); итог **keep gated** (p95 latency) — [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md).
 
-2. **E2 cache-ratio evidence (обязательно):**
-   - получить non-null `side_llm_cache_read_ratio_avg` на live run с `tool_use_summary_row_count_total > 0`;
-   - доказать порог `>= 0.4` либо оставить flag off и закрыть issue как provider telemetry gap (см. `[OPEN] Normalize side-LLM cache telemetry for tool_use_summary E2 gate` в backend backlog).
+2. **E2 cache-ratio evidence:** на этом default-suite `tool_use_summary_row_count_total=0` — §10.2 остаётся `skipped_no_side_llm_rows`; отдельный heavy/E2 прогон для `>=0.4` всё ещё нужен.
 
-3. **Wave D promotion gate 8.1 (если идём в F с промоушном):**
-   - зафиксировать 3 стабильных `judge_pilot` прогона и variance-range (F2) в артефактах promotion review.
+3. **Wave D promotion gate 8.1:** ✅ live calibration window **2026-05-13** (`eval/results/agent-v3-quality-judge-calibration-window-2026-05-13.*`, variance baseline обновлён); **строгие** пороги agreement/variance **не** пройдены — см. [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md) § Live run log.
 
 ---
 
@@ -370,8 +365,8 @@ Wave H ставится **после** D / E / G — нет смысла дви�
 
 ### 8.2 Gate «engine baseline стабилен после Wave E»
 
-- E1 default-on флаги без degradation `latency_p95_ms` и `tool_loop_repeat_max` (**pending final decision artifact**);
-- E2 cache ratio ≥ 0.4 (**pending: telemetry gap on summary forks, gate currently cannot be proven**);
+- E1: live paired **2026-05-13** — [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md); итог **keep gated** (p95); default-on не доказан.
+- E2 cache ratio: non-null telemetry при `tool_use_summary_row_count_total > 0` (**код**); порог `>= 0.4` для default-on — **операторски** (см. [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md)).
 - E3 writer oscillation closure done (**done**);
 - backlog `[PARTIAL] Simplify writer_agent into terminal synthesis seam` → `[DONE]` (**done**).
 
@@ -403,4 +398,5 @@ Wave H ставится **после** D / E / G — нет смысла дви�
 | Backlog (`[OPEN]` / `[PARTIAL]`) | [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md) |
 | Settings policy | [`../../.cursor/rules/constants-and-settings-policy.mdc`](../../.cursor/rules/constants-and-settings-policy.mdc) |
 | Long-running ops policy | [`../../.cursor/rules/long-running-ops.mdc`](../../.cursor/rules/long-running-ops.mdc) |
-| Habr export article (downstream consumer) | [`../report/export/habr_scigraph.md`](../report/export/habr_scigraph.md) |
+| Pre-F closure readiness (2026-05-12) | [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md) |
+| Pre-F Wave D operator evidence | [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md) |

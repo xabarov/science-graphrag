@@ -168,12 +168,18 @@ def _accum_tool_use_summary_batch(ev: dict[str, Any], acc: _TelemetryAccum) -> N
             continue
         read_t = row.get("side_llm_cache_read_tokens")
         create_t = row.get("side_llm_cache_creation_tokens")
-        if isinstance(read_t, (int, float)) and isinstance(create_t, (int, float)):
-            denom = float(read_t) + float(create_t)
-            if denom > 0:
-                acc.tool_use_summary_side_llm_cache_read_ratios.append(
-                    round(float(read_t) / denom, 4)
-                )
+        if read_t is None and create_t is None:
+            continue
+        try:
+            rr = int(read_t) if read_t is not None else 0
+            cc = int(create_t) if create_t is not None else 0
+        except (TypeError, ValueError):
+            continue
+        denom = float(rr) + float(cc)
+        if denom > 0:
+            acc.tool_use_summary_side_llm_cache_read_ratios.append(round(rr / denom, 4))
+        else:
+            acc.tool_use_summary_side_llm_cache_read_ratios.append(0.0)
 
 
 _EVENT_HANDLERS: dict[str, Callable[[dict[str, Any], _TelemetryAccum], None]] = {

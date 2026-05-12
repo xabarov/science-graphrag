@@ -106,14 +106,20 @@ def _cache_tokens_from_ai_message(msg: AIMessage) -> tuple[int | None, int | Non
 
 
 def _cache_read_ratio(cache_read: int | None, cache_creation: int | None) -> float | None:
+    """Share of cache-read vs (read+creation) token accounting.
+
+    When the provider reports explicit zeros (e.g. ``cache_read_input_tokens: 0`` with no
+    creation field), treat as **0.0** so trace-review can aggregate non-null ratios instead
+    of ``fail_missing_side_llm_cache_telemetry``. Unknown = both sides absent.
+    """
     if cache_read is None and cache_creation is None:
         return None
     r = int(cache_read or 0)
     c = int(cache_creation or 0)
     denom = r + c
-    if denom <= 0:
-        return None
-    return round(r / denom, 4)
+    if denom > 0:
+        return round(r / denom, 4)
+    return 0.0
 
 
 @dataclass(frozen=True, slots=True)

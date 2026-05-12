@@ -318,10 +318,20 @@ def _tool_use_summary_audit_from_specialist_results_v3(
                 else:
                     rt = meta.get("side_llm_cache_read_tokens")
                     ct = meta.get("side_llm_cache_creation_tokens")
-                    if isinstance(rt, (int, float)) and isinstance(ct, (int, float)):
-                        denom = float(rt) + float(ct)
-                        if denom > 0:
-                            ratios.append(round(float(rt) / denom, 4))
+                    if rt is None and ct is None:
+                        pass
+                    else:
+                        try:
+                            rr = int(rt) if rt is not None else 0
+                            cc = int(ct) if ct is not None else 0
+                        except (TypeError, ValueError):
+                            pass
+                        else:
+                            denom = float(rr) + float(cc)
+                            if denom > 0:
+                                ratios.append(round(float(rr) / denom, 4))
+                            else:
+                                ratios.append(0.0)
             for v in obj.values():
                 walk(v)
             return

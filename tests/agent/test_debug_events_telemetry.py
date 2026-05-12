@@ -86,3 +86,21 @@ def test_tool_use_summary_batch_emits_side_llm_cache_ratio_avg() -> None:
     assert tel.get("tool_use_summary_batch_count") == 1
     assert tel.get("tool_use_summary_row_count") == 2
     assert tel.get("tool_use_summary_side_llm_cache_read_ratio_avg") == 0.4
+
+
+def test_tool_use_summary_batch_zero_read_tokens_yields_ratio_zero() -> None:
+    """Rows with explicit ``side_llm_cache_read_tokens: 0`` and no ratio still roll up."""
+    evs = [
+        {
+            "type": "tool_use_summary_batch",
+            "count": 1,
+            "rows": [
+                {
+                    "side_llm_cache_read_tokens": 0,
+                    "compression_ratio_vs_original": 2.0,
+                },
+            ],
+        }
+    ]
+    tel = extract_runtime_telemetry_from_debug_events(evs)
+    assert tel.get("tool_use_summary_side_llm_cache_read_ratio_avg") == 0.0

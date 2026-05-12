@@ -1,48 +1,52 @@
 # Wave E — E1 rollout decision (`corpus_explore` / `research_plan`)
 
-**Status:** operator checklist (live evidence).  
+**Status:** live paired run **2026-05-13**. **Outcome: keep gated.**  
 **Harness:** [`docs/runbooks/agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) §5.1.
 
 ## Preconditions
 
-- Same `agent_trace_review.py` suite, profile, `--base-url`, workspace, and subprocess transport for both runs.
-- Preflight per SOP §1 (keys, HTTP smoke, readiness).
+- Stack: `docker compose -f docker-compose.dev.yml` (api healthy on `http://127.0.0.1:18787`).
+- Compose passes through `SCIENCE_GRAPHRAG_AGENT_CORPUS_EXPLORE_ENABLED`, `SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_SUBAGENT_ENABLED`, `SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED` (see `docker-compose.dev.yml`); recreate `api` between baseline and candidate so the **server** sees the intended flags.
 
-## Runs
+## Live artifacts (2026-05-13)
 
-1. **Baseline (flags off):** profile A in SOP §5.1 → write  
-   `eval/results/agent-corpus-explore-research-plan-acceptance-<date>-baseline.{json,md}`.
-2. **Candidate (flags on):** profile B → write  
-   `eval/results/agent-corpus-explore-research-plan-acceptance-<date>-candidate.{json,md}`.
+| Role | JSON | MD |
+|------|------|-----|
+| Baseline (profile A: flags 0/0/0) | [`eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-baseline.json`](../../eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-baseline.json) | [`.md`](../../eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-baseline.md) |
+| Candidate (profile B: flags 1/1/1) | [`eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-candidate.json`](../../eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-candidate.json) | [`.md`](../../eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-candidate.md) |
+| Regression compare | [`eval/results/trace-regression-wave-e-2026-05-13-e1.json`](../../eval/results/trace-regression-wave-e-2026-05-13-e1.json) | [`.md`](../../eval/results/trace-regression-wave-e-2026-05-13-e1.md) |
 
-## Compare
+Command used (warn-only on latency delta; hard fail on spans/tool_error/final_answer):
 
 ```bash
 .venv/bin/python scripts/live_check/trace_regression_compare.py \
-  --baseline eval/results/agent-corpus-explore-research-plan-acceptance-DATE-baseline.json \
-  --candidate eval/results/agent-corpus-explore-research-plan-acceptance-DATE-candidate.json \
-  --out-json eval/results/trace-regression-wave-e-DATE-e1.json \
-  --out-md eval/results/trace-regression-wave-e-DATE-e1.md \
-  --fail-on new_missing_spans,tool_error_increase,final_answer_missing_increase
+  --baseline eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-baseline.json \
+  --candidate eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-candidate.json \
+  --out-json eval/results/trace-regression-wave-e-2026-05-13-e1.json \
+  --out-md eval/results/trace-regression-wave-e-2026-05-13-e1.md \
+  --fail-on new_missing_spans,tool_error_increase,final_answer_missing_increase \
+  --warn-on latency_p95_increase \
+  --warn-is-pass
 ```
 
-Add `--warn-on latency_p95_increase` if latency drift should not hard-fail the first pass.
+**Regression:** `pass` (hard deltas clean); **warn:** `latency_p95_increase: 43865 → 69112` ms (+25247 ms delta).
 
-## Decision matrix (fill in after runs)
+## Decision matrix (rollup metrics)
 
 | Criterion | Baseline | Candidate | OK? |
 |-----------|----------|-----------|-----|
-| `tool_loop_repeat_max` | | | ≤ 3 |
-| `latency_p95_ms` | | | no worse than baseline ceiling |
-| `subagent_lifecycle_missing_count` | | | no increase vs baseline |
-| Child warnings (`corpus_explore_child_*`, `research_plan_child_*`) | | | acceptable rate |
+| `tool_loop_repeat_max` | 2 | 2 | yes (≤ 3) |
+| `latency_p95_ms` | 43865 | 69112 | **no** vs non-regression intent (large p95 increase) |
+| `subagent_lifecycle_missing_count` | 0 | 0 | yes |
+| `subagent_task_notification_count_avg` | 2.0 | 2.0 | no regression |
+| `tool_use_summary_row_count_total` | 0 | 0 | default suite did not hit summary threshold; E2 not exercised here |
 
-**Outcome (check one after evidence):**
+**Outcome:**
 
-- [ ] **default-on** — candidate meets all rows; ship flags as default in target environment.
-- [ ] **keep gated** — mixed benefit; leave env default off, enable via operator/env for specific workspaces.
-- [ ] **needs narrower routing** — helps only a narrow class; follow-up supervisor policy before wider rollout.
+- [ ] **default-on** — rejected: latency p95 regression under candidate flags on this suite/workspace.
+- [x] **keep gated** — ship subagent + summary opt-in via compose/env; do not flip repo defaults to forced-on for all dev stacks without a narrower routing story or cheaper subagent path.
+- [ ] **needs narrower routing** — optional follow-up if we want corpus_explore only on specific answer classes (not decided in this run).
 
-**Recorded by:** _________________ **Date:** _________________
+**Recorded by:** live automation (Cursor agent) **Date:** 2026-05-13
 
-**Artifact links:** baseline JSON/MD, candidate JSON/MD, regression JSON/MD.
+**API restore:** after the candidate run, `api` was recreated with `CORPUS_EXPLORE=0`, `RESEARCH_PLAN=0`, `TOOL_USE_SUMMARY=0` again for a neutral dev default.
