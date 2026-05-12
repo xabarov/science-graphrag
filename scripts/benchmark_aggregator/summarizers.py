@@ -96,7 +96,9 @@ def summarize_reference(paths: tuple[str, ...], *, root: Path) -> dict[str, Any]
         if "document_id" in case and "metrics" in case and "snapshot" in case["metrics"]:
             passed = _contract_passed_graph(case)
             kind = "graph"
-        elif case.get("case_id", "").endswith("_semantic") or "methods" in (case.get("predicted") or {}):
+        elif case.get("case_id", "").endswith("_semantic") or "methods" in (
+            case.get("predicted") or {}
+        ):
             passed = _passed_layer2(case)
             kind = "layer2_semantic"
         else:
@@ -185,7 +187,9 @@ def summarize_retrieval_suite(rel: str, *, root: Path) -> dict[str, Any]:
         "summary": summary,
         "cases": cases,
         "failed_count": len(failed),
-        "failed_cases": [{"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed],
+        "failed_cases": [
+            {"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed
+        ],
         "all_passed": bool(summary.get("all_passed")),
     }
 
@@ -227,7 +231,9 @@ def summarize_case_metrics_suite(rel: str, *, root: Path) -> dict[str, Any]:
         "summary": summary,
         "cases": cases,
         "failed_count": len(failed),
-        "failed_cases": [{"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed],
+        "failed_cases": [
+            {"case_id": c.get("case_id"), "metrics": c.get("metrics")} for c in failed
+        ],
         "all_passed": bool(summary.get("all_passed")),
         "mean_claim_recall": mean_claim_recall,
     }
@@ -240,7 +246,9 @@ def summarize_multihop_mini_suite(rel: str, *, root: Path) -> dict[str, Any]:
     results_dir = root / "eval" / "results"
     if not results_dir.is_dir():
         return base
-    skips = sorted(results_dir.glob("multihop-skipped-*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    skips = sorted(
+        results_dir.glob("multihop-skipped-*.json"), key=lambda p: p.stat().st_mtime, reverse=True
+    )
     if not skips:
         return base
     skip_path = skips[0]
@@ -301,10 +309,14 @@ def summarize_agent_v3_quality_judge_suite(rel: str, *, root: Path) -> dict[str,
     rm["baseline_runtime"] = meta.get("baseline_runtime")
     rm["candidate_runtime"] = meta.get("candidate_runtime")
     rm["transport"] = meta.get("transport")
+    rm["seeds"] = meta.get("seeds")
+    rm["judge_llm_model"] = meta.get("judge_llm_model")
     base["run_metadata"] = rm
     base["mean_weighted_score_baseline"] = summary.get("mean_weighted_score_baseline")
     base["mean_weighted_score_candidate"] = summary.get("mean_weighted_score_candidate")
     base["mean_delta"] = summary.get("mean_delta")
+    base["cost_delta"] = summary.get("cost_delta")
+    base["multiseed"] = summary.get("multiseed")
     base["cases_with_any_branch_non_ok"] = summary.get("cases_with_any_branch_non_ok")
     base["branch_outcome_schema"] = summary.get("branch_outcome_schema")
     return base
@@ -375,7 +387,9 @@ def compare_layer2_failures(baseline_rel: str, current_rel: str, *, root: Path) 
     }
 
 
-def supplementary_retests(*, root: Path, supplementary_paths: tuple[str, ...]) -> list[dict[str, Any]]:
+def supplementary_retests(
+    *, root: Path, supplementary_paths: tuple[str, ...]
+) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for rel in supplementary_paths:
         p = root / rel
@@ -422,14 +436,24 @@ def finalize_family_trust(
         ws = family.get("workspace_scoped")
         if isinstance(live, dict) and isinstance(ws, dict) and live.get("error") != "missing_file":
             cases_live = _cases_from_block(live)
-            if detect_runtime_mode("workspace_scoped_live", live, cases_live) not in PHANTOM_RUNTIME_MODES:
+            if (
+                detect_runtime_mode("workspace_scoped_live", live, cases_live)
+                not in PHANTOM_RUNTIME_MODES
+            ):
                 ws["_workspace_scoped_delegated_to_live"] = True
 
         hab_live = family.get("hybrid_ablation_live")
         hab = family.get("hybrid_ablation")
-        if isinstance(hab_live, dict) and isinstance(hab, dict) and hab_live.get("error") != "missing_file":
+        if (
+            isinstance(hab_live, dict)
+            and isinstance(hab, dict)
+            and hab_live.get("error") != "missing_file"
+        ):
             cases_h = _cases_from_block(hab_live)
-            if detect_runtime_mode("hybrid_ablation_live", hab_live, cases_h) not in PHANTOM_RUNTIME_MODES:
+            if (
+                detect_runtime_mode("hybrid_ablation_live", hab_live, cases_h)
+                not in PHANTOM_RUNTIME_MODES
+            ):
                 summ = hab_live.get("summary") if isinstance(hab_live.get("summary"), dict) else {}
                 if bool(summ.get("all_passed")):
                     hab["_hybrid_ablation_delegated_to_live"] = True

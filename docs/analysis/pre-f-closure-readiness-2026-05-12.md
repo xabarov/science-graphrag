@@ -16,7 +16,7 @@ Cross-links: wave plan [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](
 |------|---------|
 | **§8.1 (Wave D)** | Window JSON exists; **`--strict` would fail** (`agreement_winner_rate` min **0.3**, `mean_delta_spread` **0.835**). Next: prompt/case/model iteration or accept advisory-only until green strict + frozen pilot `<sha>`. |
 | **§8.2 E1** | Paired run **done**; **default-on** blocked by **latency_p95** regression (warn in `trace-regression-wave-e-2026-05-13-e1.md`). |
-| **§8.2 E2 product** | This suite did not trigger summaries (`tool_use_summary_row_count_total=0`); run tool-heavy acceptance or keep summary off for default dev. |
+| **§8.2 E2 product** | Heavy live run `trace-review-wave-e-e2-tool-summary-acceptance-2026-05-13-v5.json` now triggers summaries (`tool_use_summary_row_count_total=28`), but ratio gate fails: `side_llm_cache_read_ratio_avg=0.1 < 0.4`; keep summary off/gated until cache hit ratio is improved. |
 
 ## Risk carried into Wave F
 

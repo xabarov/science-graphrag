@@ -1,0 +1,11 @@
+{
+  "schema_version": "agent_v3_quality_case_v1",
+  "family": "quote_evidence_grounding",
+  "workspace_id": "ws-pilot-od",
+  "tags": ["quotes", "claim_grounding"],
+  "requires_quotes": true,
+  "requires_compare_structure": false,
+  "requires_relation_reasoning": false,
+  "forbidden_fail_modes": ["final_answer_missing", "ignored_requested_quote_or_evidence"],
+  "notes": "Wave F3 slice: claims must map to quote evidence"
+}

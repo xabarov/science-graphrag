@@ -1,0 +1,11 @@
+{
+  "schema_version": "agent_v3_quality_case_v1",
+  "family": "multi_workspace_inspect",
+  "workspace_id": "ws-pilot-od",
+  "tags": ["routing", "multi_workspace"],
+  "requires_quotes": false,
+  "requires_compare_structure": true,
+  "requires_relation_reasoning": false,
+  "forbidden_fail_modes": ["final_answer_missing", "ignored_requested_compare"],
+  "notes": "Wave F3 slice2: stresses routing when multiple workspaces are mentioned"
+}

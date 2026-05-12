@@ -26,15 +26,17 @@ from eval.agent_v3_quality.case_loader import (
 )
 from eval.agent_v3_quality.contract import (
     BENCHMARK_FAMILY_SHORT,
+    JUDGE_MODEL_FAMILY_IDS,
     LOGICAL_FAMILY_ID,
     REVIEW_VERSION,
+    resolve_benchmark_judge_model,
 )
 from eval.agent_v3_quality.judge import (
     judge_meta,
     judge_prompt_fingerprint,
     run_pairwise_judge_for_case,
 )
-from eval.agent_v3_quality.judge_metrics import summarize_suite
+from eval.agent_v3_quality.judge_metrics import cost_delta_from_cases, summarize_suite
 from eval.bench_common import benchmark_run_metadata
 from science_graphrag.artifacts.benchmark_paths import REPO_ROOT
 from science_graphrag.config import get_settings
@@ -395,71 +397,22 @@ def run_agent_branches_for_case(  # pylint: disable=too-many-arguments,too-many-
     return gold, question, case_id, workspace_id, baseline, candidate, notes, timings
 
 
-def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
-    case_dir: Path,
+def _quality_row_from_judged(
     *,
+    gold: dict[str, Any],
+    question: str,
+    case_id: str,
+    workspace_id: str | None,
     baseline_runtime: str,
     candidate_runtime: str,
-    mock_agent: bool,
     transport: str,
-    api_base_url: str | None,
-    candidate_api_base_url: str | None = None,
-    allow_http_single_base: bool = False,
-    max_tool_calls: int,
-    subprocess_timeout_s: float,
-    llm_judge: bool,
-    progress: bool = False,
+    mock_agent: bool,
+    notes: list[str],
+    timings: dict[str, float],
+    baseline: dict[str, Any],
+    candidate: dict[str, Any],
+    judged: dict[str, Any],
 ) -> dict[str, Any]:
-    """Execute baseline and candidate branches, then attach pairwise judge output."""
-
-    prog = _progress_enabled(progress)
-    t_case0 = perf_counter()
-    if prog:
-        _progress_log(
-            case_dir.name,
-            "case_start",
-            transport=transport,
-            mock_agent=mock_agent,
-        )
-
-    gold, question, case_id, workspace_id, baseline, candidate, notes, timings = (
-        run_agent_branches_for_case(
-            case_dir,
-            baseline_runtime=baseline_runtime,
-            candidate_runtime=candidate_runtime,
-            mock_agent=mock_agent,
-            transport=transport,
-            api_base_url=api_base_url,
-            candidate_api_base_url=candidate_api_base_url,
-            allow_http_single_base=allow_http_single_base,
-            max_tool_calls=max_tool_calls,
-            subprocess_timeout_s=subprocess_timeout_s,
-            progress=progress,
-        )
-    )
-
-    if prog:
-        _progress_log(case_id, "judge_start", llm_judge=llm_judge)
-    t_j0 = perf_counter()
-    judged = run_pairwise_judge_for_case(
-        question=question,
-        gold=gold,
-        baseline=baseline,
-        candidate=candidate,
-        use_llm=llm_judge,
-    )
-    timings["judge_wall_s"] = round(perf_counter() - t_j0, 3)
-    timings["case_wall_s"] = round(perf_counter() - t_case0, 3)
-    if prog:
-        _progress_log(
-            case_id,
-            "judge_done",
-            elapsed_s=timings["judge_wall_s"],
-            passed=judged["passed"],
-            winner=(judged.get("pairwise") or {}).get("winner"),
-        )
-        _progress_log(case_id, "case_done", elapsed_s=timings["case_wall_s"])
-
     row: dict[str, Any] = {
         "case_id": case_id,
         "family": gold.get("family"),
@@ -484,6 +437,111 @@ def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
     return row
 
 
+def run_v3_quality_case(  # pylint: disable=too-many-arguments,too-many-locals
+    case_dir: Path,
+    *,
+    baseline_runtime: str,
+    candidate_runtime: str,
+    mock_agent: bool,
+    transport: str,
+    api_base_url: str | None,
+    candidate_api_base_url: str | None = None,
+    allow_http_single_base: bool = False,
+    max_tool_calls: int,
+    subprocess_timeout_s: float,
+    llm_judge: bool,
+    progress: bool = False,
+    judge_seed: int | None = None,
+    judge_model: str | None = None,
+    prepared_branches: (
+        tuple[
+            dict[str, Any],
+            str,
+            str,
+            str | None,
+            dict[str, Any],
+            dict[str, Any],
+            list[str],
+            dict[str, float],
+        ]
+        | None
+    ) = None,
+) -> dict[str, Any]:
+    """Execute baseline and candidate branches, then attach pairwise judge output."""
+
+    prog = _progress_enabled(progress)
+    t_case0 = perf_counter()
+    if prog:
+        _progress_log(
+            case_dir.name,
+            "case_start",
+            transport=transport,
+            mock_agent=mock_agent,
+        )
+
+    if prepared_branches is not None:
+        gold, question, case_id, workspace_id, baseline, candidate, notes, timings = (
+            prepared_branches
+        )
+    else:
+        gold, question, case_id, workspace_id, baseline, candidate, notes, timings = (
+            run_agent_branches_for_case(
+                case_dir,
+                baseline_runtime=baseline_runtime,
+                candidate_runtime=candidate_runtime,
+                mock_agent=mock_agent,
+                transport=transport,
+                api_base_url=api_base_url,
+                candidate_api_base_url=candidate_api_base_url,
+                allow_http_single_base=allow_http_single_base,
+                max_tool_calls=max_tool_calls,
+                subprocess_timeout_s=subprocess_timeout_s,
+                progress=progress,
+            )
+        )
+
+    if prog:
+        _progress_log(case_id, "judge_start", llm_judge=llm_judge, judge_seed=judge_seed)
+    t_j0 = perf_counter()
+    judged = run_pairwise_judge_for_case(
+        question=question,
+        gold=gold,
+        baseline=baseline,
+        candidate=candidate,
+        use_llm=llm_judge,
+        judge_model=judge_model,
+        judge_seed=judge_seed,
+    )
+    timings = dict(timings)
+    timings["judge_wall_s"] = round(perf_counter() - t_j0, 3)
+    timings["case_wall_s"] = round(perf_counter() - t_case0, 3)
+    if prog:
+        _progress_log(
+            case_id,
+            "judge_done",
+            elapsed_s=timings["judge_wall_s"],
+            passed=judged["passed"],
+            winner=(judged.get("pairwise") or {}).get("winner"),
+        )
+        _progress_log(case_id, "case_done", elapsed_s=timings["case_wall_s"])
+
+    return _quality_row_from_judged(
+        gold=gold,
+        question=question,
+        case_id=case_id,
+        workspace_id=workspace_id,
+        baseline_runtime=baseline_runtime,
+        candidate_runtime=candidate_runtime,
+        transport=transport,
+        mock_agent=mock_agent,
+        notes=notes,
+        timings=timings,
+        baseline=baseline,
+        candidate=candidate,
+        judged=judged,
+    )
+
+
 def _summarize_case(row: dict[str, Any]) -> str:
     """Markdown fragment for one suite row."""
 
@@ -495,6 +553,14 @@ def _summarize_case(row: dict[str, Any]) -> str:
         "baseline_outcome": row.get("baseline_outcome"),
         "candidate_outcome": row.get("candidate_outcome"),
         "timings": row.get("timings"),
+        "latency_ms": {
+            "baseline": (row.get("baseline") or {}).get("latency_ms"),
+            "candidate": (row.get("candidate") or {}).get("latency_ms"),
+        },
+        "usage_total_tokens": {
+            "baseline": (row.get("baseline") or {}).get("usage_total_tokens"),
+            "candidate": (row.get("candidate") or {}).get("usage_total_tokens"),
+        },
     }
     if row.get("execution_error"):
         frag["execution_error"] = row.get("execution_error")
@@ -560,6 +626,29 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
     ),
     max_tool_calls: int = typer.Option(12, "--max-tool-calls"),
     subprocess_timeout_s: float = typer.Option(600.0, "--subprocess-timeout-s"),
+    judge_model: str | None = typer.Option(
+        None,
+        "--judge-model",
+        help="Override chat model id for the pairwise LLM judge (OpenRouter-style id).",
+    ),
+    judge_model_family: str | None = typer.Option(
+        None,
+        "--judge-model-family",
+        help=(
+            "Preset judge backbone: deepseek | anthropic | openai "
+            "(env SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_JUDGE_MODEL_<FAMILY> overrides defaults; "
+            "mutually exclusive with --judge-model)."
+        ),
+    ),
+    seeds: int = typer.Option(
+        1,
+        "--seeds",
+        min=1,
+        help=(
+            "Wave F2: judge passes. When >1, agent branches run once per case, then only the "
+            "pairwise judge re-runs per seed (temperature/seed sweep)."
+        ),
+    ),
     json_out: Path | None = typer.Option(None, "--json-out"),
     md_out: Path | None = typer.Option(None, "--md-out"),
     case: str | None = typer.Option(None, "--case", help="Run a single case directory name"),
@@ -568,6 +657,18 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
     settings = get_settings()
     if not suite:
         raise typer.BadParameter("Only --suite mode is supported for this benchmark.")
+
+    if (judge_model or "").strip() and (judge_model_family or "").strip():
+        raise typer.BadParameter("Use only one of --judge-model or --judge-model-family")
+    fam_key = (judge_model_family or "").strip().lower()
+    if fam_key and fam_key not in JUDGE_MODEL_FAMILY_IDS:
+        raise typer.BadParameter(
+            f"--judge-model-family must be one of {sorted(JUDGE_MODEL_FAMILY_IDS)}; got {fam_key!r}",
+        )
+    resolved_judge = resolve_benchmark_judge_model(
+        judge_model=judge_model,
+        judge_model_family=judge_model_family,
+    )
 
     cases = discover_agent_v3_quality_case_dirs(path, tier=tier)
     if case:
@@ -582,10 +683,49 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
         typer.echo("--api-base-url is required for --transport http", err=True)
         raise typer.Exit(code=1)
 
-    reports: list[dict[str, Any]] = []
-    for case_path in cases:
-        reports.append(
-            run_v3_quality_case(
+    n_seeds = max(1, int(seeds))
+    reports: list[dict[str, Any]]
+    multiseed_block: dict[str, Any] | None = None
+
+    if n_seeds == 1:
+        reports = []
+        for case_path in cases:
+            reports.append(
+                run_v3_quality_case(
+                    case_path,
+                    baseline_runtime=baseline_runtime,
+                    candidate_runtime=candidate_runtime,
+                    mock_agent=mock_agent,
+                    transport=transport,
+                    api_base_url=api_base_url,
+                    candidate_api_base_url=candidate_api_base_url,
+                    allow_http_single_base=allow_http_single_base,
+                    max_tool_calls=max_tool_calls,
+                    subprocess_timeout_s=subprocess_timeout_s,
+                    llm_judge=llm_judge,
+                    progress=progress,
+                    judge_seed=None,
+                    judge_model=resolved_judge,
+                ),
+            )
+    else:
+        prepared: list[
+            tuple[
+                Path,
+                tuple[
+                    dict[str, Any],
+                    str,
+                    str,
+                    str | None,
+                    dict[str, Any],
+                    dict[str, Any],
+                    list[str],
+                    dict[str, float],
+                ],
+            ]
+        ] = []
+        for case_path in cases:
+            tup = run_agent_branches_for_case(
                 case_path,
                 baseline_runtime=baseline_runtime,
                 candidate_runtime=candidate_runtime,
@@ -596,13 +736,78 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
                 allow_http_single_base=allow_http_single_base,
                 max_tool_calls=max_tool_calls,
                 subprocess_timeout_s=subprocess_timeout_s,
-                llm_judge=llm_judge,
                 progress=progress,
-            ),
-        )
+            )
+            prepared.append((case_path, tup))
+
+        per_seed_meta: list[dict[str, Any]] = []
+        last_reports: list[dict[str, Any]] = []
+        for seed_idx in range(n_seeds):
+            last_reports = []
+            for case_path, tup in prepared:
+                last_reports.append(
+                    run_v3_quality_case(
+                        case_path,
+                        baseline_runtime=baseline_runtime,
+                        candidate_runtime=candidate_runtime,
+                        mock_agent=mock_agent,
+                        transport=transport,
+                        api_base_url=api_base_url,
+                        candidate_api_base_url=candidate_api_base_url,
+                        allow_http_single_base=allow_http_single_base,
+                        max_tool_calls=max_tool_calls,
+                        subprocess_timeout_s=subprocess_timeout_s,
+                        llm_judge=llm_judge,
+                        progress=progress,
+                        judge_seed=seed_idx,
+                        judge_model=resolved_judge,
+                        prepared_branches=tup,
+                    ),
+                )
+            summ = summarize_suite(last_reports)
+            summ.update(aggregate_branch_outcomes(last_reports))
+            cd_seed = cost_delta_from_cases(last_reports)
+            if cd_seed:
+                summ["cost_delta"] = cd_seed
+            per_seed_meta.append(
+                {
+                    "seed_index": seed_idx,
+                    "mean_delta": summ.get("mean_delta"),
+                    "pairwise_candidate_win_rate": summ.get("pairwise_candidate_win_rate"),
+                    "cost_delta": summ.get("cost_delta"),
+                },
+            )
+        reports = last_reports
+        mean_deltas = [
+            float(x["mean_delta"])
+            for x in per_seed_meta
+            if isinstance(x.get("mean_delta"), (int, float))
+        ]
+        rollup: dict[str, Any] = {"per_seed": per_seed_meta}
+        if mean_deltas:
+            srt = sorted(mean_deltas)
+            mid = len(srt) // 2
+            if len(srt) % 2 == 1:
+                med = float(srt[mid])
+            else:
+                med = (float(srt[mid - 1]) + float(srt[mid])) / 2.0
+            rollup.update(
+                {
+                    "mean_delta_min": round(min(mean_deltas), 4),
+                    "mean_delta_max": round(max(mean_deltas), 4),
+                    "mean_delta_median": round(med, 4),
+                    "mean_delta_spread": round(max(mean_deltas) - min(mean_deltas), 4),
+                },
+            )
+        multiseed_block = rollup
 
     summary = summarize_suite(reports)
     summary.update(aggregate_branch_outcomes(reports))
+    cd = cost_delta_from_cases(reports)
+    if cd:
+        summary["cost_delta"] = cd
+    if multiseed_block is not None:
+        summary["multiseed"] = multiseed_block
     meta = benchmark_run_metadata(settings)
     meta.update(
         {
@@ -613,7 +818,8 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
             "candidate_runtime": candidate_runtime,
             "transport": transport,
             "mock_agent": mock_agent,
-            **judge_meta(llm=llm_judge),
+            "seeds": n_seeds,
+            **judge_meta(llm=llm_judge, judge_model_override=resolved_judge),
             "judge_prompt_fingerprint": judge_prompt_fingerprint(),
         },
     )
@@ -631,7 +837,7 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
     md_body = "\n\n---\n\n".join(_summarize_case(r) for r in reports)
     md_full = (
         f"# Agent v3 quality judge — {tier}\n\n"
-        f"Cases: {len(reports)}\n\n"
+        f"Cases: {len(reports)}  seeds: {n_seeds}\n\n"
         f"```json\n{json.dumps(summary, indent=2)}\n```\n\n" + md_body
     )
     typer.echo(md_full)

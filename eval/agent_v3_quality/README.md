@@ -69,6 +69,21 @@ science-graphrag-agent-v3-quality-compare \
   --release-train-gate
 ```
 
+## Wave F — cost axis, multiseed, judge model, cross-family aggregate
+
+- **F1 `summary.cost_delta`:** written by the benchmark runner from per-case `latency_ms` / `usage_total_tokens` (suite-level p95 latency + token totals + ratios). Markdown header includes the same summary JSON.
+- **`science-graphrag-agent-v3-quality-compare` advisory cost gates:** `--max-latency-ratio`, `--max-tokens-ratio` (absolute caps on candidate `cost_delta` ratios), plus `--max-latency-ratio-regress` / `--max-tokens-ratio-regress` when both artifacts expose ratios.
+- **F2 `--seeds N`:** agent branches run once per case, then the pairwise judge is re-run for each seed (temperature/seed sweep). `summary.multiseed` carries per-seed `mean_delta` and `mean_delta_min` / `max` / `median` / `spread`. With `--mock-agent` / heuristic judge, spread is typically zero.
+- **Judge model override:** `--judge-model <openrouter_id>` or `--judge-model-family deepseek|anthropic|openai` (env `SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_JUDGE_MODEL_*` overrides defaults in `contract.py`).
+- **F4 cross-family agreement:** run the benchmark once per family (or model), then:
+
+```bash
+science-graphrag-agent-v3-quality-cross-family-aggregate \
+  eval/results/run-deepseek.json eval/results/run-anthropic.json eval/results/run-openai.json \
+  --json-out eval/results/agent-v3-quality-judge-cross-family.json \
+  --md-out eval/results/agent-v3-quality-judge-cross-family.md
+```
+
 ## LLM vs heuristic calibration (small subset)
 
 From repo root (requires live stack + `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`; one agent run per case, then heuristic + LLM judge):

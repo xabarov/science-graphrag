@@ -19,7 +19,10 @@
     "mini_workspace_stats_02",
     "mini_catalog_resolution_02",
     "pilot_catalog_extra_01",
-    "pilot_relation_extra_01"
+    "pilot_relation_extra_01",
+    "pilot_quote_grounding_01",
+    "pilot_negative_refusal_01",
+    "pilot_multi_workspace_01"
   ],
   "judge_holdout": ["holdout_open_01"]
 }

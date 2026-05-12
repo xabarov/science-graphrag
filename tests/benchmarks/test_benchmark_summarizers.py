@@ -31,6 +31,8 @@ def test_summarize_agent_v3_quality_judge_suite_merges_metadata(tmp_path: Path) 
                     "baseline_runtime": "langgraph_research_v1",
                     "candidate_runtime": "langgraph_supervisor_v3",
                     "transport": "subprocess",
+                    "seeds": 3,
+                    "judge_llm_model": "openai/gpt-4o-mini",
                     "judge_prompt_fingerprint": "abc",
                 },
                 "cases": [{"case_id": "c1", "passed": True}],
@@ -39,6 +41,8 @@ def test_summarize_agent_v3_quality_judge_suite_merges_metadata(tmp_path: Path) 
                     "mean_delta": 0.1,
                     "mean_weighted_score_baseline": 3.0,
                     "mean_weighted_score_candidate": 3.5,
+                    "cost_delta": {"tokens_total_ratio": 1.2},
+                    "multiseed": {"mean_delta_median": 0.05},
                     "cases_with_any_branch_non_ok": 0,
                     "branch_outcome_schema": "branch_outcome_v1",
                 },
@@ -53,9 +57,13 @@ def test_summarize_agent_v3_quality_judge_suite_merges_metadata(tmp_path: Path) 
     assert rm.get("mock_agent") is True
     assert rm.get("baseline_runtime") == "langgraph_research_v1"
     assert rm.get("transport") == "subprocess"
+    assert rm.get("seeds") == 3
+    assert rm.get("judge_llm_model") == "openai/gpt-4o-mini"
     assert rm.get("judge_prompt_fingerprint") == "abc"
     assert out.get("mean_delta") == 0.1
     assert out.get("mean_weighted_score_baseline") == 3.0
+    assert out.get("cost_delta") == {"tokens_total_ratio": 1.2}
+    assert out.get("multiseed") == {"mean_delta_median": 0.05}
     assert out.get("cases_with_any_branch_non_ok") == 0
     assert out.get("branch_outcome_schema") == "branch_outcome_v1"
 

@@ -180,6 +180,24 @@ def main() -> int:
         ),
     )
     parser.add_argument(
+        "--max-latency-ratio",
+        type=float,
+        default=None,
+        help=(
+            "Wave F1 advisory alias: when set, used instead of --max-latency-p95-regress-ratio "
+            "(candidate latency_p95_ms vs baseline multiplier)."
+        ),
+    )
+    parser.add_argument(
+        "--max-tokens-ratio",
+        type=float,
+        default=None,
+        help=(
+            "Optional FAIL when baseline and candidate metrics.agent_usage_total_tokens_sum "
+            "are both set and candidate/baseline exceeds this ratio (Wave F1 token cost axis)."
+        ),
+    )
+    parser.add_argument(
         "--min-live-trust-signal-delta",
         type=float,
         default=None,
@@ -209,6 +227,12 @@ def main() -> int:
     parser.add_argument("--out-json", type=Path, required=True)
     parser.add_argument("--out-md", type=Path, required=True)
     args = parser.parse_args()
+
+    lat_regress = (
+        args.max_latency_ratio
+        if args.max_latency_ratio is not None
+        else args.max_latency_p95_regress_ratio
+    )
 
     base = _load(args.baseline)
     cand = _load(args.candidate)
@@ -306,6 +330,11 @@ def main() -> int:
     warn_reasons: list[str] = []
     base_lat = _metric(base, "latency_p95_ms")
     cand_lat = _metric(cand, "latency_p95_ms")
+    b_tok_sum = _metric_optional_float(base, "agent_usage_total_tokens_sum")
+    c_tok_sum = _metric_optional_float(cand, "agent_usage_total_tokens_sum")
+    tokens_usage_ratio: float | None = None
+    if b_tok_sum is not None and b_tok_sum > 0 and c_tok_sum is not None and c_tok_sum > 0:
+        tokens_usage_ratio = float(c_tok_sum) / float(b_tok_sum)
     if "latency_p95_increase" in policies_warn and base_lat > 0 and cand_lat > 0:
         if cand_lat > base_lat * args.latency_warn_ratio:
             warn_reasons.append(f"latency_p95_increase:{base_lat}->{cand_lat}")
@@ -387,11 +416,18 @@ def main() -> int:
                 f"claim_grounding_recall:{cand_rec:.4f}<{float(min_claim_recall):.4f}"
             )
 
-    max_lat_ratio = args.max_latency_p95_regress_ratio
+    max_lat_ratio = lat_regress
     if max_lat_ratio is not None and base_lat > 0 and cand_lat > 0:
         if cand_lat > base_lat * float(max_lat_ratio) + 1e-9:
             fail_reasons.append(
                 f"latency_p95_regress_ratio:{cand_lat:.4f}>{base_lat * float(max_lat_ratio):.4f}"
+            )
+
+    max_tok_ratio = args.max_tokens_ratio
+    if max_tok_ratio is not None and tokens_usage_ratio is not None:
+        if tokens_usage_ratio > float(max_tok_ratio) + 1e-9:
+            fail_reasons.append(
+                f"agent_usage_total_tokens_ratio:{tokens_usage_ratio:.4f}>{float(max_tok_ratio):.4f}"
             )
 
     ltd = args.min_live_trust_signal_delta
@@ -455,6 +491,7 @@ def main() -> int:
             "writer_oscillation_count_max": delta_writer_oscillation_max,
             "live_trust_signal_avg_delta": delta_live_trust,
             "claim_verification_verdict_parse_rate_delta": delta_cv_parse,
+            "agent_usage_total_tokens_ratio": tokens_usage_ratio,
         },
     }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
@@ -482,6 +519,7 @@ def main() -> int:
         f"- Candidate verdict rank: `{cand_verdict_rank}`",
         f"- Delta live_trust_signal_avg: `{delta_live_trust}`",
         f"- Delta claim_verification_verdict_parse_rate: `{delta_cv_parse}`",
+        f"- Agent usage total tokens ratio (cand/base): `{tokens_usage_ratio}`",
     ]
     if fail_reasons:
         md_lines.extend(["", "## Fail reasons"])

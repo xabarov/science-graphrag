@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Sequence
+from typing import Any, Sequence
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
@@ -55,22 +55,27 @@ def build_chat_model(
     timeout_seconds: float | None = None,
     max_retries: int | None = None,
     model: str | None = None,
+    model_kwargs: dict[str, Any] | None = None,
 ) -> ChatOpenAI:
     """Build ChatOpenAI client pointing to OpenRouter-compatible endpoint."""
     retries = int(settings.agent_chat_max_retries) if max_retries is None else int(max_retries)
     retries = max(0, min(2, retries))
     override_id = (model or "").strip()
     resolved_model = override_id or effective_chat_llm_model(settings)
-    return ChatOpenAI(
-        model=resolved_model,
-        api_key=settings.extraction_llm_api_key,
-        base_url=settings.extraction_llm_base_url,
-        temperature=temperature if temperature is not None else settings.agent_chat_temperature,
-        max_tokens=max_tokens if max_tokens is not None else settings.agent_chat_max_tokens,
-        timeout=(
+    mk = {k: v for k, v in (model_kwargs or {}).items() if v is not None}
+    params: dict[str, Any] = {
+        "model": resolved_model,
+        "api_key": settings.extraction_llm_api_key,
+        "base_url": settings.extraction_llm_base_url,
+        "temperature": temperature if temperature is not None else settings.agent_chat_temperature,
+        "max_tokens": max_tokens if max_tokens is not None else settings.agent_chat_max_tokens,
+        "timeout": (
             timeout_seconds
             if timeout_seconds is not None
             else settings.extraction_llm_timeout_seconds
         ),
-        max_retries=retries,
-    )
+        "max_retries": retries,
+    }
+    if mk:
+        params["model_kwargs"] = mk
+    return ChatOpenAI(**params)

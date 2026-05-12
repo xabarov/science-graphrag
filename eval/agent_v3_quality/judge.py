@@ -123,9 +123,25 @@ def _run_llm_pairwise(  # pylint: disable=too-many-locals
     gold: dict[str, Any],
     baseline: dict[str, Any],
     candidate: dict[str, Any],
+    judge_model: str | None = None,
+    judge_seed: int | None = None,
 ) -> dict[str, Any]:
     settings = get_settings()
-    llm = build_chat_model(settings, temperature=0.05, max_tokens=900)
+    temp = 0.05
+    if judge_seed is not None:
+        # Deterministic sweep for multiseed variance when the backend ignores ``seed``.
+        temp = min(0.22, 0.05 + float(judge_seed) * 0.017)
+    model_id = (judge_model or "").strip() or None
+    model_kwargs: dict[str, Any] | None = None
+    if judge_seed is not None:
+        model_kwargs = {"seed": int(judge_seed)}
+    llm = build_chat_model(
+        settings,
+        temperature=temp,
+        max_tokens=900,
+        model=model_id,
+        model_kwargs=model_kwargs,
+    )
     system = JUDGE_PROMPT_PATH.read_text(encoding="utf-8").strip()
     meta = json.dumps(
         {
@@ -192,6 +208,8 @@ def run_pairwise_judge_for_case(
     baseline: dict[str, Any],
     candidate: dict[str, Any],
     use_llm: bool,
+    judge_model: str | None = None,
+    judge_seed: int | None = None,
 ) -> dict[str, Any]:
     """Return merged baseline/candidate blocks plus pairwise verdict and ``passed``."""
 
@@ -199,7 +217,12 @@ def run_pairwise_judge_for_case(
         use_llm = False
     if use_llm:
         raw = _run_llm_pairwise(
-            question=question, gold=gold, baseline=baseline, candidate=candidate
+            question=question,
+            gold=gold,
+            baseline=baseline,
+            candidate=candidate,
+            judge_model=judge_model,
+            judge_seed=judge_seed,
         )
     else:
         raw = _heuristic_pairwise_judge(
@@ -229,13 +252,17 @@ def run_pairwise_judge_for_case(
     }
 
 
-def judge_meta(*, llm: bool) -> dict[str, Any]:
+def judge_meta(*, llm: bool, judge_model_override: str | None = None) -> dict[str, Any]:
     """Metadata fields embedded in suite ``run_metadata``."""
 
     settings = get_settings()
+    effective = (judge_model_override or "").strip() or (
+        effective_chat_llm_model(settings) if llm else None
+    )
     return {
         "judge_prompt_version": "judge_prompt_v1",
         "judge_prompt_sha256": judge_prompt_fingerprint(),
-        "judge_llm_model": effective_chat_llm_model(settings) if llm else None,
+        "judge_llm_model": effective,
+        "judge_llm_model_override": (judge_model_override or "").strip() or None,
         "llm_rubric": bool(llm),
     }

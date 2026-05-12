@@ -2,9 +2,100 @@
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from eval.agent_v3_quality.contract import RUBRIC_AXES, RUBRIC_WEIGHTS
+
+
+def _coerce_float(val: Any) -> float | None:
+    if val is None:
+        return None
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return None
+
+
+def _p95(values: list[float]) -> float | None:
+    """Nearest-rank p95 on a non-empty sorted sample."""
+
+    if not values:
+        return None
+    s = sorted(values)
+    n = len(s)
+    if n == 1:
+        return s[0]
+    # 1-based rank k = ceil(0.95 * n), clamp to [1, n]
+    k = int(math.ceil(0.95 * float(n)))
+    k = max(1, min(n, k))
+    return s[k - 1]
+
+
+def cost_delta_from_cases(cases: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Wave F1: latency p95 + token totals per branch (baseline vs candidate in-suite).
+
+    Reads per-case ``baseline`` / ``candidate`` dicts after judge merge:
+    ``latency_ms`` and ``usage_total_tokens`` (or nested ``run_metadata.usage.total_tokens``).
+    """
+
+    b_lat: list[float] = []
+    c_lat: list[float] = []
+    b_tok_sum = 0
+    c_tok_sum = 0
+    b_tok_n = 0
+    c_tok_n = 0
+
+    for row in cases:
+        b = row.get("baseline") if isinstance(row.get("baseline"), dict) else {}
+        c = row.get("candidate") if isinstance(row.get("candidate"), dict) else {}
+        bl = _coerce_float(b.get("latency_ms"))
+        cl = _coerce_float(c.get("latency_ms"))
+        if bl is not None and bl >= 0:
+            b_lat.append(bl)
+        if cl is not None and cl >= 0:
+            c_lat.append(cl)
+
+        bt = _coerce_float(b.get("usage_total_tokens"))
+        if bt is None and isinstance(b.get("run_metadata"), dict):
+            us = (b["run_metadata"] or {}).get("usage")
+            if isinstance(us, dict):
+                bt = _coerce_float(us.get("total_tokens"))
+        ct = _coerce_float(c.get("usage_total_tokens"))
+        if ct is None and isinstance(c.get("run_metadata"), dict):
+            us = (c["run_metadata"] or {}).get("usage")
+            if isinstance(us, dict):
+                ct = _coerce_float(us.get("total_tokens"))
+        if bt is not None and bt >= 0:
+            b_tok_sum += bt
+            b_tok_n += 1
+        if ct is not None and ct >= 0:
+            c_tok_sum += ct
+            c_tok_n += 1
+
+    p95_b = _p95(b_lat)
+    p95_c = _p95(c_lat)
+    if p95_b is None and p95_c is None and b_tok_n == 0 and c_tok_n == 0:
+        return None
+
+    lat_ratio = None
+    if p95_b is not None and p95_b > 0 and p95_c is not None:
+        lat_ratio = round(p95_c / p95_b, 4)
+    tok_ratio = None
+    if b_tok_sum > 0:
+        tok_ratio = round(c_tok_sum / b_tok_sum, 4)
+
+    return {
+        "latency_p95_baseline_ms": round(p95_b, 2) if p95_b is not None else None,
+        "latency_p95_candidate_ms": round(p95_c, 2) if p95_c is not None else None,
+        "latency_p95_ratio": lat_ratio,
+        "tokens_total_baseline": round(b_tok_sum, 2) if b_tok_n else None,
+        "tokens_total_candidate": round(c_tok_sum, 2) if c_tok_n else None,
+        "tokens_total_ratio": tok_ratio,
+        "cases_with_latency_samples": len(b_lat),
+        "cases_with_token_samples_baseline": b_tok_n,
+        "cases_with_token_samples_candidate": c_tok_n,
+    }
 
 
 def weighted_score_from_axes(scores: dict[str, Any] | None) -> float | None:
