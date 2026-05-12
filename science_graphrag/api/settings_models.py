@@ -31,11 +31,31 @@ class SettingsSnapshotResponse(BaseModel):
         default_factory=dict,
         description="Wave L dedup thresholds and Qdrant collection names (read-only from env).",
     )
+    agent_tools: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Persisted operator knobs for agent runtime (separate from llm.runtime_overrides).",
+    )
 
 
 class SettingsSchemaResponse(BaseModel):
     version: int
     sections: list[dict[str, Any]]
+
+
+class UpdateAgentToolsSettingsRequest(BaseModel):
+    """Wave E: minimal persisted agent operator knobs (allowlisted)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    agent_supervisor_max_rounds: int = Field(
+        ...,
+        ge=2,
+        le=32,
+        description=(
+            "Max supervisor routing legs per turn before writer handoff "
+            "(Settings.agent_supervisor_max_rounds)."
+        ),
+    )
 
 
 class UpdateGeneralSettingsRequest(BaseModel):

@@ -75,6 +75,15 @@ def main() -> int:
     parser.add_argument("--baseline", type=Path, required=True)
     parser.add_argument("--candidate", type=Path, required=True)
     parser.add_argument(
+        "--max-writer-oscillation-count",
+        type=int,
+        default=None,
+        help=(
+            "Optional FAIL when candidate metrics.writer_oscillation_count_max is strictly "
+            "above this threshold (Wave E / G3 gate)."
+        ),
+    )
+    parser.add_argument(
         "--fail-on",
         default=(
             "new_missing_spans,tool_error_increase,final_answer_missing_increase,"
@@ -249,6 +258,9 @@ def main() -> int:
     delta_tool_loop_repeat_max = _metric(cand, "tool_loop_repeat_max") - _metric(
         base, "tool_loop_repeat_max"
     )
+    delta_writer_oscillation_max = _metric(cand, "writer_oscillation_count_max") - _metric(
+        base, "writer_oscillation_count_max"
+    )
 
     b_tr = _metric_optional_float(base, "live_trust_signal_avg")
     c_tr = _metric_optional_float(cand, "live_trust_signal_avg")
@@ -287,6 +299,9 @@ def main() -> int:
         fail_reasons.append(
             f"subagent_lifecycle_missing_increase:+{delta_subagent_lifecycle_missing:.0f}"
         )
+
+    if "writer_oscillation_increase" in policies_fail and delta_writer_oscillation_max > 1e-9:
+        fail_reasons.append(f"writer_oscillation_increase:+{delta_writer_oscillation_max:.0f}")
 
     warn_reasons: list[str] = []
     base_lat = _metric(base, "latency_p95_ms")
@@ -332,6 +347,12 @@ def main() -> int:
                 f"side_llm_cache_read_ratio_avg:{cand_side:.4f}<{float(min_side):.4f}"
             )
 
+    mw_osc = args.max_writer_oscillation_count
+    if mw_osc is not None:
+        cand_w = _metric(cand, "writer_oscillation_count_max")
+        if cand_w > float(mw_osc):
+            fail_reasons.append(f"writer_oscillation_count_max:{cand_w:.0f}>{float(mw_osc):.0f}")
+
     min_recall = args.min_insight_recall_at_k
     if min_recall is not None:
         cand_r = _metric_optional_float(cand, "insight_recall_at_k")
@@ -376,9 +397,7 @@ def main() -> int:
     ltd = args.min_live_trust_signal_delta
     if ltd is not None and delta_live_trust is not None:
         if delta_live_trust + 1e-9 < float(ltd):
-            fail_reasons.append(
-                f"live_trust_signal_delta:{delta_live_trust:.6f}<{float(ltd):.6f}"
-            )
+            fail_reasons.append(f"live_trust_signal_delta:{delta_live_trust:.6f}<{float(ltd):.6f}")
 
     base_verdict_rank = _verdict_rank(base)
     cand_verdict_rank = _verdict_rank(cand)
@@ -433,6 +452,7 @@ def main() -> int:
             "subagent_lifecycle_missing_count": delta_subagent_lifecycle_missing,
             "tool_search_miss_due_to_no_discovery_total": delta_tool_search_miss,
             "tool_loop_repeat_max": delta_tool_loop_repeat_max,
+            "writer_oscillation_count_max": delta_writer_oscillation_max,
             "live_trust_signal_avg_delta": delta_live_trust,
             "claim_verification_verdict_parse_rate_delta": delta_cv_parse,
         },
@@ -457,6 +477,7 @@ def main() -> int:
         f"- Delta side_llm_cache_read_ratio_avg: `{delta_side_llm}`",
         f"- Delta subagent_lifecycle_missing_count: `{delta_subagent_lifecycle_missing}`",
         f"- Delta unnecessary_tool_calls_avg: `{delta_unnecessary_tool_calls_avg}`",
+        f"- Delta writer_oscillation_count_max: `{delta_writer_oscillation_max}`",
         f"- Baseline verdict rank: `{base_verdict_rank}`",
         f"- Candidate verdict rank: `{cand_verdict_rank}`",
         f"- Delta live_trust_signal_avg: `{delta_live_trust}`",

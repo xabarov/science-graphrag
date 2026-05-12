@@ -79,3 +79,49 @@ def test_build_non_secret_overrides_explicit_storage_secret_fallback_to_base() -
     )
 
     assert overlay["database_url"] == base.database_url
+
+
+def test_build_non_secret_overrides_merges_persisted_agent_supervisor_max_rounds() -> None:
+    base = Settings(agent_supervisor_max_rounds=10)
+    secret_store = SecretStore(Path("/tmp/non-existent-overlay-secrets-wave-e"))
+    overlay = build_non_secret_overrides(
+        base_settings=base,
+        llm={},
+        ingestion_cfg={},
+        general_cfg={},
+        storage_cfg={},
+        secret_store=secret_store,
+        agent_tools={"agent_supervisor_max_rounds": 7},
+    )
+    assert overlay["agent_supervisor_max_rounds"] == 7
+
+
+def test_build_non_secret_overrides_clamps_agent_supervisor_max_rounds() -> None:
+    base = Settings(agent_supervisor_max_rounds=10)
+    secret_store = SecretStore(Path("/tmp/non-existent-overlay-secrets-wave-e-clamp"))
+    overlay = build_non_secret_overrides(
+        base_settings=base,
+        llm={},
+        ingestion_cfg={},
+        general_cfg={},
+        storage_cfg={},
+        secret_store=secret_store,
+        agent_tools={"agent_supervisor_max_rounds": 99},
+    )
+    assert overlay["agent_supervisor_max_rounds"] == 32
+
+
+def test_build_non_secret_overrides_ignores_unknown_agent_tools_keys() -> None:
+    base = Settings()
+    secret_store = SecretStore(Path("/tmp/non-existent-overlay-secrets-wave-e-unknown"))
+    overlay = build_non_secret_overrides(
+        base_settings=base,
+        llm={},
+        ingestion_cfg={},
+        general_cfg={},
+        storage_cfg={},
+        secret_store=secret_store,
+        agent_tools={"not_allowlisted": 123, "agent_supervisor_max_rounds": 12},
+    )
+    assert "not_allowlisted" not in overlay
+    assert overlay["agent_supervisor_max_rounds"] == 12

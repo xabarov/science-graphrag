@@ -70,6 +70,103 @@ def test_merge_e2e_extracts_thread_insight_side_llm_from_run_metadata(schema_mod
     assert m.side_llm_cache_read_ratio_avg == 0.72
 
 
+def test_merge_e2e_extracts_tool_use_summary_side_llm_ratio(schema_module) -> None:
+    case = {
+        "case_id": "tus_side",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "tool_use_summary_side_llm_cache_read_ratio_avg": 0.44,
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].thread_insight_forked is None
+    assert tl[0].side_llm_cache_read_ratio == 0.44
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.side_llm_cache_read_ratio_avg == 0.44
+
+
+def test_merge_e2e_extracts_tool_use_summary_row_count(schema_module) -> None:
+    case = {
+        "case_id": "tus_rows",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "tool_use_summary_row_count": 3,
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].tool_use_summary_row_count == 3
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.tool_use_summary_row_count_total == 3
+
+
+def test_merge_e2e_extracts_tool_use_summary_row_count_from_specialist_results(
+    schema_module,
+) -> None:
+    case = {
+        "case_id": "tus_rows_sr3",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "specialist_results_v3": {
+                "legs": [
+                    {
+                        "tool_results": [
+                            {
+                                "_tool_use_summary_meta": {
+                                    "side_llm_cache_read_ratio": 0.5,
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert len(tl) == 1
+    assert tl[0].tool_use_summary_row_count == 1
+    assert tl[0].side_llm_cache_read_ratio == 0.5
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.tool_use_summary_row_count_total == 1
+    assert m.side_llm_cache_read_ratio_avg == 0.5
+
+
+def test_merge_e2e_writer_oscillation_from_routing_log(schema_module) -> None:
+    case = {
+        "case_id": "osc",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "routing_log": [
+                {"from": "supervisor", "to": "writer_agent", "reason": "handoff1"},
+                {"from": "supervisor", "to": "retrieval_agent", "reason": "more"},
+                {"from": "supervisor", "to": "writer_agent", "reason": "handoff2"},
+            ],
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert tl[0].writer_oscillation_count == 1
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.writer_oscillation_count_max == 1
+
+
+def test_merge_e2e_writer_oscillation_ignores_non_supervisor_edges(schema_module) -> None:
+    """Only routing_log steps with from=supervisor participate in oscillation counting."""
+    case = {
+        "case_id": "osc_skip",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "routing_log": [
+                {"from": "supervisor", "to": "writer_agent"},
+                {"from": "retrieval_agent", "to": "writer_agent"},
+                {"from": "supervisor", "to": "writer_agent"},
+            ],
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert tl[0].writer_oscillation_count == 0
+
+
 def test_merge_e2e_extracts_runtime_attribution_from_top_level_case(schema_module) -> None:
     case = {
         "case_id": "runtime_case",
@@ -494,3 +591,47 @@ def test_build_acceptance_summary_http_b4_checks(schema_module) -> None:
     assert "b4_timeout_or_deadline_warning_in_e2e_timeline" in out["live_proven"]
     assert "mcp_audit_deny_observed_in_timeline" in out["live_proven"]
     assert "budget_cutoff_count_gt_0_in_timeline_aggregate" in out["live_proven"]
+
+
+def test_build_acceptance_summary_side_llm_gate_uses_wave_e_floor(schema_module) -> None:
+    review_ok = {
+        "metrics": {"side_llm_cache_read_ratio_avg": 0.41},
+        "trace_timeline": [],
+        "run_context": {"suite": "acceptance"},
+        "verdict": {"status": "pass"},
+        "e2e_audit": {"ok": True},
+        "checks": [],
+    }
+    out_ok = schema_module.build_acceptance_summary(review_ok)
+    assert out_ok["gates"]["§10.2_side_llm_cache_read_ratio"] == "pass"
+
+    review_fail = {
+        "metrics": {"side_llm_cache_read_ratio_avg": 0.39},
+        "trace_timeline": [],
+        "run_context": {"suite": "acceptance"},
+        "verdict": {"status": "warn"},
+        "e2e_audit": {"ok": True},
+        "checks": [],
+    }
+    out_fail = schema_module.build_acceptance_summary(review_fail)
+    assert out_fail["gates"]["§10.2_side_llm_cache_read_ratio"].startswith("fail_below_0_4")
+
+
+def test_build_acceptance_summary_side_llm_gate_fails_without_cache_telemetry(
+    schema_module,
+) -> None:
+    review = {
+        "metrics": {
+            "side_llm_cache_read_ratio_avg": None,
+            "tool_use_summary_row_count_total": 5,
+        },
+        "trace_timeline": [],
+        "run_context": {"suite": "acceptance"},
+        "verdict": {"status": "warn"},
+        "e2e_audit": {"ok": True},
+        "checks": [],
+    }
+    out = schema_module.build_acceptance_summary(review)
+    assert (
+        out["gates"]["§10.2_side_llm_cache_read_ratio"] == "fail_missing_side_llm_cache_telemetry"
+    )

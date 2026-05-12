@@ -124,6 +124,8 @@ class TimelineCase:
     tool_schema_bytes_saved: int = 0
     #: Max consecutive identical tool names in ``tool_steps`` (loop-instability proxy).
     tool_loop_repeat_max: int = 0
+    #: Supervisor routing oscillation: ``writer_agent → other → writer_agent`` (see G3).
+    writer_oscillation_count: int = 0
     #: When set from E2E ``cases[]``, ``False`` + empty ``tool_steps`` means transport never ran tools.
     e2e_http_ok: bool | None = None
     #: Aggregated from ``run_metadata.runtime_monitor_audit`` (tool parity / observability).
@@ -142,6 +144,7 @@ class TimelineCase:
     specialist_v3_merge_conflict: bool | None = None
     specialist_v3_evidence_origin: str | None = None
     agent_usage_total_tokens: int | None = None
+    tool_use_summary_row_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,6 +186,8 @@ class Metrics:
     live_trust_signal_avg: float | None = None
     specialist_v3_merge_conflict_cases: int = 0
     agent_usage_total_tokens_sum: int | None = None
+    writer_oscillation_count_max: int = 0
+    tool_use_summary_row_count_total: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -262,6 +267,70 @@ def _phoenix_alignment_from_trace_audit(ta: dict[str, Any] | None) -> PhoenixAli
             covered=psa.get("span_sample_size"), missing=tuple(str(x) for x in issues)
         )
     return PhoenixAlignment()
+
+
+WRITER_SPECIALIST_ID = "writer_agent"
+
+
+def _writer_oscillation_count_from_routing_log(routing_log: Any) -> int:
+    """Count supervisor ``writer → not-writer → writer`` triples (Wave E / G3).
+
+    Uses ``routing_log`` entries with string field ``to`` (supervisor v3).
+    """
+    if not isinstance(routing_log, list) or len(routing_log) < 3:
+        return 0
+    seq: list[str] = []
+    for entry in routing_log:
+        if not isinstance(entry, dict):
+            continue
+        if str(entry.get("from") or "").strip() != "supervisor":
+            continue
+        to_raw = entry.get("to")
+        to_id = str(to_raw).strip() if to_raw is not None else ""
+        if to_id:
+            seq.append(to_id)
+    if len(seq) < 3:
+        return 0
+    osc = 0
+    for i in range(len(seq) - 2):
+        a, b, c = seq[i], seq[i + 1], seq[i + 2]
+        if a == WRITER_SPECIALIST_ID and b != WRITER_SPECIALIST_ID and c == WRITER_SPECIALIST_ID:
+            osc += 1
+    return osc
+
+
+def _tool_use_summary_audit_from_specialist_results_v3(
+    specialist_results_v3: Any,
+) -> tuple[int, list[float]]:
+    """Extract tool_use_summary row count + cache ratios from nested specialist payloads."""
+    rows = 0
+    ratios: list[float] = []
+
+    def walk(obj: Any) -> None:
+        nonlocal rows
+        if isinstance(obj, dict):
+            meta = obj.get("_tool_use_summary_meta")
+            if isinstance(meta, dict):
+                rows += 1
+                ratio = _coerce_optional_float(meta.get("side_llm_cache_read_ratio"))
+                if ratio is not None:
+                    ratios.append(float(ratio))
+                else:
+                    rt = meta.get("side_llm_cache_read_tokens")
+                    ct = meta.get("side_llm_cache_creation_tokens")
+                    if isinstance(rt, (int, float)) and isinstance(ct, (int, float)):
+                        denom = float(rt) + float(ct)
+                        if denom > 0:
+                            ratios.append(round(float(rt) / denom, 4))
+            for v in obj.values():
+                walk(v)
+            return
+        if isinstance(obj, list):
+            for it in obj:
+                walk(it)
+
+    walk(specialist_results_v3)
+    return rows, ratios
 
 
 def _max_consecutive_same_tool(steps: tuple[ToolStep, ...]) -> int:
@@ -395,6 +464,10 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
             sc_raw = tia.get("synthesis_conflicts")
             if isinstance(sc_raw, list):
                 ti_syn_conflict_count = len(sc_raw)
+        if side_ratio is None:
+            side_ratio = _coerce_optional_float(
+                rm.get("tool_use_summary_side_llm_cache_read_ratio_avg")
+            )
         raw_ifb = rm.get("insight_fallback_reason")
         if raw_ifb is not None and str(raw_ifb).strip():
             fb_reason = str(raw_ifb).strip()
@@ -496,6 +569,17 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     cv_tot, cv_par, live_tr, sr3_mconf, sr3_origin, usage_tok = (
         _claim_verification_and_merge_from_run_metadata(rm_dict, warn_tuple)
     )
+    tus_row_count = 0
+    if isinstance(rm, dict):
+        tus_row_count = _coerce_int(rm.get("tool_use_summary_row_count"), default=0)
+        if tus_row_count <= 0:
+            sr3 = rm.get("specialist_results_v3")
+            tus_row_count, tus_ratios = _tool_use_summary_audit_from_specialist_results_v3(sr3)
+            if side_ratio is None and tus_ratios:
+                side_ratio = round(sum(tus_ratios) / len(tus_ratios), 4)
+    w_osc = 0
+    if isinstance(rm, dict):
+        w_osc = _writer_oscillation_count_from_routing_log(rm.get("routing_log"))
 
     return TimelineCase(
         case_id=cid,
@@ -540,6 +624,7 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         tool_search_miss_due_to_no_discovery=miss_nd,
         tool_schema_bytes_saved=schema_saved,
         tool_loop_repeat_max=loop_rep,
+        writer_oscillation_count=w_osc,
         e2e_http_ok=e2e_http_ok,
         runtime_monitor_event_count=rm_mon_ev,
         runtime_monitor_degraded_hits=rm_mon_deg,
@@ -556,6 +641,7 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         specialist_v3_merge_conflict=sr3_mconf,
         specialist_v3_evidence_origin=sr3_origin,
         agent_usage_total_tokens=usage_tok,
+        tool_use_summary_row_count=tus_row_count,
     )
 
 
@@ -584,6 +670,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     miss_nd_vals: list[int] = []
     schema_saved_vals: list[int] = []
     loop_rep_vals: list[int] = []
+    writer_osc_vals: list[int] = []
     rm_ev_vals: list[int] = []
     rm_deg_vals: list[int] = []
     mcp_ev_vals: list[int] = []
@@ -595,6 +682,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     trust_vals: list[float] = []
     sr3_conf_cases = 0
     usage_token_parts: list[int] = []
+    tus_row_counts: list[int] = []
 
     for row in timeline:
         for st in row.tool_steps:
@@ -635,7 +723,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         budget_cutoff_count += sum(
             1 for x in row.budget_stop_reasons if str(x).strip() == "agent_response_budget_cutoff"
         )
-        if row.thread_insight_forked is True and row.side_llm_cache_read_ratio is not None:
+        if row.side_llm_cache_read_ratio is not None:
             try:
                 side_llm_ratios.append(float(row.side_llm_cache_read_ratio))
             except (TypeError, ValueError):
@@ -654,6 +742,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         miss_nd_vals.append(int(row.tool_search_miss_due_to_no_discovery or 0))
         schema_saved_vals.append(int(row.tool_schema_bytes_saved or 0))
         loop_rep_vals.append(int(row.tool_loop_repeat_max or 0))
+        writer_osc_vals.append(int(row.writer_oscillation_count or 0))
         rm_ev_vals.append(int(row.runtime_monitor_event_count or 0))
         rm_deg_vals.append(int(row.runtime_monitor_degraded_hits or 0))
         mcp_ev_vals.append(int(row.mcp_audit_event_count or 0))
@@ -668,6 +757,7 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
             sr3_conf_cases += 1
         if row.agent_usage_total_tokens is not None:
             usage_token_parts.append(int(row.agent_usage_total_tokens))
+        tus_row_counts.append(int(row.tool_use_summary_row_count or 0))
 
     tool_error_rate = (bad_steps / total_steps) if total_steps else 0.0
 
@@ -706,17 +796,17 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     miss_nd_sum = int(sum(miss_nd_vals)) if miss_nd_vals else 0
     schema_saved_sum = int(sum(schema_saved_vals)) if schema_saved_vals else 0
     loop_rep_max = max(loop_rep_vals) if loop_rep_vals else 0
+    writer_osc_max = max(writer_osc_vals) if writer_osc_vals else 0
     rm_ev_sum = int(sum(rm_ev_vals)) if rm_ev_vals else 0
     rm_deg_sum = int(sum(rm_deg_vals)) if rm_deg_vals else 0
     mcp_ev_sum = int(sum(mcp_ev_vals)) if mcp_ev_vals else 0
     mcp_den_sum = int(sum(mcp_den_vals)) if mcp_den_vals else 0
     lsp_ev_sum = int(sum(lsp_ev_vals)) if lsp_ev_vals else 0
     lsp_deg_sum = int(sum(lsp_deg_vals)) if lsp_deg_vals else 0
-    cv_parse_rate = (
-        round(cv_parsed_sum / float(cv_total_sum), 6) if cv_total_sum > 0 else None
-    )
+    cv_parse_rate = round(cv_parsed_sum / float(cv_total_sum), 6) if cv_total_sum > 0 else None
     trust_avg = round(sum(trust_vals) / len(trust_vals), 6) if trust_vals else None
     usage_sum_out = int(sum(usage_token_parts)) if usage_token_parts else None
+    tus_rows_total = int(sum(tus_row_counts)) if tus_row_counts else 0
 
     return Metrics(
         tool_error_rate=tool_error_rate,
@@ -758,6 +848,8 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         live_trust_signal_avg=trust_avg,
         specialist_v3_merge_conflict_cases=sr3_conf_cases,
         agent_usage_total_tokens_sum=usage_sum_out,
+        writer_oscillation_count_max=writer_osc_max,
+        tool_use_summary_row_count_total=tus_rows_total,
     )
 
 
@@ -881,9 +973,11 @@ def build_acceptance_summary(review: dict[str, Any]) -> dict[str, Any]:
     e2e = review.get("e2e_audit") if isinstance(review.get("e2e_audit"), dict) else {}
 
     side = m.get("side_llm_cache_read_ratio_avg")
-    gate_10_2 = "skipped_no_forked_thread_insight_rows"
+    gate_10_2 = "skipped_no_side_llm_rows"
     if side is not None:
-        gate_10_2 = "pass" if float(side) >= 0.6 else "fail_below_0_6_thread_insights_gate"
+        gate_10_2 = "pass" if float(side) >= 0.4 else "fail_below_0_4_side_llm_cache_gate"
+    elif int(m.get("tool_use_summary_row_count_total") or 0) > 0:
+        gate_10_2 = "fail_missing_side_llm_cache_telemetry"
 
     cv_rate = m.get("claim_verification_verdict_parse_rate")
     gate_10_3 = "skipped_no_claim_verification_rows"
@@ -897,9 +991,7 @@ def build_acceptance_summary(review: dict[str, Any]) -> dict[str, Any]:
     suite = str(ctx.get("suite") or "").strip().lower()
     if suite == "acceptance":
         gate_b1 = (
-            "pass"
-            if sub_missing == 0
-            else "fail_subagent_lifecycle_incomplete_acceptance_lane"
+            "pass" if sub_missing == 0 else "fail_subagent_lifecycle_incomplete_acceptance_lane"
         )
     else:
         gate_b1 = "pass" if sub_missing == 0 else "warn_subagent_lifecycle_incomplete"
@@ -944,9 +1036,7 @@ def build_acceptance_summary(review: dict[str, Any]) -> dict[str, Any]:
         live_proven.append("subagent_spawn_mesh_observed_2plus_rows")
     if cv_rate is not None and float(cv_rate) >= 0.95:
         live_proven.append("claim_verification_verdict_parse_rate_ge_0_95")
-    if any(
-        isinstance(row, dict) and row.get("specialist_v3_merge_conflict") is True for row in tl
-    ):
+    if any(isinstance(row, dict) and row.get("specialist_v3_merge_conflict") is True for row in tl):
         live_proven.append("specialist_v3_merge_conflict_observed_live")
     if m.get("agent_usage_total_tokens_sum") is not None:
         live_proven.append("run_metadata_usage_tokens_exported")
@@ -1250,6 +1340,9 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 tool_schema_bytes_saved=_coerce_int(item.get("tool_schema_bytes_saved"), default=0),
                 tool_loop_repeat_max=_coerce_int(item.get("tool_loop_repeat_max"), default=0)
                 or (_max_consecutive_same_tool(tuple(steps)) if steps else 0),
+                writer_oscillation_count=_coerce_int(
+                    item.get("writer_oscillation_count"), default=0
+                ),
                 e2e_http_ok=_e2e_http_ok,
                 runtime_monitor_event_count=_coerce_int(
                     item.get("runtime_monitor_event_count"), default=0
@@ -1287,6 +1380,9 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                     _coerce_int(item.get("agent_usage_total_tokens"), default=0)
                     if item.get("agent_usage_total_tokens") is not None
                     else None
+                ),
+                tool_use_summary_row_count=_coerce_int(
+                    item.get("tool_use_summary_row_count"), default=0
                 ),
             )
         )
@@ -1360,6 +1456,12 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
             _coerce_int(mraw.get("agent_usage_total_tokens_sum"), default=0)
             if mraw.get("agent_usage_total_tokens_sum") is not None
             else None
+        ),
+        writer_oscillation_count_max=_coerce_int(
+            mraw.get("writer_oscillation_count_max"), default=0
+        ),
+        tool_use_summary_row_count_total=_coerce_int(
+            mraw.get("tool_use_summary_row_count_total"), default=0
         ),
     )
 

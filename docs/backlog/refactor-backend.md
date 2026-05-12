@@ -105,23 +105,33 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Area:** `science_graphrag/agent/graph/supervisor.py`, `science_graphrag/agent/graph/nodes/retrieval_agent.py`, routing/trace-review live gates
 - **Issue:** Dev `langgraph_supervisor_v3` live runs повторно прыгали `route_to_specialist -> retrieval_agent` перед writer handoff (`tool_loop_repeat_max=11` на постфикс-трейсах). Терминальный `final_answer` уже не пропадал, но churn ел токены/latency.
 - **Done (2026-05-08):** orchestration plumbing завершён: `planner_post_retrieval_handoff(..., completion_state=...)` короткозамыкает на writer при `minimal_bundle_ready` / `writer_ready`; producer подключён через `derive_retrieval_completion_state` / `derive_graph_completion_state` + `annotate_completion_state` в retrieval/graph специалистах; `agent_route_plan_post_retrieval_handoff_enabled` переведён в default-on. Live strict acceptance на default dev-v3 даёт `tool_loop_repeat_max=3` (≤ цели плана 4) — см. `eval/results/trace-review-acceptance-v3.md`.
+- **Follow-up (Wave E E1):** subagent deepening (`corpus_explore` / `research_plan`) измеряется отдельной парой live прогонов и compare; см. [`docs/analysis/wave-e-e1-rollout-decision-2026-05-10.md`](../analysis/wave-e-e1-rollout-decision-2026-05-10.md).
 - **Plan ref:** [`docs/analysis/orchestration-stabilization-plan-2026-05-07.md`](../analysis/orchestration-stabilization-plan-2026-05-07.md) §6 acceptance gate; closeout — [`docs/analysis/orchestration-stabilization-closeout-2026-05-08.md`](../analysis/orchestration-stabilization-closeout-2026-05-08.md).
 - **Raised:** 2026-05-07 (post-fix follow-up after final_answer fallback)
 
-### [PARTIAL] Simplify `writer_agent` into terminal synthesis seam
+### [DONE] Simplify `writer_agent` into terminal synthesis seam
 - **Area:** `science_graphrag/agent/graph/nodes/writer_agent.py`, `science_graphrag/agent/graph/supervisor.py`, writer-facing prompts/contracts
 - **Issue:** `writer_agent` currently remains useful as the terminal `final_answer` seam, but its shape is still more agentic/ReAct-like than needed. That increases routing ambiguity, prompt surface area, and the chance of extra loops where synthesis should have been a deterministic last hop.
 - **Proposal:** Keep a dedicated writer boundary, but narrow its role to synthesis/citation-normalization/merge-explanation only; move any residual research/routing behavior back into supervisor or retrieval/graph specialists, and tighten the writer prompt/graph so the normal path is one terminal synthesis pass.
 - **Acceptance:** writer stays the only terminal `final_answer` owner, but does not independently expand tool search/routing in standard flows; prompt and tests explicitly describe it as a synthesis seam; live traces show fewer late-turn writer/retrieval oscillations.
-- **Done (Wave A 2026-05-08, slice):** module docstring + system prompt state terminal-only catalog; writer node skips `shortlist_tools_for_specialist` (explicit `writer_terminal_synthesis_seam` meta); unit `test_build_writer_tools_catalog_is_final_answer_only`. **Remaining:** live trace-review evidence on oscillation delta vs baseline.
+- **Done (Wave A 2026-05-08, slice):** module docstring + system prompt state terminal-only catalog; writer node skips `shortlist_tools_for_specialist` (explicit `writer_terminal_synthesis_seam` meta); unit `test_build_writer_tools_catalog_is_final_answer_only`.
+- **Done (Wave E 2026-05-10, measurement + control):** `run_metadata.routing_log` is emitted on agent responses; trace-review aggregates `writer_oscillation_count` / `writer_oscillation_count_max`; `trace_regression_compare.py` supports `--max-writer-oscillation-count` and fail policy `writer_oscillation_increase`; optional shadow path `agent_writer_terminal_single_pass_shadow_enabled` cuts post-tool writer loops for A/B. Operator records baseline vs shadow artifacts per [`docs/runbooks/agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) §5.1.
 - **Raised:** 2026-05-07 (post architecture review on writer necessity)
 
-### [OPEN] Persisted admin section `agent_tools` (runtime overrides without overloading LLM settings)
-- **Area:** `science_graphrag/settings/{service.py,runtime_overlay.py,repository.py}`, `science_graphrag/api/settings*.py`, `ui/src/pages/SettingsPage/`
+### [DONE] Persisted admin section `agent_tools` (runtime overrides without overloading LLM settings)
+- **Area:** `science_graphrag/settings/{service.py,runtime_overlay.py,repository.py}`, `science_graphrag/api/settings*.py`, `ui/src/pages/SettingsPage/` (UI optional)
 - **Issue:** Operator-facing tool toggles and safety caps (`agent_web_*`, MCP/LSP timeouts) live on `Settings` (env) but are not first-class in `/v1/settings`; stuffing them into `llm.runtime_overrides` mixes LLM provider config with tool policy.
 - **Proposal:** Add persisted JSON bucket `agent_tools` + `PATCH /v1/settings/agent_tools` with allowlisted scalar merges into `Settings` (see design doc). Keep argv/denylist-heavy knobs env-only until validation story exists.
 - **Acceptance:** Round-trip for at least one scalar changes effective `get_settings()` after documented reload policy; schema version bump + UI card optional; no secrets in persisted JSON.
+- **Done (Wave E 2026-05-10, thin slice):** allowlisted `agent_supervisor_max_rounds` (2–32) via `runtime_overlay.build_non_secret_overrides`, snapshot section `agent_tools` separate from `llm`, `PATCH /v1/settings/agent_tools`; tests `tests/test_runtime_overlay.py`, `tests/test_settings_service.py`, `tests/test_api_smoke.py::test_settings_agent_tools_patch_smoke`.
 - **Raised:** 2026-05-07 — design: [`docs/analysis/agent-tools-admin-settings-proposal-2026-05-07.md`](../analysis/agent-tools-admin-settings-proposal-2026-05-07.md)
+
+### [OPEN] Normalize side-LLM cache telemetry for `tool_use_summary` E2 gate
+- **Area:** `science_graphrag/agent/{forked_runtime.py,tool_use_summary.py,debug_events_telemetry.py}`, `scripts/live_check/trace_review_schema.py`
+- **Issue:** Wave E live runs show `tool_use_summary_row_count_total > 0`, but `side_llm_cache_read_ratio_avg` stays `null` because provider returns `side_llm_cache_*` as null/0 for summary forks. E2 gate now reports `fail_missing_side_llm_cache_telemetry`, so ratio threshold (`>=0.4`) cannot be validated.
+- **Proposal:** make cache telemetry source explicit and stable for summary forks: (1) normalize provider usage metadata extraction in `forked_runtime`, (2) emit a dedicated `tool_use_summary_side_llm_cache_*` audit fragment in `run_metadata`, (3) keep acceptance gate strict (`missing telemetry` = fail) but document provider-specific fallback policy.
+- **Acceptance:** at least one live acceptance artifact has both `tool_use_summary_row_count_total > 0` and non-null `side_llm_cache_read_ratio_avg`; `§10.2_side_llm_cache_read_ratio` is no longer `skipped_*`/`fail_missing_*` on that run.
+- **Raised:** 2026-05-12 (Wave E closeout follow-up)
 
 ### [DONE] Split permission / validation phase out of `build_tool_execution_node` inner closure
 - **Area:** `science_graphrag/agent/tool_execution_pipeline.py` (`tools_node` closure)

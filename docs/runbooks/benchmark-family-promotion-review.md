@@ -39,11 +39,13 @@ Record the outcome in the family spec header (status + policy) and, if applicabl
 | Claims | Mixed | Harness / merge contract — **advisory**; **Wave O** production pilot `current-claims-production-pilot.json` — **core** в `decision_gate` (см. `benchmark-decision-gate.md` §8.1) |
 | References resolution | Advisory | Synthetic + graph_stub harness in CI; **Neo4j `--resolver graph` lane** (Wave M) — advisory; **conditional core** после 7 зелёных ночей + promotion review (см. `benchmark-decision-gate.md` §8.2) |
 | Agent tools (`agent_tools_v1`) | Advisory | Wave R: `current-agent-tools-mini.json` + `current-agent-tools-judge-pilot.json`; promotion только после стабильного nightly и holdout |
-| Agent v3 quality judge (`agent_v3_quality_judge_v1`) | Advisory | Wave B: реализация lane; **Wave C:** rollout/KPI/baseline/compare — [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) §Wave C; артефакты `current-agent-v3-quality-judge-{mini,pilot,holdout}.json`; см. [`eval/agent_v3_quality/README.md`](../../eval/agent_v3_quality/README.md) |
+| Agent v3 quality judge (`agent_v3_quality_judge_v1`) | Advisory | Wave B: реализация lane; **Wave C:** rollout/KPI/baseline/compare — [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) §Wave C; **Wave D (2026-05):** tooling окна калибровки, fingerprint guard, release-train compare — [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md) §2 + [`agent-v3-quality-judge-calibration-2026-05.md`](../analysis/agent-v3-quality-judge-calibration-2026-05.md); артефакты `current-agent-v3-quality-judge-{mini,pilot,holdout}.json`; см. [`eval/agent_v3_quality/README.md`](../../eval/agent_v3_quality/README.md) |
 
 ## Checklist: Agent v3 quality judge (Wave B / Wave C → stronger gate)
 
 Использовать только после стабилизации **engineering** gate (`trace-review-v1`) и отдельного решения мейнтейнеров. Детальная программа Wave C (KPI, cadence, ReAct baseline policy): [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) §Wave C. Спека judge: [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](../analysis/agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) §9.
+
+**Wave D (2026-05-10):** инструментарий (скрипты, тест fingerprint, `compare --release-train-gate`, embedded baseline, runbook) уже в репозитории — см. [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md) §1.2–2. Пункты ниже — что **подтверждается перед promotion** (live артефакты, пороги, стабилизация).
 
 ### Preconditions
 

@@ -39,6 +39,7 @@
 | `--progress` heartbeat, `branch_outcome_v1` (`baseline_outcome` / `candidate_outcome`), rollup `cases_with_any_branch_non_ok` | runner hardening 2026-05-09 |
 | Wave C promotion review flow (KPI map, cadence, baseline/compare/fingerprint, advisory visibility в `aggregate_benchmark_metrics.py` → `agent_v3_quality_family`) | [`benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md) |
 | LLM-judge calibration subset (4 кейса, `agreement_winner_rate=0.5`) — наблюдение, не gate | `scripts/run_agent_v3_quality_llm_calibration_subset.py` |
+| **Wave D (P1) — инструментарий в репозитории:** calibration window (`--window` / `--strict` / `--write-variance-baseline`), fixture `calibration_window_case_ids.json`, fingerprint guard (`EXPECTED_JUDGE_PROMPT_FINGERPRINT` + тест), variance JSON-шаблон, `baseline-agent-v3-quality-judge-pilot-embedded.json`, `compare --release-train-gate`, runbooks | [`agent-v3-quality-judge-calibration-2026-05.md`](./agent-v3-quality-judge-calibration-2026-05.md), [`eval/agent_v3_quality/README.md`](../../eval/agent_v3_quality/README.md) |
 
 ### 1.3 Что осталось открытым (P0 → P3)
 
@@ -46,9 +47,7 @@
 
 | ID | Тема | Приоритет | Ось |
 |----|------|-----------|-----|
-| **D1** | LLM-judge calibration window до promotion | P1 | benchmark |
-| **D2** | Frozen judge prompt fingerprint + variance baseline | P1 | benchmark |
-| **D3** | `judge_pilot` baseline frozen JSON + автоматизированный compare на release train | P1 | benchmark |
+| **D1–D3** | **Wave D (judge calibration → promotion):** инструментарий и процесс **в репозитории закрыты** (см. §2 и строку выше в §1.2). **Остаётся операторски / для gate §8.1:** live calibration window с `agreement_winner_rate ≥ 0.7` на каждом из 3 прогонов (`--strict`), заполненный variance baseline после реальных окон, замена `baseline-agent-v3-quality-judge-pilot-embedded.json` на frozen LLM-judge pilot по commit при согласовании | P1 | benchmark |
 | **E1** | Глубже декомпозировать heavy retrieval-ветки (`corpus_explore`, `research_plan` под supervisor) — calibration + live trace-review | P1 | engine |
 | **E2** | `tool_use_summary` для длинных батчей `ToolMessage` — стабилизация side-LLM cache, измерение `side_llm_cache_read_ratio_avg` | P1 | engine |
 | **E3** | `writer_agent` oscillation-risk live evidence + дожать backlog `[PARTIAL]` | P1 | engine |
@@ -68,6 +67,8 @@
 
 **Цель:** сделать `agent_v3_quality_judge_v1` достаточно стабильным, чтобы можно было обсуждать promotion из advisory в core engineering gate (не путать с decision_gate — отдельный процесс).
 
+**Статус (2026-05-10):** реализация D1–D3 **в коде, тестах и runbooks закрыта**; подпункты §2.1–2.3 ниже фиксируют acceptance для **полного** закрытия волны (live evidence + решение по promotion). Gate «готов к promotion review» — §8.1.
+
 ### 2.1 D1: Calibration window
 
 **Acceptance:**
@@ -85,7 +86,7 @@
 
 **Acceptance:**
 - `eval/agent_v3_quality/judge_prompt_v1.md` снапшотится с `judge_prompt_sha256` в каждом артефакте (уже есть);
-- любая правка промпта → новый fingerprint → **обязательный** сброс stabilization window (правило в [`benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md) есть, но добавить sanity-check скриптом);
+- любая правка промпта → новый fingerprint → **обязательный** сброс stabilization window (правило в [`benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md)); sanity-check в репозитории: `EXPECTED_JUDGE_PROMPT_FINGERPRINT` + `tests/scripts/test_judge_prompt_fingerprint_guard.py`;
 - baseline judge variance: `(mean_delta_run1, mean_delta_run2, mean_delta_run3)` — не больше **0.15** absolute spread на одних и тех же кейсах.
 
 **Артефакты:**
@@ -121,7 +122,12 @@
 **Acceptance:**
 - 1 acceptance volna с флагами off (baseline) и 1 с on, оба `live`, `subprocess` транспорт;
 - сводный compare → `eval/results/agent-corpus-explore-research-plan-acceptance-<date>.{json,md}`;
-- backlog item в `[OPEN] Reduce supervisor route churn before writer handoff` дополнить evidence ссылкой.
+- follow-up evidence для churn: см. уже закрытый `[DONE] Reduce supervisor route churn before writer handoff`; новые прогоны дополняют картину по subagent-флагам.
+
+**Статус на 2026-05-12:** 🟡 **PARTIAL**
+- harness + rollout template готовы (`docs/runbooks/agent-trace-review-sop.md` §5.1, `wave-e-e1-rollout-decision-2026-05-10.md`);
+- есть live acceptance прогоны Wave E;
+- финальный операторский `off vs on` compare под `agent-corpus-explore-research-plan-acceptance-<date>.*` и решение `default-on / keep gated` ещё не зафиксированы отдельным артефактом.
 
 ### 3.2 E2: tool_use_summary maturity
 
@@ -139,6 +145,11 @@
 - `trace_regression_compare.py --min-side-llm-cache-read-ratio 0.4` зелёный на acceptance suite;
 - если ratio < 0.4 — feature flag `agent_tool_use_summary_enabled` остаётся **off** до устранения причины.
 
+**Статус на 2026-05-12:** 🟡 **PARTIAL**
+- done: cache-safe regression tests + telemetry merge improvements (`debug_events` full aggregation, `specialist_results_v3` fallback extraction в `trace_review_schema`);
+- done: live acceptance показывает `tool_use_summary_row_count_total > 0` (summary реально применялся);
+- blocker: provider-side cache telemetry для summary fork остаётся пустой (`side_llm_cache_read_ratio_avg = null`), gate §10.2 теперь явно фиксируется как `fail_missing_side_llm_cache_telemetry`.
+
 ### 3.3 E3: writer_agent oscillation closure
 
 Текущее: writer narrowed to terminal synthesis seam (slice ✅), но `[PARTIAL]` пункт в backlog ждёт **live** evidence по oscillation delta vs baseline.
@@ -149,6 +160,11 @@
 - если single-pass shadow не уступает по grounding precision/recall и снижает oscillation — отдельный PR на default-on.
 
 **Acceptance:** backlog `[PARTIAL] Simplify writer_agent into terminal synthesis seam` → `[DONE]`.
+
+**Статус на 2026-05-12:** ✅ **DONE**
+- `writer_oscillation_count` добавлен в trace-review schema + compare policy;
+- live Wave E прогоны подтверждают отсутствие деградации (`writer_oscillation_count_max = 0` на последних acceptance/default артефактах);
+- backlog item про writer закрыт в `docs/backlog/refactor-backend.md`.
 
 ### 3.4 E4: Persisted admin section `agent_tools`
 
@@ -163,6 +179,26 @@
 - следовать [`constants-and-settings-policy.mdc`](../../.cursor/rules/constants-and-settings-policy.mdc).
 
 **Зависимости:** не блокирует Wave D/F. Может идти параллельно.
+
+**Статус на 2026-05-12:** ✅ **DONE (thin slice)**
+- реализован persisted bucket `agent_tools` + endpoint `PATCH /v1/settings/agent_tools`;
+- round-trip для `agent_supervisor_max_rounds` (allowlist + clamp 2..32) покрыт service/API/runtime_overlay тестами;
+- секция отделена от `llm.runtime_overrides` и отражается в snapshot/schema.
+
+### 3.5 Что осталось закрыть до Wave F
+
+Перед переходом к F остаются хвосты не по коду, а по gate-доказательствам:
+
+1. **E1 decision artifact (обязательно):**
+   - провести и зафиксировать отдельный `off vs on` compare для `corpus_explore/research_plan`;
+   - заполнить `wave-e-e1-rollout-decision-2026-05-10.md` итогом (`default-on` / `keep gated` / `needs narrower routing`).
+
+2. **E2 cache-ratio evidence (обязательно):**
+   - получить non-null `side_llm_cache_read_ratio_avg` на live run с `tool_use_summary_row_count_total > 0`;
+   - доказать порог `>= 0.4` либо оставить flag off и закрыть issue как provider telemetry gap (см. `[OPEN] Normalize side-LLM cache telemetry for tool_use_summary E2 gate` в backend backlog).
+
+3. **Wave D promotion gate 8.1 (если идём в F с промоушном):**
+   - зафиксировать 3 стабильных `judge_pilot` прогона и variance-range (F2) в артефактах promotion review.
 
 ---
 
@@ -296,7 +332,7 @@
 Wave A (DONE 2026-05-08)
    └─ Wave B (DONE 2026-05-08)
       └─ Wave C (DONE 2026-05-09)
-         ├─ Wave D (D1 → D2 → D3)         ◄── ближайшая, P1
+         ├─ Wave D (tooling DONE 2026-05-10; live evidence + §8.1 open)
          │   └─ enables F1 / F2 numbers grounded in stable judge
          ├─ Wave E (E1, E2, E3 параллельно; E4 независимо)
          │   └─ feeds D3 baseline (после default-on флагов)
@@ -324,7 +360,7 @@ Wave H ставится **после** D / E / G — нет смысла дви�
 
 ### 8.1 Gate «Wave D готов к промоушн review»
 
-- D1, D2, D3 закрыты;
+- D1, D2, D3 **в смысле gate** = live артефакты и стабилизация (не только наличие CLI в репозитории; инструментарий уже см. §1.2 / §2);
 - 3 stable pilot прогона `judge_pilot` без `cases_with_any_branch_non_ok ≥ 1`;
 - `mean_delta` median не ниже `−0.05` против baseline;
 - `judge_prompt_fingerprint` не менялся ≥ 2 недель;
@@ -334,10 +370,18 @@ Wave H ставится **после** D / E / G — нет смысла дви�
 
 ### 8.2 Gate «engine baseline стабилен после Wave E»
 
-- E1 default-on флаги без degradation `latency_p95_ms` и `tool_loop_repeat_max`;
-- E2 cache ratio ≥ 0.4;
-- E3 writer oscillation closure done;
-- backlog `[PARTIAL] Simplify writer_agent into terminal synthesis seam` → `[DONE]`.
+- E1 default-on флаги без degradation `latency_p95_ms` и `tool_loop_repeat_max` (**pending final decision artifact**);
+- E2 cache ratio ≥ 0.4 (**pending: telemetry gap on summary forks, gate currently cannot be proven**);
+- E3 writer oscillation closure done (**done**);
+- backlog `[PARTIAL] Simplify writer_agent into terminal synthesis seam` → `[DONE]` (**done**).
+
+**Проверка по артефактам репозитория (Wave E implementation, 2026-05-10):**
+
+- **Harness / compare:** единый цикл в [`docs/runbooks/agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) §5.1 (имена JSON/MD, env-профили baseline/candidate, флаги `trace_regression_compare.py`).
+- **E3:** метрики `writer_oscillation_count` в `scripts/live_check/trace_review_schema.py`; политика регрессии `--max-writer-oscillation-count`, `--fail-on writer_oscillation_increase`; shadow knob `SCIENCE_GRAPHRAG_AGENT_WRITER_TERMINAL_SINGLE_PASS_SHADOW_ENABLED`.
+- **E2:** регрессия cache-safe вызова side-LLM и floor ratio — `tests/agent/test_tool_use_summary_cache_safety.py`; gate compare — `--min-side-llm-cache-read-ratio 0.4`.
+- **E4:** `PATCH /v1/settings/agent_tools` + overlay `agent_supervisor_max_rounds` (см. тесты в `tests/test_*`).
+- **E1 / решение default-on:** шаблон и критерии — [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md); финальный вывод фиксируется оператором после двух live прогонов (артефакты под `eval/results/agent-corpus-explore-research-plan-acceptance-<date>.*`).
 
 После этого backlog по агентскому графу можно считать на 80 % закрытым; следующая волна — F2/F3/F4 (research) и продуктовые направления.
 

@@ -1,5 +1,7 @@
 # Agent v3 quality — LLM judge calibration (Wave D)
 
+**Статус документа (2026-05-10):** актуален; отражает закрытый в репозитории **инструментарий** Wave D; live acceptance — по [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §8.1.
+
 This note complements Wave D in [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md).
 
 ## Calibration window (6–10 pilot cases, 3 runs)

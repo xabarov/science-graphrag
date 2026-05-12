@@ -1,0 +1,131 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-11T22:30:07.951296+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+    "suite": "default",
+    "profile": "default",
+    "run_kind": "supervisor_specialists_v3",
+    "graph_id": "supervisor_graph_v3",
+    "feature_flags": {
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "false",
+      "agent_claim_verification_enabled": null,
+      "agent_subagent_lifecycle_enhanced_enabled": null,
+      "agent_corpus_explore_enabled": null,
+      "agent_research_plan_subagent_enabled": null,
+      "agent_tool_use_summary_enabled": null,
+      "agent_writer_terminal_single_pass_shadow_enabled": null
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": false,
+      "detail": "[Errno 104] Connection reset by peer",
+      "data": {}
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": false,
+      "detail": "[Errno 104] Connection reset by peer",
+      "data": {}
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": false,
+      "detail": "turn1: [Errno 104] Connection reset by peer",
+      "data": {}
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": false,
+      "detail": "[Errno 104] Connection reset by peer",
+      "data": {
+        "partial_event_count": 0
+      }
+    }
+  ],
+  "trace_timeline": [],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": null,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0,
+    "side_llm_cache_read_ratio_avg": null,
+    "latency_p50_ms": null,
+    "insight_recall_at_k": null,
+    "stale_summary_error_rate": null,
+    "insight_stale_reason_rate": null,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "ptl_retry_count_per_compaction_avg": null,
+    "compaction_circuit_breaker_trips": 0,
+    "unnecessary_tool_calls_avg": null,
+    "hook_chain_event_count": 0,
+    "subagent_lifecycle_missing_count": 0,
+    "subagent_task_notification_count_avg": null,
+    "tool_search_miss_due_to_no_discovery_total": 0,
+    "tool_schema_bytes_saved_total": 0,
+    "tool_loop_repeat_max": 0,
+    "runtime_monitor_event_total": 0,
+    "runtime_monitor_degraded_total": 0,
+    "mcp_audit_event_total": 0,
+    "mcp_audit_deny_total": 0,
+    "lsp_audit_event_total": 0,
+    "lsp_audit_degraded_total": 0,
+    "claim_verification_verdict_parse_rate": null,
+    "live_trust_signal_avg": null,
+    "specialist_v3_merge_conflict_cases": 0,
+    "agent_usage_total_tokens_sum": null,
+    "writer_oscillation_count_max": 0
+  },
+  "verdict": {
+    "status": "fail",
+    "fail_reasons": [
+      "failed_check:agent_v2_sse",
+      "failed_check:agent_v2_sync_json",
+      "failed_check:health",
+      "e2e_failed"
+    ],
+    "warn_reasons": []
+  },
+  "e2e_audit": {
+    "ok": false,
+    "returncode": 1,
+    "command": [
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
+      "--suite",
+      "default",
+      "--timeout",
+      "600.0",
+      "--write-report",
+      "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+      "--write-report-json",
+      "/tmp/e2e_full_report_l3kb0vie.json",
+      "--trace-audit"
+    ],
+    "stdout_tail": "",
+    "stderr_tail": "ib/python3.12/site-packages/httpcore/_sync/connection.py\", line 103, in handle_request\n    return self._connection.handle_request(request)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/http11.py\", line 136, in handle_request\n    raise exc\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/http11.py\", line 106, in handle_request\n    ) = self._receive_response_headers(**kwargs)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/http11.py\", line 177, in _receive_response_headers\n    event = self._receive_event(timeout=timeout)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/http11.py\", line 217, in _receive_event\n    data = self._network_stream.read(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_backends/sync.py\", line 126, in read\n    with map_exceptions(exc_map):\n  File \"/usr/lib/python3.12/contextlib.py\", line 158, in __exit__\n    self.gen.throw(value)\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_exceptions.py\", line 14, in map_exceptions\n    raise to_exc(exc) from exc\nhttpcore.ReadError: [Errno 104] Connection reset by peer\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py\", line 837, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py\", line 724, in main\n    health = client.get(f\"{base}/health\")\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 1053, in get\n    return self.request(\n           ^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 825, in request\n    return self.send(request, auth=auth, follow_redirects=follow_redirects)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 914, in send\n    response = self._send_handling_auth(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 942, in _send_handling_auth\n    response = self._send_handling_redirects(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 979, in _send_handling_redirects\n    response = self._send_single_request(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 1014, in _send_single_request\n    response = transport.handle_request(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_transports/default.py\", line 249, in handle_request\n    with map_httpcore_exceptions():\n  File \"/usr/lib/python3.12/contextlib.py\", line 158, in __exit__\n    self.gen.throw(value)\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_transports/default.py\", line 118, in map_httpcore_exceptions\n    raise mapped_exc(message) from exc\nhttpx.ReadError: [Errno 104] Connection reset by peer\n",
+    "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
+    "full_report_json_path": "/tmp/e2e_full_report_l3kb0vie.json"
+  },
+  "phoenix_snapshot_path": null,
+  "phoenix_pull": {
+    "ok": false,
+    "error": "report_parse_failed"
+  }
+}

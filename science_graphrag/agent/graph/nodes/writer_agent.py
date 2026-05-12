@@ -59,8 +59,8 @@ DIRECT_SYSTEM_PROMPT = (
     "You are a helpful research assistant in a scholarly workspace UI. "
     "The user's message is conversational (greeting, thanks, or small talk) OR asks who you are / "
     "what you can do. Reply briefly and warmly in the user's language. "
-    "Do NOT invent paper titles, workspace inventory, citations, or graph facts — specialist_results "
-    "below are empty for this turn. Always call final_answer with citations=[] "
+    "Do NOT invent paper titles, workspace inventory, citations, or graph facts — "
+    "specialist_results below are empty for this turn. Always call final_answer with citations=[] "
     "(no fabricated sources)."
 )
 
@@ -119,6 +119,7 @@ def _compile_writer_subgraph(
     *,
     mode: str,
     sidechain_tag: str,
+    single_pass_shadow: bool,
 ) -> Any:
     system_prompt = _system_prompt_for_mode(mode, settings=settings)
     llm = build_chat_model(settings).bind_tools(tools)
@@ -194,9 +195,19 @@ def _compile_writer_subgraph(
     )
     subgraph.add_edge("final_answer_nudge", "chat")
     subgraph.add_edge("tools", "after_tools")
+
+    def _route_after_tools(state: AgentState):
+        if single_pass_shadow:
+            add_span_event(
+                "agent.writer_single_pass_shadow_cutoff",
+                {"specialist": SPECIALIST_NAME, "writer_mode": mode},
+            )
+            return END
+        return route_react_tools_next(state)
+
     subgraph.add_conditional_edges(
         "after_tools",
-        route_react_tools_next,
+        _route_after_tools,
         {"chat": "chat", END: END},
     )
     return subgraph.compile()
@@ -277,12 +288,17 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
     seq = {"n": 0}
 
     def _cached_subgraph(tools: list[BaseTool], mode: str) -> Any:
-        key = (tuple(sorted(getattr(t, "name", "") or "" for t in tools)), mode)
+        shadow = bool(getattr(settings, "agent_writer_terminal_single_pass_shadow_enabled", False))
+        key = (tuple(sorted(getattr(t, "name", "") or "" for t in tools)), mode, shadow)
         if key not in subgraph_cache:
             seq["n"] += 1
             tag = subgraph_tags.setdefault(key, f"h{seq['n']}")
             subgraph_cache[key] = _compile_writer_subgraph(
-                tools, settings, mode=mode, sidechain_tag=tag
+                tools,
+                settings,
+                mode=mode,
+                sidechain_tag=tag,
+                single_pass_shadow=shadow,
             )
         return subgraph_cache[key]
 

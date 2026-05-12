@@ -358,12 +358,13 @@ def response_from_run(
     llm_usage = getattr(out, "llm_usage", None)
     if isinstance(llm_usage, dict) and llm_usage:
         run_metadata["usage"] = dict(llm_usage)
-    dbg_tail = [
-        x for x in list(getattr(out, "debug_events", None) or [])[-50:] if isinstance(x, dict)
-    ]
+    dbg_all = [x for x in list(getattr(out, "debug_events", None) or []) if isinstance(x, dict)]
+    dbg_tail = dbg_all[-50:]
     if dbg_tail:
         run_metadata["debug_events"] = dbg_tail
-        run_metadata.update(extract_runtime_telemetry_from_debug_events(dbg_tail))
+    if dbg_all:
+        # Keep payload small via tail, but aggregate telemetry from full list.
+        run_metadata.update(extract_runtime_telemetry_from_debug_events(dbg_all))
     hc_list = [x for x in (getattr(out, "hook_chain_events", None) or []) if isinstance(x, dict)]
     merge_hook_chain_events_into_run_metadata(
         run_metadata,
@@ -411,6 +412,9 @@ def response_from_run(
     brief = getattr(out, "brief", None)
     if isinstance(brief, str) and brief.strip():
         run_metadata["brief"] = brief.strip()[:240]
+    rl = getattr(out, "routing_log", None)
+    if isinstance(rl, list) and rl:
+        run_metadata["routing_log"] = [x for x in rl if isinstance(x, dict)]
     return AgentQueryResponseV2(
         answer=out.answer,
         citations=out.citations,

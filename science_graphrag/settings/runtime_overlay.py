@@ -22,6 +22,7 @@ def build_non_secret_overrides(
     storage_cfg: dict[str, Any] | None,
     secret_store: SecretStore,
     storage_secret_explicit: dict[str, str | None] | None = None,
+    agent_tools: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build settings overlay dict used by snapshot + runtime merge."""
     timeout_seconds = llm.get("timeout_seconds")
@@ -73,4 +74,25 @@ def build_non_secret_overrides(
         explicit_secrets=storage_secret_explicit,
     )
     non_secret_overrides.update(storage_fields)
+    _merge_persisted_agent_tools(non_secret_overrides, agent_tools)
     return non_secret_overrides
+
+
+def _merge_persisted_agent_tools(
+    non_secret_overrides: dict[str, Any],
+    agent_tools: dict[str, Any] | None,
+) -> None:
+    """Apply allowlisted persisted ``agent_tools`` keys (Wave E admin slice).
+
+    Only operator-facing Settings fields are merged; tool args_schema and internal
+    guardrails stay out of this bucket.
+    """
+    if not agent_tools:
+        return
+    if "agent_supervisor_max_rounds" in agent_tools:
+        raw = agent_tools.get("agent_supervisor_max_rounds")
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            return
+        non_secret_overrides["agent_supervisor_max_rounds"] = max(2, min(32, n))

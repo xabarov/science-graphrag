@@ -12,6 +12,7 @@ from science_graphrag.api.settings_models import (
     SettingsSchemaResponse,
     SettingsSnapshotResponse,
     TestLlmConnectionRequest,
+    UpdateAgentToolsSettingsRequest,
     UpdateBenchmarkSettingsRequest,
     UpdateGeneralSettingsRequest,
     UpdateIngestionSettingsRequest,
@@ -38,6 +39,7 @@ def _settings_snapshot_response(snapshot: SettingsSnapshot) -> SettingsSnapshotR
         diagnostics=snapshot.diagnostics,
         security=snapshot.security,
         work_dedup=snapshot.work_dedup,
+        agent_tools=snapshot.agent_tools,
     )
 
 
@@ -125,6 +127,22 @@ def patch_storage_settings(
             base_settings=get_settings(),
             actor=actor,
             updates=raw,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return _settings_snapshot_response(snapshot)
+
+
+@router.patch("/agent_tools", response_model=SettingsSnapshotResponse)
+def patch_agent_tools_settings(
+    body: UpdateAgentToolsSettingsRequest,
+    actor: str = Depends(require_settings_access),
+) -> SettingsSnapshotResponse:
+    try:
+        snapshot = _SETTINGS_SERVICE.update_agent_tools_settings(
+            base_settings=get_settings(),
+            actor=actor,
+            agent_supervisor_max_rounds=body.agent_supervisor_max_rounds,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

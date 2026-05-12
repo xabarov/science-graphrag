@@ -630,6 +630,18 @@ def main() -> int:
             "agent_subagent_lifecycle_enhanced_enabled": os.environ.get(
                 "SCIENCE_GRAPHRAG_AGENT_SUBAGENT_LIFECYCLE_ENHANCED_ENABLED"
             ),
+            "agent_corpus_explore_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_CORPUS_EXPLORE_ENABLED"
+            ),
+            "agent_research_plan_subagent_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_SUBAGENT_ENABLED"
+            ),
+            "agent_tool_use_summary_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED"
+            ),
+            "agent_writer_terminal_single_pass_shadow_enabled": os.environ.get(
+                "SCIENCE_GRAPHRAG_AGENT_WRITER_TERMINAL_SINGLE_PASS_SHADOW_ENABLED"
+            ),
         },
     }
     if phoenix_pull_meta:

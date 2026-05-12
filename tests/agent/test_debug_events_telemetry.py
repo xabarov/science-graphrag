@@ -36,7 +36,13 @@ def test_tool_message_compact_audit_emits_microcompact_count() -> None:
 
 def test_mcp_audit_summary_rollup() -> None:
     evs = [
-        {"type": "mcp_audit", "phase": "deny", "server": "s1", "ok": False, "deny_reason": "denylist_hit:x"},
+        {
+            "type": "mcp_audit",
+            "phase": "deny",
+            "server": "s1",
+            "ok": False,
+            "deny_reason": "denylist_hit:x",
+        },
         {"type": "mcp_audit", "phase": "call", "server": "s1", "tool": "t1", "ok": True},
     ]
     tel = extract_runtime_telemetry_from_debug_events(evs)
@@ -57,3 +63,26 @@ def test_lsp_audit_summary_rollup() -> None:
     assert isinstance(ls, dict)
     assert ls.get("event_count") == 2
     assert ls.get("degraded_hits") == 1
+
+
+def test_tool_use_summary_batch_emits_side_llm_cache_ratio_avg() -> None:
+    evs = [
+        {
+            "type": "tool_use_summary_batch",
+            "count": 2,
+            "rows": [
+                {
+                    "side_llm_cache_read_ratio": 0.5,
+                    "compression_ratio_vs_original": 1.2,
+                },
+                {
+                    "side_llm_cache_read_tokens": 30,
+                    "side_llm_cache_creation_tokens": 70,
+                },
+            ],
+        }
+    ]
+    tel = extract_runtime_telemetry_from_debug_events(evs)
+    assert tel.get("tool_use_summary_batch_count") == 1
+    assert tel.get("tool_use_summary_row_count") == 2
+    assert tel.get("tool_use_summary_side_llm_cache_read_ratio_avg") == 0.4

@@ -215,6 +215,30 @@ def test_settings_benchmark_patch_smoke(tmp_path: Path, monkeypatch: Any) -> Non
     assert payload["benchmark"]["by_family"]["layer1"]["gold_source"] == "teacher_gold"
 
 
+def test_settings_agent_tools_patch_smoke(tmp_path: Path, monkeypatch: Any) -> None:
+    """PATCH /v1/settings/agent_tools persists allowlisted supervisor cap (Wave E)."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+    client = _client()
+    res = client.patch(
+        "/v1/settings/agent_tools",
+        json={"agent_supervisor_max_rounds": 12},
+    )
+    assert res.status_code == 200
+    payload = res.json()
+    assert payload["agent_tools"]["effective"]["resolved_agent_supervisor_max_rounds"] == 12
+
+
 def test_settings_service_llm_snapshot_env_secret_only(tmp_path: Path) -> None:
     """LLM snapshot reflects environment API key when vault is empty."""
 

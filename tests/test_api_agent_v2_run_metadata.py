@@ -98,3 +98,57 @@ def test_response_from_run_merges_brief_into_run_metadata() -> None:
         max_tool_calls=5,
     )
     assert resp.run_metadata.get("brief") == "Short card for history"
+
+
+def test_response_from_run_aggregates_telemetry_from_full_debug_events() -> None:
+    """Telemetry must include events even when they are outside the debug tail window."""
+    early = {
+        "type": "tool_use_summary_batch",
+        "ok": True,
+        "count": 1,
+        "rows": [
+            {
+                "compression_ratio_vs_original": 2.5,
+                "side_llm_cache_read_ratio": 0.4,
+            }
+        ],
+    }
+    late_noise = [{"type": "noise", "idx": i} for i in range(60)]
+    out = SimpleNamespace(
+        answer="ok",
+        citations=[],
+        tool_trace=[],
+        llm_usage=None,
+        debug_events=[early, *late_noise],
+        phoenix_trace_id=None,
+        thread_id="t2",
+        warnings=[],
+        answer_class="synthesis",
+        evidence_summary=None,
+        inventory=None,
+        relation_trace=None,
+        quote_candidates=None,
+        idea_suggestions=None,
+        bibliography=None,
+        product_path=None,
+        product_markers=[],
+        prompt_memory_run_metadata=None,
+        subagent_runs=None,
+        subagent_task_notifications=None,
+        subagent_observability_lane=None,
+        hook_chain_events=None,
+        brief=None,
+    )
+    resp = response_from_run(
+        out,
+        duration_ms=1,
+        settings=Settings(),
+        max_tool_calls=5,
+    )
+    meta = resp.run_metadata
+    assert meta.get("tool_use_summary_batch_count") == 1
+    assert meta.get("tool_use_summary_row_count") == 1
+    assert meta.get("tool_use_summary_compression_ratio_avg") == 2.5
+    assert meta.get("tool_use_summary_side_llm_cache_read_ratio_avg") == 0.4
+    # Tail remains bounded even though telemetry used all events.
+    assert len(meta.get("debug_events") or []) == 50

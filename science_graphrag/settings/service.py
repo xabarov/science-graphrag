@@ -91,6 +91,7 @@ class SettingsSnapshot:
     security: dict[str, Any]
     sections: list[dict[str, Any]]
     work_dedup: dict[str, Any]
+    agent_tools: dict[str, Any]
 
 
 class SettingsService:
@@ -268,6 +269,10 @@ class SettingsService:
         benchmark_cfg = dict(persisted.get("benchmark") or {})
         benchmark_snapshot = build_benchmark_ui_snapshot(benchmark_cfg)
 
+        agent_tools_cfg = dict(persisted.get("agent_tools") or {})
+        agent_tools_meta = dict(agent_tools_cfg.get("_meta") or {})
+        persisted_sup_rounds = agent_tools_cfg.get("agent_supervisor_max_rounds")
+
         diagnostics_snapshot = build_diagnostics_snapshot()
         security_snapshot = build_security_snapshot(base_settings)
 
@@ -279,8 +284,29 @@ class SettingsService:
             storage_cfg=storage_cfg,
             secret_store=self._secret_store,
             storage_secret_explicit=None,
+            agent_tools=agent_tools_cfg,
         )
         merged_settings = base_settings.model_copy(update=non_secret_overrides)
+
+        pr_int: int | None = None
+        if persisted_sup_rounds is not None and str(persisted_sup_rounds).strip() != "":
+            try:
+                pr_int = int(persisted_sup_rounds)
+            except (TypeError, ValueError):
+                pr_int = None
+        agent_tools_snapshot = {
+            "agent_supervisor_max_rounds": pr_int,
+            "effective": {
+                "resolved_agent_supervisor_max_rounds": int(
+                    merged_settings.agent_supervisor_max_rounds
+                ),
+            },
+            "status": {
+                "source": "server_managed" if pr_int is not None else "environment",
+                "last_updated_at": agent_tools_meta.get("last_updated_at"),
+                "last_updated_by": agent_tools_meta.get("last_updated_by"),
+            },
+        }
 
         q_work = merged_settings.qdrant_work_embeddings_collection
         q_author = merged_settings.qdrant_author_embeddings_collection
@@ -345,6 +371,15 @@ class SettingsService:
                 "status": "ready",
                 "description": "Runtime build identity (read-only).",
             },
+            {
+                "id": "agent_tools",
+                "label": "Agent tools",
+                "status": "ready",
+                "description": (
+                    "Operator knobs for agent runtime (supervisor limits); "
+                    "separate from LLM provider settings."
+                ),
+            },
         ]
 
         return SettingsSnapshot(
@@ -358,6 +393,7 @@ class SettingsService:
             security=security_snapshot,
             sections=sections,
             work_dedup=work_dedup_snapshot,
+            agent_tools=agent_tools_snapshot,
         )
 
     def get_schema(self) -> dict[str, Any]:
@@ -486,12 +522,27 @@ class SettingsService:
                 "required": False,
                 "group": "benchmark_defaults",
                 "description": (
-                    "Per-family defaults for benchmark launcher (model profile, gold, thresholds, API hints)."
+                    "Per-family defaults for benchmark launcher "
+                    "(model profile, gold, thresholds, API hints)."
+                ),
+            },
+        ]
+        agent_tools_fields: list[dict[str, Any]] = [
+            {
+                "id": "agent_supervisor_max_rounds",
+                "type": "integer",
+                "required": False,
+                "min": 2,
+                "max": 32,
+                "group": "supervisor",
+                "description": (
+                    "Cap on supervisor routing decisions per turn before writer handoff "
+                    "(Settings.agent_supervisor_max_rounds)."
                 ),
             },
         ]
         return {
-            "version": 10,
+            "version": 11,
             "sections": [
                 {
                     "id": "general",
@@ -531,6 +582,7 @@ class SettingsService:
                 },
                 {"id": "storage", "fields": storage_fields},
                 {"id": "benchmark", "fields": benchmark_fields},
+                {"id": "agent_tools", "fields": agent_tools_fields},
             ],
         }
 
@@ -591,6 +643,7 @@ class SettingsService:
             ingestion_cfg = dict(payload.get("ingestion") or {})
             general_cfg = dict(payload.get("general") or {})
             storage_cfg = dict(payload.get("storage") or {})
+            agent_tools_cfg = dict(payload.get("agent_tools") or {})
             merged_non_secret = build_non_secret_overrides(
                 base_settings=base_settings,
                 llm=llm,
@@ -599,6 +652,7 @@ class SettingsService:
                 storage_cfg=storage_cfg,
                 secret_store=self._secret_store,
                 storage_secret_explicit=None,
+                agent_tools=agent_tools_cfg,
             )
             validate_merged_runtime_settings(
                 base_settings.model_copy(update=merged_non_secret),
@@ -662,6 +716,7 @@ class SettingsService:
             llm = dict(payload.get("llm") or {})
             ingestion_cfg = dict(payload.get("ingestion") or {})
             storage_cfg = dict(payload.get("storage") or {})
+            agent_tools_cfg = dict(payload.get("agent_tools") or {})
             merged_non_secret = build_non_secret_overrides(
                 base_settings=base_settings,
                 llm=llm,
@@ -670,10 +725,53 @@ class SettingsService:
                 storage_cfg=storage_cfg,
                 secret_store=self._secret_store,
                 storage_secret_explicit=None,
+                agent_tools=agent_tools_cfg,
             )
             validate_merged_runtime_settings(
                 base_settings.model_copy(update=merged_non_secret),
             )
+            self._repository.save(payload)
+        return self.get_snapshot(base_settings)
+
+    def update_agent_tools_settings(
+        self,
+        *,
+        base_settings: Settings,
+        actor: str,
+        agent_supervisor_max_rounds: int,
+    ) -> SettingsSnapshot:
+        """Persist allowlisted agent runtime knobs (Wave E slice)."""
+
+        bounded = max(2, min(32, int(agent_supervisor_max_rounds)))
+        with self._lock:
+            payload = self._repository.load()
+            at = {k: v for k, v in dict(payload.get("agent_tools") or {}).items() if k != "_meta"}
+            at["agent_supervisor_max_rounds"] = bounded
+            at["_meta"] = {
+                "last_updated_at": _now_iso(),
+                "last_updated_by": actor,
+            }
+            payload["agent_tools"] = at
+            llm = dict(payload.get("llm") or {})
+            ingestion_cfg = dict(payload.get("ingestion") or {})
+            general_cfg = dict(payload.get("general") or {})
+            storage_cfg = dict(payload.get("storage") or {})
+            merged_non_secret = build_non_secret_overrides(
+                base_settings=base_settings,
+                llm=llm,
+                ingestion_cfg=ingestion_cfg,
+                general_cfg=general_cfg,
+                storage_cfg=storage_cfg,
+                secret_store=self._secret_store,
+                storage_secret_explicit=None,
+                agent_tools=at,
+            )
+            candidate = base_settings.model_copy(update=merged_non_secret)
+            validate_merged_runtime_settings(candidate)
+            try:
+                type(candidate).model_validate(candidate.model_dump(mode="python"))
+            except ValidationError as exc:
+                raise ValueError(str(exc)) from exc
             self._repository.save(payload)
         return self.get_snapshot(base_settings)
 
@@ -707,6 +805,7 @@ class SettingsService:
             llm = dict(payload.get("llm") or {})
             ingestion_cfg = dict(payload.get("ingestion") or {})
             general_cfg = dict(payload.get("general") or {})
+            agent_tools_cfg = dict(payload.get("agent_tools") or {})
             merged_non_secret = build_non_secret_overrides(
                 base_settings=base_settings,
                 llm=llm,
@@ -715,6 +814,7 @@ class SettingsService:
                 storage_cfg=storage_next,
                 secret_store=self._secret_store,
                 storage_secret_explicit=explicit if explicit else None,
+                agent_tools=agent_tools_cfg,
             )
             candidate = base_settings.model_copy(update=merged_non_secret)
             validate_merged_runtime_settings(candidate)

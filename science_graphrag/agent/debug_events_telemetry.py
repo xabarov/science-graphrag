@@ -20,6 +20,7 @@ class _TelemetryAccum:  # pylint: disable=too-few-public-methods
         "tool_use_summary_batches",
         "tool_use_summary_rows",
         "tool_use_summary_ratios",
+        "tool_use_summary_side_llm_cache_read_ratios",
         "runtime_monitor_events",
         "runtime_monitor_degraded_hits",
         "runtime_monitor_timeout_hits",
@@ -45,6 +46,7 @@ class _TelemetryAccum:  # pylint: disable=too-few-public-methods
         self.tool_use_summary_batches = 0
         self.tool_use_summary_rows = 0
         self.tool_use_summary_ratios: list[float] = []
+        self.tool_use_summary_side_llm_cache_read_ratios: list[float] = []
         self.runtime_monitor_events = 0
         self.runtime_monitor_degraded_hits = 0
         self.runtime_monitor_timeout_hits = 0
@@ -160,6 +162,18 @@ def _accum_tool_use_summary_batch(ev: dict[str, Any], acc: _TelemetryAccum) -> N
         ratio = row.get("compression_ratio_vs_original")
         if isinstance(ratio, (int, float)):
             acc.tool_use_summary_ratios.append(float(ratio))
+        side_ratio = row.get("side_llm_cache_read_ratio")
+        if isinstance(side_ratio, (int, float)):
+            acc.tool_use_summary_side_llm_cache_read_ratios.append(float(side_ratio))
+            continue
+        read_t = row.get("side_llm_cache_read_tokens")
+        create_t = row.get("side_llm_cache_creation_tokens")
+        if isinstance(read_t, (int, float)) and isinstance(create_t, (int, float)):
+            denom = float(read_t) + float(create_t)
+            if denom > 0:
+                acc.tool_use_summary_side_llm_cache_read_ratios.append(
+                    round(float(read_t) / denom, 4)
+                )
 
 
 _EVENT_HANDLERS: dict[str, Callable[[dict[str, Any], _TelemetryAccum], None]] = {
@@ -221,6 +235,12 @@ def extract_runtime_telemetry_from_debug_events(
     if acc.tool_use_summary_ratios:
         telemetry["tool_use_summary_compression_ratio_avg"] = round(
             sum(acc.tool_use_summary_ratios) / len(acc.tool_use_summary_ratios), 4
+        )
+    if acc.tool_use_summary_side_llm_cache_read_ratios:
+        telemetry["tool_use_summary_side_llm_cache_read_ratio_avg"] = round(
+            sum(acc.tool_use_summary_side_llm_cache_read_ratios)
+            / len(acc.tool_use_summary_side_llm_cache_read_ratios),
+            4,
         )
     if acc.runtime_monitor_events:
         rm: dict[str, Any] = {

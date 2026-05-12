@@ -140,6 +140,66 @@ Warn-политики (`--warn-on`): `latency_p95_increase`, `compaction_churn_d
 (пороги: `--latency-warn-ratio`, `--compaction-churn-warn-delta`).  
 При WARN процесс завершает с кодом **3** (если не передан `--warn-is-pass`).
 
+### 5.1 Wave E acceptance harness (baseline vs candidate)
+
+Используй **один и тот же** suite/profile/транспорт для пары прогонов; различай только env-профиль.
+
+**Имена артефактов (канон):**
+
+| Артефакт | Назначение |
+|----------|------------|
+| `eval/results/agent-corpus-explore-research-plan-acceptance-<date>.{json,md}` | E1: subagent flags off vs on |
+| `eval/results/trace-review-writer-baseline-<date>.{json,md}` | E3: текущий writer |
+| `eval/results/trace-review-writer-single-pass-shadow-<date>.{json,md}` | E3: shadow single-pass |
+| `eval/results/trace-regression-wave-e-<date>.{json,md}` | Сводный compare |
+
+**Профиль A — baseline / off:** subagent flags выключены (или дефолт окружения), writer shadow **off**:
+
+```bash
+export SCIENCE_GRAPHRAG_AGENT_CORPUS_EXPLORE_ENABLED=0
+export SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_SUBAGENT_ENABLED=0
+export SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED=0   # для изолированного E1; для E2 включать отдельным прогоном
+export SCIENCE_GRAPHRAG_AGENT_WRITER_TERMINAL_SINGLE_PASS_SHADOW_ENABLED=0
+```
+
+**Профиль B — candidate / on:** целевая конфигурация Wave E (подставьте значения согласно эксперименту):
+
+```bash
+export SCIENCE_GRAPHRAG_AGENT_CORPUS_EXPLORE_ENABLED=1
+export SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_SUBAGENT_ENABLED=1
+export SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED=1   # для E2 acceptance
+export SCIENCE_GRAPHRAG_AGENT_WRITER_TERMINAL_SINGLE_PASS_SHADOW_ENABLED=0   # 1 только для E3 shadow-ветки
+```
+
+Значения попадают в `run_context.feature_flags` итогового trace-review JSON.
+
+**Compare (пример gate-стека):**
+
+```bash
+.venv/bin/python scripts/live_check/trace_regression_compare.py \
+  --baseline eval/results/trace-review-writer-baseline-DATE.json \
+  --candidate eval/results/trace-review-writer-single-pass-shadow-DATE.json \
+  --out-json eval/results/trace-regression-wave-e-DATE.json \
+  --out-md eval/results/trace-regression-wave-e-DATE.md \
+  --max-writer-oscillation-count 5 \
+  --fail-on writer_oscillation_increase,new_missing_spans,tool_error_increase,final_answer_missing_increase
+```
+
+Для E2 добавьте порог cache-read:
+
+```bash
+  --min-side-llm-cache-read-ratio 0.4
+```
+
+Целевые метрики в rollup: `writer_oscillation_count_max`, `side_llm_cache_read_ratio_avg`, `subagent_task_notification_count_avg`, `subagent_lifecycle_missing_count`, `latency_p95_ms`, `tool_loop_repeat_max`.
+
+Если в `metrics.tool_use_summary_row_count_total > 0`, но `side_llm_cache_read_ratio_avg == null`,
+acceptance summary вернёт `§10.2_side_llm_cache_read_ratio = fail_missing_side_llm_cache_telemetry`.
+Это отдельный failure-mode: summary реально применялся, но provider не вернул cache-read telemetry
+(`side_llm_cache_*` null/0). Такой прогон не засчитывать как E2 gate pass.
+
+**E1 rollout decision:** зафиксировать после сравнения двух прогонов в [`docs/analysis/wave-e-e1-rollout-decision-2026-05-10.md`](../analysis/wave-e-e1-rollout-decision-2026-05-10.md).
+
 Несовпадение `review_version` между baseline и candidate → **exit 2**.
 
 ## 6) Pass / Warn / Fail

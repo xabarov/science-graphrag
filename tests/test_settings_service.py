@@ -173,7 +173,10 @@ def test_test_llm_connection_marks_saved_secret_source_only_for_secret_store(
 
     def _fake_probe(**kwargs: Any) -> dict[str, Any]:
         captured.update(kwargs)
-        return {"status": "connected", "resolved": {"used_saved_secret": kwargs["used_saved_secret"]}}
+        return {
+            "status": "connected",
+            "resolved": {"used_saved_secret": kwargs["used_saved_secret"]},
+        }
 
     monkeypatch.setattr("science_graphrag.settings.service.run_llm_connection_probe", _fake_probe)
 
@@ -211,3 +214,37 @@ def test_test_llm_connection_marks_saved_secret_source_only_for_secret_store(
     )
     assert out_saved["resolved"]["used_saved_secret"] is True
     assert captured["used_saved_secret"] is True
+
+
+def test_update_agent_tools_settings_persists_supervisor_rounds(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings(agent_supervisor_max_rounds=10)
+    snap = service.update_agent_tools_settings(
+        base_settings=base,
+        actor="tester",
+        agent_supervisor_max_rounds=7,
+    )
+    assert snap.agent_tools["agent_supervisor_max_rounds"] == 7
+    assert snap.agent_tools["effective"]["resolved_agent_supervisor_max_rounds"] == 7
+    assert snap.agent_tools["status"]["source"] == "server_managed"
+
+    runtime = service.build_runtime_settings(base)
+    assert runtime.agent_supervisor_max_rounds == 7
+
+
+def test_update_agent_tools_settings_clamps_supervisor_rounds(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings(agent_supervisor_max_rounds=10)
+    snap = service.update_agent_tools_settings(
+        base_settings=base,
+        actor="tester",
+        agent_supervisor_max_rounds=32,
+    )
+    assert snap.agent_tools["effective"]["resolved_agent_supervisor_max_rounds"] == 32
+
+    snap2 = service.update_agent_tools_settings(
+        base_settings=base,
+        actor="tester",
+        agent_supervisor_max_rounds=99,
+    )
+    assert snap2.agent_tools["effective"]["resolved_agent_supervisor_max_rounds"] == 32

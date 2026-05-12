@@ -716,6 +716,13 @@ class Settings(BaseSettings):
         le=1.0,
         description="Temperature for tool_use_summary side-LLM.",
     )
+    agent_writer_terminal_single_pass_shadow_enabled: bool = Field(
+        default=False,
+        description=(
+            "Wave E / trace-review A/B: writer specialist ends after the first tool execution "
+            "batch (no additional chat→tools repair hops). Operator-only; default off."
+        ),
+    )
     agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
     agent_route_plan_enabled: bool = Field(
         default=True,
