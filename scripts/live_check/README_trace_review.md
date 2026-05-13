@@ -115,6 +115,14 @@ export AGENT_LIVE_WORKSPACE_ID=<uuid>
 
 Dual-run artifact + rollout notes: `eval/results/runtime-v3-rollout-decision-2026-05-07.md`.
 
+### 4.2 Wave H microcompact — effective default
+
+`agent_tool_message_microcompact_time_trigger_enabled` may read **`True`** in `Settings`, but
+**microcompact only runs when** `agent_tool_history_compact_enabled` is **`True`** (default
+`False`). Operators who expect microcompact in production must enable history compaction
+explicitly and re-run trace-review / long-thread acceptance. See
+[`agent-engine-feature-status-2026-05-13.md`](../analysis/agent-engine-feature-status-2026-05-13.md) §8.
+
 ## 5) Pull Phoenix snapshots for offline review
 
 ```bash

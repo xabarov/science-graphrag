@@ -183,18 +183,10 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Remaining:** замер доли non-`internal_error` на фиксированном live/trace наборе (критерий приёмки ≥80%); при необходимости отдельный `chat-errors.md`.
 - **Raised:** 2026-05-05 (readable-stream-events plan)
 
-### [OPEN] Split trace-review CLI monoliths (`trace_review_schema.py`, `trace_regression_compare.py`)
+### [DONE] Split trace-review CLI monoliths (`trace_review_schema.py`, `trace_regression_compare.py`)
 - **Cross-ref:** execution waves track only operator gates in [`docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md) §9 — this item is **structural refactor debt**, not a benchmark wave deliverable.
-- **Area:** `scripts/live_check/trace_review_schema.py` (~1600 LoC), `scripts/live_check/trace_regression_compare.py` (~580 LoC, single `main()` ≈ 200 statements)
-- **Issue:** Both files accumulate every new acceptance gate / metric in one giant function (Wave G writer oscillation, Wave H §H1 paper sources restore, Wave H §H2 cache telemetry). Pylint reports `R0914` / `R0912` / `R0915` at multiple anchors (`case_to_timeline_row`, `aggregate_metrics_from_timeline`, `acceptance_summary_from_review`, `_timeline_case_from_dict`, `main()` of compare). Adding the next wave is a copy-paste, not a refinement.
-- **Proposal:**
-  - Split `trace_review_schema.py` per concern: `metrics_aggregation.py` (per-row → metric reducers), `acceptance_gates.py` (one function per gate, returning a structured result), `serde.py` (round-trip JSON ↔ dataclass), and keep `trace_review_schema.py` as a thin facade.
-  - Split `trace_regression_compare.py::main()` into argument parsing + `compute_deltas(base, cand)` + per-axis policy modules (`policies/latency.py`, `policies/cache_telemetry.py`, `policies/paper_sources.py`, ...). `main()` then orchestrates and renders.
-  - Keep CLI surface backward compatible (no flag renames in this slice).
-- **Acceptance:**
-  - No file in `scripts/live_check/` exceeds ~600 LoC; no single function exceeds pylint `R0915` threshold without an explicit suppression note.
-  - Each Wave-* gate added in 2026 (G/H/...) lives in its own module/file rather than as another branch in one giant function.
-  - Existing tests under `tests/scripts/live_check/test_trace_review_schema.py` and `test_trace_regression_compare.py` keep passing without behaviour changes.
+- **Area:** `scripts/live_check/trace_review_schema.py` (thin facade), `scripts/live_check/trace_review/` (types, serde, aggregation, gates, timeline), `scripts/live_check/trace_compare/` (parser, delta, policies, rendering, runner), `scripts/live_check/trace_regression_compare.py` (CLI entry).
+- **Done (2026-05-13, R1):** Package split + `trace_review/CONTRACT.md`; `trace_review_schema` re-exports public API; compare CLI behavior unchanged; tests `tests/scripts/live_check/test_trace_review_schema.py`, `test_trace_regression_compare.py` green.
 - **Raised:** 2026-05-12 (Wave H closeout)
 
 ### [OPEN] Extend `_product_step_code_for_tool` coverage
@@ -606,6 +598,14 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Proposal:** Вынести `run_agent_branches_for_case` + subprocess/http adapters в `runner_branches.py`, markdown/json rendering в `runner_report.py`, оставив в `runner.py` thin CLI orchestration.
 - **Acceptance:** `runner.py` < ~400 LoC; поведение CLI и артефактов не меняется (golden tests на summary keys + compare output).
 - **Raised:** 2026-05-09 (Wave B validation quality pass)
+
+### [DONE] E1/E2 Settings defaults vs operator rollout gate (product choice)
+- **Area:** `science_graphrag/config.py` (`agent_corpus_explore_enabled`, `agent_research_plan_subagent_enabled`, `agent_tool_use_summary_enabled`, related), `docs/analysis/agent-engine-feature-status-2026-05-13.md`
+- **Roadmap link:** `docs/analysis/agent-engine-next-horizon-2026-05-13.md` §R0
+- **Issue:** В `Settings` дефолты E1-ног и E2 summarization — `True`, а **operator rollout policy** остаётся консервативной до новых paired/heavy live прогонов; без чтения companion кажется, что «всё включено и безопасно».
+- **Decision (2026-05-13):** **(A)** оставить `Settings` defaults `True` (кодовый путь включён в чистом окружении); консервативный rollout и снятие доверия — через **operator rollout gate**, env overrides и companion-матрицу (не переворачивать defaults в `False` в этом PR).
+- **Acceptance:** Зафиксировано в companion §6 и в horizon closeout; `config.py` без смены дефолтов; терминология **Settings default** vs **operator rollout gate** сохранена.
+- **Raised:** 2026-05-13 (R0 reconciliation)
 
 ### [DONE] Add heartbeat / timeout diagnostics for `agent_trace_review` live suite
 - **Area:** `scripts/live_check/agent_trace_review.py`, `scripts/live_check/agent_trace_review_heartbeat.py`, `scripts/live_check/trace_regression_metrics.py`

@@ -43,7 +43,7 @@
 
 ### 1.3 Что осталось открытым (P0 → P3)
 
-Базовый источник — [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN]` / `[PARTIAL]` + §3 / §4 unified plan. **Structural refactor** (распил trace-review CLI и т.п.) ведётся только в backlog — см. §9.
+Базовый источник — [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN]` / `[PARTIAL]` + §3 / §4 unified plan. **Structural refactor** (распил trace-review CLI и т.п.) ведётся только в backlog — см. §9. **Сводка Settings vs operator** по E1/E2 и смежным флагам (R0): [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md).
 
 | ID | Тема | Приоритет | Ось |
 |----|------|-----------|-----|
@@ -100,6 +100,8 @@
 ## 3. Wave E — engine depth (subagent decomposition + writer hardening)
 
 **Цель:** снизить churn у `latency_p95` и `tool_loop_repeat_max` под нагрузкой за счёт более чистого разделения ролей в supervisor v3, не возвращая «LLM-маршрутизатор как отдельный слой».
+
+**R0 / `config.py` (2026-05-13):** формулировки ниже в §3.1–3.2 про **«keep gated»** / **«default-on still gated»** описывают **operator rollout gate** (решение по live evidence), а не обязательно `Field(default=False)` в коде. Единая матрица *Settings default / operator gate / evidence / next action*: [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md); контекст волны R0: [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §R0.
 
 ### 3.1 E1: corpus_explore / research_plan deepening
 

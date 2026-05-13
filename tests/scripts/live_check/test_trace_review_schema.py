@@ -888,3 +888,89 @@ def test_build_acceptance_summary_side_llm_gate_fails_without_cache_telemetry(
     assert (
         out["gates"]["§10.2_side_llm_cache_read_ratio"] == "fail_missing_side_llm_cache_telemetry"
     )
+
+
+@pytest.mark.parametrize(
+    ("final_missing", "tool_loop_max", "expect_status"),
+    [
+        (0, 0, "pass"),
+        (1, 0, "fail"),
+        (0, 4, "fail"),
+    ],
+)
+def test_verdict_from_signals_table(
+    schema_module, final_missing: int, tool_loop_max: int, expect_status: str
+) -> None:
+    """Table-driven contract for core verdict gates (final_answer + tool loop)."""
+    m = schema_module.Metrics(
+        final_answer_missing_count=final_missing,
+        tool_loop_repeat_max=tool_loop_max,
+    )
+    v = schema_module.verdict_from_signals(
+        checks_ok={"x": True},
+        required_checks=frozenset(),
+        e2e_ok=True,
+        metrics=m,
+        sse_missing_final_in_checks=False,
+    )
+    assert v.status == expect_status
+
+
+def test_trace_review_roundtrip_minimal_dict(schema_module) -> None:
+    """Backward-compat: minimal trace-review dict survives from_dict → to_dict."""
+    data = {
+        "review_version": schema_module.REVIEW_VERSION,
+        "generated_at": "2026-01-01T00:00:00Z",
+        "run_context": {
+            "base_url": "http://127.0.0.1",
+            "workspace_id": None,
+            "suite": "default",
+            "feature_flags": {},
+        },
+        "checks": [],
+        "trace_timeline": [],
+        "metrics": {},
+        "verdict": {"status": "pass", "fail_reasons": [], "warn_reasons": []},
+    }
+    tr = schema_module.trace_review_from_dict(data)
+    out = schema_module.trace_review_to_dict(tr)
+    assert out.get("review_version") == schema_module.REVIEW_VERSION
+    assert isinstance(out.get("trace_timeline"), list)
+
+
+def test_compare_delta_symmetric_on_identical_metrics() -> None:
+    """Delta layer: identical reviews yield zero deltas for primary counters."""
+    import sys
+    from pathlib import Path as P
+
+    scripts = P(__file__).resolve().parents[3] / "scripts" / "live_check"
+    if str(scripts) not in sys.path:
+        sys.path.insert(0, str(scripts))
+    from trace_compare.delta import (
+        compute_compare_deltas,  # pylint: disable=import-outside-toplevel
+    )
+
+    doc = {
+        "review_version": "trace-review-v1",
+        "metrics": {
+            "missing_span_count": 0,
+            "tool_error_rate": 0.0,
+            "final_answer_missing_count": 0,
+            "latency_p95_ms": 100.0,
+            "compaction_churn_score": 0.0,
+            "shortlist_ratio_avg": 0.0,
+            "deferred_schema_event_count": 0,
+            "budget_cutoff_count": 0,
+            "subagent_lifecycle_missing_count": 0,
+            "tool_search_miss_due_to_no_discovery_total": 0,
+            "tool_loop_repeat_max": 0,
+            "writer_oscillation_count_max": 0,
+            "post_compact_paper_sources_restored_total": 0,
+            "compaction_event_count": 0,
+        },
+        "verdict": {"status": "pass"},
+    }
+    d = compute_compare_deltas(doc, doc)
+    assert d["delta_missing_spans"] == 0
+    assert d["delta_tool_error"] == 0
+    assert d["delta_final_answer_missing"] == 0
