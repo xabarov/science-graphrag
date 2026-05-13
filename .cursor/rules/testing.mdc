@@ -30,6 +30,28 @@ globs: ["tests/**", "**/test_*.py"]
 .venv/bin/pytest tests -v -m integration
 ```
 
+## Test taxonomy for agent/runtime work
+
+- `tests/test_api_agent_v2_*` — mock-backed API/SSE contract tests; первый выбор для правок в `agent_v2_modules/`.
+- `tests/agent/test_*subagent*`, `tests/agent/test_hooks_*` — runtime/subagent/hook semantics.
+- `tests/scripts/live_check/*` — schema/policy tests для trace-review и compare; это не сами live прогоны.
+- `ui/src/components/work/agent/*.test.js` — Vitest для Ask/live-progress UI.
+- `scripts/live_check/*.py` и артефакты в `eval/results/trace-review-*.{json,md}` — operator evidence lane, не заменяется unit-тестами.
+
+## Live acceptance specifics
+
+- `scripts/live_check/agent_trace_review.py --suite acceptance` требует валидный `AGENT_LIVE_WORKSPACE_ID`; без него `agent_v2_fanout_probe` падает с `missing_workspace_id`.
+- Для baseline/candidate compare держи неизменными `workspace_id`, suite и основные флаги.
+- Перед live run сначала проверь mock/unit слой, затем pre-flight контура (`config-check`, `/health`, storage/DB health).
+
+## Trace-review lane contract (avoid ambiguity)
+
+- Prefer explicit base URL over aliases in operator runs:
+  - `AGENT_LIVE_BASE=http://127.0.0.1:18787` (stable live-check contour)
+- Keep the same tuple for paired compare:
+  - `base_url`, `workspace_id`, `suite`, `profile`, `--skip-e2e`, `--with-compaction-turns`, timeout family.
+- If a lane times out/hangs, artifact must contain deterministic failure reason (`failure_reason`, `failed_turn`, `failure_kind`) before repeating runs.
+
 ## API-контракты в CI
 
 [tests/test_api_smoke.py](tests/test_api_smoke.py) проверяет `/health` и контракты `/v1/*` на моках (без живых сторов) — ориентир для merge CI.

@@ -2,7 +2,7 @@
 
 **Purpose:** single checklist to satisfy [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §8.1 before treating the judge lane as promotion-ready.
 
-**Prerequisites:** repo root, `.venv`, live dev stack, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` set (see [`long-running-ops.mdc`](../../.cursor/rules/long-running-ops.mdc)); optional `AGENT_LIVE_BASE=dev`.
+**Prerequisites:** repo root, `.venv`, live dev stack, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` set (see [`long-running-ops.mdc`](../../.cursor/rules/long-running-ops.mdc)); optional explicit `AGENT_LIVE_BASE` URL for the target contour.
 
 ## 1. Calibration window (D1)
 

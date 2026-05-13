@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -48,6 +49,18 @@ def _single_turn(
     body = res.json()
     rm = body.get("run_metadata") if isinstance(body, dict) else {}
     comp = rm.get("compaction") if isinstance(rm, dict) else {}
+    comp_audit = rm.get("compaction_audit") if isinstance(rm, dict) else {}
+    llm_compact = comp_audit.get("llm_compact") if isinstance(comp_audit, dict) else {}
+    side_ratio = (
+        llm_compact.get("side_llm_cache_read_ratio")
+        if isinstance(llm_compact, dict)
+        else None
+    )
+    paper_restored = (
+        int(rm.get("post_compact_paper_sources_restored_count") or 0)
+        if isinstance(rm, dict)
+        else 0
+    )
     return {
         "thread_id": body.get("thread_id"),
         "answer_class": body.get("answer_class"),
@@ -55,6 +68,8 @@ def _single_turn(
         "warnings": body.get("warnings"),
         "tool_trace_len": len(body.get("tool_trace") or []),
         "compaction": comp if isinstance(comp, dict) else {},
+        "side_llm_cache_read_ratio": side_ratio,
+        "post_compact_paper_sources_restored_count": paper_restored,
     }
 
 
@@ -69,17 +84,26 @@ def _write_md(path: Path, report: dict[str, Any]) -> None:
         "",
         "## Turns",
         "",
-        "| Turn | tool_trace_len | compaction.kinds | warnings |",
-        "|------|----------------|------------------|----------|",
+        "| Turn | tool_trace_len | compaction.kinds | side_ratio | paper_sources_restored | warnings |",
+        "|------|----------------|------------------|------------|-------------------------|----------|",
     ]
     for item in report["turn_reports"]:
         kinds = (item.get("compaction") or {}).get("kinds") or []
         lines.append(
-            f"| {item['turn']} | {item.get('tool_trace_len')} | `{','.join(kinds)}` | `{','.join(item.get('warnings') or [])}` |"
+            (
+                f"| {item['turn']} | {item.get('tool_trace_len')} | `{','.join(kinds)}` | "
+                f"`{item.get('side_llm_cache_read_ratio')}` | "
+                f"`{item.get('post_compact_paper_sources_restored_count')}` | "
+                f"`{','.join(item.get('warnings') or [])}` |"
+            )
         )
     lines.extend(["", "## Verdict", "", f"- Status: `{report['verdict']['status']}`"])
     for reason in report["verdict"].get("reasons") or []:
         lines.append(f"- {reason}")
+    if report.get("failed_turn") is not None:
+        lines.append(f"- Failed turn: `{report.get('failed_turn')}`")
+    if report.get("failure_kind"):
+        lines.append(f"- Failure kind: `{report.get('failure_kind')}`")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
@@ -110,25 +134,86 @@ def main() -> int:
         default=None,
         help="Merge compaction_events into an existing trace-review-v1 JSON at this path",
     )
+    parser.add_argument(
+        "--heartbeat-sec",
+        type=float,
+        default=float(os.environ.get("AGENT_LIVE_COMPACTION_REVIEW_HEARTBEAT_SEC", "30")),
+        help="Progress heartbeat interval for per-turn logs (minimum 5s)",
+    )
     args = parser.parse_args()
+    from dotenv_util import (  # pylint: disable=import-outside-toplevel,import-error
+        resolve_live_base_url,
+    )
+
+    args.base_url = resolve_live_base_url(args.base_url)
+    hb_sec = max(5.0, float(args.heartbeat_sec))
 
     tid = f"compaction_review_{uuid.uuid4().hex[:12]}"
     timeout = httpx.Timeout(connect=20.0, read=args.timeout, write=120.0, pool=15.0)
     turn_reports: list[dict[str, Any]] = []
+    failure_reason: str | None = None
+    failure_kind: str | None = None
+    failed_turn: int | None = None
     with httpx.Client(timeout=timeout) as client:
         for idx in range(1, args.turns + 1):
             q = f"Turn {idx}: summarize one sentence and include turn number."
-            item = _single_turn(
-                client,
-                base_url=args.base_url.rstrip("/"),
-                question=q,
-                thread_id=tid,
-                workspace_id=args.workspace_id,
+            turn_t0 = time.perf_counter()
+            print(
+                f"[compaction-review] turn_start turn={idx} thread_id={tid} hb_sec={hb_sec}",
+                file=sys.stderr,
+                flush=True,
             )
+            try:
+                item = _single_turn(
+                    client,
+                    base_url=args.base_url.rstrip("/"),
+                    question=q,
+                    thread_id=tid,
+                    workspace_id=args.workspace_id,
+                )
+            except httpx.TimeoutException:
+                failed_turn = idx
+                failure_kind = "http_timeout"
+                failure_reason = f"http_timeout_turn_{idx}"
+                print(
+                    (
+                        f"[compaction-review] turn_fail turn={idx} reason={failure_reason} "
+                        f"elapsed_ms={int((time.perf_counter() - turn_t0) * 1000)}"
+                    ),
+                    file=sys.stderr,
+                    flush=True,
+                )
+                break
+            except httpx.HTTPError as exc:
+                failed_turn = idx
+                failure_kind = "http_error"
+                failure_reason = f"http_error_turn_{idx}:{type(exc).__name__}"
+                print(
+                    (
+                        f"[compaction-review] turn_fail turn={idx} reason={failure_reason} "
+                        f"elapsed_ms={int((time.perf_counter() - turn_t0) * 1000)}"
+                    ),
+                    file=sys.stderr,
+                    flush=True,
+                )
+                break
             item["turn"] = idx
             turn_reports.append(item)
+            elapsed_ms = int((time.perf_counter() - turn_t0) * 1000)
+            kinds = (item.get("compaction") or {}).get("kinds") or []
+            print(
+                (
+                    f"[compaction-review] turn_done turn={idx} elapsed_ms={elapsed_ms} "
+                    f"kinds={','.join(str(k) for k in kinds)} side_ratio={item.get('side_llm_cache_read_ratio')!r} "
+                    f"paper_restored={item.get('post_compact_paper_sources_restored_count')!r}"
+                ),
+                file=sys.stderr,
+                flush=True,
+            )
 
     reasons: list[str] = []
+    if failure_reason:
+        reasons.append(failure_reason)
     for item in turn_reports:
         kinds = (item.get("compaction") or {}).get("kinds") or []
         if item["turn"] >= args.require_compaction_after and not kinds:
@@ -145,6 +230,10 @@ def main() -> int:
                     "kinds": list(kinds),
                     "turn": item.get("turn"),
                     "thread_id": tid,
+                    "side_llm_cache_read_ratio": item.get("side_llm_cache_read_ratio"),
+                    "post_compact_paper_sources_restored_count": item.get(
+                        "post_compact_paper_sources_restored_count"
+                    ),
                 }
             )
 
@@ -156,6 +245,8 @@ def main() -> int:
         "require_compaction_after": args.require_compaction_after,
         "turn_reports": turn_reports,
         "compaction_events": compaction_events,
+        "failed_turn": failed_turn,
+        "failure_kind": failure_kind,
         "verdict": verdict,
     }
     args.out_json.parent.mkdir(parents=True, exist_ok=True)

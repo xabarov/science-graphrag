@@ -133,7 +133,7 @@ Stable URLs and backlinks may still point at these root paths — open the link,
 | [`orchestration-stabilization-baseline-2026-05-08.md`](./orchestration-stabilization-baseline-2026-05-08.md) | [`_archive/orchestration-stabilization-baseline-2026-05-08.md`](./_archive/orchestration-stabilization-baseline-2026-05-08.md) — pre-WS snapshot |
 | [`wave-a-residual-structural-hardening-2026-05-08.md`](./wave-a-residual-structural-hardening-2026-05-08.md) | [`_archive/wave-a-residual-structural-hardening-2026-05-08.md`](./_archive/wave-a-residual-structural-hardening-2026-05-08.md) — Wave A checklist **DONE** |
 | [`agent-runtime-train-t1-acceptance-2026-05-06.md`](./agent-runtime-train-t1-acceptance-2026-05-06.md) | [`_archive/agent-runtime-train-t1-acceptance-2026-05-06.md`](./_archive/agent-runtime-train-t1-acceptance-2026-05-06.md) — Train T1 milestone **DONE** |
-| [`agent-note-cost-eval-2026-05-06.md`](./agent-note-cost-eval-2026-05-06.md) | [`_archive/agent-note-cost-eval-2026-05-06.md`](./_archive/agent-note-cost-eval-2026-05-06.md) — `agent_note` cost evaluation snapshot **DONE** |
+| [`agent-note-cost-eval-2026-05-06.md`](./agent-note-cost-eval-2026-05-06.md) | [`_archive/agent-note-cost-eval-2026-05-06.md`](./_archive/agent-note-cost-eval-2026-05-06.md) — `agent_note` cost methodology **archived**; **live** 50-turn token pilot **open** (see stub header + R2 spec §`agent_note`) |
 
 **Reader authorship contract** (implemented Phases 0–3): [`work-graph-authorship-reader-contract-2026-04-28.md`](./work-graph-authorship-reader-contract-2026-04-28.md) — closed as a delivery plan; keep for contract text.
 
@@ -167,8 +167,10 @@ Sorted alphabetically. See sections above for roles; stubs point into `_archive/
 | `agent-engine-and-benchmarks-next-waves-2026-05-09.md` | Agent engine + benchmarks — next waves |
 | `agent-engine-feature-status-2026-05-13.md` | Agent R0: feature flags matrix (companion) |
 | `agent-engine-next-horizon-2026-05-13.md` | Agent next horizon: architecture / chat / ingestion / refactor |
+| `r2-chat-contract-closeout-2026-05-13.md` | R2 chat SSE product contract closeout (degraded_mode, product layers, doc sync) |
+| `r3-long-thread-live-baseline-2026-05-13.md` | R3 operator checklist: live long-thread trace-review + compare (Wave H gates) |
 | `agent-graph-subprocess-isolation-spike-2026-04-27.md` | Spike |
-| `agent-note-cost-eval-2026-05-06.md` | Stub → archived `agent_note` cost evaluation |
+| `agent-note-cost-eval-2026-05-06.md` | Stub → archived `agent_note` cost methodology; live token pilot open (see R2 spec) |
 | `agent-runtime-tools-context-roadmap-2026-05-04.md` | Agent · tools · context roadmap |
 | `agent-runtime-train-t1-acceptance-2026-05-06.md` | Stub → archived Train T1 acceptance |
 | `agent-tools-admin-settings-proposal-2026-05-07.md` | Design proposal (`agent_tools` admin) |

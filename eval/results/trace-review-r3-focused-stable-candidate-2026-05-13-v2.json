@@ -1,0 +1,369 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-13T12:13:52.487037+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": "ws-pilot-od",
+    "suite": "heavy",
+    "profile": "heavy",
+    "run_kind": "supervisor_specialists_v3",
+    "graph_id": "supervisor_graph_v3",
+    "execution_diagnostics": {
+      "heartbeat_interval_sec": 60.0,
+      "e2e_subprocess_timeout_sec": null,
+      "stages": [
+        {
+          "stage": "http_suite",
+          "elapsed_ms": 77102.456,
+          "ok": true
+        },
+        {
+          "stage": "e2e_audit_subprocess",
+          "elapsed_ms": 0.024,
+          "ok": true
+        },
+        {
+          "stage": "merge_e2e_report_json",
+          "elapsed_ms": 0.025,
+          "ok": true
+        },
+        {
+          "stage": "compaction_turn_review",
+          "elapsed_ms": 40704.761,
+          "ok": true
+        }
+      ]
+    },
+    "feature_flags": {
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "false",
+      "agent_claim_verification_enabled": null,
+      "agent_subagent_lifecycle_enhanced_enabled": null,
+      "agent_corpus_explore_enabled": null,
+      "agent_research_plan_subagent_enabled": null,
+      "agent_tool_use_summary_enabled": null,
+      "agent_side_llm_openrouter_cache_control_enabled": null,
+      "agent_llm_full_history_compact_enabled": "1",
+      "agent_tool_message_microcompact_time_trigger_enabled": null,
+      "agent_e1_retrieval_hop_evidence_gate_enabled": null,
+      "agent_e1_retrieval_hop_min_payloads": null,
+      "agent_writer_terminal_single_pass_shadow_enabled": null
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "body": {
+          "status": "ok",
+          "agent_session_memory_backend": "redis",
+          "agent_session_memory_configured": "redis"
+        }
+      }
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "duration_ms": 3320,
+        "warnings": [
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "tools": [
+          "coordinator_gate",
+          "route_to_specialist",
+          "route_to_specialist",
+          "final_answer"
+        ],
+        "answer_class": "grounded_explanation",
+        "run_metadata": {
+          "agent_runtime": "langgraph_supervisor_v3",
+          "agent_max_tool_calls": 12,
+          "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+          "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+          "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+          "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+          "usage": {
+            "prompt_tokens": 3097,
+            "completion_tokens": 23,
+            "total_tokens": 3120,
+            "input_tokens": 3097,
+            "output_tokens": 23
+          },
+          "debug_events": [
+            {
+              "conversation_intent": "research_task",
+              "tool_policy": "allow_tools",
+              "route_hint": "retrieval_agent",
+              "reason": "default_research_assumption",
+              "suggested_answer_class": "grounded_explanation",
+              "confidence": 1.0,
+              "classifier": "deterministic",
+              "type": "intent_classified",
+              "source": "coordinator_gate_v0",
+              "answer_class": "grounded_explanation",
+              "run_kind": "supervisor_specialists_v3",
+              "graph_id": "supervisor_graph_v3"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "retrieval_agent",
+              "tools": null,
+              "reason": "low_signal",
+              "top_score": 0.0,
+              "score_band": null,
+              "catalog_size": 7,
+              "shortlist_size": null,
+              "shortlist_ratio": null,
+              "deferred_schema_mode": null,
+              "deferred_schema_refs": null,
+              "skipped": false,
+              "carryover_tools": null,
+              "message_discovery_tools": null,
+              "message_discovery_merged": null,
+              "activation_policy": "relaxed_low_signal"
+            },
+            {
+              "type": "tool_search_result",
+              "specialist": "writer_agent",
+              "tools": null,
+              "reason": "writer_terminal_synthesis_seam",
+              "top_score": null,
+              "score_band": null,
+              "catalog_size": 1,
+              "shortlist_size": null,
+              "shortlist_ratio": null,
+              "deferred_schema_mode": null,
+              "deferred_schema_refs": null,
+              "skipped": true,
+              "carryover_tools": null,
+              "message_discovery_tools": null,
+              "message_discovery_merged": null,
+              "writer_mode": "normal"
+            }
+          ],
+          "subagent_runs": [
+            {
+              "subagent_id": "retrieval_agent",
+              "parent_turn_id": "1c83cf4c-98b6-44bb-b63f-ef08b2d90a86",
+              "child_turn_id": null,
+              "spawn_reason": "coordinator_route_hint:retrieval_agent",
+              "task": null,
+              "task_id": null,
+              "task_type": "routing_leg",
+              "description": "coordinator_route_hint:retrieval_agent",
+              "execution_mode": null,
+              "fanout_slot": null,
+              "task_status": "completed",
+              "terminal_state": "succeeded",
+              "latency_ms": null,
+              "failure_code": null,
+              "tokens": null,
+              "cost_usd_estimate": null,
+              "kind": "routing_leg",
+              "merge_provenance": null,
+              "output_pointer": null
+            },
+            {
+              "subagent_id": "writer_agent",
+              "parent_turn_id": "1c83cf4c-98b6-44bb-b63f-ef08b2d90a86",
+              "child_turn_id": null,
+              "spawn_reason": "routing",
+              "task": null,
+              "task_id": null,
+              "task_type": "routing_leg",
+              "description": "routing",
+              "execution_mode": null,
+              "fanout_slot": null,
+              "task_status": "completed",
+              "terminal_state": "succeeded",
+              "latency_ms": null,
+              "failure_code": null,
+              "tokens": null,
+              "cost_usd_estimate": null,
+              "kind": "routing_leg",
+              "merge_provenance": null,
+              "output_pointer": null
+            }
+          ],
+          "subagent_task_notifications": [
+            {
+              "schema_version": 1,
+              "task_id": "16968598-0478-4baf-b7d0-aec718eb0cc4",
+              "subagent_id": "retrieval_agent",
+              "parent_turn_id": "1c83cf4c-98b6-44bb-b63f-ef08b2d90a86",
+              "status": "completed",
+              "carry_back": {
+                "summary": "No structured specialist payload recorded.",
+                "result_excerpt": null,
+                "key_sources": [],
+                "verdict": null
+              },
+              "usage": {}
+            },
+            {
+              "schema_version": 1,
+              "task_id": "8096b502-4d81-4592-ba70-42bc51eaf2b3",
+              "subagent_id": "writer_agent",
+              "parent_turn_id": "1c83cf4c-98b6-44bb-b63f-ef08b2d90a86",
+              "status": "completed",
+              "carry_back": {
+                "summary": "No structured specialist payload recorded.",
+                "result_excerpt": null,
+                "key_sources": [],
+                "verdict": null
+              },
+              "usage": {}
+            }
+          ],
+          "subagent_observability_lane": "fork_v3_enhanced",
+          "specialist_results_v3": {
+            "schema_version": 1,
+            "legs": [],
+            "merge": {
+              "evidence_origin": "parent_tool",
+              "confidence": 1.0,
+              "conflict": null,
+              "writer_directive": "",
+              "partial_failure": false,
+              "completion_state": "evidence_insufficient"
+            }
+          },
+          "routing_log": [
+            {
+              "from": "supervisor",
+              "to": "retrieval_agent",
+              "reason": "coordinator_route_hint:retrieval_agent",
+              "budget_left": 12,
+              "decision_source": "route_plan",
+              "route_hint": "retrieval_agent"
+            },
+            {
+              "from": "supervisor",
+              "to": "writer_agent",
+              "budget_left": 12,
+              "reason": null
+            }
+          ]
+        },
+        "answer_stripped": "No relevant information was found to address the query.",
+        "answer_len": 55
+      }
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "thread_id": "live_check_1cd9c0990840",
+        "turn2_warnings": [
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "turn2_tools": [
+          "coordinator_gate",
+          "session_init",
+          "route_to_specialist",
+          "route_to_specialist",
+          "final_answer"
+        ]
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "event_types": [
+          "intent_classified",
+          "product_step",
+          "specialist_selected",
+          "subagent_started",
+          "product_step",
+          "subagent_heartbeat",
+          "subagent_finished",
+          "product_step",
+          "answer_synthesis_started",
+          "context_compacted",
+          "product_step",
+          "answer_synthesis_finished",
+          "final_answer"
+        ],
+        "event_count": 13
+      }
+    }
+  ],
+  "trace_timeline": [],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": null,
+    "post_turn_compaction_wall_ms_p95": null,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0,
+    "side_llm_cache_read_ratio_avg": null,
+    "latency_p50_ms": null,
+    "insight_recall_at_k": null,
+    "stale_summary_error_rate": null,
+    "insight_stale_reason_rate": null,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "ptl_retry_count_per_compaction_avg": null,
+    "compaction_circuit_breaker_trips": 0,
+    "unnecessary_tool_calls_avg": null,
+    "hook_chain_event_count": 0,
+    "subagent_lifecycle_missing_count": 0,
+    "subagent_terminal_state_missing_count": 0,
+    "subagent_merge_provenance_missing_count": 0,
+    "subagent_timeout_count": 0,
+    "subagent_task_notification_count_avg": null,
+    "tool_search_miss_due_to_no_discovery_total": 0,
+    "tool_schema_bytes_saved_total": 0,
+    "tool_loop_repeat_max": 0,
+    "runtime_monitor_event_total": 0,
+    "runtime_monitor_degraded_total": 0,
+    "mcp_audit_event_total": 0,
+    "mcp_audit_deny_total": 0,
+    "lsp_audit_event_total": 0,
+    "lsp_audit_degraded_total": 0,
+    "claim_verification_verdict_parse_rate": null,
+    "live_trust_signal_avg": null,
+    "specialist_v3_merge_conflict_cases": 0,
+    "agent_usage_total_tokens_sum": null,
+    "writer_oscillation_count_max": 0,
+    "tool_use_summary_row_count_total": 0,
+    "post_compact_paper_sources_restored_cases": 0,
+    "post_compact_paper_sources_restored_total": 0
+  },
+  "verdict": {
+    "status": "pass",
+    "fail_reasons": [],
+    "warn_reasons": []
+  },
+  "e2e_audit": null,
+  "phoenix_snapshot_path": null,
+  "acceptable_warns": [
+    "^claim_verification_verdict_parse_rate:absent_no_cv_rows$"
+  ],
+  "compaction_turn_review": {
+    "ok": true,
+    "returncode": 0,
+    "path": "eval/results/trace-review-r3-focused-stable-candidate-2026-05-13-v2_compaction_review.json",
+    "stdout_tail": "[compaction-review] merged into: eval/results/trace-review-r3-focused-stable-candidate-2026-05-13-v2.json\n[compaction-review] json: eval/results/trace-review-r3-focused-stable-candidate-2026-05-13-v2_compaction_review.json\n[compaction-review] md:   eval/results/trace-review-r3-focused-stable-candidate-2026-05-13-v2_compaction_review.md\n",
+    "stderr_tail": ""
+  }
+}

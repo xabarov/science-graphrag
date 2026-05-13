@@ -104,7 +104,7 @@ Exit codes: `0` pass, `1` fail policies, `2` schema version mismatch, `3` warn-o
 Runs stricter HTTP gates (including **fanout** + **malicious-deny** probes), enables `strict_v3_lifecycle`, default `min_claim_verification_parse_rate=0.95`, embeds `acceptance_summary_v1` (§10.10), and pulls **OD E2E** with `--suite acceptance` (default + heavy + v3 prompts).
 
 ```bash
-export AGENT_LIVE_BASE=dev
+export AGENT_LIVE_BASE=http://127.0.0.1:18787
 export AGENT_LIVE_WORKSPACE_ID=<uuid>
 .venv/bin/python scripts/live_check/agent_trace_review.py \
   --suite acceptance \
@@ -112,6 +112,10 @@ export AGENT_LIVE_WORKSPACE_ID=<uuid>
   --out-json eval/results/trace-review-acceptance-v3.json \
   --out-md eval/results/trace-review-acceptance-v3.md
 ```
+
+`AGENT_LIVE_BASE=dev` remains supported as a compatibility alias in live-check scripts
+(`dev -> AGENT_LIVE_DEV_URL or http://127.0.0.1:8787`), but runbooks should prefer an
+explicit URL so operator logs and artifacts are unambiguous.
 
 Dual-run artifact + rollout notes: `eval/results/runtime-v3-rollout-decision-2026-05-07.md`.
 

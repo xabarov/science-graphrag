@@ -2,7 +2,7 @@
 
 **Status:** new planning entry after
 [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md)
-is effectively complete. That plan closed most of Waves D/E/F/G/H in code or evidence,
+is effectively complete. **Update 2026-05-13:** **R2** chat contract wave is **closed** (see [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md)); **R3** code/docs increment ships `compaction_audit.l4_eligibility` + offline `memory_influence_audit_v1`, and **operator live evidence is recorded** in [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md) — current **rollout stance is `provider-gated`**: formal acceptance/compare lanes are stable, but representative long-thread cache / L4 activation signals are still insufficient for unconditional promotion (forced diagnostic probes add partial signal only). That plan closed most of Waves D/E/F/G/H in code or evidence,
 with important operator exceptions: Wave D promotion is still deferred; **E1/E2 ship
 `True` defaults in `Settings` but remain under an operator rollout gate** (paired live
 latency / cache-ratio evidence — see
@@ -30,14 +30,14 @@ stabilization and depth pass, not a "more agents" pass.
 |------|-------|---------|-----------------|
 | **R0** | Roadmap reconciliation | One source of truth for open gates / flags / artifacts. | **Done** (2026-05-13); matrix in companion doc. |
 | **R1** | Observability refactor | Trace-review and compare gates become maintainable modules. | Before new agent runtime gates. |
-| **R2** | Chat contract | SSE/product contract for progress, lifecycle, degraded mode. | After R1 interface sketch. |
-| **R3** | Context memory | Long-thread compaction and `thread_insights` split into cost vs memory layers. | R1 metrics available. |
-| **R4** | Real subagent runtime | One spawned child task with lifecycle, cancellation, merge provenance. | R2 contract agreed. |
+| **R2** | Chat contract (closed 2026-05-13) | SSE/product layers + `degraded_mode` + `product_step` policy frozen in spec; follow-ups: `agent_note` pilot (optional), tool-map maintenance. | **Done** — [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md); normative: [`../specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §R2. |
+| **R3** | Context memory | Long-thread compaction and `thread_insights` split into cost vs memory layers; **rollout `provider-gated`** until long-thread metrics clear (see baseline checklist). | R1 metrics available. |
+| **R4** | Real subagent runtime | **Slice delivered:** sync spawned `corpus_explore` child (fanout 1), SSE lifecycle + merge provenance in metadata. **R4-next:** hardening (cancellation/timeouts, paired latency compare) — no fanout>1 / no async child runtime until live evidence lanes are reliable. | R2 contract frozen (spec §R2); R4-next also needs repeatable live/trace lanes (R3 experience). |
 | **R5** | Benchmark promotion discipline | Judge stays advisory until strict calibration and variance gates pass. | Can run in parallel after R1. |
 | **R6** | Ingestion quality baseline | Corpus quality / claims / retrieval / dedup measured before headline updates. | Before publication metric refresh. |
 | **R7** | Ingestion architecture | Structured executor, year/venue writeback, dedup parity slices. | R6 baseline exists. |
 | **R8** | Artifact hygiene | Canonical vs diagnostics storage split, no noisy committed live dumps. | Before benchmark expansion scale-up. |
-| **R9** | Product integration | Graph/retrieval/chat evidence reads as one user-facing workflow. | After R2 + R6. |
+| **R9** | Product integration | Graph/retrieval/chat evidence reads as one user-facing workflow. | After R2 close + R6. |
 
 ---
 
@@ -107,10 +107,12 @@ The E1 result is the warning sign: read-only subagents are architecturally clean
 but the paired live run shows a large p95 regression. The risk is not "subagents are
 bad"; the risk is letting a nice diagram override latency and operator evidence.
 
-**Decision:** keep E1 under **operator rollout gate** (not “code off”): the next
-subagent work should focus on a real spawn / fanout / merge runtime with lifecycle
-and provenance, not simply more specialist nodes inside the same graph. Until then,
-stacks sensitive to latency should disable E1 legs via env (see R0 companion matrix).
+**Decision:** keep E1 under **operator rollout gate** (not “code off”): a **first
+spawned-child vertical slice** (sync `corpus_explore`, fanout 1, lifecycle + provenance
+in SSE/`run_metadata`) is **delivered** — see §R4. **R4-next** should harden cancellation
+/ timeouts and prove paired latency vs baseline **before** fanout>1 or new child types.
+Stacks sensitive to latency should still disable E1 legs via env until new paired
+evidence (see R0 companion matrix).
 
 ### 2.3 At risk: over-trusting LLM-as-judge
 
@@ -246,29 +248,25 @@ subagent runtime than our current specialist handoff telemetry.
 - enable E1 subagents for production **without** latency evidence and env escape hatches;
 - make pairwise judge a merge blocker.
 
-### 4.2 Create a real subagent runtime only if it buys lifecycle depth
+### 4.2 Real subagent runtime — slice delivered; expansion is **R4-next**
 
-The current subagent language is overloaded:
+The subagent language remains overloaded (fixed specialists vs spawned children vs
+sidechains). That is why the first step was intentionally narrow.
 
-- fixed graph specialists are not the same as spawned child tasks;
-- sidechain traces are not the same as independently cancellable subagents;
-- a child ReAct graph without lifecycle and merge provenance is mostly added cost.
+**Decision (executed):** a thin **vertical slice** shipped: read-only spawned
+`corpus_explore`, fanout cap 1, sync in-process execution, merge provenance, SSE
+lifecycle aligned with frozen [`agent-chat-v1.md`](../specs/agent-chat-v1.md) §R2 — see
+§R4 **Delivered (slice)** and ADR [`028-agent-runtime-v3-subagents.md`](../adr/028-agent-runtime-v3-subagents.md).
 
-**Proposal:** build one thin vertical slice of real spawned subagent runtime:
+**R4-next (not yet a product default expansion):** cancellation / timeout propagation
+hardening, paired live latency compare for the slice, and trace-review evidence for
+child timeouts — **without** fanout>1, background/coordinator child runtime, or a zoo
+of new child types until measurement lanes are repeatable (see R3 live baseline lessons:
+formal acceptance can pass while long-thread cache/L4 signals stay absent; forced probes
+are supplementary, not a substitute for representative acceptance policy).
 
-1. `SubagentRun` state model and persistence adapter.
-2. One read-only child task type: `corpus_explore`.
-3. Fanout cap = 1 first; no parallel fanout until lifecycle is stable.
-4. Merge node with source provenance.
-5. SSE lifecycle events and trace-review gates.
-
-**Acceptance:**
-
-- live trace shows parent -> child -> merge with terminal child status;
-- cancellation kills child task and records `killed`;
-- no missing lifecycle events;
-- p95 latency does not exceed current supervisor baseline by >25%;
-- user-visible progress is clearer than current fixed-specialist progress.
+**Acceptance for R4-next** builds on the slice acceptance in §R4 (including: child
+`killed` must not surface as fake success; p95 regression budget ≤25% unless waived).
 
 ### 4.3 Split chat contract from engine internals
 
@@ -282,8 +280,7 @@ stable product contract:
 - final answer with citations;
 - explicit degraded-mode reason when salvage was used.
 
-**Next doc / implementation:** update `docs/specs/agent-chat-v1.md` after the
-subagent runtime design, before changing SSE payloads.
+**Status (2026-05-13):** product contract is frozen in [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §**R2 product contract** (see closeout [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md)). Further SSE payload changes require a **spec bump** and **R4-next alignment** (spawned lifecycle / provenance), not a reopening of R2 as an open wave.
 
 ### 4.4 Treat context as a product feature
 
@@ -372,28 +369,27 @@ whether agent changes are safe.
 
 ### 6.1 Priority 1: split trace-review monoliths
 
-**Source backlog:** `[OPEN] Split trace-review CLI monoliths`.
+**Source backlog:** `[DONE] Split trace-review CLI monoliths` (2026-05-13) — see [`docs/backlog/refactor-backend.md`](../backlog/refactor-backend.md).
 
 **Why first:** every future agent/context/subagent decision depends on trace-review.
 If `trace_review_schema.py` and `trace_regression_compare.py` keep accumulating gates,
 the gate itself becomes unreviewable.
 
-**Target module shape:**
+**Delivered module shape (R1 closeout):**
 
-- `trace_review/serde.py`
-- `trace_review/timeline.py`
-- `trace_review/metrics_aggregation.py`
-- `trace_review/acceptance_gates.py`
-- `trace_review/gates/latency.py`
-- `trace_review/gates/cache_telemetry.py`
-- `trace_review/gates/writer_oscillation.py`
-- `trace_review/gates/compaction.py`
-- `trace_compare/policies/*`
-- thin CLI wrappers preserving current flags.
+- `scripts/live_check/trace_review_schema.py` — thin facade re-exporting public API
+- `scripts/live_check/trace_review/` — `types`, `serde`, `serde_helpers`, `aggregation`, `timeline_helpers`, `timeline_case`, `gates/*`, `CONTRACT.md`
+- `scripts/live_check/trace_compare/` — `parser`, `delta`, `policies`, `rendering`, `runner`
+- `scripts/live_check/trace_regression_compare.py` — CLI entry
+
+**Optional deeper split (not required for R1 acceptance):** further per-concern gate files
+(e.g. dedicated `gates/latency.py`), `trace_compare/policies/` package split, and/or
+orchestrator `agent_trace_review.py` decomposition if the **~600 LoC per file** rule should
+explicitly include the live-check orchestrator — track as separate hygiene if needed.
 
 **Acceptance:**
 
-- no file in `scripts/live_check/` over ~600 LoC for this subsystem;
+- no file in the trace-review **merge/compare** packages exceeds ~600 LoC for this subsystem **or** scope is explicitly documented (facade + `trace_review/` + `trace_compare/` + CLI);
 - each gate has unit tests independent of full JSON fixture;
 - CLI output and JSON schema remain backward compatible;
 - existing `tests/scripts/live_check/*` pass.
@@ -438,7 +434,11 @@ the corpus quality baseline, so refactor decisions follow observed quality gaps.
 - `writer_oscillation_count_max <= 1`
 - unacceptable warn reasons outside allowlist == 0
 - latency hard drift policy from trace-review compare
-- paper-source restore after compact, once live long-thread acceptance is green
+- paper-source restore after compact: treat as a **strict promotion gate** when
+  representative long-thread acceptance shows stable restore signal under the same
+  compare policy; while R3 rollout is **provider-gated**, keep this gate **red** for
+  unconditional promote (supplementary forced probes may inform diagnostics only — see
+  [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md))
 
 ### 7.2 What must stay advisory
 
@@ -524,8 +524,8 @@ quickly, freeze the feature as "operator-gated" until a live compare is run.
 
 ### R1 — trace-review and compare refactor
 
-**Goal:** make the safety gate maintainable before it absorbs subagent lifecycle,
-thread memory, and ingestion-quality signals.
+**Goal:** make the safety gate maintainable before it absorbs **additional** subagent
+lifecycle / merge evidence gates (R4-next) and further ingestion-quality signals.
 
 **Why first:** every later wave depends on trace-review. A gate that is hard to change
 will either block good work or silently accept bad work.
@@ -576,62 +576,34 @@ write a smaller "behavior-preserving split" checklist first.
 
 ### R2 — chat contract and progress UX
 
-**Goal:** define what the user sees during long agent work before implementing real
-spawned subagents. Chat contract should be stable enough that runtime internals can
-change without UI churn.
+**Status:** **closed 2026-05-13** — deliverables and checklist: [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md). Normative contract: [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §**R2 product contract**.
 
-**Scope:**
+**Delivered (summary):** event layers vs wire types; `degraded_mode` SSE; `product_step` / intentional-generic `using_tool` for MCP tools; `agent_note` explicitly **postponed** (default-off; not part of minimal canonical contract).
 
-- `docs/specs/agent-chat-v1.md`
-- `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
-- product step mapping / i18n keys
-- optional `agent_note` cost study
+**Explicit follow-ups (not R2 reopen):**
 
-**Work items:**
+- Live 50-turn `agent_note` cost pilot when product requests evidence — backlog [`refactor-backend.md`](../backlog/refactor-backend.md) `[PARTIAL] Evaluate agent_note…`.
+- Ongoing manifest hygiene: new `TOOL_MANIFEST` tools must map to `product_step` or `GENERIC_PRODUCT_STEP_TOOLS` — backlog `[OPEN] Extend _product_step_code_for_tool coverage` (maintenance DoD for tool PRs).
 
-1. Define product-level event groups:
-   - `intent_detected`;
-   - `plan_ready`;
-   - `tool_progress`;
-   - `evidence_ready`;
-   - `subtask_started` / `subtask_completed` (contract-first, even before R4);
-   - `degraded_mode`;
-   - `final_answer`.
-2. Define degraded-mode reasons:
-   - deadline salvage;
-   - tool timeout;
-   - partial evidence;
-   - compact restored sources;
-   - child task failed / killed (reserved for R4).
-3. Audit `_product_step_code_for_tool` production traces for generic `using_tool`.
-4. Decide `agent_note`: run the 50-turn cost study or explicitly keep it off until
-   the next UX cycle.
-5. Add snapshot tests for SSE event contract where possible.
-
-**Acceptance:**
-
-- `agent-chat-v1.md` documents stable user-facing event semantics.
-- New progress labels can be added without exposing graph node names.
-- Generic `using_tool` is either absent in representative traces or explicitly allowed.
-- `agent_note` has a decision: pilot / postpone / drop.
-
-**Quality gates:**
-
-- Relevant API smoke tests.
-- Product-step coverage tests.
-- Trace-review still green on quick/default suite after contract changes.
-
-**Stop condition:** if the UI cannot represent lifecycle/degraded-mode without major
-frontend work, split a frontend roadmap item before changing SSE semantics.
-
-**Artifacts:**
-
-- Updated `docs/specs/agent-chat-v1.md`.
-- Optional updated `docs/analysis/agent-note-cost-eval-2026-05-06.md`.
+**Artifacts:** same as closeout (spec + `stream_lifecycle.py` + doc sync).
 
 ### R3 — context memory and compaction productization
 
 **Goal:** separate context cost control from user-visible memory quality.
+
+**Status (2026-05-13):**
+
+- **Shipped in code/docs:** `compaction_audit.l4_eligibility` on SSE + sync JSON; offline
+  `memory_influence_audit_v1` merged under `long_thread_eval`; prompt-memory precedence /
+  freshness policy already lives in `prompt_memory_policy.py` + spec §Summarization modes.
+- **Operator evidence executed; rollout `provider-gated`:** live baseline + compare
+  artifacts are in [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md)
+  and the R0 companion matrix ([`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md) §R3).
+  Formal acceptance lanes can **pass compare** while long-thread cache / L4 activation
+  signals remain weak; forced diagnostic probes can surface partial metrics (e.g. paper
+  restore) but do not yet satisfy representative promotion criteria.
+- **Do not reopen R2 here:** any chat/SSE wording changes still go through spec alignment,
+  not through the R3 lane.
 
 **Scope:**
 
@@ -643,8 +615,9 @@ frontend work, split a frontend roadmap item before changing SSE semantics.
 
 **Work items:**
 
-1. Run live long-thread Wave H acceptance with current provider settings:
-   `--min-side-llm-cache-read-ratio 0.4` and paper-source restore gate.
+1. Re-run live long-thread Wave H acceptance when provider, model, or compaction policy
+   changes materially; keep `--min-side-llm-cache-read-ratio 0.4` and paper-source restore
+   gate for **promotion** decisions while rollout remains **provider-gated**.
 2. Promote compaction policy into an explicit module:
    - context budget;
    - summary output reservation;
@@ -652,21 +625,27 @@ frontend work, split a frontend roadmap item before changing SSE semantics.
    - blocking threshold;
    - consecutive failure circuit breaker;
    - trigger reason telemetry.
-3. Finish `thread_insights` A2:
-   - prompt injection with deterministic precedence;
-   - freshness policy;
-   - audit in run metadata.
-4. Add A3 eval lane:
+3. **Thread insights (Epic A):** treat A2 as shipped in code + roadmap Train T2; R3 work is **hardening + operator evidence** — freshness/precedence/audit already in [`prompt_memory_policy.py`](../../science_graphrag/agent/context/prompt_memory_policy.py) + spec §Summarization modes; extend **memory influence audit** in trace artifacts (see `memory_influence_audit_v1` in offline long-thread eval).
+4. Expand **A3** eval / gates beyond synthetic harness where live budget allows:
    - long-thread recall / consistency;
    - compaction churn;
    - latency/cost;
    - memory influence audit.
 5. Keep `runtime_tool_summary` separate from `progress_tool_summary`.
 
+**Already delivered inside this wave:**
+
+- explicit L4 eligibility / skip-reason policy module;
+- offline `memory_influence_audit_v1`;
+- hardening narrative: `thread_insights` A2 is treated as shipped-in-code, with R3 focused
+  on evidence and targeted eval expansion rather than a new memory subsystem rewrite.
+
 **Acceptance:**
 
 - Live long-thread acceptance passes or feature remains provider-gated.
-- Trace-review includes compact trigger reason and failure streak.
+- Trace-review includes compact trigger reason; `compaction_audit.l4_eligibility` records
+  L4 preflight (skip reason vs eligible); session `l4_llm_compacts` tail supports compaction
+  history review; lock contention / LLM failure remain log-level unless promoted to metrics later.
 - `thread_insight` appears only when freshness policy says it should.
 - Long-thread eval shows no regression in trust/verdict and a measurable gain in
   recall/consistency on memory-dependent cases.
@@ -688,67 +667,102 @@ microcompact only.
 
 - Live long-thread trace-review artifacts.
 - Updated Wave H decision section or companion closeout.
+- Operator checklist template: [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md).
 
 ### R4 — real subagent runtime vertical slice
 
 **Goal:** test whether spawned child runtimes buy lifecycle depth and better UX, not
 just a more complicated graph.
 
-**Scope:**
+#### Delivered (R4 slice — 2026-05-13)
 
-- new `SubagentRun` / `AgentTask` model;
-- one read-only child task (`corpus_explore`);
-- fanout cap 1;
-- lifecycle SSE;
-- merge provenance;
-- trace-review gates.
+- **Foundation:** v3 observability lane, `subagent_runs`, `subagent_task_notifications`,
+  sidechain rows, typed `specialist_results_v3` merge.
+- **Spawned-child contract:** explicit rows with `AgentTask` / `MergeProvenance` fields
+  where applicable; `corpus_explore` as **one** read-only child task.
+- **Execution model:** **sync-only**, in-process, **fanout cap = 1**; no coordinator /
+  background child runtime in this slice.
+- **Surfaces:** lifecycle / terminal / provenance in `run_metadata.subagent_runs` and live
+  SSE (`kind="spawned"` with `task_type`, `task_id`, `merge_provenance`, `output_pointer`
+  when available); UI + trace-review alignment for this slice.
+- **Normative record:** ADR [`028-agent-runtime-v3-subagents.md`](../adr/028-agent-runtime-v3-subagents.md).
 
-**Work items:**
+**Slice acceptance (met for shipped slice):**
 
-1. Write ADR: fixed specialists vs spawned child runtimes.
-2. Define `SubagentRun` state:
-   - ids: `parent_turn_id`, `child_turn_id`, `task_id`;
-   - type / description;
-   - status: `pending | running | completed | failed | killed`;
-   - timestamps;
-   - output pointer;
-   - merge provenance;
-   - error class.
-3. Implement in-process child execution first; no parallel fanout until terminal
-   state and cancellation semantics are stable.
-4. Add cancellation / timeout propagation.
-5. Add merge node with provenance and no hidden overwrite of parent state.
-6. Add SSE events using R2 contract.
-7. Add trace-review metrics:
-   - `subagent_lifecycle_missing_count`;
-   - `subagent_terminal_state_missing_count`;
-   - `subagent_merge_provenance_missing_count`;
-   - child latency and timeout count.
-8. Compare against current supervisor baseline.
+- Live trace shows parent → child → merge with **terminal** child status for the
+  `corpus_explore` path under the frozen [`agent-chat-v1.md`](../specs/agent-chat-v1.md) §R2 contract.
+- Merge provenance is visible in final run metadata for that path.
+- **Scope discipline:** do not raise fanout above 1 or add async/distributed children in
+  the same “slice” label — that belongs to **R4-next**.
 
-**Acceptance:**
+**Slice quality gates (already in CI / live discipline):**
 
-- Live trace shows parent -> child -> merge with terminal child status.
-- Cancellation records `killed` and does not emit a fake success.
-- Merge provenance appears in final run metadata.
-- p95 latency does not regress >25% unless explicitly waived.
-- User-visible progress is clearer than current fixed specialist progress.
+- Unit tests for terminal state transitions where applicable.
+- SSE contract tests (including spawned lifecycle shape).
+- Trace-review acceptance + compare for regression safety on touched surfaces.
+- Pairwise judge remains **advisory only**; not used to “promote” R4.
 
-**Quality gates:**
+**Slice artifacts:**
 
-- Unit tests for terminal state transitions.
-- SSE contract tests.
-- Trace-review acceptance + compare.
-- Pairwise judge remains advisory only; not used to promote R4.
+- ADR: [`028-agent-runtime-v3-subagents.md`](../adr/028-agent-runtime-v3-subagents.md).
+- Optional pinned trace-review runs: `eval/results/trace-review-subagent-runtime-r4-*.{json,md}`
+  (generate when running an explicit R4 regression lane; not required for daily dev).
 
-**Stop condition:** if lifecycle is incomplete or p95 regression exceeds 25% without a
-clear fix, stop R4 and keep fixed specialists. Do not add fanout >1.
+#### R4-next — hardening and measured expansion (not started as a default product ramp)
 
-**Artifacts:**
+**Principle:** **R3 rollout being `provider-gated` does not invalidate the shipped R4
+slice**, but it **does** block irresponsible expansion: without repeatable long-thread /
+cache / compaction observability, adding fanout, async children, or many new task types
+would increase complexity faster than evidence.
 
-- ADR under `docs/adr/`.
-- `eval/results/trace-review-subagent-runtime-r4-*.{json,md}`.
-- Closeout note linked from this doc.
+**Preconditions (from R3 operator experience):**
+
+1. **Stable live contour** and predictable operator recovery (see long-running ops /
+   agent-runtime live map rules — e.g. healthy `api`/`web` before long probes).
+2. **Repeatable measurement lanes:** separate **formal acceptance** (bounded
+   `agent_trace_review` profile) from **forced / diagnostic** long-thread probes
+   documented in [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md).
+3. **Hung / slow `/v2/agent/query` mitigation** for focused probes — see `[OPEN]`
+  “Stabilize focused long-thread live probe (R3)…” in [`refactor-backend.md`](../backlog/refactor-backend.md)
+  (close or explicitly bypass with hard timeouts before treating R4-next live gates as authoritative).
+
+**Dependency sketch (trust vs expansion):**
+
+```mermaid
+flowchart TD
+  R3Code[R3_code_shipped]
+  R3Trust[R3_rollout_providerGated]
+  R4Slice[R4_slice_delivered]
+  LaneHardening[live_lane_hardening]
+  R4Next[R4_next_expansion]
+
+  R3Code --> R4Slice
+  R3Trust --> LaneHardening
+  LaneHardening --> R4Next
+  R4Slice --> R4Next
+```
+
+**R4-next work items (evidence-first; still no fanout>1 / no async child runtime until explicitly approved):**
+
+1. Harden **cancellation / timeout propagation** for the spawned path; ensure `killed`
+   never surfaces as fake success (close any gap vs §4.2 acceptance).
+2. **Paired live latency** compare: baseline vs candidate with the slice exercised,
+   p95 regression budget ≤25% unless explicitly waived (same bar as before).
+3. Extend trace-review **metrics / gates** only as needed for child timeouts and merge
+   provenance holes discovered in production-like traces.
+4. **Optional** second read-only child task type — only after (1)–(3) stay green; still
+   **fanout 1** global policy until a later wave explicitly revisits fanout.
+
+**R4-next stop condition:** halt expansion and keep the shipped slice if lifecycle remains
+incomplete, paired latency regresses >25% without a clear fix, or live lanes remain too
+noisy to trust regression numbers. **Do not** add fanout>1 or async/background child
+runtime in R4-next without a dedicated ADR revision + evidence lane.
+
+**R4-next artifacts:**
+
+- Updated ADR note or addendum when behavior contract changes.
+- `eval/results/trace-review-subagent-runtime-r4-*.{json,md}` (paired compare artifacts).
+- Short closeout paragraph in this doc or a dedicated analysis note when R4-next closes.
 
 ### R5 — benchmark promotion discipline
 
@@ -991,11 +1005,11 @@ wave before answer-report integration.
 ```text
 R0 status reconciliation
   ├─ R1 trace-review split
-  │   ├─ R3 context memory productization
+  │   ├─ R3 context memory productization (operator stance may be provider-gated)
   │   ├─ R5 benchmark promotion discipline
-  │   └─ R4 real subagent runtime (after R2)
-  ├─ R2 chat contract
-  │   └─ R4 real subagent runtime
+  │   └─ R4 slice (shipped under frozen R2) + R4-next (hardening / measured expansion)
+  ├─ R2 chat contract (done 2026-05-13)
+  │   └─ R4 slice + future SSE bumps (spec bump + R4-next alignment, not R2 reopen)
   ├─ R6 corpus / ingestion baseline
   │   ├─ R7 ingestion repairs
   │   └─ R9 answer-as-report
@@ -1005,11 +1019,19 @@ R0 status reconciliation
 Recommended order:
 
 1. **R0 + R1** first: remove ambiguity and protect the gate.
-2. **R2 + R3** next: product contract and context memory before new runtime machinery.
-3. **R6** in parallel if operator time is available: it may change priorities.
-4. **R4** only after R2 and enough R1 gate modularity.
-5. **R5** as a calibration lane, not a blocker for R1/R2/R3.
-6. **R7/R8/R9** after the baseline tells us where product quality is bottlenecked.
+2. **R3** operator policy: code is shipped; **rollout may remain `provider-gated`** until
+   representative long-thread metrics improve — maintain both **formal acceptance** and
+   **forced diagnostic** lanes per [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md).
+3. **R4 vertical slice** is **already delivered** (sync `corpus_explore`, fanout 1, SSE +
+   metadata) — treat as maintenance unless touching spawn/merge surfaces.
+4. **R4-next** (cancellation/timeouts, paired latency compare, optional second read-only
+   child type): start when live/trace lanes are **repeatable enough** to trust regression
+   numbers (includes mitigating hung `/v2/agent/query` focused-probe debt — see
+   [`refactor-backend.md`](../backlog/refactor-backend.md)); **not** blocked by “R3 must
+   promote first”, but **is** blocked by flaky measurement.
+5. **R6** in parallel if operator time is available: it may change priorities.
+6. **R5** as a calibration lane, not a blocker for R1/R2/R3/R4 slice maintenance.
+7. **R7/R8/R9** after the baseline tells us where product quality is bottlenecked.
 
 ---
 
@@ -1023,15 +1045,16 @@ Recommended order:
 | Use `tool_use_summary` as runtime memory? | No for **operator trust** until ratio gate; **Settings** default is `True` (set `SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED=false` if needed). | Heavy live `side_llm_cache_read_ratio_avg >= 0.4` or accepted provider policy. |
 | Use tool summaries as UI progress labels? | Yes, but cheap and non-critical. | Cost study shows visible latency/cost regression. |
 | Update Habr/public headline metrics? | Only via pinned window manifest. | One changed axis is isolated and `trust_signal.runtime_mode == live`. |
-| Start graph/chat product integration? | After R2 + R6. | A user-facing demo is needed earlier; then keep it prototype-only. |
+| Start graph/chat product integration? | After R2 close + R6. | A user-facing demo is needed earlier; then keep it prototype-only. |
 | Add more benchmark cases? | Only after artifact hygiene and baseline discipline. | Case fixes a known blind spot and does not change promotion thresholds. |
 
 ## 11. Stop conditions
 
 Stop adding agent complexity if any of these happens:
 
-- subagent vertical slice fails latency by >25% without a clear fix;
-- trace-review split is not done and new gates require touching giant functions again;
+- the **shipped R4 slice** or **R4-next** expansion regresses paired live latency by >25%
+  without a clear fix;
+- trace-review subsystem regresses into monoliths again and new gates require touching giant functions;
 - pairwise judge calibration remains red after one prompt/rubric revision;
 - ingestion quality baseline shows claims/retrieval regressions larger than runtime gains;
 - chat UX cannot explain progress/degraded-mode clearly to a user.
@@ -1041,7 +1064,7 @@ In that case, the next best work is not another agent architecture wave. It is:
 1. corpus quality and ingestion repair;
 2. trace-review/benchmark maintainability;
 3. chat UX contract;
-4. only then new runtime machinery.
+4. only then further runtime machinery (**R4-next** or beyond), after measurement lanes are trustworthy.
 
 ---
 
@@ -1067,5 +1090,8 @@ In that case, the next best work is not another agent architecture wave. It is:
 | Trace-review SOP | [`../runbooks/agent-trace-review-sop.md`](../runbooks/agent-trace-review-sop.md) |
 | Promotion review | [`../runbooks/benchmark-family-promotion-review.md`](../runbooks/benchmark-family-promotion-review.md) |
 | Structural backlog | [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md) |
+| R3 long-thread live baseline (operator) | [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md) |
+| R4 subagent foundation (ADR-028) | [`028-agent-runtime-v3-subagents.md`](../adr/028-agent-runtime-v3-subagents.md) |
+| R2 chat contract closeout (SSE product layers) | [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md) |
 | Ingestion LLM standardization | [`ingestion-llm-architecture-and-instructor-standardization-2026-04-27.md`](./ingestion-llm-architecture-and-instructor-standardization-2026-04-27.md) |
 | Ingest dedup complexity | [`ingest-entity-extraction-and-dedup-complexity-analysis-2026-04-27.md`](./ingest-entity-extraction-and-dedup-complexity-analysis-2026-04-27.md) |

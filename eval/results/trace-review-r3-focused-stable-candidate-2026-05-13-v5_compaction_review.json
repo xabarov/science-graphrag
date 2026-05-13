@@ -1,0 +1,236 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-13T13:21:44.212792+00:00",
+  "thread_id": "compaction_review_89a9a5234dc5",
+  "turns": 6,
+  "require_compaction_after": 2,
+  "turn_reports": [
+    {
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 97331,
+      "warnings": [],
+      "tool_trace_len": 8,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 1,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 1
+    },
+    {
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 17304,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 2,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 2
+    },
+    {
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 21637,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 3,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 3
+    },
+    {
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 12981,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 4,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 4
+    },
+    {
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 19677,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 5,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 5
+    },
+    {
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 14690,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 6,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 6
+    }
+  ],
+  "compaction_events": [
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "turn": 1,
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "turn": 2,
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 3,
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 4,
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 5,
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 6,
+      "thread_id": "compaction_review_89a9a5234dc5",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    }
+  ],
+  "verdict": {
+    "status": "pass",
+    "reasons": []
+  }
+}

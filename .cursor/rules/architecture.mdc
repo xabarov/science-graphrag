@@ -12,6 +12,8 @@ North star и сценарии: [README.md](README.md), [docs/roadmap.md](docs/r
 | Путь | Назначение |
 |------|------------|
 | `science_graphrag/` | Пакет Phase 1: ingestion, storage, CLI, API |
+| `science_graphrag/agent/` | Agent runtime, supervisor graph, subagents, context/memory |
+| `science_graphrag/api/agent_v2_modules/` | Сборка Agent API v2: SSE, payloads, recovery, run_metadata |
 | `science_graphrag/ingestion/` | Приём документов, пайплайн, PDF/Markdown |
 | `science_graphrag/storage/neo4j_store.py` | Загрузка и запросы Neo4j (scholarly graph) |
 | `science_graphrag/api/retrieval.py` | Поиск (Qdrant + Neo4j context), политики контекста для `POST /v1/query` |
@@ -19,12 +21,22 @@ North star и сценарии: [README.md](README.md), [docs/roadmap.md](docs/r
 | `ui/` | Vite + React + MUI: workspace, reader, граф |
 | `eval/` | Бенчмарки и регрессии |
 | `tests/` | Pytest |
+| `scripts/live_check/` | Operator/live harnesses: trace-review, HTTP probes, compaction review, E2E audit |
 
 ## Локальный стек (MVP)
 
 PostgreSQL (метаданные, jobs), Neo4j (библиографический граф), Qdrant (векторы чанков), файловая система (blobs). Поднятие: `docker compose` (см. `docker-compose.yml`, `.env.example`).
 
 Детали потока данных и границ Phase 1: [docs/architecture/phase-1-backbone.md](docs/architecture/phase-1-backbone.md).
+
+## Agent/live ориентация
+
+- Если задача про Ask/chat SSE, `subagent_*`, `run_metadata`, `product_step`, `context_compacted`:
+  сначала смотри `science_graphrag/agent/` и `science_graphrag/api/agent_v2_modules/`, а не только `science_graphrag/api/agent_v2.py`.
+- Если задача про live evidence / acceptance / compare artifacts:
+  смотри `scripts/live_check/` + `docs/runbooks/agent-trace-review-sop.md` + `eval/results/`.
+- Если задача про Ask UI live-progress:
+  основные файлы находятся в `ui/src/components/work/agent/`.
 
 ## ADR и индекс документации
 

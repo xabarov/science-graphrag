@@ -53,6 +53,18 @@ def verdict_from_signals(
                 f"subagent_lifecycle_missing_count:{metrics.subagent_lifecycle_missing_count}"
             )
 
+    if metrics.subagent_terminal_state_missing_count > 0:
+        fail_reasons.append(
+            "subagent_terminal_state_missing_count:"
+            f"{metrics.subagent_terminal_state_missing_count}"
+        )
+
+    if metrics.subagent_merge_provenance_missing_count > 0:
+        fail_reasons.append(
+            "subagent_merge_provenance_missing_count:"
+            f"{metrics.subagent_merge_provenance_missing_count}"
+        )
+
     if metrics.tool_loop_repeat_max > TOOL_LOOP_REPEAT_FAIL_THRESHOLD:
         fail_reasons.append(
             f"tool_loop_repeat_max:{metrics.tool_loop_repeat_max}>{TOOL_LOOP_REPEAT_FAIL_THRESHOLD}"

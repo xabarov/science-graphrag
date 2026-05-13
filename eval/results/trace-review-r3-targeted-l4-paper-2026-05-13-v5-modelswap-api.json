@@ -1,0 +1,13 @@
+{
+  "schema_version": "r3_targeted_probe_v5_modelswap_api",
+  "thread_id": "r3_targeted_modelswap_api_2f1f52286d",
+  "failure_reason": "http_timeout_turn_1",
+  "turns": [
+    {
+      "turn": 1,
+      "question": "Use idea_search: find 2 works about graph neural networks with work_id.",
+      "failure_reason": "http_timeout_turn_1",
+      "elapsed_ms": 120061
+    }
+  ]
+}

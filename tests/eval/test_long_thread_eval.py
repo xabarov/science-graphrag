@@ -16,3 +16,10 @@ def test_long_thread_offline_all_pass() -> None:
     assert len(out["cases"]) == 3
     assert all(c["pass"] for c in out["cases"])
     assert all(c["claim_grounding_ok"] for c in out["cases"])
+    mia = out.get("memory_influence_audit_v1") or {}
+    assert mia.get("schema_version") == "memory_influence_audit_v1"
+    assert len(mia.get("cases") or []) == 3
+    fresh = next(x for x in mia["cases"] if x["case_id"] == "long_thread_fresh_insight")
+    assert fresh.get("thread_insight_prompt_injected") is True
+    stale = next(x for x in mia["cases"] if x["case_id"] == "long_thread_stale_fallback")
+    assert stale.get("thread_insight_prompt_injected") is False

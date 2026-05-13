@@ -627,9 +627,11 @@ def main() -> int:  # pylint: disable=too-many-locals,too-many-statements
 
     from dotenv_util import (
         load_dotenv_or_warn,  # pylint: disable=import-outside-toplevel,import-error
+        resolve_live_base_url,
     )
 
     load_dotenv_or_warn(args.env_file)
+    args.base_url = resolve_live_base_url(args.base_url)
 
     from eval.chat_agent.phoenix_export import (  # pylint: disable=import-outside-toplevel
         extract_span_names_for_trace,

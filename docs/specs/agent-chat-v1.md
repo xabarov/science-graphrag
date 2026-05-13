@@ -17,7 +17,7 @@
 | `run_metadata.specialist_results_v3` | Optional typed merge payload: `schema_version`, `legs[]` (parent_tool + `claim_verification` child rows), `merge` (`evidence_origin`, `confidence`, `conflict`, `writer_directive`, `partial_failure`). |
 | `run_metadata.claim_verification_results` | Optional list mirrored from transcript `HumanMessage` rows (`kind="claim_verification_result"`): `subagent_id`, `verdict`, `issues`, `terminal_state`, `failure_code`, `latency_ms`. |
 | `run_metadata.subagent_observability_lane` | `fork_v3_enhanced` vs `legacy_routing_sse_only` — documents whether v3 lifecycle extras were active for this turn. |
-| SSE `subagent_started` / `subagent_progress` / `subagent_finished` | Same `type` values as v1; **optional** extra keys when present: `parent_turn_id`, `spawn_reason`, `terminal_state` (on `subagent_finished` when known). |
+| SSE `subagent_started` / `subagent_progress` / `subagent_finished` | Same `type` values as v1; **optional** extra keys when present: `parent_turn_id`, `spawn_reason`, `terminal_state` (on `subagent_finished` when known); for explicit spawned children the stream may also include `kind="spawned"`, `task_id`, `task_type`, `description`, `merge_provenance`, `output_pointer`. |
 
 **Train T3 lifecycle (v3, implemented 2026-05-07):** `<task-notification>` user-role transcript rows (LangGraph `HumanMessage` with `additional_kwargs.kind="task_notification"`), SSE mirror `subagent_task_notification`, throttled deterministic `subagent_progress_label`, and `subagent_heartbeat` while a routing leg is active (Settings-gated).
 
@@ -26,6 +26,58 @@
 **Train T2 / Epic B (2026-05-07):** `specialist_results_v3` merge + optional `claim_verification` subagent when `SCIENCE_GRAPHRAG_AGENT_CLAIM_VERIFICATION_ENABLED=1` (see Settings); explicit spawn rows merge into `run_metadata.subagent_runs` alongside routing legs.
 
 **Product architecture (where this spec sits):** research chat stays on the **simplified** single LangGraph run (supervisor → retrieval / graph → writer). Roadmap for goals, deferred work, and future **`tool_search`** plus **context-window summarization / compaction**: [`docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md). **Каталог инструментов (имена, схемы, карта кода):** [`docs/architecture/agent-chat-tools.md`](../architecture/agent-chat-tools.md). In this document, **CH\*** labels denote **delivery waves / features**, not separate shipped microservices.
+
+## R2 product contract — transport vs product (2026-05-13)
+
+This section freezes what **product-facing clients** should depend on. Wire SSE `type` strings below remain the transport layer; **product semantics** are grouped so UI can evolve without mirroring every graph node name.
+
+### Event layers
+
+| Layer | Role | Examples |
+|-------|------|----------|
+| **User-facing (canonical)** | Headline progress, trust, completion | `intent_classified`, `product_step`, `specialist_selected`, `evidence_ready`, `answer_synthesis_*`, `final_answer`, optional `degraded_mode` |
+| **Lifecycle / provenance (canonical when v3 extras on)** | Sub-agent leg boundaries for Ask / inspectors | `subagent_started`, `subagent_progress`, `subagent_finished`, `subagent_task_notification`, `claim_verification_result`, optional `subagent_heartbeat`, `subagent_progress_label` |
+| **Optional enrichment** | Extra narration; safe to ignore | `agent_note` (only when `agent_note_enabled=true`) |
+| **Internal / plumbing** | Shortlists, debug, integration audits — not primary headline | `tool_search_result`, streamable `debug_events`, `web_fetched`, `doi_resolved`, `mcp_audit`, `lsp_audit`, `runtime_monitor`, … |
+
+**Rule:** the live Ask card should prefer **canonical** rows; internal rows stay in run inspector / eval (see UI vocabulary § below).
+
+### Product groups (semantic) vs wire `type`
+
+| Product group | Meaning | Primary wire `type`(s) |
+|---------------|---------|-------------------------|
+| **intent_detected** | Classified answer path / policy | `intent_classified` |
+| **plan_ready** | Supervisor chose next specialist | `specialist_selected` (+ `subagent_started` for the same handoff) |
+| **tool_progress** | Work in progress inside a leg | `tool_call`, `tool_result`, `product_step`, optional `subagent_progress` / `subagent_progress_label` |
+| **evidence_ready** | Citations materialized before final | `evidence_ready` |
+| **subtask_started / subtask_completed** (R4-ready) | Product vocabulary for a bounded child unit of work | Today: wire uses **`subagent_*`** for routing legs and spawned rows; same semantics until spawned runtime ships. Clients may treat `subagent_started` as *subtask started* and `subagent_finished` as *subtask completed* when `terminal_state` is present. |
+| **degraded_mode** | Salvage / partial answer — user-visible quality signal | Optional SSE **`degraded_mode`** (see below) **plus** overlapping `warnings` / `product_markers` on `final_answer` (authoritative for sync JSON parity). |
+| **final_answer** | Terminal payload | `final_answer` |
+
+### `degraded_mode` SSE (optional, additive)
+
+Emitted **once** per turn after `answer_synthesis_finished` and **immediately before** `final_answer` when the envelope warnings include any mapped salvage / partial path.
+
+Payload:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `type` | literal `degraded_mode` | Forward-compatible; unknown types must still be ignored per compatibility § |
+| `schema_version` | int | Current `1`; bump only with migration note if reasons change |
+| `reasons` | string[] | Stable machine codes (UI localizes). Derived from `final_answer.warnings` |
+
+**Initial `reasons` values** (subset; grows only with spec bump): `graph_tool_salvage`, `quote_candidate_salvage`, `assistant_draft_salvage`, `turn_deadline_exceeded`, `partial_after_deadline`, `recursion_limit_partial`, `partial_after_recursion_limit`.
+
+Implementation: `science_graphrag.api.agent_v2_modules.stream_lifecycle.degraded_mode_event_from_warnings`.
+
+### `product_step` and `using_tool`
+
+- Every catalog tool in `TOOL_MANIFEST` must map to a specific `product_step.code` **or** be listed as an **intentionally generic** tool (MCP surface: `call_mcp_tool`, `list_mcp_resources`, `fetch_mcp_resource`, `mcp_auth` → `using_tool` with `generic=true`, `generic_reason=intentionally_generic_tool`).
+- Unknown / future tool names still emit `using_tool` with `generic_reason=unmapped_tool_name` until added to manifest + mapping.
+
+### `agent_note` (optional; **postponed pilot**)
+
+**Product decision (R2):** `agent_note` is **not** part of the canonical minimal contract. It remains **off by default** (`agent_note_enabled=false`). A **live** 50-turn token/latency pilot is **deferred** until product explicitly requests default-on; methodology and archived notes live under `docs/analysis/` / backlog. Spec and wire format stay supported for opt-in stacks.
 
 ## Client contract (what to read where)
 
@@ -95,9 +147,9 @@ Each SSE `data:` line is a JSON object with a `type` field.
 |--------|------|---------|
 | `intent_classified` | Start of run | `answer_class`, `source` (e.g. `coordinator_gate_v0` for deterministic rules, `coordinator_gate_llm` / `coordinator_gate_fallback` for hybrid/LLM paths), `conversation_intent`, `tool_policy`, `route_hint`, `reason`, `confidence` (0–1), `classifier` (`deterministic` \| `llm` \| `fallback`), `suggested_answer_class` |
 | `specialist_selected` | After supervisor routing | `from`, `to`, optional `budget_left`, optional `reason`, optional runtime attribution (`run_kind`, `graph_id`) |
-| `subagent_started` | Immediately after `specialist_selected` | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe), optional **`parent_turn_id`**, **`spawn_reason`** (Train T3 B1) |
+| `subagent_started` | Immediately after `specialist_selected` or when a spawned child row becomes observable in v3 | `subagent_id` (typically specialist id), optional `from`, optional `summary` (short, product-safe), optional **`parent_turn_id`**, **`spawn_reason`** (Train T3 B1), optional `kind` (`routing_leg` \| `spawned`), optional `task_id`, `task_type`, `description`, `execution_mode`, `fanout_slot` |
 | `subagent_progress` | Optional, after `tool_call` while a subagent is active | `subagent_id`, `step`, `tool`, `summary`, optional **`parent_turn_id`**, **`spawn_reason`** |
-| `subagent_finished` | When leaving a subagent (next routing or synthesis) | `subagent_id`, optional **`parent_turn_id`**, **`spawn_reason`**, **`terminal_state`**, **`latency_ms`** |
+| `subagent_finished` | When leaving a subagent (next routing or synthesis) or when a spawned child row is mirrored from v3 terminal metadata | `subagent_id`, optional **`parent_turn_id`**, **`spawn_reason`**, **`terminal_state`**, **`latency_ms`**, optional `kind` (`routing_leg` \| `spawned`), `task_id`, `task_type`, `description`, `merge_provenance`, `output_pointer`, `failure_code` |
 | `subagent_task_notification` | After a routing leg completes (v3) | Structured payload + `xml_excerpt` (same keys as `run_metadata.subagent_task_notifications[]`). |
 | `claim_verification_result` | After each claim verification child completes (v3 + flag) | Same keys as `run_metadata.claim_verification_results[]` entries (`type` = `claim_verification_result`). |
 | `subagent_heartbeat` | While awaiting graph chunks with an active routing leg (v3) | `subagent_id`, `parent_turn_id`, `reason` (`idle_tick`). |
@@ -117,6 +169,7 @@ Each SSE `data:` line is a JSON object with a `type` field.
 | `answer_synthesis_started` | After graph streaming completes, before `evidence_ready` / compaction | empty payload beyond `type` |
 | `evidence_ready` | Before final | `citation_count` |
 | `answer_synthesis_finished` | Immediately before `final_answer` | empty payload beyond `type` |
+| `degraded_mode` | After `answer_synthesis_finished`, only when salvage / partial warnings apply | `schema_version` (int), `reasons` (string[]) — stable product codes; see §**R2 product contract** |
 | `context_compacted` | After turn digest update (CH4) when `thread_id` is set | `thread_id`, `session_summary_excerpt`, **`compaction`**: `{ "kind": "turn_digest", "kinds": string[], "trigger": "post_answer" \| "post_answer_degraded_stream", "digest_count": int, "boundary": { "status": "idle" \| "candidate", ... } }` — `kinds` may include `rolling_memory` (after enough digests) and `workspace_capsule` when a workspace-scoped capsule exists; `post_answer_degraded_stream` when the graph stream did not yield a final `values` chunk; **`audit`** (eval CH5): `{ schema_version, digest_cap, rolling_threshold, workspace_capsule_present, llm_full_history_compact }` — reproducibility slice for compaction gates (`llm_full_history_compact` reserved for future L4 LLM-wide summarization) |
 
 ### Prompt / memory matrix after compaction (L1–L4)

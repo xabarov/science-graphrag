@@ -84,6 +84,10 @@ def parse_compaction_event_dicts(raw: list[Any]) -> tuple[CompactionEvent, ...]:
                 kinds=kt,
                 turn=turn_i,
                 thread_id=str(item["thread_id"]) if item.get("thread_id") else None,
+                side_llm_cache_read_ratio=coerce_optional_float(item.get("side_llm_cache_read_ratio")),
+                post_compact_paper_sources_restored_count=coerce_int(
+                    item.get("post_compact_paper_sources_restored_count"), default=0
+                ),
             )
         )
     return tuple(out)
@@ -102,12 +106,24 @@ def merge_compaction_into_review_dict(
         return data
     tl_rows = tr.trace_timeline
     bucket_key = "compaction_multi_turn_probe"
-    if len(tl_rows) == 1:
-        bucket_key = tl_rows[0].case_id
-    new_tl = merge_compaction_events_into_timeline(
-        tl_rows,
-        {bucket_key: events},
-    )
+    if not tl_rows:
+        # ``--skip-e2e`` lanes may produce an empty timeline. Persist compaction
+        # evidence under a synthetic probe row so aggregate metrics stay truthful.
+        new_tl = (
+            TimelineCase(
+                case_id=bucket_key,
+                tool_steps=(),
+                compaction_events=events,
+                e2e_http_ok=False,
+            ),
+        )
+    else:
+        if len(tl_rows) == 1:
+            bucket_key = tl_rows[0].case_id
+        new_tl = merge_compaction_events_into_timeline(
+            tl_rows,
+            {bucket_key: events},
+        )
     new_metrics = aggregate_metrics_from_timeline(new_tl)
     tr2 = TraceReviewV1(
         review_version=tr.review_version,
@@ -276,6 +292,13 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
                 subagent_lifecycle_missing_count=coerce_int(
                     item.get("subagent_lifecycle_missing_count"), default=0
                 ),
+                subagent_terminal_state_missing_count=coerce_int(
+                    item.get("subagent_terminal_state_missing_count"), default=0
+                ),
+                subagent_merge_provenance_missing_count=coerce_int(
+                    item.get("subagent_merge_provenance_missing_count"), default=0
+                ),
+                subagent_timeout_count=coerce_int(item.get("subagent_timeout_count"), default=0),
                 eval_lane=(str(item.get("eval_lane") or "").strip() or None),
                 tool_search_miss_due_to_no_discovery=coerce_int(
                     item.get("tool_search_miss_due_to_no_discovery"), default=0
@@ -376,6 +399,13 @@ def trace_review_from_dict(data: dict[str, Any]) -> TraceReviewV1:
         subagent_lifecycle_missing_count=coerce_int(
             mraw.get("subagent_lifecycle_missing_count"), default=0
         ),
+        subagent_terminal_state_missing_count=coerce_int(
+            mraw.get("subagent_terminal_state_missing_count"), default=0
+        ),
+        subagent_merge_provenance_missing_count=coerce_int(
+            mraw.get("subagent_merge_provenance_missing_count"), default=0
+        ),
+        subagent_timeout_count=coerce_int(mraw.get("subagent_timeout_count"), default=0),
         subagent_task_notification_count_avg=coerce_optional_float(
             mraw.get("subagent_task_notification_count_avg")
         ),

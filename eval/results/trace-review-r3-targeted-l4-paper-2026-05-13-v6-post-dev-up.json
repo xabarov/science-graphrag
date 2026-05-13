@@ -1,0 +1,127 @@
+{
+  "schema_version": "r3_targeted_probe_v6_post_dev_up",
+  "base_url": "http://127.0.0.1:18787",
+  "workspace_id": "ws-pilot-od",
+  "thread_id": "r3_targeted_retry_715ee0d3cc",
+  "failure_reason": null,
+  "env": {
+    "SCIENCE_GRAPHRAG_AGENT_COMPACTION_DIGEST_CAP": "3",
+    "SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED": "1",
+    "SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_COOLDOWN_TURNS": "1"
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "elapsed_ms": 125255,
+      "question": "Use idea_search: find 3 works in this workspace about graph neural networks; include work_id for each.",
+      "tool_trace_tools": [
+        "coordinator_gate",
+        "session_init",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "idea_search",
+        "final_answer"
+      ],
+      "resolved_chat_llm_model": "google/gemini-2.5-flash",
+      "compaction_kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "digest_count": 1,
+      "l4_skip_reason": "below_digest_cap",
+      "l4_eligible": false,
+      "llm_full_history_compact": false,
+      "llm_compact_side_ratio": null,
+      "post_compact_paper_sources_restored_count": null
+    },
+    {
+      "turn": 2,
+      "elapsed_ms": 19925,
+      "question": "Use paper_quote_search for two of those work_id and return one quote candidate per work.",
+      "tool_trace_tools": [
+        "coordinator_gate",
+        "session_init",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "route_to_specialist",
+        "final_answer"
+      ],
+      "resolved_chat_llm_model": "google/gemini-2.5-flash",
+      "compaction_kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "digest_count": 2,
+      "l4_skip_reason": "below_digest_cap",
+      "l4_eligible": false,
+      "llm_full_history_compact": false,
+      "llm_compact_side_ratio": null,
+      "post_compact_paper_sources_restored_count": null
+    },
+    {
+      "turn": 3,
+      "elapsed_ms": 2690,
+      "question": "Summarize prior evidence in 2 bullets and keep citations/work_ids.",
+      "tool_trace_tools": [
+        "coordinator_gate",
+        "session_init",
+        "route_to_specialist",
+        "route_to_specialist",
+        "final_answer"
+      ],
+      "resolved_chat_llm_model": "google/gemini-2.5-flash",
+      "compaction_kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "digest_count": 3,
+      "l4_skip_reason": "below_digest_cap",
+      "l4_eligible": false,
+      "llm_full_history_compact": false,
+      "llm_compact_side_ratio": null,
+      "post_compact_paper_sources_restored_count": null
+    },
+    {
+      "turn": 4,
+      "elapsed_ms": 2370,
+      "question": "One extra recap turn using the same evidence.",
+      "tool_trace_tools": [
+        "coordinator_gate",
+        "session_init",
+        "route_to_specialist",
+        "route_to_specialist",
+        "final_answer"
+      ],
+      "resolved_chat_llm_model": "google/gemini-2.5-flash",
+      "compaction_kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "digest_count": 4,
+      "l4_skip_reason": "below_digest_cap",
+      "l4_eligible": false,
+      "llm_full_history_compact": false,
+      "llm_compact_side_ratio": null,
+      "post_compact_paper_sources_restored_count": null
+    }
+  ]
+}

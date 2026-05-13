@@ -41,6 +41,16 @@ def _failures_from_delta_policies(
         out.append(
             f"subagent_lifecycle_missing_increase:+{d['delta_subagent_lifecycle_missing']:.0f}"
         )
+    if d["delta_subagent_terminal_missing"] > 0:
+        out.append(
+            "subagent_terminal_state_missing_increase:"
+            f"+{d['delta_subagent_terminal_missing']:.0f}"
+        )
+    if d["delta_subagent_merge_prov_missing"] > 0:
+        out.append(
+            "subagent_merge_provenance_missing_increase:"
+            f"+{d['delta_subagent_merge_prov_missing']:.0f}"
+        )
     if "writer_oscillation_increase" in policies_fail and d["delta_writer_oscillation_max"] >= 2:
         out.append(f"writer_oscillation_increase:+{d['delta_writer_oscillation_max']:.0f}")
     unn = d["delta_unnecessary_tool_calls_avg"]

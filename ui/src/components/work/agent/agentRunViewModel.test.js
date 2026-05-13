@@ -32,10 +32,21 @@ const MOCK_T = {
   "chat.stream.warningLine": "W:{{message}}",
   "chat.stream.warningLineWithCode": "W:{{label}}:{{message}}",
   "chat.stream.subagentStarted": "S+{{id}}",
+  "chat.stream.subagentStartedDetailed": "S+{{id}}+{{detail}}+{{reason}}",
   "chat.stream.subagentProgress": "P+{{id}}+{{summary}}",
   "chat.stream.subagentFinished": "S-{{id}}",
+  "chat.stream.subagentFinishedStateOnly": "S-{{id}}+{{state}}",
+  "chat.stream.subagentFinishedDetailed": "S-{{id}}+{{state}}+{{provenance}}",
+  "chat.stream.subagentKind.spawned": "spawned",
+  "chat.stream.subagentKind.routing": "routing",
+  "chat.stream.subagentTerminal.succeeded": "ok",
+  "chat.stream.subagentTerminal.failed": "failed",
+  "chat.stream.subagentTerminal.cancelled": "cancelled",
+  "chat.stream.subagentTerminal.timed_out": "timed_out",
   "chat.stream.answerSynthesisStarted": "SYN+",
   "chat.stream.answerSynthesisFinished": "SYN-",
+  "chat.stream.degradedReason.recursion_limit_partial": "DG:recursion",
+  "chat.stream.degradedReason.turn_deadline_exceeded": "DG:deadline",
   "chat.stream.finalAnswerEnvelope": "FA-ENV",
   "chat.stream.toolResultLabel": "TR",
   "chat.stream.rowsLabel": "rows",
@@ -55,6 +66,7 @@ const MOCK_T = {
   "chat.run.liveExplain.routeReason": "Routing: {{reason}}",
   "chat.run.liveExplain.intentReason": "Intent {{cls}}: {{reason}}",
   "chat.run.liveExplain.subagentSummary": "Specialist {{id}}: {{summary}}",
+  "chat.run.liveExplain.subagentOutcome": "Subtask {{id}} ended with {{state}}; merge provenance: {{provenance}}",
   "chat.run.routeReason.semantic_fast_route": "fast semantic route",
   "chat.run.productStep.searching_literature": "Searching works…",
   "chat.run.productStep.composing_answer": "Composing answer…",
@@ -95,6 +107,14 @@ describe("pickLastMeaningfulStreamEvent", () => {
       { type: "answer_synthesis_finished" },
     ];
     expect(pickLastMeaningfulStreamEvent(events)?.type).toBe("answer_synthesis_finished");
+  });
+
+  it("prefers degraded_mode over answer_synthesis_finished when later in stream", () => {
+    const events = [
+      { type: "answer_synthesis_finished" },
+      { type: "degraded_mode", reasons: ["recursion_limit_partial"] },
+    ];
+    expect(pickLastMeaningfulStreamEvent(events)?.type).toBe("degraded_mode");
   });
 });
 
@@ -260,13 +280,38 @@ describe("formatStreamEventOneLine", () => {
   });
 
   it("formats UI-5 subagent and synthesis events with localized id", () => {
-    expect(formatStreamEventOneLine(t, { type: "subagent_started", subagent_id: "retrieval_agent" })).toBe("S+Corpus search");
+    expect(
+      formatStreamEventOneLine(t, {
+        type: "subagent_started",
+        subagent_id: "retrieval_agent",
+        kind: "spawned",
+        task_type: "corpus_explore",
+        spawn_reason: "semantic_fast_route",
+      }),
+    ).toBe("S+Corpus search+spawned+fast semantic route");
     expect(
       formatStreamEventOneLine(t, { type: "subagent_progress", subagent_id: "r", summary: "search_chunks" }),
     ).toBe("P+R+Search chunks");
-    expect(formatStreamEventOneLine(t, { type: "subagent_finished", subagent_id: "r" })).toBe("S-R");
+    expect(
+      formatStreamEventOneLine(t, {
+        type: "subagent_finished",
+        subagent_id: "r",
+        terminal_state: "timed_out",
+        merge_provenance: { source_kind: "corpus_explore_result" },
+      }),
+    ).toBe("S-R+timed_out+corpus_explore_result");
     expect(formatStreamEventOneLine(t, { type: "answer_synthesis_started" })).toBe("SYN+");
     expect(formatStreamEventOneLine(t, { type: "answer_synthesis_finished" })).toBe("SYN-");
+    expect(
+      formatStreamEventOneLine(t, { type: "degraded_mode", reasons: ["recursion_limit_partial"] }),
+    ).toBe("DG:recursion");
+    expect(
+      formatStreamEventOneLine(t, {
+        type: "degraded_mode",
+        reasons: ["turn_deadline_exceeded", "recursion_limit_partial"],
+      }),
+    ).toBe("DG:deadline · DG:recursion");
+    expect(formatStreamEventOneLine(t, { type: "degraded_mode", reasons: [] })).toBe("");
   });
 
   it("formats final_answer SSE envelope without raw type token", () => {
@@ -574,6 +619,15 @@ describe("pickPrimaryHeadlineEvent", () => {
     ];
     expect(pickPrimaryHeadlineEvent(events)?.type).toBe("product_step");
   });
+
+  it("prefers degraded_mode over product_step and answer_synthesis_finished", () => {
+    const events = [
+      { type: "product_step", code: "composing_answer" },
+      { type: "answer_synthesis_finished" },
+      { type: "degraded_mode", reasons: ["recursion_limit_partial"] },
+    ];
+    expect(pickPrimaryHeadlineEvent(events)?.type).toBe("degraded_mode");
+  });
 });
 
 describe("deriveDecisionRationale", () => {
@@ -622,6 +676,18 @@ describe("collectSafeExplanationLines with excludeKinds=decision", () => {
     expect(lines.some((l) => l.startsWith("Routing:"))).toBe(false);
     expect(lines.some((l) => l.startsWith("Intent "))).toBe(false);
     expect(lines.some((l) => l.startsWith("Specialist "))).toBe(true);
+  });
+
+  it("includes subagent outcome lines with provenance", () => {
+    const lines = collectSafeExplanationLines(t, [
+      {
+        type: "subagent_finished",
+        subagent_id: "retrieval_agent",
+        terminal_state: "failed",
+        merge_provenance: { source_kind: "corpus_explore_result" },
+      },
+    ]);
+    expect(lines).toContain("Subtask Corpus search ended with failed; merge provenance: corpus_explore_result");
   });
 });
 

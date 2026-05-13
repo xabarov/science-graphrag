@@ -94,7 +94,7 @@ science-graphrag-agent-v3-quality-cross-family-aggregate \
 From repo root (requires live stack + `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`; one agent run per case, then heuristic + LLM judge):
 
 ```bash
-AGENT_LIVE_BASE=dev .venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py
+AGENT_LIVE_BASE=http://127.0.0.1:18787 .venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py
 ```
 
 Optional: `AGENT_V3_QUALITY_CALIBRATION_TIMEOUT_S=600` — per-branch subprocess timeout for branches inside each case.

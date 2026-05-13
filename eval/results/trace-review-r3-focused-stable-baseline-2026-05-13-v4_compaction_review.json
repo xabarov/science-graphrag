@@ -1,0 +1,212 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-13T13:00:52.489288+00:00",
+  "thread_id": "compaction_review_61acd8905c66",
+  "turns": 6,
+  "require_compaction_after": 2,
+  "turn_reports": [
+    {
+      "thread_id": "compaction_review_61acd8905c66",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 139946,
+      "warnings": [],
+      "tool_trace_len": 9,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 1,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 1
+    },
+    {
+      "thread_id": "compaction_review_61acd8905c66",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 19636,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 2,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 2
+    },
+    {
+      "thread_id": "compaction_review_61acd8905c66",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 18055,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 3,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 3
+    },
+    {
+      "thread_id": "compaction_review_61acd8905c66",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 18853,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 4,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 4
+    },
+    {
+      "thread_id": "compaction_review_61acd8905c66",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 26076,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 5,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 5
+    },
+    {
+      "thread_id": "compaction_review_61acd8905c66",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 18001,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 6,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "turn": 6
+    }
+  ],
+  "compaction_events": [
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "turn": 1,
+      "thread_id": "compaction_review_61acd8905c66"
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "turn": 2,
+      "thread_id": "compaction_review_61acd8905c66"
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 3,
+      "thread_id": "compaction_review_61acd8905c66"
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 4,
+      "thread_id": "compaction_review_61acd8905c66"
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 5,
+      "thread_id": "compaction_review_61acd8905c66"
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 6,
+      "thread_id": "compaction_review_61acd8905c66"
+    }
+  ],
+  "verdict": {
+    "status": "pass",
+    "reasons": []
+  }
+}

@@ -155,6 +155,12 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
     comp = (data.get("run_metadata") or {}).get("compaction")
     assert isinstance(comp, dict) and comp.get("kind") == "turn_digest"
     assert "kinds" in comp
+    comp_audit = (data.get("run_metadata") or {}).get("compaction_audit")
+    assert isinstance(comp_audit, dict)
+    elig = comp_audit.get("l4_eligibility") or {}
+    assert elig.get("schema_version") == "l4_eligibility_v1"
+    assert elig.get("eligible") is False
+    assert elig.get("skip_reason") in {"disabled", "below_digest_cap"}
     assert "post_turn_compaction_wall_ms" in (data.get("run_metadata") or {})
 
 

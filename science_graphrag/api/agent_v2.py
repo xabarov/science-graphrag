@@ -10,6 +10,10 @@ from fastapi import APIRouter, Depends, Header
 from sse_starlette.sse import EventSourceResponse
 
 from science_graphrag.agent.context.compaction import build_context_compacted_payload
+from science_graphrag.agent.context.compaction_policy import (
+    attach_l4_eligibility_to_compaction_audit,
+    evaluate_l4_full_history_compact_eligibility,
+)
 from science_graphrag.agent.context.llm_history_compact import (
     maybe_llm_compact_session_after_turn,
     patch_compaction_audit_llm,
@@ -255,11 +259,15 @@ async def post_agent_query_v2(
         post_compact_wall0 = perf_counter()
         ent_sync = get_session_for_thread(thread_id)
         dcount = len(ent_sync.get("digests") or [])
+        digest_cap = int(settings.agent_compaction_digest_cap)
+        pre_l4 = evaluate_l4_full_history_compact_eligibility(
+            settings, thread_id, digest_count=dcount, digest_cap=digest_cap
+        )
         llm_audit_sync = maybe_llm_compact_session_after_turn(
             settings,
             thread_id,
             digest_count=dcount,
-            digest_cap=int(settings.agent_compaction_digest_cap),
+            digest_cap=digest_cap,
         )
         raw_sum = str(get_session_for_thread(thread_id).get("session_summary") or "")
         excerpt = raw_sum[:500] if raw_sum.strip() else None
@@ -272,13 +280,22 @@ async def post_agent_query_v2(
             latest_full_state={"source": "sync_json"},
             digest_count=dcount,
             rolling_threshold=settings.agent_compaction_rolling_memory_min_digests,
-            digest_cap=settings.agent_compaction_digest_cap,
+            digest_cap=digest_cap,
             workspace_id=workspace_id,
             workspace_capsule_present=isinstance(wc_sync, dict)
             and bool(str(wc_sync.get("workspace_id") or "").strip()),
         )
         if llm_audit_sync:
             cp_sync = patch_compaction_audit_llm(cp_sync, llm_audit=llm_audit_sync)
+        applied = bool(llm_audit_sync) if pre_l4.get("eligible") else None
+        cp_sync = attach_l4_eligibility_to_compaction_audit(
+            cp_sync,
+            settings=settings,
+            thread_id=thread_id,
+            digest_count=dcount,
+            digest_cap=digest_cap,
+            llm_compact_applied=applied,
+        )
         comp_sync = cp_sync.get("compaction")
         if isinstance(comp_sync, dict):
             extra_meta = {"compaction": comp_sync, "session_digest_count": dcount}

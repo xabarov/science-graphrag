@@ -52,6 +52,22 @@ SciGraph needs a first-class **subagent lifecycle** (spawn, bounded parallelism,
 - Benchmarks comparing fork vs coordinator: **synthetic decision artifact** ships as `eval/chat_agent/subagent_runtime_fork_vs_coordinator_bench.py` (+ `eval/results/subagent-runtime-fork-vs-coordinator-bench.{json,md}` when executed); operators should replace lanes with real `agent_trace_review` exports for production gates.
 - `langgraph_supervisor_v3` currently uses the same compiled supervisor graph as v1 where no v3-only nodes exist yet; divergence is expected in a later train.
 
+## R4 vertical slice note (2026-05-13)
+
+The first real shipped slice on top of this ADR is intentionally narrow:
+
+- one explicit spawned child type is treated as canonical for the slice: `corpus_explore`;
+- fanout remains bounded to `max_parallel_subagents=1` for the product lane;
+- execution is sync / in-process only;
+- every spawned row must carry `task_id`, `task_type`, `description`, `terminal_state`,
+  `merge_provenance`, and `output_pointer`;
+- Ask/SSE may still emit routing-leg `subagent_*` events, but spawned children now also surface
+  as explicit lifecycle rows (`kind="spawned"`) in both `run_metadata.subagent_runs` and live SSE
+  when terminal metadata is available.
+
+This is a vertical slice, not a coordinator-runtime launch. Background continuations, cross-child
+messaging, and `fanout > 1` remain deferred to a future ADR / wave.
+
 ## Deferred (explicitly not this ADR)
 
 - `claim_verification`, `corpus-explore`, `research-plan` subagents; registry loader; dynamic schema transport.

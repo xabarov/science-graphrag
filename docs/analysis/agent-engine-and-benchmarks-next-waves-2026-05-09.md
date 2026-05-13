@@ -43,7 +43,7 @@
 
 ### 1.3 Что осталось открытым (P0 → P3)
 
-Базовый источник — [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN]` / `[PARTIAL]` + §3 / §4 unified plan. **Structural refactor** (распил trace-review CLI и т.п.) ведётся только в backlog — см. §9. **Сводка Settings vs operator** по E1/E2 и смежным флагам (R0): [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md).
+Базовый источник — [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN]` / `[PARTIAL]` + §3 / §4 unified plan. **Structural refactor** (распил trace-review CLI) — **DONE** в backlog (2026-05-13); прочие structural пункты — см. §9. **Сводка Settings vs operator** по E1/E2 и смежным флагам (R0): [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md).
 
 | ID | Тема | Приоритет | Ось |
 |----|------|-----------|-----|
@@ -452,7 +452,7 @@ Wave A (DONE 2026-05-08)
 | Неделя (примерная, не CI) | Фокус |
 |---------------------------|-------|
 | Now | Закрыть Wave D §8.1 **или** держать advisory defer; повторить E2 heavy live после PR1+2; Wave H live rollout по SOP §9 |
-| Next | F3-slice2+ только при управляемой baseline-дисциплине; structural split trace-review (backlog) |
+| Next | F3-slice2+ только при управляемой baseline-дисциплине; trace-review split — **[DONE]** (2026-05-13), см. [`refactor-backend.md`](../backlog/refactor-backend.md) |
 
 Wave H live rollout логично **после** свежего E2/D сигнала, но **не** блокируется ими для read-only evidence run.
 
@@ -515,4 +515,4 @@ Wave H live rollout логично **после** свежего E2/D сигна
 | Wave F F3-slice1 closure | [`wave-f-f3-slice1-closure-2026-05-12.md`](./wave-f-f3-slice1-closure-2026-05-12.md) |
 | Wave H rollout decision | [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md) |
 | Wave H side-LLM inventory | [`wave-h-side-llm-inventory-2026-05-12.md`](./wave-h-side-llm-inventory-2026-05-12.md) |
-| **Structural debt (не waves):** split trace-review / compare monoliths | [`refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN] Split trace-review CLI…` |
+| **Structural debt (не waves):** split trace-review / compare monoliths | **DONE** (2026-05-13) — [`refactor-backend.md`](../backlog/refactor-backend.md) `[DONE] Split trace-review CLI…`; closeout [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md) |

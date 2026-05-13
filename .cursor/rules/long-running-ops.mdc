@@ -44,20 +44,38 @@ alwaysApply: true
    science-graphrag ingest-corpus ...
  ```
 
-2. **Для локального agent live/e2e базовое окружение клиента всегда `dev`.**
+2. **Для локального agent live/e2e всегда задавай `AGENT_LIVE_BASE` явно и сверяй формат с конкретным скриптом.**
 
-   Перед запуском убедиться, что `AGENT_LIVE_BASE` выставлен явно и указывает на dev-контур (а не staging/prod), иначе heavy e2e может не стартовать с корректным base URL:
+   Исторически в проекте встречается shorthand `AGENT_LIVE_BASE=dev`, но Python live-check scripts часто ожидают полноценный HTTP URL. Перед запуском:
+
+- прочитай help/README конкретного runner'а (`scripts/live_check/*.py`, `README_trace_review.md`);
+- предпочитай явный URL локального dev-контура, например:
+  - `http://127.0.0.1:18787` для stable API через `docker-compose.dev.yml:docker-compose.live-check.yml`
+  - `http://127.0.0.1:8787` для web/dev proxy;
+- не считай bare `dev` валидным base URL без проверки.
+
+   Перед запуском убедиться, что `AGENT_LIVE_BASE` выставлен явно и указывает на dev-контур (а не staging/prod):
 
    ```bash
-   export AGENT_LIVE_BASE=dev
+   export AGENT_LIVE_BASE=http://127.0.0.1:18787
    echo "AGENT_LIVE_BASE=$AGENT_LIVE_BASE"
    ```
 
    Если запуск идёт через скрипт/CI-команду, передавать переменную inline:
 
    ```bash
-   AGENT_LIVE_BASE=dev .venv/bin/python scripts/live_check/agent_trace_review.py ...
+   AGENT_LIVE_BASE=http://127.0.0.1:18787 .venv/bin/python scripts/live_check/agent_trace_review.py ...
    ```
+
+   Для длинных `trace_review` прогонов предпочитай stable API процесс через `docker-compose.live-check.yml`, чтобы `uvicorn --reload` не ронял запросы во время изменения файлов.
+
+   **Workspace:** для `agent_trace_review.py --suite acceptance` также заранее выставляй `AGENT_LIVE_WORKSPACE_ID`, иначе `agent_v2_fanout_probe` упадёт с `missing_workspace_id`.
+
+   **Live trace-review quick contract (рекомендуемый):**
+   - `AGENT_LIVE_BASE=http://127.0.0.1:18787`
+   - `AGENT_LIVE_WORKSPACE_ID=ws-pilot-od`
+   - `COMPOSE_FILE=docker-compose.dev.yml:docker-compose.live-check.yml docker compose ps` -> `api` должен быть `healthy`
+   - перед long lane: короткий smoke `agent_v2_http.py` на тот же `base/workspace`
 
 3. **Инфраструктура поднята.** Для всего, что трогает Neo4j/Qdrant/Postgres:
 
@@ -66,6 +84,12 @@ alwaysApply: true
    ```
 
    Все сервисы должны быть `running (healthy)`. Если какой-то `unhealthy` или `restarting` — ingest/benchmark упадёт молча или повиснет.
+
+   **Auto-recovery policy for local dev contour (agent/live runs):**
+   - Если `api` или `web` в `unhealthy` и запуск зависит от `/v2/agent/query`, перед повторным прогоном выполняй recovery:
+     - `make dev-up`
+     - затем повторный smoke (`agent_v2_http.py` / `GET /health`) на том же `AGENT_LIVE_BASE`.
+   - Не продолжай long-run, пока health/smoke не подтверждены.
 
 4. **Console-script зарегистрирован.** Если ты только что правил `[project.scripts]` в `pyproject.toml` или добавил новый runner — обязательно:
 
@@ -101,6 +125,14 @@ alwaysApply: true
 3. **Не ждать дальше** — `kill -9 <PID>` (для python с зависшим httpx — SIGTERM не помогает).
 4. Записать в backlog (`docs/backlog/refactor-backend.md` или текущий план в `docs/analysis/`) **что именно** повисло (стадия, файл, симптомы) — чтобы следующая итерация добавила timeout/checkpoint в правильное место.
 5. Если есть JSONL-checkpoint — попробовать `--resume` (когда появится; до этого — узкий повторный прогон только на пропавших файлах).
+
+### Особый случай: `agent_trace_review.py` + `compaction_turn_review`
+
+- При любом fail/timeout на compaction lane сначала проверяй артефакт:
+  - `review.compaction_turn_review.failure_reason`
+  - `review.compaction_turn_review.failed_turn`
+  - `review.compaction_turn_review.failure_kind`
+- Не повторяй lane “вслепую”; сначала меняй только один фактор (timeout/turns/base contour), чтобы причина оставалась интерпретируемой.
 
 ## После killed/aborted background shell
 

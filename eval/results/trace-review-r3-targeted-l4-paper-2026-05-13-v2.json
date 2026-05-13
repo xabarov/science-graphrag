@@ -1,0 +1,20 @@
+{
+  "schema_version": "r3_targeted_probe_v2",
+  "base_url": "http://127.0.0.1:18787",
+  "workspace_id": "ws-pilot-od",
+  "thread_id": "r3_targeted_f14aca5fa0",
+  "env": {
+    "SCIENCE_GRAPHRAG_AGENT_COMPACTION_DIGEST_CAP": "3",
+    "SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED": "1",
+    "SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_COOLDOWN_TURNS": "1"
+  },
+  "failure_reason": "http_timeout_turn_1",
+  "turns": [
+    {
+      "turn": 1,
+      "question": "Find 5 papers in this workspace about graph neural networks and return short bullets with years.",
+      "failure_reason": "http_timeout_turn_1",
+      "elapsed_ms": 75076
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-13T14:13:13.380711+00:00",
+  "thread_id": "compaction_review_4b2204f774d7",
+  "turns": 4,
+  "require_compaction_after": 2,
+  "turn_reports": [
+    {
+      "thread_id": "compaction_review_4b2204f774d7",
+      "answer_class": "inventory",
+      "duration_ms": 18146,
+      "warnings": [],
+      "tool_trace_len": 8,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 1,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 1
+    },
+    {
+      "thread_id": "compaction_review_4b2204f774d7",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 9988,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 2,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 2
+    },
+    {
+      "thread_id": "compaction_review_4b2204f774d7",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 10554,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 3,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 3
+    },
+    {
+      "thread_id": "compaction_review_4b2204f774d7",
+      "answer_class": "grounded_explanation",
+      "duration_ms": 8764,
+      "warnings": [
+        "weak_evidence",
+        "insufficient_evidence"
+      ],
+      "tool_trace_len": 5,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 4,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "turn": 4
+    }
+  ],
+  "compaction_events": [
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "turn": 1,
+      "thread_id": "compaction_review_4b2204f774d7",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "turn": 2,
+      "thread_id": "compaction_review_4b2204f774d7",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 3,
+      "thread_id": "compaction_review_4b2204f774d7",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 4,
+      "thread_id": "compaction_review_4b2204f774d7",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    }
+  ],
+  "failed_turn": null,
+  "failure_kind": null,
+  "verdict": {
+    "status": "pass",
+    "reasons": []
+  }
+}

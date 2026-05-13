@@ -3,3 +3,4 @@
 Детальные правила для агента и команды: каталог **`.cursor/rules/`** (файлы `*.mdc`).
 
 Канон по бэкенду (isort, black, pylint, рефакторинг): **`.cursor/rules/backend-quality.mdc`**.
+Карта agent runtime / live-check / workspace_id / test layers: **`.cursor/rules/agent-runtime-live-map.mdc`**.

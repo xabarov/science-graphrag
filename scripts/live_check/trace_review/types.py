@@ -59,6 +59,8 @@ class CompactionEvent:
     kinds: tuple[str, ...] = field(default_factory=tuple)
     turn: int | None = None
     thread_id: str | None = None
+    side_llm_cache_read_ratio: float | None = None
+    post_compact_paper_sources_restored_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -99,6 +101,9 @@ class TimelineCase:
     subagent_runs_count: int = 0
     subagent_task_notification_count: int = 0
     subagent_lifecycle_missing_count: int = 0
+    subagent_terminal_state_missing_count: int = 0
+    subagent_merge_provenance_missing_count: int = 0
+    subagent_timeout_count: int = 0
     eval_lane: str | None = None
     tool_search_miss_due_to_no_discovery: int = 0
     tool_schema_bytes_saved: int = 0
@@ -150,6 +155,9 @@ class Metrics:
     unnecessary_tool_calls_avg: float | None = None
     hook_chain_event_count: int = 0
     subagent_lifecycle_missing_count: int = 0
+    subagent_terminal_state_missing_count: int = 0
+    subagent_merge_provenance_missing_count: int = 0
+    subagent_timeout_count: int = 0
     subagent_task_notification_count_avg: float | None = None
     tool_search_miss_due_to_no_discovery_total: int = 0
     tool_schema_bytes_saved_total: int = 0

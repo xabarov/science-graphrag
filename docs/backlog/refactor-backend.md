@@ -190,21 +190,23 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Raised:** 2026-05-12 (Wave H closeout)
 
 ### [OPEN] Extend `_product_step_code_for_tool` coverage
-- **Area:** `science_graphrag/api/agent_v2_modules/stream_lifecycle.py` (`product_step_code_for_tool`)
-- **Issue:** Mapping covers the common retrieval / writer / paper_profile tools, but new tools (idea_browse, evidence_lookup, future graph traversal helpers) still fall through to `using_tool` — `using_tool: <ToolName>` is technically localized but loses the per-tool «voice» phrase that other steps benefit from.
-- **Proposal:** As tools land, add a one-line entry to the mapping (and a matching i18n key under `chat.run.productStep.<code>`); add a unit test asserting that every name in `_NORMALIZED_TOOL_NAMES` either has a mapping or is intentionally generic.
-- **Acceptance:** No tool fires `using_tool` in production traces unless the mapping has an explicit «generic» comment for it.
+- **Area:** `science_graphrag/api/agent_v2_modules/stream_lifecycle.py` (`product_step_code_for_tool`, `GENERIC_PRODUCT_STEP_TOOLS`)
+- **Issue:** New catalog tools should not silently fall through to `using_tool` with `unmapped_tool_name` once they ship in default paths; integration-only tools should be explicitly generic.
+- **Proposal:** As tools land, add a one-line mapping (and i18n under `chat.run.productStep.<code>`); extend `GENERIC_PRODUCT_STEP_TOOLS` only for tools that intentionally share the generic progress phrase.
+- **Acceptance:** Every `TOOL_MANIFEST` tool has a specific `product_step` code **or** is listed in `GENERIC_PRODUCT_STEP_TOOLS`; unknown tools use `unmapped_tool_name` until added to manifest + mapping.
 - **Done (wave 2026-05-06):** расширен маппинг (`workspace_graph_reltypes`, `summarize_workspace`, `entity_search` и др.); контракт полноты — `tests/test_product_step_tool_coverage.py` (все записи `TOOL_MANIFEST` кроме meta); интеграционный контракт SSE — `tests/test_api_agent_v2_product_step_coverage.py`.
-- **Remaining:** аудит production-трейсов на «лишний» `using_tool`; явные `# generic` комментарии в коде для инструментов, которые намеренно без отдельного voice.
+- **Done (R2 / 2026-05-13):** MCP surface tools (`call_mcp_tool`, `list_mcp_resources`, `fetch_mcp_resource`, `mcp_auth`) → `GENERIC_PRODUCT_STEP_TOOLS` + spec §R2 in [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md).
+- **Remaining:** periodic audit of live traces for unexpected `unmapped_tool_name` after new tools ship.
 - **Raised:** 2026-05-05 (Cursor-like agent progress plan)
 
-### [OPEN] Evaluate `agent_note` token cost on 50 typical turns
+### [PARTIAL] Evaluate `agent_note` token cost on 50 typical turns
 - **Area:** `science_graphrag/agent/notes.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py` (`emit_agent_note`), `docs/specs/agent-chat-v1.md`, eval harness
 - **Issue:** `agent_note_enabled=False` by default (off-by-default LLM extra). Before flipping default for a pilot we need cost evidence: tokens per turn, latency added (with `agent_note_max_per_turn=2`), and any visible-quality gain over plain `product_step` headlines.
 - **Proposal:** Run a small benchmark batch (50 turns across `inventory` / `grounded_explanation` / `relation_tracing`) with `agent_note_enabled=True` and a stubbed-cheap model; compare turn-level `usage.total_tokens` and end-to-end p50 / p95 latency vs. baseline; record the result in `docs/analysis/`.
 - **Acceptance:** ADR-light note in `docs/analysis/` with «pilot / postpone / drop» recommendation and concrete numbers; UI changelog flag updated.
 - **Done (wave 2026-05-06, частично):** ADR-light каркас — [`docs/analysis/agent-note-cost-eval-2026-05-06.md`](../analysis/agent-note-cost-eval-2026-05-06.md) (методология, рекомендация «default off» до цифр).
-- **Remaining:** фактический 50-turn прогон с замером токенов/латентности и заполнение таблицы результатов в том же документе.
+- **Decision (R2 / 2026-05-13):** **postpone** default-on pilot — `agent_note` stays **optional** and outside the canonical minimal chat contract until product requests live numbers; see [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §**R2 product contract** and [`docs/analysis/r2-chat-contract-closeout-2026-05-13.md`](../analysis/r2-chat-contract-closeout-2026-05-13.md).
+- **Remaining:** фактический **live** 50-turn прогон с замером токенов/латентности и заполнение таблицы результатов (operator-owned).
 - **Raised:** 2026-05-05 (Cursor-like agent progress plan)
 
 ### [OPEN] paper_profile year/venue — OD null-rate closure (ingest + graph)
@@ -555,8 +557,15 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Proposal:** Реализовать `thread_insights` слой (`A0/A1/A2`) и интеграцию в prompt с deterministic precedence; добавить eval lane для long-thread drift/recall и regression gate по churn/latency (`A3`).
 - **Acceptance:** Runtime использует `thread_insight` при выполнении freshness policy; trace-review содержит insight decisions/audit; long-thread eval проходит без регрессии trust/verdict и с измеримым улучшением recall/consistency.
 - **Progress (2026-05-06, Train T1 A1 skeleton):** `science_graphrag/agent/context/thread_insights.py` — deterministic chunking + `ThreadPoolExecutor` workers + synthesis; persistence в `session_meta.thread_insight` через `apply_thread_insight_snapshot`; `run_metadata.thread_insight_audit` (sync + SSE) при `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED=1`; спека режимов — `docs/specs/agent-chat-v1.md` §Summarization modes.
-- **Remaining:** A2 prompt precedence / `<thread_insight>` injection; LLM-backed chunk summaries; A3 eval lane + gates.
+- **Remaining (R3 / 2026-05-13):** operator **live** long-thread acceptance + compare (cache 0.4, paper-source restore) per Wave H / horizon §R3; explicit **compaction policy** telemetry in `compaction_audit` (`l4_eligibility`); extend **memory influence audit** (`memory_influence_audit_v1` in offline long-thread eval → trace-review merge). A2 prompt precedence / `<thread_insight>` injection — **done** in Train T2 (see [`agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) §11.2); LLM-backed chunk summaries remain optional refinement behind flags.
 - **Raised:** 2026-05-06 (roadmap §9 sync)
+
+### [OPEN] Stabilize focused long-thread live probe (R3) against hung `/v2/agent/query`
+- **Area:** `scripts/live_check/compaction_turn_review.py`, `scripts/live_check/agent_trace_review.py`, live API contour `http://127.0.0.1:18787`
+- **Issue:** During focused R3 verification (2026-05-13), direct multi-turn probe for `run_metadata.compaction_audit` hung for >4.5 minutes without progress and required manual `kill -9`. This blocks reliable diagnosis of missing `side_llm_cache_read_ratio_avg` / `post_compact_paper_sources_restored_total` and risks repeated operator timeouts.
+- **Proposal:** Add per-turn heartbeat + hard-timeout diagnostics to `compaction_turn_review.py` (current turn index, thread id), detect/classify silent stalls in `agent_trace_review.py`, and add a dedicated `focused_long_thread` mode with bounded retries and explicit failure reasons in JSON/MD artifacts.
+- **Acceptance:** Focused long-thread lane either finishes with full per-turn telemetry (including L4 skip reason hints) or fails fast with deterministic reason (`http_timeout_turn_n`, `silent_hang_turn_n`) within configured timeout budget, without manual process kill.
+- **Raised:** 2026-05-13 (R3 focused live follow-up)
 
 ### [OPEN] Real subagent runtime v3 (spawn/fanout/merge) parity track (Epic B)
 - **Area:** `science_graphrag/agent/graph/*`, `science_graphrag/agent/runtime.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, new `science_graphrag/agent/subagents/*`, `eval/chat_agent/*`

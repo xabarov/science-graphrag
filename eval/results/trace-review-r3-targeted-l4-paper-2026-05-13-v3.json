@@ -1,0 +1,45 @@
+{
+  "schema_version": "r3_targeted_probe_v3",
+  "base_url": "http://127.0.0.1:18787",
+  "workspace_id": "ws-pilot-od",
+  "thread_id": "r3_targeted_7e63fa753a",
+  "failure_reason": "http_timeout_turn_2",
+  "env": {
+    "SCIENCE_GRAPHRAG_AGENT_COMPACTION_DIGEST_CAP": "3",
+    "SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED": "1",
+    "SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_COOLDOWN_TURNS": "1"
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "elapsed_ms": 164028,
+      "question": "Use idea_search: find 3 works in this workspace about graph neural networks; include work_id for each.",
+      "tool_trace_tools": [
+        "coordinator_gate",
+        "session_init",
+        "route_to_specialist",
+        "route_to_specialist",
+        "idea_search",
+        "workspace_inspect",
+        "find_works",
+        "final_answer"
+      ],
+      "compaction_kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "digest_count": 1,
+      "l4_skip_reason": "below_digest_cap",
+      "l4_eligible": false,
+      "llm_full_history_compact": false,
+      "llm_compact_side_ratio": null,
+      "post_compact_paper_sources_restored_count": null
+    },
+    {
+      "turn": 2,
+      "question": "Use paper_quote_search for two of those work_id and return one quote candidate per work.",
+      "failure_reason": "http_timeout_turn_2",
+      "elapsed_ms": 180101
+    }
+  ]
+}

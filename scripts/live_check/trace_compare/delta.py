@@ -42,6 +42,13 @@ def compute_compare_deltas(base: dict[str, Any], cand: dict[str, Any]) -> dict[s
     delta_unnecessary_tool_calls_avg = _optional_avg_delta(base, cand, "unnecessary_tool_calls_avg")
     delta_side_llm = _optional_avg_delta(base, cand, "side_llm_cache_read_ratio_avg")
     delta_subagent_lifecycle_missing = _pair_delta(base, cand, "subagent_lifecycle_missing_count")
+    delta_subagent_terminal_missing = _pair_delta(
+        base, cand, "subagent_terminal_state_missing_count"
+    )
+    delta_subagent_merge_prov_missing = _pair_delta(
+        base, cand, "subagent_merge_provenance_missing_count"
+    )
+    delta_subagent_timeout_count = _pair_delta(base, cand, "subagent_timeout_count")
     delta_tool_search_miss = _pair_delta(base, cand, "tool_search_miss_due_to_no_discovery_total")
     delta_tool_loop_repeat_max = _pair_delta(base, cand, "tool_loop_repeat_max")
     delta_writer_oscillation_max = _pair_delta(base, cand, "writer_oscillation_count_max")
@@ -74,6 +81,9 @@ def compute_compare_deltas(base: dict[str, Any], cand: dict[str, Any]) -> dict[s
         "delta_unnecessary_tool_calls_avg": delta_unnecessary_tool_calls_avg,
         "delta_side_llm": delta_side_llm,
         "delta_subagent_lifecycle_missing": delta_subagent_lifecycle_missing,
+        "delta_subagent_terminal_missing": delta_subagent_terminal_missing,
+        "delta_subagent_merge_prov_missing": delta_subagent_merge_prov_missing,
+        "delta_subagent_timeout_count": delta_subagent_timeout_count,
         "delta_tool_search_miss": delta_tool_search_miss,
         "delta_tool_loop_repeat_max": delta_tool_loop_repeat_max,
         "delta_writer_oscillation_max": delta_writer_oscillation_max,

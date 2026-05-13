@@ -379,6 +379,73 @@ def test_merge_compaction_into_review_dict_multi_row_no_probe_id(schema_module) 
     assert merged["metrics"]["compaction_event_count"] == 0
 
 
+def test_merge_compaction_into_review_dict_empty_timeline_creates_probe_row(schema_module) -> None:
+    """Compaction evidence must survive ``--skip-e2e`` runs with empty timeline."""
+    base = {
+        "review_version": schema_module.REVIEW_VERSION,
+        "generated_at": "t",
+        "checks": [],
+        "trace_timeline": [],
+        "metrics": {
+            "tool_error_rate": 0.0,
+            "missing_span_count": 0,
+            "compaction_event_count": 0,
+            "final_answer_missing_count": 0,
+        },
+        "verdict": {"status": "pass", "fail_reasons": [], "warn_reasons": []},
+    }
+    merged = schema_module.merge_compaction_into_review_dict(
+        base,
+        [{"type": "context_compacted", "kinds": ["turn_digest"], "turn": 3, "thread_id": "tid"}],
+    )
+    assert merged["metrics"]["compaction_event_count"] == 1
+    timeline = merged.get("trace_timeline") or []
+    assert len(timeline) == 1
+    assert timeline[0].get("case_id") == "compaction_multi_turn_probe"
+
+
+def test_merge_compaction_into_review_dict_carries_side_ratio_and_paper_restore(schema_module) -> None:
+    """Compaction probe should feed side-LLM ratio and paper restore counters into metrics."""
+    base = {
+        "review_version": schema_module.REVIEW_VERSION,
+        "generated_at": "t",
+        "checks": [],
+        "trace_timeline": [],
+        "metrics": {
+            "tool_error_rate": 0.0,
+            "missing_span_count": 0,
+            "compaction_event_count": 0,
+            "final_answer_missing_count": 0,
+        },
+        "verdict": {"status": "pass", "fail_reasons": [], "warn_reasons": []},
+    }
+    merged = schema_module.merge_compaction_into_review_dict(
+        base,
+        [
+            {
+                "type": "context_compacted",
+                "kinds": ["turn_digest"],
+                "turn": 3,
+                "thread_id": "tid",
+                "side_llm_cache_read_ratio": 0.55,
+                "post_compact_paper_sources_restored_count": 2,
+            },
+            {
+                "type": "context_compacted",
+                "kinds": ["turn_digest"],
+                "turn": 4,
+                "thread_id": "tid",
+                "side_llm_cache_read_ratio": 0.45,
+                "post_compact_paper_sources_restored_count": 1,
+            },
+        ],
+    )
+    assert merged["metrics"]["compaction_event_count"] == 2
+    assert merged["metrics"]["side_llm_cache_read_ratio_avg"] == 0.5
+    assert merged["metrics"]["post_compact_paper_sources_restored_total"] == 3
+    assert merged["metrics"]["post_compact_paper_sources_restored_cases"] == 2
+
+
 def test_merge_e2e_extracts_ptl_per_compaction_and_insight_audit(schema_module) -> None:
     case = {
         "case_id": "ptl_pc_row",
@@ -448,7 +515,12 @@ def test_subagent_lifecycle_missing_with_spawn_rows_and_task_notifications(schem
             "subagent_observability_lane": "fork_v3_enhanced",
             "subagent_runs": [
                 {"subagent_id": "retrieval_agent", "kind": "routing_leg"},
-                {"subagent_id": "cv-1", "kind": "spawned"},
+                {
+                    "subagent_id": "cv-1",
+                    "kind": "spawned",
+                    "terminal_state": "succeeded",
+                    "merge_provenance": {"source_kind": "claim_verification_result"},
+                },
             ],
             "subagent_task_notifications": [{"task_id": "t1"}],
             "claim_verification_results": [{"terminal_state": "succeeded", "verdict": "PASS"}],
@@ -459,6 +531,8 @@ def test_subagent_lifecycle_missing_with_spawn_rows_and_task_notifications(schem
     assert tl[0].subagent_runs_count == 2
     assert tl[0].subagent_task_notification_count == 1
     assert tl[0].subagent_lifecycle_missing_count == 0
+    assert tl[0].subagent_terminal_state_missing_count == 0
+    assert tl[0].subagent_merge_provenance_missing_count == 0
 
 
 def test_subagent_lifecycle_missing_when_spawned_without_notifications(schema_module) -> None:
@@ -476,6 +550,29 @@ def test_subagent_lifecycle_missing_when_spawned_without_notifications(schema_mo
     }
     tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
     assert tl[0].subagent_lifecycle_missing_count == 1
+
+
+def test_subagent_terminal_state_and_merge_provenance_missing_are_counted(schema_module) -> None:
+    case = {
+        "case_id": "subagent_terminal_missing",
+        "tool_trace": [{"tool": "final_answer", "ok": True}],
+        "run_metadata": {
+            "subagent_observability_lane": "fork_v3_enhanced",
+            "subagent_runs": [
+                {"subagent_id": "ce-1", "kind": "spawned", "terminal_state": "", "merge_provenance": None},
+                {"subagent_id": "rp-1", "kind": "spawned", "terminal_state": "timed_out"},
+            ],
+            "subagent_task_notifications": [{"task_id": "t1"}, {"task_id": "t2"}],
+        },
+    }
+    tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)
+    assert tl[0].subagent_terminal_state_missing_count == 1
+    assert tl[0].subagent_merge_provenance_missing_count == 2
+    assert tl[0].subagent_timeout_count == 1
+    m = schema_module.aggregate_metrics_from_timeline(tl)
+    assert m.subagent_terminal_state_missing_count == 1
+    assert m.subagent_merge_provenance_missing_count == 2
+    assert m.subagent_timeout_count == 1
 
 
 def test_verdict_warn_when_e2e_only_retryable_provider_flakes(schema_module) -> None:

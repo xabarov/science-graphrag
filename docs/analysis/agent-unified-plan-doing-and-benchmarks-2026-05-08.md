@@ -246,7 +246,7 @@ Delivered:
 
 Wave C **не** заменяет engineering gate (`trace-review-v1`, Wave R agent-tools): он задаёт, как измерять и продвигать **продуктовое** качество `v3` поверх уже зелёного runtime.
 
-**Operator evidence (2026-05-09, live `subprocess`, `AGENT_LIVE_BASE=dev`, `--subprocess-timeout-s 600`, `--progress`):**
+**Operator evidence (2026-05-09, live `subprocess`, dev contour URL, `--subprocess-timeout-s 600`, `--progress`):**
 
 - `judge_mini` → `eval/results/current-agent-v3-quality-judge-mini.{json,md}` — `all_passed=true`, `cases_with_any_branch_non_ok=0`
 - `judge_pilot` → `eval/results/current-agent-v3-quality-judge-pilot.{json,md}` — то же (10 кейсов, wall ~11.5 min)

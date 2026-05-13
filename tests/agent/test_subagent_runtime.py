@@ -11,6 +11,7 @@ from science_graphrag.agent.subagents.runtime import (
     SubagentSpawnCapacityError,
     SubagentTaskSpec,
     build_subagent_runs_from_routing_log,
+    build_spawned_subagent_run_row,
     merge_subagent_run_rows,
 )
 
@@ -18,17 +19,33 @@ from science_graphrag.agent.subagents.runtime import (
 def test_spawn_subagent_returns_id_and_finish_moves_to_completed() -> None:
     hooks: list[dict] = []
     rt = SubagentRuntime(parent_turn_id="pt-1", max_parallel_subagents=4, hook_chain_sink=hooks)
-    sid = rt.spawn_subagent(SubagentTaskSpec(spawn_reason="test"))
+    sid = rt.spawn_subagent(
+        SubagentTaskSpec(spawn_reason="test", kind="corpus_explore", description="Read-only child")
+    )
     assert sid.startswith("sa-")
     assert rt.active_count() == 1
-    rt.finish_subagent(sid, terminal_state="succeeded")
+    rt.finish_subagent(
+        sid,
+        terminal_state="succeeded",
+        merge_provenance={
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "corpus_explore_result",
+            "carried_keys": ["corpus_explore_results", "specialist_results_v3"],
+        },
+        output_pointer="run_metadata.corpus_explore_results[0]",
+    )
     assert rt.active_count() == 0
     rows = rt.to_run_rows()
     assert len(rows) == 1
     assert rows[0]["terminal_state"] == "succeeded"
+    assert rows[0]["task_status"] == "completed"
     assert rows[0]["parent_turn_id"] == "pt-1"
     assert rows[0]["spawn_reason"] == "test"
+    assert rows[0]["task_type"] == "corpus_explore"
+    assert rows[0]["task"]["description"] == "Read-only child"
     assert rows[0]["latency_ms"] is not None
+    assert rows[0]["merge_provenance"]["source_kind"] == "corpus_explore_result"
+    assert rows[0]["output_pointer"] == "run_metadata.corpus_explore_results[0]"
     assert any(e.get("hook") == "subagent_start" for e in hooks)
     assert any(e.get("hook") == "subagent_stop" for e in hooks)
 
@@ -70,6 +87,8 @@ def test_build_subagent_runs_from_routing_log() -> None:
     assert len(rows) == 1
     assert rows[0]["subagent_id"] == "writer_agent"
     assert rows[0]["spawn_reason"] == "budget_exhausted"
+    assert rows[0]["task_status"] == "completed"
+    assert rows[0]["task_type"] == "routing_leg"
     assert rows[0]["latency_ms"] is None
 
 
@@ -85,3 +104,30 @@ def test_merge_subagent_run_rows_order() -> None:
     b = [{"subagent_id": "sa-1", "kind": "spawned"}]
     m = merge_subagent_run_rows(routing_rows=a, spawned_rows=b)
     assert [r["subagent_id"] for r in m] == ["x", "sa-1"]
+
+
+def test_build_spawned_subagent_run_row_contains_task_and_provenance() -> None:
+    row = build_spawned_subagent_run_row(
+        subagent_id="ce-1",
+        parent_turn_id="pt-9",
+        child_turn_id="ct-1",
+        spawn_reason="corpus_explore",
+        task_id="task-1",
+        task_type="corpus_explore",
+        description="Read-only corpus exploration child",
+        execution_mode="sync",
+        fanout_slot=1,
+        terminal_state="timed_out",
+        latency_ms=1234,
+        failure_code="timeout",
+        merge_provenance={
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "corpus_explore_result",
+        },
+        output_pointer="run_metadata.corpus_explore_results[0]",
+    )
+    assert row["task"]["task_id"] == "task-1"
+    assert row["task_type"] == "corpus_explore"
+    assert row["task_status"] == "timed_out"
+    assert row["child_turn_id"] == "ct-1"
+    assert row["merge_provenance"]["source_kind"] == "corpus_explore_result"

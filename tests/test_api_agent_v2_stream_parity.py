@@ -110,6 +110,71 @@ class _FakeGraph:
         yield ("values", full)
 
 
+class _FakeGraphSpawnedRows:
+    async def astream(self, state, config=None, **kwargs):  # noqa: ARG002
+        human = state["messages"][0]
+        yield (
+            "values",
+            {
+                "messages": [human, AIMessage(content="spawned done")],
+                "workspace_id": state.get("workspace_id"),
+                "citations": [],
+                "tool_trace": [],
+                "budget_remaining": 5,
+                "metadata": {
+                    **dict(state.get("metadata") or {}),
+                    "subagent_spawn_rows": [
+                        {
+                            "subagent_id": "ce-1",
+                            "parent_turn_id": dict(state.get("metadata") or {}).get(
+                                "parent_turn_id"
+                            ),
+                            "spawn_reason": "corpus_explore",
+                            "task": {
+                                "task_id": "task-ce-1",
+                                "task_type": "corpus_explore",
+                                "description": "Read-only corpus exploration child",
+                                "execution_mode": "sync",
+                                "fanout_slot": 1,
+                            },
+                            "task_id": "task-ce-1",
+                            "task_type": "corpus_explore",
+                            "description": "Read-only corpus exploration child",
+                            "execution_mode": "sync",
+                            "fanout_slot": 1,
+                            "task_status": "completed",
+                            "terminal_state": "succeeded",
+                            "latency_ms": 17,
+                            "failure_code": None,
+                            "tokens": None,
+                            "cost_usd_estimate": None,
+                            "kind": "spawned",
+                            "merge_provenance": {
+                                "strategy": "typed_specialist_results_v3",
+                                "source_kind": "corpus_explore_result",
+                                "carried_keys": [
+                                    "corpus_explore_results",
+                                    "specialist_results_v3",
+                                ],
+                                "evidence_origin": "subagent:ce-1",
+                                "parent_state_write": "bounded_append_only",
+                            },
+                            "output_pointer": "run_metadata.corpus_explore_results[0]",
+                        }
+                    ],
+                },
+                "specialist_results": {},
+                "current_specialist": None,
+                "routing_log": [],
+                "debug_events": [],
+                "thread_id": state.get("thread_id"),
+                "session_summary": str(state.get("session_summary") or ""),
+                "answer_class": None,
+                "history_digest": list(state.get("history_digest") or []),
+            },
+        )
+
+
 class _FakeGraphUnmappedTool:
     """Emits a tool_call whose name is not in _product_step_code_for_tool mapping (uses using_tool)."""
 
@@ -344,6 +409,37 @@ def test_sse_subagent_lifecycle_includes_parent_turn_id_and_run_metadata(monkeyp
     assert rm["subagent_runs"][0]["subagent_id"] == started.get("subagent_id")
 
 
+def test_sse_emits_spawned_subagent_terminal_row_from_metadata(monkeypatch) -> None:
+    events = _collect_agent_sse_events(
+        monkeypatch,
+        _FakeGraphSpawnedRows,
+        agent_runtime="langgraph_supervisor_v3",
+    )
+    started = next(
+        e
+        for e in events
+        if e.get("type") == "subagent_started" and e.get("kind") == "spawned"
+    )
+    assert started.get("task_type") == "corpus_explore"
+    assert started.get("task_id") == "task-ce-1"
+    finished = next(
+        e
+        for e in events
+        if e.get("type") == "subagent_finished" and e.get("kind") == "spawned"
+    )
+    assert finished.get("terminal_state") == "succeeded"
+    assert (finished.get("merge_provenance") or {}).get("source_kind") == "corpus_explore_result"
+    assert finished.get("output_pointer") == "run_metadata.corpus_explore_results[0]"
+    fa = next(e for e in events if e.get("type") == "final_answer")
+    rows = (fa.get("run_metadata") or {}).get("subagent_runs") or []
+    assert any(
+        row.get("kind") == "spawned"
+        and row.get("task_type") == "corpus_explore"
+        and row.get("output_pointer") == "run_metadata.corpus_explore_results[0]"
+        for row in rows
+    )
+
+
 def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:
     events = _collect_agent_sse_events(monkeypatch, _FakeGraph)
 
@@ -478,12 +574,23 @@ def test_sse_context_compacted_and_session_init_with_thread(monkeypatch) -> None
     assert "turn_digest" in compact["compaction"]["kinds"]
     assert "digest_count" in compact.get("compaction", {})
     assert compact["compaction"].get("boundary", {}).get("status") == "idle"
+    audit = compact.get("audit") or {}
+    elig = audit.get("l4_eligibility") or {}
+    assert elig.get("schema_version") == "l4_eligibility_v1"
+    assert elig.get("eligible") is False
+    assert elig.get("skip_reason") in {"disabled", "below_digest_cap"}
     finals = [e for e in events if e.get("type") == "final_answer"]
     assert len(finals) == 1
     trace = finals[0].get("tool_trace") or []
     tools = [t.get("tool") for t in trace if isinstance(t, dict)]
     assert "session_init" in tools
     assert finals[0].get("thread_id") == "thr_sse_parity"
+    rm = finals[0].get("run_metadata") or {}
+    comp_audit = rm.get("compaction_audit") or {}
+    assert (comp_audit.get("l4_eligibility") or {}).get("skip_reason") in {
+        "disabled",
+        "below_digest_cap",
+    }
 
 
 def test_sse_history_digest_invalid_warning_and_final(monkeypatch) -> None:

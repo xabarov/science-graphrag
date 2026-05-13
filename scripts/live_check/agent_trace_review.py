@@ -299,13 +299,28 @@ def _run_compaction_turn_review(
             "stdout_tail": ((exc.stdout or "")[-2000:] or ""),
             "stderr_tail": ((exc.stderr or "")[-2000:] or "subprocess.TimeoutExpired"),
             "timeout_expired": True,
+            "failure_reason": "compaction_turn_review_timeout",
         }
+    report_blob: dict[str, Any] = {}
+    if out_json.exists():
+        try:
+            report_blob = json.loads(out_json.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            report_blob = {}
+    failure_reason = None
+    if isinstance(report_blob.get("verdict"), dict):
+        reasons = report_blob["verdict"].get("reasons") or []
+        if isinstance(reasons, list) and reasons:
+            failure_reason = str(reasons[0])
     return {
         "ok": completed.returncode == 0,
         "returncode": completed.returncode,
         "path": str(out_json),
         "stdout_tail": completed.stdout[-2000:],
         "stderr_tail": completed.stderr[-2000:],
+        "failure_reason": failure_reason,
+        "failed_turn": report_blob.get("failed_turn") if isinstance(report_blob, dict) else None,
+        "failure_kind": report_blob.get("failure_kind") if isinstance(report_blob, dict) else None,
     }
 
 
@@ -565,6 +580,9 @@ def main() -> int:
     args = parser.parse_args()
 
     _ensure_local_imports()
+    from dotenv_util import (  # pylint: disable=import-outside-toplevel,import-error
+        resolve_live_base_url,
+    )
     from trace_review_schema import (  # pylint: disable=import-outside-toplevel
         REVIEW_VERSION,
         TraceReviewV1,
@@ -578,6 +596,7 @@ def main() -> int:
     )
 
     _load_dotenv(args.env_file)
+    args.base_url = resolve_live_base_url(args.base_url)
     if args.suite == "acceptance":
         args.strict_v3_lifecycle = True
         if args.min_claim_verification_parse_rate is None:

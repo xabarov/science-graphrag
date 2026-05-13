@@ -233,7 +233,7 @@ science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_q
   --md-out eval/results/current-agent-v3-quality-judge-mini.md
 
 # Live: stderr phases + branch outcome rollup — ``--progress`` (или SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_PROGRESS=1)
-# LLM vs heuristic на 4 кейсах: ``AGENT_LIVE_BASE=dev .venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py``
+# LLM vs heuristic на 4 кейсах: ``AGENT_LIVE_BASE=http://127.0.0.1:18787 .venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py``
 ```
 
 ## Chat agent — roadmap use-case harness

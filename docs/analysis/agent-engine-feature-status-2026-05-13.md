@@ -36,11 +36,20 @@
 | **E2** `tool_use_summary` + cache hint (`agent_tool_use_summary_enabled`, `agent_side_llm_openrouter_cache_control_enabled`) | `True` / `True` | **Operator rollout gate:** heavy live `side_llm_cache_read_ratio_avg` below 0.4 target; PR3 open in next-waves. | [`eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md`](../../eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md); [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §3.2. | **promote** (cache-prefix code + telemetry); **keep off** *product trust* for summarization rows until ratio ≥ 0.4 or explicit policy; OpenRouter cache hint remains independent of whether summaries fire. | Heavy live rerun after PR1+2 or set `SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED=false` until gate passes. |
 | **Wave H L4** `agent_llm_full_history_compact_enabled` | `True` | **Promote** for code + offline harness; **operator compare** still recommended on provider/model change. | [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md); offline harness `side_llm_cache_read_ratio` cited in horizon §1.1. | **promote** (docs + defaults aligned). | Long-thread live acceptance when changing OpenRouter model / cache behavior. |
 | **Wave H microcompact** `agent_tool_message_microcompact_time_trigger_enabled` | `True` | **Effective default off:** microcompact runs only when `agent_tool_history_compact_enabled` is `True` (Settings default **`False`**). | [`science_graphrag/agent/tool_message_compact.py`](../../science_graphrag/agent/tool_message_compact.py) guard; [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md) (when compact is on). | **promote** for *field* default; clarify **effective** behavior in runbooks. | If product wants microcompact in production, enable `agent_tool_history_compact_enabled` deliberately and re-run acceptance. |
-| **`agent_note`** `agent_note_enabled` | `False` | None (already off by default). | [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §1.3; cost study still optional. | **keep off** (default). | Run 50-turn cost study (R3/R2 scope) or leave off. |
+| **`agent_note`** `agent_note_enabled` | `False` | None (already off by default). | [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §1.3; live 50-turn token pilot still open (operator). | **keep off** (default). | **Postponed (R2 2026-05-13):** optional only; not part of canonical minimal contract — see [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §R2; run live pilot when product requests default-on. |
 | **`thread_insights`** `agent_thread_insights_enabled` | `False` | Opt-in via `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED=1`; Epic A backlog. | [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md) `[OPEN] Smart context summarization parity track (Epic A)`; Train T1 skeleton done. | **keep off** default; **promote** path via env when running A2/A3 work. | Continue A2/A3 per roadmap; no default flip without eval lane. |
 | **`agent_v3_quality_judge_v1`** (logical family) | N/A (benchmark lane, not a single Settings bool) | **Advisory**; Wave D strict promotion not met. | [`wave-d-promotion-operator-closeout-2026-05-12.md`](./wave-d-promotion-operator-closeout-2026-05-12.md); [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §1.2. | **keep off** (from `decision_gate`); instrumentation **promote**. | Calibration windows + promotion review per runbooks; do not conflate with CI `--mock-agent`. |
 
 *Roadmap narrative for each row is aligned with [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §1.2, §2.2, and §10 after R0 (no conflated “default-on” + “keep gated” without labels).*
+
+---
+
+## R3 operator verdict (2026-05-13)
+
+| Track | Implementation | Operator verdict | Next action |
+|-------|----------------|------------------|-------------|
+| **L4 preflight telemetry** | **Shipped in code:** `compaction_audit.l4_eligibility` on SSE `context_compacted` + sync JSON (`compaction_policy.py`) | **provider-gated** as of 2026-05-13 rerun: baseline/candidate/compare artifacts are valid, but long-thread cache/compaction evidence is still absent in the bounded lane (`side_llm_cache_read_ratio_avg=None`, no compaction events) | Keep provider-gated; rerun stable acceptance lane with observable compaction/cache signal, then promote or operator-off based on real long-thread metrics |
+| **Memory influence audit (offline)** | `memory_influence_audit_v1` under `long_thread_eval` in trace-review merge (`eval/chat_agent/long_thread_eval.py`) | **Shipped** (deterministic harness) | Keep `--with-long-thread-eval` on acceptance profiles; extend cases when new prompt-memory edges appear |
 
 ---
 
@@ -120,37 +129,4 @@ deliberately enables history compaction and re-runs acceptance.
 See also [`README_trace_review.md`](../../scripts/live_check/README_trace_review.md) (Wave H
 harness section) for compaction-focused review commands.
 
----
-
-## 6. Product decision — E1 / E2 defaults (2026-05-13)
-
-**Chosen path: (A)** — keep **`Settings` defaults `True`** for the E1-related knobs and E2 `tool_use_summary` path so a clean process reflects the shipped code path.
-
-- **Operator rollout gate** (conservative trust, env overrides, paired/heavy live) remains the product control surface until fresh evidence clears the gates in the matrix (§2).
-- **(B) deferred:** flipping defaults to `False` would require an explicit migration story for stacks that assumed implicit `True`; revisit only with a dedicated PR + release note.
-
----
-
-## 7. Evidence replication lane (operator; no code in this slice)
-
-Use this checklist when **rerun evidence** rows in §2 apply (material code change, provider/cache change, or model switch for Wave H long-thread).
-
-| Track | Minimal replication | Artifact pointers |
-|-------|---------------------|-------------------|
-| **E1** latency | Same workspace + suite as prior acceptance; paired baseline vs candidate `agent_trace_review.py` JSON; compare with `trace_regression_compare.py` and latency fail policies. | Baseline/candidate JSON under `eval/results/`; narrative in [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §3.1. |
-| **E2** cache / summaries | Heavy live run with `tool_use_summary` rows present; confirm `side_llm_cache_read_ratio_avg` (or telemetry fallback) vs **0.4** operator floor. | [`eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md`](../../eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md); next-waves §3.2. |
-| **Wave H** long-thread | After OpenRouter model / cache-behavior change: `long_thread_compaction_eval.py` or acceptance long-thread profile per [`README_trace_review.md`](../../scripts/live_check/README_trace_review.md). | [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md). |
-
-Pre-flight for long commands: repo rules (`config-check`, `AGENT_LIVE_BASE=dev`, docker health).
-
----
-
-## 8. Wave H microcompact — **effective** vs **Settings** default
-
-| Concept | Value |
-|--------|--------|
-| `agent_tool_message_microcompact_time_trigger_enabled` (**Settings** field) | default **`True`** in `config.py` |
-| **Effective runtime** | Microcompact runs **only** when `agent_tool_history_compact_enabled` is **`True`** (that knob defaults **`False`**). So in a default env, microcompact does **not** fire even though the microcompact field is `True`. |
-
-**Operator action:** to enable microcompact in production, set `SCIENCE_GRAPHRAG_AGENT_TOOL_HISTORY_COMPACT_ENABLED=1` (or equivalent) **deliberately**, then re-run acceptance / trace-review. Guard implementation: [`science_graphrag/agent/tool_message_compact.py`](../../science_graphrag/agent/tool_message_compact.py).
 

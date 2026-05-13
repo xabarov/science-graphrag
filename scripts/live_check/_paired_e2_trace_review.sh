@@ -3,7 +3,7 @@
 set -euo pipefail
 REPO="/home/roman/pyprojects/ML/Prod/science-graphrag"
 cd "$REPO"
-export AGENT_LIVE_BASE="${AGENT_LIVE_BASE:-dev}"
+export AGENT_LIVE_BASE="${AGENT_LIVE_BASE:-http://127.0.0.1:18787}"
 BASE_URL="${AGENT_LIVE_TRACE_URL:-http://127.0.0.1:18787}"
 WS="${AGENT_LIVE_WORKSPACE_ID:-ws-pilot-od}"
 COMPOSE=(docker compose -f docker-compose.dev.yml)

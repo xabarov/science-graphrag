@@ -82,9 +82,11 @@ def main() -> int:
     _ensure_suite_path()
     from dotenv_util import (  # pylint: disable=import-outside-toplevel,import-error
         load_dotenv_or_warn,
+        resolve_live_base_url,
     )
 
     load_dotenv_or_warn(args.env_file)
+    args.base_url = resolve_live_base_url(args.base_url)
 
     from http_suite import (  # pylint: disable=import-outside-toplevel,import-error
         CheckResult,

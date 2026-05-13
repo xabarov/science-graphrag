@@ -18,6 +18,10 @@ from science_graphrag.agent.chat_envelope import (
 )
 from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
 from science_graphrag.agent.context.compaction import build_context_compacted_payload
+from science_graphrag.agent.context.compaction_policy import (
+    attach_l4_eligibility_to_compaction_audit,
+    evaluate_l4_full_history_compact_eligibility,
+)
 from science_graphrag.agent.context.llm_history_compact import (
     maybe_llm_compact_session_after_turn,
     patch_compaction_audit_llm,
@@ -100,7 +104,40 @@ META_TOOL_NAMES = frozenset(
 
 # Tools that intentionally remain on generic `using_tool` wording.
 # Keep this set explicit and small to prevent accidental fallback drift.
-GENERIC_PRODUCT_STEP_TOOLS = frozenset({})
+# MCP surface tools share one UX phrase (integration plumbing, not domain voice).
+GENERIC_PRODUCT_STEP_TOOLS = frozenset(
+    {"call_mcp_tool", "list_mcp_resources", "fetch_mcp_resource", "mcp_auth"}
+)
+
+DEGRADED_MODE_SCHEMA_VERSION = 1
+
+# Map top-level ``final_answer.warnings`` codes to stable product-facing reasons for SSE
+# ``degraded_mode`` (R2 contract). Order is preserved for deterministic streams.
+_WARNING_TO_DEGRADED_REASON: tuple[tuple[str, str], ...] = (
+    ("answer_salvaged_from_graph_tool", "graph_tool_salvage"),
+    ("answer_salvaged_from_quote_candidates", "quote_candidate_salvage"),
+    ("answer_salvaged_from_assistant_draft", "assistant_draft_salvage"),
+    ("agent_turn_deadline_exceeded", "turn_deadline_exceeded"),
+    ("partial_after_deadline", "partial_after_deadline"),
+    ("agent_partial_graph_recursion_limit", "recursion_limit_partial"),
+    ("partial_after_recursion_limit", "partial_after_recursion_limit"),
+)
+
+
+def degraded_mode_event_from_warnings(warnings: list[str]) -> dict[str, Any] | None:
+    """Build optional SSE ``degraded_mode`` when the turn used a salvage / partial path."""
+    wset = {str(x).strip() for x in (warnings or []) if str(x).strip()}
+    reasons: list[str] = []
+    for war, reason in _WARNING_TO_DEGRADED_REASON:
+        if war in wset and reason not in reasons:
+            reasons.append(reason)
+    if not reasons:
+        return None
+    return {
+        "type": "degraded_mode",
+        "schema_version": DEGRADED_MODE_SCHEMA_VERSION,
+        "reasons": reasons,
+    }
 
 
 def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
@@ -138,10 +175,6 @@ def product_step_code_for_tool(tool_name: str) -> str | None:
         "web_search": "searching_literature",
         "web_fetch": "gathering_evidence",
         "doi_resolver": "paper_metadata",
-        "call_mcp_tool": "using_tool",
-        "list_mcp_resources": "using_tool",
-        "fetch_mcp_resource": "using_tool",
-        "mcp_auth": "using_tool",
         "lsp_tool": "exploring_graph",
         "runtime_monitor_get": "summarizing_workspace",
         "research_plan_write": "interpreting_question",
@@ -425,6 +458,7 @@ async def stream_agent_events(
     seen_claim_verification_markers: set[int] = set()
     seen_corpus_explore_markers: set[int] = set()
     seen_research_plan_markers: set[int] = set()
+    seen_spawned_terminal_rows: set[tuple[str, str, str]] = set()
     last_progress_label_emit_fp: str | None = None
     last_progress_label_mono = 0.0
     note_counter: dict[str, int] = {"emitted": 0}
@@ -702,37 +736,6 @@ async def stream_agent_events(
                                     if note_event is not None:
                                         yield note_event
                                 prev_route_len = len(routes)
-                                if subagent_lifecycle_enhanced_enabled(settings):
-                                    for msg2 in list(payload.get("messages") or []):
-                                        if not isinstance(msg2, HumanMessage):
-                                            continue
-                                        mid2 = id(msg2)
-                                        if mid2 in seen_task_notification_markers:
-                                            continue
-                                        sse_tn = sse_payload_from_human_message(msg2)
-                                        if sse_tn:
-                                            seen_task_notification_markers.add(mid2)
-                                            yield {"data": json.dumps(sse_tn)}
-                                        sse_cv = sse_payload_claim_verification_from_human_message(
-                                            msg2
-                                        )
-                                        if sse_cv:
-                                            if mid2 in seen_claim_verification_markers:
-                                                continue
-                                            seen_claim_verification_markers.add(mid2)
-                                            yield {"data": json.dumps(sse_cv)}
-                                        sse_ce = sse_payload_corpus_explore_from_human_message(msg2)
-                                        if sse_ce:
-                                            if mid2 in seen_corpus_explore_markers:
-                                                continue
-                                            seen_corpus_explore_markers.add(mid2)
-                                            yield {"data": json.dumps(sse_ce)}
-                                        sse_rp = sse_payload_research_plan_from_human_message(msg2)
-                                        if sse_rp:
-                                            if mid2 in seen_research_plan_markers:
-                                                continue
-                                            seen_research_plan_markers.add(mid2)
-                                            yield {"data": json.dumps(sse_rp)}
                             dev = list(payload.get("debug_events") or [])
                             if len(dev) > prev_debug_len:
                                 for ev in dev[prev_debug_len:]:
@@ -741,6 +744,127 @@ async def stream_agent_events(
                                     if _streamable_debug_event(ev):
                                         yield {"data": json.dumps(dict(ev))}
                                 prev_debug_len = len(dev)
+                            if subagent_lifecycle_enhanced_enabled(settings):
+                                for msg2 in list(payload.get("messages") or []):
+                                    if not isinstance(msg2, HumanMessage):
+                                        continue
+                                    mid2 = id(msg2)
+                                    if mid2 in seen_task_notification_markers:
+                                        continue
+                                    sse_tn = sse_payload_from_human_message(msg2)
+                                    if sse_tn:
+                                        seen_task_notification_markers.add(mid2)
+                                        yield {"data": json.dumps(sse_tn)}
+                                    sse_cv = sse_payload_claim_verification_from_human_message(msg2)
+                                    if sse_cv:
+                                        if mid2 in seen_claim_verification_markers:
+                                            continue
+                                        seen_claim_verification_markers.add(mid2)
+                                        yield {"data": json.dumps(sse_cv)}
+                                    sse_ce = sse_payload_corpus_explore_from_human_message(msg2)
+                                    if sse_ce:
+                                        if mid2 in seen_corpus_explore_markers:
+                                            continue
+                                        seen_corpus_explore_markers.add(mid2)
+                                        yield {"data": json.dumps(sse_ce)}
+                                    sse_rp = sse_payload_research_plan_from_human_message(msg2)
+                                    if sse_rp:
+                                        if mid2 in seen_research_plan_markers:
+                                            continue
+                                        seen_research_plan_markers.add(mid2)
+                                        yield {"data": json.dumps(sse_rp)}
+                                _meta_v = payload.get("metadata") or {}
+                                _raw_spawn_rows = (
+                                    _meta_v.get("subagent_spawn_rows")
+                                    if isinstance(_meta_v, dict)
+                                    else None
+                                )
+                                if isinstance(_raw_spawn_rows, list):
+                                    for row in _raw_spawn_rows:
+                                        if not isinstance(row, dict):
+                                            continue
+                                        if str(row.get("kind") or "") != "spawned":
+                                            continue
+                                        _task = row.get("task") or {}
+                                        _task_id = str(
+                                            row.get("task_id")
+                                            or (
+                                                _task.get("task_id")
+                                                if isinstance(_task, dict)
+                                                else ""
+                                            )
+                                            or ""
+                                        ).strip()
+                                        _sid = str(row.get("subagent_id") or "").strip()
+                                        _term = str(row.get("terminal_state") or "").strip()
+                                        _row_fp = (_task_id, _sid, _term)
+                                        if not _sid or not _term or _row_fp in seen_spawned_terminal_rows:
+                                            continue
+                                        seen_spawned_terminal_rows.add(_row_fp)
+                                        started_payload = {
+                                            "type": "subagent_started",
+                                            "subagent_id": _sid,
+                                            "parent_turn_id": row.get("parent_turn_id")
+                                            or parent_turn_id_str
+                                            or None,
+                                            "spawn_reason": row.get("spawn_reason"),
+                                            "summary": row.get("description"),
+                                            "kind": "spawned",
+                                            "task_id": _task_id or None,
+                                            "task_type": row.get("task_type")
+                                            or (
+                                                _task.get("task_type")
+                                                if isinstance(_task, dict)
+                                                else None
+                                            ),
+                                            "description": row.get("description")
+                                            or (
+                                                _task.get("description")
+                                                if isinstance(_task, dict)
+                                                else None
+                                            ),
+                                            "execution_mode": row.get("execution_mode")
+                                            or (
+                                                _task.get("execution_mode")
+                                                if isinstance(_task, dict)
+                                                else None
+                                            ),
+                                            "fanout_slot": row.get("fanout_slot")
+                                            or (
+                                                _task.get("fanout_slot")
+                                                if isinstance(_task, dict)
+                                                else None
+                                            ),
+                                        }
+                                        yield {"data": json.dumps(started_payload)}
+                                        finished_payload = {
+                                            "type": "subagent_finished",
+                                            "subagent_id": _sid,
+                                            "parent_turn_id": row.get("parent_turn_id")
+                                            or parent_turn_id_str
+                                            or None,
+                                            "spawn_reason": row.get("spawn_reason"),
+                                            "terminal_state": _term,
+                                            "latency_ms": row.get("latency_ms"),
+                                            "failure_code": row.get("failure_code"),
+                                            "kind": "spawned",
+                                            "task_id": _task_id or None,
+                                            "task_type": row.get("task_type")
+                                            or (
+                                                _task.get("task_type")
+                                                if isinstance(_task, dict)
+                                                else None
+                                            ),
+                                            "description": row.get("description")
+                                            or (
+                                                _task.get("description")
+                                                if isinstance(_task, dict)
+                                                else None
+                                            ),
+                                            "merge_provenance": row.get("merge_provenance"),
+                                            "output_pointer": row.get("output_pointer"),
+                                        }
+                                        yield {"data": json.dumps(finished_payload)}
                         if mode != "updates":
                             continue
                         chunk = payload
@@ -1088,6 +1212,7 @@ async def stream_agent_events(
                 ent_post = get_session_for_thread(thread_id)
                 dcount = len(ent_post.get("digests") or [])
                 wc_post = (ent_post.get("capsules") or {}).get("workspace")
+                digest_cap = int(settings.agent_compaction_digest_cap)
                 compact_payload = build_context_compacted_payload(
                     thread_id=thread_id,
                     session_summary_excerpt=(new_sum or "")[:500],
@@ -1099,11 +1224,14 @@ async def stream_agent_events(
                     workspace_capsule_present=isinstance(wc_post, dict)
                     and bool(str(wc_post.get("workspace_id") or "").strip()),
                 )
+                pre_l4 = evaluate_l4_full_history_compact_eligibility(
+                    settings, thread_id, digest_count=dcount, digest_cap=digest_cap
+                )
                 llm_audit = maybe_llm_compact_session_after_turn(
                     settings,
                     thread_id,
                     digest_count=dcount,
-                    digest_cap=int(settings.agent_compaction_digest_cap),
+                    digest_cap=digest_cap,
                 )
                 if llm_audit:
                     new_sum2 = str(get_session_for_thread(thread_id).get("session_summary") or "")
@@ -1116,7 +1244,7 @@ async def stream_agent_events(
                         latest_full_state=latest_full_state,
                         digest_count=dcount,
                         rolling_threshold=settings.agent_compaction_rolling_memory_min_digests,
-                        digest_cap=settings.agent_compaction_digest_cap,
+                        digest_cap=digest_cap,
                         workspace_id=workspace_id,
                         workspace_capsule_present=isinstance(wc_post2, dict)
                         and bool(str(wc_post2.get("workspace_id") or "").strip()),
@@ -1124,6 +1252,15 @@ async def stream_agent_events(
                     compact_payload = patch_compaction_audit_llm(
                         compact_payload, llm_audit=llm_audit
                     )
+                applied = bool(llm_audit) if pre_l4.get("eligible") else None
+                compact_payload = attach_l4_eligibility_to_compaction_audit(
+                    compact_payload,
+                    settings=settings,
+                    thread_id=thread_id,
+                    digest_count=dcount,
+                    digest_cap=digest_cap,
+                    llm_compact_applied=applied,
+                )
                 yield {"data": json.dumps(compact_payload)}
                 if latest_full_state is not None:
                     run_post_compact_hooks(
@@ -1344,6 +1481,9 @@ async def stream_agent_events(
                 "bibliography": envelope.get("bibliography"),
             }
             yield {"data": json.dumps({"type": "answer_synthesis_finished"})}
+            degraded_evt = degraded_mode_event_from_warnings(final_warnings)
+            if degraded_evt is not None:
+                yield {"data": json.dumps(degraded_evt)}
             yield {"data": json.dumps(final_event)}
             tp0 = (initial_state.get("metadata") or {}).get("turn_policy") or {}
             logger.info(

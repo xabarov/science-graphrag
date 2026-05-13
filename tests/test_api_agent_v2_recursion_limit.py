@@ -131,6 +131,13 @@ def test_stream_recursion_limit_with_salvage_emits_warning_and_partial_final_ans
     assert "agent_partial_graph_recursion_limit" in final_warnings
     assert "partial_after_recursion_limit" in final_warnings
 
+    degraded = [e for e in events if e.get("type") == "degraded_mode"]
+    assert degraded, events
+    assert degraded[-1].get("schema_version") == 1
+    reasons = degraded[-1].get("reasons") or []
+    assert "recursion_limit_partial" in reasons
+    assert "partial_after_recursion_limit" in reasons
+
 
 def test_stream_recursion_limit_without_salvage_emits_structured_error_event(
     monkeypatch,

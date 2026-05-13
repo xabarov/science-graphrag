@@ -1,0 +1,66 @@
+---
+description: Agent runtime, live-check contour, workspace_id and test map
+alwaysApply: true
+---
+
+# Agent runtime / live-check map
+
+Use this mental model before changing agent/runtime or running live evidence:
+
+- `science_graphrag/agent/` — runtime logic, supervisor graph, subagents, context/memory.
+- `science_graphrag/api/agent_v2_modules/` — HTTP/SSE assembly (`stream_lifecycle.py`, payloads, recovery).
+- `scripts/live_check/` — operator live harnesses (`agent_trace_review.py`, `http_suite.py`, `compaction_turn_review.py`); these are not unit tests.
+- `tests/test_api_agent_v2_*` — mock-backed API/SSE contract tests.
+- `tests/agent/test_*subagent*` + `tests/scripts/live_check/*` — runtime/trace-review schema and policy checks.
+- `ui/src/components/work/agent/` — Ask/live-progress UI and its Vitest coverage.
+
+## Quick start checklist (before live evidence)
+
+Run these checks in order from repo root:
+
+1. `.venv/bin/science-graphrag config-check`
+2. `COMPOSE_FILE=docker-compose.dev.yml:docker-compose.live-check.yml docker compose ps --format 'table {{.Service}}\t{{.Status}}'`
+3. export explicit base/workspace:
+   - `export AGENT_LIVE_BASE=http://127.0.0.1:18787`
+   - `export AGENT_LIVE_WORKSPACE_ID=ws-pilot-od`
+4. smoke one endpoint:
+   - `.venv/bin/python scripts/live_check/agent_v2_http.py --base-url "$AGENT_LIVE_BASE" --workspace-id "$AGENT_LIVE_WORKSPACE_ID" --timeout 5`
+
+If smoke fails due to contour health:
+
+- run `make dev-up` and re-run step 2 + step 4 before any long live lane.
+
+## Live base URL
+
+- Do not assume bare `AGENT_LIVE_BASE=dev` is a valid URL for Python live-check scripts.
+- Before any live run, inspect the script/runbook and prefer an explicit URL:
+  - stable live-check API: `http://127.0.0.1:18787` with `docker-compose.dev.yml:docker-compose.live-check.yml`
+  - web/dev proxy: `http://127.0.0.1:8787`
+- Use `docker-compose.live-check.yml` when long trace-review runs must avoid `uvicorn --reload` restarts.
+
+Alias note:
+
+- `dev` / `stable` aliases are supported by `dotenv_util.resolve_live_base_url`, but operator artifacts should still use explicit URLs for unambiguous evidence.
+
+## workspace_id for live/e2e
+
+- `agent_trace_review.py --suite acceptance` requires `AGENT_LIVE_WORKSPACE_ID`; otherwise `agent_v2_fanout_probe` fails with `missing_workspace_id`.
+- Reuse the workspace expected by the current artifact lane/runbook (often `ws-pilot-od`) instead of inventing a new one mid-run.
+- When comparing baseline vs candidate, keep the same `workspace_id`, suite, and flags.
+
+Suite contract:
+
+- `--suite default|heavy` can run without workspace for basic HTTP checks, but workspace is strongly recommended for comparable evidence.
+- `--suite acceptance` requires non-empty workspace id (hard fail if missing).
+
+## Test selection
+
+- Start with targeted mock/unit tests before live runs.
+- Only use live/e2e after the local contour passes pre-flight (`config-check`, `/health`, storage health, required workspace).
+
+Minimal progression for agent/runtime changes:
+
+1. `tests/test_api_agent_v2_*` (contracts)
+2. `tests/agent/test_*subagent*` and adjacent runtime tests
+3. `tests/scripts/live_check/*` (schema/gates)
+4. then live `scripts/live_check/agent_trace_review.py`

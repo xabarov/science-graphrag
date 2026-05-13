@@ -57,6 +57,39 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
 ) -> None:
     mod = _load_module()
 
+    hb_mod = types.ModuleType("agent_trace_review_heartbeat")
+
+    class _StubStageHeartbeat:
+        def __init__(self, _name: str, *, interval_s: float) -> None:
+            self.interval_s = interval_s
+
+        def start(self) -> None:
+            return None
+
+        def stop(self) -> None:
+            return None
+
+    def _record_stage(
+        stages: list[dict[str, Any]],
+        *,
+        stage: str,
+        elapsed_ms: float,
+        ok: bool,
+        detail: str | None = None,
+    ) -> None:
+        row: dict[str, Any] = {
+            "stage": stage,
+            "elapsed_ms": round(float(elapsed_ms), 3),
+            "ok": bool(ok),
+        }
+        if detail:
+            row["detail"] = detail[:2000]
+        stages.append(row)
+
+    hb_mod.StageHeartbeat = _StubStageHeartbeat
+    hb_mod.record_stage = _record_stage
+    monkeypatch.setitem(sys.modules, "agent_trace_review_heartbeat", hb_mod)
+
     monkeypatch.setattr(mod, "_ensure_local_imports", lambda: None)
     monkeypatch.setattr(mod, "_load_dotenv", lambda *_a, **_k: None)
     monkeypatch.setattr(
@@ -212,4 +245,105 @@ def test_server_agent_runtime_from_checks_reads_sync_json_run_metadata() -> None
         },
     ]
     assert mod._server_agent_runtime_from_checks(checks) == "langgraph_supervisor_v3"
+
+
+def test_agent_trace_review_accepts_dev_base_alias(tmp_path: Path) -> None:
+    """Alias ``AGENT_LIVE_BASE=dev`` is normalized before network calls."""
+    out_json = tmp_path / "trace-review-dev-alias.json"
+    out_md = tmp_path / "trace-review-dev-alias.md"
+    env = {k: v for k, v in os.environ.items()}
+    env["AGENT_LIVE_DEV_URL"] = "http://127.0.0.1:65535"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(_SCRIPT),
+            "--profile",
+            "quick",
+            "--base-url",
+            "dev",
+            "--timeout",
+            "0.5",
+            "--skip-e2e",
+            "--out-json",
+            str(out_json),
+            "--out-md",
+            str(out_md),
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert completed.returncode == 1
+    payload = json.loads(out_json.read_text(encoding="utf-8"))
+    run_ctx = payload.get("run_context") or {}
+    assert run_ctx.get("base_url") == "http://127.0.0.1:65535"
+
+
+def test_run_compaction_turn_review_surfaces_failure_reason(tmp_path: Path, monkeypatch) -> None:
+    mod = _load_module()
+    out_json = tmp_path / "compaction.json"
+    out_json.write_text(
+        json.dumps(
+            {
+                "review_version": "trace-review-v1",
+                "failed_turn": 3,
+                "failure_kind": "http_timeout",
+                "verdict": {"status": "fail", "reasons": ["http_timeout_turn_3"]},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    class _Completed:
+        returncode = 1
+        stdout = "x"
+        stderr = "y"
+
+    def _fake_run(*_args, **_kwargs):  # type: ignore[no-untyped-def]
+        return _Completed()
+
+    monkeypatch.setattr(mod.subprocess, "run", _fake_run)
+    out = mod._run_compaction_turn_review(
+        base_url="http://127.0.0.1:65535",
+        workspace_id="ws1",
+        timeout=0.5,
+        turns=3,
+        require_after=2,
+        out_json=out_json,
+        emit_merged_into=None,
+    )
+    assert out.get("ok") is False
+    assert out.get("failure_reason") == "http_timeout_turn_3"
+    assert out.get("failed_turn") == 3
+    assert out.get("failure_kind") == "http_timeout"
+
+
+def test_run_compaction_turn_review_timeout_sets_failure_reason(tmp_path: Path, monkeypatch) -> None:
+    mod = _load_module()
+    out_json = tmp_path / "compaction-timeout.json"
+
+    def _fake_timeout(*_args, **_kwargs):  # type: ignore[no-untyped-def]
+        err = subprocess.TimeoutExpired(
+            cmd=["python", "compaction_turn_review.py"],
+            timeout=3.0,
+            output="partial",
+            stderr="timeout",
+        )
+        raise err
+
+    monkeypatch.setattr(mod.subprocess, "run", _fake_timeout)
+    out = mod._run_compaction_turn_review(
+        base_url="http://127.0.0.1:65535",
+        workspace_id="ws1",
+        timeout=0.5,
+        turns=3,
+        require_after=2,
+        out_json=out_json,
+        emit_merged_into=None,
+    )
+    assert out.get("ok") is False
+    assert out.get("timeout_expired") is True
+    assert out.get("failure_reason") == "compaction_turn_review_timeout"
 

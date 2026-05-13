@@ -10,7 +10,7 @@ This note complements Wave D in [`agent-engine-and-benchmarks-next-waves-2026-05
 
 Fixture list: [`../tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json`](../tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json).
 
-From repo root (live stack + `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`; optional `AGENT_LIVE_BASE=dev`):
+From repo root (live stack + `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`; optional explicit `AGENT_LIVE_BASE=http://127.0.0.1:18787`):
 
 ```bash
 .venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py --window --runs 3 \

@@ -109,10 +109,24 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
     srun_c = 0
     stn_c = 0
     miss_lc = 0
+    miss_term = 0
+    miss_merge_prov = 0
+    timeout_count = 0
     if isinstance(rm, dict):
         sr0 = rm.get("subagent_runs")
         if isinstance(sr0, list):
             srun_c = len(sr0)
+            for row in sr0:
+                if not isinstance(row, dict):
+                    continue
+                is_spawned = str(row.get("kind") or "").strip() == "spawned"
+                term_raw = str(row.get("terminal_state") or "").strip()
+                if is_spawned and not term_raw:
+                    miss_term += 1
+                if term_raw == "timed_out":
+                    timeout_count += 1
+                if is_spawned and not isinstance(row.get("merge_provenance"), dict):
+                    miss_merge_prov += 1
         st0 = rm.get("subagent_task_notifications")
         if isinstance(st0, list):
             stn_c = len(st0)
@@ -242,6 +256,9 @@ def timeline_case_from_e2e_case(case: dict[str, Any]) -> TimelineCase:
         subagent_runs_count=srun_c,
         subagent_task_notification_count=stn_c,
         subagent_lifecycle_missing_count=miss_lc,
+        subagent_terminal_state_missing_count=miss_term,
+        subagent_merge_provenance_missing_count=miss_merge_prov,
+        subagent_timeout_count=timeout_count,
         eval_lane=eval_lane,
         tool_search_miss_due_to_no_discovery=miss_nd,
         tool_schema_bytes_saved=schema_saved,

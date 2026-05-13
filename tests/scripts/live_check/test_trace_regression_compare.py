@@ -841,6 +841,48 @@ def test_regression_subagent_lifecycle_missing_increase_fail_policy(tmp_path: Pa
     assert any("subagent_lifecycle_missing_increase" in x for x in payload["fail_reasons"])
 
 
+def test_regression_subagent_terminal_and_merge_provenance_increase_fail(tmp_path: Path) -> None:
+    base = _minimal_review(
+        {
+            "subagent_terminal_state_missing_count": 0,
+            "subagent_merge_provenance_missing_count": 0,
+            "missing_span_count": 0,
+        }
+    )
+    cand = _minimal_review(
+        {
+            "subagent_terminal_state_missing_count": 1,
+            "subagent_merge_provenance_missing_count": 2,
+            "missing_span_count": 0,
+        }
+    )
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert any("subagent_terminal_state_missing_increase" in x for x in payload["fail_reasons"])
+    assert any("subagent_merge_provenance_missing_increase" in x for x in payload["fail_reasons"])
+
+
 def test_regression_min_live_trust_signal_delta_fail(tmp_path: Path) -> None:
     base = _minimal_review({"live_trust_signal_avg": 0.9, "missing_span_count": 0})
     cand = _minimal_review({"live_trust_signal_avg": 0.5, "missing_span_count": 0})

@@ -1,0 +1,17 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-13T14:13:24.128263+00:00",
+  "thread_id": "compaction_review_386ce26b500f",
+  "turns": 4,
+  "require_compaction_after": 2,
+  "turn_reports": [],
+  "compaction_events": [],
+  "failed_turn": 1,
+  "failure_kind": "http_timeout",
+  "verdict": {
+    "status": "fail",
+    "reasons": [
+      "http_timeout_turn_1"
+    ]
+  }
+}

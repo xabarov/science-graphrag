@@ -26,6 +26,7 @@ from science_graphrag.agent.subagents.specialist_results_v3 import (
     append_research_plan_leg,
     parse_verdict_from_text,
 )
+from science_graphrag.agent.subagents.runtime import build_spawned_subagent_run_row
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
 
@@ -120,17 +121,27 @@ def run_retrieval_fork_bundles(
                 )
                 extra_debug.extend(hook_local)
             spawn_rows.append(
-                {
-                    "subagent_id": sid,
-                    "parent_turn_id": parent_tid,
-                    "spawn_reason": "claim_verification",
-                    "terminal_state": term,
-                    "latency_ms": int(lat) if isinstance(lat, int) else None,
-                    "failure_code": fc,
-                    "tokens": None,
-                    "cost_usd_estimate": None,
-                    "kind": "spawned",
-                }
+                build_spawned_subagent_run_row(
+                    subagent_id=sid,
+                    parent_turn_id=parent_tid,
+                    spawn_reason="claim_verification",
+                    task_id=None,
+                    task_type="claim_verification",
+                    description="Verify retrieved claims against cited evidence",
+                    execution_mode="sync",
+                    fanout_slot=1,
+                    terminal_state=term,
+                    latency_ms=int(lat) if isinstance(lat, int) else None,
+                    failure_code=str(fc) if fc is not None else None,
+                    merge_provenance={
+                        "strategy": "typed_specialist_results_v3",
+                        "source_kind": "claim_verification_result",
+                        "carried_keys": ["claim_verification_results", "specialist_results_v3"],
+                        "evidence_origin": f"subagent:{sid}",
+                        "parent_state_write": "bounded_append_only",
+                    },
+                    output_pointer=f"run_metadata.claim_verification_results[{len(cv_bucket)}]",
+                )
             )
             working_v3 = append_claim_verification_leg(
                 working_v3,
@@ -218,17 +229,27 @@ def run_retrieval_fork_bundles(
                 )
                 extra_debug.extend(hook_local_ce)
             spawn_rows.append(
-                {
-                    "subagent_id": sid,
-                    "parent_turn_id": parent_tid,
-                    "spawn_reason": "corpus_explore",
-                    "terminal_state": term,
-                    "latency_ms": int(lat) if isinstance(lat, int) else None,
-                    "failure_code": fc,
-                    "tokens": None,
-                    "cost_usd_estimate": None,
-                    "kind": "spawned",
-                }
+                build_spawned_subagent_run_row(
+                    subagent_id=sid,
+                    parent_turn_id=parent_tid,
+                    spawn_reason="corpus_explore",
+                    task_id=None,
+                    task_type="corpus_explore",
+                    description="Read-only corpus exploration child",
+                    execution_mode="sync",
+                    fanout_slot=1,
+                    terminal_state=term,
+                    latency_ms=int(lat) if isinstance(lat, int) else None,
+                    failure_code=str(fc) if fc is not None else None,
+                    merge_provenance={
+                        "strategy": "typed_specialist_results_v3",
+                        "source_kind": "corpus_explore_result",
+                        "carried_keys": ["corpus_explore_results", "specialist_results_v3"],
+                        "evidence_origin": f"subagent:{sid}",
+                        "parent_state_write": "bounded_append_only",
+                    },
+                    output_pointer=f"run_metadata.corpus_explore_results[{len(ce_bucket)}]",
+                )
             )
             working_ce = append_corpus_explore_leg(
                 working_ce,
@@ -313,17 +334,27 @@ def run_retrieval_fork_bundles(
                 )
                 extra_debug.extend(hook_local_rp)
             spawn_rows.append(
-                {
-                    "subagent_id": sid,
-                    "parent_turn_id": parent_tid,
-                    "spawn_reason": "research_plan",
-                    "terminal_state": term,
-                    "latency_ms": int(lat) if isinstance(lat, int) else None,
-                    "failure_code": fc,
-                    "tokens": None,
-                    "cost_usd_estimate": None,
-                    "kind": "spawned",
-                }
+                build_spawned_subagent_run_row(
+                    subagent_id=sid,
+                    parent_turn_id=parent_tid,
+                    spawn_reason="research_plan",
+                    task_id=None,
+                    task_type="research_plan",
+                    description="Read-only research plan child",
+                    execution_mode="sync",
+                    fanout_slot=1,
+                    terminal_state=term,
+                    latency_ms=int(lat) if isinstance(lat, int) else None,
+                    failure_code=str(fc) if fc is not None else None,
+                    merge_provenance={
+                        "strategy": "typed_specialist_results_v3",
+                        "source_kind": "research_plan_result",
+                        "carried_keys": ["research_plan_results", "specialist_results_v3"],
+                        "evidence_origin": f"subagent:{sid}",
+                        "parent_state_write": "bounded_append_only",
+                    },
+                    output_pointer=f"run_metadata.research_plan_results[{len(rp_bucket)}]",
+                )
             )
             rw_ok = rp.get("research_plan_write_ok")
             issues_rp = list(rp.get("issues") or [])

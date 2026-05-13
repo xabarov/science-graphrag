@@ -1,8 +1,11 @@
 """L4: optional LLM consolidation of full turn-digest window into ``session_summary``.
 
 Runs when digest count reaches ``agent_compaction_digest_cap`` (boundary candidate) and
-cooldown elapsed — feature-flagged (default off). Uses compaction_lock mutual exclusion
-with thread_insights refresh and optional PTL-style retries by dropping oldest digests.
+cooldown elapsed. The ``Settings`` default for
+``agent_llm_full_history_compact_enabled`` is currently on, but operators may still keep
+the feature provider-gated or explicitly disabled pending live long-thread evidence.
+Uses compaction_lock mutual exclusion with thread_insights refresh and optional PTL-style
+retries by dropping oldest digests.
 """
 
 from __future__ import annotations
@@ -13,6 +16,9 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from science_graphrag.agent.context.compaction_policy import (
+    evaluate_l4_full_history_compact_eligibility,
+)
 from science_graphrag.agent.context.message_groups import drop_oldest_digest_rounds_for_ptl
 from science_graphrag.agent.context.message_sanitizers import sanitize_digest_dict_for_compact
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
@@ -163,28 +169,24 @@ def maybe_llm_compact_session_after_turn(  # pylint: disable=too-many-return-sta
     Returns audit dict, or ``None`` when skipped or failed.
     """
 
-    if not settings.agent_llm_full_history_compact_enabled:
-        return None
-    if not (thread_id or "").strip():
-        return None
-    if digest_count < digest_cap:
-        return None
-    if not (settings.extraction_llm_api_key or "").strip():
-        logger.warning("l4_llm_compact skipped: extraction_llm_api_key unset")
+    elig = evaluate_l4_full_history_compact_eligibility(
+        settings,
+        thread_id,
+        digest_count=digest_count,
+        digest_cap=digest_cap,
+    )
+    if not elig.get("eligible"):
+        if elig.get("skip_reason") == "no_extraction_api_key":
+            logger.warning("l4_llm_compact skipped: extraction_llm_api_key unset")
         return None
 
     backend = get_session_memory_backend()
     ent = backend.get_session_copy(thread_id)
-    meta = ent.get("session_meta") or {}
-    turn_counter = int(meta.get("turn_counter") or 0)
-    last_compact = int(meta.get("last_llm_compact_turn") or 0)
-    cooldown = max(1, int(settings.agent_llm_full_history_compact_cooldown_turns))
-    if turn_counter - last_compact < cooldown:
-        return None
-
     digests = [d for d in (ent.get("digests") or []) if isinstance(d, dict)]
     if not digests:
         return None
+    meta = ent.get("session_meta") or {}
+    turn_counter = int(meta.get("turn_counter") or 0)
 
     if not backend.compaction_lock_acquire(thread_id, owner="l4", turn=turn_counter):
         logger.info("l4_llm_compact skipped: compaction_lock held")

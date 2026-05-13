@@ -28,6 +28,9 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     unnecessary_vals: list[int] = []
     hook_chain_counts: list[int] = []
     subagent_missing_vals: list[int] = []
+    subagent_terminal_missing_vals: list[int] = []
+    subagent_merge_prov_missing_vals: list[int] = []
+    subagent_timeout_vals: list[int] = []
     stn_counts: list[int] = []
     miss_nd_vals: list[int] = []
     schema_saved_vals: list[int] = []
@@ -56,6 +59,13 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         if row.phoenix_alignment and row.phoenix_alignment.missing:
             missing_span_count += len(row.phoenix_alignment.missing)
         compaction_event_count += len(row.compaction_events)
+        for ce in row.compaction_events:
+            if ce.side_llm_cache_read_ratio is not None:
+                try:
+                    side_llm_ratios.append(float(ce.side_llm_cache_read_ratio))
+                except (TypeError, ValueError):
+                    pass
+            paper_restored_vals.append(int(ce.post_compact_paper_sources_restored_count or 0))
         hook_chain_counts.append(len(row.hook_chain_events))
 
         steps = row.tool_steps
@@ -101,6 +111,11 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
             ptl_pc_vals.append(int(row.ptl_retry_count_per_compaction))
         unnecessary_vals.append(int(row.unnecessary_tool_calls or 0))
         subagent_missing_vals.append(int(row.subagent_lifecycle_missing_count or 0))
+        subagent_terminal_missing_vals.append(int(row.subagent_terminal_state_missing_count or 0))
+        subagent_merge_prov_missing_vals.append(
+            int(row.subagent_merge_provenance_missing_count or 0)
+        )
+        subagent_timeout_vals.append(int(row.subagent_timeout_count or 0))
         stn_counts.append(int(row.subagent_task_notification_count or 0))
         miss_nd_vals.append(int(row.tool_search_miss_due_to_no_discovery or 0))
         schema_saved_vals.append(int(row.tool_schema_bytes_saved or 0))
@@ -169,6 +184,13 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
     )
     hook_chain_event_count = int(sum(hook_chain_counts)) if hook_chain_counts else 0
     subagent_missing_sum = int(sum(subagent_missing_vals)) if subagent_missing_vals else 0
+    subagent_terminal_missing_sum = (
+        int(sum(subagent_terminal_missing_vals)) if subagent_terminal_missing_vals else 0
+    )
+    subagent_merge_prov_missing_sum = (
+        int(sum(subagent_merge_prov_missing_vals)) if subagent_merge_prov_missing_vals else 0
+    )
+    subagent_timeout_sum = int(sum(subagent_timeout_vals)) if subagent_timeout_vals else 0
     stn_avg = round(sum(stn_counts) / float(len(stn_counts)), 4) if stn_counts else None
     miss_nd_sum = int(sum(miss_nd_vals)) if miss_nd_vals else 0
     schema_saved_sum = int(sum(schema_saved_vals)) if schema_saved_vals else 0
@@ -214,6 +236,9 @@ def aggregate_metrics_from_timeline(timeline: tuple[TimelineCase, ...]) -> Metri
         unnecessary_tool_calls_avg=unn_avg,
         hook_chain_event_count=hook_chain_event_count,
         subagent_lifecycle_missing_count=subagent_missing_sum,
+        subagent_terminal_state_missing_count=subagent_terminal_missing_sum,
+        subagent_merge_provenance_missing_count=subagent_merge_prov_missing_sum,
+        subagent_timeout_count=subagent_timeout_sum,
         subagent_task_notification_count_avg=stn_avg,
         tool_search_miss_due_to_no_discovery_total=miss_nd_sum,
         tool_schema_bytes_saved_total=schema_saved_sum,

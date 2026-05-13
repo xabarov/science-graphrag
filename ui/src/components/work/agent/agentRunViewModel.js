@@ -38,6 +38,7 @@ const MEANINGFUL_STREAM_TYPES = new Set([
   "subagent_finished",
   "answer_synthesis_started",
   "answer_synthesis_finished",
+  "degraded_mode",
   "product_step",
   "agent_note",
 ]);
@@ -61,6 +62,7 @@ export const LIVE_STREAM_TAXONOMY = {
   subagent_finished: "primary",
   answer_synthesis_started: "primary",
   answer_synthesis_finished: "primary",
+  degraded_mode: "primary",
   agent_note: "secondary",
   tool_call: "secondary",
   tool_result: "debug",
@@ -111,6 +113,7 @@ export function pickLastMeaningfulStreamEvent(events) {
 export const PRODUCT_STEP_HEADLINE_STALE_MS = 8000;
 
 const HEADLINE_PRIORITY = {
+  degraded_mode: 7,
   product_step: 6,
   answer_synthesis_finished: 5,
   answer_synthesis_started: 5,
@@ -127,7 +130,7 @@ const HEADLINE_PRIORITY = {
 /**
  * Pick the strongest "voice" event for the live headline.
  *
- * Priority (high → low): active `product_step` (most recent) → `answer_synthesis_*` →
+ * Priority (high → low): `degraded_mode` → active `product_step` (most recent) → `answer_synthesis_*` →
  * `subagent_started/finished` → `evidence_ready` / `context_compacted` /
  * `specialist_selected` → `intent_classified` → most recent `tool_call` /
  * `warning`. Within the same priority level, the latest event wins.
@@ -309,7 +312,15 @@ export function formatStreamEventOneLine(t, event) {
   if (type === "subagent_started") {
     const idRaw = String(event.subagent_id || event.name || "");
     const id = mapSpecialistToLabel(t, idRaw) || idRaw;
-    return t("chat.stream.subagentStarted", { id });
+    const spawnReason = String(event.spawn_reason || "");
+    const kind = String(event.kind || "");
+    const taskType = String(event.task_type || "");
+    const isSpawned = kind === "spawned" || Boolean(taskType);
+    const detail = isSpawned ? t("chat.stream.subagentKind.spawned") : t("chat.stream.subagentKind.routing");
+    const reason = mapRouteReasonToLabel(t, spawnReason) || spawnReason;
+    return reason
+      ? t("chat.stream.subagentStartedDetailed", { id, detail, reason })
+      : t("chat.stream.subagentStarted", { id });
   }
   if (type === "subagent_progress") {
     const idRaw = String(event.subagent_id || "");
@@ -328,6 +339,18 @@ export function formatStreamEventOneLine(t, event) {
   if (type === "subagent_finished") {
     const idRaw = String(event.subagent_id || "");
     const id = mapSpecialistToLabel(t, idRaw) || idRaw;
+    const terminalState = String(event.terminal_state || "").trim();
+    const stateKey = terminalState ? `chat.stream.subagentTerminal.${terminalState}` : "";
+    const stateLabel = stateKey ? t(stateKey) : "";
+    const provenance = event.merge_provenance && typeof event.merge_provenance === "object"
+      ? String(event.merge_provenance.source_kind || event.merge_provenance.evidence_origin || "").trim()
+      : "";
+    if (stateLabel && provenance) {
+      return t("chat.stream.subagentFinishedDetailed", { id, state: stateLabel, provenance });
+    }
+    if (stateLabel) {
+      return t("chat.stream.subagentFinishedStateOnly", { id, state: stateLabel });
+    }
     return t("chat.stream.subagentFinished", { id });
   }
   if (type === "answer_synthesis_started") {
@@ -335,6 +358,20 @@ export function formatStreamEventOneLine(t, event) {
   }
   if (type === "answer_synthesis_finished") {
     return t("chat.stream.answerSynthesisFinished");
+  }
+  if (type === "degraded_mode") {
+    const reasons = Array.isArray(event.reasons) ? event.reasons : [];
+    if (reasons.length === 0) return "";
+    const parts = reasons
+      .map((raw) => {
+        const r = String(raw ?? "").trim();
+        if (!r) return "";
+        const key = `chat.stream.degradedReason.${r}`;
+        const out = t(key);
+        return out === key ? humanizeUnknownCode(r) : out;
+      })
+      .filter(Boolean);
+    return parts.join(" · ");
   }
   if (type === "product_step") {
     const code = String(event.code || "");
@@ -625,6 +662,23 @@ export function collectSafeExplanationLines(t, events, maxLines = 6, opts = {}) 
         const id = mapSpecialistToLabel(t, idRaw) || idRaw;
         const summary = mapRouteReasonToLabel(t, summaryRaw) || summaryRaw.slice(0, 160);
         raw.push(t("chat.run.liveExplain.subagentSummary", { id, summary }));
+      }
+    } else if (type === "subagent_finished") {
+      const idRaw = String(ev.subagent_id || "");
+      const id = mapSpecialistToLabel(t, idRaw) || idRaw;
+      const terminalState = String(ev.terminal_state || "").trim();
+      const provenance =
+        ev.merge_provenance && typeof ev.merge_provenance === "object"
+          ? String(ev.merge_provenance.source_kind || ev.merge_provenance.evidence_origin || "").trim()
+          : "";
+      if (terminalState || provenance) {
+        raw.push(
+          t("chat.run.liveExplain.subagentOutcome", {
+            id,
+            state: terminalState || "unknown",
+            provenance: provenance || "none",
+          }),
+        );
       }
     }
   }

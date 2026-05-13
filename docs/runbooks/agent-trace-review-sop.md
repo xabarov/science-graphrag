@@ -427,7 +427,7 @@ Wave H acceptance gate в compare:
 
    ```bash
    export SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED=1
-   export AGENT_LIVE_BASE=dev
+   export AGENT_LIVE_BASE=http://127.0.0.1:18787
    ```
 
 2. Снять acceptance trace-review JSON/MD (§9.3 команда с `--with-compaction-turns 6` или heavy profile по матрице SOP).

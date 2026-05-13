@@ -166,12 +166,50 @@ def _evaluate_case(
     return case_out, ok, claim_grounding_ok, stale_error
 
 
+_OFFLINE_LONG_THREAD_SCENARIOS: list[tuple[str, dict[str, Any], list[str], list[str]]] = [
+    (
+        "long_thread_fresh_insight",
+        _scenario_fresh_insight_with_digest(),
+        ["<thread_insight", "<last_turn_digest", "topic alpha"],
+        [],
+    ),
+    (
+        "long_thread_stale_fallback",
+        _scenario_stale_lag(),
+        ["<last_turn_digest", "q2 latest intent marker", "<session_memory>"],
+        ["<thread_insight"],
+    ),
+    (
+        "long_thread_conflict_marked",
+        _scenario_conflict(),
+        ['status="conflicted"', "uniquemarkerxyzforconflict"],
+        [],
+    ),
+]
+
+
+def build_memory_influence_audit_v1(*, settings: Settings) -> dict[str, Any]:
+    """Per-scenario ``run_metadata`` fragments for prompt memory layers (R3 audit).
+
+    Merged under ``long_thread_eval`` in trace-review JSON for operator visibility.
+    """
+    rows: list[dict[str, Any]] = []
+    for case_id, ent, _, _ in _OFFLINE_LONG_THREAD_SCENARIOS:
+        pm = resolve_prompt_memory_policy(session_ent=ent, settings=settings)
+        rows.append({"case_id": case_id, **pm.run_metadata_fragment()})
+    return {"schema_version": "memory_influence_audit_v1", "cases": rows}
+
+
 # pylint: disable-next=too-many-locals
 def run_offline_long_thread_metrics(
     *,
     settings: Settings | None = None,
 ) -> dict[str, Any]:
-    """Return ``{ "cases": [...], "metrics": {...} }`` for trace-review merge."""
+    """Return offline long-thread eval bundle for trace-review merge.
+
+    Keys: ``cases``, ``metrics``, and ``memory_influence_audit_v1`` (operator-facing
+    digest of which signals fire per scenario).
+    """
     st2 = settings or Settings(
         agent_thread_insights_enabled=True, agent_thread_insights_min_digests=1
     )
@@ -183,26 +221,7 @@ def run_offline_long_thread_metrics(
     grounding_hits = 0
     grounding_total = 0
 
-    scenarios: list[tuple[str, dict[str, Any], list[str], list[str]]] = [
-        (
-            "long_thread_fresh_insight",
-            _scenario_fresh_insight_with_digest(),
-            ["<thread_insight", "<last_turn_digest", "topic alpha"],
-            [],
-        ),
-        (
-            "long_thread_stale_fallback",
-            _scenario_stale_lag(),
-            ["<last_turn_digest", "q2 latest intent marker", "<session_memory>"],
-            ["<thread_insight"],
-        ),
-        (
-            "long_thread_conflict_marked",
-            _scenario_conflict(),
-            ['status="conflicted"', "uniquemarkerxyzforconflict"],
-            [],
-        ),
-    ]
+    scenarios = _OFFLINE_LONG_THREAD_SCENARIOS
 
     for case_id, ent, must_contain, must_not in scenarios:
         case_out, ok, claim_grounding_ok, stale_error = _evaluate_case(
@@ -238,4 +257,8 @@ def run_offline_long_thread_metrics(
         "claim_grounding_recall": round(grounding_hits / g, 6),
         "insight_synthesis_conflict_audit_rate": round(conflict_audit_hits / n, 6),
     }
-    return {"cases": cases_out, "metrics": metrics}
+    return {
+        "cases": cases_out,
+        "metrics": metrics,
+        "memory_influence_audit_v1": build_memory_influence_audit_v1(settings=st2),
+    }
