@@ -102,6 +102,7 @@ Optional: `AGENT_V3_QUALITY_CALIBRATION_TIMEOUT_S=600` — per-branch subprocess
 ## Wave D — calibration window + variance + release-train compare
 
 - **Window (6–10 `judge_pilot` cases, default 3 runs):** `tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json` + `scripts/run_agent_v3_quality_llm_calibration_subset.py --window [--runs N] [--strict] [--write-variance-baseline] [--date YYYY-MM-DD]`.
+- **Merging per-case JSON into one suite artifact:** when you run the benchmark once per `--case` (mock or live), merge with `scripts/merge_agent_v3_quality_benchmark_reports.py` (`--inputs …` or `--glob …`); it rebuilds `summary` / `cost_delta` like the single-shot multi-case run. **Do not** assume `--max-cases N` selects the same rows as `calibration_window_case_ids.json` (suite iteration order is lexicographic by case directory name).
 - **Narrative / operator commands:** [`docs/analysis/agent-v3-quality-judge-calibration-2026-05.md`](../../docs/analysis/agent-v3-quality-judge-calibration-2026-05.md).
 - **Frozen prompt fingerprint:** bump `EXPECTED_JUDGE_PROMPT_FINGERPRINT` in [`contract.py`](contract.py) when `judge_prompt_v1.md` changes (see `tests/scripts/test_judge_prompt_fingerprint_guard.py`).
 - **Release train (advisory, not merge `decision_gate`):** `science-graphrag-agent-v3-quality-compare <baseline.json> <candidate.json> --release-train-gate` — optional `--gate-mean-delta-margin` / `--gate-max-branch-non-ok`. Example baseline: `eval/results/baseline-agent-v3-quality-judge-pilot-embedded.json`.

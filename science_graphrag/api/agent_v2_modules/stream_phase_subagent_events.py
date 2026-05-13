@@ -10,6 +10,12 @@ from langchain_core.messages import HumanMessage
 
 from science_graphrag.agent.debug_streamable_types import STREAMABLE_DEBUG_EVENT_TYPES
 from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
+from science_graphrag.agent.subagents.lifecycle_contract import (
+    sse_subagent_finished_from_spawn_row,
+    sse_subagent_finished_routing_leg,
+    sse_subagent_started_from_spawn_row,
+    sse_subagent_started_routing_leg,
+)
 from science_graphrag.agent.subagents.notification import (
     sse_payload_claim_verification_from_human_message,
     sse_payload_corpus_explore_from_human_message,
@@ -58,16 +64,12 @@ async def iter_values_mode_stream_events(
                         },
                     )
                 leg_done = ctx.routing_subagent_ledger.close_leg(terminal_state="succeeded")
-                fin_payload: dict[str, Any] = {
-                    "type": "subagent_finished",
-                    "subagent_id": state.active_subagent_id,
-                    "parent_turn_id": ctx.parent_turn_id_str or None,
-                    "terminal_state": "succeeded",
-                }
-                if leg_done:
-                    fin_payload["spawn_reason"] = leg_done.get("spawn_reason")
-                    if leg_done.get("latency_ms") is not None:
-                        fin_payload["latency_ms"] = leg_done["latency_ms"]
+                fin_payload = sse_subagent_finished_routing_leg(
+                    subagent_id=state.active_subagent_id,
+                    parent_turn_id=ctx.parent_turn_id_str or None,
+                    terminal_state="succeeded",
+                    leg_done=leg_done,
+                )
                 yield {"data": json.dumps(fin_payload)}
                 state.active_subagent_id = None
             yield {
@@ -103,14 +105,13 @@ async def iter_values_mode_stream_events(
                 )
             )
             ctx.routing_subagent_ledger.open_leg(subagent_id=to_id, spawn_reason=spawn_reason_open)
-            start_payload: dict[str, Any] = {
-                "type": "subagent_started",
-                "subagent_id": to_id,
-                "from": entry.get("from"),
-                "summary": summary,
-                "parent_turn_id": ctx.parent_turn_id_str or None,
-                "spawn_reason": spawn_reason_open,
-            }
+            start_payload = sse_subagent_started_routing_leg(
+                subagent_id=to_id,
+                parent_turn_id=ctx.parent_turn_id_str or None,
+                spawn_reason=spawn_reason_open,
+                from_node=entry.get("from"),
+                summary=summary,
+            )
             yield {"data": json.dumps(start_payload)}
             if ctx.parent_turn_id_str and subagent_lifecycle_enhanced_enabled(ctx.settings):
                 append_subagent_sidechain_event(
@@ -202,41 +203,13 @@ async def iter_values_mode_stream_events(
                 if not _sid or not _term or _row_fp in state.seen_spawned_terminal_rows:
                     continue
                 state.seen_spawned_terminal_rows.add(_row_fp)
-                started_payload = {
-                    "type": "subagent_started",
-                    "subagent_id": _sid,
-                    "parent_turn_id": row.get("parent_turn_id") or ctx.parent_turn_id_str or None,
-                    "spawn_reason": row.get("spawn_reason"),
-                    "summary": row.get("description"),
-                    "kind": "spawned",
-                    "task_id": _task_id or None,
-                    "task_type": row.get("task_type")
-                    or (_task.get("task_type") if isinstance(_task, dict) else None),
-                    "description": row.get("description")
-                    or (_task.get("description") if isinstance(_task, dict) else None),
-                    "execution_mode": row.get("execution_mode")
-                    or (_task.get("execution_mode") if isinstance(_task, dict) else None),
-                    "fanout_slot": row.get("fanout_slot")
-                    or (_task.get("fanout_slot") if isinstance(_task, dict) else None),
-                }
+                started_payload = sse_subagent_started_from_spawn_row(
+                    row, fallback_parent_turn_id=ctx.parent_turn_id_str
+                )
                 yield {"data": json.dumps(started_payload)}
-                finished_payload = {
-                    "type": "subagent_finished",
-                    "subagent_id": _sid,
-                    "parent_turn_id": row.get("parent_turn_id") or ctx.parent_turn_id_str or None,
-                    "spawn_reason": row.get("spawn_reason"),
-                    "terminal_state": _term,
-                    "latency_ms": row.get("latency_ms"),
-                    "failure_code": row.get("failure_code"),
-                    "kind": "spawned",
-                    "task_id": _task_id or None,
-                    "task_type": row.get("task_type")
-                    or (_task.get("task_type") if isinstance(_task, dict) else None),
-                    "description": row.get("description")
-                    or (_task.get("description") if isinstance(_task, dict) else None),
-                    "merge_provenance": row.get("merge_provenance"),
-                    "output_pointer": row.get("output_pointer"),
-                }
+                finished_payload = sse_subagent_finished_from_spawn_row(
+                    row, fallback_parent_turn_id=ctx.parent_turn_id_str
+                )
                 yield {"data": json.dumps(finished_payload)}
 
 

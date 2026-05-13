@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import sys
+import threading
 import time
 import uuid
 from datetime import UTC, datetime
@@ -52,14 +53,10 @@ def _single_turn(
     comp_audit = rm.get("compaction_audit") if isinstance(rm, dict) else {}
     llm_compact = comp_audit.get("llm_compact") if isinstance(comp_audit, dict) else {}
     side_ratio = (
-        llm_compact.get("side_llm_cache_read_ratio")
-        if isinstance(llm_compact, dict)
-        else None
+        llm_compact.get("side_llm_cache_read_ratio") if isinstance(llm_compact, dict) else None
     )
     paper_restored = (
-        int(rm.get("post_compact_paper_sources_restored_count") or 0)
-        if isinstance(rm, dict)
-        else 0
+        int(rm.get("post_compact_paper_sources_restored_count") or 0) if isinstance(rm, dict) else 0
     )
     return {
         "thread_id": body.get("thread_id"),
@@ -73,6 +70,46 @@ def _single_turn(
     }
 
 
+def _single_turn_with_wait_heartbeat(
+    client: httpx.Client,
+    *,
+    base_url: str,
+    question: str,
+    thread_id: str,
+    workspace_id: str | None,
+    turn_idx: int,
+    hb_sec: float,
+) -> dict[str, Any]:
+    """Run ``_single_turn`` while emitting stderr heartbeats during blocking HTTP wait."""
+    done = threading.Event()
+    t0 = time.perf_counter()
+
+    def _hb_loop() -> None:
+        while not done.wait(timeout=max(5.0, float(hb_sec))):
+            elapsed_ms = int((time.perf_counter() - t0) * 1000)
+            print(
+                (
+                    f"[compaction-review] turn_wait turn={turn_idx} thread_id={thread_id} "
+                    f"elapsed_ms={elapsed_ms}"
+                ),
+                file=sys.stderr,
+                flush=True,
+            )
+
+    hb_thread = threading.Thread(target=_hb_loop, name="compaction-review-hb", daemon=True)
+    hb_thread.start()
+    try:
+        return _single_turn(
+            client,
+            base_url=base_url,
+            question=question,
+            thread_id=thread_id,
+            workspace_id=workspace_id,
+        )
+    finally:
+        done.set()
+
+
 def _write_md(path: Path, report: dict[str, Any]) -> None:
     lines = [
         "# Compaction Turn Review",
@@ -84,8 +121,14 @@ def _write_md(path: Path, report: dict[str, Any]) -> None:
         "",
         "## Turns",
         "",
-        "| Turn | tool_trace_len | compaction.kinds | side_ratio | paper_sources_restored | warnings |",
-        "|------|----------------|------------------|------------|-------------------------|----------|",
+        (
+            "| Turn | tool_trace_len | compaction.kinds | side_ratio | "
+            "paper_sources_restored | warnings |"
+        ),
+        (
+            "|------|----------------|------------------|------------|"
+            "-------------------------|----------|"
+        ),
     ]
     for item in report["turn_reports"]:
         kinds = (item.get("compaction") or {}).get("kinds") or []
@@ -108,6 +151,7 @@ def _write_md(path: Path, report: dict[str, Any]) -> None:
 
 
 def main() -> int:
+    """Run N sync turns, collect compaction telemetry, and write JSON/MD verdict."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--base-url", default=os.environ.get("AGENT_LIVE_BASE", "http://127.0.0.1:8000")
@@ -140,6 +184,13 @@ def main() -> int:
         default=float(os.environ.get("AGENT_LIVE_COMPACTION_REVIEW_HEARTBEAT_SEC", "30")),
         help="Progress heartbeat interval for per-turn logs (minimum 5s)",
     )
+    parser.add_argument(
+        "--no-in-turn-heartbeat",
+        action="store_true",
+        help=(
+            "Disable stderr heartbeats during blocking JSON /v2/agent/query wait " "(between turns)"
+        ),
+    )
     args = parser.parse_args()
     from dotenv_util import (  # pylint: disable=import-outside-toplevel,import-error
         resolve_live_base_url,
@@ -147,6 +198,7 @@ def main() -> int:
 
     args.base_url = resolve_live_base_url(args.base_url)
     hb_sec = max(5.0, float(args.heartbeat_sec))
+    in_turn_hb = not bool(args.no_in_turn_heartbeat)
 
     tid = f"compaction_review_{uuid.uuid4().hex[:12]}"
     timeout = httpx.Timeout(connect=20.0, read=args.timeout, write=120.0, pool=15.0)
@@ -164,13 +216,24 @@ def main() -> int:
                 flush=True,
             )
             try:
-                item = _single_turn(
-                    client,
-                    base_url=args.base_url.rstrip("/"),
-                    question=q,
-                    thread_id=tid,
-                    workspace_id=args.workspace_id,
-                )
+                if in_turn_hb:
+                    item = _single_turn_with_wait_heartbeat(
+                        client,
+                        base_url=args.base_url.rstrip("/"),
+                        question=q,
+                        thread_id=tid,
+                        workspace_id=args.workspace_id,
+                        turn_idx=idx,
+                        hb_sec=hb_sec,
+                    )
+                else:
+                    item = _single_turn(
+                        client,
+                        base_url=args.base_url.rstrip("/"),
+                        question=q,
+                        thread_id=tid,
+                        workspace_id=args.workspace_id,
+                    )
             except httpx.TimeoutException:
                 failed_turn = idx
                 failure_kind = "http_timeout"
@@ -204,7 +267,8 @@ def main() -> int:
             print(
                 (
                     f"[compaction-review] turn_done turn={idx} elapsed_ms={elapsed_ms} "
-                    f"kinds={','.join(str(k) for k in kinds)} side_ratio={item.get('side_llm_cache_read_ratio')!r} "
+                    f"kinds={','.join(str(k) for k in kinds)} "
+                    f"side_ratio={item.get('side_llm_cache_read_ratio')!r} "
                     f"paper_restored={item.get('post_compact_paper_sources_restored_count')!r}"
                 ),
                 file=sys.stderr,
@@ -243,6 +307,7 @@ def main() -> int:
         "thread_id": tid,
         "turns": args.turns,
         "require_compaction_after": args.require_compaction_after,
+        "in_turn_heartbeat": in_turn_hb,
         "turn_reports": turn_reports,
         "compaction_events": compaction_events,
         "failed_turn": failed_turn,
@@ -257,7 +322,7 @@ def main() -> int:
     _write_md(args.out_md, report)
 
     if args.emit_merged_into and args.emit_merged_into.exists():
-        from trace_review_schema import (  # pylint: disable=import-outside-toplevel
+        from trace_review_schema import (  # pylint: disable=import-outside-toplevel,import-error
             merge_compaction_into_review_dict,
         )
 

@@ -33,7 +33,7 @@ stabilization and depth pass, not a "more agents" pass.
 | **R2** | Chat contract (closed 2026-05-13) | SSE/product layers + `degraded_mode` + `product_step` policy frozen in spec; follow-ups: `agent_note` pilot (optional), tool-map maintenance. | **Done** — [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md); normative: [`../specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §R2. |
 | **R3** | Context memory | Long-thread compaction and `thread_insights` split into cost vs memory layers; **rollout `provider-gated`** until long-thread metrics clear (see baseline checklist). | R1 metrics available. |
 | **R4** | Real subagent runtime | **Slice delivered:** sync spawned `corpus_explore` child (fanout 1), SSE lifecycle + merge provenance in metadata. **R4-next:** hardening (cancellation/timeouts, paired latency compare) — no fanout>1 / no async child runtime until live evidence lanes are reliable. | R2 contract frozen (spec §R2); R4-next also needs repeatable live/trace lanes (R3 experience). |
-| **R5** | Benchmark promotion discipline | Judge stays advisory until strict calibration and variance gates pass. | Can run in parallel after R1. |
+| **R5** | Benchmark promotion discipline | **Wave executed 2026-05-13:** judge stays **advisory** (strict calibration red); closeout [`r5-benchmark-promotion-discipline-closeout-2026-05-13.md`](./r5-benchmark-promotion-discipline-closeout-2026-05-13.md); manifest `eval/results/r5-wave-2026-05-13-manifest.json`. | Can run in parallel after R1. |
 | **R6** | Ingestion quality baseline | Corpus quality / claims / retrieval / dedup measured before headline updates. | Before publication metric refresh. |
 | **R7** | Ingestion architecture | Structured executor, year/venue writeback, dedup parity slices. | R6 baseline exists. |
 | **R8** | Artifact hygiene | Canonical vs diagnostics storage split, no noisy committed live dumps. | Before benchmark expansion scale-up. |
@@ -780,6 +780,23 @@ Interpretation:
 - **Closed in this lane:** R4-next lifecycle consistency for spawned rows stays stable in live baseline/candidate compare.
 - **Still open for strict latency acceptance:** this profile did not emit usable `latency_p95_ms`; keep the explicit p95 regression budget check as an open operator item for a lane/profile where latency is exported.
 
+**Latency evidence update (2026-05-13, v1 paired lane with Phoenix + DB audit):**
+
+| Field | Value |
+|-------|-------|
+| Baseline JSON/MD | `eval/results/trace-review-r4next-latency-baseline-2026-05-13-v1.json` / `eval/results/trace-review-r4next-latency-baseline-2026-05-13-v1.md` |
+| Candidate JSON/MD | `eval/results/trace-review-r4next-latency-candidate-2026-05-13-v1.json` / `eval/results/trace-review-r4next-latency-candidate-2026-05-13-v1.md` |
+| Compare JSON/MD | `eval/results/trace-regression-r4next-latency-2026-05-13-v1.json` / `eval/results/trace-regression-r4next-latency-2026-05-13-v1.md` |
+| Compare status | `pass` |
+| `latency_p95_ms` (baseline / candidate) | `50681 / 48748` |
+| p95 delta / ratio | `-1933 ms`, `0.962x` (within `<=1.25x` budget) |
+| Lifecycle deltas | `subagent_lifecycle_missing_count=0.0`, `subagent_terminal_state_missing_count=0.0`, `subagent_merge_provenance_missing_count=0.0`, `subagent_timeout_count=0.0` |
+
+Interpretation:
+
+- **Closed in latency lane:** R4-next p95 regression budget check is satisfied for this paired run.
+- **Residual non-blocking warns:** acceptance still reports non-R4 warnings (`claim_verification_verdict_parse_rate` absent in sample; compaction gates skipped without compaction events).
+
 ### R5 — benchmark promotion discipline
 
 **Goal:** keep LLM-as-judge useful without letting it become a false authority.
@@ -830,6 +847,12 @@ on promotion. Use it as regression smell, not release gate.
 - Updated calibration note.
 - Optional `agent-v3-quality-judge-rubric-revision-2026-05.md`.
 - Runner split closeout.
+
+**R5 wave execution (2026-05-13):**
+
+- Closeout + decision packet: [`r5-benchmark-promotion-discipline-closeout-2026-05-13.md`](./r5-benchmark-promotion-discipline-closeout-2026-05-13.md)
+- Machine-readable manifest (artifact paths, commands, verdict): `eval/results/r5-wave-2026-05-13-manifest.json`
+- **Verdict:** `agent_v3_quality_judge_v1` stays **advisory** — Wave D strict calibration window remains **red** (`agent-v3-quality-judge-calibration-window-2026-05-13.*`); release-train compare vs embedded pilot baseline **passes** (`r5-phase-e-release-train-compare-2026-05-13.*`); Phase C includes both `judge_mini` multiseed smoke and **per-case** multiseed on the frozen calibration ids + merged combined JSON (see closeout §Phase C).
 
 ### R6 — corpus and ingestion quality baseline
 

@@ -40,6 +40,7 @@ from science_graphrag.agent.runtime import (
     resolve_langgraph_answer_with_salvage,
 )
 from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
+from science_graphrag.agent.subagents.lifecycle_contract import sse_subagent_finished_routing_leg
 from science_graphrag.agent.subagents.runtime import merge_subagent_run_rows
 from science_graphrag.agent.subagents.sidechain_transcript import append_subagent_sidechain_event
 from science_graphrag.api.agent_v2_modules.payloads import (
@@ -194,16 +195,12 @@ async def iter_finalize_stream_events(
                 },
             )
         leg_final = ctx.routing_subagent_ledger.close_leg(terminal_state="succeeded")
-        fin_final: dict[str, Any] = {
-            "type": "subagent_finished",
-            "subagent_id": state.active_subagent_id,
-            "parent_turn_id": parent_turn_id_str or None,
-            "terminal_state": "succeeded",
-        }
-        if leg_final:
-            fin_final["spawn_reason"] = leg_final.get("spawn_reason")
-            if leg_final.get("latency_ms") is not None:
-                fin_final["latency_ms"] = leg_final["latency_ms"]
+        fin_final = sse_subagent_finished_routing_leg(
+            subagent_id=state.active_subagent_id,
+            parent_turn_id=parent_turn_id_str or None,
+            terminal_state="succeeded",
+            leg_done=leg_final,
+        )
         yield {"data": json.dumps(fin_final)}
         state.active_subagent_id = None
     yield {"data": json.dumps({"type": "product_step", "code": "composing_answer"})}

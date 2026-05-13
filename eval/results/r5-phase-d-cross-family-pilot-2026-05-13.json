@@ -1,0 +1,115 @@
+{
+  "artifacts": [
+    "eval/results/current-agent-v3-quality-judge-pilot-wavef-live-deepseek-s3-full.json",
+    "eval/results/current-agent-v3-quality-judge-pilot-wavef-live-anthropic-s1-full.json"
+  ],
+  "inter_judge_agreement_rate": 0.3846,
+  "cases_compared": 13,
+  "cases_agreed": 5,
+  "per_case": [
+    {
+      "case_id": "mini_catalog_resolution_01",
+      "agreed": true,
+      "winners": [
+        "tie",
+        "tie"
+      ]
+    },
+    {
+      "case_id": "mini_catalog_resolution_02",
+      "agreed": false,
+      "winners": [
+        "tie",
+        "candidate"
+      ]
+    },
+    {
+      "case_id": "mini_dual_evidence_compare_01",
+      "agreed": false,
+      "winners": [
+        "candidate",
+        "baseline"
+      ]
+    },
+    {
+      "case_id": "mini_open_research_01",
+      "agreed": false,
+      "winners": [
+        "tie",
+        "candidate"
+      ]
+    },
+    {
+      "case_id": "mini_quote_evidence_01",
+      "agreed": false,
+      "winners": [
+        "tie",
+        "candidate"
+      ]
+    },
+    {
+      "case_id": "mini_relation_tracing_01",
+      "agreed": true,
+      "winners": [
+        "baseline",
+        "baseline"
+      ]
+    },
+    {
+      "case_id": "mini_workspace_stats_01",
+      "agreed": false,
+      "winners": [
+        "tie",
+        "candidate"
+      ]
+    },
+    {
+      "case_id": "mini_workspace_stats_02",
+      "agreed": true,
+      "winners": [
+        "candidate",
+        "candidate"
+      ]
+    },
+    {
+      "case_id": "pilot_catalog_extra_01",
+      "agreed": false,
+      "winners": [
+        "candidate",
+        "baseline"
+      ]
+    },
+    {
+      "case_id": "pilot_multi_workspace_01",
+      "agreed": false,
+      "winners": [
+        "tie",
+        "baseline"
+      ]
+    },
+    {
+      "case_id": "pilot_negative_refusal_01",
+      "agreed": false,
+      "winners": [
+        "tie",
+        "baseline"
+      ]
+    },
+    {
+      "case_id": "pilot_quote_grounding_01",
+      "agreed": true,
+      "winners": [
+        "candidate",
+        "candidate"
+      ]
+    },
+    {
+      "case_id": "pilot_relation_extra_01",
+      "agreed": true,
+      "winners": [
+        "candidate",
+        "candidate"
+      ]
+    }
+  ]
+}

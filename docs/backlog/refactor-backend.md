@@ -14,6 +14,7 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 
 | When | Theme |
 |------|--------|
+| 2026-05-13 | **Wave SSE lifecycle split — stream path closure:** `api/agent_v2_modules/stream_lifecycle.py` — thin orchestrator (~460 LoC) с фазами `stream_phase_chunk_consumer`, `stream_phase_subagent_events`, `stream_phase_tool_events`, `stream_phase_finalize`, `stream_phase_recovery`, `stream_phase_routing_leg_abort`, `stream_phase_product_steps`, `stream_phase_agent_notes`, `stream_lifecycle_state`; контрактные тесты `test_api_agent_v2_stream_parity`, `test_api_agent_v2_recursion_limit`, `test_api_agent_v2_run_metadata` + `tests/test_api_agent_v2_modules_stream_phase_chunk_consumer.py`. Хвост того же roadmap-тикета — **`react_edges.py`** + pylint budget на phase entrypoints (см. Queue OPEN «Split oversized agent edges…»). |
 | 2026-05-06 | **Agent runtime Train T1 + roadmap §8.5 queue sync:** Train T1 acceptance — [`docs/analysis/agent-runtime-train-t1-acceptance-2026-05-06.md`](../analysis/agent-runtime-train-t1-acceptance-2026-05-06.md). Implemented: `thread_insights` skeleton + flags, C0 LC message tool discovery in `tool_search`, spec §Summarization modes. **Removed from Queue as already delivered (§8.5 / prior waves):** PR CI `agent-sse-contract.yml` candidate `agent_trace_review.py` + advisory vs strict `trace_regression_compare`; `tests/scripts/live_check/test_agent_trace_review.py` orchestration smoke; canonical `build_run_metadata` / `apply_runtime_metadata_from_state` + `test_trace_review_schema.py` tool_trace/span alignment; sync/SSE metadata de-dup via `payloads.py`. |
 | 2026-05-06 | **Refactor wave follow-up (quality + parity):** `cli/main.py` доведён до thin registry (~59 LoC) через вынос `cli/{ingest,dedup,qdrant,config}_commands.py`; `scripts/aggregate_benchmark_metrics.py` доведён до thin entrypoint (~68 LoC) с выносом parser/payload builder в `scripts/benchmark_aggregator/{cli,payload_builder}.py`; `settings` split продолжен (`settings/{snapshots,runtime_overlay}.py`), `tests/test_settings_service.py` зелёный после фикса интеграции overlay; error classifier расширен (`OutputParserException` + parse/validation fallbacks); CI `agent-sse-contract` получил strict trace-regression report step. |
 | 2026-05-06 | **Agent runtime wave (BT8/BT9 + P2 telemetry):** stub agent benchmark traces (no ``mock answer`` / ``mock-work``) for honest ``trust_signal`` on ``agent_tools_mini`` + new **``agent_tools_multiagent``** aggregate lane; ``routing_log`` on ``AgentRunOutput``; ``eval/agent_tools/metrics`` ``tool_name`` + ``args_match``; optional nightly **live** mini regeneration when ``MAIN_LLM_API_KEY`` set; CH5 ``context_compacted.audit``; ADR-027; prompt/memory matrix in ``docs/specs/agent-chat-v1.md``; P2 tests (trace-review ROI counters, sidechain path, tool_search gate docstring). |
@@ -53,6 +54,27 @@ Summaries only; details lived in prior revisions / runbooks / ADRs.
 ## Queue
 
 Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies here).
+
+### Next wave (backend, 2026-05-14+) — SSE/runtime seams after stream-path closure
+
+Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 2026-05-13). Источники: [`docs/analysis/agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md) (§4.2 R4-next, §6.3 API seams, §R3 измеримость), [`docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md) (E1/E2 operator gate, paired compare).
+
+#### Wave charter (большая взаимосвязанная волна)
+
+- **Name:** `R4/R3 evidence spine: terminals -> live compare -> API seams`
+- **Goal:** закрыть один end-to-end контур для безопасного расширения subagent runtime: сначала корректные terminal-инварианты и наблюдаемость long-thread lane, затем парное latency-сравнение, затем структурная стабилизация API seams и unit safety-net.
+- **Scope linkage:** W1 + W3 + W2 + W5 + W4 (именно в этом порядке зависимостей); OPEN `Split oversized agent edges...` остаётся companion-track для `react_edges.py` после стабилизации терминалов и coverage.
+- **Global acceptance gate:** (1) terminal states согласованы между SSE / `run_metadata` / fork legs, (2) long-thread lane либо проходит, либо fail-fast с machine-readable reason, (3) baseline-vs-candidate compare на одном контуре даёт интерпретируемый latency verdict, (4) refactor API seams не меняет контракт parity/smoke.
+
+| ID | Theme | Acceptance (минимум) |
+|----|--------|----------------------|
+| **W1** | **R4-next: termination / cancel инварианты spawned-child (fanout≤1)** | При отмене/таймауте дочернего run — терминальный статус (`failed`/`killed`/`timed_out`), нет противоречивого «успешного» merge vs факт; цепочка parent→child→terminal согласована в SSE + `run_metadata`; зелёны `test_api_agent_v2_*` parity; один сценарий зафиксирован в trace-review артефакте. Стыкуется с Queue OPEN «Real subagent runtime v3…» и «Unify subagent lifecycle event contract…» (один адаптер терминалов). |
+| **W2** | **Парный live baseline vs candidate + latency compare** | Два артефакта на **одинаковом** suite / `workspace_id` / контуре; в compare явно `latency_p95_ms` (и policy регрессии по horizon ≤25% unless waived); вывод operator: в бюджете / вне бюджета. |
+| **W3** | **R3: стабилизация long-thread / compaction live lane** | Закрыть или существенно продвинуть Queue OPEN «Stabilize focused long-thread live probe…»: heartbeat per-turn, fail-fast с `failure_kind` / `failed_turn` без ручного `kill -9`. |
+| **W4** | **Дожим split `api/agent_v2.py` после freeze SSE контракта (R2)** | Продолжить Queue **[PARTIAL] Split `api/agent_v2.py`…**: вынести оставшиеся seams (или переименовать пакет в `api/agent_v2/` с shims); каждый новый модуль ≤300 LoC где применимо; `test_api_agent_v2_smoke.py` + ключевые parity без контрактных сдвигов. |
+| **W5** | **Unit coverage для `stream_phase_*` entrypoints** | Расширить Queue OPEN «Targeted backend test coverage…» для горячих фаз: минимум по одному контрактному тесту на `stream_phase_tool_events`, `stream_phase_subagent_events`, `stream_phase_routing_leg_abort` (error/edge paths), без дублирования полного `stream_parity` в каждом файле. |
+
+**Примечание:** W1–W3 — измеримость и безопасность перед расширением fanout/async; W4–W5 — снижение стоимости следующих правок transport vs runtime.
 
 ### [DONE] Introduce RoutePlan + QuestionFeatures (orchestration policy unification)
 - **Area:** `science_graphrag/agent/coordination/`, `science_graphrag/agent/graph/supervisor.py`, `science_graphrag/agent/graph/state.py`
@@ -479,9 +501,9 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Raised:** 2026-05-06 (backend re-analysis)
 
 ### [OPEN] Targeted backend test coverage for hot modules
-- **Area:** `tests/test_ingest_jobs*`, `tests/test_retrieval*`, `tests/storage/test_neo4j_*`, `tests/agent/`
+- **Area:** `tests/test_ingest_jobs*`, `tests/test_retrieval*`, `tests/storage/test_neo4j_*`, `tests/agent/`, `tests/test_api_agent_v2_modules_*`
 - **Issue:** На фоне распилов (registry, retrieval core, neo4j writes) текущее покрытие — преимущественно smoke + интеграционные. Юнит-тестов на error paths и DTO-маппинги мало; рискуют регрессии при разнесении god-файлов.
-- **Proposal:** перед каждым крупным split добавить характерные unit-тесты (registry transitions, ORM↔DTO, retrieval core с mocked stores, neo4j writes по доменам). Перед Wave Y2 — `tests/agent/` под LangGraph state.
+- **Proposal:** перед каждым крупным split добавить характерные unit-тесты (registry transitions, ORM↔DTO, retrieval core с mocked stores, neo4j writes по доменам). Перед Wave Y2 — `tests/agent/` под LangGraph state. **Next wave W5:** точечные контракты на `stream_phase_*` (см. таблицу в начале Queue).
 - **Acceptance:** для затронутых split-PR'ов покрытие новых модулей юнит-тестами > 70 % строк (без интеграционных).
 - **Raised:** 2026-04-25
 
@@ -502,8 +524,8 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Done in Roadmap pass (2026-05-05):** вынесены новые seams: `api/agent_v2_payloads.py` (payload mapping), `api/agent_v2_errors.py` (error normalization), `api/agent_v2_streaming.py` (graph chunk streaming primitives), `api/agent_v2_runtime_bridge.py` (sync runtime bridge); `agent_v2.py` переведён на эти adapters; smoke/parity тесты зелёные.
 - **Done in follow-up packaging slice (2026-05-05):** добавлен подпакет `api/agent_v2_modules/` и основные импорты в `agent_v2.py` переведены на package-path (`...agent_v2_modules.{payloads,errors,streaming,runtime_bridge}`); прежние top-level модули сохранены как compatibility shims.
 - **Done (2026-05-06):** основной SSE lifecycle вынесен в `api/agent_v2_modules/stream_lifecycle.py` (`stream_agent_events`, `stream_shortcut_answer_events`); `agent_v2.py` — router + sync JSON.
-- **Done (quality 2026-05-06):** общий OTEL для deadline — `api/agent_v2_modules/deadline_otel.py` (sync + stream без дублирования); в stream восстановлен span `agent.graph_recursion_limit_hit` при `AgentGraphRecursionLimitExceeded`; импорт `maybe_generate_agent_note` на уровне модуля (без deferred import).
-- **Remaining:** при желании переименовать пакет в `api/agent_v2/` (обратная совместимость импортов); дальнейший распил см. отдельный OPEN «Split oversized agent edges…».
+- **Done (2026-05-13, R4/R3 wave):** sync JSON ветка вынесена в `api/agent_v2_modules/sync_agent_query.py` (`execute_agent_query_v2_json_response`); `api/agent_v2.py` — thin router (~108 LoC); патчи `build_agent` в тестах переведены на `sync_agent_query`; canonical SSE subagent lifecycle — `agent/subagents/lifecycle_contract.py` + использование в `stream_phase_subagent_events` / `stream_phase_routing_leg_abort` / `stream_phase_finalize`; runbook paired compare — [`docs/runbooks/r4-r3-paired-compare.md`](../runbooks/r4-r3-paired-compare.md); `compaction_turn_review.py` — in-turn wait heartbeat (по умолчанию) + поле `in_turn_heartbeat` в JSON отчёте.
+- **Remaining:** при желании переименовать пакет в `api/agent_v2/` (обратная совместимость импортов); дальнейший распил orchestration/SSE — **Next wave W4** (не путать с завершённым stream-path в OPEN «Split oversized agent edges…», где SSE фазы уже вынесены).
 
 ### [PARTIAL] Split ingest pipeline orchestration seams (`ingestion/_pipeline_impl.py`)
 - **Area:** `science_graphrag/ingestion/_pipeline_impl.py`, `science_graphrag/ingestion/stages/*`, `science_graphrag/ingestion/checkpoint.py`
@@ -539,18 +561,21 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] Split oversized agent edges + SSE lifecycle modules
 - **Area:** `science_graphrag/agent/graph/react_edges.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
-- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B runtime spine), §9.6 (T3/T4)
-- **Issue:** After adding ReAct soft-cap and recursion-limit/deadline salvage, routing + streaming logic still accumulates in two hotspots. `react_after_tools_decrement_budget` and `route_react_chat_to_tools` keep absorbing policy branches, while `stream_agent_events` blends at least six concerns in one coroutine (routing-leg lifecycle, spawned-row replay, tool_call/tool_result product events, recovery/degraded mode, post-turn compaction, final run-metadata assembly). This keeps change risk high: one contract tweak in SSE can regress runtime metadata or subagent lifecycle parity.
-- **Progress (2026-05-06):** вынесен общий OTEL-блок deadline (`deadline_otel.py`); восстановлены span-события для recursion-limit; импорт notes на toplevel — размер/ветвление `stream_agent_events` всё ещё требуют распила по Proposal ниже.
+- **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B runtime spine), §9.6 (T3/T4); next-wave приоритизация — [`agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md) §4.2–4.3, §6.3.
+- **Stream-path status (SSE, 2026-05-13):** **[DONE]** — `stream_agent_events` делегирует в `stream_phase_*` + `stream_lifecycle_state`; `stream_lifecycle.py` — orchestration facade **&lt;~500 LoC**; mixed contract закреплён `test_api_agent_v2_stream_parity.py`, `test_api_agent_v2_recursion_limit.py`, `test_api_agent_v2_run_metadata.py` + `tests/test_api_agent_v2_modules_stream_phase_chunk_consumer.py`. Дальнейшие правки SSE — через фазовые модули, не распухание facade.
+- **Issue (remaining in this ticket):** ReAct graph edge logic still concentrates in `react_edges.py` (`react_after_tools_decrement_budget`, `route_react_chat_to_tools`). Optional follow-up: measure and drive down pylint R0912/R0915 on large `iter_*` phase entrypoints (`stream_phase_subagent_events`, `stream_phase_tool_events`, `stream_phase_finalize`) **or** document a baseline waiver if the hard numeric caps from the original Acceptance are relaxed.
+- **Progress (2026-05-06):** вынесен общий OTEL-блок deadline (`deadline_otel.py`); восстановлены span-события для recursion-limit; импорт notes на toplevel; последующий распил `stream_agent_events` закрыт в **Progress (2026-05-13)** — см. **Stream-path status** выше.
 - **Progress (2026-05-06, follow-up):** soft-cap ветвление вынесено в `agent/graph/react_soft_cap.py` и подключено из `react_edges.py`; recovery-salvage/error-event helper вынесен в `api/agent_v2_modules/recovery.py`, deadline/recursion branches в `stream_lifecycle.py` переведены на общие helper-функции.
 - **Progress (2026-05-06, follow-up-2):** в `stream_lifecycle.py` добавлен helper `_streamable_debug_event` (уменьшение локальной ветвистости в debug-events path), `run_kind/graph_id` проброшены в stream metadata/events для лучшего trace-audit контекста.
-- **Progress (2026-05-13, structural audit):** зафиксировано, что `stream_lifecycle.py` снова разросся (~1.5k LoC) и остаётся “aggregation point” для API transport + runtime orchestration + product event semantics; tests (`test_api_agent_v2_stream_parity.py`, `test_api_agent_v2_recursion_limit.py`, `test_api_agent_v2_run_metadata.py`) now encode this mixed contract and raise refactor cost.
+- **Progress (2026-05-13, structural audit, superseded by split):** зафиксировано, что `stream_lifecycle.py` разросся (~1.5k LoC) как aggregation point; **актуальный размер facade после split** — см. Progress «Wave SSE lifecycle split» ниже и **Stream-path status**.
 - **Progress (2026-05-13, Wave SSE lifecycle split — stream path):** `stream_lifecycle.py` переведён на thin orchestration (~480 LoC) с фазами: `stream_phase_chunk_consumer.py` (dispatch), `stream_phase_subagent_events.py` (values/routing/debug/spawned replay), `stream_phase_tool_events.py` (updates/tool_call), `stream_phase_finalize.py` (envelope/compaction/final_answer/run_metadata), `stream_phase_recovery.py` (deadline/recursion salvage), `stream_phase_routing_leg_abort.py` (единый close routing leg + cancel spawns при deadline/recursion), `stream_phase_product_steps.py` + `stream_phase_agent_notes.py`; обратная совместимость импортов тестов из `stream_lifecycle` сохранена; добавлен `tests/test_api_agent_v2_modules_stream_phase_chunk_consumer.py`.
-- **Remaining:** `react_edges.py` split по тому же OPEN (ReAct soft-cap уже частично вынесен); pylint statement/branch budget для отдельных phase-функций ещё не замерян/не гарантирован.
+- **Remaining (executable):**
+  1. **`react_edges.py`:** продолжить распил узлов/политик (soft-cap уже частично в `react_soft_cap.py`) — цель: тонкие node entrypoints, без дублирования budget/force-finalize веток.
+  2. **Phase complexity budget:** зафиксировать baseline pylint R0912/R0915 для `iter_values_mode_stream_events`, `iter_updates_mode_tool_events`, `iter_finalize_stream_events` (и дочерних helper'ов при выносе) **или** ослабить формулировку ниже до «no regression vs baseline + parity tests green».
 - **Proposal:**
   - Extract soft-cap helpers (`_compute_react_force_finalize`, `_track_react_hops_and_repeats`) from `react_after_tools_decrement_budget` into `science_graphrag/agent/graph/react_soft_cap.py`; keep node thin.
-  - Split `stream_agent_events` into explicit phases/modules: chunk consumption/state tracking, subagent lifecycle emission, tool event emission, and finalize/post-turn envelope assembly; keep each phase independently unit-testable.
-- **Acceptance:** No single function in these modules exceeds 80 statements / 12 branches; `stream_lifecycle.py` becomes an orchestration facade (<~500 LoC target) delegating to phase modules; existing SSE/run_metadata parity tests stay green.
+  - ~~Split `stream_agent_events` into explicit phases/modules~~ **Done (2026-05-13)** — см. Stream-path status выше.
+- **Acceptance:** **SSE stream-path:** `stream_lifecycle.py` ≤ ~500 LoC, фазы вынесены, parity тесты зелёные — **met (2026-05-13)**. **Graph edges:** `react_edges.py` без монолитных policy-комков в одном node (конкретный LoC/ветвление — зафиксировать в PR). **Phases (optional hard gate):** либо no function >80 statements / >12 branches в новых phase entrypoints, либо явный baseline waiver в этом пункте + линтер job не падает по согласованным suppressions.
 - **Raised:** 2026-05-06 (recursion-limit-architecture-fix)
 
 ### [OPEN] Smart context summarization parity track (Epic A)
@@ -565,6 +590,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] Stabilize focused long-thread live probe (R3) against hung `/v2/agent/query`
 - **Area:** `scripts/live_check/compaction_turn_review.py`, `scripts/live_check/agent_trace_review.py`, live API contour `http://127.0.0.1:18787`
+- **Coordination:** **Next wave W3** (таблица в начале Queue); horizon §R3 — [`agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md).
 - **Issue:** During focused R3 verification (2026-05-13), direct multi-turn probe for `run_metadata.compaction_audit` hung for >4.5 minutes without progress and required manual `kill -9`. This blocks reliable diagnosis of missing `side_llm_cache_read_ratio_avg` / `post_compact_paper_sources_restored_total` and risks repeated operator timeouts.
 - **Proposal:** Add per-turn heartbeat + hard-timeout diagnostics to `compaction_turn_review.py` (current turn index, thread id), detect/classify silent stalls in `agent_trace_review.py`, and add a dedicated `focused_long_thread` mode with bounded retries and explicit failure reasons in JSON/MD artifacts.
 - **Acceptance:** Focused long-thread lane either finishes with full per-turn telemetry (including L4 skip reason hints) or fails fast with deterministic reason (`http_timeout_turn_n`, `silent_hang_turn_n`) within configured timeout budget, without manual process kill.
@@ -572,6 +598,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] Real subagent runtime v3 (spawn/fanout/merge) parity track (Epic B)
 - **Area:** `science_graphrag/agent/graph/*`, `science_graphrag/agent/runtime.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, new `science_graphrag/agent/subagents/*`, `eval/chat_agent/*`
+- **Coordination:** не дублировать работу с OPEN «Unify subagent lifecycle event contract…» (общий адаптер терминалов/SSE); приоритет исполнения — **Next wave W1** + horizon §4.2. SSE stream-path фазы уже вынесены — см. OPEN «Split oversized agent edges…» (**Stream-path status [DONE]**).
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B), §9.6 (T3/T4/T5), §9.7
 - **Issue:** В текущем runtime `subagent_*` события отражают specialist handoff в фиксированном графе, но не lifecycle реально spawned child runtimes (нет полноценного spawn/fanout/merge контура как целевой parity).
 - **Proposal:** Зафиксировать ADR и API границы (`B0`), внедрить runtime primitive spawn/track/collect (`B1`), merge-node с provenance (`B2`), квоты/guardrails (`B3`) и safety/eval gate (`B4`).
@@ -597,6 +624,7 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 
 ### [OPEN] Unify subagent lifecycle event contract across runtime/API/fork legs
 - **Area:** `science_graphrag/agent/graph/nodes/retrieval_fork_legs.py`, `science_graphrag/agent/hooks/subagent_hooks.py`, `science_graphrag/agent/subagents/runtime.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, `tests/agent/test_subagent_runtime.py`, `tests/test_api_agent_v2_stream_parity.py`
+- **Coordination:** выполнять в связке с Epic B и **Next wave W1**; не открывать второй параллельный «терминальный mapping» в fork vs SSE — один canonical adapter (см. Proposal). Зависимость от стабильного SSE finalize — **Stream-path [DONE]** в OPEN «Split oversized agent edges…».
 - **Issue:** Subagent lifecycle payload shape is assembled in several places: fork legs manually emit start/stop hooks and spawn rows, runtime has its own canonical row builders/terminal-state mapping, SSE layer rehydrates rows into `subagent_started/subagent_finished`. This duplicates terminal-state normalization and task payload wiring, and creates drift risk between hook-chain events, `run_metadata.subagent_runs`, and streamed lifecycle events.
 - **Proposal:** Introduce one canonical “subagent lifecycle event/row adapter” seam used by fork legs and SSE finalize paths (including terminal patching on parent abort). Keep `TerminalState`/`task_status` mapping and payload schemas in a single module with shared typed helpers.
 - **Acceptance:** Fork bundles stop hand-assembling hook + spawn payloads; SSE `subagent_*` events and `run_metadata.subagent_runs` are produced from the same adapter outputs; tests cover one shared contract matrix (`terminal_state x task_status x event payload`) instead of duplicating assertions across API/runtime suites.

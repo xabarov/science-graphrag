@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from science_graphrag.agent.context.session_store import clear_session_store_for_tests
 from science_graphrag.agent.runtime import AgentRunOutput
 from science_graphrag.api.agent_v2 import router as agent_v2_router
+from science_graphrag.api.agent_v2_modules import sync_agent_query as sync_agent_query_mod
 from science_graphrag.api.deps import get_stores
 from science_graphrag.config import Settings, get_settings
 
@@ -19,13 +20,11 @@ def _app() -> FastAPI:
 
 
 def test_sync_json_history_digest_invalid_warning(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
-
     class _FakeAgent:
         def run(self, **_kwargs: object) -> AgentRunOutput:  # accepts client_idle_ms, etc.
             return AgentRunOutput(answer="ok", citations=[], tool_trace=[])
 
-    monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_k: _FakeAgent())
+    monkeypatch.setattr(sync_agent_query_mod, "build_agent", lambda **_k: _FakeAgent())
     client = TestClient(_app())
     client.app.dependency_overrides[get_settings] = lambda: Settings()
     client.app.dependency_overrides[get_stores] = lambda: type(
@@ -63,7 +62,6 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
     from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
     from science_graphrag.agent.graph.state import build_initial_agent_state
     from science_graphrag.agent.graph.tracing import collect_tool_trace
-    from science_graphrag.api import agent_v2 as agent_v2_api
 
     class _FakeAgent:
         def run(
@@ -117,7 +115,7 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
 
     try:
         clear_session_store_for_tests()
-        monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_k: _FakeAgent())
+        monkeypatch.setattr(sync_agent_query_mod, "build_agent", lambda **_k: _FakeAgent())
         client = TestClient(_app())
         client.app.dependency_overrides[get_settings] = lambda: Settings()
         client.app.dependency_overrides[get_stores] = lambda: type(
@@ -169,7 +167,6 @@ def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> Non
     from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
     from science_graphrag.agent.graph.state import build_initial_agent_state
     from science_graphrag.agent.graph.tracing import collect_tool_trace
-    from science_graphrag.api import agent_v2 as agent_v2_api
 
     class _FakeAgent:
         def run(
@@ -224,7 +221,7 @@ def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> Non
     tid = "thr_two_turn"
     try:
         clear_session_store_for_tests()
-        monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_k: _FakeAgent())
+        monkeypatch.setattr(sync_agent_query_mod, "build_agent", lambda **_k: _FakeAgent())
         client = TestClient(_app())
         client.app.dependency_overrides[get_settings] = lambda: Settings()
         client.app.dependency_overrides[get_stores] = lambda: type(

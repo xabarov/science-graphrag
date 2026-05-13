@@ -1,0 +1,42 @@
+{
+  "schema_version": "r5_wave_manifest_v1",
+  "wave": "R5_benchmark_promotion_discipline",
+  "date": "2026-05-13",
+  "decision": {
+    "judge_lane_status": "advisory_only",
+    "strict_calibration_window": "red",
+    "release_train_compare_vs_embedded_baseline": "pass_exit_0",
+    "promotion_review": "not_opened",
+    "rationale": "Wave D strict window fails agreement_winner_rate>=0.7 on every run and mean_delta spread>0.15 (see calibration window artifact). Judge lane remains advisory per R5 stop conditions."
+  },
+  "fixtures": {
+    "calibration_window_case_ids": "tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json"
+  },
+  "artifacts": {
+    "phase_a_mock_combined": "eval/results/r5-phase-a-calibration-window-mock-combined-2026-05-13.json",
+    "phase_a_mock_per_case_glob": "eval/results/r5-phase-a-part-*.json",
+    "phase_b_live_calibration_window": "eval/results/agent-v3-quality-judge-calibration-window-2026-05-13.json",
+    "phase_b_live_calibration_window_md": "eval/results/agent-v3-quality-judge-calibration-window-2026-05-13.md",
+    "phase_c_multiseed_mock_mini": "eval/results/r5-phase-c-multiseed-mock-mini-2026-05-13.json",
+    "phase_c_multiseed_mock_mini_md": "eval/results/r5-phase-c-multiseed-mock-mini-2026-05-13.md",
+    "phase_c_multiseed_calibration_window_per_case_glob": "eval/results/r5-phase-c-multiseed-part-*-2026-05-13.json",
+    "phase_c_multiseed_calibration_window_combined": "eval/results/r5-phase-c-calibration-window-multiseed-mock-combined-2026-05-13.json",
+    "phase_d_cross_family_pilot": "eval/results/r5-phase-d-cross-family-pilot-2026-05-13.json",
+    "phase_d_cross_family_pilot_md": "eval/results/r5-phase-d-cross-family-pilot-2026-05-13.md",
+    "phase_e_release_train_compare": "eval/results/r5-phase-e-release-train-compare-2026-05-13.json",
+    "phase_e_release_train_compare_md": "eval/results/r5-phase-e-release-train-compare-2026-05-13.md",
+    "reference_embedded_baseline": "eval/results/baseline-agent-v3-quality-judge-pilot-embedded.json",
+    "reference_current_pilot": "eval/results/current-agent-v3-quality-judge-pilot.json"
+  },
+  "commands_rerun": [
+    "for c in $(jq -r '.case_ids[]' tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json); do .venv/bin/science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite --tier judge_pilot --case \"$c\" --mock-agent --json-out eval/results/r5-phase-a-part-${c}.json --md-out eval/results/r5-phase-a-part-${c}.md; done",
+    ".venv/bin/python scripts/merge_agent_v3_quality_benchmark_reports.py --glob 'eval/results/r5-phase-a-part-*.json' --out-json eval/results/r5-phase-a-calibration-window-mock-combined-2026-05-13.json",
+    ".venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py --window --date 2026-05-13 --runs 3",
+    ".venv/bin/python scripts/run_agent_v3_quality_llm_calibration_subset.py --window --date 2026-05-13 --runs 3 --strict",
+    "for c in $(jq -r '.case_ids[]' tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json); do .venv/bin/science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite --tier judge_pilot --case \"$c\" --mock-agent --seeds 3 --json-out eval/results/r5-phase-c-multiseed-part-${c}-2026-05-13.json --md-out eval/results/r5-phase-c-multiseed-part-${c}-2026-05-13.md; done",
+    ".venv/bin/python scripts/merge_agent_v3_quality_benchmark_reports.py --glob 'eval/results/r5-phase-c-multiseed-part-*-2026-05-13.json' --out-json eval/results/r5-phase-c-calibration-window-multiseed-mock-combined-2026-05-13.json",
+    ".venv/bin/science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite --tier judge_mini --mock-agent --seeds 3 --json-out eval/results/r5-phase-c-multiseed-mock-mini-2026-05-13.json --md-out eval/results/r5-phase-c-multiseed-mock-mini-2026-05-13.md",
+    ".venv/bin/science-graphrag-agent-v3-quality-cross-family-aggregate eval/results/current-agent-v3-quality-judge-pilot-wavef-live-deepseek-s3-full.json eval/results/current-agent-v3-quality-judge-pilot-wavef-live-anthropic-s1-full.json --json-out eval/results/r5-phase-d-cross-family-pilot-2026-05-13.json --md-out eval/results/r5-phase-d-cross-family-pilot-2026-05-13.md",
+    ".venv/bin/science-graphrag-agent-v3-quality-compare eval/results/baseline-agent-v3-quality-judge-pilot-embedded.json eval/results/current-agent-v3-quality-judge-pilot.json --release-train-gate --json-out eval/results/r5-phase-e-release-train-compare-2026-05-13.json --md-out eval/results/r5-phase-e-release-train-compare-2026-05-13.md"
+  ]
+}

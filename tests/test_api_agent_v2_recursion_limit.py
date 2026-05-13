@@ -217,10 +217,10 @@ class _SyncAgentRaisingRecursion:
 
 
 def test_sync_recursion_limit_returns_friendly_response(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_mod
+    from science_graphrag.api.agent_v2_modules import sync_agent_query as sync_agent_query_mod
 
     monkeypatch.setattr(
-        agent_v2_mod,
+        sync_agent_query_mod,
         "build_agent",
         lambda *_args, **_kwargs: _SyncAgentRaisingRecursion(),
     )

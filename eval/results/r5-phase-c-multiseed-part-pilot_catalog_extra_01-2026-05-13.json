@@ -1,0 +1,239 @@
+{
+  "review_version": "agent-v3-quality-judge-v1",
+  "family": "agent_v3_quality_judge",
+  "tier": "judge_pilot",
+  "baseline_runtime": "langgraph_research_v1",
+  "candidate_runtime": "langgraph_supervisor_v3",
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true,
+    "logical_family_id": "agent_v3_quality_judge_v1",
+    "benchmark_family_short": "agent_v3_quality_judge",
+    "tier": "judge_pilot",
+    "baseline_runtime": "langgraph_research_v1",
+    "candidate_runtime": "langgraph_supervisor_v3",
+    "transport": "subprocess",
+    "mock_agent": true,
+    "seeds": 3,
+    "judge_prompt_version": "judge_prompt_v1",
+    "judge_prompt_sha256": "sha256-20:5b68007c9ae3d6801673",
+    "judge_llm_model": null,
+    "judge_llm_model_override": null,
+    "llm_rubric": false,
+    "judge_prompt_fingerprint": "sha256-20:5b68007c9ae3d6801673"
+  },
+  "summary": {
+    "case_count": 1,
+    "mean_weighted_score_baseline": 4.0,
+    "mean_weighted_score_candidate": 4.0,
+    "mean_delta": 0.0,
+    "pairwise_candidate_win_rate": 0.0,
+    "pairwise_baseline_win_rate": 0.0,
+    "pairwise_tie_rate": 1.0,
+    "hard_fail_count_baseline": 0,
+    "hard_fail_count_candidate": 0,
+    "family_breakdown": {
+      "dual_evidence_compare": {
+        "candidate_wins": 0,
+        "baseline_wins": 0,
+        "ties": 1
+      }
+    },
+    "all_passed": true,
+    "branch_outcome_schema": "branch_outcome_v1",
+    "cases_with_any_branch_non_ok": 0,
+    "baseline_status_counts": {
+      "ok": 1
+    },
+    "candidate_status_counts": {
+      "ok": 1
+    },
+    "error_kind_counts": {},
+    "baseline_timeout_cases": [],
+    "candidate_timeout_cases": [],
+    "baseline_error_cases": [],
+    "candidate_error_cases": [],
+    "cost_delta": {
+      "latency_p95_baseline_ms": 50.0,
+      "latency_p95_candidate_ms": 120.0,
+      "latency_p95_ratio": 2.4,
+      "tokens_total_baseline": 100.0,
+      "tokens_total_candidate": 180.0,
+      "tokens_total_ratio": 1.8,
+      "cases_with_latency_samples": 1,
+      "cases_with_token_samples_baseline": 1,
+      "cases_with_token_samples_candidate": 1
+    },
+    "multiseed": {
+      "per_seed": [
+        {
+          "seed_index": 0,
+          "mean_delta": 0.0,
+          "pairwise_candidate_win_rate": 0.0,
+          "cost_delta": {
+            "latency_p95_baseline_ms": 50.0,
+            "latency_p95_candidate_ms": 120.0,
+            "latency_p95_ratio": 2.4,
+            "tokens_total_baseline": 100.0,
+            "tokens_total_candidate": 180.0,
+            "tokens_total_ratio": 1.8,
+            "cases_with_latency_samples": 1,
+            "cases_with_token_samples_baseline": 1,
+            "cases_with_token_samples_candidate": 1
+          }
+        },
+        {
+          "seed_index": 1,
+          "mean_delta": 0.0,
+          "pairwise_candidate_win_rate": 0.0,
+          "cost_delta": {
+            "latency_p95_baseline_ms": 50.0,
+            "latency_p95_candidate_ms": 120.0,
+            "latency_p95_ratio": 2.4,
+            "tokens_total_baseline": 100.0,
+            "tokens_total_candidate": 180.0,
+            "tokens_total_ratio": 1.8,
+            "cases_with_latency_samples": 1,
+            "cases_with_token_samples_baseline": 1,
+            "cases_with_token_samples_candidate": 1
+          }
+        },
+        {
+          "seed_index": 2,
+          "mean_delta": 0.0,
+          "pairwise_candidate_win_rate": 0.0,
+          "cost_delta": {
+            "latency_p95_baseline_ms": 50.0,
+            "latency_p95_candidate_ms": 120.0,
+            "latency_p95_ratio": 2.4,
+            "tokens_total_baseline": 100.0,
+            "tokens_total_candidate": 180.0,
+            "tokens_total_ratio": 1.8,
+            "cases_with_latency_samples": 1,
+            "cases_with_token_samples_baseline": 1,
+            "cases_with_token_samples_candidate": 1
+          }
+        }
+      ],
+      "mean_delta_min": 0.0,
+      "mean_delta_max": 0.0,
+      "mean_delta_median": 0.0,
+      "mean_delta_spread": 0.0
+    }
+  },
+  "cases": [
+    {
+      "case_id": "pilot_catalog_extra_01",
+      "family": "dual_evidence_compare",
+      "question": "In ws-pilot-od, pick two works that discuss region proposal networks and compare how each uses proposals (balanced bullets, cite sources).",
+      "workspace_id": "ws-pilot-od",
+      "baseline_runtime": "langgraph_research_v1",
+      "candidate_runtime": "langgraph_supervisor_v3",
+      "transport": "subprocess",
+      "mock_agent": true,
+      "notes": [],
+      "timings": {
+        "judge_wall_s": 0.0,
+        "case_wall_s": 0.0
+      },
+      "baseline": {
+        "answer": "[mock_baseline:langgraph_research_v1] Summary for pilot_catalog_extra_01 (ReAct-style stub).",
+        "citations": [
+          {
+            "work_id": "mock-baseline-pilot_catalog_extra_01"
+          }
+        ],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "tool": "idea_search"
+          },
+          {
+            "tool": "final_answer"
+          }
+        ],
+        "tool_trace_summary": "idea_search → final_answer",
+        "run_metadata": {
+          "agent_runtime": "langgraph_research_v1",
+          "usage": {
+            "total_tokens": 100
+          }
+        },
+        "usage_total_tokens": 100,
+        "latency_ms": 50,
+        "agent_runtime_label": "langgraph_research_v1",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "candidate": {
+        "answer": "[mock_candidate:langgraph_supervisor_v3] Summary for pilot_catalog_extra_01 (supervisor-style stub with synthesis and citations placeholder).",
+        "citations": [
+          {
+            "work_id": "mock-candidate-pilot_catalog_extra_01"
+          }
+        ],
+        "warnings": [],
+        "tool_trace": [
+          {
+            "tool": "route_to_specialist"
+          },
+          {
+            "tool": "final_answer"
+          }
+        ],
+        "tool_trace_summary": "route_to_specialist → final_answer",
+        "run_metadata": {
+          "agent_runtime": "langgraph_supervisor_v3",
+          "usage": {
+            "total_tokens": 180
+          }
+        },
+        "usage_total_tokens": 180,
+        "latency_ms": 120,
+        "agent_runtime_label": "langgraph_supervisor_v3",
+        "error": null,
+        "scores": {
+          "correctness": 4,
+          "completeness": 4,
+          "groundedness": 4,
+          "synthesis_quality": 4,
+          "usefulness": 4,
+          "brevity_discipline": 4
+        },
+        "hard_fail_flags": [],
+        "weighted_score": 4.0
+      },
+      "pairwise": {
+        "winner": "tie",
+        "confidence": "low",
+        "rationale": "heuristic_judge_no_llm: compare answer length, hard-fail heuristics, and gold requirements"
+      },
+      "passed": true,
+      "baseline_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      },
+      "candidate_outcome": {
+        "status": "ok",
+        "error_kind": null,
+        "timeout_seconds": null,
+        "error_message": null
+      }
+    }
+  ]
+}

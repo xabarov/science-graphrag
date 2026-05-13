@@ -11,6 +11,7 @@ from langchain_core.messages import AIMessage
 from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.agent_v2 import router as agent_v2_router
 from science_graphrag.api.agent_v2_modules import stream_lifecycle as agent_v2_stream_lifecycle
+from science_graphrag.api.agent_v2_modules import sync_agent_query as sync_agent_query_mod
 from science_graphrag.api.deps import get_stores
 from science_graphrag.config import Settings, get_settings
 
@@ -35,7 +36,7 @@ def _build_test_app() -> FastAPI:
 
 
 def test_v2_sync_json(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
+    """Sync JSON path returns expected payload when agent.run succeeds."""
 
     class _FakeOut:
         answer = "Test answer"
@@ -46,7 +47,7 @@ def test_v2_sync_json(monkeypatch) -> None:
         def run(self, **_kwargs):
             return _FakeOut()
 
-    monkeypatch.setattr(agent_v2_api, "build_agent", lambda **_kwargs: _FakeAgent())
+    monkeypatch.setattr(sync_agent_query_mod, "build_agent", lambda **_kwargs: _FakeAgent())
     test_app = _build_test_app()
     client = TestClient(test_app)
     client.app.dependency_overrides[get_settings] = lambda: Settings()
@@ -142,12 +143,12 @@ def test_v2_sse_stream_formats_provider_valueerror(monkeypatch) -> None:
 
 
 def test_v2_deferred_topic_shortcuts_sync_without_agent(monkeypatch) -> None:
-    from science_graphrag.api import agent_v2 as agent_v2_api
+    from science_graphrag.api.agent_v2_modules import sync_agent_query as sync_agent_query_mod
 
     def _fail_build_agent(**_kwargs):
         raise AssertionError("deferred topic should not build the agent")
 
-    monkeypatch.setattr(agent_v2_api, "build_agent", _fail_build_agent)
+    monkeypatch.setattr(sync_agent_query_mod, "build_agent", _fail_build_agent)
     test_app = _build_test_app()
     client = TestClient(test_app)
     client.app.dependency_overrides[get_settings] = lambda: Settings()
@@ -156,7 +157,10 @@ def test_v2_deferred_topic_shortcuts_sync_without_agent(monkeypatch) -> None:
         resp = client.post(
             "/v2/agent/query",
             json={
-                "question": "Найди противоречия между статьями по теме, которую я сформулирую следующим сообщением."
+                "question": (
+                    "Найди противоречия между статьями по теме, "
+                    "которую я сформулирую следующим сообщением."
+                )
             },
             headers={"Accept": "application/json"},
         )
@@ -185,7 +189,10 @@ def test_v2_deferred_topic_shortcuts_sse_without_graph(monkeypatch) -> None:
             "POST",
             "/v2/agent/query",
             json={
-                "question": "Найди противоречия между статьями по теме, которую я сформулирую следующим сообщением."
+                "question": (
+                    "Найди противоречия между статьями по теме, "
+                    "которую я сформулирую следующим сообщением."
+                )
             },
             headers={"Accept": "text/event-stream"},
         ) as resp:
