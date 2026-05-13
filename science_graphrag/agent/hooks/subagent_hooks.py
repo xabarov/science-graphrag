@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from science_graphrag.agent.hooks.contracts import hook_chain_event_dict
 
-TerminalState = Literal["succeeded", "failed", "cancelled", "timed_out"]
+TerminalState = Literal["succeeded", "failed", "cancelled", "killed", "timed_out"]
 
 
 def emit_subagent_start_hook(

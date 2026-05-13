@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 
 from fastapi import FastAPI
@@ -173,6 +174,65 @@ class _FakeGraphSpawnedRows:
                 "history_digest": list(state.get("history_digest") or []),
             },
         )
+
+
+class _FakeGraphSpawnedRowsWithParentTimeout:
+    async def astream(self, state, config=None, **kwargs):  # noqa: ARG002
+        human = state["messages"][0]
+        yield (
+            "values",
+            {
+                "messages": [human, AIMessage(content="partial before timeout")],
+                "workspace_id": state.get("workspace_id"),
+                "citations": [],
+                "tool_trace": [],
+                "budget_remaining": 5,
+                "metadata": {
+                    **dict(state.get("metadata") or {}),
+                    "subagent_spawn_rows": [
+                        {
+                            "subagent_id": "ce-timeout-1",
+                            "parent_turn_id": dict(state.get("metadata") or {}).get(
+                                "parent_turn_id"
+                            ),
+                            "spawn_reason": "corpus_explore",
+                            "task_id": "task-timeout-1",
+                            "task_type": "corpus_explore",
+                            "description": "Read-only corpus exploration child",
+                            "execution_mode": "sync",
+                            "fanout_slot": 1,
+                            "task_status": "running",
+                            "terminal_state": "running",
+                            "latency_ms": 4,
+                            "failure_code": None,
+                            "tokens": None,
+                            "cost_usd_estimate": None,
+                            "kind": "spawned",
+                            "merge_provenance": {
+                                "strategy": "typed_specialist_results_v3",
+                                "source_kind": "corpus_explore_result",
+                                "carried_keys": [
+                                    "corpus_explore_results",
+                                    "specialist_results_v3",
+                                ],
+                                "evidence_origin": "subagent:ce-timeout-1",
+                                "parent_state_write": "bounded_append_only",
+                            },
+                            "output_pointer": "run_metadata.corpus_explore_results[0]",
+                        }
+                    ],
+                },
+                "specialist_results": {},
+                "current_specialist": None,
+                "routing_log": [],
+                "debug_events": [],
+                "thread_id": state.get("thread_id"),
+                "session_summary": str(state.get("session_summary") or ""),
+                "answer_class": None,
+                "history_digest": list(state.get("history_digest") or []),
+            },
+        )
+        await asyncio.sleep(1.1)
 
 
 class _FakeGraphUnmappedTool:
@@ -438,6 +498,48 @@ def test_sse_emits_spawned_subagent_terminal_row_from_metadata(monkeypatch) -> N
         and row.get("output_pointer") == "run_metadata.corpus_explore_results[0]"
         for row in rows
     )
+
+
+def test_sse_spawned_rows_are_patched_when_parent_finishes_after_inflight_spawn_row(monkeypatch) -> None:
+    monkeypatch.setattr(
+        agent_v2_stream_lifecycle,
+        "build_retrieval_graph",
+        lambda *_a, **_k: _FakeGraphSpawnedRowsWithParentTimeout(),
+    )
+    client = TestClient(_app())
+    client.app.dependency_overrides[get_settings] = lambda: Settings(
+        agent_runtime="langgraph_supervisor_v3",
+        agent_step_timeout_seconds=1.0,
+    )
+    client.app.dependency_overrides[get_stores] = _fake_store_registry
+    try:
+        events: list[dict] = []
+        with client.stream(
+            "POST",
+            "/v2/agent/query",
+            json={"question": "q"},
+            headers={"Accept": "text/event-stream"},
+        ) as resp:
+            assert resp.status_code == 200
+            for line in resp.iter_lines():
+                if isinstance(line, bytes):
+                    line = line.decode("utf-8")
+                if line.startswith("data:"):
+                    events.append(json.loads(line[5:].strip()))
+    finally:
+        client.app.dependency_overrides.pop(get_settings, None)
+        client.app.dependency_overrides.pop(get_stores, None)
+
+    final = next(e for e in events if e.get("type") == "final_answer")
+    rows = (final.get("run_metadata") or {}).get("subagent_runs") or []
+    target = next(
+        row for row in rows if row.get("kind") == "spawned" and row.get("subagent_id") == "ce-timeout-1"
+    )
+    # In this harness path parent completes normally after a stale in-flight spawned row;
+    # run_metadata must not keep the child in running/pending state.
+    assert target.get("terminal_state") == "succeeded"
+    assert target.get("task_status") == "completed"
+    assert target.get("failure_code") is None
 
 
 def test_sse_final_tool_trace_matches_collect_tool_trace(monkeypatch) -> None:

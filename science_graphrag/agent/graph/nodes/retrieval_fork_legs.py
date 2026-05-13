@@ -43,6 +43,8 @@ def e1_subagents_allowed_for_retrieval_hop(*, settings: Settings, new_payloads: 
 def _hook_terminal_state(term: str) -> SubagentHookTerminalState:
     if term == "timed_out":
         return "timed_out"
+    if term == "killed":
+        return "killed"
     if term == "cancelled":
         return "cancelled"
     if term == "succeeded":

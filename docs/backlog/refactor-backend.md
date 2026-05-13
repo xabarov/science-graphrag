@@ -540,14 +540,17 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 ### [OPEN] Split oversized agent edges + SSE lifecycle modules
 - **Area:** `science_graphrag/agent/graph/react_edges.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B runtime spine), §9.6 (T3/T4)
-- **Issue:** After adding ReAct soft-cap and recursion-limit salvage, `react_after_tools_decrement_budget` (~130 lines, 19 branches) and `route_react_chat_to_tools` keep accruing routing cases; `stream_agent_events` is 269+ stmts and pylint flags `R0912/R0915/R0914/R1702`. Score still ≥9.8 but the functions hide multiple concerns (budget bookkeeping, soft-cap detection, debug emission, salvage on deadline + recursion).
+- **Issue:** After adding ReAct soft-cap and recursion-limit/deadline salvage, routing + streaming logic still accumulates in two hotspots. `react_after_tools_decrement_budget` and `route_react_chat_to_tools` keep absorbing policy branches, while `stream_agent_events` blends at least six concerns in one coroutine (routing-leg lifecycle, spawned-row replay, tool_call/tool_result product events, recovery/degraded mode, post-turn compaction, final run-metadata assembly). This keeps change risk high: one contract tweak in SSE can regress runtime metadata or subagent lifecycle parity.
 - **Progress (2026-05-06):** вынесен общий OTEL-блок deadline (`deadline_otel.py`); восстановлены span-события для recursion-limit; импорт notes на toplevel — размер/ветвление `stream_agent_events` всё ещё требуют распила по Proposal ниже.
 - **Progress (2026-05-06, follow-up):** soft-cap ветвление вынесено в `agent/graph/react_soft_cap.py` и подключено из `react_edges.py`; recovery-salvage/error-event helper вынесен в `api/agent_v2_modules/recovery.py`, deadline/recursion branches в `stream_lifecycle.py` переведены на общие helper-функции.
 - **Progress (2026-05-06, follow-up-2):** в `stream_lifecycle.py` добавлен helper `_streamable_debug_event` (уменьшение локальной ветвистости в debug-events path), `run_kind/graph_id` проброшены в stream metadata/events для лучшего trace-audit контекста.
+- **Progress (2026-05-13, structural audit):** зафиксировано, что `stream_lifecycle.py` снова разросся (~1.5k LoC) и остаётся “aggregation point” для API transport + runtime orchestration + product event semantics; tests (`test_api_agent_v2_stream_parity.py`, `test_api_agent_v2_recursion_limit.py`, `test_api_agent_v2_run_metadata.py`) now encode this mixed contract and raise refactor cost.
+- **Progress (2026-05-13, Wave SSE lifecycle split — stream path):** `stream_lifecycle.py` переведён на thin orchestration (~480 LoC) с фазами: `stream_phase_chunk_consumer.py` (dispatch), `stream_phase_subagent_events.py` (values/routing/debug/spawned replay), `stream_phase_tool_events.py` (updates/tool_call), `stream_phase_finalize.py` (envelope/compaction/final_answer/run_metadata), `stream_phase_recovery.py` (deadline/recursion salvage), `stream_phase_routing_leg_abort.py` (единый close routing leg + cancel spawns при deadline/recursion), `stream_phase_product_steps.py` + `stream_phase_agent_notes.py`; обратная совместимость импортов тестов из `stream_lifecycle` сохранена; добавлен `tests/test_api_agent_v2_modules_stream_phase_chunk_consumer.py`.
+- **Remaining:** `react_edges.py` split по тому же OPEN (ReAct soft-cap уже частично вынесен); pylint statement/branch budget для отдельных phase-функций ещё не замерян/не гарантирован.
 - **Proposal:**
   - Extract soft-cap helpers (`_compute_react_force_finalize`, `_track_react_hops_and_repeats`) from `react_after_tools_decrement_budget` into `science_graphrag/agent/graph/react_soft_cap.py`; keep node thin.
-  - Split `stream_agent_events` recovery branches (deadline, recursion-limit) into `_recover_after_deadline` and `_recover_after_recursion_limit` helpers (or move the salvage flow into `agent_v2_modules/recovery.py`); pull update-chunk handling into a per-chunk function.
-- **Acceptance:** No file in this subtree has a single function exceeding 80 statements / 12 branches; pylint stops emitting `R0912/R0914/R0915` for these modules; existing tests pass.
+  - Split `stream_agent_events` into explicit phases/modules: chunk consumption/state tracking, subagent lifecycle emission, tool event emission, and finalize/post-turn envelope assembly; keep each phase independently unit-testable.
+- **Acceptance:** No single function in these modules exceeds 80 statements / 12 branches; `stream_lifecycle.py` becomes an orchestration facade (<~500 LoC target) delegating to phase modules; existing SSE/run_metadata parity tests stay green.
 - **Raised:** 2026-05-06 (recursion-limit-architecture-fix)
 
 ### [OPEN] Smart context summarization parity track (Epic A)
@@ -591,6 +594,13 @@ Closed items live only in **Completed (archive)** above (no `### [DONE]` bodies 
 - **Proposal:** Extract one internal module (e.g. `subagents/react_subgraph_utils.py`) for shared pieces; keep public surfaces narrow.
 - **Acceptance:** All three subagent runtimes import shared helpers; no behavior change in contract tests.
 - **Raised:** 2026-05-07 (Train T4 implementation pass)
+
+### [OPEN] Unify subagent lifecycle event contract across runtime/API/fork legs
+- **Area:** `science_graphrag/agent/graph/nodes/retrieval_fork_legs.py`, `science_graphrag/agent/hooks/subagent_hooks.py`, `science_graphrag/agent/subagents/runtime.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, `tests/agent/test_subagent_runtime.py`, `tests/test_api_agent_v2_stream_parity.py`
+- **Issue:** Subagent lifecycle payload shape is assembled in several places: fork legs manually emit start/stop hooks and spawn rows, runtime has its own canonical row builders/terminal-state mapping, SSE layer rehydrates rows into `subagent_started/subagent_finished`. This duplicates terminal-state normalization and task payload wiring, and creates drift risk between hook-chain events, `run_metadata.subagent_runs`, and streamed lifecycle events.
+- **Proposal:** Introduce one canonical “subagent lifecycle event/row adapter” seam used by fork legs and SSE finalize paths (including terminal patching on parent abort). Keep `TerminalState`/`task_status` mapping and payload schemas in a single module with shared typed helpers.
+- **Acceptance:** Fork bundles stop hand-assembling hook + spawn payloads; SSE `subagent_*` events and `run_metadata.subagent_runs` are produced from the same adapter outputs; tests cover one shared contract matrix (`terminal_state x task_status x event payload`) instead of duplicating assertions across API/runtime suites.
+- **Raised:** 2026-05-13 (backend structural audit)
 
 ### [DONE] Add heartbeat/progress telemetry to `agent_v3_quality` live runner
 - **Area:** `eval/agent_v3_quality/runner.py`, `eval/agent_v3_quality/one_shot.py`

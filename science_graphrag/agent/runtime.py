@@ -44,6 +44,7 @@ from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanc
 from science_graphrag.agent.subagents.runtime import (
     build_subagent_runs_from_routing_log,
     merge_subagent_run_rows,
+    patch_spawn_rows_for_parent_terminal,
 )
 from science_graphrag.agent.trace import ToolCallTrace
 from science_graphrag.api.deps import StoreRegistry
@@ -358,6 +359,19 @@ class RetrievalAgent:
         spawned_rows = (
             [x for x in raw_spawn if isinstance(x, dict)] if isinstance(raw_spawn, list) else []
         )
+        if spawned_rows:
+            if deadline_partial_used:
+                spawned_rows = patch_spawn_rows_for_parent_terminal(
+                    spawned_rows,
+                    terminal_state="timed_out",
+                    failure_code="parent_timed_out",
+                )
+            else:
+                spawned_rows = patch_spawn_rows_for_parent_terminal(
+                    spawned_rows,
+                    terminal_state="succeeded",
+                    failure_code=None,
+                )
         subagent_runs = merge_subagent_run_rows(
             routing_rows=routing_sub_rows, spawned_rows=spawned_rows
         )

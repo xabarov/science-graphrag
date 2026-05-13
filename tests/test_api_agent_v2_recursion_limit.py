@@ -69,7 +69,7 @@ class _RecursingGraphWithSalvageState:
         yield (
             "values",
             {
-                "routing_log": [],
+                "routing_log": [{"from": "supervisor", "to": "retrieval_agent", "reason": "route"}],
                 "messages": [AIMessage(content="Partial draft from research.")],
                 "debug_events": [],
                 "citations": [],
@@ -77,6 +77,29 @@ class _RecursingGraphWithSalvageState:
                     "raw_user_question": "q",
                     "react_total_hops": 11,
                     "react_force_finalize": "react_hops_cap",
+                    "parent_turn_id": "pt-rec-1",
+                    "subagent_spawn_rows": [
+                        {
+                            "subagent_id": "ce-rec-1",
+                            "parent_turn_id": "pt-rec-1",
+                            "spawn_reason": "corpus_explore",
+                            "task_id": "task-rec-1",
+                            "task_type": "corpus_explore",
+                            "description": "Read-only corpus exploration child",
+                            "execution_mode": "sync",
+                            "fanout_slot": 1,
+                            "task_status": "running",
+                            "terminal_state": "succeeded",
+                            "latency_ms": 9,
+                            "failure_code": None,
+                            "kind": "spawned",
+                            "merge_provenance": {
+                                "strategy": "typed_specialist_results_v3",
+                                "source_kind": "corpus_explore_result",
+                            },
+                            "output_pointer": "run_metadata.corpus_explore_results[0]",
+                        }
+                    ],
                 },
             },
         )
@@ -130,6 +153,19 @@ def test_stream_recursion_limit_with_salvage_emits_warning_and_partial_final_ans
     final_warnings = list(final.get("warnings") or [])
     assert "agent_partial_graph_recursion_limit" in final_warnings
     assert "partial_after_recursion_limit" in final_warnings
+    sub_rows = list((rm.get("subagent_runs") or []))
+    assert any(
+        row.get("kind") == "routing_leg" and row.get("terminal_state") == "failed"
+        for row in sub_rows
+    )
+    assert any(
+        row.get("kind") == "spawned"
+        and row.get("subagent_id") == "ce-rec-1"
+        and row.get("failure_code") == "parent_recursion_limit"
+        and row.get("terminal_state") == "killed"
+        and row.get("task_status") == "cancelled"
+        for row in sub_rows
+    )
 
     degraded = [e for e in events if e.get("type") == "degraded_mode"]
     assert degraded, events

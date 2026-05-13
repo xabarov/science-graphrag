@@ -19,7 +19,7 @@ from science_graphrag.agent.hooks.subagent_hooks import (
 )
 from science_graphrag.agent.subagents.notification import new_task_id
 
-TerminalState = Literal["succeeded", "failed", "cancelled", "timed_out"]
+TerminalState = Literal["succeeded", "failed", "cancelled", "killed", "timed_out"]
 TaskStatus = Literal["pending", "running", "completed", "failed", "cancelled", "timed_out"]
 LegKind = Literal["routing_leg", "spawned"]
 
@@ -29,9 +29,59 @@ def _task_status_from_terminal_state(terminal_state: TerminalState) -> TaskStatu
         return "completed"
     if terminal_state == "failed":
         return "failed"
-    if terminal_state == "cancelled":
+    if terminal_state in {"cancelled", "killed"}:
         return "cancelled"
     return "timed_out"
+
+
+def patched_task_status_for_terminal(terminal_state: str) -> str:
+    """Map terminal state to task_status for patched spawned rows."""
+    ts = str(terminal_state or "").strip()
+    if ts == "succeeded":
+        return "completed"
+    if ts == "failed":
+        return "failed"
+    if ts in {"cancelled", "killed"}:
+        return "cancelled"
+    return "timed_out"
+
+
+def patch_spawn_rows_for_parent_terminal(
+    rows: list[dict[str, Any]],
+    *,
+    terminal_state: str,
+    failure_code: str | None,
+) -> list[dict[str, Any]]:
+    """Patch in-flight spawned rows to a parent terminal state.
+
+    Used by both SSE and sync runtime paths to avoid leaking ``running/pending``
+    rows in final ``run_metadata.subagent_runs`` snapshots.
+    """
+    patched: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        current_kind = str(row.get("kind") or "").strip()
+        if current_kind != "spawned":
+            patched.append(dict(row))
+            continue
+        task_status = str(row.get("task_status") or "").strip()
+        current_terminal = str(row.get("terminal_state") or "").strip()
+        is_inflight = task_status in {"pending", "running"} or current_terminal in {
+            "",
+            "pending",
+            "running",
+            "succeeded",
+        }
+        if not is_inflight:
+            patched.append(dict(row))
+            continue
+        updated = dict(row)
+        updated["terminal_state"] = str(terminal_state)
+        updated["task_status"] = patched_task_status_for_terminal(terminal_state)
+        updated["failure_code"] = str(failure_code) if failure_code else None
+        patched.append(updated)
+    return patched
 
 
 @dataclass(frozen=True, slots=True)
@@ -229,10 +279,12 @@ class SubagentRuntime:
             failure_code=failure_code,
         )
 
-    def cancel_all(self, *, failure_code: str = "cancelled") -> None:
-        """Mark every active child ``cancelled`` (e.g. parent turn aborted)."""
+    def cancel_all(
+        self, *, failure_code: str = "cancelled", terminal_state: TerminalState = "cancelled"
+    ) -> None:
+        """Mark every active child terminally (e.g. parent turn aborted/killed)."""
         for sid in list(self._active.keys()):
-            self.finish_subagent(sid, terminal_state="cancelled", failure_code=failure_code)
+            self.finish_subagent(sid, terminal_state=terminal_state, failure_code=failure_code)
 
     def to_run_rows(self) -> list[dict[str, Any]]:
         """Return completed rows for ``run_metadata.subagent_runs`` (explicit spawns)."""
@@ -375,4 +427,6 @@ __all__ = [
     "build_subagent_runs_from_routing_log",
     "build_spawned_subagent_run_row",
     "merge_subagent_run_rows",
+    "patch_spawn_rows_for_parent_terminal",
+    "patched_task_status_for_terminal",
 ]

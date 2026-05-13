@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+from langchain_core.messages import AIMessage
+
+from science_graphrag.agent.runtime import RetrievalAgent
 from science_graphrag.api.agent_v2_modules.payloads import (
     apply_runtime_metadata_from_state,
     build_run_metadata,
@@ -152,3 +155,156 @@ def test_response_from_run_aggregates_telemetry_from_full_debug_events() -> None
     assert meta.get("tool_use_summary_side_llm_cache_read_ratio_avg") == 0.4
     # Tail remains bounded even though telemetry used all events.
     assert len(meta.get("debug_events") or []) == 50
+
+
+def test_retrieval_runtime_partial_salvage_patches_inflight_spawn_rows(monkeypatch) -> None:
+    settings = Settings(agent_runtime="langgraph_supervisor_v3")
+    stores = SimpleNamespace(
+        neo4j=None,
+        qdrant_chunks=None,
+        qdrant_works=None,
+        qdrant_claims=None,
+        blob=None,
+    )
+
+    parent_turn_id = "pt-sync-partial-1"
+    final_state = {
+        "messages": [AIMessage(content="partial answer from salvage state")],
+        "workspace_id": None,
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 3,
+        "routing_log": [],
+        "debug_events": [],
+        "specialist_results": {},
+        "metadata": {
+            "parent_turn_id": parent_turn_id,
+            "subagent_spawn_rows": [
+                {
+                    "subagent_id": "ce-sync-1",
+                    "parent_turn_id": parent_turn_id,
+                    "spawn_reason": "corpus_explore",
+                    "task_id": "task-sync-1",
+                    "task_type": "corpus_explore",
+                    "description": "Read-only corpus exploration child",
+                    "execution_mode": "sync",
+                    "fanout_slot": 1,
+                    "task_status": "running",
+                    "terminal_state": "running",
+                    "latency_ms": 4,
+                    "failure_code": None,
+                    "kind": "spawned",
+                    "merge_provenance": {
+                        "strategy": "typed_specialist_results_v3",
+                        "source_kind": "corpus_explore_result",
+                    },
+                    "output_pointer": "run_metadata.corpus_explore_results[0]",
+                }
+            ],
+        },
+    }
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.runtime.build_retrieval_graph",
+        lambda *_a, **_k: object(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.runtime.invoke_agent_graph_with_deadline_partial",
+        lambda *_a, **_k: (final_state, True),
+    )
+
+    agent = RetrievalAgent(settings=settings, stores=stores)
+    out = agent.run(
+        question="q",
+        workspace_id=None,
+        max_tool_calls=6,
+        answer_class_hint=None,
+        thread_id=None,
+        history_digest=None,
+    )
+
+    assert out.subagent_runs is not None
+    spawned = next(
+        row for row in out.subagent_runs if row.get("kind") == "spawned" and row.get("subagent_id") == "ce-sync-1"
+    )
+    assert spawned.get("terminal_state") == "timed_out"
+    assert spawned.get("task_status") == "timed_out"
+    assert spawned.get("failure_code") == "parent_timed_out"
+    assert "agent_turn_deadline_partial_salvage" in (out.warnings or [])
+
+
+def test_retrieval_runtime_normal_finalize_patches_inflight_spawn_rows(monkeypatch) -> None:
+    settings = Settings(agent_runtime="langgraph_supervisor_v3")
+    stores = SimpleNamespace(
+        neo4j=None,
+        qdrant_chunks=None,
+        qdrant_works=None,
+        qdrant_claims=None,
+        blob=None,
+    )
+
+    parent_turn_id = "pt-sync-final-1"
+    final_state = {
+        "messages": [AIMessage(content="final answer from normal finalize")],
+        "workspace_id": None,
+        "citations": [],
+        "tool_trace": [],
+        "budget_remaining": 3,
+        "routing_log": [],
+        "debug_events": [],
+        "specialist_results": {},
+        "metadata": {
+            "parent_turn_id": parent_turn_id,
+            "subagent_spawn_rows": [
+                {
+                    "subagent_id": "ce-sync-final-1",
+                    "parent_turn_id": parent_turn_id,
+                    "spawn_reason": "corpus_explore",
+                    "task_id": "task-sync-final-1",
+                    "task_type": "corpus_explore",
+                    "description": "Read-only corpus exploration child",
+                    "execution_mode": "sync",
+                    "fanout_slot": 1,
+                    "task_status": "running",
+                    "terminal_state": "running",
+                    "latency_ms": 4,
+                    "failure_code": None,
+                    "kind": "spawned",
+                    "merge_provenance": {
+                        "strategy": "typed_specialist_results_v3",
+                        "source_kind": "corpus_explore_result",
+                    },
+                    "output_pointer": "run_metadata.corpus_explore_results[0]",
+                }
+            ],
+        },
+    }
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.runtime.build_retrieval_graph",
+        lambda *_a, **_k: object(),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.runtime.invoke_agent_graph_with_deadline_partial",
+        lambda *_a, **_k: (final_state, False),
+    )
+
+    agent = RetrievalAgent(settings=settings, stores=stores)
+    out = agent.run(
+        question="q",
+        workspace_id=None,
+        max_tool_calls=6,
+        answer_class_hint=None,
+        thread_id=None,
+        history_digest=None,
+    )
+
+    assert out.subagent_runs is not None
+    spawned = next(
+        row
+        for row in out.subagent_runs
+        if row.get("kind") == "spawned" and row.get("subagent_id") == "ce-sync-final-1"
+    )
+    assert spawned.get("terminal_state") == "succeeded"
+    assert spawned.get("task_status") == "completed"
+    assert spawned.get("failure_code") is None

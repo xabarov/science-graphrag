@@ -764,6 +764,22 @@ runtime in R4-next without a dedicated ADR revision + evidence lane.
 - `eval/results/trace-review-subagent-runtime-r4-*.{json,md}` (paired compare artifacts).
 - Short closeout paragraph in this doc or a dedicated analysis note when R4-next closes.
 
+**Live evidence update (2026-05-13, v1 paired run):**
+
+| Field | Value |
+|-------|-------|
+| Baseline JSON/MD | `eval/results/trace-review-r4next-lifecycle-baseline-2026-05-13-v1.json` / `eval/results/trace-review-r4next-lifecycle-baseline-2026-05-13-v1.md` |
+| Candidate JSON/MD | `eval/results/trace-review-r4next-lifecycle-candidate-2026-05-13-v1.json` / `eval/results/trace-review-r4next-lifecycle-candidate-2026-05-13-v1.md` |
+| Compare JSON/MD | `eval/results/trace-regression-r4next-lifecycle-2026-05-13-v1.json` / `eval/results/trace-regression-r4next-lifecycle-2026-05-13-v1.md` |
+| Compare status | `pass` |
+| Lifecycle deltas | `subagent_lifecycle_missing_count=0.0`, `subagent_terminal_state_missing_count=0.0`, `subagent_merge_provenance_missing_count=0.0`, `subagent_timeout_count=0.0` |
+| Trace-review per-run verdict | `warn` (non-R4 signals: no claim-verification rows, no compaction events in this acceptance profile) |
+
+Interpretation:
+
+- **Closed in this lane:** R4-next lifecycle consistency for spawned rows stays stable in live baseline/candidate compare.
+- **Still open for strict latency acceptance:** this profile did not emit usable `latency_p95_ms`; keep the explicit p95 regression budget check as an open operator item for a lane/profile where latency is exported.
+
 ### R5 — benchmark promotion discipline
 
 **Goal:** keep LLM-as-judge useful without letting it become a false authority.

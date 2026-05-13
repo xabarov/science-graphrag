@@ -67,6 +67,30 @@ def test_cancel_all_marks_cancelled() -> None:
     assert rt.to_run_rows()[0]["terminal_state"] == "cancelled"
 
 
+def test_cancel_all_can_mark_killed_terminal_state() -> None:
+    rt = SubagentRuntime(parent_turn_id="pt-3b", max_parallel_subagents=3)
+    sid = rt.spawn_subagent(SubagentTaskSpec(spawn_reason="x"))
+    rt.cancel_all(failure_code="parent_recursion_limit", terminal_state="killed")
+    row = rt.to_run_rows()[0]
+    assert row["subagent_id"] == sid
+    assert row["terminal_state"] == "killed"
+    assert row["task_status"] == "cancelled"
+    assert row["failure_code"] == "parent_recursion_limit"
+
+
+def test_spawned_row_killed_maps_to_cancelled_task_status() -> None:
+    row = build_spawned_subagent_run_row(
+        subagent_id="ce-killed",
+        parent_turn_id="pt-k",
+        spawn_reason="parent_abort",
+        task_id="task-k",
+        task_type="corpus_explore",
+        terminal_state="killed",
+    )
+    assert row["terminal_state"] == "killed"
+    assert row["task_status"] == "cancelled"
+
+
 def test_routing_ledger_open_close_latency() -> None:
     h: list[dict] = []
     led = RoutingSubagentLegLedger(parent_turn_id="pt-4", hook_chain_sink=h)
@@ -130,4 +154,6 @@ def test_build_spawned_subagent_run_row_contains_task_and_provenance() -> None:
     assert row["task_type"] == "corpus_explore"
     assert row["task_status"] == "timed_out"
     assert row["child_turn_id"] == "ct-1"
-    assert row["merge_provenance"]["source_kind"] == "corpus_explore_result"
+    merge_provenance = row.get("merge_provenance")
+    assert isinstance(merge_provenance, dict)
+    assert merge_provenance.get("source_kind") == "corpus_explore_result"

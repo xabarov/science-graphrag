@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
+from science_graphrag.agent import notes as agent_notes_mod
 from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.agent_v2 import router as agent_v2_router
 from science_graphrag.api.agent_v2_modules import stream_lifecycle as agent_v2_stream_lifecycle
@@ -188,7 +189,7 @@ def test_agent_note_emitted_when_enabled_with_cap(monkeypatch) -> None:
         call_count["n"] += 1
         return f"Note {kind} {call_count['n']}"
 
-    monkeypatch.setattr(agent_v2_stream_lifecycle, "maybe_generate_agent_note", _fake_generate)
+    monkeypatch.setattr(agent_notes_mod, "maybe_generate_agent_note", _fake_generate)
 
     monkeypatch.setattr(
         agent_v2_stream_lifecycle,
