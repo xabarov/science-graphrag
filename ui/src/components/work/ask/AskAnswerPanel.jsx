@@ -105,6 +105,7 @@ export function AskAnswerPanel({
   const answerClass = normalized.answer_class != null ? String(normalized.answer_class).trim() : "";
   /** Quote-style turns surface evidence in the answer + quote_candidates; structured citations are redundant. */
   const hideStructuredCitations = answerClass === "quote_extraction";
+  const citationListLabelKey = answerClass === "inventory" ? "askPanel.citations.inventoryTitle" : "askPanel.citations.title";
   const warningsList = Array.isArray(normalized.warnings) ? normalized.warnings : [];
   const hasWeakEvidence = warningsList.includes("weak_evidence");
   const answerText = String(normalized.answer || "").trim();
@@ -114,8 +115,9 @@ export function AskAnswerPanel({
   const wsForTrace = String(workspaceId || "").trim();
 
   const missingPassageCount = citations.filter((c) => !pickCitationBodyText(c).trim()).length;
-  const allPassagesMissing = citations.length > 0 && missingPassageCount === citations.length;
-  const somePassagesMissing = missingPassageCount > 0 && missingPassageCount < citations.length;
+  const suppressMissingPassageChrome = answerClass === "inventory";
+  const allPassagesMissing = !suppressMissingPassageChrome && citations.length > 0 && missingPassageCount === citations.length;
+  const somePassagesMissing = !suppressMissingPassageChrome && missingPassageCount > 0 && missingPassageCount < citations.length;
 
   const showSubagentRail = retrievalMode === "agent" && shouldShowSubagentRail(streamEvents);
 
@@ -280,7 +282,7 @@ export function AskAnswerPanel({
       {!hideStructuredCitations && (!isRunActive || citations.length > 0) ? (
         <>
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 2, mb: 0.5, color: tk.text.primary }}>
-            {t("askPanel.citations.title")}
+            {t(citationListLabelKey)}
           </Typography>
           {allPassagesMissing ? (
             <Alert severity="info" sx={{ mb: 1, fontSize: "0.75rem", backgroundColor: tk.surface.panelAlt }}>
@@ -311,7 +313,7 @@ export function AskAnswerPanel({
               const workTitle = pickCitationWorkTitle(c);
               const hasPassage = Boolean(pickCitationBodyText(c).trim());
               const suppressMissingPlaceholder =
-                !hasPassage && (allPassagesMissing || somePassagesMissing);
+                !hasPassage && (suppressMissingPassageChrome || allPassagesMissing || somePassagesMissing);
               const deepLinks =
                 wid &&
                 (chatDetailLevel === "detailed" ? (

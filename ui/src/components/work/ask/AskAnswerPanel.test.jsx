@@ -569,6 +569,40 @@ describe("AskAnswerPanel", () => {
     expect(screen.queryByText("askPanel.citation.noSnippet")).toBeNull();
   });
 
+  it("labels inventory citations as found papers without missing-passage alert", () => {
+    const normalized = normalizeQueryResponse({
+      answer: "5 papers found",
+      citations: [{ work_id: "w-yolo", title: "YOLO paper" }],
+      graph_context: {},
+      retrieval_trace: {},
+      answer_class: "inventory",
+    });
+    render(
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>
+          <AskAnswerPanel
+            t={(k) => k}
+            normalized={normalized}
+            locked={false}
+            inWorkspace={false}
+            workId=""
+            workspaceWorkId={null}
+            retrievalMode="agent"
+            agentToolTrace={[]}
+            retrievalJsonOpen={false}
+            onToggleRetrievalJson={() => {}}
+            streamEvents={[]}
+            isRunActive={false}
+          />
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+    expect(screen.getByText("askPanel.citations.inventoryTitle")).toBeTruthy();
+    expect(screen.queryByText("askPanel.citations.title")).toBeNull();
+    expect(screen.queryByText("askPanel.citation.noSnippetBulkAll")).toBeNull();
+    expect(screen.queryByText("askPanel.citation.noSnippet")).toBeNull();
+  });
+
   it("hides chunk id line in simple mode when citation has chunk_fingerprint", () => {
     const normalized = normalizeQueryResponse({
       answer: "ok",

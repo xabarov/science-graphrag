@@ -2,7 +2,7 @@
 
 **Role:** executable checklist for **R3** in [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §R3 — complements offline harness (`scripts/live_check/long_thread_compaction_eval.py`) with **live** trace-review evidence.
 
-**Status:** operator evidence lane executed (2026-05-13 rerun) — code/docs side is shipped (`compaction_audit.l4_eligibility` + offline `memory_influence_audit_v1`), live pairwise artifacts are now present, but final rollout stance remains **provider-gated** until long-thread cache/compaction signal is observed in a representative acceptance lane.
+**Status:** operator evidence lane executed (2026-05-13 rerun; **2026-05-14 stabilization pass** below) — code/docs side is shipped (`compaction_audit.l4_eligibility` + offline `memory_influence_audit_v1`), live pairwise artifacts are now present, but final rollout stance remains **provider-gated** until long-thread cache/compaction signal is observed in a representative acceptance lane.
 
 ## Preconditions
 
@@ -109,6 +109,20 @@ Representative acceptance lane (2026-05-13, rerun `r4`, bounded e2e + compaction
 | `compaction_turn_review.failure_reason` | `null` |
 | Additional failures in both lanes | `e2e_failed` (bounded timeout), `failed_check:agent_v2_malicious_deny` on candidate |
 | Operator decision | `provider-gated` (insufficient cache/paper evidence for promotion) |
+
+Stabilization pass (2026-05-14, plan `remaining-horizon-closure` — acceptance + `focused_long_thread` compaction, bounded e2e):
+
+| Field | Value |
+|-------|-------|
+| Baseline JSON | `eval/results/diagnostics/trace-review-r3-stabilization-2026-05-14-baseline.json` |
+| Candidate JSON | `eval/results/diagnostics/trace-review-r3-stabilization-2026-05-14-candidate.json` |
+| Compare JSON/MD | `eval/results/diagnostics/trace-regression-r3-stabilization-2026-05-14.json` / `...md` |
+| Compare CLI exit | `0` (policies satisfied for this pair) |
+| Trace-review verdict (baseline / candidate) | `fail / fail` (suite-level; same shape as prior acceptance runs) |
+| `side_llm_cache_read_ratio_avg` (baseline / candidate) | `null / null` |
+| `post_compact_paper_sources_restored_total` (baseline / candidate) | `0 / 0` |
+| `compaction_turn_review.failure_reason` | `null` |
+| Operator decision | **`provider-gated`** — stabilization rerun confirms no new promotable cache or paper-restore signal; continue evidence-first track before any rollout change. |
 
 | Field | Value |
 |-------|-------|

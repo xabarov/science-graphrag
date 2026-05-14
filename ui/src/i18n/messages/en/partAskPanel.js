@@ -54,6 +54,7 @@ export default {
   "askPanel.answer.degraded":
     "Some context had to degrade during retrieval. Review the trace details below before using this answer as a final conclusion.",
   "askPanel.citations.title": "Citations",
+  "askPanel.citations.inventoryTitle": "Found papers",
   "askPanel.citations.none": "No supporting citations were returned for this answer.",
   "askPanel.citation.line": "Citation #{{rank}} · score {{score}} · {{work}}",
   "askPanel.citation.rankLabel": "Citation #{{rank}}",

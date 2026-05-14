@@ -53,6 +53,7 @@ export default {
   "askPanel.answer.degraded":
     "Часть контекста была упрощена при retrieval. Изучите трассу ниже, прежде чем считать ответ окончательным.",
   "askPanel.citations.title": "Цитаты",
+  "askPanel.citations.inventoryTitle": "Найденные статьи",
   "askPanel.citations.none": "Для этого ответа цитаты не вернулись.",
   "askPanel.citation.line": "Цитата #{{rank}} · score {{score}} · {{work}}",
   "askPanel.citation.rankLabel": "Цитата #{{rank}}",

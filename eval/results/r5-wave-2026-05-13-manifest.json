@@ -26,7 +26,13 @@
     "phase_e_release_train_compare": "eval/results/r5-phase-e-release-train-compare-2026-05-13.json",
     "phase_e_release_train_compare_md": "eval/results/r5-phase-e-release-train-compare-2026-05-13.md",
     "reference_embedded_baseline": "eval/results/baseline-agent-v3-quality-judge-pilot-embedded.json",
-    "reference_current_pilot": "eval/results/current-agent-v3-quality-judge-pilot.json"
+    "reference_current_pilot": "eval/results/current-agent-v3-quality-judge-pilot.json",
+    "follow_up_2026_05_14_judge_mini_mock_contract_smoke": "eval/results/r5-residual-contract-smoke-2026-05-14.json"
+  },
+  "follow_up_2026_05_14": {
+    "note": "Horizon residual pass: one judge_mini mock contract smoke after runner split; does not re-open strict calibration or promotion.",
+    "judge_lane_status": "advisory_only",
+    "strict_calibration_window": "unchanged_red"
   },
   "commands_rerun": [
     "for c in $(jq -r '.case_ids[]' tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json); do .venv/bin/science-graphrag-agent-v3-quality-benchmark tests/fixtures/benchmarks/agent_v3_quality --suite --tier judge_pilot --case \"$c\" --mock-agent --json-out eval/results/r5-phase-a-part-${c}.json --md-out eval/results/r5-phase-a-part-${c}.md; done",

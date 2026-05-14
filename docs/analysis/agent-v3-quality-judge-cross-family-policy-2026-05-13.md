@@ -32,3 +32,12 @@ After **one** coordinated remediation iteration (prompt **or** judge model **or*
 ## 4. Implementation maintenance
 
 Runner orchestration split: [`eval/agent_v3_quality/runner_branches.py`](../../eval/agent_v3_quality/runner_branches.py), [`eval/agent_v3_quality/runner_report.py`](../../eval/agent_v3_quality/runner_report.py), thin [`eval/agent_v3_quality/runner.py`](../../eval/agent_v3_quality/runner.py) CLI — keeps cost axis (`cost_delta`) and multiseed plumbing maintainable without conflating promotion authority.
+
+## 5. Residual follow-up cycle (2026-05-14, horizon plan closure)
+
+Executed **one** low-cost maintenance run (per §3 stop discipline — no second coordinated prompt/model/calibration change):
+
+- **Command:** `science-graphrag-agent-v3-quality-benchmark … --tier judge_mini --mock-agent` (contract smoke only).
+- **Artifacts:** `eval/results/r5-residual-contract-smoke-2026-05-14.{json,md}`; manifest pointer: [`eval/results/r5-wave-2026-05-13-manifest.json`](../../eval/results/r5-wave-2026-05-13-manifest.json) → `follow_up_2026_05_14` + `artifacts.follow_up_2026_05_14_judge_mini_mock_contract_smoke`.
+- **Outcome:** mock lane `all_passed=true`; **advisory stance unchanged**; Wave D **strict calibration** artifacts from 2026-05-13 are **not superseded** by this smoke (no live LLM judge re-run).
+- **Stop:** no further promotion experiments this cycle — lane remains **regression smell** only until strict window is green.

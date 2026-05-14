@@ -33,7 +33,7 @@ stabilization and depth pass, not a "more agents" pass.
 | **R2** | Chat contract (closed 2026-05-13) | SSE/product layers + `degraded_mode` + `product_step` policy frozen in spec; follow-ups: `agent_note` pilot (optional), tool-map maintenance. | **Done** — [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md); normative: [`../specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §R2. |
 | **R3** | Context memory | Long-thread compaction and `thread_insights` split into cost vs memory layers; **rollout `provider-gated`** until long-thread metrics clear (see baseline checklist). | R1 metrics available. |
 | **R4** | Real subagent runtime | **Slice delivered:** sync spawned `corpus_explore` child (fanout 1), SSE lifecycle + merge provenance in metadata. **R4-next:** hardening (cancellation/timeouts, paired latency compare) — no fanout>1 / no async child runtime until live evidence lanes are reliable. | R2 contract frozen (spec §R2); R4-next also needs repeatable live/trace lanes (R3 experience). |
-| **R5** | Benchmark promotion discipline | **Wave executed 2026-05-13:** judge stays **advisory** (strict calibration red); closeout [`r5-benchmark-promotion-discipline-closeout-2026-05-13.md`](./r5-benchmark-promotion-discipline-closeout-2026-05-13.md); manifest `eval/results/r5-wave-2026-05-13-manifest.json`; only narrow residual policy / runner follow-ups remain. | Can run in parallel after R1; do not reopen as a broad feature wave. |
+| **R5** | Benchmark promotion discipline | **Wave executed 2026-05-13:** judge stays **advisory** (strict calibration red); closeout [`r5-benchmark-promotion-discipline-closeout-2026-05-13.md`](./r5-benchmark-promotion-discipline-closeout-2026-05-13.md); manifest [`eval/results/r5-wave-2026-05-13-manifest.json`](../../eval/results/r5-wave-2026-05-13-manifest.json) includes **2026-05-14 residual** `follow_up_2026_05_14` (judge_mini mock contract smoke — advisory unchanged). | Can run in parallel after R1; do not reopen as a broad feature wave. |
 | **R6** | Ingestion quality baseline | Corpus quality / claims / retrieval / dedup measured before headline updates. | Before publication metric refresh. |
 | **R7** | Ingestion architecture | Structured executor, year/venue writeback, dedup parity slices. | R6 baseline exists. |
 | **R8** | Artifact hygiene | Canonical vs diagnostics storage split, no noisy committed live dumps. | Before benchmark expansion scale-up. |
@@ -1143,6 +1143,8 @@ Recommended order for the **next** cycle:
 7. **R8** artifact hygiene before the next expansion of benchmark/live artifact storage.
 8. **R9** answer-as-report remains design-only until runtime/retrieval evidence path is stable enough to polish.
 
+**2026-05-14 closeout note:** items (1), (2), (6), and (8) above now have cycle-end artifacts/decisions captured in §12; this ordered list remains as forward-looking operating guidance for the subsequent cycle.
+
 ---
 
 ## 10. Cross-wave decision matrix
@@ -1186,7 +1188,22 @@ In that case, the next best work is not another agent architecture wave. It is:
 
 ---
 
-## 12. Reference links
+## 12. Closed in this cycle / Remaining by design (2026-05-14)
+
+Horizon plan closeout: each row has **decision**, **artifact**, **what stays open**.
+
+| Track | Closed / recorded this cycle | Artifact(s) | Remaining by design |
+|-------|------------------------------|-------------|---------------------|
+| **R3** | Stabilization pass (acceptance + `focused_long_thread` compaction); operator stance unchanged | [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md) §Stabilization pass; `eval/results/diagnostics/trace-review-r3-stabilization-2026-05-14-{baseline,candidate}.json`; `eval/results/diagnostics/trace-regression-r3-stabilization-2026-05-14.{json,md}` | **`provider-gated`** until representative cache / L4 / paper-restore metrics clear in acceptance (suite `verdict` may still be `fail` for unrelated gates — use compare + compaction fields). |
+| **R5** | One residual **mock** contract smoke after runner split; no second calibration prompt/model iteration | [`agent-v3-quality-judge-cross-family-policy-2026-05-13.md`](./agent-v3-quality-judge-cross-family-policy-2026-05-13.md) §5; `eval/results/r5-residual-contract-smoke-2026-05-14.{json,md}`; manifest `follow_up_2026_05_14` | Judge lane **advisory**; strict calibration window **still red** until two green windows per prior policy — no promotion reopen. |
+| **R7** | Runtime-first prep table + explicit **hold exit** triggers while `bottleneck_hypothesis=runtime` | [`r7-ingestion-repairs-from-baseline-2026-05.md`](./r7-ingestion-repairs-from-baseline-2026-05.md) | **Hold mode:** no broad ingestion refactor; ingestion thaw only on manifest hypothesis flip or scoped operator waiver (documented). |
+| **R9** | **M1 implementation-ready packet** (schema/API/UI/eval prechecks) without shipping runtime | [`agent-answer-report-roadmap-2026-05.md`](./agent-answer-report-roadmap-2026-05.md) §M1 | **Design-only** until runtime/retrieval stabilization gate; no `answer_report` in prod SSE until then. |
+
+**Nuance:** R6 manifest [`eval/results/corpus-quality-baseline-2026-05-13-manifest.json`](../../eval/results/corpus-quality-baseline-2026-05-13-manifest.json) remains authoritative for `bottleneck_hypothesis=runtime`; R7/R9 rows above are consistent with that lock.
+
+---
+
+## 13. Reference links
 
 | Topic | Doc / artifact |
 |-------|----------------|
