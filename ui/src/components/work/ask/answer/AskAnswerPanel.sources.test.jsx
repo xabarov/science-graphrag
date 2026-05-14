@@ -193,6 +193,7 @@ describe("AskAnswerPanel — sources / citations", () => {
       if (k === "askPanel.citations.inventoryTitle") return "Найденные статьи";
       if (k === "askPanel.citation.workRankLabel")
         return `Статья #${vars.rank}`;
+      if (k === "askPanel.citation.sourceLine") return `Источник: ${vars.title}`;
       return k;
     };
     const normalized = normalizeQueryResponse({
@@ -227,9 +228,8 @@ describe("AskAnswerPanel — sources / citations", () => {
       />,
     );
     expect(screen.getByText("Найденные статьи")).toBeTruthy();
-    expect(
-      screen.getByText(/Статья #1 · DN-DETR: Accelerate DETR Training/),
-    ).toBeTruthy();
+    expect(screen.getByText("Статья #1")).toBeTruthy();
+    expect(screen.getByText("Источник: DN-DETR: Accelerate DETR Training")).toBeTruthy();
   });
   it("treats work-only citations as found papers even without inventory answer class", () => {
     const t = (k, vars = {}) => {

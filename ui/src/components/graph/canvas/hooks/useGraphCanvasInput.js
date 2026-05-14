@@ -1,15 +1,16 @@
-import { useCallback, useRef, useState } from "react";
-import { flushSync } from "react-dom";
-import { screenToWorld } from "../graphCanvasTransform.js";
-import { hitTestClosestEdgeId, hitTestNodeScreen } from "../graphCanvasDraw.js";
-import { dispatchGraphCanvasPointerDown, dispatchGraphCanvasPointerUp } from "../graphCanvasPointerEvents.js";
-import { useGraphPhysicsPointerBridge } from "../GraphPhysicsPointerBridgeContext.jsx";
-import { writeSimNodeWorldPosition } from "../graphCanvasSimBuffer.js";
+import { useCallback, useRef } from "react";
 
-const DRAG_THRESHOLD_PX = 5;
+import { useGraphPhysicsPointerBridge } from "../GraphPhysicsPointerBridgeContext.jsx";
+import { graphCanvasInputPointerDown } from "./graphCanvasInput/pointerDown.js";
+import { graphCanvasInputPointerMove } from "./graphCanvasInput/pointerMove.js";
+import { graphCanvasInputPointerUp } from "./graphCanvasInput/pointerUp.js";
+import { useGraphCanvasInputHoverPick } from "./graphCanvasInput/hoverPick.js";
 
 /**
  * Canvas pointer wiring for {@link GraphCanvasMvp}.
+ *
+ * Composes hover RAF pick, node-drag / pan sessions, and click selection. Submodules live under
+ * `./graphCanvasInput/`; seam map in [`../README.md`](../README.md).
  *
  * @param {object} opts
  * @param {import("react").MutableRefObject<import("../../model/graphSimulationAdapter.js").SimNode[]>} opts.simNodesRef Live sim buffer for force mode (mutated on drag).
@@ -39,114 +40,68 @@ export default function useGraphCanvasInput({
   searchActive = false,
   searchMatchSet = null,
   canvasLabelMode = "adaptive",
-  // Ref-based to avoid a render cycle: the active-for-label set is computed downstream of the
-  // hovered node id this hook produces; reading via ref inside hit-test callbacks gives us the
-  // freshest set per frame without forcing a second render of hit-test handlers.
   activeForLabelSetRef = null,
   simNodesRef,
   invokeCanvasRedraw,
 }) {
-  const [hoveredNodeId, setHoveredNodeId] = useState("");
-  const [hoveredEdgeId, setHoveredEdgeId] = useState("");
-  const [canvasCursor, setCanvasCursor] = useState("grab");
   const physicsPointerBridge = useGraphPhysicsPointerBridge();
   const pointerBus = physicsPointerBridge?.pointerBus;
 
-  const hoverPickPendingRef = useRef(false);
-  const hoverClientRef = useRef({ x: 0, y: 0 });
   const dragRef = useRef({ active: false, moved: false, startX: 0, startY: 0, startTx: 0, startTy: 0, pointerId: null });
   const nodeDragRef = useRef({ active: false, moved: false, nodeId: "", startX: 0, startY: 0, pointerId: null });
 
-  const queueHoverPick = useCallback(
-    (clientX, clientY) => {
-      hoverClientRef.current = { x: clientX, y: clientY };
-      if (hoverPickPendingRef.current) return;
-      hoverPickPendingRef.current = true;
-      requestAnimationFrame(() => {
-        hoverPickPendingRef.current = false;
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        if (dragRef.current.active && dragRef.current.moved) return;
-        if (nodeDragRef.current.active && nodeDragRef.current.moved) return;
-        const rect = canvas.getBoundingClientRect();
-        const lx = hoverClientRef.current.x - rect.left;
-        const ly = hoverClientRef.current.y - rect.top;
-        const posMap = getPositionsForFrame();
-        const nodeId =
-          hitTestNodeScreen(lx, ly, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
-            colorBy: graphColorBy,
-            nodeCount: graph.nodes.length,
-            searchActive,
-            searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
-            selectedNodeId,
-            hoveredNodeId,
-            mode: canvasLabelMode,
-            activeForLabelSet: activeForLabelSetRef?.current ?? null,
-          }) || "";
-        if (nodeId) {
-          setHoveredNodeId((prev) => (prev === nodeId ? prev : nodeId));
-          setHoveredEdgeId("");
-          setCanvasCursor("pointer");
-          return;
-        }
-        setHoveredNodeId("");
-        const edgeId = hitTestClosestEdgeId(lx, ly, graph.edges, posMap, transformRef.current);
-        setHoveredEdgeId((prev) => (prev === edgeId ? prev : edgeId));
-        setCanvasCursor(edgeId ? "pointer" : "grab");
-      });
-    },
-    [
-      activeForLabelSetRef,
-      canvasLabelMode,
-      canvasRef,
-      getPositionsForFrame,
-      graph.edges,
-      graph.nodes,
-      graphColorBy,
-      hoveredNodeId,
-      resolveNodeCanvasLabel,
-      searchActive,
-      searchMatchSet,
-      selectedNodeId,
-      transformRef,
-    ],
-  );
+  const {
+    hoveredNodeId,
+    hoveredEdgeId,
+    canvasCursor,
+    setHoveredNodeId,
+    setHoveredEdgeId,
+    setCanvasCursor,
+    queueHoverPick,
+    clearHover,
+  } = useGraphCanvasInputHoverPick({
+    canvasRef,
+    dragRef,
+    nodeDragRef,
+    getPositionsForFrame,
+    graph,
+    transformRef,
+    resolveNodeCanvasLabel,
+    graphColorBy,
+    searchActive,
+    searchMatchSet,
+    selectedNodeId,
+    canvasLabelMode,
+    activeForLabelSetRef,
+  });
 
   const handlePointerDown = useCallback(
     (ev) => {
-      if (ev.button !== 0) return;
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      dispatchGraphCanvasPointerDown(pointerBus);
-      const rect = canvas.getBoundingClientRect();
-      const x = ev.clientX - rect.left;
-      const y = ev.clientY - rect.top;
-      const { scale, tx, ty } = transformRef.current;
-      if (simNodesRef.current.length > 0) {
-        const posMap = getPositionsForFrame();
-        const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
-          colorBy: graphColorBy,
-          nodeCount: graph.nodes.length,
-          searchActive,
-          searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
-          selectedNodeId,
+      graphCanvasInputPointerDown(
+        {
+          canvasRef,
+          simNodesRef,
+          getPositionsForFrame,
+          graph,
+          transformRef,
+          resolveNodeCanvasLabel,
+          graphColorBy,
           hoveredNodeId,
-          mode: canvasLabelMode,
-          activeForLabelSet: activeForLabelSetRef?.current ?? null,
-        });
-        if (nodeId) {
-          if (layoutMode === "circle" && onCanvasLayoutModeChange) flushSync(() => onCanvasLayoutModeChange("force"));
-          const world = screenToWorld(x, y, scale, tx, ty);
-          canvas.setPointerCapture(ev.pointerId);
-          nodeDragRef.current = { active: true, moved: false, nodeId, startX: x, startY: y, pointerId: ev.pointerId };
-          draggedNodePositionRef.current = { id: nodeId, x: world.x, y: world.y };
-          writeSimNodeWorldPosition(simNodesRef.current, nodeId, world.x, world.y);
-          invokeCanvasRedraw();
-          return;
-        }
-      }
-      canvas.setPointerCapture(ev.pointerId);
-      dragRef.current = { active: true, moved: false, startX: x, startY: y, startTx: tx, startTy: ty, pointerId: ev.pointerId };
+          searchActive,
+          searchMatchSet,
+          selectedNodeId,
+          canvasLabelMode,
+          activeForLabelSetRef,
+          layoutMode,
+          onCanvasLayoutModeChange,
+          draggedNodePositionRef,
+          nodeDragRef,
+          dragRef,
+          invokeCanvasRedraw,
+          pointerBus,
+        },
+        ev,
+      );
     },
     [
       activeForLabelSetRef,
@@ -154,158 +109,99 @@ export default function useGraphCanvasInput({
       canvasRef,
       draggedNodePositionRef,
       getPositionsForFrame,
-      graph.nodes,
+      graph,
       graphColorBy,
       hoveredNodeId,
+      invokeCanvasRedraw,
       layoutMode,
       onCanvasLayoutModeChange,
+      pointerBus,
       resolveNodeCanvasLabel,
       searchActive,
       searchMatchSet,
       selectedNodeId,
       simNodesRef,
-      invokeCanvasRedraw,
       transformRef,
-      pointerBus,
     ],
   );
 
   const handlePointerMove = useCallback(
     (ev) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const nd = nodeDragRef.current;
-      if (nd.active) {
-        const rect = canvas.getBoundingClientRect();
-        const x = ev.clientX - rect.left;
-        const y = ev.clientY - rect.top;
-        const dx = x - nd.startX;
-        const dy = y - nd.startY;
-        if (!nd.moved && dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
-          nd.moved = true;
-          setHoveredNodeId("");
-          setHoveredEdgeId("");
-          setCanvasCursor("grabbing");
-          setIsSimulationStable(false);
-          bumpPhysicsReheat();
-        }
-        const world = screenToWorld(x, y, transformRef.current.scale, transformRef.current.tx, transformRef.current.ty);
-        draggedNodePositionRef.current = { id: nd.nodeId, x: world.x, y: world.y };
-        writeSimNodeWorldPosition(simNodesRef.current, nd.nodeId, world.x, world.y);
-        invokeCanvasRedraw();
-        return;
-      }
-      const d = dragRef.current;
-      if (d.active) {
-        const rect = canvas.getBoundingClientRect();
-        const x = ev.clientX - rect.left;
-        const y = ev.clientY - rect.top;
-        const dx = x - d.startX;
-        const dy = y - d.startY;
-        if (!d.moved && dx * dx + dy * dy > DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) {
-          d.moved = true;
-          setHoveredNodeId("");
-          setHoveredEdgeId("");
-          setCanvasCursor("grabbing");
-        }
-        if (d.moved) {
-          const next = { scale: transformRef.current.scale, tx: d.startTx + dx, ty: d.startTy + dy };
-          transformRef.current = next;
-          setTransform(next);
-        }
-        return;
-      }
-      queueHoverPick(ev.clientX, ev.clientY);
+      graphCanvasInputPointerMove(
+        {
+          canvasRef,
+          nodeDragRef,
+          dragRef,
+          draggedNodePositionRef,
+          simNodesRef,
+          transformRef,
+          setTransform,
+          setIsSimulationStable,
+          bumpPhysicsReheat,
+          setHoveredNodeId,
+          setHoveredEdgeId,
+          setCanvasCursor,
+          queueHoverPick,
+          invokeCanvasRedraw,
+        },
+        ev,
+      );
     },
     [
       bumpPhysicsReheat,
       canvasRef,
       draggedNodePositionRef,
+      invokeCanvasRedraw,
       queueHoverPick,
+      setCanvasCursor,
+      setHoveredEdgeId,
+      setHoveredNodeId,
       setIsSimulationStable,
       setTransform,
       simNodesRef,
-      invokeCanvasRedraw,
       transformRef,
     ],
   );
 
   const handlePointerLeave = useCallback(() => {
-    setHoveredNodeId("");
-    setHoveredEdgeId("");
-    setCanvasCursor("grab");
-  }, []);
+    clearHover();
+  }, [clearHover]);
 
   const handlePointerUp = useCallback(
     (ev) => {
-      try {
-        const canvas = canvasRef.current;
-        const nd = nodeDragRef.current;
-        if (nd.active) {
-          try {
-            canvas?.releasePointerCapture(ev.pointerId);
-          } catch {
-            /* ignore */
-          }
-          const { nodeId, moved } = nd;
-          const pinAfterDrop = moved && isSimulationStable;
-          nodeDragRef.current = { active: false, moved: false, nodeId: "", startX: 0, startY: 0, pointerId: null };
-          draggedNodePositionRef.current = null;
-          if (moved) {
-            setIsSimulationStable(false);
-            bumpPhysicsReheat();
-          }
-          if (pinAfterDrop) {
-            fixedNodesRef.current.add(nodeId);
-            setPinnedNodeCount(fixedNodesRef.current.size);
-          }
-          if (moved) {
-            setSimNodes(simNodesRef.current.map((n) => ({ ...n })));
-            invokeCanvasRedraw();
-          }
-          if (!moved) queueMicrotask(() => onNodeClick?.(nodeId));
-          queueHoverPick(ev.clientX, ev.clientY);
-          return;
-        }
-        const d = dragRef.current;
-        if (!d.active) return;
-        try {
-          canvas?.releasePointerCapture(ev.pointerId);
-        } catch {
-          /* ignore */
-        }
-        dragRef.current = { ...d, active: false, pointerId: null };
-        if (!d.moved) {
-          const rect = canvas.getBoundingClientRect();
-          const x = ev.clientX - rect.left;
-          const y = ev.clientY - rect.top;
-          const posMap = getPositionsForFrame();
-          const nodeId = hitTestNodeScreen(x, y, graph.nodes, posMap, transformRef.current, resolveNodeCanvasLabel, {
-            colorBy: graphColorBy,
-            nodeCount: graph.nodes.length,
-            searchActive,
-            searchMatchSet: searchMatchSet instanceof Set ? searchMatchSet : null,
-            selectedNodeId,
-            hoveredNodeId,
-            mode: canvasLabelMode,
-            activeForLabelSet: activeForLabelSetRef?.current ?? null,
-          });
-          if (nodeId) {
-            queueMicrotask(() => onNodeClick?.(nodeId));
-            return;
-          }
-          const edgeId = hitTestClosestEdgeId(x, y, graph.edges, posMap, transformRef.current);
-          if (edgeId) {
-            queueMicrotask(() => onEdgeClick?.(edgeId));
-            return;
-          }
-          queueMicrotask(() => onCanvasClick?.());
-        } else {
-          queueHoverPick(ev.clientX, ev.clientY);
-        }
-      } finally {
-        dispatchGraphCanvasPointerUp(pointerBus);
-      }
+      graphCanvasInputPointerUp(
+        {
+          canvasRef,
+          nodeDragRef,
+          dragRef,
+          draggedNodePositionRef,
+          simNodesRef,
+          fixedNodesRef,
+          isSimulationStable,
+          setIsSimulationStable,
+          bumpPhysicsReheat,
+          setSimNodes,
+          setPinnedNodeCount,
+          invokeCanvasRedraw,
+          getPositionsForFrame,
+          graph,
+          transformRef,
+          resolveNodeCanvasLabel,
+          graphColorBy,
+          hoveredNodeId,
+          searchActive,
+          searchMatchSet,
+          selectedNodeId,
+          canvasLabelMode,
+          activeForLabelSetRef,
+          onNodeClick,
+          onEdgeClick,
+          onCanvasClick,
+          queueHoverPick,
+          pointerBus,
+        },
+        ev,
+      );
     },
     [
       activeForLabelSetRef,
@@ -315,14 +211,15 @@ export default function useGraphCanvasInput({
       draggedNodePositionRef,
       fixedNodesRef,
       getPositionsForFrame,
-      graph.edges,
-      graph.nodes,
+      graph,
       graphColorBy,
       hoveredNodeId,
+      invokeCanvasRedraw,
       isSimulationStable,
       onCanvasClick,
       onEdgeClick,
       onNodeClick,
+      pointerBus,
       queueHoverPick,
       resolveNodeCanvasLabel,
       searchActive,
@@ -332,9 +229,7 @@ export default function useGraphCanvasInput({
       setPinnedNodeCount,
       setSimNodes,
       simNodesRef,
-      invokeCanvasRedraw,
       transformRef,
-      pointerBus,
     ],
   );
 
@@ -347,10 +242,6 @@ export default function useGraphCanvasInput({
     handlePointerMove,
     handlePointerLeave,
     handlePointerUp,
-    clearHover: () => {
-      setHoveredNodeId("");
-      setHoveredEdgeId("");
-      setCanvasCursor("grab");
-    },
+    clearHover,
   };
 }

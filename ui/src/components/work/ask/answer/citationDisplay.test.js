@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import {
   citationNumericScore,
   formatCitationHeadline,
-  formatCitationWorkLabel,
   isWorkOnlyCitation,
   pickCitationWorkTitle,
 } from "./citationDisplay.js";
@@ -16,26 +15,32 @@ function t(key, vars = {}) {
 }
 
 describe("citationDisplay", () => {
-  it("formats headline without score when missing", () => {
+  it("formats work-only headline without work_id or score in simple mode", () => {
     const headline = formatCitationHeadline({
       rank: "2",
       citation: { work_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" },
       chatDetailLevel: "simple",
       t,
     });
-    expect(headline).toContain("Статья #2");
-    expect(headline).not.toContain("score");
-    expect(headline).not.toMatch(/aaaaaaaa/);
+    expect(headline).toBe("Статья #2");
   });
 
-  it("includes numeric score when present", () => {
-    const headline = formatCitationHeadline({
+  it("includes numeric score only in detailed mode", () => {
+    const simple = formatCitationHeadline({
       rank: "1",
-      citation: { work_id: "w1", score: 0.91 },
+      citation: { work_id: "w1", score: 0.91, excerpt: "x" },
       chatDetailLevel: "simple",
       t,
     });
-    expect(headline).toContain("0.91");
+    expect(simple).toBe("Цитата #1");
+    const detailed = formatCitationHeadline({
+      rank: "1",
+      citation: { work_id: "w1", score: 0.91, excerpt: "x" },
+      chatDetailLevel: "detailed",
+      t,
+    });
+    expect(detailed).toContain("0.91");
+    expect(detailed).toContain("Цитата #1");
   });
 
   it("classifies only work references without passage or chunk as work-only", () => {
@@ -45,17 +50,33 @@ describe("citationDisplay", () => {
   });
 
   it("prefers title over work_id in label", () => {
-    expect(
-      formatCitationWorkLabel({ work_id: "uuid", title: "Paper" }, "simple"),
-    ).toBe("Paper");
+    const headline = formatCitationHeadline({
+      rank: "3",
+      citation: { work_id: "uuid", title: "Paper", excerpt: "Body" },
+      chatDetailLevel: "simple",
+      t,
+    });
+    expect(headline).toBe("Цитата #3");
     expect(pickCitationWorkTitle({ paper_title: " P " })).toBe("P");
   });
 
-  it("work-only list mode omits truncated work_id from work label", () => {
-    expect(formatCitationWorkLabel({ work_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee" }, "simple", { workOnlyListMode: true })).toBe(
-      "",
-    );
-    expect(formatCitationWorkLabel({ work_id: "w1", title: "T" }, "simple", { workOnlyListMode: true })).toBe("T");
+  it("never includes work_id in headline, regardless of detail level", () => {
+    const simple = formatCitationHeadline({
+      rank: "1",
+      citation: { work_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", excerpt: "Body" },
+      chatDetailLevel: "simple",
+      t,
+    });
+    const detailed = formatCitationHeadline({
+      rank: "1",
+      citation: { work_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", excerpt: "Body", score: 0.99 },
+      chatDetailLevel: "detailed",
+      t,
+    });
+    expect(simple).toBe("Цитата #1");
+    expect(detailed).toContain("Цитата #1");
+    expect(simple).not.toMatch(/aaaaaaaa/);
+    expect(detailed).not.toMatch(/aaaaaaaa/);
   });
 
   it("parses citationNumericScore", () => {

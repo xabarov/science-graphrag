@@ -40,26 +40,8 @@ export function isWorkOnlyCitation(c) {
 }
 
 /**
- * Prefer paper title; otherwise shorten work_id in simple mode for the headline.
- *
- * @param {Record<string, unknown>} c
- * @param {"simple" | "detailed"} chatDetailLevel
- * @param {{ workOnlyListMode?: boolean }} [options]
- */
-export function formatCitationWorkLabel(c, chatDetailLevel, options = {}) {
-  const title = pickCitationWorkTitle(c);
-  if (title) return title;
-  const wid = c.work_id != null ? String(c.work_id).trim() : "";
-  if (!wid) return "";
-  if (options.workOnlyListMode) {
-    return "";
-  }
-  if (chatDetailLevel === "detailed") return wid;
-  return wid.length > 12 ? `${wid.slice(0, 8)}…` : wid;
-}
-
-/**
- * Single-line headline: rank, optional numeric score, optional work label.
+ * Single-line headline: rank label and optional numeric score (detailed only).
+ * Source title and work_id are rendered by AskSourceList, not in this string.
  *
  * @param {{
  *   rank: string,
@@ -73,8 +55,7 @@ export function formatCitationHeadline(args) {
   const workOnly = isWorkOnlyCitation(citation);
   const rankLabel = t(workOnly ? "askPanel.citation.workRankLabel" : "askPanel.citation.rankLabel", { rank });
   const score = citationNumericScore(citation);
-  const scorePart = score != null ? ` · ${String(score)}` : "";
-  const label = formatCitationWorkLabel(citation, chatDetailLevel, { workOnlyListMode: workOnly });
-  const workPart = label ? ` · ${label}` : "";
-  return `${rankLabel}${scorePart}${workPart}`;
+  const scorePart =
+    chatDetailLevel === "detailed" && score != null ? ` · ${String(score)}` : "";
+  return `${rankLabel}${scorePart}`;
 }

@@ -59,6 +59,7 @@ export default {
   "askPanel.citation.line": "Citation #{{rank}} · score {{score}} · {{work}}",
   "askPanel.citation.rankLabel": "Citation #{{rank}}",
   "askPanel.citation.workRankLabel": "Paper #{{rank}}",
+  "askPanel.citation.sourceLine": "Source: {{title}}",
   "askPanel.citation.workIdLine": "work_id: {{id}}",
   "askPanel.citation.tooltipArticle": "Open article (reader)",
   "askPanel.citation.tooltipGraphWork": "Open work graph",

@@ -1,14 +1,18 @@
 /** @vitest-environment jsdom */
 import React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, afterEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import { ThemeProvider } from "@mui/material/styles";
 
 import { buildAppTheme } from "../../../../theme/buildAppTheme.js";
 import { AskSourceList } from "./AskSourceList.jsx";
 
 const appTheme = buildAppTheme("dark");
+
+afterEach(() => {
+  cleanup();
+});
 
 function renderWithTheme(node) {
   return render(
@@ -26,6 +30,7 @@ const testMessages = {
   "askPanel.citation.noSnippetBulkPartial": "No passages in some citations",
   "askPanel.citation.rankLabel": "Citation #{{rank}}",
   "askPanel.citation.workRankLabel": "Paper #{{rank}}",
+  "askPanel.citation.sourceLine": "Source: {{title}}",
   "askPanel.citation.workIdLine": "work_id: {{id}}",
   "askPanel.citation.noSnippet": "No snippet",
   "askPanel.citation.passageLabel": "Passage",
@@ -99,5 +104,57 @@ describe("AskSourceList", () => {
       />,
     );
     expect(screen.getByText("work_id: w-det")).toBeTruthy();
+  });
+
+  it("puts paper title on source line, not in rank headline (simple)", () => {
+    renderWithTheme(
+      <AskSourceList
+        t={t}
+        citations={[
+          {
+            work_id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+            title: "Neural Scaling Laws",
+            excerpt: "Supervised pre-training…",
+            chunk_fingerprint: "fp-1",
+          },
+        ]}
+        answerClass="grounded_explanation"
+        workspaceId="ws-1"
+        isRunActive={false}
+        hideStructuredCitations={false}
+        chatDetailLevel="simple"
+      />,
+    );
+    expect(screen.getByText("Citation #1")).toBeTruthy();
+    expect(screen.getByText("Source: Neural Scaling Laws")).toBeTruthy();
+    expect(screen.queryByText(/aaaaaaaa/)).toBeNull();
+  });
+
+  it("shows work_id and source line in detailed mode when title present", () => {
+    const { container } = renderWithTheme(
+      <AskSourceList
+        t={t}
+        citations={[
+          {
+            work_id: "w-x",
+            title: "Paper X",
+            excerpt: "Body",
+            chunk_fingerprint: "fp-z",
+          },
+        ]}
+        answerClass="grounded_explanation"
+        workspaceId="ws-1"
+        isRunActive={false}
+        hideStructuredCitations={false}
+        chatDetailLevel="detailed"
+      />,
+    );
+    const el = container.querySelector('[data-testid="citation-block-0"]');
+    expect(el).toBeTruthy();
+    const block = within(el);
+    expect(block.getByText("Citation #1")).toBeTruthy();
+    expect(block.queryByText(/Citation #1 ·/)).toBeNull();
+    expect(block.getByText("work_id: w-x")).toBeTruthy();
+    expect(block.getByText("Source: Paper X")).toBeTruthy();
   });
 });

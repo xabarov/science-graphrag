@@ -30,7 +30,7 @@ Priorities: **P0** = user-visible risk or scaling ceiling; **P1** = maintainabil
 
 Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor-backend.md`](./refactor-backend.md); do not track duplicate narratives here.
 
-**Open queue (2026-05-14 refresh):** ниже — **новые P1/P2** после глубокого прохода по `ui/src` (LOC `wc -l`, без `*.test.*`). Graph canvas controller закрыт; следующий фокус — **canvas input**, **graph workspace/flow shell**, **workspace page + `workspaceStore`**, **benchmark inspector / run-group**, **Ask orchestration**, затем **Settings** и мелкий **react-refresh** долг.
+**Open queue (2026-05-14 refresh):** ниже — **новые P1/P2** после глубокого прохода по `ui/src` (LOC `wc -l`, без `*.test.*`). Graph canvas controller закрыт; **canvas input (Wave G1) закрыт 2026-05-14**; следующий фокус — **graph workspace/flow shell**, **workspace page + `workspaceStore`**, **benchmark inspector / run-group**, **Ask orchestration**, затем **Settings** и мелкий **react-refresh** долг.
 
 ### Глубокий аудит фронтенда (landscape, 2026-05-14)
 
@@ -39,14 +39,14 @@ Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor
 - **Страницы** (`pages/`): маршруты, табы workspace, Settings/Benchmark/Home — здесь смешиваются роутинг, query-параметры и «толстые» `use*` ядра (`useWorkspacePageCore`, run-tab orchestration).
 - **Продуктовые области** (`components/work/`, `components/graph/`): Ask + Agent runtime уже разнесены по доменам (`ask/index.js`, `work/agent/index.js`), но оркестрация сабмита и сессии Ask остаётся узкой полосой риска.
 - **Сервисы и IO** (`services/apiClient.js`, `services/researchApi.js`, `utils/workspaceStore.js`): `workspaceStore` — монолит **~399 LOC** поверх `apiClient` (таймауты ingest, workspace CRUD, graph stats); это главный **не-React** кандидат на разрез по доменным модулям (read vs write vs ingest).
-- **Граф**: canvas MVP и force-sim уже разложены; остаются **ввод/жесты** (`useGraphCanvasInput` ~356), **flow shell** (`GraphFlowView` ~373), **workspace chrome** (`GraphWorkspacePanel` ~390, `WorkspaceGraphToolbar` ~352, `GraphNodeDetailSection` ~343).
+- **Граф**: canvas MVP и force-sim уже разложены; **ввод/жесты** — фасад [`useGraphCanvasInput`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js) + [`hooks/graphCanvasInput/`](../../ui/src/components/graph/canvas/hooks/graphCanvasInput/) (2026-05-14); далее **flow shell** (`GraphFlowView` ~373), **workspace chrome** (`GraphWorkspacePanel` ~390, `WorkspaceGraphToolbar` ~352, `GraphNodeDetailSection` ~343).
 
 **Где сосредоточена сложность (крупнейшие не-тестовые модули, ориентир)**
 
 | Band | Примеры путей (LOC, май 2026) | Риск |
 | --- | --- | --- |
 | **~380–400** | [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) (~399), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx) (~390), [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) (~381) | смешение API + UI-состояния + навигации; регрессии при ingest/workspace |
-| **~340–375** | [`BenchmarkCaseInspectorShell.jsx`](../../ui/src/pages/BenchmarkPage/caseInspector/BenchmarkCaseInspectorShell.jsx) (~377), [`GraphFlowView.jsx`](../../ui/src/components/graph/flow/GraphFlowView.jsx) (~373), [`useGraphCanvasInput.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js) (~356), [`useGraphCanvasMvpController.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasMvpController.js) (~355) | долгие файлы = высокая стоимость фич; canvas input — логический хвост после декомпозиции controller |
+| **~340–375** | [`BenchmarkCaseInspectorShell.jsx`](../../ui/src/pages/BenchmarkPage/caseInspector/BenchmarkCaseInspectorShell.jsx) (~377), [`GraphFlowView.jsx`](../../ui/src/components/graph/flow/GraphFlowView.jsx) (~373), [`useGraphCanvasMvpController.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasMvpController.js) (~355) | долгие файлы = высокая стоимость фич; canvas input вынесен в `hooks/graphCanvasInput/*` + фасад |
 | **~290–320** | [`scienceGraphSimulationTickEngine.js`](../../ui/src/hooks/graph/scienceGraphSimulationTickEngine.js) (~319), [`useBenchmarkRunGroup.js`](../../ui/src/pages/BenchmarkPage/useBenchmarkRunGroup.js) (~315), [`WorkspaceIngestPanel.jsx`](../../ui/src/pages/WorkspacePage/WorkspaceIngestPanel.jsx) (~303), [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx) (~300), [`askSessionState.js`](../../ui/src/components/work/ask/session/askSessionState.js) (~297), [`SettingsPage.jsx`](../../ui/src/pages/SettingsPage.jsx) (~295) | точечные волны или явные подмодули по мере роста |
 
 **Уже стабилизировано (контекст планирования)**
@@ -61,7 +61,7 @@ Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor
 
 ### План волн (рекомендуемый порядок рефактор-проходов)
 
-1. **Wave G1 — Graph canvas input + при необходимости view toolbar** — декомпозиция [`useGraphCanvasInput.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js) (pointer/drag/hover/label ref bridge); опционально уменьшить [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx). Vitest: canvas hooks + draw hit-tests.
+1. **Wave G1 — Graph canvas input** — **[DONE] 2026-05-14** — фасад [`useGraphCanvasInput.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js) + [`hooks/graphCanvasInput/`](../../ui/src/components/graph/canvas/hooks/graphCanvasInput/); опционально позже: [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx). Vitest: canvas input + draw hit-tests.
 2. **Wave G2 — Graph workspace / flow shell** — [`GraphFlowView.jsx`](../../ui/src/components/graph/flow/GraphFlowView.jsx), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx), [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/workspace/WorkspaceGraphToolbar.jsx), [`GraphNodeDetailSection.jsx`](../../ui/src/components/graph/shell/detail/GraphNodeDetailSection.jsx): вынести данные/действия в hooks или `workspace/*` подмодули; не смешивать canvas MVP с layout shell без явной границы.
 3. **Wave W — Workspace** — разрезать [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) по табам/ingest/bootstrap; выделить из [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) доменные клиенты (`workspaceRead`, `workspaceWrite`, `workspaceIngest`) с общим `apiClient` + тонким фасадом `workspaceStore.js`.
 4. **Wave B — Benchmark operator UI** — [`BenchmarkCaseInspectorShell.jsx`](../../ui/src/pages/BenchmarkPage/caseInspector/BenchmarkCaseInspectorShell.jsx), [`useBenchmarkRunGroup.js`](../../ui/src/pages/BenchmarkPage/useBenchmarkRunGroup.js): презентация vs загрузка данных vs URL/session.
@@ -104,12 +104,13 @@ _No open items._
 
 ### P1 — Module size and coupling
 
-### [OPEN] Graph canvas — `useGraphCanvasInput` size (~356 LOC)
-- **Area:** [`hooks/useGraphCanvasInput.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js)
+### [DONE] Graph canvas — `useGraphCanvasInput` decomposition (Wave G1)
+- **Area:** [`hooks/useGraphCanvasInput.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js) (facade) + [`hooks/graphCanvasInput/`](../../ui/src/components/graph/canvas/hooks/graphCanvasInput/) (`hoverPick`, `pointerDown`, `pointerMove`, `pointerUp`, `clickSelection`, `hitTestContext`, `constants`); seam table in [`canvas/README.md`](../../ui/src/components/graph/canvas/README.md).
 - **Issue:** After `useGraphCanvasMvpController` split, pointer/drag/hover/selection and label-bridge logic remain in one dense hook — highest coupling with physics pause and `activeForLabelSetRef`.
 - **Proposal:** Split by seam (e.g. pointer session + drag, hover pick queue, selection dispatch) with unchanged public contract to `useGraphCanvasMvpController`; extend canvas vitest where behavior is currently implicit.
 - **Acceptance:** hook(s) at most ~300 LOC each or explicit submodules; graph canvas hook tests + existing draw/hit-test suite green.
 - **Raised:** 2026-05-14 (post-controller decomposition audit)
+- **Done:** 2026-05-14 — facade composes submodules; public API unchanged for `useGraphCanvasMvpController`; Vitest for `hoverPick` (RAF vs drag-moved), `pointerMove` (threshold / pan / hover delegate), `pointerUp` (`dispatchGraphCanvasPointerUp` when idle), `hitTestContext`, integration tap→`onCanvasClick`; `npm run lint` (no new errors).
 
 ### [OPEN] Graph workspace / flow shell — panel, toolbar, flow view, node detail
 - **Area:** [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx), [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/workspace/WorkspaceGraphToolbar.jsx), [`GraphFlowView.jsx`](../../ui/src/components/graph/flow/GraphFlowView.jsx), [`GraphNodeDetailSection.jsx`](../../ui/src/components/graph/shell/detail/GraphNodeDetailSection.jsx)

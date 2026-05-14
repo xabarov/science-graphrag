@@ -13,7 +13,7 @@ import { buildStandaloneTracePath } from "../../traceability/traceabilityState.j
 import { CursorIconButton, CursorSmallButton } from "../../../common/index.js";
 import { CitationBodyExpandable } from "./CitationBodyExpandable.jsx";
 import { citationRankFromRow, citationTraceExtras, deriveSourceListPresentation } from "./askSourcePresentation.js";
-import { formatCitationHeadline, isWorkOnlyCitation, pickCitationWorkTitle } from "./citationDisplay.js";
+import { formatCitationHeadline, pickCitationWorkTitle } from "./citationDisplay.js";
 import { pickCitationBodyText } from "./citationBodyText.js";
 
 /**
@@ -75,8 +75,7 @@ export function AskSourceList({
           const hasPassage = Boolean(pickCitationBodyText(c).trim());
           const suppressMissingPlaceholder =
             !hasPassage && (suppressMissingPassageChrome || allPassagesMissing || somePassagesMissing);
-          const workOnly = isWorkOnlyCitation(c);
-          const showWorkIdSecondary = chatDetailLevel === "detailed" && wid && (Boolean(workTitle) || workOnly);
+          const showWorkIdSecondary = chatDetailLevel === "detailed" && Boolean(wid.trim());
           const deepLinks =
             wid &&
             (chatDetailLevel === "detailed" ? (
@@ -141,6 +140,18 @@ export function AskSourceList({
                   t,
                 })}
               </Typography>
+              {workTitle ? (
+                <Typography
+                  sx={{
+                    fontSize: "0.75rem",
+                    color: tk.text.muted,
+                    mt: 0.15,
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {t("askPanel.citation.sourceLine", { title: workTitle })}
+                </Typography>
+              ) : null}
               {showWorkIdSecondary ? (
                 <Typography
                   sx={{ fontSize: "0.68rem", color: tk.text.faint, mt: 0.25, fontFamily: "monospace", wordBreak: "break-all" }}

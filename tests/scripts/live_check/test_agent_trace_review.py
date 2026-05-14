@@ -110,10 +110,12 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
     monkeypatch.setitem(sys.modules, "agent_trace_review_heartbeat", hb_mod)
 
     rmod = _load_main_runner()
+    he2e = importlib.import_module("trace_review.orchestrator_run_http_and_e2e")
+    art = importlib.import_module("trace_review.orchestrator_run_artifacts")
     monkeypatch.setattr(rmod, "_ensure_local_imports", lambda: None)
     monkeypatch.setattr(rmod, "_load_dotenv", lambda *_a, **_k: None)
     monkeypatch.setattr(
-        rmod,
+        he2e,
         "_run_http_suite",
         lambda **_k: [
             {"name": "health", "ok": True, "detail": "ok"},
@@ -121,9 +123,9 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
             {"name": "agent_v2_sse", "ok": True, "detail": "ok"},
         ],
     )
-    monkeypatch.setattr(rmod, "_run_optional_e2e", lambda *_a, **_k: None)
+    monkeypatch.setattr(he2e, "_run_optional_e2e", lambda *_a, **_k: None)
     monkeypatch.setattr(
-        rmod,
+        art,
         "_runtime_attribution_from_env",
         lambda: ("single_agent_research", "single_agent_react"),
     )
