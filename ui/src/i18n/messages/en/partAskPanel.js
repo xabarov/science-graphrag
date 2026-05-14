@@ -58,6 +58,7 @@ export default {
   "askPanel.citations.none": "No supporting citations were returned for this answer.",
   "askPanel.citation.line": "Citation #{{rank}} · score {{score}} · {{work}}",
   "askPanel.citation.rankLabel": "Citation #{{rank}}",
+  "askPanel.citation.workRankLabel": "Paper #{{rank}}",
   "askPanel.citation.workIdLine": "work_id: {{id}}",
   "askPanel.citation.tooltipArticle": "Open article (reader)",
   "askPanel.citation.tooltipGraphWork": "Open work graph",

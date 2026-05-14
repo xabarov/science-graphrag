@@ -2,58 +2,48 @@
 
 from __future__ import annotations
 
-import os
-from copy import deepcopy
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, ConfigDict, ValidationError
-
 from science_graphrag.settings.benchmark_defaults import (
-    build_benchmark_ui_snapshot,
     merge_persisted_benchmark_family,
     normalize_benchmark_family_key,
     validate_merged_benchmark_family_prefs,
 )
 from science_graphrag.settings.llm_advanced_fields import (
     LLM_ADVANCED_RUNTIME_KEYS,
-    advanced_effective_map,
-    advanced_schema_fields,
     clamp_advanced_field,
-    recommended_advanced_values,
     validate_merged_runtime_settings,
 )
-from science_graphrag.settings.llm_probe import run_llm_connection_probe
+from science_graphrag.settings.llm_test_probe_service import (
+    LlmTestDraft,
+    run_llm_connection_probe,
+    run_settings_llm_test_probe,
+)
 from science_graphrag.settings.repository import SettingsRepository
 from science_graphrag.settings.runtime_overlay import build_non_secret_overrides
-from science_graphrag.settings.secret_display import mask_short_secret as _mask_secret
+from science_graphrag.settings.schema import build_settings_schema
+from science_graphrag.settings.secret_store_keys import LLM_API_KEY
 from science_graphrag.settings.secrets import SecretStore
-from science_graphrag.settings.snapshots import (
-    build_diagnostics_snapshot,
-    build_security_snapshot,
-    resolve_ingestion_fields,
+from science_graphrag.settings.service_runtime_merge import (
+    merged_runtime_candidate_from_persisted_payload,
+    validate_settings_model_roundtrip,
 )
+from science_graphrag.settings.snapshot_materialize import materialize_settings_snapshot
+from science_graphrag.settings.snapshot_model import SettingsSnapshot
 from science_graphrag.settings.storage_runtime import (
     _SK_DATABASE_URL,
     _SK_NEO4J_PASSWORD,
     _SK_S3_SECRET,
     apply_storage_json_updates,
-    build_storage_ui_snapshot,
 )
 
 if TYPE_CHECKING:
     from science_graphrag.config import Settings
 
-_LLM_SECRET_KEY = "llm.api_key"
 _UNSET_CHAT_MODEL = object()
-
-_LLM_ENV_KEY_HINT = (
-    "SCIENCE_GRAPHRAG_API_KEY (canonical unified key) or "
-    "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY / SCIENCE_GRAPHRAG_VL_API_KEY for compatibility"
-)
 
 
 def _now_iso() -> str:
@@ -62,36 +52,6 @@ def _now_iso() -> str:
 
 def _runtime_settings_root(repo_root: Path) -> Path:
     return repo_root / "data" / "settings"
-
-
-class LlmTestDraft(BaseModel):
-    """Draft configuration used for a one-off connection test."""
-
-    model_config = ConfigDict(extra="ignore")
-
-    base_url: str | None = None
-    model: str | None = None
-    api_key: str | None = None
-    temperature: float | None = None
-    timeout_seconds: float | None = None
-    use_saved_secret: bool = True
-
-
-@dataclass(frozen=True)
-class SettingsSnapshot:
-    """Materialized runtime state for the settings UI and config overlay."""
-
-    non_secret_overrides: dict[str, Any]
-    llm: dict[str, Any]
-    ingestion: dict[str, Any]
-    general: dict[str, Any]
-    storage: dict[str, Any]
-    benchmark: dict[str, Any]
-    diagnostics: dict[str, Any]
-    security: dict[str, Any]
-    sections: list[dict[str, Any]]
-    work_dedup: dict[str, Any]
-    agent_tools: dict[str, Any]
 
 
 class SettingsService:
@@ -114,477 +74,25 @@ class SettingsService:
         """Overlay persisted runtime overrides onto env-derived settings."""
         overrides = self.get_snapshot(base_settings).non_secret_overrides
         payload = dict(overrides)
-        api_key = self._secret_store.get_secret(_LLM_SECRET_KEY)
+        api_key = self._secret_store.get_secret(LLM_API_KEY)
         if api_key:
             payload["extraction_llm_api_key"] = api_key
         if not payload:
             return base_settings
         return base_settings.model_copy(update=payload)
 
-    def get_snapshot(  # pylint: disable=too-many-locals,too-many-statements
-        self, base_settings: Settings
-    ) -> SettingsSnapshot:
+    def get_snapshot(self, base_settings: Settings) -> SettingsSnapshot:
         """Return a masked UI-facing snapshot of runtime settings."""
         persisted = self._repository.load()
-        llm = dict(persisted.get("llm") or {})
-        ingestion_cfg = dict(persisted.get("ingestion") or {})
-        general_cfg = dict(persisted.get("general") or {})
-        storage_cfg = dict(persisted.get("storage") or {})
-        general_meta = dict(general_cfg.get("_meta") or {})
-        ingestion_meta = dict(ingestion_cfg.get("_meta") or {})
-        meta = dict(llm.get("_meta") or {})
-        saved_secret = self._secret_store.get_secret(_LLM_SECRET_KEY)
-        has_saved_secret = bool(saved_secret)
-        env_key_raw = base_settings.extraction_llm_api_key
-        env_key = (env_key_raw or "").strip() if env_key_raw else ""
-        has_env_key = bool(env_key)
-
-        if has_saved_secret:
-            secret_source = "server_managed"
-            active_key_for_mask = saved_secret
-        elif has_env_key:
-            secret_source = "environment"
-            active_key_for_mask = env_key
-        else:
-            secret_source = "none"
-            active_key_for_mask = None
-
-        configured = has_saved_secret or has_env_key
-        needs_initial_setup = not configured
-        # Prefer Settings fields: matches pydantic/.env resolution, not getenv alone.
-        canonical_api_key_env_set = bool((base_settings.api_key or "").strip())
-        legacy_extraction_key_env_set = bool(
-            os.getenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY", "").strip()
-        )
-        vl_raw = (base_settings.vl_api_key or "").strip()
-        extraction_effective = (base_settings.extraction_llm_api_key or "").strip()
-        # Redundant VL_API_KEY identical to unified/extraction should not surface as an override.
-        vl_dedicated_api_key = bool(vl_raw) and vl_raw != extraction_effective
-        uses_env_defaults = not (
-            bool(str(llm.get("base_url") or "").strip())
-            or bool(str(llm.get("model") or "").strip())
-        )
-        legacy_override_detected = bool(vl_dedicated_api_key or legacy_extraction_key_env_set)
-        setup_status = "needs_api_key" if needs_initial_setup else "ready"
-
-        timeout_seconds = llm.get("timeout_seconds")
-        if timeout_seconds is None:
-            timeout_seconds = base_settings.extraction_llm_timeout_seconds
-
-        persisted_chat = str(llm.get("chat_model") or "").strip()
-        env_chat = str(base_settings.chat_llm_model or "").strip()
-        resolved_chat_model = persisted_chat or env_chat or base_settings.extraction_llm_model
-
-        persisted_vl_model = str(llm.get("vl_model") or "").strip()
-        persisted_vl_base = str(llm.get("vl_base_url") or "").strip().rstrip("/")
-        resolved_vl_model = persisted_vl_model or base_settings.vl_model
-        resolved_vl_base_url = persisted_vl_base or base_settings.vl_base_url
-
-        llm_snapshot = {
-            "provider_mode": "openai_compatible",
-            "base_url": llm.get("base_url") or base_settings.extraction_llm_base_url,
-            "model": llm.get("model") or base_settings.extraction_llm_model,
-            "vl_model": persisted_vl_model,
-            "vl_base_url": persisted_vl_base,
-            "chat_model": persisted_chat,
-            "temperature": llm.get("temperature", base_settings.extraction_llm_temperature),
-            "timeout_seconds": timeout_seconds,
-            "status": {
-                "configured": configured,
-                "has_saved_secret": has_saved_secret,
-                "masked_key": _mask_secret(active_key_for_mask),
-                "secret_source": secret_source,
-                "env_key_hint": _LLM_ENV_KEY_HINT if secret_source == "environment" else None,
-                "last_updated_at": meta.get("last_updated_at"),
-                "last_updated_by": meta.get("last_updated_by"),
-                "needs_initial_setup": needs_initial_setup,
-                "setup_status": setup_status,
-                "uses_env_defaults": uses_env_defaults,
-                "legacy_override_detected": legacy_override_detected,
-                "canonical_api_key_env_set": canonical_api_key_env_set,
-                "legacy_extraction_key_env_set": legacy_extraction_key_env_set,
-                # API key name kept for stability; true only when VL env key differs
-                # from extraction key.
-                "vl_api_key_explicit_env": vl_dedicated_api_key,
-            },
-            "effective": {
-                "resolved_base_url": llm.get("base_url") or base_settings.extraction_llm_base_url,
-                "resolved_model": llm.get("model") or base_settings.extraction_llm_model,
-                "resolved_chat_model": resolved_chat_model,
-                "resolved_timeout_seconds": timeout_seconds,
-                "resolved_temperature": llm.get(
-                    "temperature", base_settings.extraction_llm_temperature
-                ),
-                "resolved_enabled": bool(llm.get("enabled", base_settings.extraction_llm_enabled)),
-                "resolved_vl_model": resolved_vl_model,
-                "resolved_vl_base_url": resolved_vl_base_url,
-            },
-        }
-
-        adv_eff = advanced_effective_map(llm, base_settings)
-        llm_snapshot["advanced_controls"] = {
-            k: {"persisted": llm[k] if k in llm else None, "effective": adv_eff[k]}
-            for k in LLM_ADVANCED_RUNTIME_KEYS
-        }
-        llm_snapshot["recommended_advanced"] = recommended_advanced_values()
-
-        resolved_upload_mb, resolved_claims_enabled = resolve_ingestion_fields(
-            ingestion_cfg, base_settings
-        )
-
-        ingestion_snapshot = {
-            "max_file_size_mb": resolved_upload_mb,
-            "claims_extraction_enabled": resolved_claims_enabled,
-            "status": {
-                "last_updated_at": ingestion_meta.get("last_updated_at"),
-                "last_updated_by": ingestion_meta.get("last_updated_by"),
-            },
-            "effective": {
-                "resolved_max_file_size_mb": resolved_upload_mb,
-                "resolved_claims_extraction_enabled": resolved_claims_enabled,
-            },
-        }
-
-        persisted_openalex_mailto = str(general_cfg.get("openalex_mailto") or "").strip()
-        resolved_openalex_mailto = (
-            persisted_openalex_mailto or str(base_settings.openalex_mailto or "").strip()
-        )
-        general_snapshot = {
-            "openalex_mailto": persisted_openalex_mailto,
-            "effective": {"resolved_openalex_mailto": resolved_openalex_mailto},
-            "status": {
-                "source": "server_managed" if persisted_openalex_mailto else "environment",
-                "last_updated_at": general_meta.get("last_updated_at"),
-                "last_updated_by": general_meta.get("last_updated_by"),
-                "uses_env_default": not persisted_openalex_mailto,
-            },
-        }
-
-        storage_snapshot = build_storage_ui_snapshot(
+        return materialize_settings_snapshot(
             base_settings=base_settings,
-            storage_cfg=storage_cfg,
+            persisted=persisted,
             secret_store=self._secret_store,
-        )
-
-        benchmark_cfg = dict(persisted.get("benchmark") or {})
-        benchmark_snapshot = build_benchmark_ui_snapshot(benchmark_cfg)
-
-        agent_tools_cfg = dict(persisted.get("agent_tools") or {})
-        agent_tools_meta = dict(agent_tools_cfg.get("_meta") or {})
-        persisted_sup_rounds = agent_tools_cfg.get("agent_supervisor_max_rounds")
-
-        diagnostics_snapshot = build_diagnostics_snapshot()
-        security_snapshot = build_security_snapshot(base_settings)
-
-        non_secret_overrides = build_non_secret_overrides(
-            base_settings=base_settings,
-            llm=llm,
-            ingestion_cfg=ingestion_cfg,
-            general_cfg=general_cfg,
-            storage_cfg=storage_cfg,
-            secret_store=self._secret_store,
-            storage_secret_explicit=None,
-            agent_tools=agent_tools_cfg,
-        )
-        merged_settings = base_settings.model_copy(update=non_secret_overrides)
-
-        pr_int: int | None = None
-        if persisted_sup_rounds is not None and str(persisted_sup_rounds).strip() != "":
-            try:
-                pr_int = int(persisted_sup_rounds)
-            except (TypeError, ValueError):
-                pr_int = None
-        agent_tools_snapshot = {
-            "agent_supervisor_max_rounds": pr_int,
-            "effective": {
-                "resolved_agent_supervisor_max_rounds": int(
-                    merged_settings.agent_supervisor_max_rounds
-                ),
-            },
-            "status": {
-                "source": "server_managed" if pr_int is not None else "environment",
-                "last_updated_at": agent_tools_meta.get("last_updated_at"),
-                "last_updated_by": agent_tools_meta.get("last_updated_by"),
-            },
-        }
-
-        q_work = merged_settings.qdrant_work_embeddings_collection
-        q_author = merged_settings.qdrant_author_embeddings_collection
-        work_dedup_snapshot = {
-            "effective": {
-                "qdrant_work_embeddings_collection": q_work,
-                "qdrant_author_embeddings_collection": q_author,
-                "work_dedup_sim_low": float(base_settings.work_dedup_sim_low),
-                "work_dedup_sim_high": float(base_settings.work_dedup_sim_high),
-                "work_dedup_max_candidates": int(base_settings.work_dedup_max_candidates),
-                "work_dedup_llm_mode": str(base_settings.work_dedup_llm_mode),
-                "work_dedup_llm_timeout_s": float(merged_settings.work_dedup_llm_timeout_s),
-                "author_dedup_sim_low": float(base_settings.author_dedup_sim_low),
-                "author_dedup_sim_high": float(base_settings.author_dedup_sim_high),
-                "author_dedup_max_candidates": int(base_settings.author_dedup_max_candidates),
-                "author_dedup_llm_timeout_s": float(merged_settings.author_dedup_llm_timeout_s),
-            }
-        }
-
-        sections = [
-            {
-                "id": "general",
-                "label": "General",
-                "status": "ready",
-                "description": (
-                    "Interface language, appearance, and server-managed OpenAlex contact email."
-                ),
-            },
-            {
-                "id": "llm",
-                "label": "LLM",
-                "status": "ready",
-                "description": "Provider endpoint, model defaults, credentials, and test tools.",
-            },
-            {
-                "id": "ingestion",
-                "label": "Ingestion",
-                "status": "ready",
-                "description": "Workspace file uploads and related limits.",
-            },
-            {
-                "id": "storage",
-                "label": "Storage & Integrations",
-                "status": "ready",
-                "description": ("Neo4j, Qdrant, Postgres, Redis, object storage, and local paths."),
-            },
-            {
-                "id": "benchmark",
-                "label": "Benchmark",
-                "status": "ready",
-                "description": ("Teacher/student defaults and benchmark-specific execution knobs."),
-            },
-            {
-                "id": "security",
-                "label": "Security & Access",
-                "status": "ready",
-                "description": "Read-only flags for admin and settings API protection.",
-            },
-            {
-                "id": "diagnostics",
-                "label": "Diagnostics",
-                "status": "ready",
-                "description": "Runtime build identity (read-only).",
-            },
-            {
-                "id": "agent_tools",
-                "label": "Agent tools",
-                "status": "ready",
-                "description": (
-                    "Operator knobs for agent runtime (supervisor limits); "
-                    "separate from LLM provider settings."
-                ),
-            },
-        ]
-
-        return SettingsSnapshot(
-            non_secret_overrides=non_secret_overrides,
-            llm=llm_snapshot,
-            ingestion=ingestion_snapshot,
-            general=general_snapshot,
-            storage=storage_snapshot,
-            benchmark=benchmark_snapshot,
-            diagnostics=diagnostics_snapshot,
-            security=security_snapshot,
-            sections=sections,
-            work_dedup=work_dedup_snapshot,
-            agent_tools=agent_tools_snapshot,
         )
 
     def get_schema(self) -> dict[str, Any]:
         """Return a UI-friendly schema so future sections can extend the page safely."""
-        llm_fields: list[dict[str, Any]] = [
-            {"id": "base_url", "type": "url", "required": True, "group": "llm_provider"},
-            {"id": "model", "type": "string", "required": True, "group": "llm_provider"},
-            {
-                "id": "chat_model",
-                "type": "string",
-                "required": False,
-                "group": "llm_provider",
-                "description": (
-                    "Research chat model override; empty uses env "
-                    "SCIENCE_GRAPHRAG_CHAT_LLM_MODEL or extraction model."
-                ),
-            },
-            {
-                "id": "temperature",
-                "type": "number",
-                "required": True,
-                "min": 0.0,
-                "max": 2.0,
-                "group": "llm_provider",
-            },
-            {
-                "id": "timeout_seconds",
-                "type": "number",
-                "required": True,
-                "min": 1.0,
-                "max": 900.0,
-                "group": "llm_provider",
-                "description": (
-                    "Shared extraction/provider HTTP transport timeout "
-                    "(extraction_llm_timeout_seconds)."
-                ),
-            },
-            {
-                "id": "vl_model",
-                "type": "string",
-                "required": False,
-                "group": "llm_provider",
-                "description": (
-                    "Vision-language model id for PDF→Markdown " "(SCIENCE_GRAPHRAG_VL_MODEL)."
-                ),
-            },
-            {
-                "id": "vl_base_url",
-                "type": "url",
-                "required": False,
-                "group": "llm_provider",
-                "description": (
-                    "OpenAI-compatible base URL for VL; "
-                    "defaults to extraction base URL when unset."
-                ),
-            },
-            {"id": "api_key", "type": "secret", "required": False, "group": "llm_provider"},
-            {
-                "id": "runtime_overrides",
-                "type": "object",
-                "required": False,
-                "group": "llm_provider",
-                "description": (
-                    "Nested map of advanced LLM runtime limits (same keys as Settings)."
-                ),
-            },
-        ]
-        llm_fields.extend(advanced_schema_fields())
-        storage_fields: list[dict[str, Any]] = [
-            {"id": "neo4j_uri", "type": "url", "required": False, "group": "neo4j"},
-            {"id": "neo4j_user", "type": "string", "required": False, "group": "neo4j"},
-            {"id": "neo4j_password", "type": "secret", "required": False, "group": "neo4j"},
-            {"id": "qdrant_url", "type": "url", "required": False, "group": "qdrant"},
-            {"id": "qdrant_collection", "type": "string", "required": False, "group": "qdrant"},
-            {
-                "id": "qdrant_claims_collection",
-                "type": "string",
-                "required": False,
-                "group": "qdrant",
-            },
-            {
-                "id": "qdrant_work_embeddings_collection",
-                "type": "string",
-                "required": False,
-                "group": "qdrant",
-            },
-            {
-                "id": "qdrant_author_embeddings_collection",
-                "type": "string",
-                "required": False,
-                "group": "qdrant",
-            },
-            {"id": "database_url", "type": "secret", "required": False, "group": "postgres"},
-            {"id": "redis_url", "type": "url", "required": False, "group": "redis"},
-            {"id": "blob_root", "type": "string", "required": False, "group": "paths"},
-            {"id": "artifact_root", "type": "string", "required": False, "group": "paths"},
-            {"id": "s3_endpoint_url", "type": "url", "required": False, "group": "s3"},
-            {"id": "s3_bucket", "type": "string", "required": False, "group": "s3"},
-            {"id": "s3_use_ssl", "type": "boolean", "required": False, "group": "s3"},
-            {
-                "id": "s3_addressing_style",
-                "type": "string",
-                "required": False,
-                "group": "s3",
-            },
-            {"id": "s3_artifact_key_prefix", "type": "string", "required": False, "group": "s3"},
-            {"id": "s3_access_key_id", "type": "string", "required": False, "group": "s3"},
-            {"id": "s3_secret_access_key", "type": "secret", "required": False, "group": "s3"},
-            {
-                "id": "s3_benchmark_runs_key_prefix",
-                "type": "string",
-                "required": False,
-                "group": "s3",
-            },
-            {
-                "id": "s3_diagnostics_key_prefix",
-                "type": "string",
-                "required": False,
-                "group": "s3",
-            },
-        ]
-        benchmark_fields: list[dict[str, Any]] = [
-            {
-                "id": "by_family",
-                "type": "object",
-                "required": False,
-                "group": "benchmark_defaults",
-                "description": (
-                    "Per-family defaults for benchmark launcher "
-                    "(model profile, gold, thresholds, API hints)."
-                ),
-            },
-        ]
-        agent_tools_fields: list[dict[str, Any]] = [
-            {
-                "id": "agent_supervisor_max_rounds",
-                "type": "integer",
-                "required": False,
-                "min": 2,
-                "max": 32,
-                "group": "supervisor",
-                "description": (
-                    "Cap on supervisor routing decisions per turn before writer handoff "
-                    "(Settings.agent_supervisor_max_rounds)."
-                ),
-            },
-        ]
-        return {
-            "version": 11,
-            "sections": [
-                {
-                    "id": "general",
-                    "fields": [
-                        {
-                            "id": "openalex_mailto",
-                            "type": "string",
-                            "required": True,
-                            "group": "openalex",
-                            "description": (
-                                "Polite-pool contact for OpenAlex HTTP API "
-                                "(SCIENCE_GRAPHRAG_OPENALEX_MAILTO when not overridden here)."
-                            ),
-                        },
-                    ],
-                },
-                {
-                    "id": "llm",
-                    "fields": llm_fields,
-                },
-                {
-                    "id": "ingestion",
-                    "fields": [
-                        {
-                            "id": "max_file_size_mb",
-                            "type": "integer",
-                            "required": True,
-                            "min": 1,
-                            "max": 2048,
-                        },
-                        {
-                            "id": "claims_extraction_enabled",
-                            "type": "boolean",
-                            "required": True,
-                        },
-                    ],
-                },
-                {"id": "storage", "fields": storage_fields},
-                {"id": "benchmark", "fields": benchmark_fields},
-                {"id": "agent_tools", "fields": agent_tools_fields},
-            ],
-        }
+        return build_settings_schema()
 
     def update_llm_settings(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals,too-many-branches
         self,
@@ -660,7 +168,7 @@ class SettingsService:
             payload["llm"] = llm
             self._repository.save(payload)
             if api_key is not None:
-                self._secret_store.set_secret(_LLM_SECRET_KEY, api_key.strip())
+                self._secret_store.set_secret(LLM_API_KEY, api_key.strip())
         return self.get_snapshot(base_settings)
 
     def update_ingestion_settings(
@@ -713,22 +221,10 @@ class SettingsService:
                 "last_updated_by": actor,
             }
             payload["general"] = general
-            llm = dict(payload.get("llm") or {})
-            ingestion_cfg = dict(payload.get("ingestion") or {})
-            storage_cfg = dict(payload.get("storage") or {})
-            agent_tools_cfg = dict(payload.get("agent_tools") or {})
-            merged_non_secret = build_non_secret_overrides(
+            merged_runtime_candidate_from_persisted_payload(
                 base_settings=base_settings,
-                llm=llm,
-                ingestion_cfg=ingestion_cfg,
-                general_cfg=general,
-                storage_cfg=storage_cfg,
+                payload=payload,
                 secret_store=self._secret_store,
-                storage_secret_explicit=None,
-                agent_tools=agent_tools_cfg,
-            )
-            validate_merged_runtime_settings(
-                base_settings.model_copy(update=merged_non_secret),
             )
             self._repository.save(payload)
         return self.get_snapshot(base_settings)
@@ -752,26 +248,12 @@ class SettingsService:
                 "last_updated_by": actor,
             }
             payload["agent_tools"] = at
-            llm = dict(payload.get("llm") or {})
-            ingestion_cfg = dict(payload.get("ingestion") or {})
-            general_cfg = dict(payload.get("general") or {})
-            storage_cfg = dict(payload.get("storage") or {})
-            merged_non_secret = build_non_secret_overrides(
+            candidate = merged_runtime_candidate_from_persisted_payload(
                 base_settings=base_settings,
-                llm=llm,
-                ingestion_cfg=ingestion_cfg,
-                general_cfg=general_cfg,
-                storage_cfg=storage_cfg,
+                payload=payload,
                 secret_store=self._secret_store,
-                storage_secret_explicit=None,
-                agent_tools=at,
             )
-            candidate = base_settings.model_copy(update=merged_non_secret)
-            validate_merged_runtime_settings(candidate)
-            try:
-                type(candidate).model_validate(candidate.model_dump(mode="python"))
-            except ValidationError as exc:
-                raise ValueError(str(exc)) from exc
+            validate_settings_model_roundtrip(candidate)
             self._repository.save(payload)
         return self.get_snapshot(base_settings)
 
@@ -802,26 +284,16 @@ class SettingsService:
             if "s3_secret_access_key" in updates:
                 explicit[_SK_S3_SECRET] = updates["s3_secret_access_key"]
 
-            llm = dict(payload.get("llm") or {})
-            ingestion_cfg = dict(payload.get("ingestion") or {})
-            general_cfg = dict(payload.get("general") or {})
-            agent_tools_cfg = dict(payload.get("agent_tools") or {})
-            merged_non_secret = build_non_secret_overrides(
+            candidate = merged_runtime_candidate_from_persisted_payload(
                 base_settings=base_settings,
-                llm=llm,
-                ingestion_cfg=ingestion_cfg,
-                general_cfg=general_cfg,
-                storage_cfg=storage_next,
+                payload={
+                    **payload,
+                    "storage": storage_next,
+                },
                 secret_store=self._secret_store,
                 storage_secret_explicit=explicit if explicit else None,
-                agent_tools=agent_tools_cfg,
             )
-            candidate = base_settings.model_copy(update=merged_non_secret)
-            validate_merged_runtime_settings(candidate)
-            try:
-                type(candidate).model_validate(candidate.model_dump(mode="python"))
-            except ValidationError as exc:
-                raise ValueError(str(exc)) from exc
+            validate_settings_model_roundtrip(candidate)
 
             storage_next["_meta"] = {
                 "last_updated_at": _now_iso(),
@@ -896,7 +368,7 @@ class SettingsService:
     def delete_llm_secret(self, *, base_settings: Settings) -> SettingsSnapshot:
         """Remove the managed LLM secret while keeping non-secret config intact."""
         with self._lock:
-            self._secret_store.delete_secret(_LLM_SECRET_KEY)
+            self._secret_store.delete_secret(LLM_API_KEY)
         return self.get_snapshot(base_settings)
 
     def test_llm_connection(  # pylint: disable=too-many-locals
@@ -909,38 +381,18 @@ class SettingsService:
         """Run a minimal OpenAI-compatible probe using current or draft settings."""
         del actor  # Reserved for future audit trail.
         snapshot = self.get_snapshot(base_settings)
-        effective = deepcopy(snapshot.llm["effective"])
-        candidate = draft or LlmTestDraft()
+        return run_settings_llm_test_probe(
+            base_settings=base_settings,
+            secret_store=self._secret_store,
+            effective_llm_snapshot=snapshot.llm["effective"],
+            draft=draft,
+            probe_fn=run_llm_connection_probe,
+        )
 
-        base_url = (candidate.base_url or effective["resolved_base_url"]).strip().rstrip("/")
-        model = (candidate.model or effective["resolved_model"]).strip()
-        timeout_seconds = float(
-            candidate.timeout_seconds
-            if candidate.timeout_seconds is not None
-            else effective["resolved_timeout_seconds"]
-        )
-        temperature = float(
-            candidate.temperature
-            if candidate.temperature is not None
-            else effective["resolved_temperature"]
-        )
-        api_key = (candidate.api_key or "").strip() if candidate.api_key is not None else None
-        api_key_source = "draft" if api_key else "missing"
-        if not api_key and candidate.use_saved_secret:
-            api_key = self._secret_store.get_secret(_LLM_SECRET_KEY)
-            if api_key:
-                api_key_source = "secret_store"
-        if not api_key and candidate.use_saved_secret:
-            env_fallback = (base_settings.extraction_llm_api_key or "").strip()
-            if env_fallback:
-                api_key = env_fallback
-                api_key_source = "env_fallback"
 
-        return run_llm_connection_probe(
-            base_url=base_url,
-            model=model,
-            timeout_seconds=timeout_seconds,
-            temperature=temperature,
-            api_key=api_key,
-            used_saved_secret=(api_key_source == "secret_store"),
-        )
+__all__ = [
+    "LlmTestDraft",
+    "SettingsService",
+    "SettingsSnapshot",
+    "run_llm_connection_probe",
+]

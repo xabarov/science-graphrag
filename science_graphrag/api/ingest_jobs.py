@@ -14,9 +14,14 @@ from science_graphrag.api.ingest.dto import (
     IngestJobView,
     IngestStageView,
 )
-from science_graphrag.api.ingest.registry import IngestJobRegistry, _registry
 from science_graphrag.api.ingest.router import router
 from science_graphrag.api.ingest_event_bus import BUS
+from science_graphrag.ingestion.jobs.registry import (
+    IngestJobRegistry,
+    _registry,
+    get_ingest_job_registry,
+    reset_ingest_job_registry_for_tests,
+)
 
 __all__ = [
     "BATCH_MAX_FILES",
@@ -29,7 +34,9 @@ __all__ = [
     "SUPPORTED_SUFFIXES",
     "_append_log",
     "_registry",
+    "get_ingest_job_registry",
     "job_to_dict",
+    "reset_ingest_job_registry_for_tests",
     "router",
     "start_batch_ingest_job",
     "start_ingest_job",

@@ -13,7 +13,6 @@ from tenacity import Retrying, stop_after_attempt, wait_exponential
 
 from science_graphrag.artifacts.protocols import ArtifactStorePort
 from science_graphrag.config import Settings, get_settings
-from science_graphrag.embeddings.preflight import probe_embeddings
 from science_graphrag.ingestion.artifact_layout import canonical_article_md_rel
 from science_graphrag.ingestion.cache_policy import article_slug as _article_slug
 from science_graphrag.ingestion.cache_policy import canonical_article_rel as _canonical_article_rel
@@ -21,8 +20,6 @@ from science_graphrag.ingestion.cache_policy import (
     canonical_diagnostics_rel as _canonical_diagnostics_rel,
 )
 from science_graphrag.ingestion.markdown_extraction import markdown_from_path
-from science_graphrag.ingestion.orchestrator import BatchDeps, run_batch_ingest
-from science_graphrag.ingestion.progress_store import default_progress_file
 from science_graphrag.ingestion.reference_citations import (
     maybe_link_openalex_arxiv_version,
     normalize_arxiv_id,
@@ -36,8 +33,6 @@ from science_graphrag.ingestion.session_wiring import (
     sql_commit_if_session as _sql_commit_if_session,
 )
 from science_graphrag.ingestion.stage_context import IngestRunContext, build_ingest_run_context
-from science_graphrag.observability.phoenix_tracer import init_tracer_provider
-from science_graphrag.storage.db import get_engine, init_db, session_factory
 from science_graphrag.storage.models_orm import DocumentRecord
 from science_graphrag.storage.neo4j_store import Neo4jGraphStore
 from science_graphrag.storage.raw_blob_store import RawBlobStorePort, build_raw_blob_store
@@ -54,8 +49,6 @@ _normalized_title_for_fingerprint = normalized_title_for_fingerprint
 _persist_reference_citation = persist_reference_citation
 _maybe_link_openalex_arxiv_version = maybe_link_openalex_arxiv_version
 _markdown_from_path = markdown_from_path
-
-CORPUS_SUPPORTED_SUFFIXES = frozenset({".pdf", ".md", ".txt"})
 
 
 @dataclass(slots=True)
@@ -119,40 +112,6 @@ def _resolve_document_id_for_sha(
     if skip_existing_sha:
         raise SkippedDuplicateIngestError(document_id=row.id, sha256=sha256_hex)
     return row.id, True
-
-
-def discover_corpus_files(directory: Path) -> list[Path]:
-    """Sorted list of ingestible files under directory (recursive)."""
-
-    found: list[Path] = []
-    for path in sorted(directory.rglob("*")):
-        if path.is_file() and path.suffix.lower() in CORPUS_SUPPORTED_SUFFIXES:
-            found.append(path)
-    return found
-
-
-def _run_dedup_audit(settings: Settings) -> None:
-    """Compatibility wrapper for tests monkeypatching Neo4jGraphStore."""
-    neo = Neo4jGraphStore(settings.neo4j_uri, settings.neo4j_user, settings.neo4j_password)
-    try:
-        violations = neo.find_work_dedup_violations()
-    finally:
-        neo.close()
-
-    logger.info("--- Work dedup audit (Neo4j) ---")
-    if not violations:
-        logger.info(
-            "OK: no duplicate Work clusters by doi / openalex_id / fingerprint / arxiv_id",
-        )
-        return
-    logger.info("Found %s duplicate cluster(s):", len(violations))
-    for item in violations:
-        logger.info(
-            "  [%s] key=%r work_ids=%s",
-            item["kind"],
-            item["dedup_key"],
-            item["work_ids"],
-        )
 
 
 def _write_markdown_artifact(
@@ -349,88 +308,3 @@ def ingest_document(
             logger=logger,
         ),
     )
-
-
-def run_ingest_batch_cli(
-    directory: Path,
-    *,
-    continue_on_error: bool = False,
-    settings: Settings | None = None,
-    skip_existing_sha: bool = False,
-    force_new_document: bool = False,
-    per_file_timeout_s: int = 900,
-    resume: bool = False,
-    progress_file: Path | None = None,
-    embeddings_preflight: bool = False,
-    bypass_markdown_cache: bool = False,
-) -> list[dict[str, Any]]:
-    """
-    Ingest every ``.pdf`` / ``.md`` / ``.txt`` under ``directory`` (recursive).
-
-    Prints a per-file summary and a post-hoc Neo4j :Work dedup audit
-    (duplicate clusters by DOI, OpenAlex id, fingerprint, arXiv id).
-    """
-
-    init_tracer_provider()
-    s = settings or get_settings()
-    if embeddings_preflight:
-        probe_embeddings(s)
-    engine = get_engine(s.database_url)
-    init_db(engine)
-    progress_path = progress_file or default_progress_file()
-    rows = run_batch_ingest(
-        directory,
-        deps=BatchDeps(
-            discover_corpus_files=discover_corpus_files,
-            ingest_document=ingest_document,
-            session_factory=session_factory,
-        ),
-        settings=s,
-        engine=engine,
-        progress_file=progress_path,
-        continue_on_error=continue_on_error,
-        skip_existing_sha=skip_existing_sha,
-        force_new_document=force_new_document,
-        per_file_timeout_s=per_file_timeout_s,
-        resume=resume,
-        duplicate_error_type=SkippedDuplicateIngestError,
-        bypass_markdown_cache=bypass_markdown_cache,
-    )
-
-    _run_dedup_audit(s)
-    return rows
-
-
-def run_ingest_cli(
-    path: Path,
-    *,
-    skip_existing_sha: bool = False,
-    force_new_document: bool = False,
-    embeddings_preflight: bool = False,
-    bypass_markdown_cache: bool = False,
-) -> None:
-    """CLI helper for single-file ingest."""
-    init_tracer_provider()
-    s = get_settings()
-    if embeddings_preflight:
-        probe_embeddings(s)
-    engine = get_engine(s.database_url)
-    init_db(engine)
-    factory = session_factory(engine)
-    with factory() as session:
-        try:
-            doc_id, work_id = ingest_document(
-                path,
-                settings=s,
-                session=session,
-                skip_existing_sha=skip_existing_sha,
-                force_new_document=force_new_document,
-                bypass_markdown_cache=bypass_markdown_cache,
-            )
-            logger.info("document_id=%s work_id=%s", doc_id, work_id)
-        except SkippedDuplicateIngestError as dup:
-            logger.info(
-                "SKIP duplicate sha256=%s document_id=%s",
-                dup.sha256,
-                dup.document_id,
-            )

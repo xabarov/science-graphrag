@@ -48,7 +48,7 @@ from science_graphrag.agent.tool_call_normalization import normalize_tool_call_n
 from science_graphrag.agent.tool_execution_pipeline import build_tool_execution_node
 from science_graphrag.agent.tools import build_graph_tools, build_retrieval_tools
 from science_graphrag.agent.tools.product_interaction_tools import build_product_interaction_tools
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import SpanAttributes, llm_span

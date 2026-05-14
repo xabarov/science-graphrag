@@ -5,7 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 from science_graphrag.api.ingest.dto import IngestJobRecord
-from science_graphrag.api.ingest.worker import _sse_progress_canonical_fields
+from science_graphrag.ingestion.jobs.single_document_ingest import sse_progress_canonical_fields
 from science_graphrag.config import Settings
 
 
@@ -32,8 +32,11 @@ def test_sse_progress_always_includes_progress_indeterminate_bool() -> None:
     mock_reg = MagicMock()
     mock_reg.get_job.return_value = rec
 
-    with patch("science_graphrag.api.ingest.worker._registry", return_value=mock_reg):
-        out = _sse_progress_canonical_fields("j-sse", settings)
+    with patch(
+        "science_graphrag.ingestion.jobs.single_document_ingest.get_ingest_job_registry",
+        return_value=mock_reg,
+    ):
+        out = sse_progress_canonical_fields("j-sse", settings)
 
     assert "progress_indeterminate" in out
     assert out["progress_indeterminate"] is False

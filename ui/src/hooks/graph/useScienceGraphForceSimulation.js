@@ -1,6 +1,12 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import { useGraphPhysicsPolicy } from "./useGraphPhysicsPolicy.js";
+import {
+  BOUNDS_SMOOTHING,
+  createWorldBoundsCalculator,
+  lerp,
+} from "./scienceGraphSimulationBounds.js";
+import { HIGH_REPULSION_STRENGTH_THRESHOLD } from "./scienceGraphSimulationTune.js";
 import { getScienceDesiredDistance } from "../../components/graph/canvas/physics/desiredLinkDistance.js";
 import { getNodeCluster } from "../../components/graph/canvas/physics/structuralCommunities.js";
 import { detectScienceHybridCommunities } from "../../components/graph/canvas/physics/scienceHybridCommunities.js";
@@ -83,6 +89,12 @@ export function useScienceGraphForceSimulation(
     onPhysicsVisualTickRef.current = onPhysicsVisualTick;
   }, [onPhysicsVisualTick]);
 
+  const calculateWorldBounds = useMemo(
+    () => createWorldBoundsCalculator(canvasSize),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only width/height affect bounds math; object identity may churn per parent render
+    [canvasSize.width, canvasSize.height],
+  );
+
   const { integrationBlocked } = useGraphPhysicsPolicy({
     enabled,
     simulationSignature,
@@ -134,53 +146,6 @@ export function useScienceGraphForceSimulation(
     }
 
     const stableCountRef = { current: 0 };
-    const WORLD_SCALE = 3;
-    const MIN_WORLD_SPAN = Math.max(canvasSize.width, canvasSize.height) * WORLD_SCALE;
-    const SMOOTHING = 0.15;
-    const lerp = (a, b, t) => a + (b - a) * t;
-
-    const calculateWorldBounds = (nodeList) => {
-      if (!nodeList || nodeList.length === 0) {
-        const halfSpan = MIN_WORLD_SPAN / 2 + CANVAS_MARGIN * 2;
-        return {
-          minX: -halfSpan,
-          maxX: halfSpan,
-          minY: -halfSpan,
-          maxY: halfSpan,
-          width: halfSpan * 2,
-          height: halfSpan * 2,
-        };
-      }
-
-      let minX = Infinity;
-      let maxX = -Infinity;
-      let minY = Infinity;
-      let maxY = -Infinity;
-
-      nodeList.forEach((node) => {
-        if (node.x < minX) minX = node.x;
-        if (node.x > maxX) maxX = node.x;
-        if (node.y < minY) minY = node.y;
-        if (node.y > maxY) maxY = node.y;
-      });
-
-      const spanX = Math.max(maxX - minX, MIN_WORLD_SPAN);
-      const spanY = Math.max(maxY - minY, MIN_WORLD_SPAN);
-      const padding = Math.max(CANVAS_MARGIN * 2, Math.max(spanX, spanY) * 0.15);
-      const centerX = (minX + maxX) / 2;
-      const centerY = (minY + maxY) / 2;
-      const halfX = spanX / 2 + padding;
-      const halfY = spanY / 2 + padding;
-
-      return {
-        minX: centerX - halfX,
-        maxX: centerX + halfX,
-        minY: centerY - halfY,
-        maxY: centerY + halfY,
-        width: halfX * 2,
-        height: halfY * 2,
-      };
-    };
 
     if (!boundsRef.current) {
       boundsRef.current = calculateWorldBounds(nodes);
@@ -224,10 +189,10 @@ export function useScienceGraphForceSimulation(
       const targetBounds = calculateWorldBounds(newNodes);
       const prevBounds = boundsRef.current ?? targetBounds;
       const effectiveBounds = {
-        minX: lerp(prevBounds.minX, targetBounds.minX, SMOOTHING),
-        minY: lerp(prevBounds.minY, targetBounds.minY, SMOOTHING),
-        maxX: lerp(prevBounds.maxX, targetBounds.maxX, SMOOTHING),
-        maxY: lerp(prevBounds.maxY, targetBounds.maxY, SMOOTHING),
+        minX: lerp(prevBounds.minX, targetBounds.minX, BOUNDS_SMOOTHING),
+        minY: lerp(prevBounds.minY, targetBounds.minY, BOUNDS_SMOOTHING),
+        maxX: lerp(prevBounds.maxX, targetBounds.maxX, BOUNDS_SMOOTHING),
+        maxY: lerp(prevBounds.maxY, targetBounds.maxY, BOUNDS_SMOOTHING),
       };
       effectiveBounds.width = effectiveBounds.maxX - effectiveBounds.minX;
       effectiveBounds.height = effectiveBounds.maxY - effectiveBounds.minY;
@@ -282,7 +247,7 @@ export function useScienceGraphForceSimulation(
         let fx = 0;
         let fy = 0;
         const nodeType = nodeTypeMap.get(node.id);
-        const isHighRepulsion = repulsionStrength > 20000;
+        const isHighRepulsion = repulsionStrength > HIGH_REPULSION_STRENGTH_THRESHOLD;
 
         if (quadtree && newNodes.length > 10) {
           const repulsion = quadtree.calculateRepulsion(
@@ -317,7 +282,7 @@ export function useScienceGraphForceSimulation(
             const otherType = nodeTypeMap.get(other.id);
             const repulsionMultiplier = getRepulsionMultiplier(nodeType, otherType, undefined, undefined);
 
-            const forceScale = repulsionStrength > 20000 ? 1.5 : 1.0;
+            const forceScale = repulsionStrength > HIGH_REPULSION_STRENGTH_THRESHOLD ? 1.5 : 1.0;
             const force = repulsionStrength * repulsionMultiplier * forceScale * invDist * invDist;
             fx += dx * invDist * force;
             fy += dy * invDist * force;
@@ -505,6 +470,7 @@ export function useScienceGraphForceSimulation(
     isSimulationStable,
     canvasSize.width,
     canvasSize.height,
+    calculateWorldBounds,
     setNodes,
     setIsSimulationStable,
     fixedNodesRef,

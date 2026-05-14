@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import importlib.util
+import importlib
 import json
 import os
 import subprocess
@@ -15,6 +15,15 @@ import pytest
 
 _REPO = Path(__file__).resolve().parents[3]
 _SCRIPT = _REPO / "scripts" / "live_check" / "agent_trace_review.py"
+_LIVE_CHECK = _REPO / "scripts" / "live_check"
+
+
+def _trace_review_subprocess_module() -> Any:
+    """Import ``trace_review.orchestrator_subprocess`` (where ``subprocess.run`` is bound)."""
+    lc = str(_LIVE_CHECK)
+    if lc not in sys.path:
+        sys.path.insert(0, lc)
+    return importlib.import_module("trace_review.orchestrator_subprocess")
 
 
 def _run_script_subprocess(
@@ -47,12 +56,11 @@ def _run_script_subprocess(
 
 
 def _load_module() -> Any:
-    spec = importlib.util.spec_from_file_location("agent_trace_review_test_mod", _SCRIPT)
-    assert spec is not None
-    assert spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    """Load orchestrator as ``trace_review.agent_trace_review_orchestrator`` (package imports)."""
+    lc = str(_LIVE_CHECK)
+    if lc not in sys.path:
+        sys.path.insert(0, lc)
+    return importlib.import_module("trace_review.agent_trace_review_orchestrator")
 
 
 def test_agent_trace_review_quick_profile_writes_contract_files(
@@ -312,7 +320,7 @@ def test_run_compaction_turn_review_surfaces_failure_reason(tmp_path: Path, monk
     def _fake_run(*_args, **_kwargs):  # type: ignore[no-untyped-def]
         return _Completed()
 
-    monkeypatch.setattr(mod.subprocess, "run", _fake_run)
+    monkeypatch.setattr(_trace_review_subprocess_module().subprocess, "run", _fake_run)
     out = mod._run_compaction_turn_review(
         base_url="http://127.0.0.1:65535",
         workspace_id="ws1",
@@ -343,7 +351,7 @@ def test_run_compaction_turn_review_timeout_sets_failure_reason(
         )
         raise err
 
-    monkeypatch.setattr(mod.subprocess, "run", _fake_timeout)
+    monkeypatch.setattr(_trace_review_subprocess_module().subprocess, "run", _fake_timeout)
     out = mod._run_compaction_turn_review(
         base_url="http://127.0.0.1:65535",
         workspace_id="ws1",
@@ -360,6 +368,11 @@ def test_run_compaction_turn_review_timeout_sets_failure_reason(
 
 def test_run_compaction_turn_review_forwards_mode_and_retries(tmp_path: Path, monkeypatch) -> None:
     """CLI passes mode/retries; subprocess timeout uses wall budget (floor 120s for tiny per-turn timeouts)."""
+    lc = str(_REPO / "scripts" / "live_check")
+    if lc not in sys.path:
+        sys.path.insert(0, lc)
+    from trace_review.orchestrator_env import compaction_in_turn_heartbeat_sec
+
     mod = _load_module()
     out_json = tmp_path / "compaction-mode.json"
     captured: dict[str, Any] = {}
@@ -374,7 +387,7 @@ def test_run_compaction_turn_review_forwards_mode_and_retries(tmp_path: Path, mo
         captured["subprocess_timeout"] = kwargs.get("timeout")
         return _Completed()
 
-    monkeypatch.setattr(mod.subprocess, "run", _fake_run)
+    monkeypatch.setattr(_trace_review_subprocess_module().subprocess, "run", _fake_run)
     out = mod._run_compaction_turn_review(
         base_url="http://127.0.0.1:65535",
         workspace_id="ws1",
@@ -392,6 +405,12 @@ def test_run_compaction_turn_review_forwards_mode_and_retries(tmp_path: Path, mo
     assert "focused_long_thread" in cmd
     assert "--max-retries-per-turn" in cmd
     assert "2" in cmd
+    assert "--heartbeat-sec" in cmd
+    from trace_review.orchestrator_env import compaction_in_turn_heartbeat_sec
+
+    expected_hb = compaction_in_turn_heartbeat_sec(mode="focused_long_thread")
+    hb_arg = float(cmd[cmd.index("--heartbeat-sec") + 1])
+    assert hb_arg == pytest.approx(expected_hb)
     # Wall budget: max(120, timeout * turns * (1 + retries) * 1.25); floor 120 for tiny httpx timeouts.
     assert captured.get("subprocess_timeout") == max(120.0, 0.5 * 3.0 * 3.0 * 1.25)
 
@@ -413,7 +432,7 @@ def test_run_compaction_turn_review_subprocess_timeout_scales_past_floor(
         captured["subprocess_timeout"] = kwargs.get("timeout")
         return _Completed()
 
-    monkeypatch.setattr(mod.subprocess, "run", _fake_run)
+    monkeypatch.setattr(_trace_review_subprocess_module().subprocess, "run", _fake_run)
     mod._run_compaction_turn_review(
         base_url="http://127.0.0.1:65535",
         workspace_id=None,
@@ -453,7 +472,9 @@ def test_run_compaction_turn_review_prefers_top_level_failure_reason(
         stdout = ""
         stderr = ""
 
-    monkeypatch.setattr(mod.subprocess, "run", lambda *_a, **_k: _Completed())
+    monkeypatch.setattr(
+        _trace_review_subprocess_module().subprocess, "run", lambda *_a, **_k: _Completed()
+    )
     out = mod._run_compaction_turn_review(
         base_url="http://127.0.0.1:65535",
         workspace_id=None,

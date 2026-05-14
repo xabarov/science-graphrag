@@ -1,6 +1,6 @@
 """FastAPI router for POST /v2/agent/query (SSE + sync JSON).
 
-Extracted from ``api.agent_v2`` so the package root stays a thin compatibility
+Extracted from :mod:`science_graphrag.api.agent_v2` so the package root stays a thin compatibility
 facade (W4 structural split; R2 contract unchanged).
 """
 
@@ -31,8 +31,9 @@ from science_graphrag.api.agent_v2_modules.stream_lifecycle import (
 from science_graphrag.api.agent_v2_modules.sync_agent_query import (
     execute_agent_query_v2_json_response,
 )
-from science_graphrag.api.deps import StoreRegistry, get_stores
+from science_graphrag.api.deps import get_stores
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.stores.registry import StoreRegistry
 
 router = APIRouter()
 

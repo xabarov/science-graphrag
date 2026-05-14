@@ -20,11 +20,9 @@ Kendall-style order correctness.
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, Field
 from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
@@ -33,125 +31,38 @@ from scripts.dual_validate.extractors.base import (
     ExtractorBase,
     ExtractorRunOutput,
 )
+from scripts.dual_validate.extractors.retrieval_v1_inventory import (
+    WORKSPACES_PATH,
+    load_inventory,
+)
+from scripts.dual_validate.extractors.retrieval_v1_prompts import (
+    HYBRID_ABLATION_SYSTEM,
+    HYBRID_ABLATION_USER,
+    MULTIHOP_SYSTEM,
+    MULTIHOP_USER_CHAIN,
+    MULTIHOP_USER_SET,
+    WORKSPACE_SCOPED_SYSTEM,
+    WORKSPACE_SCOPED_USER,
+)
+from scripts.dual_validate.extractors.retrieval_v1_ranking import (
+    format_candidates as _format_candidates,
+)
+from scripts.dual_validate.extractors.retrieval_v1_ranking import kendall_order as _kendall_order
+from scripts.dual_validate.extractors.retrieval_v1_ranking import set_metrics as _set_metrics
+from scripts.dual_validate.extractors.retrieval_v1_schema import (
+    HybridAblationResponseModel,
+    MultihopResponseModel,
+    WorkspaceScopedResponseModel,
+)
+from scripts.dual_validate.extractors.retrieval_v1_workspace_priority import (
+    classify_workspace_scoped_spot_check,
+)
 from scripts.dual_validate.llm_client import LLMCallSpec
 from scripts.dual_validate.matcher import EmbeddingScorerProtocol
-
-CATALOG_PATH = Path("tests/fixtures/corpus/CATALOG.md")
-WORKSPACES_PATH = Path("tests/fixtures/benchmarks/retrieval/workspace_scoped_live/_workspaces.json")
-
-
-_INVENTORY_CACHE: dict[str, dict[str, str]] | None = None
-_TABLE_ROW = re.compile(r"^\|\s*`([a-z0-9_]+)`\s*\|\s*(.*?)\s*\|\s*([0-9n/a]+)\s*\|")
-
-
-class WorkspaceScopedResponseModel(BaseModel):
-    expected_corpus_work_ids: list[str] = Field(default_factory=list)
-    would_violate_workspace_with: list[str] = Field(default_factory=list)
-    rationale: str = Field(default="")
-
-
-class HybridAblationResponseModel(BaseModel):
-    relevant_corpus_work_ids: list[str] = Field(default_factory=list)
-    irrelevant_corpus_work_ids: list[str] = Field(default_factory=list)
-    rationale: str = Field(default="")
-
-
-class MultihopResponseModel(BaseModel):
-    expected_chain_corpus_work_ids: list[str] = Field(default_factory=list)
-    expected_node_canonical_names: list[str] = Field(default_factory=list)
-    rationale: str = Field(default="")
-
-
-def _load_inventory() -> dict[str, dict[str, str]]:
-    """Parse CATALOG.md inventory table → ``{corpus_work_id: {title, year}}``."""
-
-    global _INVENTORY_CACHE  # noqa: PLW0603 — module-level cache by design
-    if _INVENTORY_CACHE is not None:
-        return _INVENTORY_CACHE
-    inv: dict[str, dict[str, str]] = {}
-    text = CATALOG_PATH.read_text(encoding="utf-8")
-    for line in text.splitlines():
-        m = _TABLE_ROW.match(line)
-        if not m:
-            continue
-        wid, title, year = m.group(1), m.group(2), m.group(3)
-        inv[wid] = {"title": title.strip(), "year": year.strip()}
-    _INVENTORY_CACHE = inv
-    return inv
-
-
-def _format_candidates(work_ids: list[str], inv: dict[str, dict[str, str]]) -> str:
-    lines: list[str] = []
-    for wid in work_ids:
-        meta = inv.get(wid, {})
-        title = meta.get("title", "<title unknown>")
-        year = meta.get("year", "n/a")
-        lines.append(f"  - {wid}  ({year}) — {title}")
-    return "\n".join(lines)
-
-
-def _set_metrics(a: set[str], b: set[str]) -> dict[str, float]:
-    inter = len(a & b)
-    union = len(a | b) or 1
-    p = inter / len(b) if b else 0.0
-    r = inter / len(a) if a else 0.0
-    f1 = (2 * p * r / (p + r)) if (p + r) else 0.0
-    return {
-        "precision": round(p, 3),
-        "recall": round(r, 3),
-        "f1": round(f1, 3),
-        "jaccard": round(inter / union, 3),
-    }
-
-
-def _kendall_order(a: list[str], b: list[str]) -> float:
-    """Pairwise order agreement on the intersection (∈ [0,1])."""
-
-    common = [x for x in a if x in b]
-    if len(common) < 2:
-        return 1.0 if common else 0.0
-    pos_a = {x: i for i, x in enumerate(a) if x in common}
-    pos_b = {x: i for i, x in enumerate(b) if x in common}
-    correct = 0
-    total = 0
-    for i, x in enumerate(common):
-        for y in common[i + 1 :]:
-            total += 1
-            if (pos_a[x] < pos_a[y]) == (pos_b[x] < pos_b[y]):
-                correct += 1
-    return round(correct / total, 3) if total else 0.0
-
 
 # ---------------------------------------------------------------------------
 # workspace_scoped_live
 # ---------------------------------------------------------------------------
-
-
-_WS_SYSTEM = (
-    "You are an independent retrieval reviewer. Given a question, the papers "
-    "available in a workspace, and the rest of the corpus that is OUT OF "
-    "scope, decide which workspace papers should be cited and flag any "
-    "out-of-scope papers you would have mistakenly added. Always answer as a "
-    "JSON object."
-)
-
-_WS_USER = """Workspace: {ws_name}
-Workspace papers (in scope):
-{workspace_block}
-
-Out-of-scope papers (must NOT be cited):
-{forbidden_block}
-
-QUESTION:
-{question}
-
-Output STRICTLY this JSON object — no prose, no markdown:
-{{
-  "expected_corpus_work_ids": ["<id from workspace>", ...],
-  "would_violate_workspace_with": ["<id from out-of-scope>", ...],
-  "rationale": "<one sentence>"
-}}
-"""
 
 
 class WorkspaceScopedLiveExtractor(ExtractorBase):
@@ -176,7 +87,7 @@ class WorkspaceScopedLiveExtractor(ExtractorBase):
         spec = ws.get(ws_id) or {}
         ids = spec.get("corpus_work_ids", [])
         if ids == "*":
-            return sorted(_load_inventory().keys())
+            return sorted(load_inventory().keys())
         return list(ids)
 
     def build_call_spec(self, pack_dir: Path, *, model: str, base_url: str) -> LLMCallSpec:
@@ -185,10 +96,10 @@ class WorkspaceScopedLiveExtractor(ExtractorBase):
         ws_id = gold["workspace_id"]
         workspace_ids = self._workspace_papers(ws_id)
         forbidden_ids = list(gold.get("forbidden_corpus_work_ids", []))
-        inv = _load_inventory()
+        inv = load_inventory()
         ws_block = _format_candidates(workspace_ids, inv)
         forbidden_block = _format_candidates(forbidden_ids, inv) or "  (none)"
-        user = _WS_USER.format(
+        user = WORKSPACE_SCOPED_USER.format(
             ws_name=ws_id,
             workspace_block=ws_block,
             forbidden_block=forbidden_block,
@@ -197,7 +108,7 @@ class WorkspaceScopedLiveExtractor(ExtractorBase):
         return LLMCallSpec(
             model=model,
             base_url=base_url,
-            system_prompt=_WS_SYSTEM,
+            system_prompt=WORKSPACE_SCOPED_SYSTEM,
             user_prompt=user,
             temperature=0.1,
             max_tokens=1024,
@@ -289,7 +200,7 @@ class WorkspaceScopedLiveExtractor(ExtractorBase):
                 }
             )
 
-        priority, why = self._classify_priority(
+        priority, why = classify_workspace_scoped_spot_check(
             metrics_required=metrics_required,
             metrics_all=metrics_all,
             boundary_violations=len(crossed_boundary_directly),
@@ -358,72 +269,11 @@ class WorkspaceScopedLiveExtractor(ExtractorBase):
             spot_check_priority_rationale=why,
         )
 
-    @staticmethod
-    def _classify_priority(
-        *,
-        metrics_required: dict[str, float],
-        metrics_all: dict[str, float],
-        boundary_violations: int,
-        real_violations_predicted: int,  # noqa: ARG004 — kept for downstream reporting
-        a_empty_negative_case: bool = False,
-        b_empty: bool = False,
-    ) -> tuple[str, str]:
-        if boundary_violations > 0:
-            return (
-                "high",
-                f"B proposed {boundary_violations} out-of-scope corpus_work_id(s) — workspace boundary leak",
-            )
-        if a_empty_negative_case:
-            # Negative case: gold expects abstain (empty citations).
-            if b_empty:
-                return (
-                    "low",
-                    "negative case: B also returned an empty expected_corpus_work_ids set",
-                )
-            return (
-                "high",
-                "negative case: B proposed citations where gold expects abstain",
-            )
-        if metrics_required["recall"] >= 0.9 and metrics_all["precision"] >= 0.7:
-            return (
-                "low",
-                f"required-recall={metrics_required['recall']:.2f}, precision={metrics_all['precision']:.2f}",
-            )
-        if metrics_required["recall"] >= 0.5 and metrics_all["precision"] >= 0.5:
-            return (
-                "medium",
-                f"required-recall={metrics_required['recall']:.2f}, precision={metrics_all['precision']:.2f}",
-            )
-        return (
-            "high",
-            f"required-recall={metrics_required['recall']:.2f}, precision={metrics_all['precision']:.2f} (gate)",
-        )
-
+    # Priority classification for workspace_scoped_live lives in ``retrieval_v1_workspace_priority``.
 
 # ---------------------------------------------------------------------------
 # hybrid_ablation_v2
 # ---------------------------------------------------------------------------
-
-
-_HA_SYSTEM = (
-    "You are an independent retrieval reviewer. Given a question and a list "
-    "of candidate papers, classify each candidate as relevant or irrelevant "
-    "to the question. Always answer as a JSON object."
-)
-
-_HA_USER = """QUESTION:
-{question}
-
-Candidate papers:
-{candidates_block}
-
-Output STRICTLY this JSON object — no prose, no markdown:
-{{
-  "relevant_corpus_work_ids": ["<id>", ...],
-  "irrelevant_corpus_work_ids": ["<id>", ...],
-  "rationale": "<one sentence>"
-}}
-"""
 
 
 class HybridAblationV2Extractor(ExtractorBase):
@@ -447,13 +297,13 @@ class HybridAblationV2Extractor(ExtractorBase):
             set(gold.get("relevant_corpus_work_ids", []))
             | set(gold.get("irrelevant_corpus_work_ids", []))
         )
-        inv = _load_inventory()
+        inv = load_inventory()
         block = _format_candidates(candidates, inv)
         return LLMCallSpec(
             model=model,
             base_url=base_url,
-            system_prompt=_HA_SYSTEM,
-            user_prompt=_HA_USER.format(question=question, candidates_block=block),
+            system_prompt=HYBRID_ABLATION_SYSTEM,
+            user_prompt=HYBRID_ABLATION_USER.format(question=question, candidates_block=block),
             temperature=0.1,
             max_tokens=1024,
             response_format="json_object",
@@ -612,47 +462,6 @@ class HybridAblationV2Extractor(ExtractorBase):
 # ---------------------------------------------------------------------------
 
 
-_MH_SYSTEM = (
-    "You are an independent multihop-retrieval reviewer. Given a question, "
-    "an indication of whether the answer is an ordered chain of papers or an "
-    "unordered set of papers / authors, and an inventory of candidate papers, "
-    "produce the expected ids (and order, if a chain). Always answer as a "
-    "JSON object."
-)
-
-_MH_USER_CHAIN = """QUESTION:
-{question}
-
-Expected path kind: ordered_chain (later items extend / cite earlier items)
-
-Candidate inventory:
-{candidates_block}
-
-Output STRICTLY this JSON object — no prose, no markdown:
-{{
-  "expected_chain_corpus_work_ids": ["<id>", "<id>", ...],
-  "rationale": "<one sentence>"
-}}
-"""
-
-_MH_USER_SET = """QUESTION:
-{question}
-
-Expected path kind: unordered_set ({node_kind})
-
-Candidate paper inventory (use to ground your answer):
-{candidates_block}
-
-Output STRICTLY this JSON object — no prose, no markdown:
-{{
-  "expected_node_canonical_names": ["<name>", "<name>", ...],
-  "rationale": "<one sentence>"
-}}
-"""
-
-
-
-
 class MultihopV2Extractor(ExtractorBase):
     layer_name = "multihop_v2"
     fixtures_subdir: ClassVar[str] = "retrieval/multihop_v2"
@@ -672,19 +481,19 @@ class MultihopV2Extractor(ExtractorBase):
         if gold.get("expected_path_kind") == "ordered_chain":
             return list(gold.get("expected_chain_corpus_work_ids", []))
         # Set node case: include relevant + a small distractor pool from inventory.
-        names = sorted(_load_inventory().keys())
+        names = sorted(load_inventory().keys())
         return names
 
     def build_call_spec(self, pack_dir: Path, *, model: str, base_url: str) -> LLMCallSpec:
         gold = self._gold(pack_dir)
         question = (pack_dir / "question.txt").read_text(encoding="utf-8").strip()
-        inv = _load_inventory()
+        inv = load_inventory()
         candidates = self._candidate_ids(gold)
         block = _format_candidates(candidates, inv)
         if gold.get("expected_path_kind") == "ordered_chain":
-            user = _MH_USER_CHAIN.format(question=question, candidates_block=block)
+            user = MULTIHOP_USER_CHAIN.format(question=question, candidates_block=block)
         else:
-            user = _MH_USER_SET.format(
+            user = MULTIHOP_USER_SET.format(
                 question=question,
                 node_kind=gold.get("expected_node_kind", "unspecified"),
                 candidates_block=block,
@@ -692,7 +501,7 @@ class MultihopV2Extractor(ExtractorBase):
         return LLMCallSpec(
             model=model,
             base_url=base_url,
-            system_prompt=_MH_SYSTEM,
+            system_prompt=MULTIHOP_SYSTEM,
             user_prompt=user,
             temperature=0.1,
             max_tokens=1024,

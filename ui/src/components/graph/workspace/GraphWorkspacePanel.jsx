@@ -16,7 +16,6 @@ import GraphViewModeSwitch from "../shell/GraphViewModeSwitch.jsx";
 import GraphVisualization from "../shell/GraphVisualization.jsx";
 import { GraphErrorAlert, GraphLoadingInline, GraphMissingWorkInline } from "../shell/graphShellStates.jsx";
 import { firstMatchingNodeIdInOrder } from "../model/graphNodeSearch.js";
-import { LS_GRAPH_STANDALONE_DETAIL_MIN_PX, readGraphDetailColumnPxStored } from "../model/graphDetailColumnWidth.js";
 import GraphWorkspaceOnboarding from "./GraphWorkspaceOnboarding.jsx";
 import WorkspaceGraphToolbar from "./WorkspaceGraphToolbar.jsx";
 import GraphWorkspaceLayerCountsFooter from "./GraphWorkspaceLayerCountsFooter.jsx";
@@ -25,56 +24,21 @@ import { useGraphSelectionReconcile } from "../hooks/useGraphSelectionReconcile.
 import { useGraphWorkspaceProjection } from "./hooks/useGraphWorkspaceProjection.js";
 import { GRAPH_CAP_WARNING_LARGE_PAYLOAD } from "../model/graphUiLimits.js";
 import { detectCommunitiesForUi } from "../canvas/physics/structuralCommunities.js";
-
-const LS_GRAPH_CANVAS_LAYOUT_MODE = "graphCanvasLayoutMode";
-const LS_GRAPH_VIZ_MODE = "graphVizMode";
-const LS_STANDALONE_DETAILS = "graphStandaloneDetailsVisible";
-const LS_STANDALONE_LEGEND = "graphStandaloneLegendOpen";
-const LS_EMBEDDED_LEGEND = "graphEmbeddedLegendOpen";
-const LS_GRAPH_CANVAS_COLOR_BY = "graphCanvasColorBy";
-const LS_GRAPH_CANVAS_COMMUNITY_HULLS = "graphCanvasCommunityHulls";
-
-function readLsMode() {
-  if (typeof window === "undefined") return "canvas";
-  try {
-    const v = window.localStorage.getItem(LS_GRAPH_VIZ_MODE);
-    return v === "cards" || v === "canvas" || v === "flow" ? v : "canvas";
-  } catch {
-    return "canvas";
-  }
-}
-
-function readLsLayout() {
-  if (typeof window === "undefined") return "force";
-  try {
-    return window.localStorage.getItem(LS_GRAPH_CANVAS_LAYOUT_MODE) === "circle" ? "circle" : "force";
-  } catch {
-    return "force";
-  }
-}
-
-function readBoolLs(key, fallback) {
-  if (typeof window === "undefined") return fallback;
-  try {
-    const v = window.localStorage.getItem(key);
-    if (v == null) return fallback;
-    return v === "1";
-  } catch {
-    return fallback;
-  }
-}
-
-/** @returns {"type" | "community"} */
-function readGraphColorByStored() {
-  if (typeof window === "undefined") return "type";
-  try {
-    const v = window.localStorage.getItem(LS_GRAPH_CANVAS_COLOR_BY);
-    if (v === "type" || v === "community") return v;
-  } catch {
-    /* ignore */
-  }
-  return "type";
-}
+import {
+  LS_EMBEDDED_LEGEND,
+  LS_GRAPH_CANVAS_COLOR_BY,
+  LS_GRAPH_CANVAS_COMMUNITY_HULLS,
+  LS_GRAPH_CANVAS_LAYOUT_MODE,
+  LS_GRAPH_STANDALONE_DETAIL_MIN_PX,
+  LS_GRAPH_VIZ_MODE,
+  LS_STANDALONE_DETAILS,
+  LS_STANDALONE_LEGEND,
+  readBoolLs,
+  readGraphColorByStored,
+  readGraphDetailColumnPxStored,
+  readLsLayout,
+  readLsMode,
+} from "./graphWorkspacePanelStorage.js";
 
 export default function GraphWorkspacePanel({
   workId,

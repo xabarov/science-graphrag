@@ -9,12 +9,12 @@ from typing import Any
 from langchain_core.messages import AIMessage, HumanMessage
 
 from science_graphrag.agent.subagents.runtime import RoutingSubagentLegLedger, SubagentRuntime
-from science_graphrag.api.deps import build_store_registry_for_tests
 from science_graphrag.api.agent_v2_modules.stream_lifecycle_state import (
     StreamAgentLifecycleState,
     StreamLifecycleRequestContext,
 )
 from science_graphrag.api.agent_v2_modules.stream_phase_finalize import iter_finalize_stream_events
+from science_graphrag.api.deps import build_store_registry_for_tests
 from science_graphrag.config import Settings
 
 
@@ -93,3 +93,86 @@ def test_finalize_emits_degraded_mode_for_recursion_warning() -> None:
 
     asyncio.run(_run())
 
+
+def test_finalize_routing_leg_terminal_timed_out_after_deadline_salvage() -> None:
+    async def _run() -> None:
+        ctx = _ctx()
+        ctx.routing_subagent_ledger.open_leg(subagent_id="spec-a", spawn_reason="routing")
+        state = StreamAgentLifecycleState()
+        state.active_subagent_id = "spec-a"
+        state.salvaged_after_deadline = True
+        state.latest_full_state = {
+            "messages": [HumanMessage(content="q"), AIMessage(content="x")],
+            "debug_events": [],
+            "metadata": {},
+            "tool_trace": [],
+        }
+        state.final_answer = "salvaged"
+        initial_state: dict[str, Any] = {"metadata": {}}
+
+        events: list[dict[str, str]] = []
+        async for ev in iter_finalize_stream_events(
+            started=0.0,
+            ctx=ctx,
+            stores=_stores(),
+            question="q",
+            workspace_id=None,
+            thread_id=None,
+            max_tool_calls=8,
+            answer_class_hint=None,
+            history_digest_invalid=False,
+            state=state,
+            initial_state=initial_state,
+        ):
+            events.append(ev)
+
+        payloads = [json.loads(ev["data"]) for ev in events]
+        first = payloads[0]
+        assert first.get("type") == "subagent_finished"
+        assert first.get("terminal_state") == "timed_out"
+        assert first.get("subagent_id") == "spec-a"
+        assert state.active_subagent_id is None
+
+    asyncio.run(_run())
+
+
+def test_finalize_routing_leg_terminal_failed_after_recursion_salvage() -> None:
+    async def _run() -> None:
+        ctx = _ctx()
+        ctx.routing_subagent_ledger.open_leg(subagent_id="spec-b", spawn_reason="routing")
+        state = StreamAgentLifecycleState()
+        state.active_subagent_id = "spec-b"
+        state.salvaged_after_recursion_limit = True
+        state.recursion_limit_value = 7
+        state.latest_full_state = {
+            "messages": [HumanMessage(content="q"), AIMessage(content="y")],
+            "debug_events": [],
+            "metadata": {},
+            "tool_trace": [],
+        }
+        state.final_answer = "partial"
+        initial_state: dict[str, Any] = {"metadata": {}}
+
+        events: list[dict[str, str]] = []
+        async for ev in iter_finalize_stream_events(
+            started=0.0,
+            ctx=ctx,
+            stores=_stores(),
+            question="q",
+            workspace_id=None,
+            thread_id=None,
+            max_tool_calls=8,
+            answer_class_hint=None,
+            history_digest_invalid=False,
+            state=state,
+            initial_state=initial_state,
+        ):
+            events.append(ev)
+
+        payloads = [json.loads(ev["data"]) for ev in events]
+        first = payloads[0]
+        assert first.get("type") == "subagent_finished"
+        assert first.get("terminal_state") == "failed"
+        assert state.active_subagent_id is None
+
+    asyncio.run(_run())

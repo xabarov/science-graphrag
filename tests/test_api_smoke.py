@@ -637,7 +637,7 @@ def test_get_ingest_job_returns_stages(monkeypatch: Any) -> None:
     )
     monkeypatch.setattr(
         ingest_router,
-        "_registry",
+        "get_ingest_job_registry",
         lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a, **_k: job})(),
     )
 
@@ -664,7 +664,7 @@ def test_get_ingest_job_includes_pending_conflicts_breakdown(monkeypatch: Any) -
     )
     monkeypatch.setattr(
         ingest_router,
-        "_registry",
+        "get_ingest_job_registry",
         lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a, **_k: job})(),
     )
     monkeypatch.setattr(
@@ -695,7 +695,7 @@ def test_ingest_job_events_stream_yields_stage_events(monkeypatch: Any) -> None:
     )
     monkeypatch.setattr(
         ingest_router,
-        "_registry",
+        "get_ingest_job_registry",
         lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a: job})(),
     )
 
@@ -751,11 +751,10 @@ def test_ingest_job_events_stream_yields_stage_events(monkeypatch: Any) -> None:
 def test_ingest_job_events_stream_404_for_unknown_job(monkeypatch: Any) -> None:
     import science_graphrag.api.ingest.router as ingest_router
 
-    monkeypatch_registry = type("R", (), {"get": lambda *_a, **_k: None})
     monkeypatch.setattr(
         ingest_router,
-        "_registry",
-        lambda *_args, **_kwargs: monkeypatch_registry(),
+        "get_ingest_job_registry",
+        lambda *_args, **_kwargs: type("R", (), {"get": lambda *_a, **_k: None})(),
     )
     client = _client()
     res = client.get("/v1/ingest/jobs/00000000-0000-0000-0000-000000000000/events")

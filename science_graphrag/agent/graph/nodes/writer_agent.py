@@ -40,7 +40,7 @@ from science_graphrag.agent.tool_execution_pipeline import (
 )
 from science_graphrag.agent.tool_search import build_tool_search_result_debug_event
 from science_graphrag.agent.tools import build_writer_tools
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import SpanAttributes, add_span_event, llm_span

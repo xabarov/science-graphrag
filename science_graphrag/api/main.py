@@ -33,12 +33,11 @@ from science_graphrag.api.deps import (
 )
 from science_graphrag.api.entity_dedup import router as entity_dedup_router
 from science_graphrag.api.idea_assist import router as idea_assist_router
-from science_graphrag.api.ingest.registry import _registry
 from science_graphrag.api.ingest_event_bus import BUS
 from science_graphrag.api.ingest_jobs import router as ingest_router
 from science_graphrag.api.retrieval import router as retrieval_router
-from science_graphrag.api.setup_hints import router as setup_hints_router
 from science_graphrag.api.settings import router as settings_router
+from science_graphrag.api.setup_hints import router as setup_hints_router
 from science_graphrag.api.task_store import attach_benchmark_run_persistence
 from science_graphrag.api.translation import router as translation_router
 from science_graphrag.api.works import works_router
@@ -47,6 +46,7 @@ from science_graphrag.api.workspace_graph import router as workspace_graph_route
 from science_graphrag.api.workspaces import router as workspaces_router
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
+from science_graphrag.ingestion.jobs.registry import get_ingest_job_registry
 from science_graphrag.observability.phoenix_tracer import init_tracer_provider
 from science_graphrag.storage.qdrant_store import ensure_entity_dedup_collections
 from science_graphrag.utils.project_logging import configure_logging
@@ -60,7 +60,7 @@ async def _app_lifespan(app: FastAPI):
     BUS.attach_loop(asyncio.get_running_loop())
     settings = get_settings()
     configure_session_memory_backend(settings)
-    _registry(settings).bootstrap()
+    get_ingest_job_registry(settings).bootstrap()
     app.state.stores = init_store_registry(settings)
     attach_benchmark_run_persistence(app.state.stores.benchmark_runs)
     _dim = resolve_embedding_dim(settings=settings)

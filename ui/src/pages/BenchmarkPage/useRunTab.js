@@ -1,14 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { useI18n } from "../../i18n/useI18n.js";
-import { getSettingsSnapshot } from "../SettingsPage/settingsApi.js";
-import { listBenchmarkCases, getBenchmarkRun, runBenchmark } from "../../services/benchmarkApi.js";
 import { BENCHMARK_TERMINAL_RUN_STATUSES } from "./benchmarkRunGroup.js";
 import {
   buildExecutionSummary,
-  buildRunPayload,
-  humanizeLauncherError,
   loadLauncherPrefs,
   mergeProfileDefaults,
   resolveNightlyScope,
@@ -18,12 +14,13 @@ import {
 } from "./benchmarkLauncherConfig.js";
 import { mergeLauncherPrefsWithServer } from "./mergeBenchmarkLauncherPrefs.js";
 import { toggleBenchmarkCaseSelection } from "./runTabCaseToggle.js";
-import {
-  getLauncherPresetForExperiment,
-  parseRunLabQueryFromSearchParams,
-  RUN_MODE_GROUPED,
-} from "./experimentCatalog.js";
+import { parseRunLabQueryFromSearchParams, RUN_MODE_GROUPED } from "./experimentCatalog.js";
+import { tryStartBenchmarkSingleRun } from "./runTab/runTabSingleRunLaunch.js";
 import { useBenchmarkRunGroup } from "./useBenchmarkRunGroup.js";
+import { useBenchmarkRunLabCaseLists } from "./useBenchmarkRunLabCaseLists.js";
+import { useBenchmarkRunPoll } from "./useBenchmarkRunPoll.js";
+import { useBenchmarkServerBenchmarkSnapshot } from "./useBenchmarkServerBenchmarkSnapshot.js";
+import { useRunLabExperimentPresetFromUrl } from "./useRunLabExperimentPresetFromUrl.js";
 
 /**
  * @param {object} [opts]
@@ -37,20 +34,16 @@ export function useRunTab(opts = {}) {
   const executionMode = runLabQuery.runMode;
 
   const [launcherPrefs, setLauncherPrefs] = useState(() => loadLauncherPrefs());
-  const [serverBenchmarkSnapshot, setServerBenchmarkSnapshot] = useState(/** @type {object | null} */ (null));
-  const [benchmarkSettingsLoadError, setBenchmarkSettingsLoadError] = useState(/** @type {string | null} */ (null));
-  const [serverBenchmarkFetchDone, setServerBenchmarkFetchDone] = useState(false);
+  const { serverBenchmarkSnapshot, benchmarkSettingsLoadError, serverBenchmarkFetchDone } =
+    useBenchmarkServerBenchmarkSnapshot();
   const benchmarkFamily = launcherPrefs.activeFamily || "layer1";
-  const [mergeSafeCases, setMergeSafeCases] = useState([]);
-  const [nightlyCases, setNightlyCases] = useState([]);
   const [runId, setRunId] = useState(() => window.localStorage.getItem("benchmark:lastRunId") || null);
   const [run, setRun] = useState(null);
   const [error, setError] = useState(null);
-  const [loadingCases, setLoadingCases] = useState(false);
   const [models, setModels] = useState([]);
   const [lastStartedSummary, setLastStartedSummary] = useState(null);
 
-  const appliedExperimentKeyRef = useRef(/** @type {string | null} */ (null));
+  useRunLabExperimentPresetFromUrl({ runLabQuery, setLauncherPrefs });
 
   const nightlyTierParam = resolveNightlyScope(benchmarkFamily);
   const nightlyLabel = nightlyTierParam;
@@ -88,120 +81,23 @@ export function useRunTab(opts = {}) {
     t,
   });
 
+  const { mergeSafeCases, nightlyCases, loadingCases } = useBenchmarkRunLabCaseLists({
+    benchmarkFamily,
+    nightlyTierParam,
+    setError,
+  });
+
+  useBenchmarkRunPoll({
+    runId,
+    setRunId,
+    setRun,
+    setLastStartedSummary,
+    setError,
+  });
+
   useEffect(() => {
     saveLauncherPrefs(launcherPrefs);
   }, [launcherPrefs]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const snap = await getSettingsSnapshot();
-        if (cancelled) return;
-        setServerBenchmarkSnapshot(snap?.benchmark || null);
-        setBenchmarkSettingsLoadError(null);
-      } catch (e) {
-        if (!cancelled) {
-          setServerBenchmarkSnapshot(null);
-          setBenchmarkSettingsLoadError(e?.message || "benchmark_settings_load_failed");
-        }
-      } finally {
-        if (!cancelled) setServerBenchmarkFetchDone(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!runLabQuery.experimentId) {
-      appliedExperimentKeyRef.current = null;
-      return;
-    }
-    const preset = getLauncherPresetForExperiment(runLabQuery.experimentId);
-    if (!preset) return;
-    const key = `${runLabQuery.experimentId}:${runLabQuery.packId || ""}`;
-    if (appliedExperimentKeyRef.current === key) return;
-    appliedExperimentKeyRef.current = key;
-    setLauncherPrefs((prev) => ({
-      ...prev,
-      activeFamily: preset.uiFamily,
-      byFamily: {
-        ...prev.byFamily,
-        [preset.uiFamily]: {
-          ...(prev.byFamily?.[preset.uiFamily] || {}),
-          selectedCaseIds: prev.byFamily?.[preset.uiFamily]?.selectedCaseIds || [],
-          launcherScope: preset.launcherScope,
-        },
-      },
-    }));
-  }, [runLabQuery.experimentId, runLabQuery.packId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function loadCases() {
-      setLoadingCases(true);
-      try {
-        const fam = benchmarkFamily === "graph" ? "graph" : benchmarkFamily;
-        const [merge, nightly] = await Promise.all([
-          listBenchmarkCases({ family: fam, tier: "merge_safe" }),
-          listBenchmarkCases({ family: fam, tier: nightlyTierParam }),
-        ]);
-        if (cancelled) return;
-        setMergeSafeCases(merge?.items || []);
-        setNightlyCases(nightly?.items || []);
-      } catch (e) {
-        if (!cancelled) setError(e?.message || "failed_to_load_cases");
-      } finally {
-        if (!cancelled) setLoadingCases(false);
-      }
-    }
-    loadCases();
-    return () => {
-      cancelled = true;
-    };
-  }, [benchmarkFamily, nightlyTierParam]);
-
-  useEffect(() => {
-    if (!runId) return;
-    let cancelled = false;
-    let intervalId = null;
-
-    async function tick() {
-      try {
-        const resp = await getBenchmarkRun(runId);
-        const payload = resp?.data || resp;
-        if (cancelled) return;
-        setRun(payload);
-
-        const status = payload?.status;
-        if (BENCHMARK_TERMINAL_RUN_STATUSES.includes(status)) {
-          if (intervalId) clearInterval(intervalId);
-        }
-      } catch (e) {
-        if (cancelled) return;
-        const statusCode = e?.response?.status;
-        if (statusCode === 404) {
-          window.localStorage.removeItem("benchmark:lastRunId");
-          setRunId(null);
-          setRun(null);
-          setLastStartedSummary(null);
-          setError(null);
-          if (intervalId) clearInterval(intervalId);
-          return;
-        }
-        setError(e?.message || "failed_to_fetch_run");
-      }
-    }
-
-    tick();
-    intervalId = window.setInterval(tick, 2000);
-    return () => {
-      cancelled = true;
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [runId]);
 
   function updateFamilyPrefs(field, value, options = {}) {
     setLauncherPrefs((prev) => {
@@ -267,50 +163,20 @@ export function useRunTab(opts = {}) {
   }
 
   async function startRun() {
-    if (executionMode === RUN_MODE_GROUPED) return;
-    if (isGraphCatalog) return;
     setError(null);
-    const validationErrors = validateLauncherConfig({
-      family: benchmarkFamily,
-      launcherScope: familyPrefs.launcherScope,
-      caseIds: familyPrefs.selectedCaseIds,
-      modelProfile: familyPrefs.modelProfile,
-      customModelId: familyPrefs.customModelId,
-      baseUrlOverride: familyPrefs.baseUrlOverride,
-      apiKeyEnvName: familyPrefs.apiKeyEnvName,
+    const result = await tryStartBenchmarkSingleRun({
+      executionMode,
+      isGraphCatalog,
+      benchmarkFamily,
+      familyPrefs,
     });
-    if (validationErrors.length) {
-      setError(validationErrors[0]);
+    if (result.kind === "skipped") return;
+    if (result.kind === "validation") {
+      setError(result.error);
       return;
     }
-
-    const scopeLabel = resolveScopeLabel(benchmarkFamily, familyPrefs.launcherScope);
-    const payload = buildRunPayload({
-      family: benchmarkFamily,
-      caseIds: familyPrefs.selectedCaseIds,
-      launcherScope: familyPrefs.launcherScope,
-      label: scopeLabel,
-      modelProfile: familyPrefs.modelProfile,
-      customModelId: familyPrefs.customModelId,
-      goldSource: familyPrefs.goldSource,
-      thresholdProfile: familyPrefs.thresholdProfile,
-      baseUrlOverride: familyPrefs.baseUrlOverride,
-      apiKeyEnvName: familyPrefs.apiKeyEnvName,
-    });
-
-    const res = await runBenchmark(payload).catch((e) => {
-      throw new Error(humanizeLauncherError(e));
-    });
-    const newRunId = res?.run_id;
-    if (!newRunId) throw new Error("run_id_missing");
-    window.localStorage.setItem("benchmark:lastRunId", newRunId);
-    setRunId(newRunId);
-    setLastStartedSummary(
-      buildExecutionSummary(res, {
-        fallbackPayload: payload,
-        fallbackScopeLabel: scopeLabel,
-      }),
-    );
+    setRunId(result.newRunId);
+    setLastStartedSummary(result.lastStartedSummary);
   }
 
   const summary = run?.summary || {};

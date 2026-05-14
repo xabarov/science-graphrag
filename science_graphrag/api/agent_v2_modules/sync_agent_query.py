@@ -44,7 +44,7 @@ from science_graphrag.api.agent_v2_modules.payloads import (
 from science_graphrag.api.agent_v2_modules.payloads import (
     thread_insight_audit_fragment,
 )
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 
 logger = logging.getLogger(__name__)

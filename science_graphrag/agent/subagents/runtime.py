@@ -53,6 +53,23 @@ def patched_task_status_for_terminal(terminal_state: str) -> str:
     return "timed_out"
 
 
+def parent_turn_routing_terminal_on_stream_finalize(
+    *,
+    salvaged_after_deadline: bool,
+    salvaged_after_recursion_limit: bool,
+) -> TerminalState:
+    """Terminal state for the active routing leg when the stream enters finalize.
+
+    Must stay aligned with ``sse_event_close_active_routing_leg_on_parent_abort``:
+    deadline -> ``timed_out``; recursion limit -> ``failed`` (ledger); normal -> ``succeeded``.
+    """
+    if salvaged_after_deadline:
+        return "timed_out"
+    if salvaged_after_recursion_limit:
+        return "failed"
+    return "succeeded"
+
+
 def patch_spawn_rows_for_parent_terminal(
     rows: list[dict[str, Any]],
     *,
@@ -74,11 +91,19 @@ def patch_spawn_rows_for_parent_terminal(
             continue
         task_status = str(row.get("task_status") or "").strip()
         current_terminal = str(row.get("terminal_state") or "").strip()
+        # Do not clobber rows that already reflect a definitive child outcome (W1).
+        # Previously ``terminal_state == "succeeded"`` was treated as inflight, which
+        # overwrote completed child rows during the normal parent finalize patch pass.
+        definitive_child = (
+            current_terminal == "succeeded" and task_status == "completed"
+        ) or current_terminal in {"failed", "cancelled", "killed", "timed_out"}
+        if definitive_child:
+            patched.append(dict(row))
+            continue
         is_inflight = task_status in {"pending", "running"} or current_terminal in {
             "",
             "pending",
             "running",
-            "succeeded",
         }
         if not is_inflight:
             patched.append(dict(row))
@@ -279,7 +304,9 @@ class SubagentRuntime:
                 f"max_parallel_subagents={self.max_parallel_subagents} reached"
             )
         subagent_id = f"sa-{uuid.uuid4().hex}"
-        description = str(task_spec.description or "").strip() or str(task_spec.spawn_reason or "").strip()
+        description = (
+            str(task_spec.description or "").strip() or str(task_spec.spawn_reason or "").strip()
+        )
         self._active[subagent_id] = _ActiveLeg(
             subagent_id=subagent_id,
             task_id=new_task_id(),
@@ -498,6 +525,7 @@ __all__ = [
     "build_subagent_runs_from_routing_log",
     "build_spawned_subagent_run_row",
     "merge_subagent_run_rows",
+    "parent_turn_routing_terminal_on_stream_finalize",
     "patch_spawn_rows_for_parent_terminal",
     "patched_task_status_for_terminal",
 ]

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import Box from "@mui/material/Box";
 import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 
-import AskPanel from "../components/work/ask/AskPanel.jsx";
+import { AskPanel } from "../components/work/ask/index.js";
 import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js";
 import { useI18n } from "../i18n/useI18n.js";
 import { persistWorkId } from "./WorkspacePage/utils/workContext.js";

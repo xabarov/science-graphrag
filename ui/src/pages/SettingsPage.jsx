@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -17,10 +17,10 @@ import SecuritySettingsPanel from "./SettingsPage/SecuritySettingsPanel.jsx";
 import StorageSettingsPanel from "./SettingsPage/StorageSettingsPanel.jsx";
 import BenchmarkSettingsPanel from "./SettingsPage/BenchmarkSettingsPanel.jsx";
 import SettingsLayout from "./SettingsPage/SettingsLayout.jsx";
+import { PlaceholderSettingsSection } from "./SettingsPage/PlaceholderSettingsSection.jsx";
+import { useSettingsPageBootstrap } from "./SettingsPage/useSettingsPageBootstrap.js";
 import {
   deleteLlmSecret,
-  getSettingsSchema,
-  getSettingsSnapshot,
   testLlmConnection,
   updateGeneralSettings,
   updateIngestionSettings,
@@ -31,35 +31,20 @@ import {
 import { formatResearchApiError } from "../services/researchApi.js";
 import { useI18n } from "../i18n/useI18n.js";
 
-function PlaceholderSection({ title, description }) {
-  const tk = useTheme().appTokens;
-  return (
-    <Box
-      sx={{
-        border: `1px solid ${tk.border.default}`,
-        backgroundColor: tk.surface.panel,
-        borderRadius: 1.5,
-        padding: 2.5,
-      }}
-    >
-      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{title}</Typography>
-      <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: tk.text.secondary, lineHeight: 1.6 }}>
-        {description}
-      </Typography>
-    </Box>
-  );
-}
-
 export default function SettingsPage() {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
   const [searchParams] = useSearchParams();
   const settingsUrlSearchKey = searchParams.toString();
-  const [snapshot, setSnapshot] = useState(null);
-  const [schema, setSchema] = useState(null);
-  const [activeSectionId, setActiveSectionId] = useState("llm");
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
+  const {
+    snapshot,
+    setSnapshot,
+    schema,
+    activeSectionId,
+    setActiveSectionId,
+    loading,
+    loadError,
+  } = useSettingsPageBootstrap({ settingsUrlSearchKey, t });
   const [saveError, setSaveError] = useState("");
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -77,39 +62,6 @@ export default function SettingsPage() {
   const [benchmarkDirty, setBenchmarkDirty] = useState(false);
   const [benchmarkSaveError, setBenchmarkSaveError] = useState("");
   const [benchmarkSaving, setBenchmarkSaving] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    async function load() {
-      setLoading(true);
-      setLoadError("");
-      try {
-        const [nextSchema, nextSnapshot] = await Promise.all([
-          getSettingsSchema(),
-          getSettingsSnapshot(),
-        ]);
-        if (!mounted) return;
-        setSchema(nextSchema);
-        setSnapshot(nextSnapshot);
-        const sectionIds = new Set((nextSnapshot.sections || []).map((s) => s.id));
-        const urlSection = (new URLSearchParams(settingsUrlSearchKey).get("section") || "").trim();
-        const fromUrl = urlSection && sectionIds.has(urlSection) ? urlSection : null;
-        const fallback = nextSnapshot.sections.some((item) => item.id === "llm")
-          ? "llm"
-          : nextSnapshot.sections[0]?.id || "llm";
-        setActiveSectionId(fromUrl || fallback);
-      } catch (error) {
-        if (!mounted) return;
-        setLoadError(formatResearchApiError(error) || t("settings.page.loadError"));
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, [t, settingsUrlSearchKey]);
 
   const sections = useMemo(() => snapshot?.sections || [], [snapshot]);
   const activeSection = useMemo(
@@ -291,7 +243,7 @@ export default function SettingsPage() {
     const descKey = `settings.snapshot.${activeSection.id}.description`;
     const title = t(labelKey) !== labelKey ? t(labelKey) : activeSection.label;
     const description = t(descKey) !== descKey ? t(descKey) : activeSection.description;
-    return <PlaceholderSection title={title} description={description} />;
+    return <PlaceholderSettingsSection title={title} description={description} />;
   }
 
   if (loading) {

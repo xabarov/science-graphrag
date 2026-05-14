@@ -29,7 +29,7 @@ from science_graphrag.agent.tool_search import (
     shortlist_tools_for_specialist,
 )
 from science_graphrag.agent.tools import build_retrieval_tools
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 
 SPECIALIST_NAME = "retrieval_agent"

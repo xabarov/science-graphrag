@@ -12,7 +12,7 @@ if str(_SCRIPT_DIR) not in sys.path:
 
 from trace_compare.delta import compute_compare_deltas
 from trace_compare.parser import load_pair
-from trace_compare.policies import evaluate_policies
+from trace_compare.policies import evaluate_policies, operator_latency_gate
 from trace_compare.rendering import (
     build_compare_payload,
     format_compare_markdown,
@@ -222,6 +222,13 @@ def main(argv: list[str] | None = None) -> int:
     elif warn_reasons and not args.warn_is_pass:
         status = "warn"
 
+    lat_fail = float(lat_regress if lat_regress is not None else args.max_latency_p95_regress_ratio)
+    latency_gate = operator_latency_gate(
+        d,
+        latency_warn_ratio=float(args.latency_warn_ratio),
+        latency_fail_regress_ratio=lat_fail,
+    )
+
     payload = build_compare_payload(
         review_version=REVIEW_VERSION,
         status=status,
@@ -229,12 +236,14 @@ def main(argv: list[str] | None = None) -> int:
         warn_reasons=warn_reasons,
         cand=cand,
         d=d,
+        latency_gate=latency_gate,
     )
     md_text = format_compare_markdown(
         status=status,
         fail_reasons=fail_reasons,
         warn_reasons=warn_reasons,
         d=d,
+        latency_gate=latency_gate,
     )
     write_compare_outputs(
         out_json=args.out_json, out_md=args.out_md, payload=payload, md_text=md_text

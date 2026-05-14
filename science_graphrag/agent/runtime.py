@@ -47,7 +47,7 @@ from science_graphrag.agent.subagents.runtime import (
     patch_spawn_rows_for_parent_terminal,
 )
 from science_graphrag.agent.trace import ToolCallTrace
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.observability.spans import (
     OpenInferenceAttributes,

@@ -14,7 +14,7 @@ from science_graphrag.api.agent_v2_modules.deadline_otel import (
     record_agent_turn_deadline_exceeded,
 )
 from science_graphrag.api.agent_v2_modules.recovery import salvage_answer_from_state
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.observability.spans import add_span_event
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { deriveAskScopeKey } from "../ask/askSessionState.js";
+import { deriveAskScopeKey } from "../ask/index.js";
 import { CHAT_PATH, EVIDENCE_PATH } from "../../../routes/paths.js";
 import {
   buildStandaloneChatPath,

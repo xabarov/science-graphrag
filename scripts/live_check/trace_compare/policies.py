@@ -8,8 +8,62 @@ from __future__ import annotations
 from typing import Any
 
 from trace_regression_metrics import metric as _metric  # pylint: disable=import-error
-from trace_regression_metrics import metric_optional_any as _metric_optional_any
-from trace_regression_metrics import metric_optional_float as _metric_optional_float
+from trace_regression_metrics import (
+    metric_optional_any as _metric_optional_any,  # pylint: disable=import-error
+)
+from trace_regression_metrics import (
+    metric_optional_float as _metric_optional_float,  # pylint: disable=import-error
+)
+
+
+def operator_latency_gate(
+    d: dict[str, Any],
+    *,
+    latency_warn_ratio: float,
+    latency_fail_regress_ratio: float,
+) -> dict[str, Any]:
+    """Machine-readable operator verdict for paired ``latency_p95_ms`` (baseline vs candidate).
+
+    Uses the same ratio semantics as compare policies: ``latency_warn_ratio`` defaults to
+    1.25 (+25%% advisory band); ``latency_fail_regress_ratio`` matches
+    ``--max-latency-p95-regress-ratio`` (hard fail when exceeded).
+    """
+    base_raw = d.get("base_lat")
+    cand_raw = d.get("cand_lat")
+    out: dict[str, Any] = {
+        "baseline_latency_p95_ms": base_raw,
+        "candidate_latency_p95_ms": cand_raw,
+        "delta_latency_p95_ms": d.get("delta_latency_p95"),
+        "latency_warn_ratio_cap": float(latency_warn_ratio),
+        "latency_fail_regress_ratio_cap": float(latency_fail_regress_ratio),
+    }
+    try:
+        base_lat = float(base_raw)  # type: ignore[arg-type]
+        cand_lat = float(cand_raw)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        out["verdict"] = "unknown"
+        out["verdict_detail"] = "non_numeric_or_missing_latency_p95"
+        return out
+    if base_lat <= 0 or cand_lat <= 0:
+        out["verdict"] = "unknown"
+        out["verdict_detail"] = "missing_or_zero_latency_p95_on_one_or_both_runs"
+        return out
+    ratio = cand_lat / base_lat
+    out["candidate_vs_baseline_ratio"] = ratio
+    if ratio > float(latency_fail_regress_ratio) + 1e-9:
+        out["verdict"] = "out_of_budget"
+        out["verdict_detail"] = (
+            f"candidate_latency_exceeds_fail_ratio_cap_x{float(latency_fail_regress_ratio):.4f}"
+        )
+    elif ratio > float(latency_warn_ratio) + 1e-9:
+        out["verdict"] = "warn_band"
+        out["verdict_detail"] = (
+            f"candidate_latency_exceeds_warn_ratio_cap_x{float(latency_warn_ratio):.4f}"
+        )
+    else:
+        out["verdict"] = "in_budget"
+        out["verdict_detail"] = "within_warn_ratio_cap"
+    return out
 
 
 def _failures_from_delta_policies(

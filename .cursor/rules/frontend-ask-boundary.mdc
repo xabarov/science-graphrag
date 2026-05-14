@@ -1,0 +1,27 @@
+# Ask module public boundary
+
+## Scope
+
+Applies to `ui/src/components/work/ask/**` and external consumers of Ask (`ui/src/pages/**`, `ui/src/components/work/traceability/**`, etc.).
+
+## Rule
+
+- Treat `ui/src/components/work/ask/index.js` as the **only public entrypoint** for Ask exports.
+- From outside `ask/`, do not import from `ask/shell/*`, `ask/session/*`, `ask/chat/*`, `ask/answer/*`, `ask/forms/*`, or `ask/orchestration/*`.
+- If an external module needs a new Ask symbol, re-export it from `ask/index.js` first, then import from `ask/index.js`.
+
+## Internal structure intent
+
+- `shell/` -> `orchestration/` -> (`session/`, `chat/`, `answer/`, `forms/`)
+- Avoid reverse dependencies from leaf domains back into `shell/` or page-level modules.
+
+## Agent integration (Ask → agent)
+
+- Ask UI may depend on agent presentation components; import them from **`ui/src/components/work/agent/index.js`** (narrow export surface) instead of deep paths under `agent/*` implementation files.
+- When adding a new cross-import from `ask/` to `agent/`, extend `agent/index.js` first.
+
+## Verification checklist (after Ask refactors)
+
+- `rg "components/work/ask/" ui/src` should show external imports using `ask/index.js` only.
+- `npm run lint`
+- `npm run test -- src/components/work/ask src/components/work/traceability/askFlowCompatibility.test.js`

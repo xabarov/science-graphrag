@@ -57,7 +57,7 @@ from science_graphrag.agent.tool_search import (
     shortlist_tools_for_single_agent,
 )
 from science_graphrag.agent.tools import build_tool_registry
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import (

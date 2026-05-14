@@ -8,7 +8,7 @@ from typing import Any
 from science_graphrag.agent.chat_envelope import collect_typed_payloads
 from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
 from science_graphrag.agent.runtime import resolve_langgraph_answer_with_salvage
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 
 
 def salvage_answer_from_state(
@@ -19,7 +19,9 @@ def salvage_answer_from_state(
     """Try to salvage final answer + hydrated citations from latest state."""
     if latest_full_state is None:
         return False, "", []
-    state_answer, resolved_cites, _g, _q, _d = resolve_langgraph_answer_with_salvage(latest_full_state)
+    state_answer, resolved_cites, _g, _q, _d = resolve_langgraph_answer_with_salvage(
+        latest_full_state
+    )
     if not (state_answer or "").strip():
         return False, "", []
     typed = collect_typed_payloads(latest_full_state)

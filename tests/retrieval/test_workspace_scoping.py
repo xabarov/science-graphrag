@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.retrieval.answer import answer_query
 from science_graphrag.retrieval.neo4j_context import _workspace_scope_work_ids
 

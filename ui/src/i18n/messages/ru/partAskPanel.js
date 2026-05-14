@@ -57,6 +57,7 @@ export default {
   "askPanel.citations.none": "Для этого ответа цитаты не вернулись.",
   "askPanel.citation.line": "Цитата #{{rank}} · score {{score}} · {{work}}",
   "askPanel.citation.rankLabel": "Цитата #{{rank}}",
+  "askPanel.citation.workRankLabel": "Статья #{{rank}}",
   "askPanel.citation.workIdLine": "work_id: {{id}}",
   "askPanel.citation.tooltipArticle": "Открыть статью (чтение)",
   "askPanel.citation.tooltipGraphWork": "Открыть граф работы",

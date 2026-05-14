@@ -5,6 +5,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from science_graphrag.ingestion import _pipeline_impl as pipeline_impl
+from science_graphrag.ingestion import pipeline_cli_entrypoints as cli_entry
 
 
 class _DummyTx:
@@ -43,9 +44,9 @@ class _DummyNeo:
 
 
 def _stub_common(monkeypatch):
-    monkeypatch.setattr(pipeline_impl, "init_tracer_provider", lambda: None)
+    monkeypatch.setattr(cli_entry, "init_tracer_provider", lambda: None)
     monkeypatch.setattr(
-        pipeline_impl,
+        cli_entry,
         "get_settings",
         lambda: SimpleNamespace(
             database_url="postgresql+psycopg://unused",
@@ -54,10 +55,10 @@ def _stub_common(monkeypatch):
             neo4j_password="unused",
         ),
     )
-    monkeypatch.setattr(pipeline_impl, "get_engine", lambda _url: object())
-    monkeypatch.setattr(pipeline_impl, "init_db", lambda _engine: None)
-    monkeypatch.setattr(pipeline_impl, "session_factory", lambda _engine: _DummyFactory())
-    monkeypatch.setattr(pipeline_impl, "Neo4jGraphStore", _DummyNeo)
+    monkeypatch.setattr(cli_entry, "get_engine", lambda _url: object())
+    monkeypatch.setattr(cli_entry, "init_db", lambda _engine: None)
+    monkeypatch.setattr(cli_entry, "session_factory", lambda _engine: _DummyFactory())
+    monkeypatch.setattr(cli_entry, "Neo4jGraphStore", _DummyNeo)
 
 
 def test_batch_timeout_marks_file_and_continues(monkeypatch, tmp_path: Path) -> None:
@@ -66,7 +67,7 @@ def test_batch_timeout_marks_file_and_continues(monkeypatch, tmp_path: Path) -> 
     fast = tmp_path / "fast.md"
     slow.write_text("slow", encoding="utf-8")
     fast.write_text("fast", encoding="utf-8")
-    monkeypatch.setattr(pipeline_impl, "discover_corpus_files", lambda _dir: [slow, fast])
+    monkeypatch.setattr(cli_entry, "discover_corpus_files", lambda _dir: [slow, fast])
 
     def _ingest(path: Path, **_kwargs):
         if path == slow:
@@ -77,7 +78,7 @@ def test_batch_timeout_marks_file_and_continues(monkeypatch, tmp_path: Path) -> 
     monkeypatch.setattr(pipeline_impl, "ingest_document", _ingest)
 
     progress_file = tmp_path / "progress.jsonl"
-    rows = pipeline_impl.run_ingest_batch_cli(
+    rows = cli_entry.run_ingest_batch_cli(
         tmp_path,
         continue_on_error=True,
         per_file_timeout_s=1,
@@ -98,7 +99,7 @@ def test_batch_resume_skips_ok_files(monkeypatch, tmp_path: Path) -> None:
     second = tmp_path / "two.md"
     first.write_text("one", encoding="utf-8")
     second.write_text("two", encoding="utf-8")
-    monkeypatch.setattr(pipeline_impl, "discover_corpus_files", lambda _dir: [first, second])
+    monkeypatch.setattr(cli_entry, "discover_corpus_files", lambda _dir: [first, second])
 
     progress_file = tmp_path / "progress.jsonl"
     progress_file.write_text(
@@ -120,7 +121,7 @@ def test_batch_resume_skips_ok_files(monkeypatch, tmp_path: Path) -> None:
 
     monkeypatch.setattr(pipeline_impl, "ingest_document", _ingest)
 
-    rows = pipeline_impl.run_ingest_batch_cli(
+    rows = cli_entry.run_ingest_batch_cli(
         tmp_path,
         continue_on_error=True,
         resume=True,

@@ -117,6 +117,8 @@ export default {
     "Simple view: no «Answer» heading, no post-run status line or trace rail; citations without chunk ids; retrieval drafts and relation trace hidden or collapsed.",
   "chat.chrome.detailModeDetailed":
     "Detailed view: «Answer» section, post-run status line and processing trace when available, chunk fingerprints, quote drafts expanded, relation trace JSON.",
+  "chat.chrome.detailDiscoveryHint":
+    "Tip: use this control to switch to Detailed view for traces, post-run status, and richer citation fields.",
   "chat.run.detail.simple": "Simple",
   "chat.run.detail.detailed": "Detailed",
 

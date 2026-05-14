@@ -229,8 +229,12 @@ def main() -> int:
     parser.add_argument(
         "--heartbeat-sec",
         type=float,
-        default=float(os.environ.get("AGENT_LIVE_COMPACTION_REVIEW_HEARTBEAT_SEC", "30")),
-        help="Progress heartbeat interval for per-turn logs (minimum 5s)",
+        default=None,
+        help=(
+            "Progress heartbeat interval for per-turn logs (minimum 5s). "
+            "When omitted, uses mode-specific defaults (15s focused_long_thread, 30s default) "
+            "and AGENT_LIVE_COMPACTION_* env overrides."
+        ),
     )
     parser.add_argument(
         "--no-in-turn-heartbeat",
@@ -269,6 +273,12 @@ def main() -> int:
     )
 
     args.base_url = resolve_live_base_url(args.base_url)
+    if args.heartbeat_sec is None:
+        from trace_review.orchestrator_env import (  # pylint: disable=import-outside-toplevel
+            compaction_in_turn_heartbeat_sec,
+        )
+
+        args.heartbeat_sec = compaction_in_turn_heartbeat_sec(mode=str(args.mode))
     hb_sec = max(5.0, float(args.heartbeat_sec))
     in_turn_hb = not bool(args.no_in_turn_heartbeat)
 
@@ -282,7 +292,9 @@ def main() -> int:
     with httpx.Client(timeout=timeout) as client:
         for idx in range(1, args.turns + 1):
             q = f"Turn {idx}: summarize one sentence and include turn number."
-            retries_left = max(0, int(args.max_retries_per_turn)) if args.mode == "focused_long_thread" else 0
+            retries_left = (
+                max(0, int(args.max_retries_per_turn)) if args.mode == "focused_long_thread" else 0
+            )
             attempt = 1
             item: dict[str, Any] | None = None
             while True:
@@ -481,6 +493,7 @@ def main() -> int:
         "require_compaction_after": args.require_compaction_after,
         "mode": args.mode,
         "max_retries_per_turn": int(args.max_retries_per_turn),
+        "heartbeat_sec": hb_sec,
         "in_turn_heartbeat": in_turn_hb,
         "turn_attempts": turn_attempts,
         "turn_reports": turn_reports,

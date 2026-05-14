@@ -13,7 +13,7 @@ from science_graphrag.storage.ingest_queue_store import build_ingest_queue_store
 
 from .dto import IngestJobRecord, job_record_to_view, now_iso
 from .ingest_progress import apply_batch_parent_aggregates
-from .registry import IngestJobRegistry, _registry
+from .registry import IngestJobRegistry, get_ingest_job_registry
 from .worker import (
     SUPPORTED_SUFFIXES,
     _append_log,
@@ -53,7 +53,7 @@ def _persist_queued_payload(
 ) -> str:
     store = build_ingest_queue_store(settings)
     key = store.put(job_id, filename, data)
-    registry._update(  # noqa: SLF001
+    registry.update_job(
         job_id,
         queued_source_object_key=key,
         queued_source_size=len(data),
@@ -87,11 +87,11 @@ def start_batch_ingest_job(
             detail={"error": "too_many_files", "max": BATCH_MAX_FILES, "got": len(files)},
         )
     BUS.cleanup_old_events(ttl_hours=24)
-    registry = _registry(settings)
+    registry = get_ingest_job_registry(settings)
     parent = registry.create_job(workspace_id, f"batch ({len(files)} files)", kind="batch_parent")
-    registry._update(
+    registry.update_job(
         parent.job_id, progress_total=len(files), message=f"Queued {len(files)} file(s)"
-    )  # noqa: SLF001
+    )
     child_ids: list[str] = []
     for name, data in files:
         if not data:
@@ -116,9 +116,10 @@ def start_batch_ingest_job(
         _append_log(
             child.job_id,
             f"Part of batch {parent.job_id}; queued key={key}",
+            settings=settings,
         )
     if not child_ids:
-        registry._update(  # noqa: SLF001
+        registry.update_job(
             parent.job_id,
             status="failed",
             error="no_valid_files",
@@ -126,14 +127,14 @@ def start_batch_ingest_job(
             finished_at=now_iso(),
         )
         raise HTTPException(status_code=400, detail="no_supported_files_in_batch")
-    registry._update(
+    registry.update_job(
         parent.job_id,
         child_job_ids=child_ids,
         status="running",
         message=f"Processing {len(child_ids)} file(s)…",
         progress_current=0,
         progress_total=100,
-    )  # noqa: SLF001
+    )
     for child_id in child_ids:
         enqueue_ingest_job(child_id)
     return parent
@@ -155,7 +156,7 @@ def start_ingest_job(
             detail=f"unsupported_type_allowed:{','.join(sorted(SUPPORTED_SUFFIXES))}",
         )
     BUS.cleanup_old_events(ttl_hours=24)
-    registry = _registry(settings)
+    registry = get_ingest_job_registry(settings)
     rec = registry.create_job(workspace_id, filename)
     key = _persist_queued_payload(
         registry,
@@ -164,21 +165,23 @@ def start_ingest_job(
         filename=filename,
         data=file_bytes,
     )
-    _append_log(rec.job_id, f"Saved {len(file_bytes)} bytes → {key}")
+    _append_log(rec.job_id, f"Saved {len(file_bytes)} bytes → {key}", settings=settings)
     enqueue_ingest_job(rec.job_id)
     return rec
 
 
-def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
+def job_to_dict(rec: IngestJobRecord, *, settings: Settings | None = None) -> dict[str, Any]:
+    from science_graphrag.config import get_settings
+
+    settings_eff = settings or get_settings()
     out = job_record_to_view(rec).model_dump()
     ws = (rec.workspace_id or "").strip()
     wid = (rec.work_id or "").strip()
     if ws and wid:
         try:
             from science_graphrag.api.ingest.work_dedup_counts import count_pending_ingest_conflicts
-            from science_graphrag.config import get_settings
 
-            pc = count_pending_ingest_conflicts(get_settings(), ws, wid)
+            pc = count_pending_ingest_conflicts(settings_eff, ws, wid)
             out["pending_conflicts"] = pc
             out["pending_conflicts_count"] = int(
                 pc.get("works", 0) + pc.get("authors", 0) + pc.get("entities", 0)
@@ -189,9 +192,9 @@ def job_to_dict(rec: IngestJobRecord) -> dict[str, Any]:
     if rec.kind == "batch_parent":
         child_jobs: list[dict[str, Any]] = []
         for child_id in rec.child_job_ids:
-            child = _registry().get(child_id)
+            child = get_ingest_job_registry(settings_eff).get(child_id)
             if child:
-                child_jobs.append(job_to_dict(child))
+                child_jobs.append(job_to_dict(child, settings=settings_eff))
         out["child_jobs"] = child_jobs
         apply_batch_parent_aggregates(out)
     return out

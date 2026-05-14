@@ -10,6 +10,7 @@ import logging
 from typing import Any
 
 from science_graphrag.config import Settings
+from science_graphrag.ingestion.jobs.registry import get_ingest_job_registry as ingest_registry_fn
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,9 @@ def _ingest_job_to_snapshot(rec: Any) -> dict[str, Any]:
         cur = max(0, min(100, int(view.progress_current or 0)))
         progress = float(cur) / float(tot)
     err = (view.error or "").strip() or None
-    degraded = bool(err or state == "failed" or bool(view.progress_indeterminate and state == "running"))
+    degraded = bool(
+        err or state == "failed" or bool(view.progress_indeterminate and state == "running")
+    )
     last_hb = view.finished_at or view.created_at or None
     msg = str(view.message or "").strip()
     if err:
@@ -87,15 +90,15 @@ def _benchmark_summary_to_snapshot(summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def resolve_runtime_monitor_from_job_stores(task_id: str, settings: Settings) -> dict[str, Any] | None:
+def resolve_runtime_monitor_from_job_stores(
+    task_id: str, settings: Settings
+) -> dict[str, Any] | None:
     """Return a snapshot dict when ``task_id`` matches ingest or benchmark task store."""
     tid = (task_id or "").strip()
     if not tid:
         return None
 
     try:
-        from science_graphrag.api.ingest.registry import _registry as ingest_registry_fn
-
         ingest_rec = ingest_registry_fn(settings).get_job(tid)
         if ingest_rec is not None:
             return _ingest_job_to_snapshot(ingest_rec)

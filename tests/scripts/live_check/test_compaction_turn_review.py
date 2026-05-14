@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 _REPO = Path(__file__).resolve().parents[3]
 _SCRIPT = _REPO / "scripts" / "live_check" / "compaction_turn_review.py"
 
@@ -42,3 +44,15 @@ def test_classify_turn_failure_focused_silent_hang() -> None:
     )
     assert fk == "silent_hang"
     assert fr == "silent_hang_turn_3"
+
+
+def test_compaction_in_turn_heartbeat_sec_focused_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from trace_review.orchestrator_env import compaction_in_turn_heartbeat_sec
+
+    monkeypatch.delenv("AGENT_LIVE_COMPACTION_FOCUS_HEARTBEAT_SEC", raising=False)
+    monkeypatch.delenv("AGENT_LIVE_COMPACTION_REVIEW_HEARTBEAT_SEC", raising=False)
+    assert compaction_in_turn_heartbeat_sec(mode="focused_long_thread") == 15.0
+    monkeypatch.delenv("AGENT_LIVE_COMPACTION_REVIEW_HEARTBEAT_SEC", raising=False)
+    assert compaction_in_turn_heartbeat_sec(mode="default") == 30.0

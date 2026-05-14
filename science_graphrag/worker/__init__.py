@@ -11,8 +11,8 @@ import dramatiq
 from dramatiq.brokers.redis import RedisBroker
 from dramatiq.middleware import AgeLimit, Retries, TimeLimit
 
-from science_graphrag.api.ingest.registry import _registry
 from science_graphrag.config import get_settings
+from science_graphrag.ingestion.jobs.registry import get_ingest_job_registry
 from science_graphrag.utils.project_logging import configure_logging
 from science_graphrag.worker.otel_middleware import OtelTraceMiddleware
 from science_graphrag.worker.trace_options import dramatiq_otel_options
@@ -40,7 +40,7 @@ from science_graphrag.worker.actor import ingest_document_actor  # noqa: E402,F4
 
 def run_compensation_sweep() -> None:
     """Recover stale ``running`` rows, then re-enqueue ``queued`` jobs stuck without delivery."""
-    registry = _registry(settings)
+    registry = get_ingest_job_registry(settings)
     registry.bootstrap()
     # Orphan ``running`` rows (worker died / Dramatiq AgeLimit skip) block the actor; reset first.
     stale_running_cutoff = datetime.now(UTC) - timedelta(hours=2)

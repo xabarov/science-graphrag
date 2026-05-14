@@ -21,6 +21,7 @@ def build_compare_payload(
     warn_reasons: list[str],
     cand: dict[str, Any],
     d: dict[str, Any],
+    latency_gate: dict[str, Any],
 ) -> dict[str, Any]:
     """Assemble the ``--out-json`` document (shape is a public contract)."""
     return {
@@ -28,6 +29,7 @@ def build_compare_payload(
         "status": status,
         "fail_reasons": fail_reasons,
         "warn_reasons": warn_reasons,
+        "operator_latency_verdict": latency_gate,
         "delta": {
             "missing_span_count": d["delta_missing_spans"],
             "tool_error_rate": d["delta_tool_error"],
@@ -85,10 +87,22 @@ def format_compare_markdown(
     fail_reasons: list[str],
     warn_reasons: list[str],
     d: dict[str, Any],
+    latency_gate: dict[str, Any],
 ) -> str:
     """Build Markdown body for ``--out-md``."""
     md_lines = [
         "# Trace Regression Compare",
+        "",
+        "## Operator latency verdict",
+        "",
+        f"- Verdict: `{latency_gate.get('verdict')}` ({latency_gate.get('verdict_detail')})",
+        f"- Candidate / baseline ratio: `{latency_gate.get('candidate_vs_baseline_ratio')}`",
+        f"- Warn ratio cap: `{latency_gate.get('latency_warn_ratio_cap')}`",
+        f"- Fail regress ratio cap: `{latency_gate.get('latency_fail_regress_ratio_cap')}`",
+        "",
+        f"- Baseline ``latency_p95_ms``: `{latency_gate.get('baseline_latency_p95_ms')}`",
+        f"- Candidate ``latency_p95_ms``: `{latency_gate.get('candidate_latency_p95_ms')}`",
+        f"- Delta ``latency_p95_ms`` (candidate − baseline): `{latency_gate.get('delta_latency_p95_ms')}`",
         "",
         f"- Status: `{status}`",
         f"- Delta missing spans: `{d['delta_missing_spans']}`",

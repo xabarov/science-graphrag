@@ -47,7 +47,7 @@ from science_graphrag.agent.subagents.react_subgraph_utils import (
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.tool_execution_pipeline import build_tool_execution_node
 from science_graphrag.agent.tools import build_retrieval_tools
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import SpanAttributes, llm_span

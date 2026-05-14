@@ -5,6 +5,7 @@ on:
     paths:
       - "science_graphrag/agent/**"
       - "science_graphrag/api/agent_v2.py"
+      - "science_graphrag/api/agent_v2/**"
       - "science_graphrag/api/agent_v2_modules/**"
       - "tests/test_api_agent_v2_*.py"
       - "tests/test_product_step_tool_coverage.py"

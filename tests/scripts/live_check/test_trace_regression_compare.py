@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 _REPO = Path(__file__).resolve().parents[3]
 _COMPARE = _REPO / "scripts" / "live_check" / "trace_regression_compare.py"
 
@@ -912,3 +914,107 @@ def test_regression_min_live_trust_signal_delta_fail(tmp_path: Path) -> None:
     assert r.returncode == 1
     payload = json.loads(out_j.read_text())
     assert any("live_trust_signal_delta" in x for x in payload["fail_reasons"])
+
+
+def test_regression_operator_latency_verdict_in_budget(tmp_path: Path) -> None:
+    base = _minimal_review({"latency_p95_ms": 100.0, "missing_span_count": 0})
+    cand = _minimal_review({"latency_p95_ms": 120.0, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--max-latency-p95-regress-ratio",
+            "1.5",
+            "--latency-warn-ratio",
+            "1.25",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 0
+    payload = json.loads(out_j.read_text())
+    gate = payload.get("operator_latency_verdict") or {}
+    assert gate.get("verdict") == "in_budget"
+    assert gate.get("candidate_vs_baseline_ratio") == pytest.approx(1.2)
+    md = out_m.read_text(encoding="utf-8")
+    assert "Verdict: `in_budget`" in md
+
+
+def test_regression_operator_latency_verdict_warn_band(tmp_path: Path) -> None:
+    base = _minimal_review({"latency_p95_ms": 100.0, "missing_span_count": 0})
+    cand = _minimal_review({"latency_p95_ms": 130.0, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--max-latency-p95-regress-ratio",
+            "1.5",
+            "--latency-warn-ratio",
+            "1.25",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 3
+    payload = json.loads(out_j.read_text())
+    assert payload["status"] == "warn"
+    assert (payload.get("operator_latency_verdict") or {}).get("verdict") == "warn_band"
+
+
+def test_regression_operator_latency_verdict_out_of_budget(tmp_path: Path) -> None:
+    base = _minimal_review({"latency_p95_ms": 100.0, "missing_span_count": 0})
+    cand = _minimal_review({"latency_p95_ms": 160.0, "missing_span_count": 0})
+    b = tmp_path / "b.json"
+    c = tmp_path / "c.json"
+    b.write_text(json.dumps(base), encoding="utf-8")
+    c.write_text(json.dumps(cand), encoding="utf-8")
+    out_j = tmp_path / "o.json"
+    out_m = tmp_path / "o.md"
+    r = subprocess.run(
+        [
+            sys.executable,
+            str(_COMPARE),
+            "--baseline",
+            str(b),
+            "--candidate",
+            str(c),
+            "--max-latency-p95-regress-ratio",
+            "1.5",
+            "--latency-warn-ratio",
+            "1.25",
+            "--out-json",
+            str(out_j),
+            "--out-md",
+            str(out_m),
+        ],
+        check=False,
+    )
+    assert r.returncode == 1
+    payload = json.loads(out_j.read_text())
+    assert (payload.get("operator_latency_verdict") or {}).get("verdict") == "out_of_budget"

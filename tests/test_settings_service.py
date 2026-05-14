@@ -56,6 +56,35 @@ def test_mask_url_userinfo_redacts_password() -> None:
     assert "***" in (masked or "")
 
 
+def test_work_dedup_snapshot_effective_contains_expected_keys(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings(
+        qdrant_work_embeddings_collection="works-col",
+        qdrant_author_embeddings_collection="authors-col",
+        work_dedup_sim_low=0.12,
+        work_dedup_sim_high=0.88,
+        work_dedup_max_candidates=40,
+        work_dedup_llm_mode="off",
+        work_dedup_llm_timeout_s=30.0,
+        author_dedup_sim_low=0.2,
+        author_dedup_sim_high=0.9,
+        author_dedup_max_candidates=25,
+        author_dedup_llm_timeout_s=45.0,
+    )
+    snap = service.get_snapshot(base)
+    eff = snap.work_dedup["effective"]
+    assert eff["qdrant_work_embeddings_collection"] == "works-col"
+    assert eff["qdrant_author_embeddings_collection"] == "authors-col"
+    assert eff["work_dedup_sim_low"] == pytest.approx(0.12)
+    assert eff["work_dedup_sim_high"] == pytest.approx(0.88)
+    assert eff["work_dedup_max_candidates"] == 40
+    assert eff["work_dedup_llm_mode"] == "off"
+    assert eff["work_dedup_llm_timeout_s"] == pytest.approx(30.0)
+    assert eff["author_dedup_sim_low"] == pytest.approx(0.2)
+    assert eff["author_dedup_max_candidates"] == 25
+    assert eff["author_dedup_llm_timeout_s"] == pytest.approx(45.0)
+
+
 def test_mask_short_secret_shape() -> None:
     assert mask_short_secret("abcdefghijklmnop") == "abcd********mnop"
 

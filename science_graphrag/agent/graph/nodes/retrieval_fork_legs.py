@@ -22,7 +22,7 @@ from science_graphrag.agent.subagents.specialist_results_v3 import (
     parse_verdict_from_text,
 )
 from science_graphrag.agent.subagents.runtime import append_spawned_subagent_terminal_row
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 
 

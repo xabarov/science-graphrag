@@ -20,10 +20,10 @@ def test_ingest_document_actor_skips_completed_job() -> None:
 
     with patch("science_graphrag.worker.actor.get_settings") as mock_settings:
         mock_settings.return_value = SimpleNamespace(blob_root=Path("/tmp"))
-        with patch("science_graphrag.worker.actor._registry") as mock_registry:
+        with patch("science_graphrag.worker.actor.get_ingest_job_registry") as mock_registry:
             reg = mock_registry.return_value
             reg.get_job.return_value = mock_job
-            with patch("science_graphrag.worker.actor._execute_single_ingest") as mock_execute:
+            with patch("science_graphrag.worker.actor.execute_single_ingest") as mock_execute:
                 ingest_document_actor.fn("job-123")
                 mock_execute.assert_not_called()
 
@@ -31,10 +31,10 @@ def test_ingest_document_actor_skips_completed_job() -> None:
 def test_ingest_document_actor_skips_missing_job() -> None:
     with patch("science_graphrag.worker.actor.get_settings") as mock_settings:
         mock_settings.return_value = SimpleNamespace(blob_root=Path("/tmp"))
-        with patch("science_graphrag.worker.actor._registry") as mock_registry:
+        with patch("science_graphrag.worker.actor.get_ingest_job_registry") as mock_registry:
             reg = mock_registry.return_value
             reg.get_job.return_value = None
-            with patch("science_graphrag.worker.actor._execute_single_ingest") as mock_execute:
+            with patch("science_graphrag.worker.actor.execute_single_ingest") as mock_execute:
                 ingest_document_actor.fn("job-missing")
                 mock_execute.assert_not_called()
 
@@ -50,12 +50,12 @@ def test_ingest_document_actor_runs_batch_child_queued_job() -> None:
 
     with patch("science_graphrag.worker.actor.get_settings") as mock_settings:
         mock_settings.return_value = SimpleNamespace(blob_root=Path("/tmp"))
-        with patch("science_graphrag.worker.actor._registry") as mock_registry:
+        with patch("science_graphrag.worker.actor.get_ingest_job_registry") as mock_registry:
             with patch("science_graphrag.worker.actor.build_ingest_queue_store") as mock_store:
                 with patch("science_graphrag.worker.actor.tempfile.mkstemp") as mock_mkstemp:
                     mock_mkstemp.return_value = (3, "/tmp/fake-ingest.pdf")
                     with patch("science_graphrag.worker.actor.os.close"):
-                        exec_patch = patch("science_graphrag.worker.actor._execute_single_ingest")
+                        exec_patch = patch("science_graphrag.worker.actor.execute_single_ingest")
                         with exec_patch as mock_execute:
                             reg = mock_registry.return_value
                             reg.get_job.return_value = mock_job
@@ -83,13 +83,13 @@ def test_ingest_document_actor_logs_terminal_status_after_pipeline(
     with caplog.at_level(logging.INFO, logger="science_graphrag.worker.actor"):
         with patch("science_graphrag.worker.actor.get_settings") as mock_settings:
             mock_settings.return_value = SimpleNamespace(blob_root=Path("/tmp"))
-            with patch("science_graphrag.worker.actor._registry") as mock_registry:
+            with patch("science_graphrag.worker.actor.get_ingest_job_registry") as mock_registry:
                 with patch("science_graphrag.worker.actor.build_ingest_queue_store") as mock_store:
                     with patch("science_graphrag.worker.actor.tempfile.mkstemp") as mock_mkstemp:
                         mock_mkstemp.return_value = (3, "/tmp/fake-ingest.pdf")
                         with patch("science_graphrag.worker.actor.os.close"):
                             with patch(
-                                "science_graphrag.worker.actor._execute_single_ingest"
+                                "science_graphrag.worker.actor.execute_single_ingest"
                             ) as mock_execute:
                                 reg = mock_registry.return_value
                                 reg.get_job.side_effect = [mock_job, refreshed]

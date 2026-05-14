@@ -10,9 +10,9 @@ from pathlib import Path
 
 import dramatiq
 
-from science_graphrag.api.ingest.registry import _registry
-from science_graphrag.api.ingest.worker import _execute_single_ingest
 from science_graphrag.config import get_settings
+from science_graphrag.ingestion.jobs.registry import get_ingest_job_registry
+from science_graphrag.ingestion.jobs.single_document_ingest import execute_single_ingest
 from science_graphrag.observability.ingest_metrics import (
     observe_ingest_job_started,
     observe_ingest_job_terminal,
@@ -40,7 +40,7 @@ def ingest_document_actor(job_id: str) -> None:
         return int((time.perf_counter() - since) * 1000)
 
     settings = get_settings()
-    registry = _registry(settings)
+    registry = get_ingest_job_registry(settings)
     registry.bootstrap()
     job = registry.get_job(job_id)
     if job is None:
@@ -116,7 +116,7 @@ def ingest_document_actor(job_id: str) -> None:
                     )
                     return
 
-            _execute_single_ingest(job_id, source_path, settings)
+            execute_single_ingest(job_id, source_path, settings)
         finally:
             refreshed = registry.get_job(job_id)
             term_status = (

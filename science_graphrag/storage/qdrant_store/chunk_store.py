@@ -2,26 +2,16 @@
 
 from __future__ import annotations
 
-import logging
-import uuid
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from qdrant_client import QdrantClient
-from qdrant_client.models import (
-    Distance,
-    FieldCondition,
-    Filter,
-    MatchAny,
-    MatchValue,
-    PointStruct,
-    VectorParams,
-)
+
+from science_graphrag.storage.qdrant_store import chunk_store_read as _chunk_read
+from science_graphrag.storage.qdrant_store import chunk_store_write as _chunk_write
 
 if TYPE_CHECKING:
     from science_graphrag.ingestion.chunking import DocumentChunk
-
-logger = logging.getLogger(__name__)
 
 
 class QdrantChunkStore:
@@ -29,16 +19,7 @@ class QdrantChunkStore:
         self._client = QdrantClient(url=url, check_compatibility=False)
         self._collection = collection
         self._vector_dim = vector_dim
-        self._ensure_collection()
-
-    def _ensure_collection(self) -> None:
-        cols = self._client.get_collections().collections
-        names = {c.name for c in cols}
-        if self._collection not in names:
-            self._client.create_collection(
-                collection_name=self._collection,
-                vectors_config=VectorParams(size=self._vector_dim, distance=Distance.COSINE),
-            )
+        _chunk_write.ensure_chunk_collection(self._client, self._collection, self._vector_dim)
 
     def upsert_chunks(
         self,
@@ -49,33 +30,16 @@ class QdrantChunkStore:
         vectors: np.ndarray,
         embedding_model: str,
     ) -> None:
-        if len(chunks) != len(vectors):
-            raise ValueError("chunks and vectors length mismatch")
-        if vectors.size and int(vectors.shape[1]) != self._vector_dim:
-            raise ValueError(
-                f"Qdrant chunk vector dim mismatch for collection {self._collection!r}: "
-                f"got {int(vectors.shape[1])}, expected {self._vector_dim}."
-            )
-        points: list[PointStruct] = []
-        for idx, (text, vec) in enumerate(zip(chunks, vectors, strict=True)):
-            pid = str(uuid.uuid5(uuid.NAMESPACE_URL, f"{document_id}:{idx}"))
-            payload: dict[str, Any] = {
-                "work_id": work_id,
-                "document_id": document_id,
-                "chunk_index": idx,
-                "text": text[:8000],
-                "embedding_model": embedding_model,
-                "workspace_ids": [],
-            }
-            points.append(
-                PointStruct(
-                    id=pid,
-                    vector=vec.tolist(),
-                    payload=payload,
-                )
-            )
-        if points:
-            self._client.upsert(collection_name=self._collection, points=points)
+        _chunk_write.upsert_chunks(
+            self._client,
+            self._collection,
+            self._vector_dim,
+            work_id=work_id,
+            document_id=document_id,
+            chunks=chunks,
+            vectors=vectors,
+            embedding_model=embedding_model,
+        )
 
     def upsert_document_chunks(
         self,
@@ -87,162 +51,32 @@ class QdrantChunkStore:
         embedding_model: str,
         workspace_ids: list[str] | None = None,
     ) -> None:
-        """Upsert section-aware chunks with deterministic ids from chunk_fingerprint."""
-        # Local import avoids circular import: ingestion.stage_context imports this store.
-        from science_graphrag.ingestion.chunking import infer_chunk_kind_from_section_path
-
-        if len(document_chunks) != len(vectors):
-            raise ValueError("document_chunks and vectors length mismatch")
-        if vectors.size and int(vectors.shape[1]) != self._vector_dim:
-            raise ValueError(
-                f"Qdrant chunk vector dim mismatch for collection {self._collection!r}: "
-                f"got {int(vectors.shape[1])}, expected {self._vector_dim}."
-            )
-        points: list[PointStruct] = []
-        for ch, vec in zip(document_chunks, vectors, strict=True):
-            pid = str(
-                uuid.uuid5(
-                    uuid.NAMESPACE_URL,
-                    f"{document_id}:{ch.chunk_fingerprint}",
-                ),
-            )
-            ws_ids = [str(x).strip() for x in (workspace_ids or []) if str(x).strip()]
-            payload: dict[str, Any] = {
-                "work_id": work_id,
-                "document_id": document_id,
-                "chunk_index": ch.chunk_index,
-                "chunk_fingerprint": ch.chunk_fingerprint,
-                "section_path": ch.section_path,
-                "chunk_kind": infer_chunk_kind_from_section_path(ch.section_path),
-                "language": "en",
-                "overlap_prev": ch.overlap_prev,
-                "overlap_next": ch.overlap_next,
-                "start_offset": ch.start_offset,
-                "end_offset": ch.end_offset,
-                "text": ch.text[:8000],
-                "embedding_model": embedding_model,
-                "workspace_ids": ws_ids,
-            }
-            points.append(
-                PointStruct(
-                    id=pid,
-                    vector=vec.tolist(),
-                    payload=payload,
-                ),
-            )
-        if points:
-            self._client.upsert(collection_name=self._collection, points=points)
+        _chunk_write.upsert_document_chunks(
+            self._client,
+            self._collection,
+            self._vector_dim,
+            work_id=work_id,
+            document_id=document_id,
+            document_chunks=document_chunks,
+            vectors=vectors,
+            embedding_model=embedding_model,
+            workspace_ids=workspace_ids,
+        )
 
     def repoint_work_id_payload(self, *, from_work_id: str, to_work_id: str) -> int:
-        """
-        Set payload.work_id from ``from_work_id`` to ``to_work_id`` for all matching points.
-
-        Required after ``merge_work_into_canonical`` so retrieval citations match Neo4j :Work ids.
-        """
-
-        if from_work_id == to_work_id:
-            return 0
-        flt = Filter(
-            must=[FieldCondition(key="work_id", match=MatchValue(value=from_work_id))],
+        return _chunk_write.repoint_work_id_payload(
+            self._client, self._collection, from_work_id=from_work_id, to_work_id=to_work_id
         )
-        n_before = int(
-            self._client.count(
-                collection_name=self._collection,
-                count_filter=flt,
-                exact=True,
-            ).count
-        )
-        if n_before == 0:
-            return 0
-        self._client.set_payload(
-            collection_name=self._collection,
-            payload={"work_id": to_work_id},
-            points=flt,
-            wait=True,
-        )
-        return n_before
 
     def add_workspace_to_chunks(self, *, work_id: str, workspace_id: str) -> int:
-        """Idempotent: append workspace_id to payload.workspace_ids for all points of work_id."""
-
-        wid = str(workspace_id or "").strip()
-        if not wid:
-            return 0
-        flt = Filter(
-            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        return _chunk_write.add_workspace_to_chunks(
+            self._client, self._collection, work_id=work_id, workspace_id=workspace_id
         )
-        updated = 0
-        offset: int | str | None = None
-        while True:
-            records, offset = self._client.scroll(
-                collection_name=self._collection,
-                scroll_filter=flt,
-                limit=256,
-                offset=offset,
-                with_payload=True,
-                with_vectors=False,
-            )
-            if not records:
-                break
-            for rec in records:
-                payload = rec.payload or {}
-                cur = [
-                    str(x).strip() for x in (payload.get("workspace_ids") or []) if str(x).strip()
-                ]
-                if wid in cur:
-                    continue
-                cur.append(wid)
-                self._client.set_payload(
-                    collection_name=self._collection,
-                    payload={"workspace_ids": cur},
-                    points=[rec.id],
-                    wait=True,
-                )
-                updated += 1
-            if offset is None:
-                break
-        return updated
 
     def remove_workspace_from_chunks(self, *, work_id: str, workspace_id: str) -> int:
-        """Remove ``workspace_id`` from payload.workspace_ids for all points of work_id (idempotent)."""
-
-        wid = str(workspace_id or "").strip()
-        if not wid:
-            return 0
-        flt = Filter(
-            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        return _chunk_write.remove_workspace_from_chunks(
+            self._client, self._collection, work_id=work_id, workspace_id=workspace_id
         )
-        updated = 0
-        offset: int | str | None = None
-        while True:
-            records, offset = self._client.scroll(
-                collection_name=self._collection,
-                scroll_filter=flt,
-                limit=256,
-                offset=offset,
-                with_payload=True,
-                with_vectors=False,
-            )
-            if not records:
-                break
-            for rec in records:
-                payload = rec.payload or {}
-                cur = [
-                    str(x).strip() for x in (payload.get("workspace_ids") or []) if str(x).strip()
-                ]
-                if wid not in cur:
-                    continue
-                nxt = [x for x in cur if x != wid]
-                self._client.set_payload(
-                    collection_name=self._collection,
-                    payload={"workspace_ids": nxt},
-                    points=[rec.id],
-                    wait=True,
-                )
-                updated += 1
-            if offset is None:
-                break
-        return updated
 
     def add_workspace_to_all_chunks(
         self,
@@ -250,93 +84,22 @@ class QdrantChunkStore:
         workspace_id: str,
         progress_log_every: int = 2048,
     ) -> int:
-        """Append ``workspace_id`` to every point's ``workspace_ids`` (idempotent).
-
-        Used when a Neo4j workspace has full-corpus membership (no ``CONTAINS`` work list).
-        When ``progress_log_every`` > 0, log INFO after that many payload updates.
-        """
-
-        wid = str(workspace_id or "").strip()
-        if not wid:
-            return 0
-        updated = 0
-        offset: int | str | None = None
-        while True:
-            records, offset = self._client.scroll(
-                collection_name=self._collection,
-                limit=256,
-                offset=offset,
-                with_payload=True,
-                with_vectors=False,
-            )
-            if not records:
-                break
-            for rec in records:
-                payload = rec.payload or {}
-                cur = [
-                    str(x).strip() for x in (payload.get("workspace_ids") or []) if str(x).strip()
-                ]
-                if wid in cur:
-                    continue
-                cur.append(wid)
-                self._client.set_payload(
-                    collection_name=self._collection,
-                    payload={"workspace_ids": cur},
-                    points=[rec.id],
-                    wait=True,
-                )
-                updated += 1
-                if progress_log_every > 0 and updated % progress_log_every == 0:
-                    logger.info(
-                        "add_workspace_to_all_chunks progress workspace_id=%s updated=%d",
-                        wid,
-                        updated,
-                    )
-            if offset is None:
-                break
-        return updated
+        return _chunk_write.add_workspace_to_all_chunks(
+            self._client,
+            self._collection,
+            workspace_id=workspace_id,
+            progress_log_every=progress_log_every,
+        )
 
     def delete_points_by_document_id(self, *, document_id: str) -> int:
-        """Remove all points whose payload ``document_id`` matches (re-ingest / cleanup)."""
-
-        flt = Filter(
-            must=[FieldCondition(key="document_id", match=MatchValue(value=document_id))],
+        return _chunk_write.delete_points_by_document_id(
+            self._client, self._collection, document_id=document_id
         )
-        res = self._client.count(
-            collection_name=self._collection,
-            count_filter=flt,
-            exact=True,
-        )
-        n = int(res.count)
-        if n == 0:
-            return 0
-        self._client.delete(
-            collection_name=self._collection,
-            points_selector=flt,
-            wait=True,
-        )
-        return n
 
     def delete_points_by_work_id(self, *, work_id: str) -> int:
-        """Remove all points for a Work (purge / repair). Use with care on shared corpora."""
-
-        flt = Filter(
-            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        return _chunk_write.delete_points_by_work_id(
+            self._client, self._collection, work_id=work_id
         )
-        res = self._client.count(
-            collection_name=self._collection,
-            count_filter=flt,
-            exact=True,
-        )
-        n = int(res.count)
-        if n == 0:
-            return 0
-        self._client.delete(
-            collection_name=self._collection,
-            points_selector=flt,
-            wait=True,
-        )
-        return n
 
     def scroll_points_payload_only(
         self,
@@ -344,14 +107,8 @@ class QdrantChunkStore:
         limit: int,
         offset: int | str | None = None,
     ) -> tuple[list[Any], int | str | None]:
-        """Low-level scroll for diagnostics (payload only, no vectors)."""
-
-        return self._client.scroll(
-            collection_name=self._collection,
-            limit=limit,
-            offset=offset,
-            with_payload=True,
-            with_vectors=False,
+        return _chunk_read.scroll_points_payload_only(
+            self._client, self._collection, limit=limit, offset=offset
         )
 
     def search_similar(
@@ -363,96 +120,23 @@ class QdrantChunkStore:
         work_ids: list[str] | None = None,
         workspace_id: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Return scored hits with payload (text, work_id, chunk metadata)."""
-
-        query_filter = None
-        ws_scope = (workspace_id or "").strip()
-        must_clauses: list[Any] = []
-        if ws_scope:
-            must_clauses.append(
-                FieldCondition(key="workspace_ids", match=MatchAny(any=[ws_scope])),
-            )
-        if work_id:
-            must_clauses.append(FieldCondition(key="work_id", match=MatchValue(value=work_id)))
-            query_filter = Filter(must=must_clauses) if must_clauses else None
-        elif work_ids:
-            cleaned = [str(w).strip() for w in work_ids if str(w).strip()]
-            if cleaned:
-                work_clause = Filter(
-                    should=[
-                        FieldCondition(key="work_id", match=MatchValue(value=w)) for w in cleaned
-                    ],
-                )
-                if must_clauses:
-                    query_filter = Filter(must=[*must_clauses, work_clause])
-                else:
-                    query_filter = work_clause
-        elif must_clauses:
-            query_filter = Filter(must=must_clauses)
-        # qdrant-client>=1.17: use query_points (search() removed)
-        resp = self._client.query_points(
-            collection_name=self._collection,
-            query=vector,
+        return _chunk_read.search_similar_chunks(
+            self._client,
+            self._collection,
+            vector=vector,
             limit=limit,
-            query_filter=query_filter,
-            with_payload=True,
+            work_id=work_id,
+            work_ids=work_ids,
+            workspace_id=workspace_id,
         )
-        hits = resp.points
-        out: list[dict[str, Any]] = []
-        for hit in hits:
-            payload = hit.payload or {}
-            fp = payload.get("chunk_fingerprint")
-            if not fp:
-                # Legacy upserts (`upsert_chunks`) omitted fingerprints; use stable point id for
-                # citations, benchmarks, and UI keys until chunks are re-ingested with fingerprints.
-                fp = str(hit.id)
-            out.append(
-                {
-                    "id": str(hit.id),
-                    "score": float(hit.score),
-                    "text": payload.get("text"),
-                    "work_id": payload.get("work_id"),
-                    "document_id": payload.get("document_id"),
-                    "chunk_fingerprint": fp,
-                    "section_path": payload.get("section_path"),
-                    "chunk_kind": payload.get("chunk_kind"),
-                    "language": payload.get("language"),
-                },
-            )
-        return out
 
     def count_chunks_for_work(self, *, work_id: str) -> int:
-        """Approximate count of points for a work (for pagination total)."""
-
-        flt = Filter(
-            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
-        )
-        res = self._client.count(
-            collection_name=self._collection,
-            count_filter=flt,
-            exact=True,
-        )
-        return int(res.count)
+        return _chunk_read.count_chunks_for_work(self._client, self._collection, work_id=work_id)
 
     def count_chunks_for_workspace_work(self, *, workspace_id: str, work_id: str) -> int:
-        """Count chunk points scoped to a workspace (payload.workspace_ids contains workspace_id)."""
-
-        ws = (workspace_id or "").strip()
-        wid = (work_id or "").strip()
-        if not ws or not wid:
-            return 0
-        flt = Filter(
-            must=[
-                FieldCondition(key="work_id", match=MatchValue(value=wid)),
-                FieldCondition(key="workspace_ids", match=MatchAny(any=[ws])),
-            ],
+        return _chunk_read.count_chunks_for_workspace_work(
+            self._client, self._collection, workspace_id=workspace_id, work_id=work_id
         )
-        res = self._client.count(
-            collection_name=self._collection,
-            count_filter=flt,
-            exact=True,
-        )
-        return int(res.count)
 
     def scroll_chunks_for_work(
         self,
@@ -461,31 +145,9 @@ class QdrantChunkStore:
         limit: int = 50,
         offset: int | str | None = None,
     ) -> tuple[list[dict[str, Any]], int | str | None]:
-        """List chunk payloads for one work (ordered by scroll order)."""
-
-        flt = Filter(
-            must=[FieldCondition(key="work_id", match=MatchValue(value=work_id))],
+        return _chunk_read.scroll_chunks_for_work(
+            self._client, self._collection, work_id=work_id, limit=limit, offset=offset
         )
-        records, next_offset = self._client.scroll(
-            collection_name=self._collection,
-            scroll_filter=flt,
-            limit=limit,
-            offset=offset,
-            with_payload=True,
-        )
-        out: list[dict[str, Any]] = []
-        for rec in records:
-            payload = rec.payload or {}
-            out.append(
-                {
-                    "document_id": payload.get("document_id"),
-                    "chunk_fingerprint": payload.get("chunk_fingerprint"),
-                    "section_path": payload.get("section_path"),
-                    "text": payload.get("text"),
-                    "chunk_index": payload.get("chunk_index"),
-                },
-            )
-        return out, next_offset
 
     def get_chunk_text_by_work_and_fingerprint(
         self,
@@ -493,32 +155,12 @@ class QdrantChunkStore:
         work_id: str,
         chunk_fingerprint: str,
     ) -> str | None:
-        """Return stored chunk body text for UI citation enrichment (Ask passage panel)."""
-
-        wid = str(work_id or "").strip()
-        fp = str(chunk_fingerprint or "").strip()
-        if not wid or not fp:
-            return None
-        flt = Filter(
-            must=[
-                FieldCondition(key="work_id", match=MatchValue(value=wid)),
-                FieldCondition(key="chunk_fingerprint", match=MatchValue(value=fp)),
-            ],
+        return _chunk_read.get_chunk_text_by_work_and_fingerprint(
+            self._client,
+            self._collection,
+            work_id=work_id,
+            chunk_fingerprint=chunk_fingerprint,
         )
-        records, _ = self._client.scroll(
-            collection_name=self._collection,
-            scroll_filter=flt,
-            limit=1,
-            with_payload=True,
-            with_vectors=False,
-        )
-        if not records:
-            return None
-        payload = records[0].payload or {}
-        text = payload.get("text")
-        if isinstance(text, str) and text.strip():
-            return text.strip()[:8000]
-        return None
 
 
 def recreate_qdrant_chunk_collection(

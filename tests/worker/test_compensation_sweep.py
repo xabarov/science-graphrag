@@ -15,7 +15,7 @@ def test_run_compensation_sweep_resets_stale_running_then_enqueues() -> None:
     mock_job.job_id = "stale-queued-1"
     mock_reg.list_stale_queued_jobs.return_value = [mock_job]
 
-    with patch("science_graphrag.worker._registry", return_value=mock_reg):
+    with patch("science_graphrag.worker.get_ingest_job_registry", return_value=mock_reg):
         with patch("science_graphrag.worker.ingest_document_actor") as mock_actor:
             with patch("science_graphrag.worker.dramatiq_otel_options", return_value={}):
                 worker_mod.run_compensation_sweep()

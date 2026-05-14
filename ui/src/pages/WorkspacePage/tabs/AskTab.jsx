@@ -4,8 +4,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import AskPanel from "../../../components/work/ask/AskPanel.jsx";
-import { sessionExistsInScope } from "../../../components/work/ask/askSessionState.js";
+import { AskPanel, sessionExistsInScope } from "../../../components/work/ask/index.js";
 import {
   describeTraceabilityState,
   readTraceabilityState,

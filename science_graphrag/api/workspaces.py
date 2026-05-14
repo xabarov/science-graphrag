@@ -239,7 +239,7 @@ async def ingest_document_to_workspace(
     rec = start_ingest_job(
         workspace_id=workspace_id, filename=raw_name, file_bytes=data, settings=settings
     )
-    return job_to_dict(rec)
+    return job_to_dict(rec, settings=settings)
 
 
 @router.post("/{workspace_id}/ingest/batch")
@@ -284,7 +284,7 @@ async def ingest_batch_to_workspace(
     if not items:
         raise HTTPException(status_code=400, detail="no_supported_files_in_batch")
     rec = start_batch_ingest_job(workspace_id=workspace_id, files=items, settings=settings)
-    return job_to_dict(rec)
+    return job_to_dict(rec, settings=settings)
 
 
 @router.post("/{workspace_id}/merge-works")

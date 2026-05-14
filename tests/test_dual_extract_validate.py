@@ -831,14 +831,14 @@ def test_hybrid_ablation_v2_set_overlap_metrics() -> None:
 
 
 def test_multihop_v2_chain_order_correctness_via_kendall() -> None:
-    from scripts.dual_validate.extractors.retrieval_v1 import _kendall_order
+    from scripts.dual_validate.extractors.retrieval_v1_ranking import kendall_order
 
     a = ["yolov1", "yolov2", "yolov3", "yolox"]
-    assert _kendall_order(a, a) == 1.0
-    assert _kendall_order(a, list(reversed(a))) == 0.0
+    assert kendall_order(a, a) == 1.0
+    assert kendall_order(a, list(reversed(a))) == 0.0
     # one swap → 5/6 correct (out of 6 ordered pairs)
     swapped = ["yolov1", "yolov3", "yolov2", "yolox"]
-    assert 0.6 < _kendall_order(a, swapped) < 1.0
+    assert 0.6 < kendall_order(a, swapped) < 1.0
 
 
 def test_multihop_v2_set_case_b_uses_slug_canonical_disagreement() -> None:

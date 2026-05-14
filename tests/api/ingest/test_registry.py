@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 import threading
+from types import SimpleNamespace
 from typing import Any
 
+import pytest
+
 from science_graphrag.api.ingest.dto import IngestJobRecord
-from science_graphrag.api.ingest.registry import IngestJobRegistry
+from science_graphrag.ingestion.jobs.registry import (
+    IngestJobRegistry,
+    get_ingest_job_registry,
+    reset_ingest_job_registry_for_tests,
+)
 
 
 class _FakeSession:
@@ -69,8 +76,46 @@ def test_update_stage_status(monkeypatch: Any) -> None:
     def _capture_update(job_id: str, **kwargs: Any) -> None:
         calls.append({"job_id": job_id, **kwargs})
 
-    monkeypatch.setattr(registry, "_update", _capture_update)
+    monkeypatch.setattr(registry, "update_job", _capture_update)
 
     registry.update_stage("job-1", status="running", message="started")
 
     assert calls == [{"job_id": "job-1", "status": "running", "message": "started"}]
+
+
+def test_get_ingest_job_registry_rebinds_on_database_url_change(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from science_graphrag.ingestion.jobs import registry as reg_mod
+
+    reset_ingest_job_registry_for_tests()
+    disposed: list[str] = []
+
+    class _FakeReg:
+        def __init__(self, settings: SimpleNamespace) -> None:
+            self._url = str(settings.database_url).strip()
+
+        @property
+        def resolved_database_url(self) -> str:
+            return self._url
+
+    monkeypatch.setattr(reg_mod, "IngestJobRegistry", _FakeReg)
+    monkeypatch.setattr(
+        reg_mod,
+        "dispose_engine_for_database_url",
+        lambda u: disposed.append(str(u).strip()),
+    )
+
+    s1 = SimpleNamespace(database_url="sqlite:///ingest_registry_one")
+    s2 = SimpleNamespace(database_url="sqlite:///ingest_registry_two")
+    r1 = get_ingest_job_registry(s1)
+    r2 = get_ingest_job_registry(s1)
+    assert r1 is r2
+    r3 = get_ingest_job_registry(s2)
+    assert r3 is not r1
+    assert disposed == ["sqlite:///ingest_registry_one"]
+    reset_ingest_job_registry_for_tests()
+    assert disposed == [
+        "sqlite:///ingest_registry_one",
+        "sqlite:///ingest_registry_two",
+    ]

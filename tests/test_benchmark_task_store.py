@@ -176,7 +176,7 @@ def test_task_store_get_run_summary_omits_case_results(tmp_path: Path) -> None:
 def test_get_run_summary_paginated_when_over_inline_limit(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setattr("science_graphrag.api.task_store._SUMMARY_CASES_INLINE_MAX", 1)
+    monkeypatch.setattr("science_graphrag.api.benchmark_task_store_core._SUMMARY_CASES_INLINE_MAX", 1)
 
     def _fake_layer1_runner(
         fixture_dir: Path,
@@ -340,7 +340,7 @@ def test_get_run_raises_when_case_count_over_limit(
         run_config={"model_profile": "env_default"},
     )
     _wait_for_terminal(store, run_id)
-    monkeypatch.setattr("science_graphrag.api.task_store._FULL_RUN_MAX_CASE_IDS", 1)
+    monkeypatch.setattr("science_graphrag.api.benchmark_task_store_core._FULL_RUN_MAX_CASE_IDS", 1)
     slim = store.get_run_summary(run_id)
     assert slim is not None
     assert slim.get("full_run_blocked") is True

@@ -1,0 +1,163 @@
+import React from "react";
+import Box from "@mui/material/Box";
+
+import { useFeedback } from "../../../feedback/index.js";
+import { ChatComposer } from "../chat/ChatComposer.jsx";
+import { ChatMessageThread } from "../chat/ChatMessageThread.jsx";
+import { ChatSessionSidebar } from "../chat/ChatSessionSidebar.jsx";
+import AskResearchPlanPanel from "../forms/AskResearchPlanPanel.jsx";
+import { AskPanelChrome } from "./AskPanelChrome.jsx";
+import { useAskPanelOrchestration } from "../orchestration/useAskPanelOrchestration.js";
+import { useChatDetailLevel } from "../chat/useChatDetailLevel.js";
+
+/** Ask / chat workspace — composition shell; logic in `useAskPanelOrchestration`. */
+export default function AskPanel({
+  scopedWorkId = null,
+  initialWorkId = "",
+  showPageChrome = true,
+  workspaceWorkId = null,
+  workspaceId = "",
+  urlSessionId = "",
+  onUrlSessionIdChange,
+  fillAvailableHeight = false,
+}) {
+  const { confirm } = useFeedback();
+  const { detailLevel, toggleDetailLevel } = useChatDetailLevel();
+  const o = useAskPanelOrchestration({
+    scopedWorkId,
+    initialWorkId,
+    workspaceWorkId,
+    workspaceId,
+    urlSessionId,
+    onUrlSessionIdChange,
+  });
+
+  const handleDeleteSessionRequest = async (session) => {
+    const n = Array.isArray(session?.entries) ? session.entries.length : 0;
+    if (n > 0) {
+      const ok = await confirm({
+        title: o.t("chat.sidebar.deleteDialogTitle"),
+        body: o.t("chat.sidebar.deleteConfirm"),
+        variant: "danger",
+        confirmLabel: o.t("chat.sidebar.deleteConfirmButton"),
+        cancelLabel: o.t("chat.clear.cancel"),
+      });
+      if (!ok) return;
+    }
+    void o.onDeleteSession(session.id);
+  };
+
+  return (
+    <Box
+      sx={{
+        width: "100%",
+        boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        ...(fillAvailableHeight
+          ? { flex: 1, minHeight: 0, height: "100%" }
+          : {
+              minHeight: { xs: "min(100dvh - 140px, 720px)", md: "min(calc(100dvh - 160px), 900px)" },
+              maxHeight: { md: "calc(100dvh - 160px)" },
+            }),
+      }}
+    >
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: { xs: 1.5, md: 2 },
+          alignItems: "stretch",
+        }}
+      >
+        <ChatSessionSidebar
+          t={o.t}
+          sessionList={o.sessionList}
+          activeSessionId={o.activeSessionId}
+          onActiveSessionChange={o.onActiveSessionChange}
+          onNewSession={o.onNewSession}
+          onDeleteSessionRequest={handleDeleteSessionRequest}
+          sx={{ flex: { xs: "0 0 auto", md: "0 0 auto" }, maxHeight: { xs: "min(40vh, 320px)", md: "none" } }}
+        />
+        <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", gap: 0.5 }}>
+          <AskPanelChrome
+            showPageChrome={showPageChrome}
+            t={o.t}
+            scopeEyebrow={o.scopeEyebrow}
+            error={o.error}
+            onClearChatClick={showPageChrome ? undefined : () => void o.onClearChat()}
+            clearChatDisabled={o.isLoading}
+            detailLevel={detailLevel}
+            onToggleDetailLevel={toggleDetailLevel}
+          />
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              minWidth: 0,
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: { xs: 1, md: 1.25 },
+              alignItems: "stretch",
+            }}
+          >
+            <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", gap: 0.5 }}>
+              <ChatMessageThread
+                t={o.t}
+                chatDetailLevel={detailLevel}
+                scopeKey={o.scopeKey}
+                activeSessionId={o.activeSessionId}
+                streamingTarget={o.streamingTarget}
+                history={o.history}
+                pendingUserQuery={o.pendingUserQuery}
+                isLoading={o.isLoading}
+                streamEvents={o.streamEvents}
+                liveNormalized={o.normalized}
+                locked={o.locked}
+                inWorkspace={o.inWorkspace}
+                workId={o.workId}
+                workspaceWorkId={workspaceWorkId}
+                workspaceId={workspaceId}
+                agentToolTrace={o.agentToolTrace}
+                retrievalJsonOpen={o.retrievalJsonOpen}
+                onToggleRetrievalJson={() => o.setRetrievalJsonOpen((v) => !v)}
+                starterPromptKeys={o.starterPromptKeys}
+                onStarterPrompt={o.setQuery}
+                onCopyUserText={o.onCopyUserText}
+                onRestartFromTurn={o.onRestartFromTurn}
+                onCopyAssistantEntry={o.onCopyAssistantEntry}
+                restartDisabled={o.isLoading}
+                openStructuredQuestion={o.openStructuredQuestion}
+                onStructuredAnswersSubmit={o.onStructuredAnswersSubmit}
+              />
+              <ChatComposer
+                t={o.t}
+                query={o.query}
+                onQueryChange={o.setQuery}
+                loading={o.isLoading}
+                onSubmit={o.onSubmit}
+                inWorkspace={o.inWorkspace}
+                standaloneChatPath={o.standaloneChatPath}
+                locked={o.locked}
+                scopedWorkId={scopedWorkId}
+                workspaceId={workspaceId}
+                workId={o.workId}
+                onWorkIdChange={o.handleWorkIdChange}
+                onArticlePicked={o.onArticlePicked}
+                onWorkSearch={o.searchWorks}
+                resolvedWork={o.workDetailsForChip}
+                corpusWorkspaceOnly={o.corpusWorkspaceOnly}
+                standaloneMode={o.standaloneMode}
+                streamingHint={o.streamingHint}
+                structuredAnswerPending={Boolean(o.openStructuredQuestion)}
+              />
+            </Box>
+            <AskResearchPlanPanel t={o.t} plan={o.researchPlanForPanel} streamHint={o.researchPlanStreamHint} />
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+}

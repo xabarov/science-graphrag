@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
 from science_graphrag.retrieval.llm_answer import _try_query_answer_llm

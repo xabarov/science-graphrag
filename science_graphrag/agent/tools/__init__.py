@@ -12,7 +12,7 @@ from science_graphrag.agent.tools.product_interaction_tools import build_product
 from science_graphrag.agent.tools.summarize_workspace import SummarizeWorkspaceTool
 from science_graphrag.agent.tools.workspace_paper_tools import build_workspace_paper_langchain_tools
 from science_graphrag.agent.tools.worktree_isolation_tools import build_worktree_isolation_tools
-from science_graphrag.api.deps import StoreRegistry
+from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings, get_settings
 
 

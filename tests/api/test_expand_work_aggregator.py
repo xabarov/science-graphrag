@@ -60,3 +60,29 @@ def test_expand_author_aggregator_uses_reader_without_author_aggregation(
     assert captured.get("aggregator_disabled_kinds") == "Author"
     assert out["meta"].get("expanded_aggregator_id") == agg
     assert len(out.get("nodes") or []) >= 2
+
+
+def test_expand_neighbor_aggregation_contract_is_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``expand_work_aggregator`` uses ``work_graph_neighborhood``; aggregation stays disabled."""
+
+    def _fake_work_graph_neighborhood(
+        _stores: Any,
+        work_id: str,
+        **_kwargs: Any,
+    ) -> dict[str, Any]:
+        return {
+            "nodes": [{"id": "w1", "type": "Work", "node_kind": "Work"}],
+            "edges": [],
+            "meta": {"neighbor_aggregation": "none"},
+        }
+
+    monkeypatch.setattr(
+        "science_graphrag.api.works.graph_neighborhood.work_graph_neighborhood",
+        _fake_work_graph_neighborhood,
+    )
+
+    wid = "work-expand-meta-1"
+    agg = _aggregator_id(wid, "Work", "CITES")
+    out = expand_work_aggregator(object(), wid, agg, limit=5)
+    assert out is not None
+    assert (out.get("meta") or {}).get("neighbor_aggregation", "none") == "none"
