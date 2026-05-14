@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from .http_client import stderr_wait_heartbeat_line
+from .parsed_args import CompactionParsedArgs
 from .report_builder import build_compaction_report_dict
 from .retry_policy import classify_turn_failure, compaction_review_stop_outcome
-from .run import CompactionParsedArgs, run_compaction_review_from_parsed_args
+from .run import run_compaction_review_from_parsed_args
 
 __all__ = [
     "CompactionParsedArgs",

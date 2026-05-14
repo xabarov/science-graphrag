@@ -111,7 +111,7 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
 
     rmod = _load_main_runner()
     he2e = importlib.import_module("trace_review.orchestrator_run_http_and_e2e")
-    art = importlib.import_module("trace_review.orchestrator_run_artifacts")
+    env_mod = importlib.import_module("trace_review.orchestrator_env")
     monkeypatch.setattr(rmod, "_ensure_local_imports", lambda: None)
     monkeypatch.setattr(rmod, "_load_dotenv", lambda *_a, **_k: None)
     monkeypatch.setattr(
@@ -125,8 +125,8 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
     )
     monkeypatch.setattr(he2e, "_run_optional_e2e", lambda *_a, **_k: None)
     monkeypatch.setattr(
-        art,
-        "_runtime_attribution_from_env",
+        env_mod,
+        "runtime_attribution_from_env",
         lambda: ("single_agent_research", "single_agent_react"),
     )
 

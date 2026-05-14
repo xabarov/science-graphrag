@@ -1,23 +1,14 @@
 import React, { useMemo } from "react";
-import BusinessOutlinedIcon from "@mui/icons-material/BusinessOutlined";
-import ClearIcon from "@mui/icons-material/Clear";
-import MyLocationOutlinedIcon from "@mui/icons-material/MyLocationOutlined";
 import Box from "@mui/material/Box";
-import Chip from "@mui/material/Chip";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
-import { CursorIconButton } from "../../common/index.js";
 import { useI18n } from "../../../i18n/useI18n.js";
 import { outlinedAppTextFieldSx } from "../../../theme/settingsFormSx.js";
-import GraphNodesVisibilityMenu from "../toolbar/GraphNodesVisibilityMenu.jsx";
-import GraphViewChips from "../toolbar/GraphViewChips.jsx";
+import WorkspaceToolbarFiltersRow from "./WorkspaceToolbarFiltersRow.jsx";
+import WorkspaceToolbarPanelsRow from "./WorkspaceToolbarPanelsRow.jsx";
+import { buildWorkspaceToolbarStatsFragments, computeWorkspaceToolbarFlags } from "./workspaceToolbarModel.js";
 
 /**
  * @param {{
@@ -75,42 +66,16 @@ export default function WorkspaceGraphToolbar({
 }) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
-  const wid = String(workspaceId || "").trim();
-  const ctxWork = String(contextWorkId || "").trim();
-  const filtersEnabled = Boolean(wid);
-  const nodesMenuEnabled = filtersEnabled || Boolean(ctxWork);
-  /** Single wrapped row: no stacked zone labels; used when canvas or parent dense layout. */
-  const useCompactToolbarRow = dense || canvasMode;
 
-  const statsFragments = useMemo(() => {
-    if (!stats || typeof stats !== "object" || !filtersEnabled) return [];
-    const w = stats.works_count;
-    const a = stats.authors_count;
-    const x = stats.external_citations;
-    const out = [];
-    if (typeof w === "number") {
-      out.push({
-        key: "w",
-        text: t("graph.wsToolbar.statsWorks", { count: String(w) }),
-        tip: t("graph.wsToolbar.statsWorksTooltip"),
-      });
-    }
-    if (typeof a === "number") {
-      out.push({
-        key: "a",
-        text: t("graph.wsToolbar.statsAuthors", { count: String(a) }),
-        tip: t("graph.wsToolbar.statsAuthorsTooltip"),
-      });
-    }
-    if (typeof x === "number") {
-      out.push({
-        key: "x",
-        text: t("graph.wsToolbar.statsExtCites", { count: String(x) }),
-        tip: t("graph.wsToolbar.statsExtCitesTooltip"),
-      });
-    }
-    return out;
-  }, [filtersEnabled, stats, t]);
+  const { ctxWork, filtersEnabled, nodesMenuEnabled, useCompactToolbarRow } = useMemo(
+    () => computeWorkspaceToolbarFlags(workspaceId, contextWorkId, dense, canvasMode),
+    [workspaceId, contextWorkId, dense, canvasMode],
+  );
+
+  const statsFragments = useMemo(
+    () => buildWorkspaceToolbarStatsFragments(stats, filtersEnabled, t),
+    [filtersEnabled, stats, t],
+  );
 
   const institutionChipSx = useMemo(
     () => (active) => ({
@@ -183,47 +148,18 @@ export default function WorkspaceGraphToolbar({
     ],
   );
 
-  const statsBlock =
-    statsFragments.length > 0 ? (
-      <Typography component="span" sx={statsTypographySx}>
-        {statsFragments.map((frag, i) => (
-          <React.Fragment key={frag.key}>
-            {i > 0 ? " · " : null}
-            <Tooltip title={frag.tip}>
-              <Box component="span" sx={{ cursor: "default" }}>
-                {frag.text}
-              </Box>
-            </Tooltip>
-          </React.Fragment>
-        ))}
-      </Typography>
-    ) : null;
-
-  const institutionsBlock =
-    ctxWork && onToggleWorkGraphIncludeInstitutions ? (
-      <>
-        <Divider orientation="vertical" flexItem sx={dividerSx} />
-        <Tooltip title={t("graph.wsToolbar.chipInstitutionsTooltip")}>
-          <Chip
-            size="small"
-            variant="outlined"
-            icon={<BusinessOutlinedIcon sx={{ fontSize: "1rem !important" }} />}
-            label={t("graph.wsToolbar.chipInstitutions")}
-            onClick={onToggleWorkGraphIncludeInstitutions}
-            aria-pressed={workGraphIncludeInstitutions}
-            aria-label={t("graph.wsToolbar.chipInstitutionsAria")}
-            sx={institutionChipSx(workGraphIncludeInstitutions)}
-          />
-        </Tooltip>
-      </>
-    ) : null;
-
   const panelsRow = (
-    <>
-      <GraphViewChips {...viewChipsProps} />
-      {institutionsBlock}
-      {statsBlock}
-    </>
+    <WorkspaceToolbarPanelsRow
+      viewChipsProps={viewChipsProps}
+      ctxWork={ctxWork}
+      onToggleWorkGraphIncludeInstitutions={onToggleWorkGraphIncludeInstitutions}
+      workGraphIncludeInstitutions={workGraphIncludeInstitutions}
+      institutionChipSx={institutionChipSx}
+      dividerSx={dividerSx}
+      statsFragments={statsFragments}
+      statsTypographySx={statsTypographySx}
+      t={t}
+    />
   );
 
   return (
@@ -255,77 +191,24 @@ export default function WorkspaceGraphToolbar({
             {t("graph.wsToolbar.zoneFilter")}
           </Typography>
         ) : null}
-        <Stack
-          direction="row"
-          flexWrap="wrap"
-          alignItems="center"
-          gap={useCompactToolbarRow ? 0.5 : 1}
-          useFlexGap
-          aria-label={useCompactToolbarRow ? t("graph.wsToolbar.compactToolbarAria") : undefined}
-        >
-          {leadingSlot ? (
-            <>
-              {leadingSlot}
-              <Divider orientation="vertical" flexItem sx={dividerSx} />
-            </>
-          ) : null}
-          {nodesMenuEnabled ? (
-            <>
-              <GraphNodesVisibilityMenu visibility={visibility} onChange={onVisibilityChange} t={t} />
-              {canvasMode && onLocalFindChange ? <Divider orientation="vertical" flexItem sx={dividerSx} /> : null}
-            </>
-          ) : null}
-
-          {canvasMode && onLocalFindChange ? (
-            <>
-              <TextField
-                size="small"
-                variant="outlined"
-                value={localFindQuery}
-                onChange={onLocalFindChange}
-                placeholder={t("graph.localFind.placeholder")}
-                inputProps={{ "aria-label": t("graph.localFind.aria") }}
-                sx={localFindFieldSx}
-                InputProps={{
-                  endAdornment: localFindQuery && onLocalFindClear ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        aria-label={t("graph.localFind.clearAria")}
-                        onClick={onLocalFindClear}
-                        edge="end"
-                        sx={{ color: tk.text.muted }}
-                      >
-                        <ClearIcon fontSize="small" />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : null,
-                }}
-              />
-              {onFocusFirstMatch ? (
-                <Tooltip title={t("graph.localFind.focusFirstTooltip")}>
-                  <span>
-                    <CursorIconButton
-                      type="button"
-                      aria-label={t("graph.localFind.focusFirst")}
-                      onClick={onFocusFirstMatch}
-                      disabled={localFindFocusDisabled}
-                    >
-                      <MyLocationOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                    </CursorIconButton>
-                  </span>
-                </Tooltip>
-              ) : null}
-            </>
-          ) : null}
-
-          {useCompactToolbarRow ? (
-            <>
-              {nodesMenuEnabled || canvasMode ? <Divider orientation="vertical" flexItem sx={dividerSx} /> : null}
-              {panelsRow}
-            </>
-          ) : null}
-        </Stack>
+        <WorkspaceToolbarFiltersRow
+          leadingSlot={leadingSlot}
+          dividerSx={dividerSx}
+          nodesMenuEnabled={nodesMenuEnabled}
+          visibility={visibility}
+          onVisibilityChange={onVisibilityChange}
+          t={t}
+          canvasMode={canvasMode}
+          onLocalFindChange={onLocalFindChange}
+          localFindQuery={localFindQuery}
+          onLocalFindClear={onLocalFindClear}
+          onFocusFirstMatch={onFocusFirstMatch}
+          localFindFocusDisabled={localFindFocusDisabled}
+          localFindFieldSx={localFindFieldSx}
+          tk={tk}
+          useCompactToolbarRow={useCompactToolbarRow}
+          panelsRow={panelsRow}
+        />
 
         {!useCompactToolbarRow ? (
           <>

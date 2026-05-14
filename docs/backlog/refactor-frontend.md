@@ -30,7 +30,7 @@ Priorities: **P0** = user-visible risk or scaling ceiling; **P1** = maintainabil
 
 Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor-backend.md`](./refactor-backend.md); do not track duplicate narratives here.
 
-**Open queue (2026-05-14 refresh):** ниже — **новые P1/P2** после глубокого прохода по `ui/src` (LOC `wc -l`, без `*.test.*`). Graph canvas controller закрыт; **canvas input (Wave G1) закрыт 2026-05-14**; следующий фокус — **graph workspace/flow shell**, **workspace page + `workspaceStore`**, **benchmark inspector / run-group**, **Ask orchestration**, затем **Settings** и мелкий **react-refresh** долг.
+**Open queue (2026-05-14 refresh):** ниже — **новые P1/P2** после глубокого прохода по `ui/src` (LOC `wc -l`, без `*.test.*`). Graph canvas controller закрыт; **canvas input (Wave G1) закрыт 2026-05-14**; **Wave G2 (workspace / flow shell / node detail) закрыт 2026-05-14**; следующий фокус — **workspace page + `workspaceStore`**, **benchmark inspector / run-group**, **Ask orchestration**, затем **Settings** и мелкий **react-refresh** долг.
 
 ### Глубокий аудит фронтенда (landscape, 2026-05-14)
 
@@ -39,7 +39,7 @@ Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor
 - **Страницы** (`pages/`): маршруты, табы workspace, Settings/Benchmark/Home — здесь смешиваются роутинг, query-параметры и «толстые» `use*` ядра (`useWorkspacePageCore`, run-tab orchestration).
 - **Продуктовые области** (`components/work/`, `components/graph/`): Ask + Agent runtime уже разнесены по доменам (`ask/index.js`, `work/agent/index.js`), но оркестрация сабмита и сессии Ask остаётся узкой полосой риска.
 - **Сервисы и IO** (`services/apiClient.js`, `services/researchApi.js`, `utils/workspaceStore.js`): `workspaceStore` — монолит **~399 LOC** поверх `apiClient` (таймауты ingest, workspace CRUD, graph stats); это главный **не-React** кандидат на разрез по доменным модулям (read vs write vs ingest).
-- **Граф**: canvas MVP и force-sim уже разложены; **ввод/жесты** — фасад [`useGraphCanvasInput`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js) + [`hooks/graphCanvasInput/`](../../ui/src/components/graph/canvas/hooks/graphCanvasInput/) (2026-05-14); далее **flow shell** (`GraphFlowView` ~373), **workspace chrome** (`GraphWorkspacePanel` ~390, `WorkspaceGraphToolbar` ~352, `GraphNodeDetailSection` ~343).
+- **Граф**: canvas MVP и force-sim уже разложены; **ввод/жесты** — фасад [`useGraphCanvasInput`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js) + [`hooks/graphCanvasInput/`](../../ui/src/components/graph/canvas/hooks/graphCanvasInput/) (2026-05-14); **workspace / flow / detail shell** — Wave **G2** [`workspace/README.md`](../../ui/src/components/graph/workspace/README.md) (2026-05-14); опционально позже: [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx).
 
 **Где сосредоточена сложность (крупнейшие не-тестовые модули, ориентир)**
 
@@ -62,7 +62,7 @@ Backend-only follow-ups (dedup HTTP removal, Agent V2 locale) live in [`refactor
 ### План волн (рекомендуемый порядок рефактор-проходов)
 
 1. **Wave G1 — Graph canvas input** — **[DONE] 2026-05-14** — фасад [`useGraphCanvasInput.js`](../../ui/src/components/graph/canvas/hooks/useGraphCanvasInput.js) + [`hooks/graphCanvasInput/`](../../ui/src/components/graph/canvas/hooks/graphCanvasInput/); опционально позже: [`GraphCanvasViewToolbar.jsx`](../../ui/src/components/graph/canvas/GraphCanvasViewToolbar.jsx). Vitest: canvas input + draw hit-tests.
-2. **Wave G2 — Graph workspace / flow shell** — [`GraphFlowView.jsx`](../../ui/src/components/graph/flow/GraphFlowView.jsx), [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx), [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/workspace/WorkspaceGraphToolbar.jsx), [`GraphNodeDetailSection.jsx`](../../ui/src/components/graph/shell/detail/GraphNodeDetailSection.jsx): вынести данные/действия в hooks или `workspace/*` подмодули; не смешивать canvas MVP с layout shell без явной границы.
+2. **Wave G2 — Graph workspace / flow shell** — **[DONE] 2026-05-14** — фасад панели + хуки/секции в [`workspace/`](../../ui/src/components/graph/workspace/); React Flow разнесён под [`flow/`](../../ui/src/components/graph/flow/); детали — [`shell/detail/detailSections/`](../../ui/src/components/graph/shell/detail/detailSections/); seam map [`workspace/README.md`](../../ui/src/components/graph/workspace/README.md).
 3. **Wave W — Workspace** — разрезать [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx) по табам/ingest/bootstrap; выделить из [`workspaceStore.js`](../../ui/src/utils/workspaceStore.js) доменные клиенты (`workspaceRead`, `workspaceWrite`, `workspaceIngest`) с общим `apiClient` + тонким фасадом `workspaceStore.js`.
 4. **Wave B — Benchmark operator UI** — [`BenchmarkCaseInspectorShell.jsx`](../../ui/src/pages/BenchmarkPage/caseInspector/BenchmarkCaseInspectorShell.jsx), [`useBenchmarkRunGroup.js`](../../ui/src/pages/BenchmarkPage/useBenchmarkRunGroup.js): презентация vs загрузка данных vs URL/session.
 5. **Wave A — Ask (продолжение)** — [`useAskPanelOrchestration.js`](../../ui/src/components/work/ask/orchestration/useAskPanelOrchestration.js), [`askSessionState.js`](../../ui/src/components/work/ask/session/askSessionState.js), при необходимости [`useAskPerformAgentSubmit.js`](../../ui/src/components/work/ask/orchestration/useAskPerformAgentSubmit.js); публичный вход только через [`ask/index.js`](../../ui/src/components/work/ask/index.js).
@@ -112,12 +112,13 @@ _No open items._
 - **Raised:** 2026-05-14 (post-controller decomposition audit)
 - **Done:** 2026-05-14 — facade composes submodules; public API unchanged for `useGraphCanvasMvpController`; Vitest for `hoverPick` (RAF vs drag-moved), `pointerMove` (threshold / pan / hover delegate), `pointerUp` (`dispatchGraphCanvasPointerUp` when idle), `hitTestContext`, integration tap→`onCanvasClick`; `npm run lint` (no new errors).
 
-### [OPEN] Graph workspace / flow shell — panel, toolbar, flow view, node detail
+### [DONE] Graph workspace / flow shell — panel, toolbar, flow view, node detail (Wave G2)
 - **Area:** [`GraphWorkspacePanel.jsx`](../../ui/src/components/graph/workspace/GraphWorkspacePanel.jsx), [`WorkspaceGraphToolbar.jsx`](../../ui/src/components/graph/workspace/WorkspaceGraphToolbar.jsx), [`GraphFlowView.jsx`](../../ui/src/components/graph/flow/GraphFlowView.jsx), [`GraphNodeDetailSection.jsx`](../../ui/src/components/graph/shell/detail/GraphNodeDetailSection.jsx)
 - **Issue:** Each file ~340–390 LOC — layout, data hooks, and chrome evolve together; risk of duplicating canvas contracts when adding filters or detail panes.
 - **Proposal:** Extract `use*` data hooks and presentational sections per file; keep graph/canvas vs workspace shell boundary documented (extend [`canvas/README.md`](../../ui/src/components/graph/canvas/README.md) or add `workspace/README.md` if a second seam map helps).
 - **Acceptance:** measurable LOC drop per slice or documented submodule map; workspace/graph vitest where present stays green.
 - **Raised:** 2026-05-14 (frontend landscape audit)
+- **Done:** 2026-05-14 — toolbar: [`workspaceToolbarModel.js`](../../ui/src/components/graph/workspace/workspaceToolbarModel.js) + `WorkspaceToolbarFiltersRow` / `WorkspaceToolbarPanelsRow`; flow: `GraphFlowInner`, `useGraphFlowState`, `useGraphFlowSelectionHandlers`, `GraphFlowToolbar`, `GraphFlowViewport`, `graphFlowConstants`, `graphFlowNodeTypes`; detail: `detailSections/*` + [`graphNodeDetailSectionSx.js`](../../ui/src/components/graph/shell/detail/graphNodeDetailSectionSx.js); workspace: `useGraphWorkspacePanelState` / `Actions` / `CommunityMap`, `sections/*`, seam map [`workspace/README.md`](../../ui/src/components/graph/workspace/README.md); `npm run lint` + vitest `src/components/graph` green.
 
 ### [OPEN] Workspace page — `useWorkspacePageCore` + `workspaceStore` API surface
 - **Area:** [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx), [`utils/workspaceStore.js`](../../ui/src/utils/workspaceStore.js)

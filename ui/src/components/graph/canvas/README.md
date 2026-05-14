@@ -40,3 +40,7 @@ Force integrator hook: [`../../../hooks/graph/useScienceGraphForceSimulation.js`
 - [`../../../hooks/graph/scienceGraphSimulationTickEngine.js`](../../../hooks/graph/scienceGraphSimulationTickEngine.js) — one physics step (`createRunOnePhysicsTick`)
 
 Do not reintroduce ad-hoc physics pause toggles here; use [`../../../hooks/graph/useGraphPhysicsPolicy.js`](../../../hooks/graph/useGraphPhysicsPolicy.js).
+
+## See also
+
+- Workspace / flow / detail shell (cards vs React Flow vs canvas wiring): [`../workspace/README.md`](../workspace/README.md).
