@@ -15,6 +15,12 @@ from science_graphrag.agent.runtime import (
 )
 from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
 from science_graphrag.agent.subagents.runtime import merge_subagent_run_rows
+from science_graphrag.agent.subagents.terminal_truth import (
+    SPAWN_CANCEL_FAILURE_CODE_ON_DEADLINE,
+    SPAWN_CANCEL_FAILURE_CODE_ON_RECURSION,
+    SPAWN_CANCEL_TERMINAL_ON_DEADLINE,
+    SPAWN_CANCEL_TERMINAL_ON_RECURSION,
+)
 from science_graphrag.api.agent_v2_modules.payloads import (
     apply_runtime_metadata_from_state,
     build_run_metadata,
@@ -129,14 +135,14 @@ def build_finalize_run_metadata(
     if _meta_spawn and salvaged_after_deadline:
         _meta_spawn = patch_spawn_rows_on_parent_abort(
             _meta_spawn,
-            terminal_state="timed_out",
-            failure_code="parent_timed_out",
+            terminal_state=SPAWN_CANCEL_TERMINAL_ON_DEADLINE,
+            failure_code=SPAWN_CANCEL_FAILURE_CODE_ON_DEADLINE,
         )
     if _meta_spawn and salvaged_after_recursion_limit:
         _meta_spawn = patch_spawn_rows_on_parent_abort(
             _meta_spawn,
-            terminal_state="killed",
-            failure_code="parent_recursion_limit",
+            terminal_state=SPAWN_CANCEL_TERMINAL_ON_RECURSION,
+            failure_code=SPAWN_CANCEL_FAILURE_CODE_ON_RECURSION,
         )
     if _meta_spawn and not salvaged_after_deadline and not salvaged_after_recursion_limit:
         _meta_spawn = patch_spawn_rows_on_parent_abort(

@@ -20,6 +20,10 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 ### Next wave (backend, 2026-05-14+) — SSE/runtime seams after stream-path closure
 
+**Progress (implementation through 2026-05-15):** W1 — `terminal_truth` + runtime merge/patch invariants; contract tests in `tests/agent/test_subagent_terminal_truth.py`. W2 — runbook [`docs/runbooks/trace-review-w2-paired-latency-compare.md`](../../docs/runbooks/trace-review-w2-paired-latency-compare.md) + [`paired_trace_review_w2.py`](../../scripts/live_check/paired_trace_review_w2.py) (default +25% `latency_p95_ms` cap → `operator_latency_verdict`, verdict values `in_budget` / `warn_band` / `out_of_budget`). W3 — compaction JSON `heartbeat_contract`, stderr `compaction_turn_wait_heartbeat`, plus `stop_reason` / `fail_fast`; helper `_log_turn_fail_stderr`. W4 — [`stream_lifecycle_graph_abort_specs.py`](../../science_graphrag/api/agent_v2_modules/stream_lifecycle_graph_abort_specs.py) + `stream_lifecycle_graph_stream.py` (~363 LoC; optional further chunk-loop split if growth resumes). W5 — dedicated contract modules: `tests/test_api_agent_v2_modules_stream_phase_{tool_events,subagent_events,routing_leg_abort}_contract.py` + existing `stream_phases_contracts.py`. Trace-review split: thin [`agent_trace_review_orchestrator.py`](../../scripts/live_check/trace_review/agent_trace_review_orchestrator.py) + [`orchestrator_argparse.py`](../../scripts/live_check/trace_review/orchestrator_argparse.py) / [`orchestrator_main_runner.py`](../../scripts/live_check/trace_review/orchestrator_main_runner.py) (~425 LoC — next split target). Evidence skeleton unchanged. **Remaining wave work:** decompose `orchestrator_main_runner` + `compaction_turn_review.py`; live operator fill for 50-turn `agent_note` numbers; optional `stream_lifecycle_graph_stream` chunk-phase extract if file crosses ~400 LoC again.
+
+**Wave status (2026-05-15):** W1–W5 **baseline deliverables are in tree**; global acceptance gate (4 bullets in charter) is **partially met** — live contour evidence and long regression compare remain operator-owned before calling the wave “closed”.
+
 Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream_phase_*`). Источники: [`agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md) (§4.2 R4-next, §6.3 API seams, §R3 измеримость), [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md) (E1/E2 operator gate, paired compare).
 
 #### Wave charter (большая взаимосвязанная волна)
@@ -37,23 +41,50 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 | **W4** | **Дожим split `api/agent_v2.py` после freeze SSE контракта (R2)** | Продолжить Queue **[PARTIAL] Split `api/agent_v2.py`…**: вынести оставшиеся seams (или переименовать пакет в `api/agent_v2/` с shims); каждый новый модуль ≤300 LoC где применимо; `test_api_agent_v2_smoke.py` + ключевые parity без контрактных сдвигов. |
 | **W5** | **Unit coverage для `stream_phase_*` entrypoints** | Расширить Queue OPEN «Targeted backend test coverage…» для горячих фаз: минимум по одному контрактному тесту на `stream_phase_tool_events`, `stream_phase_subagent_events`, `stream_phase_routing_leg_abort` (error/edge paths), без дублирования полного `stream_parity` в каждом файле. |
 
-**Примечание:** W1–W3 — измеримость и безопасность перед расширением fanout/async; W4–W5 — снижение стоимости следующих правок transport vs runtime.
+**Примечание:** W1–W3 — измеримость и безопасность перед расширением fanout/async; W4–W5 — снижение стоимости следующих правок transport vs runtime. **W2 (контракт):** в `trace_regression_compare` / `paired_trace_review_w2` поле `operator_latency_verdict.verdict` — `in_budget` / `warn_band` / `out_of_budget` / `unknown` (реализация: `scripts/live_check/trace_compare/policies.py`).
 
-### Backend structural audit refresh (2026-05-14)
+### Backend structural audit refresh (2026-05-15)
 
-Повторный аудит backend показал две категории долга:
+Глубокий пересмотр дерева `science_graphrag/` + `scripts/` (wc по `.py`, верхние хвосты). Цель — обновить **приоритеты** и не вести устаревшие цифры в карточках.
 
-- **Layering:** `StoreRegistry` neutralized under `science_graphrag/stores/registry.py` (API deps remain thin `Depends`); Dramatiq worker + ingest execution import neutral `science_graphrag/ingestion/jobs/*` (`registry`, `single_document_ingest`, `batch_parent_ingest`); `api/ingest/registry.py` remains a compatibility shim for API routers/tests.
-- **Size hotspots:** `config.py` (~605 LoC after agent-runtime mixin extract), `science_graphrag/api/benchmark/` package (router split across `routes_catalog.py` / `routes_runs.py` + helpers; thin `task_store.py` facade + `benchmark_task_store_core.py`), `api/works/graph_neighborhood.py` (~184 orchestrator; payload in `graph_neighborhood_payload.py` ~384; aggregation in `graph_neighborhood_aggregation.py` ~328), `settings/service.py` (~398; snapshot assembly in `settings/snapshot_materialize.py`; merge in `service_runtime_merge.py`), `agent/context/thread_insights.py` (~484 after policy + session-control extract), `agent/context/session_backend.py` (~537), `scripts/live_check/trace_review/agent_trace_review_orchestrator.py` (~522; thin `agent_trace_review.py` delegates here), `scripts/live_check/agent_od_workspace_e2e_audit.py` (~360; suites/retry/query/report in `agent_od_audit/`), `scripts/dual_validate/extractors/retrieval_v1.py` (~700 after splits: `retrieval_v1_ranking.py`, `retrieval_v1_schema.py`, `retrieval_v1_inventory.py`, `retrieval_v1_prompts.py`), `storage/qdrant_store/chunk_store.py` (~178 facade; read/write in `chunk_store_read.py` / `chunk_store_write.py`; filters in `chunk_filters.py`), `api/agent_v2_modules/stream_phase_finalize.py` (~279), `ingestion/_pipeline_impl.py` (~310 after CLI/corpus extraction).
+#### Size / churn heatmap (top-of-mind)
 
-Existing `[PARTIAL]` items already cover `api/benchmark.py`, `settings/service.py`, ingest pipeline/resume (`resume_ingest`, `_pipeline_impl` seams), `tool_search.py`, and `api/agent_v2.py` packaging. New items below track gaps not covered by those tickets.
+| Bucket | Representative paths (LoC, rounded) | Risk |
+|--------|--------------------------------------|------|
+| **Settings / config** | [`config_mixins/agent_runtime_fields.py`](../../science_graphrag/config_mixins/agent_runtime_fields.py) **~971**; [`config.py`](../../science_graphrag/config.py) **~546** | Любой флаг agent-runtime трогает огромный mixin; конфликты PR и сложность аудита констант. |
+| **Offline / eval scripts** | `scripts/dual_validate/extractors/retrieval_v1.py` **~663**; `dedup_v1.py` **~513**; `triple_vote_consensus.py` **~473** | Долг уже заведён OPEN для `retrieval_v1`; соседние экстракторы масштабируются тем же паттерном. |
+| **Live-check / operator** | [`compaction_turn_review.py`](../../scripts/live_check/compaction_turn_review.py) **~590**; [`trace_review/orchestrator_main_runner.py`](../../scripts/live_check/trace_review/orchestrator_main_runner.py) **~425**; [`http_suite.py`](../../scripts/live_check/http_suite.py) **~459** | R3/R4 evidence завязан на эти файлы; без дальнейшего split дорого менять heartbeat/политики. |
+| **Agent runtime** | [`agent/subagents/runtime.py`](../../science_graphrag/agent/subagents/runtime.py) **~540**; [`agent/tool_search.py`](../../science_graphrag/agent/tool_search.py) **~547**; [`agent/runtime.py`](../../science_graphrag/agent/runtime.py) **~462** | Транспорт графа vs tool orchestration; PARTIAL по `tool_search` остаётся актуальным. |
+| **Ingest** | [`ingestion/resume_ingest.py`](../../science_graphrag/ingestion/resume_ingest.py) **~579**; [`document_orchestrator.py`](../../science_graphrag/ingestion/document_orchestrator.py) **~573**; [`ingestion/claims/extractor.py`](../../science_graphrag/ingestion/claims/extractor.py) **~454** | Resume + stage graph — отдельная волна от agent/SSE. |
+| **API / benchmark** | Пакет [`api/benchmark/`](../../science_graphrag/api/benchmark/) **~1258** суммарно; hotspot [`inspector.py`](../../science_graphrag/api/benchmark/inspector.py) **~322**; [`benchmark_task_store_core.py`](../../science_graphrag/api/benchmark_task_store_core.py) **~572** | God-router `api/benchmark.py` **снят** в пользу подпакета; остаётся выравнивание «catalog vs inspector vs serializers». |
+| **Agent v2 SSE** | [`stream_lifecycle_graph_stream.py`](../../science_graphrag/api/agent_v2_modules/stream_lifecycle_graph_stream.py) **~363**; [`stream_phase_finalize_run_metadata.py`](../../science_graphrag/api/agent_v2_modules/stream_phase_finalize_run_metadata.py) **~234** | Ниже порога «400 LoC panic»; дальнейший split — по росту или по фазам chunk vs finalize glue. |
+| **Graph API** | [`graph_neighborhood_payload.py`](../../science_graphrag/api/works/graph_neighborhood_payload.py) **~384**; [`workspace_graph/projection.py`](../../science_graphrag/api/workspace_graph/projection.py) **~453** | Совпадает с PARTIAL по graph neighborhood / reader-raw split. |
+| **Agent context** | [`thread_insights.py`](../../science_graphrag/agent/context/thread_insights.py) **~477**; [`session_backend.py`](../../science_graphrag/agent/context/session_backend.py) **~137** | `session_backend` уже сжат; основной долг — `thread_insights` + политики памяти. |
+
+#### Layering (кратко, без регресса)
+
+- **Stores / ingest jobs:** по-прежнему нейтральный `stores/registry.py`, ingest jobs под `ingestion/jobs/*`, API shim `api/ingest/registry.py` — ок.
+- **Agent v2:** пакет `api/agent_v2/` + `agent_v2_modules/stream_*`; lazy `build_retrieval_graph` через `stream_lifecycle` сохраняет monkeypatch surface для тестов — менять только осознанно.
+
+#### Приоритизированные проходы рефакторинга (план на ближайшие волны)
+
+Один проход = одна тема (см. `.cursor/rules/refactor-rhythm-and-backlog.mdc`).
+
+1. **Operator / live-check depth** — дожать OPEN «Reduce live-check…»: нарезать [`orchestrator_main_runner.py`](../../scripts/live_check/trace_review/orchestrator_main_runner.py) по кластерам стадий; вынести HTTP+retry+artifact из [`compaction_turn_review.py`](../../scripts/live_check/compaction_turn_review.py); при необходимости — ещё один слой для OD E2E. *Зависимости:* зелёные `tests/scripts/live_check/*`, без смены CLI контракта.
+2. **dual_validate retrieval** — закрыть OPEN `retrieval_v1.py` ≤350 LoC (сейчас ~663); держать в одной волне только экстракторы, не смешивать с prod API.
+3. **Settings domain split** — расширить PARTIAL по `Settings`: первый удар по [`config_mixins/agent_runtime_fields.py`](../../science_graphrag/config_mixins/agent_runtime_fields.py) (~971 LoC): нарезать по подсистемам (timeouts, subagent flags, side-LLM, compaction, …) с сохранением env имён; затем облегчить [`config.py`](../../science_graphrag/config.py).
+4. **Agent context / memory** — PARTIAL «Deepen agent context»: фокус на [`thread_insights.py`](../../science_graphrag/agent/context/thread_insights.py) (~477 LoC); `session_backend` пересмотреть только если снова растёт.
+5. **Benchmark package** — PARTIAL split benchmark: снизить [`inspector.py`](../../science_graphrag/api/benchmark/inspector.py) / укрепить границы catalog vs runs vs serializers; `task_store` довести до orchestration-only (см. карточку).
+6. **Agent v2 optional** — если `stream_lifecycle_graph_stream` >~400 LoC или появляется вторая «фаза» в том же файле: вынести chunk-timeout/heartbeat loop в модуль рядом с `stream_lifecycle_graph_abort_specs.py`; не трогать SSE JSON контракт без parity-тестов.
+
+*Параллельно вне этих волн:* ingest resume/VL/cache (существующие PARTIAL), Qdrant chunk split, error_class coverage — по операторскому давлению, не блокируя agent wave.
 
 ### [PARTIAL] Decompose monolithic `Settings` model by domain
-- **Area:** `science_graphrag/config.py`, `science_graphrag/settings/`, `science_graphrag/cli/config_commands.py`
-- **Issue:** `config.py` is ~605 LoC (agent-runtime mixin applied) and still mixes storage, ingest, LLM, agent, benchmark, OCR/VL, and runtime rollout fields in one `Settings` model. This creates high conflict churn and makes it hard to audit constants/settings policy by domain.
-- **Proposal:** Split field groups into domain modules or mixins (`config_fields/agent.py`, `ingest.py`, `storage.py`, `llm.py`, `benchmarks.py`) with a single assembled `Settings` class and preserved public import path `from science_graphrag.config import Settings`.
-- **Acceptance:** No domain config file exceeds ~400 LoC; env names and `Settings` field names remain stable; `science-graphrag config-check` and settings/config tests pass; constants/settings policy remains explicit for operator-facing knobs.
-- **Raised:** 2026-05-14
+- **Area:** `science_graphrag/config.py`, `science_graphrag/config_mixins/agent_runtime_fields.py`, `science_graphrag/settings/`, `science_graphrag/cli/config_commands.py`
+- **Issue:** Корневой [`config.py`](../../science_graphrag/config.py) (~546 LoC) уже собран из mixins, но доминирующий объём сосредоточен в [`config_mixins/agent_runtime_fields.py`](../../science_graphrag/config_mixins/agent_runtime_fields.py) (**~971 LoC**): agent-runtime rollout, таймауты, subagent/tool flags, side-LLM, compaction и др. в одном файле — высокий churn и риск нарушить constants/settings policy при точечных PR.
+- **Proposal:** (1) Распилить `agent_runtime_fields` на несколько mixins по подсистемам (`agent_runtime_subagent.py`, `agent_runtime_tools.py`, `agent_runtime_side_llm.py`, …) с **стабильными** именами полей и env. (2) Затем довести `config.py` до тонкой сборки + при необходимости вынести `CoreStorageFields` соседние куски. (3) Сохранить единый импорт `from science_graphrag.config import Settings`.
+- **Acceptance:** ни один mixin-файл > ~400 LoC; `science-graphrag config-check` и тесты settings/config зелёные; operator knobs остаются в `Field(description=...)` где политика требует.
+- **Raised:** 2026-05-14, **updated:** 2026-05-15
 
 ### [PARTIAL] Split graph neighborhood response assembly
 - **Area:** `science_graphrag/api/works/graph_neighborhood.py`, `science_graphrag/api/works/graph_neighborhood_payload.py`, `science_graphrag/api/works/graph_neighborhood_institutions.py`, `science_graphrag/api/graph_reader_projection/`, `science_graphrag/api/workspace_graph/`
@@ -71,21 +102,21 @@ Existing `[PARTIAL]` items already cover `api/benchmark.py`, `settings/service.p
 
 ### [PARTIAL] Deepen agent context modules after long-thread delivery
 - **Area:** `science_graphrag/agent/context/thread_insights.py`, `science_graphrag/agent/context/session_backend.py`, prompt/memory policy tests
-- **Issue:** Long-thread acceptance is functionally closed, but `thread_insights.py` (~612 LoC) and `session_backend.py` (~537 LoC) remain large modules mixing chunking/synthesis/persistence audit and session storage/policy concerns. Future memory changes will be expensive to review.
-- **Proposal:** Split `thread_insights` into a package (`chunking.py`, `synthesis.py`, `persistence.py`, `audit.py`) and separate session storage adapter concerns from policy/serialization in `session_backend`.
+- **Issue:** [`thread_insights.py`](../../science_graphrag/agent/context/thread_insights.py) (~**477** LoC) всё ещё смешивает chunking, synthesis, persistence audit и политики влияния на промпт. [`session_backend.py`](../../science_graphrag/agent/context/session_backend.py) (~**137** LoC) после выносов уже не является главным hotspot — приоритет низкий, пока файл не растёт снова.
+- **Proposal:** Split `thread_insights` into a package (`chunking.py`, `synthesis.py`, `persistence.py`, `audit.py`) and separate session storage adapter concerns from policy/serialization in `session_backend` **только если** снова появится рост или новая фича трогает оба слоя.
 - **Acceptance:** `thread_insights.py` becomes a thin facade or is replaced by a package with no file > ~400 LoC; `tests/test_thread_insights.py`, `tests/test_prompt_memory_policy.py`, and long-thread eval tests pass; memory influence audit remains stable.
-- **Raised:** 2026-05-14
+- **Raised:** 2026-05-14, **updated:** 2026-05-15
 
 ### [OPEN] Reduce live-check entrypoint size after trace-review split
-- **Area:** `scripts/live_check/trace_review/agent_trace_review_orchestrator.py`, `scripts/live_check/agent_od_workspace_e2e_audit.py`, `scripts/live_check/agent_trace_review.py`
-- **Issue:** `agent_trace_review.py` is now a thin wrapper, but the heavy orchestration still sits in `trace_review/agent_trace_review_orchestrator.py` (~522 LoC after submodule split); OD E2E entrypoint remains large (~839 LoC). Together they still mix CLI/suite registry, subprocess orchestration, heartbeat policy, artifact writing, and rendering.
-- **Proposal:** Move suite registry, stage execution, artifact writer, and OD E2E audit assembly into dedicated modules under `scripts/live_check/trace_review/` or adjacent packages; leave entrypoints as thin CLI orchestration.
-- **Acceptance:** CLI entrypoints stay thin (`agent_trace_review.py` facade) and orchestrators are split to <= ~250–300 LoC modules where practical; existing CLI flags and artifact schema stay compatible; `tests/scripts/live_check/*` pass; long-running heartbeat/timeout diagnostics remain visible.
-- **Raised:** 2026-05-14
+- **Area:** `scripts/live_check/trace_review/orchestrator_main_runner.py`, `scripts/live_check/trace_review/orchestrator_argparse.py`, `scripts/live_check/trace_review/agent_trace_review_orchestrator.py`, `scripts/live_check/compaction_turn_review.py`, `scripts/live_check/agent_od_workspace_e2e_audit.py`, `scripts/live_check/agent_trace_review.py`
+- **Issue:** Первая итерация split (2026-05) вынесла CLI в [`orchestrator_argparse.py`](../../scripts/live_check/trace_review/orchestrator_argparse.py) и сделала [`agent_trace_review_orchestrator.py`](../../scripts/live_check/trace_review/agent_trace_review_orchestrator.py) тонким фасадом (~40 LoC), но **вся оркестрация** осталась в [`orchestrator_main_runner.py`](../../scripts/live_check/trace_review/orchestrator_main_runner.py) (~425 LoC) и смешивает стадии http/e2e/merge/phoenix/compaction с записью артефактов. Отдельно [`compaction_turn_review.py`](../../scripts/live_check/compaction_turn_review.py) (~590 LoC) остаётся монолитом транспорта + политики + JSON/MD. OD E2E [`agent_od_workspace_e2e_audit.py`](../../scripts/live_check/agent_od_workspace_e2e_audit.py) (~360 LoC) всё ещё крупный entry.
+- **Proposal:** (1) Нарезать `orchestrator_main_runner` по вертикали стадий (например `orchestrator_run_http_and_e2e.py`, `orchestrator_run_artifacts.py`, общий `orchestrator_run_context.py` для `run_context` / feature_flags). (2) Вынести из `compaction_turn_review` слой `httpx` + retry + сбор отчёта в подмодули `scripts/live_check/compaction_review/`. (3) Продолжить дробление OD audit в `agent_od_audit/` по мере роста.
+- **Acceptance:** ни один модуль оркестрации не >~300 LoC где практично; CLI флаги и schema trace-review-v1 без регрессий; `tests/scripts/live_check/*` зелёные; heartbeat/timeout диагностика остаётся видимой в stderr и в JSON.
+- **Raised:** 2026-05-14, **updated:** 2026-05-15 (аудит LoC)
 
 ### [OPEN] Split dual-validate retrieval extractor
 - **Area:** `scripts/dual_validate/extractors/retrieval_v1.py`, `scripts/dual_validate/extractors/base.py`
-- **Issue:** `retrieval_v1.py` is still ~700 LoC (extractor classes + report assembly) after moving prompts/schemas/inventory/ranking helpers out; further splits are needed to reach the acceptance target.
+- **Issue:** [`retrieval_v1.py`](../../scripts/dual_validate/extractors/retrieval_v1.py) остаётся **~663** LoC после выноса prompts/schemas/inventory/ranking; цель ≤350 LoC не достигнута.
 - **Proposal:** Extract retrieval-specific matching/scoring and summary rendering into helper modules, keeping the extractor class focused on loading inputs, calling the LLM client, and composing the result.
 - **Acceptance:** `retrieval_v1.py` <= ~350 LoC; shared extractor tests and retrieval dual-validate fixtures pass; adding a retrieval metric does not require editing prompt/client orchestration.
 - **Raised:** 2026-05-14
@@ -147,14 +178,14 @@ Existing `[PARTIAL]` items already cover `api/benchmark.py`, `settings/service.p
 - **Remaining:** frontend integration — see [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md).
 - **Raised:** 2026-04-25
 
-### [PARTIAL] Split benchmark backend hubs: `api/benchmark.py` (1249) + `api/task_store.py` (593)
-- **Area:** `science_graphrag/api/benchmark.py`, `science_graphrag/api/task_store.py`, `science_graphrag/api/benchmark_profiles.py`
-- **Issue:** `task_store.py` частично разгружен (persistence вынесен в `science_graphrag/storage/benchmark_run_persistence.py`, сериализация — в `science_graphrag/api/task_benchmark_serializers.py`), но `benchmark.py` остаётся главным god-router (fixture catalog + case detail + compare + graph preview + eval integration) и продолжает расти. Глубина seam'ов низкая: добавление нового benchmark family всё ещё требует правок в центральном роутере.
-- **Proposal:** зафиксировать новый target split: (1) `api/benchmark.py` → подпакет `api/benchmark/{router,catalog,case_detail,compare,graph_preview}.py`; (2) `task_store.py` добить до orchestration-only слоя с явными adapter seams к persistence/serialization.
-- **Acceptance:** `api/benchmark.py` как входной router <= 300 LoC; новые benchmark families добавляются через `catalog` adapter без изменения compare/preview модулей; `task_store.py` не содержит JSON snapshot plumbing и не знает layout on-disk артефактов.
-- **Synergy:** **Wave M/P/Q/R/S** в `ontology-benchmarks-roadmap-2026-04-24.md` — каждое семейство не упирается в god-файл.
-- **Remaining:** основной сплит на `api/benchmark/{router,catalog,case_detail,compare,graph_preview}.py` и финальный orchestration-only `task_store.py`.
-- **Raised:** 2026-04-25, updated 2026-05-05
+### [PARTIAL] Split benchmark backend hubs: historical `api/benchmark.py` → package + task store
+- **Area:** `science_graphrag/api/benchmark/` (в т.ч. [`routes_catalog.py`](../../science_graphrag/api/benchmark/routes_catalog.py), [`routes_runs.py`](../../science_graphrag/api/benchmark/routes_runs.py), [`inspector.py`](../../science_graphrag/api/benchmark/inspector.py) ~322 LoC), `science_graphrag/api/task_store.py`, `science_graphrag/api/benchmark_task_store_core.py`, `science_graphrag/api/benchmark_profiles.py`
+- **Issue:** Монолитный `api/benchmark.py` снят в пользу подпакета (**~1258** LoC суммарно), но **inspector** и **task_store** слой всё ещё концентрируют сложность; добавление benchmark family тянет за собой несколько файлов без жёсткого adapter boundary.
+- **Proposal:** (1) Разгрузить [`inspector.py`](../../science_graphrag/api/benchmark/inspector.py) (preview/compare/diagnostics shards). (2) `task_store.py` довести до orchestration-only с явными seams к [`benchmark_task_store_core.py`](../../science_graphrag/api/benchmark_task_store_core.py) + serializers. (3) Catalog/runs оставить тонкими HTTP слоями над use-cases.
+- **Acceptance:** входной router-пакет без «god-файла» > ~350 LoC; новые семейства benchmark подключаются через catalog adapter без правок inspector/compare; `task_store` не содержит JSON snapshot plumbing.
+- **Synergy:** **Wave M/P/Q/R/S** в `ontology-benchmarks-roadmap-2026-04-24.md` — каждое семейство не упирается в один файл.
+- **Remaining:** сплит inspector + финальный orchestration-only `task_store.py`.
+- **Raised:** 2026-04-25, **updated:** 2026-05-15 (актуальные пути и LoC)
 
 ### [PARTIAL] Standardize ingestion LLM seams around structured executor
 - **Area:** `science_graphrag/ingestion/llm/`, `science_graphrag/ingestion/claims/extractor.py`, `science_graphrag/ingestion/vl_pdf.py`, `science_graphrag/ingestion/_pipeline_impl.py`
@@ -184,12 +215,12 @@ Existing `[PARTIAL]` items already cover `api/benchmark.py`, `settings/service.p
 - **Raised:** 2026-04-25, updated 2026-05-05
 
 ### [PARTIAL] Split `api/agent_v2.py` orchestration seams (historically 995; now thin facade)
-- **Area:** `science_graphrag/api/agent_v2/`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle_graph_stream.py`
-- **Issue:** Router/digest facade now lives in package `api/agent_v2/`; main SSE loop moved to `stream_lifecycle_graph_stream.py` (~310 LoC) with `stream_lifecycle.py` as re-exports + shortcut path. Lazy `build_retrieval_graph` indirection via `stream_lifecycle` preserves test monkeypatch surface.
-- **Proposal:** further shrink `stream_lifecycle_graph_stream.py` if it grows; optional companion split for `react_edges.py` transport glue.
-- **Acceptance:** each module ≤300 LoC where practical; SSE protocol edits do not require editing business orchestration; `test_api_agent_v2_smoke.py` and trace-audit tests pass without contract drift.
-- **Remaining:** optional further SSE splits; companion OPEN «Split oversized agent edges…» for `react_edges.py` transport glue.
-- **Raised:** 2026-05-05, updated 2026-05-14
+- **Area:** `science_graphrag/api/agent_v2/`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle_graph_stream.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle_graph_abort_specs.py`
+- **Issue:** Router/digest facade lives in package `api/agent_v2/`; основной SSE chunk loop в [`stream_lifecycle_graph_stream.py`](../../science_graphrag/api/agent_v2_modules/stream_lifecycle_graph_stream.py) (**~363** LoC) + вынесенные abort builders в [`stream_lifecycle_graph_abort_specs.py`](../../science_graphrag/api/agent_v2_modules/stream_lifecycle_graph_abort_specs.py). Lazy `build_retrieval_graph` через `stream_lifecycle` сохраняет monkeypatch surface для тестов.
+- **Proposal:** дальнейший split только при росте файла или появлении второй крупной фазы в том же модуле (chunk-timeout loop vs finalize bridge); companion — OPEN «Split oversized agent edges…» / `react_edges.py` transport glue.
+- **Acceptance:** each hot module ≤400 LoC where practical (мягкий порог до следующего крупного фича); SSE protocol edits do not require editing business orchestration; `test_api_agent_v2_smoke.py` and trace-audit tests pass without contract drift.
+- **Remaining:** optional chunk-loop extract; companion `react_edges.py` transport glue.
+- **Raised:** 2026-05-05, **updated:** 2026-05-15
 
 ### [PARTIAL] Split ingest pipeline orchestration seams (`ingestion/_pipeline_impl.py`)
 - **Area:** `science_graphrag/ingestion/_pipeline_impl.py`, `science_graphrag/ingestion/stages/*`, `science_graphrag/ingestion/checkpoint.py`

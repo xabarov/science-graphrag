@@ -52,9 +52,10 @@ def test_maybe_refresh_thread_insight_writes_session_meta_and_audit() -> None:
     assert int(aud.get("chunk_count") or 0) >= 1
     assert aud.get("mode") == "deterministic_stub"
     assert aud.get("refresh_mode") == "full"
-    assert isinstance(aud.get("digest_window_fingerprint"), str) and len(
-        str(aud.get("digest_window_fingerprint") or "")
-    ) >= 8
+    assert (
+        isinstance(aud.get("digest_window_fingerprint"), str)
+        and len(str(aud.get("digest_window_fingerprint") or "")) >= 8
+    )
     assert aud.get("built_at_turn_counter") == 2
     assert aud.get("forked") is False
     cb = tip.get("compaction_boundary")

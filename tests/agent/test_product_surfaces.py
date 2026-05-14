@@ -14,7 +14,10 @@ from science_graphrag.agent.context.user_structured_answer import (
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.runtime import extract_last_brief_from_messages
 from science_graphrag.agent.tools.mcp_surface import _server_denied
-from science_graphrag.agent.tools.product_interaction_tools import AskUserQuestionArgs, build_product_interaction_tools
+from science_graphrag.agent.tools.product_interaction_tools import (
+    AskUserQuestionArgs,
+    build_product_interaction_tools,
+)
 from science_graphrag.agent.tools.runtime_monitor_surface import (
     clear_runtime_monitor_snapshots_for_tests,
     register_runtime_monitor_snapshot,
@@ -26,6 +29,8 @@ from science_graphrag.agent.tools.lsp_surface import (
     _decode_lsp_messages_from_text,
     _encode_lsp_message,
 )
+
+
 @pytest.fixture(autouse=True)
 def _clear_sessions():
     clear_session_store_for_tests()
@@ -56,7 +61,9 @@ def test_consume_user_structured_answer_clears_pending() -> None:
         patch={
             "pending_user_question": {
                 "request_id": "rid-1",
-                "questions": [{"id": "q1", "prompt": "Pick", "options": [{"id": "a", "label": "A"}]}],
+                "questions": [
+                    {"id": "q1", "prompt": "Pick", "options": [{"id": "a", "label": "A"}]}
+                ],
                 "created_at": 1.0,
             }
         },

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-shot: recreate api with tool_use_summary off/on, run trace-review, regression compare.
 set -euo pipefail
-REPO="/home/roman/pyprojects/ML/Prod/science-graphrag"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO"
 export AGENT_LIVE_BASE="${AGENT_LIVE_BASE:-http://127.0.0.1:18787}"
 BASE_URL="${AGENT_LIVE_TRACE_URL:-http://127.0.0.1:18787}"

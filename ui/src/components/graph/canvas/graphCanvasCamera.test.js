@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { buildPositionSubset, computeFitTransformForNodeSubset } from "./graphCanvasCamera.js";
+import { buildPositionSubset, clampGraphCanvasFitTransform, computeFitTransformForNodeSubset } from "./graphCanvasCamera.js";
+import { MIN_FIT_SCALE } from "./graphCanvasMvpConstants.js";
 import { computeFitTransform, computeWorldLayout, DEFAULT_WORLD_RADIUS } from "./graphCanvasTransform.js";
 
 describe("graphCanvasCamera", () => {
@@ -18,6 +19,13 @@ describe("graphCanvasCamera", () => {
     const all = new Map([["a", { x: 0, y: 0 }]]);
     expect(computeFitTransformForNodeSubset(all, [], 400, 300, 12, 40)).toBe(null);
     expect(computeFitTransformForNodeSubset(all, ["x"], 400, 300, 12, 40)).toBe(null);
+  });
+
+  it("clampGraphCanvasFitTransform enforces minimum scale", () => {
+    const low = { scale: 0.01, tx: 0, ty: 0 };
+    const clamped = clampGraphCanvasFitTransform(low);
+    expect(clamped.scale).toBeGreaterThanOrEqual(MIN_FIT_SCALE);
+    expect(clamped.tx).toBe(0);
   });
 
   it("single-node subset yields larger scale than fitting the full two-node layout (zoom-to-selection)", () => {

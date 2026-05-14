@@ -146,7 +146,9 @@ def test_detect_runtime_mode_v3_judge_mock() -> None:
 
 def test_detect_runtime_mode_v3_judge_live() -> None:
     block: dict = {"run_metadata": {"mock_agent": False}}
-    assert detect_runtime_mode("v3_judge_pilot", block, [{"case_id": "x", "passed": True}]) == "live"
+    assert (
+        detect_runtime_mode("v3_judge_pilot", block, [{"case_id": "x", "passed": True}]) == "live"
+    )
 
 
 def test_collect_individual_failures_v3_judge_branch() -> None:

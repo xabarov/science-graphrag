@@ -74,6 +74,20 @@ def _single_turn(
     }
 
 
+def _stderr_wait_heartbeat_line(*, turn_idx: int, thread_id: str, elapsed_ms: int) -> str:
+    """Machine-readable stderr line while blocking on ``/v2/agent/query`` (W3 contract)."""
+    return json.dumps(
+        {
+            "kind": "compaction_turn_wait_heartbeat",
+            "lane": "compaction_turn_review",
+            "turn": turn_idx,
+            "thread_id": thread_id,
+            "elapsed_ms": elapsed_ms,
+        },
+        ensure_ascii=False,
+    )
+
+
 def _single_turn_with_wait_heartbeat(
     client: httpx.Client,
     *,
@@ -92,9 +106,8 @@ def _single_turn_with_wait_heartbeat(
         while not done.wait(timeout=max(5.0, float(hb_sec))):
             elapsed_ms = int((time.perf_counter() - t0) * 1000)
             print(
-                (
-                    f"[compaction-review] turn_wait turn={turn_idx} thread_id={thread_id} "
-                    f"elapsed_ms={elapsed_ms}"
+                _stderr_wait_heartbeat_line(
+                    turn_idx=turn_idx, thread_id=thread_id, elapsed_ms=elapsed_ms
                 ),
                 file=sys.stderr,
                 flush=True,
@@ -114,6 +127,25 @@ def _single_turn_with_wait_heartbeat(
         done.set()
 
 
+def compaction_review_stop_outcome(
+    *,
+    failure_reason: str | None,
+    verdict_status: str,
+) -> tuple[str, bool]:
+    """Machine-readable end state for compaction review JSON (W3 / R3).
+
+    Returns ``(stop_reason, fail_fast)``:
+    - ``stopped_on_turn_failure`` + ``fail_fast=True`` when a turn hard-stopped the lane;
+    - ``completed_turns_verdict_fail`` when all turns ran but compaction verdict failed;
+    - ``completed`` on pass.
+    """
+    if failure_reason:
+        return "stopped_on_turn_failure", True
+    if verdict_status == "fail":
+        return "completed_turns_verdict_fail", False
+    return "completed", False
+
+
 def _classify_turn_failure(
     *,
     mode: str,
@@ -130,6 +162,15 @@ def _classify_turn_failure(
     if failure_kind_raw == "http_error":
         return "http_error", f"http_error_turn_{turn_idx}"
     return "unknown_error", f"unknown_error_turn_{turn_idx}"
+
+
+def _log_turn_fail_stderr(*, turn_idx: int, failure_reason: str, elapsed_ms: int) -> None:
+    print(
+        f"[compaction-review] turn_fail turn={turn_idx} "
+        f"reason={failure_reason} elapsed_ms={elapsed_ms}",
+        file=sys.stderr,
+        flush=True,
+    )
 
 
 def _write_md(path: Path, report: dict[str, Any]) -> None:
@@ -187,6 +228,10 @@ def _write_md(path: Path, report: dict[str, Any]) -> None:
                 )
             )
     lines.extend(["", "## Verdict", "", f"- Status: `{report['verdict']['status']}`"])
+    if report.get("stop_reason"):
+        lines.append(f"- Stop reason: `{report.get('stop_reason')}`")
+    if "fail_fast" in report:
+        lines.append(f"- Fail fast: `{report.get('fail_fast')}`")
     if report.get("failure_reason"):
         lines.append(f"- Failure reason: `{report.get('failure_reason')}`")
     for reason in report["verdict"].get("reasons") or []:
@@ -353,10 +398,10 @@ def main() -> int:
                     failed_turn = idx
                     failure_kind = fk
                     failure_reason = fr
-                    print(
-                        f"[compaction-review] turn_fail turn={idx} reason={failure_reason} elapsed_ms={elapsed_ms}",
-                        file=sys.stderr,
-                        flush=True,
+                    _log_turn_fail_stderr(
+                        turn_idx=idx,
+                        failure_reason=str(failure_reason or ""),
+                        elapsed_ms=elapsed_ms,
                     )
                     break
                 except httpx.TimeoutException:
@@ -386,10 +431,10 @@ def main() -> int:
                     failed_turn = idx
                     failure_kind = fk
                     failure_reason = fr
-                    print(
-                        f"[compaction-review] turn_fail turn={idx} reason={failure_reason} elapsed_ms={elapsed_ms}",
-                        file=sys.stderr,
-                        flush=True,
+                    _log_turn_fail_stderr(
+                        turn_idx=idx,
+                        failure_reason=str(failure_reason or ""),
+                        elapsed_ms=elapsed_ms,
                     )
                     break
                 except httpx.HTTPError as exc:
@@ -413,10 +458,10 @@ def main() -> int:
                     failed_turn = idx
                     failure_kind = "http_error"
                     failure_reason = base_fr
-                    print(
-                        f"[compaction-review] turn_fail turn={idx} reason={failure_reason} elapsed_ms={elapsed_ms}",
-                        file=sys.stderr,
-                        flush=True,
+                    _log_turn_fail_stderr(
+                        turn_idx=idx,
+                        failure_reason=str(failure_reason or ""),
+                        elapsed_ms=elapsed_ms,
                     )
                     break
                 elapsed_ms = int((time.perf_counter() - turn_t0) * 1000)
@@ -467,6 +512,10 @@ def main() -> int:
         if item["turn"] >= args.require_compaction_after and not kinds:
             reasons.append(f"missing_compaction_kinds_turn_{item['turn']}")
     verdict = {"status": "pass" if not reasons else "fail", "reasons": reasons}
+    stop_reason, fail_fast = compaction_review_stop_outcome(
+        failure_reason=failure_reason,
+        verdict_status=str(verdict["status"]),
+    )
 
     compaction_events: list[dict[str, Any]] = []
     for item in turn_reports:
@@ -495,6 +544,16 @@ def main() -> int:
         "max_retries_per_turn": int(args.max_retries_per_turn),
         "heartbeat_sec": hb_sec,
         "in_turn_heartbeat": in_turn_hb,
+        "heartbeat_contract": {
+            "version": 1,
+            "lane": "compaction_turn_review",
+            "stderr_interval_sec": hb_sec,
+            "in_turn_heartbeat_enabled": in_turn_hb,
+            "stderr_event_kind": "compaction_turn_wait_heartbeat",
+            "silent_hang_threshold_sec": float(args.silent_hang_threshold_sec),
+        },
+        "stop_reason": stop_reason,
+        "fail_fast": fail_fast,
         "turn_attempts": turn_attempts,
         "turn_reports": turn_reports,
         "compaction_events": compaction_events,

@@ -476,16 +476,12 @@ def test_sse_emits_spawned_subagent_terminal_row_from_metadata(monkeypatch) -> N
         agent_runtime="langgraph_supervisor_v3",
     )
     started = next(
-        e
-        for e in events
-        if e.get("type") == "subagent_started" and e.get("kind") == "spawned"
+        e for e in events if e.get("type") == "subagent_started" and e.get("kind") == "spawned"
     )
     assert started.get("task_type") == "corpus_explore"
     assert started.get("task_id") == "task-ce-1"
     finished = next(
-        e
-        for e in events
-        if e.get("type") == "subagent_finished" and e.get("kind") == "spawned"
+        e for e in events if e.get("type") == "subagent_finished" and e.get("kind") == "spawned"
     )
     assert finished.get("terminal_state") == "succeeded"
     assert (finished.get("merge_provenance") or {}).get("source_kind") == "corpus_explore_result"
@@ -500,7 +496,9 @@ def test_sse_emits_spawned_subagent_terminal_row_from_metadata(monkeypatch) -> N
     )
 
 
-def test_sse_spawned_rows_are_patched_when_parent_finishes_after_inflight_spawn_row(monkeypatch) -> None:
+def test_sse_spawned_rows_are_patched_when_parent_finishes_after_inflight_spawn_row(
+    monkeypatch,
+) -> None:
     monkeypatch.setattr(
         agent_v2_stream_lifecycle,
         "build_retrieval_graph",
@@ -533,7 +531,9 @@ def test_sse_spawned_rows_are_patched_when_parent_finishes_after_inflight_spawn_
     final = next(e for e in events if e.get("type") == "final_answer")
     rows = (final.get("run_metadata") or {}).get("subagent_runs") or []
     target = next(
-        row for row in rows if row.get("kind") == "spawned" and row.get("subagent_id") == "ce-timeout-1"
+        row
+        for row in rows
+        if row.get("kind") == "spawned" and row.get("subagent_id") == "ce-timeout-1"
     )
     # In this harness path parent completes normally after a stale in-flight spawned row;
     # run_metadata must not keep the child in running/pending state.

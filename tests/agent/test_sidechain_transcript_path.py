@@ -43,9 +43,7 @@ def test_append_subagent_sidechain_event_ignores_truthy_mock_flag(
     assert list(tmp_path.iterdir()) == []
 
 
-def test_sidechain_root_falls_back_when_default_dir_unwritable(
-    tmp_path: Path, monkeypatch
-) -> None:
+def test_sidechain_root_falls_back_when_default_dir_unwritable(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     home = tmp_path / "home"
     home.mkdir()

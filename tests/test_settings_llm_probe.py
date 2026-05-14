@@ -19,9 +19,7 @@ def test_llm_probe_missing_api_key_returns_structured_error() -> None:
 
 
 def test_llm_probe_connected_when_provider_returns_ok() -> None:
-    completion = SimpleNamespace(
-        choices=[SimpleNamespace(message=SimpleNamespace(content="OK"))]
-    )
+    completion = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content="OK"))])
 
     payload = run_llm_connection_probe(
         base_url="https://example.org/v1",

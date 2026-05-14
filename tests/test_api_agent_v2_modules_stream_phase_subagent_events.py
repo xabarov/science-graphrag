@@ -49,7 +49,12 @@ def test_values_mode_emits_routing_start_and_finish() -> None:
         state = StreamAgentLifecycleState()
         payload = {
             "routing_log": [
-                {"from": "supervisor", "to": "retrieval_agent", "reason": "need facts", "budget_left": 8},
+                {
+                    "from": "supervisor",
+                    "to": "retrieval_agent",
+                    "reason": "need facts",
+                    "budget_left": 8,
+                },
                 {"from": "supervisor", "to": "writer_agent", "reason": "compose", "budget_left": 7},
             ],
             "debug_events": [],
@@ -118,4 +123,3 @@ def test_values_mode_emits_spawned_subagent_start_and_finish_once() -> None:
         assert "subagent_finished" not in kinds_second
 
     asyncio.run(_run())
-

@@ -31,7 +31,11 @@ def test_fanout_two_spawns_increase_subagent_runs_count(schema_module) -> None:
                 {"subagent_id": "cv-1", "kind": "spawned"},
                 {"subagent_id": "cv-2", "kind": "spawned"},
             ],
-            "subagent_task_notifications": [{"task_id": "t1"}, {"task_id": "t2"}, {"task_id": "t3"}],
+            "subagent_task_notifications": [
+                {"task_id": "t1"},
+                {"task_id": "t2"},
+                {"task_id": "t3"},
+            ],
         },
     }
     tl = schema_module.merge_e2e_report_json_into_review(cases=[case], workspace_postgres=None)

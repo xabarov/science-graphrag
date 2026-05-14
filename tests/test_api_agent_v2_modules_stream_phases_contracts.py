@@ -194,3 +194,46 @@ def test_values_mode_forwards_streamable_debug_tail() -> None:
     first = json.loads(events[0]["data"])
     assert first.get("type") == "warning"
     assert first.get("code") == "dbg_test"
+
+
+async def _collect_values_routing_events() -> list[dict[str, str]]:
+    settings = Settings(agent_runtime="langgraph_supervisor_v3")
+    hook: list[dict[str, Any]] = []
+    ctx = StreamLifecycleRequestContext(
+        settings=settings,
+        question="q",
+        workspace_id=None,
+        max_tool_calls=4,
+        answer_class_hint=None,
+        thread_id=None,
+        history_digest_invalid=False,
+        run_kind=None,
+        graph_id=None,
+        parent_turn_id_str="pt-route",
+        routing_subagent_ledger=RoutingSubagentLegLedger(
+            parent_turn_id="pt-route", hook_chain_sink=hook
+        ),
+        spawn_subagent_runtime=SubagentRuntime(
+            parent_turn_id="pt-route", max_parallel_subagents=2, hook_chain_sink=hook
+        ),
+        hook_chain_events=hook,
+        prompt_memory_audit_initial=None,
+        post_compact_paper_sources_restored_initial=None,
+    )
+    state = StreamAgentLifecycleState()
+    payload = {
+        "routing_log": [{"from": "supervisor", "to": "writer_agent", "reason": "draft"}],
+        "debug_events": [],
+        "messages": [],
+    }
+    events: list[dict[str, str]] = []
+    async for ev in iter_values_mode_stream_events(ctx=ctx, state=state, payload=payload):
+        events.append(ev)
+    return events
+
+
+def test_values_mode_routing_log_emits_subagent_started() -> None:
+    events = asyncio.run(_collect_values_routing_events())
+    types = [json.loads(e["data"]).get("type") for e in events]
+    assert "specialist_selected" in types
+    assert "subagent_started" in types

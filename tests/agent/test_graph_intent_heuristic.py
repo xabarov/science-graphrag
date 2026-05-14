@@ -14,9 +14,12 @@ def test_graph_intent_false_on_citations_boilerplate() -> None:
 
 
 def test_graph_intent_true_on_citation_chain() -> None:
-    assert _graph_intent_heuristic(
-        "What is the citation chain between paper A and paper B in this workspace?"
-    ) is True
+    assert (
+        _graph_intent_heuristic(
+            "What is the citation chain between paper A and paper B in this workspace?"
+        )
+        is True
+    )
 
 
 def test_graph_intent_true_on_who_cited() -> None:

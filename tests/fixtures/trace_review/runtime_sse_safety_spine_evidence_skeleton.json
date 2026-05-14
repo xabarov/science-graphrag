@@ -1,0 +1,27 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-14T00:00:00+00:00",
+  "thread_id": "fixture_thread_w1_w3",
+  "verdict": {"status": "pass", "reasons": []},
+  "compaction_turn_review": {
+    "review_version": "trace-review-v1",
+    "mode": "focused_long_thread",
+    "heartbeat_sec": 15.0,
+    "in_turn_heartbeat": true,
+    "heartbeat_contract": {
+      "version": 1,
+      "lane": "compaction_turn_review",
+      "stderr_interval_sec": 15.0,
+      "in_turn_heartbeat_enabled": true,
+      "stderr_event_kind": "compaction_turn_wait_heartbeat",
+      "silent_hang_threshold_sec": 180.0
+    },
+    "failed_turn": null,
+    "failure_kind": null,
+    "failure_reason": null,
+    "turn_attempts": [],
+    "turn_reports": [],
+    "verdict": {"status": "pass", "reasons": []}
+  },
+  "_comment": "Skeleton for W1/W3 operator evidence: merge under trace-review root or use compaction_turn_review standalone JSON."
+}

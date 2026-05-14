@@ -225,7 +225,9 @@ def test_retrieval_runtime_partial_salvage_patches_inflight_spawn_rows(monkeypat
 
     assert out.subagent_runs is not None
     spawned = next(
-        row for row in out.subagent_runs if row.get("kind") == "spawned" and row.get("subagent_id") == "ce-sync-1"
+        row
+        for row in out.subagent_runs
+        if row.get("kind") == "spawned" and row.get("subagent_id") == "ce-sync-1"
     )
     assert spawned.get("terminal_state") == "timed_out"
     assert spawned.get("task_status") == "timed_out"

@@ -28,6 +28,10 @@ from science_graphrag.api.agent_v2_modules.recovery import (
     sse_error_event,
     sse_warning_event,
 )
+from science_graphrag.api.agent_v2_modules.stream_lifecycle_graph_abort_specs import (
+    abort_spec_parent_deadline,
+    abort_spec_parent_recursion_limit,
+)
 from science_graphrag.api.agent_v2_modules.stream_lifecycle_state import (
     StreamAgentLifecycleState,
     StreamLifecycleRequestContext,
@@ -42,7 +46,6 @@ from science_graphrag.api.agent_v2_modules.stream_phase_recovery import (
     recover_after_recursion_limit,
 )
 from science_graphrag.api.agent_v2_modules.stream_phase_routing_leg_abort import (
-    ActiveRoutingLegAbortSpec,
     sse_event_close_active_routing_leg_on_parent_abort,
 )
 from science_graphrag.api.agent_v2_modules.streaming import iter_graph_chunks
@@ -256,16 +259,12 @@ async def stream_agent_events(
 
             except AgentGraphDeadlineExceeded as exc:
                 _abort = sse_event_close_active_routing_leg_on_parent_abort(
-                    ActiveRoutingLegAbortSpec(
+                    abort_spec_parent_deadline(
                         settings=settings,
                         parent_turn_id_str=parent_turn_id_str,
                         active_subagent_id=str(state.active_subagent_id or ""),
                         routing_subagent_ledger=routing_subagent_ledger,
                         spawn_subagent_runtime=spawn_subagent_runtime,
-                        routing_leg_sidechain_terminal="timed_out",
-                        routing_leg_ledger_terminal="timed_out",
-                        spawn_cancel_failure_code="parent_timed_out",
-                        spawn_cancel_terminal_state="timed_out",
                     )
                 )
                 if _abort is not None:
@@ -293,16 +292,12 @@ async def stream_agent_events(
                     yield sse_warning_event(warning_payload)
             except AgentGraphRecursionLimitExceeded as exc:
                 _abort = sse_event_close_active_routing_leg_on_parent_abort(
-                    ActiveRoutingLegAbortSpec(
+                    abort_spec_parent_recursion_limit(
                         settings=settings,
                         parent_turn_id_str=parent_turn_id_str,
                         active_subagent_id=str(state.active_subagent_id or ""),
                         routing_subagent_ledger=routing_subagent_ledger,
                         spawn_subagent_runtime=spawn_subagent_runtime,
-                        routing_leg_sidechain_terminal="failed",
-                        routing_leg_ledger_terminal="failed",
-                        spawn_cancel_failure_code="parent_recursion_limit",
-                        spawn_cancel_terminal_state="killed",
                     )
                 )
                 if _abort is not None:

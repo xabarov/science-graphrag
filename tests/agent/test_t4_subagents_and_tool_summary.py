@@ -250,9 +250,15 @@ def test_shared_subgraph_utils_permission_last_text_and_fanout() -> None:
     assert permission_denied_in_messages(
         [ToolMessage(content='{"error":"permission_denied"}', name="x", tool_call_id="tc-1")]
     )
-    assert last_assistant_text([AIMessage(content=""), AIMessage(content=" final text ")]) == "final text"
+    assert (
+        last_assistant_text([AIMessage(content=""), AIMessage(content=" final text ")])
+        == "final text"
+    )
     assert fanout_suffixes(max_fan=1, variant_prompt_suffixes=None, defaults=["a", "b"]) == [""]
-    assert fanout_suffixes(max_fan=2, variant_prompt_suffixes=None, defaults=["a", "b"]) == ["a", "b"]
+    assert fanout_suffixes(max_fan=2, variant_prompt_suffixes=None, defaults=["a", "b"]) == [
+        "a",
+        "b",
+    ]
     assert fanout_suffixes(
         max_fan=2, variant_prompt_suffixes=["x", "y", "z"], defaults=["a", "b"]
     ) == ["x", "y"]

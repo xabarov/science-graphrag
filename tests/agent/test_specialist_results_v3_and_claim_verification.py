@@ -78,7 +78,9 @@ def test_build_tool_execution_node_respects_claim_verification_callback() -> Non
     )
     bad_ai = AIMessage(
         content="",
-        tool_calls=[{"name": "final_answer", "id": "tc1", "args": {"answer": "x", "citations": []}}],
+        tool_calls=[
+            {"name": "final_answer", "id": "tc1", "args": {"answer": "x", "citations": []}}
+        ],
     )
     out = node(
         {

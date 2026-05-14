@@ -18,8 +18,13 @@ from science_graphrag.agent.hooks.subagent_hooks import (
     emit_subagent_stop_hook,
 )
 from science_graphrag.agent.subagents.notification import new_task_id
+from science_graphrag.agent.subagents.terminal_truth import (
+    TerminalState,
+    dedupe_merged_subagent_runs,
+    is_spawned_row_terminal_definitive,
+    routing_leg_terminal_on_parent_stream_finalize,
+)
 
-TerminalState = Literal["succeeded", "failed", "cancelled", "killed", "timed_out"]
 TaskStatus = Literal["pending", "running", "completed", "failed", "cancelled", "timed_out"]
 LegKind = Literal["routing_leg", "spawned"]
 
@@ -60,14 +65,13 @@ def parent_turn_routing_terminal_on_stream_finalize(
 ) -> TerminalState:
     """Terminal state for the active routing leg when the stream enters finalize.
 
-    Must stay aligned with ``sse_event_close_active_routing_leg_on_parent_abort``:
-    deadline -> ``timed_out``; recursion limit -> ``failed`` (ledger); normal -> ``succeeded``.
+    Delegates to ``terminal_truth.routing_leg_terminal_on_parent_stream_finalize`` so
+    finalize stays aligned with ``sse_event_close_active_routing_leg_on_parent_abort``.
     """
-    if salvaged_after_deadline:
-        return "timed_out"
-    if salvaged_after_recursion_limit:
-        return "failed"
-    return "succeeded"
+    return routing_leg_terminal_on_parent_stream_finalize(
+        salvaged_after_deadline=salvaged_after_deadline,
+        salvaged_after_recursion_limit=salvaged_after_recursion_limit,
+    )
 
 
 def patch_spawn_rows_for_parent_terminal(
@@ -94,9 +98,7 @@ def patch_spawn_rows_for_parent_terminal(
         # Do not clobber rows that already reflect a definitive child outcome (W1).
         # Previously ``terminal_state == "succeeded"`` was treated as inflight, which
         # overwrote completed child rows during the normal parent finalize patch pass.
-        definitive_child = (
-            current_terminal == "succeeded" and task_status == "completed"
-        ) or current_terminal in {"failed", "cancelled", "killed", "timed_out"}
+        definitive_child = is_spawned_row_terminal_definitive(row)
         if definitive_child:
             patched.append(dict(row))
             continue
@@ -208,7 +210,9 @@ def build_spawned_subagent_run_row(
         "description": desc[:500],
         "execution_mode": str(execution_mode or "sync"),
         "fanout_slot": max(1, int(fanout_slot or 1)),
-        "task_status": _task_status_from_terminal_state(str(terminal_state or "failed")),  # type: ignore[arg-type]
+        "task_status": _task_status_from_terminal_state(
+            str(terminal_state or "failed"),
+        ),  # type: ignore[arg-type]
         "terminal_state": str(terminal_state or "failed"),
         "latency_ms": latency_ms,
         "failure_code": failure_code,
@@ -461,8 +465,13 @@ def merge_subagent_run_rows(
     routing_rows: list[dict[str, Any]],
     spawned_rows: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Stable merge: routing legs first, then explicit spawns (same parent turn)."""
-    return list(routing_rows) + list(spawned_rows)
+    """Stable merge: routing legs first, then explicit spawns (same parent turn).
+
+    Spawned rows from runtime + graph metadata are deduped by
+    ``(parent_turn_id, subagent_id, task_id)`` so a definitive child terminal
+    (e.g. ``failed``) is never overwritten by a weaker duplicate (W1).
+    """
+    return dedupe_merged_subagent_runs(list(routing_rows) + list(spawned_rows))
 
 
 def build_subagent_runs_from_routing_log(

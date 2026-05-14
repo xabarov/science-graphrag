@@ -12,7 +12,9 @@ from science_graphrag.agent.citation_enrichment import (
 
 def test_merge_single_quote_candidate_when_citation_has_no_chunk_key():
     citations = [{"work_id": "w1", "title": "Only title"}]
-    quote_candidates = [{"work_id": "w1", "chunk_id": "fp-x", "quote_text": "Only hit for this work."}]
+    quote_candidates = [
+        {"work_id": "w1", "chunk_id": "fp-x", "quote_text": "Only hit for this work."}
+    ]
     merge_quote_candidates_into_citations(citations, quote_candidates)
     assert citations[0].get("excerpt") == "Only hit for this work."
 

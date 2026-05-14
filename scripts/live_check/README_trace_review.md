@@ -38,6 +38,22 @@ For hotspot PRs, choose the exact `profile` / `suite` from
 `docs/runbooks/agent-trace-review-sop.md` §0.2. This README is the quick command
 reference; the SOP is the source of truth for Wave G blocking vs advisory policy.
 
+## 1.1) W2 — paired baseline vs candidate + latency verdict
+
+After producing two artifacts with **identical** `--base-url`, `--workspace-id`, `--suite`,
+and `--profile`, run the W2 wrapper (default **+25%** hard cap on `latency_p95_ms` regress):
+
+```bash
+.venv/bin/python scripts/live_check/paired_trace_review_w2.py \
+  --baseline eval/results/trace-review-baseline.json \
+  --candidate eval/results/trace-review-candidate.json \
+  --out-json eval/results/trace-regression-w2.json \
+  --out-md eval/results/trace-regression-w2.md
+```
+
+Operator fields: `operator_latency_verdict` in the compare JSON/Markdown. Full checklist:
+[`docs/runbooks/trace-review-w2-paired-latency-compare.md`](../../docs/runbooks/trace-review-w2-paired-latency-compare.md).
+
 ### Stage heartbeat + JSON diagnostics
 
 `agent_trace_review.py` emits stderr `[trace-review] heartbeat …` while long stages run

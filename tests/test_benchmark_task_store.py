@@ -176,7 +176,9 @@ def test_task_store_get_run_summary_omits_case_results(tmp_path: Path) -> None:
 def test_get_run_summary_paginated_when_over_inline_limit(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setattr("science_graphrag.api.benchmark_task_store_core._SUMMARY_CASES_INLINE_MAX", 1)
+    monkeypatch.setattr(
+        "science_graphrag.api.benchmark_task_store_core._SUMMARY_CASES_INLINE_MAX", 1
+    )
 
     def _fake_layer1_runner(
         fixture_dir: Path,

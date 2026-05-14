@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { clampGraphCanvasFitTransform } from "../graphCanvasCamera.js";
+import {
+  FIT_PADDING,
+  MIN_CANVAS_HEIGHT,
+  NODE_RADIUS,
+} from "../graphCanvasMvpConstants.js";
 import { computeFitTransform, computeWorldLayout, screenToWorld } from "../graphCanvasTransform.js";
-
-const NODE_RADIUS = 12;
-const FIT_PADDING = 40;
-const MIN_CANVAS_HEIGHT = 280;
-const MIN_FIT_SCALE = 0.11;
-
-function clampFitTransform(fit) {
-  return { ...fit, scale: Math.max(fit.scale, MIN_FIT_SCALE) };
-}
 
 /**
  * Host sizing, pan/zoom transform, fit-to-graph camera, and related effects for {@link GraphCanvasMvp}.
@@ -74,7 +71,7 @@ export default function useGraphCanvasViewport({
           : computeWorldLayout(graph.nodes, layoutWorldRadius);
       }
       positionsRef.current = positions;
-      const next = clampFitTransform(computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING));
+      const next = clampGraphCanvasFitTransform(computeFitTransform(positions, w, h, NODE_RADIUS, FIT_PADDING));
       transformRef.current = next;
       setTransform(next);
     },

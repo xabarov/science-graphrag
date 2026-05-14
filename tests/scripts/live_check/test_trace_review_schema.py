@@ -404,7 +404,9 @@ def test_merge_compaction_into_review_dict_empty_timeline_creates_probe_row(sche
     assert timeline[0].get("case_id") == "compaction_multi_turn_probe"
 
 
-def test_merge_compaction_into_review_dict_carries_side_ratio_and_paper_restore(schema_module) -> None:
+def test_merge_compaction_into_review_dict_carries_side_ratio_and_paper_restore(
+    schema_module,
+) -> None:
     """Compaction probe should feed side-LLM ratio and paper restore counters into metrics."""
     base = {
         "review_version": schema_module.REVIEW_VERSION,
@@ -559,7 +561,12 @@ def test_subagent_terminal_state_and_merge_provenance_missing_are_counted(schema
         "run_metadata": {
             "subagent_observability_lane": "fork_v3_enhanced",
             "subagent_runs": [
-                {"subagent_id": "ce-1", "kind": "spawned", "terminal_state": "", "merge_provenance": None},
+                {
+                    "subagent_id": "ce-1",
+                    "kind": "spawned",
+                    "terminal_state": "",
+                    "merge_provenance": None,
+                },
                 {"subagent_id": "rp-1", "kind": "spawned", "terminal_state": "timed_out"},
             ],
             "subagent_task_notifications": [{"task_id": "t1"}, {"task_id": "t2"}],
