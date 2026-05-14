@@ -508,3 +508,25 @@ def test_hybrid_llm_rerank_merges_selector_meta(
     assert meta.get("selector_confidence") == 0.88
     assert meta.get("selector_reason_codes") == ["llm_rerank_ok"]
     assert "final_answer" in {getattr(t, "name", "") for t in out}
+
+
+def test_shortlist_retrieval_keeps_web_tools_when_asks_for_web_research() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    out, _meta = shortlist_tools_for_specialist(
+        tools,
+        question="что говорят об этой теме в интернете?",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        asks_for_web_research=True,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "web_search" in names
+    assert "web_fetch" in names

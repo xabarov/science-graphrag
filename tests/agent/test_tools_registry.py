@@ -18,15 +18,26 @@ def _fake_stores() -> MagicMock:
 
 def test_build_tool_registry_includes_core_and_catalog_tools() -> None:
     tools = build_tool_registry(_fake_stores())
-    # graph (2) + catalog/semantic/bib (7 incl. workspace_graph_reltypes) + idea_search + final_answer
-    assert len(tools) == 10
-    tool_names = {tool.name for tool in tools}
-    assert "cypher_query" in tool_names
-    assert "idea_search" in tool_names
-    assert "workspace_inspect" in tool_names
-    assert "workspace_graph_reltypes" in tool_names
-    assert "find_works" in tool_names
-    assert "format_bibliography_gost" in tool_names
+    tool_names = [getattr(t, "name", "") for t in tools]
+    assert len(tool_names) == len(set(tool_names)), "registry must not register duplicate tools"
+    uniq = set(tool_names)
+    assert "cypher_query" in uniq
+    assert "idea_search" in uniq
+    assert "workspace_inspect" in uniq
+    assert "workspace_graph_reltypes" in uniq
+    assert "find_works" in uniq
+    assert "format_bibliography_gost" in uniq
+    assert "web_search" in uniq
+    assert "web_fetch" in uniq
+
+
+def test_build_retrieval_tools_includes_web_research() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    tools = build_retrieval_tools(_fake_stores())
+    names = {getattr(t, "name", "") for t in tools}
+    assert "web_search" in names
+    assert "web_fetch" in names
 
 
 def test_cypher_query_tool_rejects_write() -> None:

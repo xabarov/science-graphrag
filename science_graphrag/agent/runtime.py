@@ -338,6 +338,7 @@ class RetrievalAgent:
             inventory=inv if isinstance(inv, dict) else None,
             messages=list(final_state.get("messages") or []),
             specialist_results=sr if isinstance(sr, dict) else None,
+            web_sources=list(typed_payloads.get("web_sources") or []),
         )
         extra_warn_list: list[str] = []
         if graph_salvage:

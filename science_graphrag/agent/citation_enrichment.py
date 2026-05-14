@@ -20,6 +20,8 @@ _PASSAGE_KEYS = (
     "content",
 )
 
+_WEB_CITATION_SNIPPET_CAP = 2000
+
 
 def _citation_has_passage(c: dict[str, Any]) -> bool:
     for k in _PASSAGE_KEYS:
@@ -37,6 +39,42 @@ def _quote_body(row: dict[str, Any]) -> str:
     return str(
         row.get("quote_text") or row.get("text") or row.get("snippet") or "",
     ).strip()
+
+
+def _citation_dicts_from_web_sources(
+    web_sources: list[dict[str, Any]],
+    *,
+    limit: int,
+) -> list[dict[str, Any]]:
+    """Turn merged ``web_sources`` rows into UI citation dicts (external links, no work_id)."""
+
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for row in web_sources:
+        if not isinstance(row, dict):
+            continue
+        url = _norm(row.get("url"))
+        if not url:
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        title = _norm(row.get("title")) or url
+        cit: dict[str, Any] = {
+            "source_type": "web",
+            "url": url,
+            "title": title,
+        }
+        doi = _norm(row.get("doi"))
+        if doi:
+            cit["doi"] = doi
+        snippet = str(row.get("snippet") or "").strip()
+        if snippet:
+            cit["excerpt"] = snippet[:_WEB_CITATION_SNIPPET_CAP]
+        out.append(cit)
+        if len(out) >= limit:
+            break
+    return out
 
 
 def _quote_row_fingerprint(row: dict[str, Any]) -> str:
@@ -94,6 +132,8 @@ def inject_work_ids_from_inventory(
     if not title_map:
         return
     for c in citations:
+        if str(c.get("source_type") or "").strip().lower() == "web":
+            continue
         if _norm(c.get("work_id")):
             continue
         ct = _normalize_title(c.get("title") or c.get("work_title") or c.get("paper_title"))
@@ -180,12 +220,35 @@ def _collect_cited_work_ids_from_specialist_results(
     return out
 
 
+def _merge_web_sources_into_citations(
+    citations: list[dict[str, Any]],
+    web_sources: list[dict[str, Any]],
+    *,
+    max_web: int = 8,
+) -> None:
+    """Append web rows as structured citations when URL is not already present."""
+    if not web_sources:
+        return
+    existing_urls = {_norm(c.get("url")) for c in citations if _norm(c.get("url"))}
+    appended = 0
+    for cit in _citation_dicts_from_web_sources(web_sources, limit=len(web_sources)):
+        u = _norm(cit.get("url"))
+        if not u or u in existing_urls:
+            continue
+        citations.append(cit)
+        existing_urls.add(u)
+        appended += 1
+        if appended >= max_web:
+            break
+
+
 def synthesize_citations_from_available_evidence(
     *,
     quote_candidates: list[dict[str, Any]] | None,
     inventory: dict[str, Any] | None,
     messages: list[Any] | None,
     specialist_results: dict[str, list[Any]] | None,
+    web_sources: list[dict[str, Any]] | None = None,
     limit: int = 4,
 ) -> list[dict[str, Any]]:
     """Best-effort citations when writer omitted them despite grounded tool evidence."""
@@ -216,6 +279,11 @@ def synthesize_citations_from_available_evidence(
     for row in list(quote_candidates or []):
         if isinstance(row, dict):
             _push(row)
+        if len(out) >= limit:
+            return out[:limit]
+
+    for cit in _citation_dicts_from_web_sources(list(web_sources or []), limit=limit):
+        out.append(cit)
         if len(out) >= limit:
             return out[:limit]
 
@@ -341,6 +409,7 @@ def hydrate_citations_for_ui(
     inventory: dict[str, Any] | None = None,
     messages: list[Any] | None = None,
     specialist_results: dict[str, list[Any]] | None = None,
+    web_sources: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Return a shallow copy of citations with excerpt/snippet hydrated for the chat UI."""
 
@@ -353,6 +422,8 @@ def hydrate_citations_for_ui(
             inventory=inventory,
             messages=list(messages or []),
             specialist_results=specialist_results,
+            web_sources=list(web_sources or []),
+            limit=8,
         )
     inject_work_ids_from_inventory(merged, inventory)
     merge_quote_candidates_into_citations(merged, list(quote_candidates or []))
@@ -363,4 +434,5 @@ def hydrate_citations_for_ui(
         specialist_results=specialist_results,
     )
     merge_paper_profile_abstracts_into_citations(merged, abstracts)
+    _merge_web_sources_into_citations(merged, list(web_sources or []), max_web=8)
     return merged

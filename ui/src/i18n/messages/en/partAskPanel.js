@@ -65,6 +65,8 @@ export default {
   "askPanel.citation.tooltipGraphWork": "Open work graph",
   "askPanel.citation.linkReader": "Reader",
   "askPanel.citation.linkGraph": "Graph",
+  "askPanel.citation.linkWeb": "Open link",
+  "askPanel.citation.tooltipWebSource": "Open external source",
   "askPanel.citation.passageLabel": "Passage",
   "askPanel.citation.noSnippet":
     "No passage text in the API response — open the article using the button below.",
@@ -101,7 +103,7 @@ export default {
   "askPanel.idea.claims": "Claims:",
   "askPanel.idea.contradictionCandidates": "Contradiction candidates",
   "askPanel.researchPlan.title": "Research plan",
-  "askPanel.researchPlan.empty": "No checklist items yet. The agent will populate this when it uses the research plan tool.",
+  "askPanel.researchPlan.empty": "No plan items yet. The agent can add steps when it uses the research plan tool.",
   "askPanel.researchPlan.updating": "Updating plan ({{count}} items)…",
   "askPanel.userQuestion.title": "The agent needs your input",
   "askPanel.userQuestion.submit": "Submit answers",

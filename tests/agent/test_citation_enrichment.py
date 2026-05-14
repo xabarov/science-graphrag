@@ -6,6 +6,7 @@ from langchain_core.messages import ToolMessage
 
 from science_graphrag.agent.citation_enrichment import (
     hydrate_citations_for_ui,
+    inject_work_ids_from_inventory,
     merge_quote_candidates_into_citations,
 )
 
@@ -165,3 +166,39 @@ def test_hydrate_synthesizes_citations_from_inventory_when_empty() -> None:
         },
     )
     assert out == [{"work_id": "wid-graph", "title": "Graph Coverage Paper"}]
+
+
+def test_hydrate_merges_web_sources_into_citations() -> None:
+    out = hydrate_citations_for_ui(
+        [],
+        quote_candidates=[],
+        chunk_store=None,
+        web_sources=[
+            {
+                "title": "Example Study",
+                "url": "https://doi.org/10.1234/example",
+                "doi": "10.1234/example",
+                "source_tool": "web_search",
+                "snippet": "",
+            }
+        ],
+    )
+    assert len(out) == 1
+    assert out[0].get("source_type") == "web"
+    assert out[0].get("url") == "https://doi.org/10.1234/example"
+    assert out[0].get("doi") == "10.1234/example"
+
+
+def test_inject_work_ids_skips_web_source_citations() -> None:
+    citations = [
+        {
+            "source_type": "web",
+            "title": "Attention Is All You Need",
+            "url": "https://example.org/x",
+        }
+    ]
+    inventory = {
+        "papers": [{"work_id": "wid-inv", "title": "Attention Is All You Need"}],
+    }
+    inject_work_ids_from_inventory(citations, inventory)
+    assert "work_id" not in citations[0]

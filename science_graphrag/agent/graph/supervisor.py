@@ -37,6 +37,7 @@ from science_graphrag.agent.graph.supervisor_decisions import (
     compute_round_cap_decision,
     first_user_plain_question,
     maybe_replan_via_llm,
+    question_features_from_agent_state,
     should_skip_llm_router,
 )
 from science_graphrag.agent.llm.chat import (
@@ -57,7 +58,6 @@ from science_graphrag.agent.tool_search import (
     shortlist_tools_for_single_agent,
 )
 from science_graphrag.agent.tools import build_tool_registry
-from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import (
@@ -66,6 +66,7 @@ from science_graphrag.observability.spans import (
     chain_span,
     llm_span,
 )
+from science_graphrag.stores.registry import StoreRegistry
 
 ROUTE_FINISH = "finish"
 
@@ -330,6 +331,7 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
 
             sess = get_session_for_thread(tid)
 
+        feats = question_features_from_agent_state(state)
         bound_tools, _ts_meta = shortlist_tools_for_single_agent(
             tool_registry,
             question=question,
@@ -338,6 +340,7 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
             answer_class=effective_ac,
             session=sess,
             lc_messages=list(state.get("messages") or []),
+            asks_for_web_research=feats.asks_for_web_research,
         )
         bound_tools, _mtx = apply_allowed_tools_matrix(bound_tools, settings=settings, state=state)
         ts_meta = dict(_ts_meta or {})

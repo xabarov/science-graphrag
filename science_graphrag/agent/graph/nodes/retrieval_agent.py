@@ -18,6 +18,7 @@ from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
     build_retrieval_subgraph as build_retrieval_subgraph_impl,
 )
 from science_graphrag.agent.graph.state import AgentState
+from science_graphrag.agent.graph.supervisor_decisions import question_features_from_agent_state
 from science_graphrag.agent.subagents.specialist_results_v3 import (
     append_parent_tool_leg,
     empty_specialist_results_v3,
@@ -29,8 +30,8 @@ from science_graphrag.agent.tool_search import (
     shortlist_tools_for_specialist,
 )
 from science_graphrag.agent.tools import build_retrieval_tools
-from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.stores.registry import StoreRegistry
 
 SPECIALIST_NAME = "retrieval_agent"
 
@@ -73,6 +74,7 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
         has_ws = bool((state.get("workspace_id") or "").strip())
         ac = state.get("answer_class")
         answer_class = str(ac).strip() if isinstance(ac, str) and ac.strip() else None
+        feats = question_features_from_agent_state(state)
         tools, meta = shortlist_tools_for_specialist(
             all_tools,
             question=question,
@@ -82,6 +84,7 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             answer_class=answer_class,
             session=sess,
             lc_messages=list(state.get("messages") or []),
+            asks_for_web_research=feats.asks_for_web_research,
         )
         tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
         compiled = _cached_subgraph(tools)

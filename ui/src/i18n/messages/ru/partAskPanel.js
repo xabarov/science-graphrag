@@ -64,6 +64,8 @@ export default {
   "askPanel.citation.tooltipGraphWork": "Открыть граф работы",
   "askPanel.citation.linkReader": "Чтение",
   "askPanel.citation.linkGraph": "Граф",
+  "askPanel.citation.linkWeb": "Ссылка",
+  "askPanel.citation.tooltipWebSource": "Открыть внешний источник",
   "askPanel.citation.passageLabel": "Отрывок",
   "askPanel.citation.noSnippet":
     "Фрагмент не включён в ответ сервера — откройте статью кнопкой ниже.",
@@ -101,7 +103,7 @@ export default {
   "askPanel.idea.contradictionCandidates": "Кандидаты на противоречия",
   "askPanel.researchPlan.title": "План исследования",
   "askPanel.researchPlan.empty":
-    "Пока нет пунктов чеклиста. Они появятся, когда агент использует инструмент плана исследования.",
+    "Пока нет пунктов плана. Их можно добавить, когда агент вызовет инструмент плана исследования.",
   "askPanel.researchPlan.updating": "Обновление плана ({{count}} пунктов)…",
   "askPanel.userQuestion.title": "Агенту нужен ваш выбор",
   "askPanel.userQuestion.submit": "Отправить ответы",

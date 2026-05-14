@@ -51,6 +51,7 @@ def typed_payloads_from_tool_messages(
     quote_candidates: list[dict[str, Any]] = []
     bibliography: dict[str, Any] | None = None
     relation_trace: dict[str, Any] = {}
+    web_sources: list[dict[str, Any]] = []
 
     for msg in messages:
         if not isinstance(msg, ToolMessage):
@@ -78,6 +79,9 @@ def typed_payloads_from_tool_messages(
         rt = payload.get("relation_trace")
         if isinstance(rt, dict) and rt:
             relation_trace.update(rt)
+        ws = payload.get("web_sources")
+        if isinstance(ws, list):
+            web_sources.extend(x for x in ws if isinstance(x, dict))
 
     out: dict[str, Any] = {}
     if inventory:
@@ -88,4 +92,6 @@ def typed_payloads_from_tool_messages(
         out["bibliography"] = bibliography
     if relation_trace:
         out["relation_trace"] = relation_trace
+    if web_sources:
+        out["web_sources"] = web_sources[:quote_candidate_cap]
     return out

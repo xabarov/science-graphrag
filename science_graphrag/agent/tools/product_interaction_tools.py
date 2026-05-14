@@ -23,7 +23,9 @@ def _research_plan_hint(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _user_question_hint(request_id: str, n_questions: int, questions: list[dict[str, Any]]) -> dict[str, Any]:
+def _user_question_hint(
+    request_id: str, n_questions: int, questions: list[dict[str, Any]]
+) -> dict[str, Any]:
     """Include bounded ``questions`` so the Ask UI can render without an extra round-trip."""
     return {
         "type": "user_question_asked",
@@ -93,7 +95,9 @@ class AskUserQuestionArgs(BaseModel):
 class BriefArgs(BaseModel):
     """Arguments for the ``brief`` tool (effective text capped at 240 chars in output)."""
 
-    text: str = Field(..., min_length=1, max_length=500, description="Short summary <=240 chars effective.")
+    text: str = Field(
+        ..., min_length=1, max_length=500, description="Short summary <=240 chars effective."
+    )
 
 
 def build_product_interaction_tools(settings: Settings) -> list[BaseTool]:
@@ -113,7 +117,7 @@ def build_product_interaction_tools(settings: Settings) -> list[BaseTool]:
                     "sse_hint": {"type": "research_plan_updated", "error": "missing_thread_id"},
                 }
             raw_items = [it.model_dump() for it in items]
-            plan = merge_research_plan_items(tid, raw_items)
+            plan = merge_research_plan_items(tid, raw_items, ui_mode="checklist")
             return {
                 "ok": True,
                 "item_count": len(plan.get("items") or []),
@@ -151,7 +155,9 @@ def build_product_interaction_tools(settings: Settings) -> list[BaseTool]:
                 "questions": q_payload,
                 "created_at": time.time(),
             }
-            get_session_memory_backend().patch_session_meta(tid, patch={"pending_user_question": pending})
+            get_session_memory_backend().patch_session_meta(
+                tid, patch={"pending_user_question": pending}
+            )
             return {
                 "ok": True,
                 "request_id": request_id,

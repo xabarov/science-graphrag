@@ -77,6 +77,7 @@ def test_plan_mode_seed_is_visible_as_snapshot() -> None:
         clear_session_store_for_tests()
     assert isinstance(plan, dict)
     assert len(plan.get("items") or []) == 3
+    assert plan.get("ui_mode") == "outline"
 
 
 def test_plan_mode_seed_localized_to_russian() -> None:

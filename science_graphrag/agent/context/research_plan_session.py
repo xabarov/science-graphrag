@@ -10,6 +10,11 @@ from science_graphrag.agent.context.session_store import get_session_for_thread
 
 _ALLOWED_STATUS = frozenset({"pending", "in_progress", "completed", "cancelled"})
 
+_RU_SEED_FIND_SOURCES = (
+    "Найти наиболее релевантные источники и подтверждающие материалы "
+    "в рабочей области."
+)
+
 
 def _norm_item(raw: dict[str, Any]) -> dict[str, Any] | None:
     iid = str(raw.get("id") or "").strip()
@@ -22,31 +27,100 @@ def _norm_item(raw: dict[str, Any]) -> dict[str, Any] | None:
     return {"id": iid, "content": content[:2000], "status": status}
 
 
-def merge_research_plan_items(thread_id: str, items: list[dict[str, Any]]) -> dict[str, Any]:
-    """Merge items by ``id`` into ``session_meta.research_plan``; return new plan dict."""
-    tid = (thread_id or "").strip()
-    if not tid:
-        return {"schema_version": "research_plan_v1", "items": [], "updated_at": time.time()}
-    ent = get_session_for_thread(tid)
-    meta = dict(ent.get("session_meta") or {})
-    prev = meta.get("research_plan")
+def _load_prev_plan_index(prev: Any) -> tuple[dict[str, dict[str, Any]], list[str]]:
     by_id: dict[str, dict[str, Any]] = {}
-    if isinstance(prev, dict):
-        for it in prev.get("items") or []:
-            if isinstance(it, dict) and str(it.get("id") or "").strip():
-                by_id[str(it["id"]).strip()] = dict(it)
+    prev_order_ids: list[str] = []
+    if not isinstance(prev, dict):
+        return by_id, prev_order_ids
+    raw_items = prev.get("items") or []
+    if not isinstance(raw_items, list):
+        return by_id, prev_order_ids
+    for it in raw_items:
+        if isinstance(it, dict) and str(it.get("id") or "").strip():
+            pid = str(it["id"]).strip()
+            prev_order_ids.append(pid)
+            by_id[pid] = dict(it)
+    return by_id, prev_order_ids
+
+
+def _apply_incoming_plan_rows(
+    by_id: dict[str, dict[str, Any]],
+    items: list[dict[str, Any]],
+) -> list[str]:
+    incoming_order: list[str] = []
     for raw in items:
         if not isinstance(raw, dict):
             continue
         norm = _norm_item(raw)
-        if norm:
-            by_id[norm["id"]] = norm
-    ordered = sorted(by_id.values(), key=lambda x: x["id"])
+        if not norm:
+            continue
+        by_id[norm["id"]] = norm
+        if norm["id"] not in incoming_order:
+            incoming_order.append(norm["id"])
+    return incoming_order
+
+
+def _stable_ordered_item_ids(
+    prev_order_ids: list[str],
+    incoming_order: list[str],
+    by_id: dict[str, dict[str, Any]],
+) -> list[str]:
+    ordered_ids: list[str] = []
+    for iid in prev_order_ids:
+        if iid in by_id and iid not in ordered_ids:
+            ordered_ids.append(iid)
+    for iid in incoming_order:
+        if iid not in ordered_ids:
+            ordered_ids.append(iid)
+    for iid in by_id:
+        if iid not in ordered_ids:
+            ordered_ids.append(iid)
+    return ordered_ids[:200]
+
+
+def _resolve_plan_ui_mode(prev: Any, *, incoming_ui: str | None) -> str | None:
+    prev_ui: str | None = None
+    if isinstance(prev, dict):
+        raw_um = prev.get("ui_mode")
+        if isinstance(raw_um, str) and raw_um.strip().lower() in {"outline", "checklist"}:
+            prev_ui = raw_um.strip().lower()
+    if incoming_ui in {"outline", "checklist"}:
+        return incoming_ui
+    return prev_ui
+
+
+def merge_research_plan_items(
+    thread_id: str,
+    items: list[dict[str, Any]],
+    *,
+    ui_mode: str | None = None,
+) -> dict[str, Any]:
+    """Merge items by ``id`` into ``session_meta.research_plan``; return new plan dict."""
+    tid = (thread_id or "").strip()
+    if not tid:
+        plan: dict[str, Any] = {
+            "schema_version": "research_plan_v1",
+            "items": [],
+            "updated_at": time.time(),
+        }
+        if isinstance(ui_mode, str) and ui_mode.strip().lower() in {"outline", "checklist"}:
+            plan["ui_mode"] = ui_mode.strip().lower()
+        return plan
+    ent = get_session_for_thread(tid)
+    meta = dict(ent.get("session_meta") or {})
+    prev = meta.get("research_plan")
+    by_id, prev_order_ids = _load_prev_plan_index(prev)
+    incoming_order = _apply_incoming_plan_rows(by_id, items)
+    ordered = [by_id[i] for i in _stable_ordered_item_ids(prev_order_ids, incoming_order, by_id)]
     plan = {
         "schema_version": "research_plan_v1",
-        "items": ordered[:200],
+        "items": ordered,
         "updated_at": time.time(),
     }
+    incoming_ui = ui_mode.strip().lower() if isinstance(ui_mode, str) and ui_mode.strip() else None
+    eff = _resolve_plan_ui_mode(prev, incoming_ui=incoming_ui)
+    if eff:
+        plan["ui_mode"] = eff
     get_session_memory_backend().patch_session_meta(tid, patch={"research_plan": plan})
     return plan
 
@@ -77,12 +151,12 @@ def seed_research_plan_if_empty(
             {
                 "id": "01_scope",
                 "content": f"Уточнить исследовательский вопрос и рамки сравнения{scope}",
-                "status": "completed",
+                "status": "pending",
             },
             {
                 "id": "02_sources",
-                "content": "Найти наиболее релевантные источники и подтверждающие материалы в рабочей области.",
-                "status": "in_progress",
+                "content": _RU_SEED_FIND_SOURCES,
+                "status": "pending",
             },
             {
                 "id": "03_synthesis",
@@ -95,12 +169,12 @@ def seed_research_plan_if_empty(
             {
                 "id": "01_scope",
                 "content": f"Clarify the research question and comparison scope{scope}",
-                "status": "completed",
+                "status": "pending",
             },
             {
                 "id": "02_sources",
                 "content": "Find the most relevant workspace sources and evidence.",
-                "status": "in_progress",
+                "status": "pending",
             },
             {
                 "id": "03_synthesis",
@@ -111,6 +185,7 @@ def seed_research_plan_if_empty(
     return merge_research_plan_items(
         tid,
         seed_items,
+        ui_mode="outline",
     )
 
 
@@ -132,6 +207,23 @@ def get_research_plan_snapshot_for_thread(thread_id: str | None) -> dict[str, An
     return dict(plan)
 
 
+def _plan_items_all_pending(items: list[Any]) -> bool:
+    return all(
+        str(it.get("status") or "pending").strip().lower() == "pending"
+        for it in items
+        if isinstance(it, dict) and str(it.get("id") or "").strip()
+    )
+
+
+def _research_plan_outline_prompt_lines(plan: dict[str, Any], items: list[Any]) -> bool:
+    ui_m = str(plan.get("ui_mode") or "").strip().lower()
+    if ui_m == "outline":
+        return True
+    if ui_m == "checklist":
+        return False
+    return _plan_items_all_pending(items)
+
+
 def research_plan_prompt_block(thread_id: str | None) -> str | None:
     """Return XML block for prompt reinjection (re-attach after compaction)."""
     tid = (thread_id or "").strip()
@@ -147,6 +239,7 @@ def research_plan_prompt_block(thread_id: str | None) -> str | None:
     items = plan.get("items") or []
     if not isinstance(items, list) or not items:
         return None
+    outline_prompt = _research_plan_outline_prompt_lines(plan, items)
     lines = []
     for it in items[:80]:
         if not isinstance(it, dict):
@@ -155,7 +248,10 @@ def research_plan_prompt_block(thread_id: str | None) -> str | None:
         st = str(it.get("status") or "").strip()
         ct = str(it.get("content") or "").strip().replace("\n", " ")[:240]
         if iid and ct:
-            lines.append(f"- [{st}] {iid}: {ct}")
+            if outline_prompt:
+                lines.append(f"- {iid}: {ct}")
+            else:
+                lines.append(f"- [{st}] {iid}: {ct}")
     if not lines:
         return None
     body = "\n".join(lines)

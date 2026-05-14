@@ -8,31 +8,53 @@ import { useTheme } from "@mui/material/styles";
 const STATUS_ORDER = { in_progress: 0, pending: 1, completed: 2, cancelled: 3 };
 
 /**
- * Structured checklist from ``session_meta.research_plan`` (mirrored in ``run_metadata.research_plan``).
+ * Structured plan from ``session_meta.research_plan`` (mirrored in ``run_metadata.research_plan``).
  *
  * @param {{
  *   t: (key: string, vars?: Record<string, string>) => string,
- *   plan: { items?: Array<{ id: string, content: string, status: string }> } | null | undefined,
+ *   plan: { items?: Array<{ id: string, content: string, status: string }>, ui_mode?: string } | null | undefined,
  *   streamHint: { item_count?: number, updated_at?: number } | null,
  * }} props
  */
 export default function AskResearchPlanPanel({ t, plan, streamHint }) {
   const tk = useTheme().appTokens;
-  const items = useMemo(() => {
+
+  const { items, isOutline } = useMemo(() => {
     const raw = plan && Array.isArray(plan.items) ? plan.items : [];
-    return raw
+    const mapped = raw
       .filter((x) => x && typeof x === "object" && String(x.id || "").trim())
       .map((x) => ({
         id: String(x.id),
         content: String(x.content || "").trim(),
         status: String(x.status || "pending").toLowerCase(),
-      }))
-      .sort((a, b) => {
+      }));
+    const uiMode = String(plan?.ui_mode || "").toLowerCase().trim();
+    if (uiMode === "checklist") {
+      const sorted = [...mapped].sort((a, b) => {
         const oa = STATUS_ORDER[a.status] ?? 9;
         const ob = STATUS_ORDER[b.status] ?? 9;
         if (oa !== ob) return oa - ob;
         return a.id.localeCompare(b.id);
       });
+      return { items: sorted, isOutline: false };
+    }
+    if (uiMode === "outline") {
+      return { items: mapped, isOutline: true };
+    }
+    /* Legacy plans without ui_mode: treat as checklist if statuses look like a tracker. */
+    const looksLikeChecklist = mapped.some(
+      (x) => x.status !== "pending" && x.status !== "cancelled",
+    );
+    if (looksLikeChecklist) {
+      const sorted = [...mapped].sort((a, b) => {
+        const oa = STATUS_ORDER[a.status] ?? 9;
+        const ob = STATUS_ORDER[b.status] ?? 9;
+        if (oa !== ob) return oa - ob;
+        return a.id.localeCompare(b.id);
+      });
+      return { items: sorted, isOutline: false };
+    }
+    return { items: mapped, isOutline: true };
   }, [plan]);
 
   const title = t("askPanel.researchPlan.title");
@@ -67,6 +89,26 @@ export default function AskResearchPlanPanel({ t, plan, streamHint }) {
       <Box sx={{ flex: 1, overflowY: "auto", py: 0.75, px: 1 }}>
         {items.length === 0 ? (
           <Typography sx={{ fontSize: "0.75rem", color: tk.text.faint, lineHeight: 1.45 }}>{empty}</Typography>
+        ) : isOutline ? (
+          <Box component="ol" sx={{ m: 0, pl: 2.1, color: tk.text.primary }}>
+            {items.map((row) => (
+              <Box
+                component="li"
+                key={row.id}
+                sx={{
+                  py: 0.45,
+                  borderBottom: `1px solid ${tk.border.subtle}`,
+                  "&:last-of-type": { borderBottom: "none" },
+                  fontSize: "0.75rem",
+                  lineHeight: 1.35,
+                }}
+              >
+                <Typography sx={{ fontSize: "0.75rem", color: tk.text.primary, lineHeight: 1.35 }}>
+                  {row.content}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
         ) : (
           items.map((row) => (
             <Box

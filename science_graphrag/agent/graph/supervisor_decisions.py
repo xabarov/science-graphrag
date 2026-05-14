@@ -38,6 +38,8 @@ from science_graphrag.agent.coordination.route_plan import (
 )
 from science_graphrag.agent.coordination.route_planner import (
     build_route_plan,
+)
+from science_graphrag.agent.coordination.route_planner import (
     planner_post_retrieval_handoff as _planner_post_retrieval_handoff,
 )
 from science_graphrag.agent.coordination.turn_policy import TurnPolicy
@@ -432,6 +434,11 @@ def maybe_replan_via_llm(
     )
 
 
+def question_features_from_agent_state(state: AgentState) -> QuestionFeatures:
+    """Read cached ``question_features`` from metadata or extract from the user prompt."""
+    return _features_from_state(state)
+
+
 __all__ = [
     "FirstHopDecision",
     "ReplanDecision",
@@ -442,5 +449,6 @@ __all__ = [
     "first_user_plain_question",
     "maybe_replan_via_llm",
     "normalized_question",
+    "question_features_from_agent_state",
     "should_skip_llm_router",
 ]

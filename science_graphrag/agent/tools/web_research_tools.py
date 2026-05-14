@@ -304,10 +304,23 @@ def _web_search_impl(
             link = f"https://doi.org/{doi}" if doi else ""
             items.append({"title": title, "doi": doi, "url": link})
     n = len(items)
+    web_sources = [
+        {
+            "title": str(it.get("title") or "").strip() or str(it.get("url") or "").strip(),
+            "url": str(it.get("url") or "").strip(),
+            "doi": str(it.get("doi") or "").strip(),
+            "source_tool": "web_search",
+            "snippet": "",
+        }
+        for it in items
+        if isinstance(it, dict)
+        and (str(it.get("url") or "").strip() or str(it.get("title") or "").strip())
+    ]
     return {
         "ok": True,
         "row_count": n,
         "items": items,
+        "web_sources": web_sources,
         "evidence_origin": "external_web",
         "sse_hint": {
             "type": "web_fetched",
@@ -471,6 +484,15 @@ def _web_fetch_impl(
         "row_count": 1,
         "url": final_url,
         "summary": summary or text[:_WEB_FETCH_FALLBACK_TEXT_CHAR_CAP],
+        "web_sources": [
+            {
+                "title": (urlparse(final_url).hostname or final_url).strip()[:512],
+                "url": final_url,
+                "doi": "",
+                "source_tool": "web_fetch",
+                "snippet": (summary or text)[:_WEB_FETCH_SUMMARY_CHAR_CAP],
+            }
+        ],
         "evidence_origin": "external_web",
         "sse_hint": {
             "type": "web_fetched",

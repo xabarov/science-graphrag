@@ -10,10 +10,11 @@ from science_graphrag.agent.tools.idea_search import IdeaSearchTool, _make_idea_
 from science_graphrag.agent.tools.plan_mode_tools import build_plan_mode_tools
 from science_graphrag.agent.tools.product_interaction_tools import build_product_interaction_tools
 from science_graphrag.agent.tools.summarize_workspace import SummarizeWorkspaceTool
+from science_graphrag.agent.tools.web_research_tools import build_web_research_tools
 from science_graphrag.agent.tools.workspace_paper_tools import build_workspace_paper_langchain_tools
 from science_graphrag.agent.tools.worktree_isolation_tools import build_worktree_isolation_tools
-from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings, get_settings
+from science_graphrag.stores.registry import StoreRegistry
 
 
 def _append_agent_surface_tools(
@@ -57,6 +58,7 @@ def build_retrieval_tools(
         ),
     ]
     out = catalog + core
+    out.extend(build_web_research_tools(settings=settings))
     _append_agent_surface_tools(out, stores, settings)
     return out
 
@@ -80,14 +82,10 @@ def build_tool_registry(stores: StoreRegistry, settings: Settings | None = None)
     out: list[BaseTool] = []
     out.extend(build_graph_tools(stores))
     out.extend(build_retrieval_tools(stores, settings))
-    from science_graphrag.agent.tools.web_research_tools import build_web_research_tools
-
-    out.extend(build_web_research_tools(settings=settings))
     if getattr(settings, "agent_doi_resolver_tool_enabled", False):
         from science_graphrag.agent.tools.doi_resolver_tool import build_doi_resolver_tool
 
         out.append(build_doi_resolver_tool(stores.neo4j, settings))
-    _append_agent_surface_tools(out, stores, settings)
     out.extend(build_writer_tools(stores))
     return out
 

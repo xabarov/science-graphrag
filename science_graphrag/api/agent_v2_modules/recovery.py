@@ -34,6 +34,7 @@ def salvage_answer_from_state(
         inventory=inventory if isinstance(inventory, dict) else None,
         messages=list(latest_full_state.get("messages") or []),
         specialist_results=specialist_results if isinstance(specialist_results, dict) else None,
+        web_sources=list(typed.get("web_sources") or []),
     )
     return True, str(state_answer).strip(), citations
 

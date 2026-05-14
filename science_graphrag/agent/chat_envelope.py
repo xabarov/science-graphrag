@@ -261,6 +261,7 @@ def collect_typed_payloads(state: AgentState | dict[str, Any]) -> dict[str, Any]
     quote_candidates: list[dict[str, Any]] = []
     bibliography: dict[str, Any] | None = None
     relation_trace: dict[str, Any] = {}
+    web_sources: list[dict[str, Any]] = []
     for _spec, payloads in specialist_results.items():
         for payload in payloads or []:
             if not isinstance(payload, dict):
@@ -277,6 +278,9 @@ def collect_typed_payloads(state: AgentState | dict[str, Any]) -> dict[str, Any]
             rt = payload.get("relation_trace")
             if isinstance(rt, dict) and rt:
                 relation_trace.update(rt)
+            ws = payload.get("web_sources")
+            if isinstance(ws, list):
+                web_sources.extend(x for x in ws if isinstance(x, dict))
     out: dict[str, Any] = {}
     if inventory:
         out["inventory"] = inventory
@@ -286,6 +290,8 @@ def collect_typed_payloads(state: AgentState | dict[str, Any]) -> dict[str, Any]
         out["bibliography"] = bibliography
     if relation_trace:
         out["relation_trace"] = relation_trace
+    if web_sources:
+        out["web_sources"] = web_sources[:50]
     return out
 
 

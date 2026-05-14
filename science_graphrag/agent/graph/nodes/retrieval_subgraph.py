@@ -33,14 +33,19 @@ SYSTEM_PROMPT = (
     "find_works (full-text work search; pass workspace_id when the user means "
     "this workspace, omit for corpus-wide search), paper_profile "
     "(metadata + authors for one work_id), paper_quote_search "
-    "(semantic chunk quotes), format_bibliography_gost, idea_search. "
+    "(semantic chunk quotes), format_bibliography_gost, idea_search, "
+    "web_search (Crossref metadata search for external scholarly literature), "
+    "web_fetch (GET + summarize one allowed scholarly URL). "
     "When <active_workspace_id> appears in the user message, use that exact "
     "UUID as workspace_id for "
     "workspace_inspect and for find_works whenever the question is scoped to this workspace. "
     "Use find_works (without workspace_id) only for global title search. Call paper_profile only "
     "when you have a real work_id (from find_works, workspace_inspect mode=papers or blurb—not "
     "stats alone). Use idea_search for open semantic discovery; use paper_quote_search for "
-    "verbatim evidence. Return findings through tool outputs only. Do not call final_answer."
+    "verbatim evidence. When the user explicitly asks about the internet, the web, online "
+    "discourse, or what people are saying outside the workspace corpus, start with web_search; "
+    "then use web_fetch for 1–3 relevant URLs when page text is needed. "
+    "Return findings through tool outputs only. Do not call final_answer."
 )
 
 

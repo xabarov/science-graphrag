@@ -42,6 +42,8 @@ const testMessages = {
   "askPanel.citation.tooltipGraphWork": "Open work graph",
   "askPanel.citation.linkReader": "Reader",
   "askPanel.citation.linkGraph": "Graph",
+  "askPanel.citation.linkWeb": "Open link",
+  "askPanel.citation.tooltipWebSource": "Open external source",
   "askPanel.citation.noWork": "No work",
   "askPanel.chunkLabel": "chunk",
 };
@@ -156,5 +158,26 @@ describe("AskSourceList", () => {
     expect(block.queryByText(/Citation #1 ·/)).toBeNull();
     expect(block.getByText("work_id: w-x")).toBeTruthy();
     expect(block.getByText("Source: Paper X")).toBeTruthy();
+  });
+
+  it("renders external web link for web citations", () => {
+    const { container } = renderWithTheme(
+      <AskSourceList
+        t={t}
+        answerClass="grounded_explanation"
+        citations={[
+          {
+            source_type: "web",
+            title: "Crossref hit",
+            url: "https://doi.org/10.9999/demo",
+            excerpt: "Summary text.",
+          },
+        ]}
+        chatDetailLevel="detailed"
+      />,
+    );
+    const link = container.querySelector('a[href="https://doi.org/10.9999/demo"]');
+    expect(link).toBeTruthy();
+    expect(link.textContent).toContain("Open link");
   });
 });

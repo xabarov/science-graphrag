@@ -106,6 +106,23 @@ def test_question_features_workspace_stats_ru() -> None:
     assert feats.language in ("ru", "mixed")
 
 
+def test_question_features_asks_for_web_research_ru() -> None:
+    feats = extract_question_features(
+        question="что говорят об этой теме в интернете?",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_web_research is True
+    assert "интернет" in feats.matched_markers
+
+
+def test_question_features_asks_for_web_research_en_online() -> None:
+    feats = extract_question_features(
+        question="What are people saying online about this topic?",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_web_research is True
+
+
 def test_question_features_ru_instruction_with_english_terms_stays_ru() -> None:
     feats = extract_question_features(
         question=(

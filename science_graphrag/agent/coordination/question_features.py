@@ -86,6 +86,23 @@ _QUOTE_VERBATIM_MARKERS: tuple[str, ...] = (
 )
 
 
+# Explicit internet / web research intent (retrieval must keep web_search / web_fetch).
+_WEB_RESEARCH_MARKERS_RU: tuple[str, ...] = (
+    "интернет",
+    "в интернете",
+    "веб",
+    "что говорят",
+    "сейчас обсуждают",
+)
+_WEB_RESEARCH_MARKERS_EN: tuple[str, ...] = (
+    "web",
+    "internet",
+    "online",
+    "current discussion",
+    "what are people saying",
+)
+
+
 _RU_LETTERS = re.compile(r"[а-яё]", re.IGNORECASE)
 _EN_LETTERS = re.compile(r"[a-z]", re.IGNORECASE)
 
@@ -116,6 +133,7 @@ class QuestionFeatures:
     asks_for_bibliography_gost: bool = False
     asks_for_anchor_free_quote: bool = False
     asks_for_relations: bool = False  # cited / paths / cypher / lineage
+    asks_for_web_research: bool = False
 
     matched_markers: tuple[str, ...] = field(default_factory=tuple)
 
@@ -134,6 +152,7 @@ class QuestionFeatures:
             "asks_for_bibliography_gost": bool(self.asks_for_bibliography_gost),
             "asks_for_anchor_free_quote": bool(self.asks_for_anchor_free_quote),
             "asks_for_relations": bool(self.asks_for_relations),
+            "asks_for_web_research": bool(self.asks_for_web_research),
             "matched_markers": list(self.matched_markers),
         }
 
@@ -171,6 +190,7 @@ class QuestionFeatures:
             asks_for_bibliography_gost=bool(payload.get("asks_for_bibliography_gost")),
             asks_for_anchor_free_quote=bool(payload.get("asks_for_anchor_free_quote")),
             asks_for_relations=bool(payload.get("asks_for_relations")),
+            asks_for_web_research=bool(payload.get("asks_for_web_research")),
             matched_markers=markers,
         )
 
@@ -249,6 +269,12 @@ def extract_question_features(
                 matched.append(needle)
                 break
 
+    asks_web_ru, hits_web_ru = _has_any(qn, _WEB_RESEARCH_MARKERS_RU)
+    matched.extend(hits_web_ru)
+    asks_web_en, hits_web_en = _has_any(qn, _WEB_RESEARCH_MARKERS_EN)
+    matched.extend(hits_web_en)
+    asks_web = bool(asks_web_ru or asks_web_en)
+
     return QuestionFeatures(
         raw_question=raw,
         normalized_question=qn,
@@ -262,6 +288,7 @@ def extract_question_features(
         asks_for_bibliography_gost=asks_gost,
         asks_for_anchor_free_quote=asks_anchor_free,
         asks_for_relations=asks_relations,
+        asks_for_web_research=asks_web,
         matched_markers=tuple(dict.fromkeys(matched)),  # de-dupe, preserve order
     )
 

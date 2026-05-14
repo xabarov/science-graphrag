@@ -64,6 +64,7 @@ def build_finalize_envelope_and_trace(
             inventory=inv_s if isinstance(inv_s, dict) else None,
             messages=list(latest_full_state.get("messages") or []),
             specialist_results=sr_s if isinstance(sr_s, dict) else None,
+            web_sources=list(typed_stream.get("web_sources") or []),
         )
     trace_list: list[dict[str, Any]] = [dict(t) for t in trace_for_run]
 

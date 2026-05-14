@@ -1,6 +1,7 @@
 import React from "react";
 import AccountTreeOutlinedIcon from "@mui/icons-material/AccountTreeOutlined";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Tooltip from "@mui/material/Tooltip";
@@ -64,70 +65,110 @@ export function AskSourceList({
       ) : (
         citations.map((c, i) => {
           const wid = c.work_id != null ? String(c.work_id) : "";
+          const extUrl = c.url != null ? String(c.url).trim() : "";
+          const isWebSource =
+            String(c.source_type || "").toLowerCase() === "web" ||
+            (Boolean(extUrl) &&
+              /^https?:\/\//i.test(extUrl) &&
+              !String(wid).trim());
           const chunkFingerprint = c.chunk_fingerprint != null ? String(c.chunk_fingerprint) : "";
           const sectionPath = c.section_path != null ? String(c.section_path) : "";
           const citationIndex = String(i + 1);
           const rank = citationRankFromRow(c, i);
           const traceExtras = citationTraceExtras(workspaceId, chunkFingerprint, sectionPath, citationIndex);
-          const readerUrl = buildStandaloneTracePath(READER_PATH, wid, traceExtras);
-          const graphUrl = buildStandaloneTracePath(GRAPH_PATH, wid, traceExtras);
+          const readerUrl = wid ? buildStandaloneTracePath(READER_PATH, wid, traceExtras) : "";
+          const graphUrl = wid ? buildStandaloneTracePath(GRAPH_PATH, wid, traceExtras) : "";
           const workTitle = pickCitationWorkTitle(c);
           const hasPassage = Boolean(pickCitationBodyText(c).trim());
           const suppressMissingPlaceholder =
             !hasPassage && (suppressMissingPassageChrome || allPassagesMissing || somePassagesMissing);
           const showWorkIdSecondary = chatDetailLevel === "detailed" && Boolean(wid.trim());
-          const deepLinks =
-            wid &&
-            (chatDetailLevel === "detailed" ? (
-              <>
-                <Tooltip title={t("askPanel.citation.tooltipArticle")}>
-                  <CursorSmallButton
-                    component={RouterLink}
-                    to={readerUrl}
-                    aria-label={t("askPanel.citation.tooltipArticle")}
-                    sx={{ textTransform: "none", minWidth: 0, px: 1.1 }}
-                  >
-                    {t("askPanel.citation.linkReader")}
-                  </CursorSmallButton>
-                </Tooltip>
-                <Tooltip title={t("askPanel.citation.tooltipGraphWork")}>
-                  <CursorSmallButton
-                    component={RouterLink}
-                    to={graphUrl}
-                    aria-label={t("askPanel.citation.tooltipGraphWork")}
-                    sx={{ textTransform: "none", minWidth: 0, px: 1.1 }}
-                  >
-                    {t("askPanel.citation.linkGraph")}
-                  </CursorSmallButton>
-                </Tooltip>
-              </>
-            ) : (
-              <>
-                <Tooltip title={t("askPanel.citation.tooltipArticle")}>
-                  <CursorIconButton
-                    component={RouterLink}
-                    to={readerUrl}
-                    aria-label={t("askPanel.citation.tooltipArticle")}
-                    size="small"
-                  >
-                    <ArticleOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                  </CursorIconButton>
-                </Tooltip>
-                <Tooltip title={t("askPanel.citation.tooltipGraphWork")}>
-                  <CursorIconButton
-                    component={RouterLink}
-                    to={graphUrl}
-                    aria-label={t("askPanel.citation.tooltipGraphWork")}
-                    size="small"
-                  >
-                    <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
-                  </CursorIconButton>
-                </Tooltip>
-              </>
-            ));
+          const doiStr = c.doi != null ? String(c.doi).trim() : "";
+          const showDoiSecondary = chatDetailLevel === "detailed" && Boolean(doiStr) && isWebSource;
+          const deepLinks = isWebSource && extUrl
+            ? chatDetailLevel === "detailed"
+              ? (
+                  <Tooltip title={t("askPanel.citation.tooltipWebSource")}>
+                    <CursorSmallButton
+                      component="a"
+                      href={extUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={t("askPanel.citation.tooltipWebSource")}
+                      sx={{ textTransform: "none", minWidth: 0, px: 1.1 }}
+                    >
+                      {t("askPanel.citation.linkWeb")}
+                    </CursorSmallButton>
+                  </Tooltip>
+                )
+              : (
+                  <Tooltip title={t("askPanel.citation.tooltipWebSource")}>
+                    <CursorIconButton
+                      component="a"
+                      href={extUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={t("askPanel.citation.tooltipWebSource")}
+                      size="small"
+                    >
+                      <OpenInNewOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                    </CursorIconButton>
+                  </Tooltip>
+                )
+            : wid
+              ? chatDetailLevel === "detailed"
+                ? (
+                    <>
+                      <Tooltip title={t("askPanel.citation.tooltipArticle")}>
+                        <CursorSmallButton
+                          component={RouterLink}
+                          to={readerUrl}
+                          aria-label={t("askPanel.citation.tooltipArticle")}
+                          sx={{ textTransform: "none", minWidth: 0, px: 1.1 }}
+                        >
+                          {t("askPanel.citation.linkReader")}
+                        </CursorSmallButton>
+                      </Tooltip>
+                      <Tooltip title={t("askPanel.citation.tooltipGraphWork")}>
+                        <CursorSmallButton
+                          component={RouterLink}
+                          to={graphUrl}
+                          aria-label={t("askPanel.citation.tooltipGraphWork")}
+                          sx={{ textTransform: "none", minWidth: 0, px: 1.1 }}
+                        >
+                          {t("askPanel.citation.linkGraph")}
+                        </CursorSmallButton>
+                      </Tooltip>
+                    </>
+                  )
+                : (
+                    <>
+                      <Tooltip title={t("askPanel.citation.tooltipArticle")}>
+                        <CursorIconButton
+                          component={RouterLink}
+                          to={readerUrl}
+                          aria-label={t("askPanel.citation.tooltipArticle")}
+                          size="small"
+                        >
+                          <ArticleOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                        </CursorIconButton>
+                      </Tooltip>
+                      <Tooltip title={t("askPanel.citation.tooltipGraphWork")}>
+                        <CursorIconButton
+                          component={RouterLink}
+                          to={graphUrl}
+                          aria-label={t("askPanel.citation.tooltipGraphWork")}
+                          size="small"
+                        >
+                          <AccountTreeOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+                        </CursorIconButton>
+                      </Tooltip>
+                    </>
+                  )
+              : null;
           return (
             <Box
-              key={wid ? `${wid}-${i}` : `citation-${i}`}
+              key={wid ? `${wid}-${i}` : extUrl ? `${extUrl}-${i}` : `citation-${i}`}
               id={`ask-citation-${i + 1}`}
               data-testid={`citation-block-${i}`}
               sx={{ mb: 1.25, fontSize: "0.8125rem", color: tk.text.secondary }}
@@ -157,6 +198,13 @@ export function AskSourceList({
                   sx={{ fontSize: "0.68rem", color: tk.text.faint, mt: 0.25, fontFamily: "monospace", wordBreak: "break-all" }}
                 >
                   {t("askPanel.citation.workIdLine", { id: wid })}
+                </Typography>
+              ) : null}
+              {showDoiSecondary ? (
+                <Typography
+                  sx={{ fontSize: "0.68rem", color: tk.text.faint, mt: 0.25, fontFamily: "monospace", wordBreak: "break-all" }}
+                >
+                  DOI: {doiStr}
                 </Typography>
               ) : null}
               <CitationBodyExpandable

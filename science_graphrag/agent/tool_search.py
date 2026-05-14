@@ -134,6 +134,25 @@ _RETRIEVAL_OPTIONAL_BASELINE = ("idea_search", "paper_quote_search")
 _RETRIEVAL_CORE_EXEMPT: frozenset[str] = frozenset(_RETRIEVAL_CORE_CATALOG)
 
 
+def _ensure_web_tools_in_picked(
+    picked: list[BaseTool],
+    tools: list[BaseTool],
+    *,
+    asks_for_web_research: bool,
+) -> None:
+    """Keep Crossref web tools available when the user explicitly asks for internet research."""
+    if not asks_for_web_research:
+        return
+    have = {getattr(t, "name", "") for t in picked}
+    for nm in ("web_search", "web_fetch"):
+        if nm in have:
+            continue
+        hit = next((t for t in tools if getattr(t, "name", "") == nm), None)
+        if hit is not None:
+            picked.append(hit)
+            have.add(nm)
+
+
 def _ensure_final_answer_in_picked(picked: list[BaseTool], tools: list[BaseTool]) -> None:
     names = {getattr(t, "name", "") for t in picked}
     if "final_answer" in names:
@@ -341,6 +360,7 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
     for_single_agent: bool = False,
     session: dict[str, Any] | None = None,
     lc_messages: Sequence[Any] | None = None,
+    asks_for_web_research: bool = False,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Return possibly narrowed tool list and debug meta for SSE / run_metadata."""
     if not settings.agent_rule_tool_search_enabled:
@@ -405,11 +425,18 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             tools,
             strict_deferred=strict_on,
         )
+        _ensure_web_tools_in_picked(
+            picked,
+            tools,
+            asks_for_web_research=asks_for_web_research,
+        )
     core_exempt = (
         _RETRIEVAL_CORE_EXEMPT
         if (specialist == "retrieval_agent" or for_single_agent)
         else frozenset()
     )
+    if asks_for_web_research and (specialist == "retrieval_agent" or for_single_agent):
+        core_exempt = frozenset(core_exempt) | frozenset({"web_search", "web_fetch"})
     if strict_on:
         picked, strict_removed_tools = apply_strict_deferred_activation_filter(
             picked,
@@ -443,6 +470,12 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
         message_discovery_merged=message_discovery_merged,
         carryover_merged=carryover_merged,
     )
+    if specialist == "retrieval_agent" or for_single_agent:
+        _ensure_web_tools_in_picked(
+            picked,
+            tools,
+            asks_for_web_research=asks_for_web_research,
+        )
 
     meta_out = _shortlist_build_rules_meta(
         picked,
@@ -531,6 +564,7 @@ def shortlist_tools_for_single_agent(
     answer_class: str | None = None,
     session: dict[str, Any] | None = None,
     lc_messages: Sequence[Any] | None = None,
+    asks_for_web_research: bool = False,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Rule-based shortlist for single-agent ReAct (full registry in one bind_tools surface)."""
 
@@ -544,4 +578,5 @@ def shortlist_tools_for_single_agent(
         for_single_agent=True,
         session=session,
         lc_messages=lc_messages,
+        asks_for_web_research=asks_for_web_research,
     )
