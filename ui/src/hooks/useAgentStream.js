@@ -61,6 +61,8 @@ export function useAgentStream({
       historyDigest = null,
       clientIdleMs = null,
       userStructuredAnswer = null,
+      webResearchEnabled = false,
+      agentMode = "agent",
     }) => {
       if (!String(question || "").trim()) return;
 
@@ -88,6 +90,8 @@ export function useAgentStream({
             max_tool_calls: maxToolCalls,
             thread_id: threadId || null,
             history_digest: historyDigest || null,
+            web_research_enabled: webResearchEnabled,
+            agent_mode: agentMode,
             ...(clientIdleMs != null && Number.isFinite(Number(clientIdleMs))
               ? { client_idle_ms: Math.max(0, Math.round(Number(clientIdleMs))) }
               : {}),

@@ -26,6 +26,7 @@ def build_finalize_envelope_and_trace(
     salvaged_after_recursion_limit: bool,
     initial_final_answer: str | None = None,
     initial_citations: list[Any] | None = None,
+    request_turn_warnings: list[str] | None = None,
 ) -> tuple[
     dict[str, Any],
     list[dict[str, Any]],
@@ -76,6 +77,10 @@ def build_finalize_envelope_and_trace(
             "answer_class_hint": answer_class_hint,
         }
         extra_stream_warnings: list[str] = []
+        for w in list(request_turn_warnings or []):
+            ws = str(w).strip()
+            if ws and ws not in extra_stream_warnings:
+                extra_stream_warnings.append(ws)
         if graph_salvage_stream:
             extra_stream_warnings.append("answer_salvaged_from_graph_tool")
         if quote_salvage_stream:
@@ -105,10 +110,15 @@ def build_finalize_envelope_and_trace(
             env_kw["extra_warnings"] = extra_stream_warnings
         envelope = build_chat_envelope(**env_kw)  # type: ignore[arg-type]
     else:
+        base_w = [] if workspace_id else ["no_workspace"]
+        for w in list(request_turn_warnings or []):
+            ws = str(w).strip()
+            if ws and ws not in base_w:
+                base_w.append(ws)
         envelope = {
             "answer_class": heuristic_answer_class(question, answer_class_hint),
             "evidence_summary": None,
-            "warnings": ([] if workspace_id else ["no_workspace"]),
+            "warnings": base_w,
         }
 
     return (

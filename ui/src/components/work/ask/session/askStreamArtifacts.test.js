@@ -35,5 +35,12 @@ describe("askStreamArtifacts", () => {
       { type: "research_plan_updated", item_count: 5 },
     ]);
     expect(h?.item_count).toBe(5);
+    expect(h?.seen).toBe(true);
+  });
+
+  it("extractResearchPlanStreamHint marks seen without item_count", () => {
+    const h = extractResearchPlanStreamHint([{ type: "research_plan_updated" }]);
+    expect(h?.seen).toBe(true);
+    expect(h?.item_count).toBeUndefined();
   });
 });

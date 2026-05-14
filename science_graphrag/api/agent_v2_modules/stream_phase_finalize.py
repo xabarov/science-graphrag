@@ -106,6 +106,7 @@ async def iter_finalize_stream_events(
         salvaged_after_recursion_limit=salvaged_after_recursion_limit,
         initial_final_answer=state.final_answer,
         initial_citations=state.citations,
+        request_turn_warnings=list(ctx.request_turn_warnings or []),
     )
 
     settings = ctx.settings
@@ -231,8 +232,20 @@ async def iter_finalize_stream_events(
         recursion_limit_value=recursion_limit_value,
     )
 
-    final_warnings = list(envelope.get("warnings") or [])
-    if history_digest_invalid and "history_digest_invalid" not in final_warnings:
+    _warn_seen: set[str] = set()
+    final_warnings: list[str] = []
+    for w in list(ctx.request_turn_warnings or []):
+        s = str(w).strip()
+        if s and s not in _warn_seen:
+            _warn_seen.add(s)
+            final_warnings.append(s)
+    for w in list(envelope.get("warnings") or []):
+        s = str(w).strip()
+        if s and s not in _warn_seen:
+            _warn_seen.add(s)
+            final_warnings.append(s)
+    if history_digest_invalid and "history_digest_invalid" not in _warn_seen:
+        _warn_seen.add("history_digest_invalid")
         final_warnings.append("history_digest_invalid")
 
     summary_excerpt: str | None = None

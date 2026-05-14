@@ -92,6 +92,9 @@ def build_finalize_run_metadata(
             ),
         },
     )
+    _req_frag = getattr(ctx, "request_run_metadata_fragment", None)
+    if isinstance(_req_frag, dict) and _req_frag:
+        run_meta.update(dict(_req_frag))
     debug_events_tail = (
         (latest_full_state or {}).get("debug_events", [])[-50:]
         if isinstance(latest_full_state, dict)

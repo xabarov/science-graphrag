@@ -54,6 +54,8 @@ class StreamLifecycleRequestContext:
     hook_chain_events: list[dict[str, Any]]
     prompt_memory_audit_initial: dict[str, Any] | None
     post_compact_paper_sources_restored_initial: int | None
+    request_turn_warnings: list[str] = field(default_factory=list)
+    request_run_metadata_fragment: dict[str, Any] = field(default_factory=dict)
 
 
 __all__ = ["StreamAgentLifecycleState", "StreamLifecycleRequestContext"]

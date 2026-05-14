@@ -100,7 +100,14 @@ export function useAskSubmit({
   }, [workspaceId]);
 
   const submit = useCallback(
-    async ({ query, threadId = null, historyDigest = null, userStructuredAnswer = null }) => {
+    async ({
+      query,
+      threadId = null,
+      historyDigest = null,
+      userStructuredAnswer = null,
+      webResearchEnabled = false,
+      agentMode = "agent",
+    }) => {
       if (!String(query || "").trim()) return null;
 
       if (useStreamingAgent) {
@@ -115,6 +122,8 @@ export function useAskSubmit({
           historyDigest,
           clientIdleMs: idleMs,
           userStructuredAnswer,
+          webResearchEnabled,
+          agentMode,
         });
         const normalized = lastStreamNormalizedRef.current;
         return {
@@ -141,6 +150,8 @@ export function useAskSubmit({
             thread_id: threadId || null,
             history_digest: historyDigest || null,
             client_idle_ms: Math.round(idleMs),
+            web_research_enabled: webResearchEnabled,
+            agent_mode: agentMode,
             ...(userStructuredAnswer && typeof userStructuredAnswer === "object"
               ? { user_structured_answer: userStructuredAnswer }
               : {}),

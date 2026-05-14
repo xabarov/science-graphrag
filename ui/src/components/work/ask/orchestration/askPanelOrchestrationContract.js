@@ -55,5 +55,9 @@ export const ASK_PANEL_ORCHESTRATION_RETURN_KEYS = Object.freeze(
     "researchPlanStreamHint",
     "openStructuredQuestion",
     "onStructuredAnswersSubmit",
+    "webResearchEnabled",
+    "agentMode",
+    "setWebResearchEnabled",
+    "setAgentMode",
   ].sort((a, b) => a.localeCompare(b)),
 );

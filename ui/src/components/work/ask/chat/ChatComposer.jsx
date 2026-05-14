@@ -1,11 +1,14 @@
 import React, { useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
+import PublicOutlinedIcon from "@mui/icons-material/PublicOutlined";
 import DeleteSweepOutlinedIcon from "@mui/icons-material/DeleteSweepOutlined";
 import KeyboardArrowUpRoundedIcon from "@mui/icons-material/KeyboardArrowUpRounded";
 import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import TextField from "@mui/material/TextField";
+import ToggleButton from "@mui/material/ToggleButton";
+import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
@@ -36,6 +39,10 @@ import { ChatContextPicker } from "./ChatContextPicker.jsx";
  *   onClearChatClick?: () => void,
  *   clearChatDisabled?: boolean,
  *   structuredAnswerPending?: boolean,
+ *   webResearchEnabled?: boolean,
+ *   onWebResearchEnabledChange?: (v: boolean) => void,
+ *   agentMode?: "agent" | "plan",
+ *   onAgentModeChange?: (m: "agent" | "plan") => void,
  * }} props
  */
 export function ChatComposer({
@@ -60,6 +67,10 @@ export function ChatComposer({
   onClearChatClick,
   clearChatDisabled = false,
   structuredAnswerPending = false,
+  webResearchEnabled = false,
+  onWebResearchEnabledChange,
+  agentMode = "agent",
+  onAgentModeChange,
 }) {
   const tk = useTheme().appTokens;
 
@@ -82,6 +93,19 @@ export function ChatComposer({
     },
     [loading, query, structuredAnswerPending],
   );
+
+  const handleAgentModeChange = useCallback(
+    (_e, next) => {
+      if (!next || !onAgentModeChange) return;
+      onAgentModeChange(next);
+    },
+    [onAgentModeChange],
+  );
+
+  const toggleWebResearch = useCallback(() => {
+    if (!onWebResearchEnabledChange || loading || structuredAnswerPending) return;
+    onWebResearchEnabledChange(!webResearchEnabled);
+  }, [loading, onWebResearchEnabledChange, structuredAnswerPending, webResearchEnabled]);
 
   const composerShellSx = useMemo(
     () => ({
@@ -158,6 +182,36 @@ export function ChatComposer({
           disabled={structuredAnswerPending}
           sx={{ ...inputSx, px: 0.5 }}
         />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap", px: 0.25 }}>
+          <ToggleButtonGroup
+            exclusive
+            size="small"
+            value={agentMode}
+            onChange={handleAgentModeChange}
+            disabled={loading || structuredAnswerPending}
+            aria-label={t("chat.composer.agentModeGroupAria")}
+            sx={{
+              "& .MuiToggleButton-root": {
+                fontSize: "0.75rem",
+                py: 0.25,
+                px: 0.85,
+                textTransform: "none",
+                borderRadius: "6px",
+                color: tk.text.muted,
+                border: `1px solid ${tk.border.default}`,
+              },
+              "& .MuiToggleButtonGroup-grouped": { borderRadius: "6px !important" },
+              "& .Mui-selected": {
+                color: `${tk.accent.fg} !important`,
+                backgroundColor: `${tk.accent.emphasisHoverBg} !important`,
+                borderColor: `${tk.accent.emphasisHoverBorder} !important`,
+              },
+            }}
+          >
+            <ToggleButton value="agent">{t("chat.composer.modeAgent")}</ToggleButton>
+            <ToggleButton value="plan">{t("chat.composer.modePlan")}</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
         <Box
           sx={{
             display: "flex",
@@ -218,6 +272,27 @@ export function ChatComposer({
                 <DeleteSweepOutlinedIcon sx={{ fontSize: "1rem" }} />
               </IconButton>
             ) : null}
+            <IconButton
+              type="button"
+              onClick={toggleWebResearch}
+              disabled={loading || structuredAnswerPending}
+              aria-label={
+                webResearchEnabled
+                  ? t("chat.composer.webResearchOnAria")
+                  : t("chat.composer.webResearchOffAria")
+              }
+              title={t("chat.composer.webResearchTitle")}
+              size="small"
+              sx={{
+                color: webResearchEnabled ? tk.accent.fg : tk.text.muted,
+                border: `1px solid ${webResearchEnabled ? tk.accent.emphasisHoverBorder : tk.border.default}`,
+                borderRadius: "6px",
+                backgroundColor: webResearchEnabled ? tk.accent.emphasisHoverBg : "transparent",
+                "&:hover": { backgroundColor: tk.control.navItemHoverBg },
+              }}
+            >
+              <PublicOutlinedIcon sx={{ fontSize: "1.05rem" }} />
+            </IconButton>
             <IconButton
               type="submit"
               size="small"

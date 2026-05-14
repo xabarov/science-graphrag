@@ -96,6 +96,8 @@ async def post_agent_query_v2(
                 history_digest_invalid=history_digest_invalid,
                 client_idle_ms=client_idle_ms,
                 user_structured_answer=body.user_structured_answer,
+                web_research_enabled=body.web_research_enabled,
+                agent_mode=body.agent_mode,
             )
         )
 

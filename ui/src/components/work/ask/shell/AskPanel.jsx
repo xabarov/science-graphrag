@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import Box from "@mui/material/Box";
 
 import { useFeedback } from "../../../feedback/index.js";
@@ -31,6 +31,19 @@ export default function AskPanel({
     urlSessionId,
     onUrlSessionIdChange,
   });
+
+  const showResearchPlanPanel = useMemo(() => {
+    const items = o.researchPlanForPanel?.items;
+    const n = Array.isArray(items) ? items.length : 0;
+    const hint = o.researchPlanStreamHint;
+    const hintFromStream =
+      hint &&
+      typeof hint === "object" &&
+      (Boolean(hint.seen) ||
+        (Number.isFinite(Number(hint.item_count)) && Number(hint.item_count) > 0) ||
+        (hint.updated_at != null && Number.isFinite(Number(hint.updated_at))));
+    return Boolean(n > 0 || hintFromStream || o.agentMode === "plan");
+  }, [o.researchPlanForPanel, o.researchPlanStreamHint, o.agentMode]);
 
   const handleDeleteSessionRequest = async (session) => {
     const n = Array.isArray(session?.entries) ? session.entries.length : 0;
@@ -152,9 +165,15 @@ export default function AskPanel({
                 standaloneMode={o.standaloneMode}
                 streamingHint={o.streamingHint}
                 structuredAnswerPending={Boolean(o.openStructuredQuestion)}
+                webResearchEnabled={o.webResearchEnabled}
+                onWebResearchEnabledChange={o.setWebResearchEnabled}
+                agentMode={o.agentMode}
+                onAgentModeChange={o.setAgentMode}
               />
             </Box>
-            <AskResearchPlanPanel t={o.t} plan={o.researchPlanForPanel} streamHint={o.researchPlanStreamHint} />
+            {showResearchPlanPanel ? (
+              <AskResearchPlanPanel t={o.t} plan={o.researchPlanForPanel} streamHint={o.researchPlanStreamHint} />
+            ) : null}
           </Box>
         </Box>
       </Box>

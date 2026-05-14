@@ -135,6 +135,25 @@ def _plan_mode_denies(
     return out
 
 
+def _turn_tool_denylist_denies(
+    *,
+    tcs: list[Any],
+    deny_names: frozenset[str],
+    existing: dict[str, str],
+) -> dict[str, str]:
+    """Deny specific tools for this turn (e.g. user-disabled web research)."""
+    if not deny_names:
+        return {}
+    out: dict[str, str] = {}
+    for tc in tcs:
+        if not isinstance(tc, dict):
+            continue
+        nm = normalize_tool_call_name(str(tc.get("name") or ""))
+        if nm and nm in deny_names and nm not in existing:
+            out[nm] = "turn_tool_denylist:user_disabled"
+    return out
+
+
 def _callback_denies(
     *,
     tcs: list[Any],
@@ -171,6 +190,7 @@ def compute_tool_denies(  # pylint: disable=too-many-arguments
     plan_mode_active: bool,
     plan_mode_high_risk: set[str],
     can_use_tool: CanUseTool | None,
+    turn_tool_denylist: frozenset[str] | None = None,
 ) -> DenyDecision:
     """Aggregate every deny source into a single ``{tool_name: reason}`` map.
 
@@ -179,8 +199,9 @@ def compute_tool_denies(  # pylint: disable=too-many-arguments
     1. tool policy (``no_tools`` / ``clarify``)
     2. mode allowlist (``allowed_names``)
     3. bound tool surface (per-turn shortlist)
-    4. plan_mode high-risk block list
-    5. ``CanUseTool`` callback (last-mile, can also synthesize errors)
+    4. explicit per-turn denylist (user toggles / policy caps)
+    5. plan_mode high-risk block list
+    6. ``CanUseTool`` callback (last-mile, can also synthesize errors)
 
     Each layer respects already-recorded reasons (first writer wins) so the
     most specific refusal is preserved across sources.
@@ -191,6 +212,13 @@ def compute_tool_denies(  # pylint: disable=too-many-arguments
     denies.update(_policy_denies(policy=policy, tcs=tcs))
     denies.update(_surface_denies(tcs=tcs, allowed_names=allowed_names, existing=denies))
     denies.update(_bound_denies(tcs=tcs, bound=bound, existing=denies))
+    denies.update(
+        _turn_tool_denylist_denies(
+            tcs=tcs,
+            deny_names=turn_tool_denylist or frozenset(),
+            existing=denies,
+        )
+    )
     denies.update(
         _plan_mode_denies(
             tcs=tcs,

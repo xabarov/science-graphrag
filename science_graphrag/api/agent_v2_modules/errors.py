@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import Final
 
@@ -59,6 +60,11 @@ def classify_agent_stream_error(exc: BaseException) -> tuple[str, str]:
     - ``llm_output_parse_error`` — JSON parse failures on model output.
     - ``internal_error`` — anything else, including unknown exception types.
     """
+    if isinstance(exc, asyncio.CancelledError):
+        return (
+            "internal_error",
+            "The agent run was cancelled before completion.",
+        )
     if isinstance(exc, AgentGraphDeadlineExceeded):
         return (
             "agent_turn_deadline_exceeded",

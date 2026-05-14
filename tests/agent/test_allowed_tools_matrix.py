@@ -81,3 +81,31 @@ def test_react_bound_tool_names_denies_calls_outside_shortlist() -> None:
     body = json.loads(str(getattr(msgs[0], "content", "") or ""))
     assert body.get("error") == "permission_denied"
     assert "not_in_bound_tool_surface" in str(body.get("reason") or "")
+
+
+def test_turn_tool_denylist_denies_named_tools() -> None:
+    @tool("web_search")
+    def web_search(x: str = "") -> dict:
+        """Stub web search."""
+        return {"ok": True}
+
+    st = Settings.model_construct()
+    state = build_initial_agent_state(
+        question="hi",
+        workspace_id=None,
+        max_tool_calls=4,
+        agent_runtime="langgraph_research_v1",
+        settings=st,
+        turn_tool_denylist=["web_search"],
+    )
+    tools_node = build_tool_execution_node(tools=[web_search], settings=st)
+    ai = AIMessage(
+        content="",
+        tool_calls=[{"name": "web_search", "id": "t1", "args": {}}],
+    )
+    out = tools_node({**state, "messages": [ai]}, None)
+    msgs = out.get("messages") or []
+    assert msgs
+    body = json.loads(str(getattr(msgs[0], "content", "") or ""))
+    assert body.get("error") == "permission_denied"
+    assert "turn_tool_denylist" in str(body.get("reason") or "")

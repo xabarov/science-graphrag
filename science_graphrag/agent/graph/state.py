@@ -10,6 +10,7 @@ from typing import Annotated, Any, TypedDict
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph.message import add_messages
 
+from science_graphrag.agent.request_turn_policy import utc_now_iso_z
 from science_graphrag.config import Settings, get_settings
 
 
@@ -57,6 +58,8 @@ def build_initial_agent_state(
     client_idle_ms: int | None = None,
     settings: Settings | None = None,
     user_structured_answer: dict[str, Any] | None = None,
+    turn_tool_denylist: list[str] | None = None,
+    server_time_utc_iso: str | None = None,
 ) -> dict[str, Any]:
     """Shared initial state for LangGraph agent runs (API v2 + RetrievalAgent runtime)."""
     from science_graphrag.agent.context.post_compact_attachments import (
@@ -131,6 +134,7 @@ def build_initial_agent_state(
     if tid_stripped and bool(getattr(st, "agent_research_plan_tool_enabled", False)):
         rp_block = research_plan_prompt_block(tid_stripped)
 
+    _time_iso = (server_time_utc_iso or "").strip() or utc_now_iso_z()
     user_content = format_user_with_memory(
         question=question,
         session_summary=pm_session_text,
@@ -145,6 +149,7 @@ def build_initial_agent_state(
         paper_sources_items=paper_sources_items,
         research_plan_block=rp_block,
         structured_user_answer_block=structured_answer_block,
+        server_time_utc_iso=_time_iso,
     )
     if post_compact_paper_sources_restored_count and tid_stripped:
         clear_paper_sources_capsule(tid_stripped)
@@ -184,6 +189,9 @@ def build_initial_agent_state(
             meta["post_compact_paper_sources_restored_count"] = int(
                 post_compact_paper_sources_restored_count
             )
+        _tdl_meta = [str(x).strip() for x in (turn_tool_denylist or []) if str(x).strip()]
+        if _tdl_meta:
+            meta["turn_tool_denylist"] = _tdl_meta
         ac = answer_class_hint or heuristic_answer_class(question, None)
         initial_debug: list[dict[str, Any]] = [
             *pre_debug,
@@ -275,6 +283,9 @@ def build_initial_agent_state(
         meta["post_compact_paper_sources_restored_count"] = int(
             post_compact_paper_sources_restored_count
         )
+    _tdl_meta2 = [str(x).strip() for x in (turn_tool_denylist or []) if str(x).strip()]
+    if _tdl_meta2:
+        meta["turn_tool_denylist"] = _tdl_meta2
     initial_intent = dict(turn_policy.sse_payload())
     initial_intent["run_kind"] = run_kind
     initial_intent["graph_id"] = graph_id

@@ -75,6 +75,8 @@ def test_sync_json_thread_id_session_init_and_session_summary_excerpt(monkeypatc
             history_digest: list | None,
             client_idle_ms: int | None = None,  # noqa: ARG002 — parity with real agent.run()
             user_structured_answer: dict | None = None,  # noqa: ARG002
+            web_research_enabled: bool | None = None,  # noqa: ARG002
+            agent_mode: str = "agent",  # noqa: ARG002
         ) -> AgentRunOutput:
             state = build_initial_agent_state(
                 question=question,
@@ -180,6 +182,8 @@ def test_sync_json_two_turns_same_thread_accumulates_excerpt(monkeypatch) -> Non
             history_digest: list | None,
             client_idle_ms: int | None = None,  # noqa: ARG002 — parity with real agent.run()
             user_structured_answer: dict | None = None,  # noqa: ARG002
+            web_research_enabled: bool | None = None,  # noqa: ARG002
+            agent_mode: str = "agent",  # noqa: ARG002
         ) -> AgentRunOutput:
             state = build_initial_agent_state(
                 question=question,

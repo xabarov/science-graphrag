@@ -110,6 +110,12 @@ export default {
   "chat.composer.enterHint": "Enter to send · Shift+Enter for newline",
   "chat.composer.clearChatAria": "Clear chat",
   "chat.composer.clearChatTitle": "Clear conversation and start a new session",
+  "chat.composer.modeAgent": "Agent",
+  "chat.composer.modePlan": "Plan",
+  "chat.composer.agentModeGroupAria": "Agent or plan mode for this message",
+  "chat.composer.webResearchOnAria": "Web research on — click to disable web search and fetch",
+  "chat.composer.webResearchOffAria": "Web research off — click to enable web search and fetch",
+  "chat.composer.webResearchTitle": "Web search and fetch (when enabled on server)",
 
   "chat.chrome.detailToggleAria":
     "Toggle answer detail level (trace rail, post-run status line, citation technical fields, structured blocks)",

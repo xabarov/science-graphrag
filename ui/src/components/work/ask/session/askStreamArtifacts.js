@@ -32,17 +32,17 @@ export function extractOpenStructuredQuestion(streamEvents) {
 
 /**
  * @param {unknown[]} streamEvents
- * @returns {{ item_count?: number, updated_at?: number } | null}
+ * @returns {{ seen?: true, item_count?: number, updated_at?: number } | null}
  */
 export function extractResearchPlanStreamHint(streamEvents) {
   const arr = Array.isArray(streamEvents) ? streamEvents : [];
-  /** @type {{ item_count?: number, updated_at?: number } | null} */
+  /** @type {{ seen?: true, item_count?: number, updated_at?: number } | null} */
   let last = null;
   for (const raw of arr) {
     if (!raw || typeof raw !== "object") continue;
     const e = /** @type {Record<string, unknown>} */ (raw);
     if (String(e.type || "") !== "research_plan_updated") continue;
-    last = {};
+    last = { seen: true };
     if (e.item_count != null && Number.isFinite(Number(e.item_count))) last.item_count = Number(e.item_count);
     if (e.updated_at != null && Number.isFinite(Number(e.updated_at))) last.updated_at = Number(e.updated_at);
   }

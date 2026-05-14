@@ -47,7 +47,6 @@ from science_graphrag.agent.subagents.runtime import (
     patch_spawn_rows_for_parent_terminal,
 )
 from science_graphrag.agent.trace import ToolCallTrace
-from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.observability.spans import (
     OpenInferenceAttributes,
@@ -56,6 +55,7 @@ from science_graphrag.observability.spans import (
     chain_span,
 )
 from science_graphrag.observability.spans.decorators import MIME_TYPE_JSON
+from science_graphrag.stores.registry import StoreRegistry
 
 # Backward-compatible names for imports expecting private symbols on this module.
 _coerce_optional_str = coerce_optional_str
@@ -151,6 +151,8 @@ class RetrievalAgent:
         history_digest: list[dict[str, Any]] | None = None,
         client_idle_ms: int | None = None,
         user_structured_answer: dict[str, Any] | None = None,
+        web_research_enabled: bool | None = None,
+        agent_mode: str = "agent",
     ) -> AgentRunOutput:
         tid = (thread_id or "").strip() or None
         session_id = tid or str(uuid.uuid4())
@@ -212,6 +214,8 @@ class RetrievalAgent:
                 history_digest=history_digest,
                 client_idle_ms=client_idle_ms,
                 user_structured_answer=user_structured_answer,
+                web_research_enabled=web_research_enabled,
+                agent_mode=agent_mode,
             )
 
     def _run_langgraph(  # pylint: disable=too-many-locals
@@ -225,6 +229,51 @@ class RetrievalAgent:
         history_digest: list[dict[str, Any]] | None = None,
         client_idle_ms: int | None = None,
         user_structured_answer: dict[str, Any] | None = None,
+        web_research_enabled: bool | None = None,
+        agent_mode: str = "agent",
+    ) -> AgentRunOutput:
+        from science_graphrag.agent.request_turn_policy import (
+            build_agent_request_turn_context,
+            clear_plan_mode_after_plan_turn,
+        )
+
+        turn_ctx = build_agent_request_turn_context(
+            self._settings,
+            thread_id=thread_id,
+            web_research_enabled=web_research_enabled,
+            agent_mode=agent_mode,
+        )
+        try:
+            return self._run_langgraph_inner(
+                question=question,
+                workspace_id=workspace_id,
+                max_tool_calls=max_tool_calls,
+                answer_class_hint=answer_class_hint,
+                thread_id=thread_id,
+                history_digest=history_digest,
+                client_idle_ms=client_idle_ms,
+                user_structured_answer=user_structured_answer,
+                turn_tool_denylist=turn_ctx.turn_tool_denylist,
+                warn_req=turn_ctx.warn_req,
+                req_meta_frag=turn_ctx.run_metadata_fragment,
+            )
+        finally:
+            clear_plan_mode_after_plan_turn(thread_id, requested_plan=(turn_ctx.mode == "plan"))
+
+    def _run_langgraph_inner(  # pylint: disable=too-many-locals
+        self,
+        *,
+        question: str,
+        workspace_id: str | None,
+        max_tool_calls: int,
+        answer_class_hint: str | None = None,
+        thread_id: str | None = None,
+        history_digest: list[dict[str, Any]] | None = None,
+        client_idle_ms: int | None = None,
+        user_structured_answer: dict[str, Any] | None = None,
+        turn_tool_denylist: list[str],
+        warn_req: list[str],
+        req_meta_frag: dict[str, Any],
     ) -> AgentRunOutput:
         budget = max_tool_calls or self._settings.agent_max_tool_calls
         session_summary = ""
@@ -243,6 +292,7 @@ class RetrievalAgent:
             client_idle_ms=client_idle_ms,
             settings=self._settings,
             user_structured_answer=user_structured_answer,
+            turn_tool_denylist=turn_tool_denylist,
         )
         pm_meta: dict[str, Any] | None = None
         meta0 = initial_state.get("metadata") or {}
@@ -315,7 +365,7 @@ class RetrievalAgent:
                 "agent.assistant_draft_answer_salvage",
                 {"answer_chars": len(answer or "")},
             )
-        merged_extra_warns = list(extra_warn or [])
+        merged_extra_warns = list(warn_req) + list(extra_warn or [])
         merged_extra_warns.extend(collect_subagent_fork_warning_codes(messages))
         envelope = build_chat_envelope(
             state=final_state,
@@ -407,6 +457,9 @@ class RetrievalAgent:
             mime_type=MIME_TYPE_JSON,
         )
 
+        pm_out: dict[str, Any] = dict(pm_meta or {})
+        pm_out.update(req_meta_frag)
+
         return AgentRunOutput(
             answer=answer,
             citations=citations,
@@ -429,7 +482,7 @@ class RetrievalAgent:
             phoenix_trace_id=current_otel_trace_id_hex(),
             thread_id=thread_id,
             brief=brief_out,
-            prompt_memory_run_metadata=pm_meta,
+            prompt_memory_run_metadata=pm_out if pm_out else None,
             subagent_runs=subagent_runs or None,
             subagent_task_notifications=_tn or None,
             subagent_observability_lane=_lane,

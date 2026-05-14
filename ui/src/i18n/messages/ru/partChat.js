@@ -111,6 +111,12 @@ export default {
   "chat.composer.enterHint": "Enter — отправить · Shift+Enter — новая строка",
   "chat.composer.clearChatAria": "Очистить чат",
   "chat.composer.clearChatTitle": "Очистить переписку и начать новую сессию",
+  "chat.composer.modeAgent": "Агент",
+  "chat.composer.modePlan": "План",
+  "chat.composer.agentModeGroupAria": "Режим агента или планирования для этого сообщения",
+  "chat.composer.webResearchOnAria": "Веб-поиск включён — нажмите, чтобы отключить поиск и загрузку страниц",
+  "chat.composer.webResearchOffAria": "Веб-поиск выключен — нажмите, чтобы включить поиск и загрузку страниц",
+  "chat.composer.webResearchTitle": "Поиск в интернете и загрузка URL (если включено на сервере)",
 
   "chat.chrome.detailToggleAria":
     "Переключить уровень детализации (трассировка, строка статуса после ответа, техполя цитат, структурированные блоки)",

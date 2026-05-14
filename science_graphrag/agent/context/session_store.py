@@ -59,6 +59,7 @@ def format_user_with_memory(
     paper_sources_items: list[dict[str, Any]] | None = None,
     research_plan_block: str | None = None,
     structured_user_answer_block: str | None = None,
+    server_time_utc_iso: str | None = None,
 ) -> str:
     """Build the first user message, optionally prefixing server/client memory (CH4+CH5).
 
@@ -72,8 +73,14 @@ def format_user_with_memory(
 
     ``research_plan_block`` / ``structured_user_answer_block`` are optional XML-ish carry-over
     fragments (session_meta re-attach and ask-user roundtrip).
+
+    ``server_time_utc_iso`` is injected for every turn so the model can reason about recency
+    without a separate datetime tool.
     """
     parts: list[str] = []
+    stu = str(server_time_utc_iso or "").strip()
+    if stu:
+        parts.append(f"<server_time_utc>{stu}</server_time_utc>")
     away_lines = [str(x).strip() for x in (away_recap_lines or []) if str(x).strip()]
     if away_lines:
         parts.append("<away_recap>\n" + "\n".join(f"- {x}" for x in away_lines) + "\n</away_recap>")

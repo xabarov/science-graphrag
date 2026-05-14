@@ -100,6 +100,8 @@ async function commitPersistedTurnToUiAndServer(ctx) {
  *
  * @param {{
  *   submit: (args: object) => Promise<object>,
+ *   webResearchEnabled: boolean,
+ *   agentMode: "agent" | "plan",
  *   workId: string,
  *   activeSessionId: string | null,
  *   locked: boolean,
@@ -121,6 +123,8 @@ async function commitPersistedTurnToUiAndServer(ctx) {
  */
 export function useAskPerformAgentSubmit({
   submit,
+  webResearchEnabled,
+  agentMode,
   workId,
   activeSessionId,
   locked,
@@ -159,6 +163,8 @@ export function useAskPerformAgentSubmit({
             threadId: submitSid || null,
             historyDigest,
             userStructuredAnswer: userStructuredAnswer && typeof userStructuredAnswer === "object" ? userStructuredAnswer : null,
+            webResearchEnabled,
+            agentMode,
           });
         } catch (submitExc) {
           composerSuppressHydrateTurnIdRef.current = "";
@@ -232,6 +238,8 @@ export function useAskPerformAgentSubmit({
     },
     [
       submit,
+      webResearchEnabled,
+      agentMode,
       workId,
       activeSessionId,
       locked,

@@ -5,6 +5,7 @@ import { CHAT_PATH } from "../../../../routes/paths.js";
 import { readAskServerSyncPref } from "../session/askSessionServerBridge.js";
 import { deriveAskScopeKey, readAskSessionUi } from "../session/askSessionState.js";
 import { buildStandaloneTracePath } from "../../traceability/traceabilityState.js";
+import { readAskComposerPrefs, writeAskComposerPrefs } from "../chat/askComposerPreferences.js";
 import { useAskSubmit } from "./useAskSubmit.js";
 import { useAskSessionLifecycle } from "./useAskSessionLifecycle.js";
 import { useAskPanelSessionHandlers } from "./useAskPanelSessionHandlers.js";
@@ -39,6 +40,9 @@ export function useAskPanelOrchestration({
   const locked = Boolean(scopedWorkId && String(scopedWorkId).trim());
   const [query, setQuery] = useState("");
   const [workId, setWorkId] = useState(locked ? String(scopedWorkId).trim() : initialWorkId);
+  const [composerPrefs, setComposerPrefs] = useState(() =>
+    readAskComposerPrefs(deriveAskScopeKey({ locked, scopedWorkId, workspaceId })),
+  );
   const [error, setError] = useState(null);
   const [normalized, setNormalized] = useState(null);
   const [history, setHistory] = useState([]);
@@ -73,7 +77,30 @@ export function useAskPanelOrchestration({
   useLayoutEffect(() => {
     scopeKeyRef.current = scopeKey;
   }, [scopeKey]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reload prefs when Ask scope changes
+    setComposerPrefs(readAskComposerPrefs(scopeKey));
+  }, [scopeKey]);
   const bumpSessions = useCallback(() => setSessionTick((v) => v + 1), []);
+  const setWebResearchEnabled = useCallback(
+    (next) => {
+      setComposerPrefs((prev) => {
+        const merged = { ...prev, webResearchEnabled: Boolean(next) };
+        writeAskComposerPrefs(scopeKeyRef.current, merged);
+        return merged;
+      });
+    },
+    [],
+  );
+  const setAgentMode = useCallback((next) => {
+    const mode = next === "plan" ? "plan" : "agent";
+    setComposerPrefs((prev) => {
+      const merged = { ...prev, agentMode: mode };
+      writeAskComposerPrefs(scopeKeyRef.current, merged);
+      return merged;
+    });
+  }, []);
   const { activeId: activeSessionId, sessions: sessionList } = readAskSessionUi(scopeKey, sessionTick);
   const inWorkspace = Boolean(workspaceWorkId && String(workspaceWorkId).trim());
   const corpusWorkspaceOnly = Boolean(String(workspaceId || "").trim() && !String(workId || "").trim() && !locked);
@@ -134,6 +161,8 @@ export function useAskPanelOrchestration({
     },
   });
 
+  const { webResearchEnabled, agentMode } = composerPrefs;
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setWorkId(locked ? String(scopedWorkId).trim() : initialWorkId || "");
@@ -141,6 +170,8 @@ export function useAskPanelOrchestration({
 
   const performAgentSubmit = useAskPerformAgentSubmit({
     submit,
+    webResearchEnabled,
+    agentMode,
     workId,
     activeSessionId,
     locked,
@@ -265,5 +296,9 @@ export function useAskPanelOrchestration({
     researchPlanStreamHint,
     openStructuredQuestion,
     onStructuredAnswersSubmit,
+    webResearchEnabled,
+    agentMode,
+    setWebResearchEnabled,
+    setAgentMode,
   };
 }

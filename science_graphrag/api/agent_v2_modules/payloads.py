@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -256,6 +256,18 @@ class AgentQueryRequestV2(BaseModel):
             "(``request_id`` + ``answers``); requires matching ``thread_id``."
         ),
     )
+    agent_mode: Literal["agent", "plan"] = Field(
+        default="agent",
+        description='UI mode: "plan" enables read-focused plan_mode for this turn (high-risk tools blocked).',
+    )
+    web_research_enabled: bool | None = Field(
+        default=None,
+        description=(
+            "When false, deny ``web_search`` / ``web_fetch`` for this turn. "
+            "When true, allow if ``agent_web_research_tools_enabled`` on server. "
+            "When null/omitted, preserve legacy behavior (allow if server-enabled)."
+        ),
+    )
 
     @field_validator("thread_id", mode="before")
     @classmethod
@@ -278,6 +290,12 @@ class AgentQueryRequestV2(BaseModel):
         if isinstance(v, dict) and v:
             return dict(v)
         return None
+
+    @field_validator("agent_mode", mode="before")
+    @classmethod
+    def _normalize_agent_mode(cls, v: object) -> str:
+        s = str(v or "agent").strip().lower()
+        return s if s in {"agent", "plan"} else "agent"
 
 
 class AgentQueryResponseV2(BaseModel):

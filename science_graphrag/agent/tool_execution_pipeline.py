@@ -83,6 +83,17 @@ def _thread_id_for_tool_context(st: AgentState) -> str | None:
     return None
 
 
+def _turn_tool_denylist_from_state(st: AgentState) -> frozenset[str]:
+    meta = st.get("metadata")
+    if not isinstance(meta, dict):
+        return frozenset()
+    raw = meta.get("turn_tool_denylist")
+    if not isinstance(raw, list) or not raw:
+        return frozenset()
+    out = {normalize_tool_call_name(str(x)) for x in raw if str(x).strip()}
+    return frozenset(x for x in out if x)
+
+
 _SIDECHAIN_LOCK = threading.Lock()
 
 
@@ -322,6 +333,7 @@ def build_tool_execution_node(
             plan_mode_active=plan_mode_active,
             plan_mode_high_risk=set(plan_mode_hi),
             can_use_tool=can_use_tool,
+            turn_tool_denylist=_turn_tool_denylist_from_state(st0),
         )
         if deny_decision.is_blocked():
             denies = deny_decision.denies

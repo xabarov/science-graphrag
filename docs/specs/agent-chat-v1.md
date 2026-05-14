@@ -106,6 +106,10 @@ Implementation: `science_graphrag.api.agent_v2_modules.stream_lifecycle.degraded
 | `thread_id` | string \| null | no | **CH4:** stable id for server-side session memory (`memory` = process-local dict, `redis` = shared store when configured); client may use chat session id |
 | `history_digest` | string \| list \| null | no | **CH4:** JSON **array** of turn objects, or that array as a JSON string; see §`history_digest` parsing |
 | `answer_class_hint` | string \| null | no | Optional hint for routing/UI; does not force model behavior |
+| `client_idle_ms` | int \| null | no | Client idle time for away-recap framing |
+| `user_structured_answer` | object \| null | no | Structured answers to prior `ask_user_question` |
+| `agent_mode` | `"agent"` \| `"plan"` | no | Defaults to `agent`. `plan` enables read-focused plan mode for this turn (high-risk tools blocked); cleared after the turn completes |
+| `web_research_enabled` | bool \| null | no | When `false`, `web_search` / `web_fetch` are denied for this turn when the server has web tools enabled. When `null`/omitted, legacy behavior: allow if server-enabled |
 
 ## Response envelope (`AgentQueryResponseV2`)
 

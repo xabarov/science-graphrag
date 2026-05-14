@@ -1,0 +1,182 @@
+"""Per-request agent controls (web research toggle, plan mode, server time hints)."""
+
+from __future__ import annotations
+
+import time
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Any, Literal
+
+from science_graphrag.agent.context.session_backend import get_session_memory_backend
+from science_graphrag.config import Settings
+
+WEB_RESEARCH_TOOL_NAMES: frozenset[str] = frozenset({"web_search", "web_fetch"})
+
+AgentUiMode = Literal["agent", "plan"]
+
+
+@dataclass(frozen=True)
+class AgentRequestTurnContext:
+    """Resolved per-request tool/session policy for one agent turn."""
+
+    mode: str
+    warn_req: list[str]
+    turn_tool_denylist: list[str]
+    run_metadata_fragment: dict[str, Any]
+
+
+def build_agent_request_turn_context(
+    settings: Settings,
+    *,
+    thread_id: str | None,
+    web_research_enabled: bool | None,
+    agent_mode: str,
+) -> AgentRequestTurnContext:
+    """Apply session plan_mode start-of-turn + compute denylist and transparency metadata."""
+    mode = (agent_mode or "agent").strip().lower()
+    if mode not in {"agent", "plan"}:
+        mode = "agent"
+    warn_req = list(apply_plan_mode_thread_start(thread_id, mode))
+    user_web = effective_web_research_user_enabled(web_research_enabled)
+    warn_req.extend(compute_request_warnings(settings, web_research_user_enabled=user_web))
+    tdl = compute_turn_tool_denylist(settings, web_research_user_enabled=user_web)
+    frag = build_request_run_metadata_fragment(
+        settings,
+        web_research_enabled=web_research_enabled,
+        agent_mode=mode,
+        turn_tool_denylist=tdl,
+        request_warnings=warn_req,
+    )
+    return AgentRequestTurnContext(
+        mode=mode,
+        warn_req=warn_req,
+        turn_tool_denylist=tdl,
+        run_metadata_fragment=frag,
+    )
+
+
+def utc_now_iso_z() -> str:
+    """Return current UTC time as ISO-8601 with Z suffix (stable for prompts)."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def effective_web_research_user_enabled(web_research_enabled: bool | None) -> bool:
+    """Legacy API clients send null/omit -> treat as enabled (previous behavior)."""
+    if web_research_enabled is None:
+        return True
+    return bool(web_research_enabled)
+
+
+def compute_turn_tool_denylist(
+    settings: Settings,
+    *,
+    web_research_user_enabled: bool,
+) -> list[str]:
+    """Tool names denied for this turn (execution layer), e.g. user-disabled web."""
+    deny: list[str] = []
+    deploy_web = bool(getattr(settings, "agent_web_research_tools_enabled", False))
+    if deploy_web and not web_research_user_enabled:
+        deny.extend(sorted(WEB_RESEARCH_TOOL_NAMES))
+    return deny
+
+
+def compute_request_warnings(
+    settings: Settings,
+    *,
+    web_research_user_enabled: bool,
+) -> list[str]:
+    """Warnings when user asks for web but deployment does not allow it."""
+    out: list[str] = []
+    if web_research_user_enabled and not bool(
+        getattr(settings, "agent_web_research_tools_enabled", False)
+    ):
+        out.append("web_research_requested_but_disabled_by_server")
+    return out
+
+
+def apply_plan_mode_thread_start(
+    thread_id: str | None,
+    agent_mode: str,
+) -> list[str]:
+    """Sync session_meta.plan_mode with UI agent_mode at turn start.
+
+    Returns warnings (e.g. plan mode requested without thread_id).
+    """
+    warnings: list[str] = []
+    tid = (thread_id or "").strip() or None
+    mode = (agent_mode or "agent").strip().lower()
+    if mode not in {"agent", "plan"}:
+        mode = "agent"
+    if not tid:
+        if mode == "plan":
+            warnings.append("plan_mode_requires_thread_id")
+        return warnings
+    be = get_session_memory_backend()
+    if mode == "plan":
+        payload = {
+            "active": True,
+            "entered_at": time.time(),
+            "note": "request_agent_mode_plan",
+        }
+        be.patch_session_meta(tid, patch={"plan_mode": payload})
+    else:
+        payload = {
+            "active": False,
+            "exited_at": time.time(),
+            "approved": True,
+            "reason": "request_agent_mode_agent",
+        }
+        be.patch_session_meta(tid, patch={"plan_mode": payload})
+    return warnings
+
+
+def clear_plan_mode_after_plan_turn(thread_id: str | None, *, requested_plan: bool) -> None:
+    """Exit request-scoped plan mode after a plan-mode turn completes."""
+    if not requested_plan:
+        return
+    tid = (thread_id or "").strip() or None
+    if not tid:
+        return
+    payload = {
+        "active": False,
+        "exited_at": time.time(),
+        "approved": True,
+        "reason": "request_agent_mode_plan_completed",
+    }
+    get_session_memory_backend().patch_session_meta(tid, patch={"plan_mode": payload})
+
+
+def build_request_run_metadata_fragment(
+    settings: Settings,
+    *,
+    web_research_enabled: bool | None,
+    agent_mode: str,
+    turn_tool_denylist: list[str],
+    request_warnings: list[str],
+) -> dict[str, Any]:
+    """Small fragment merged into run_metadata for UI transparency."""
+    user_on = effective_web_research_user_enabled(web_research_enabled)
+    deploy_web = bool(getattr(settings, "agent_web_research_tools_enabled", False))
+    return {
+        "request_web_research_enabled": web_research_enabled,
+        "effective_web_research_user_enabled": user_on,
+        "effective_web_research_tools": bool(deploy_web and user_on),
+        "request_agent_mode": (agent_mode or "agent").strip().lower(),
+        "turn_tool_denylist": list(turn_tool_denylist),
+        "request_turn_warnings": list(request_warnings),
+    }
+
+
+__all__ = [
+    "WEB_RESEARCH_TOOL_NAMES",
+    "AgentRequestTurnContext",
+    "AgentUiMode",
+    "apply_plan_mode_thread_start",
+    "build_agent_request_turn_context",
+    "build_request_run_metadata_fragment",
+    "clear_plan_mode_after_plan_turn",
+    "compute_request_warnings",
+    "compute_turn_tool_denylist",
+    "effective_web_research_user_enabled",
+    "utc_now_iso_z",
+]

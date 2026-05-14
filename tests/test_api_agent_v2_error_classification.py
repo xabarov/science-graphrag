@@ -7,6 +7,7 @@ UI can localize them via ``chat.errors.<error_class>`` keys.
 
 from __future__ import annotations
 
+import asyncio
 import httpx
 
 from science_graphrag.api.agent_v2_modules.errors import (
@@ -84,6 +85,12 @@ def test_classify_internal_error_for_unknown_exception() -> None:
     cls, msg = classify_agent_stream_error(RuntimeError("kaboom"))
     assert cls == "internal_error"
     assert "kaboom" in msg
+
+
+def test_classify_cancelled_error_as_internal_cancelled() -> None:
+    cls, msg = classify_agent_stream_error(asyncio.CancelledError())
+    assert cls == "internal_error"
+    assert "cancelled" in msg.lower()
 
 
 def test_classify_agent_turn_deadline() -> None:

@@ -85,6 +85,8 @@ async def execute_agent_query_v2_json_response(
             history_digest=history_digest,
             client_idle_ms=body.client_idle_ms,
             user_structured_answer=body.user_structured_answer,
+            web_research_enabled=body.web_research_enabled,
+            agent_mode=body.agent_mode,
         )
     except AgentGraphDeadlineExceeded as exc:
         duration_ms = int((perf_counter() - started) * 1000)
