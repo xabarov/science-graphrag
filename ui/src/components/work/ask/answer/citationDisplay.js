@@ -52,6 +52,10 @@ export function isWorkOnlyCitation(c) {
  */
 export function formatCitationHeadline(args) {
   const { rank, citation, chatDetailLevel, t } = args;
+  const isWebSource = String(citation?.source_type || "").toLowerCase() === "web";
+  if (isWebSource) {
+    return t("askPanel.citation.webRankLabel", { rank });
+  }
   const workOnly = isWorkOnlyCitation(citation);
   const rankLabel = t(workOnly ? "askPanel.citation.workRankLabel" : "askPanel.citation.rankLabel", { rank });
   const score = citationNumericScore(citation);

@@ -26,10 +26,17 @@ export function deriveShowAsFoundPapers(answerClass, citations) {
  * @param {Record<string, unknown>[]} citations
  */
 export function deriveSourceListPresentation(answerClass, citations) {
+  const allWebOnly =
+    citations.length > 0 &&
+    citations.every((c) => String(c?.source_type || "").toLowerCase() === "web");
   const showAsFoundPapers = deriveShowAsFoundPapers(answerClass, citations);
-  const citationListLabelKey = showAsFoundPapers ? "askPanel.citations.inventoryTitle" : "askPanel.citations.title";
+  const citationListLabelKey = allWebOnly
+    ? "askPanel.citations.webTitle"
+    : showAsFoundPapers
+      ? "askPanel.citations.inventoryTitle"
+      : "askPanel.citations.title";
   const missingPassageCount = citations.filter((c) => !pickCitationBodyText(c).trim()).length;
-  const suppressMissingPassageChrome = showAsFoundPapers;
+  const suppressMissingPassageChrome = showAsFoundPapers || allWebOnly;
   const allPassagesMissing =
     !suppressMissingPassageChrome && citations.length > 0 && missingPassageCount === citations.length;
   const somePassagesMissing =

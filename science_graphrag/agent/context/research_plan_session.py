@@ -11,9 +11,10 @@ from science_graphrag.agent.context.session_store import get_session_for_thread
 _ALLOWED_STATUS = frozenset({"pending", "in_progress", "completed", "cancelled"})
 
 _RU_SEED_FIND_SOURCES = (
-    "Найти наиболее релевантные источники и подтверждающие материалы "
-    "в рабочей области."
+    "Найти наиболее релевантные источники и подтверждающие материалы " "в рабочей области."
 )
+_RU_SEED_SCOPE = "Уточнить цель запроса и критерии ответа."
+_EN_SEED_SCOPE = "Clarify the request goal and answer criteria."
 
 
 def _norm_item(raw: dict[str, Any]) -> dict[str, Any] | None:
@@ -144,13 +145,12 @@ def seed_research_plan_if_empty(
         if isinstance(prev, dict) and isinstance(prev.get("items"), list) and prev["items"]:
             return dict(prev)
     q = " ".join(str(question or "").strip().split())[:240]
-    scope = f": {q}" if q else ""
     has_ru = any(("а" <= ch.lower() <= "я") or ch.lower() == "ё" for ch in q)
     if has_ru:
         seed_items = [
             {
                 "id": "01_scope",
-                "content": f"Уточнить исследовательский вопрос и рамки сравнения{scope}",
+                "content": _RU_SEED_SCOPE,
                 "status": "pending",
             },
             {
@@ -168,7 +168,7 @@ def seed_research_plan_if_empty(
         seed_items = [
             {
                 "id": "01_scope",
-                "content": f"Clarify the research question and comparison scope{scope}",
+                "content": _EN_SEED_SCOPE,
                 "status": "pending",
             },
             {
@@ -187,6 +187,77 @@ def seed_research_plan_if_empty(
         seed_items,
         ui_mode="outline",
     )
+
+
+def reset_research_plan_for_explicit_web_followup(
+    thread_id: str | None,
+    *,
+    question: str | None = None,
+) -> dict[str, Any] | None:
+    """Replace current thread plan with a concise web-research outline.
+
+    Used when a follow-up turn explicitly shifts intent to internet research, so
+    the right panel does not keep showing stale corpus-plan bullets.
+    """
+    tid = (thread_id or "").strip()
+    if not tid:
+        return None
+    q = " ".join(str(question or "").strip().split())
+    has_ru = any(("а" <= ch.lower() <= "я") or ch.lower() == "ё" for ch in q)
+    if has_ru:
+        rows = [
+            {
+                "id": "01_web_scope",
+                "content": "Уточнить веб-вопрос и критерии релевантности.",
+                "status": "pending",
+            },
+            {
+                "id": "02_web_search",
+                "content": "Найти внешние источники через web_search.",
+                "status": "pending",
+            },
+            {
+                "id": "03_web_fetch",
+                "content": "Открыть 1–3 ключевые URL через web_fetch и извлечь факты.",
+                "status": "pending",
+            },
+            {
+                "id": "04_web_synthesis",
+                "content": "Собрать выводы и ссылки на внешние источники.",
+                "status": "pending",
+            },
+        ]
+    else:
+        rows = [
+            {
+                "id": "01_web_scope",
+                "content": "Clarify the web question and relevance criteria.",
+                "status": "pending",
+            },
+            {
+                "id": "02_web_search",
+                "content": "Find external sources via web_search.",
+                "status": "pending",
+            },
+            {
+                "id": "03_web_fetch",
+                "content": "Fetch 1–3 key URLs with web_fetch and extract facts.",
+                "status": "pending",
+            },
+            {
+                "id": "04_web_synthesis",
+                "content": "Synthesize findings and cite external sources.",
+                "status": "pending",
+            },
+        ]
+    plan = {
+        "schema_version": "research_plan_v1",
+        "items": rows[:200],
+        "updated_at": time.time(),
+        "ui_mode": "outline",
+    }
+    get_session_memory_backend().patch_session_meta(tid, patch={"research_plan": plan})
+    return plan
 
 
 def get_research_plan_snapshot_for_thread(thread_id: str | None) -> dict[str, Any] | None:

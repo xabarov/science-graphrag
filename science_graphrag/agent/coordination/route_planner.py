@@ -220,6 +220,13 @@ def planner_post_retrieval_handoff(  # pylint: disable=too-many-return-statement
     if "workspace_inspect" in tool_names and features.asks_for_workspace_stats:
         return "retrieval_completion_workspace_stats"
 
+    # Explicit web/internet requests are considered minimally complete only after at
+    # least one ``web_fetch`` call (web_search-only is metadata, often too shallow).
+    if features.asks_for_web_research:
+        if tool_counts.get("web_fetch", 0) > 0:
+            return "retrieval_completion_web_research"
+        return None
+
     if (
         {"find_works", "paper_profile"}.issubset(tool_names)
         and not features.asks_for_compare
@@ -275,6 +282,11 @@ def derive_retrieval_completion_state(
         if features.asks_for_workspace_stats and tool_counts.get("workspace_inspect", 0) > 0:
             return "any_specialist_payload"
         return "evidence_insufficient"
+    if features.asks_for_web_research:
+        if tool_counts.get("web_fetch", 0) > 0:
+            return "minimal_bundle_ready"
+        if tool_counts.get("web_search", 0) > 0:
+            return "evidence_insufficient"
     handoff = planner_post_retrieval_handoff(
         features=features,
         tool_counts=tool_counts,

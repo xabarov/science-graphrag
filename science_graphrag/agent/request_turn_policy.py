@@ -7,13 +7,29 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Literal
 
-from science_graphrag.agent.context.research_plan_session import seed_research_plan_if_empty
+from science_graphrag.agent.context.research_plan_session import (
+    reset_research_plan_for_explicit_web_followup,
+    seed_research_plan_if_empty,
+)
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
 from science_graphrag.config import Settings
 
 WEB_RESEARCH_TOOL_NAMES: frozenset[str] = frozenset({"web_search", "web_fetch"})
 
 AgentUiMode = Literal["agent", "plan"]
+
+_WEB_INTENT_MARKERS: tuple[str, ...] = (
+    "интернет",
+    "в интернете",
+    "веб",
+    "что говорят",
+    "сейчас обсуждают",
+    "web",
+    "internet",
+    "online",
+    "current discussion",
+    "what are people saying",
+)
 
 
 @dataclass(frozen=True)
@@ -24,6 +40,13 @@ class AgentRequestTurnContext:
     warn_req: list[str]
     turn_tool_denylist: list[str]
     run_metadata_fragment: dict[str, Any]
+
+
+def _asks_for_web_followup(question: str | None) -> bool:
+    q = " ".join(str(question or "").strip().lower().split())
+    if not q:
+        return False
+    return any(marker in q for marker in _WEB_INTENT_MARKERS)
 
 
 def build_agent_request_turn_context(
@@ -41,6 +64,11 @@ def build_agent_request_turn_context(
     warn_req = list(apply_plan_mode_thread_start(thread_id, mode))
     if mode == "plan":
         seed_research_plan_if_empty(thread_id, question=question)
+    if mode == "agent" and _asks_for_web_followup(question):
+        reset_research_plan_for_explicit_web_followup(
+            thread_id,
+            question=question,
+        )
     user_web = effective_web_research_user_enabled(web_research_enabled)
     warn_req.extend(compute_request_warnings(settings, web_research_user_enabled=user_web))
     tdl = compute_turn_tool_denylist(settings, web_research_user_enabled=user_web)

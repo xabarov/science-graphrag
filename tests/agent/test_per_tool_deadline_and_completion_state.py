@@ -196,3 +196,37 @@ def test_supervisor_decision_uses_completion_state() -> None:
 
     reason = compute_post_retrieval_handoff(state=state, settings=settings)
     assert reason == "retrieval_completion_minimal_bundle"
+
+
+def test_derive_retrieval_completion_state_web_search_only_is_insufficient() -> None:
+    from science_graphrag.agent.coordination.route_planner import (
+        derive_retrieval_completion_state,
+    )
+
+    feats = extract_question_features(
+        question="поищи в интернете по теме object detection",
+        workspace_id="ws-1",
+    )
+    cs = derive_retrieval_completion_state(
+        features=feats,
+        tool_counts={"web_search": 1},
+        has_payloads=True,
+    )
+    assert cs == "evidence_insufficient"
+
+
+def test_derive_retrieval_completion_state_web_fetch_ready() -> None:
+    from science_graphrag.agent.coordination.route_planner import (
+        derive_retrieval_completion_state,
+    )
+
+    feats = extract_question_features(
+        question="what are people saying online about this topic?",
+        workspace_id="ws-1",
+    )
+    cs = derive_retrieval_completion_state(
+        features=feats,
+        tool_counts={"web_search": 1, "web_fetch": 1},
+        has_payloads=True,
+    )
+    assert cs == "minimal_bundle_ready"

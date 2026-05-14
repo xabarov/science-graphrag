@@ -25,11 +25,13 @@ function renderWithTheme(node) {
 const testMessages = {
   "askPanel.citations.title": "Citations",
   "askPanel.citations.inventoryTitle": "Found papers",
+  "askPanel.citations.webTitle": "Web sources",
   "askPanel.citations.none": "No citations",
   "askPanel.citation.noSnippetBulkAll": "No passages in all citations",
   "askPanel.citation.noSnippetBulkPartial": "No passages in some citations",
   "askPanel.citation.rankLabel": "Citation #{{rank}}",
   "askPanel.citation.workRankLabel": "Paper #{{rank}}",
+  "askPanel.citation.webRankLabel": "Source #{{rank}}",
   "askPanel.citation.sourceLine": "Source: {{title}}",
   "askPanel.citation.workIdLine": "work_id: {{id}}",
   "askPanel.citation.noSnippet": "No snippet",
@@ -179,5 +181,7 @@ describe("AskSourceList", () => {
     const link = container.querySelector('a[href="https://doi.org/10.9999/demo"]');
     expect(link).toBeTruthy();
     expect(link.textContent).toContain("Open link");
+    expect(screen.getByText("Web sources")).toBeTruthy();
+    expect(screen.getByText("Source #1")).toBeTruthy();
   });
 });

@@ -560,6 +560,23 @@ def test_planner_post_retrieval_handoff_quote_evidence() -> None:
     assert reason == "retrieval_completion_quote_evidence"
 
 
+def test_planner_post_retrieval_handoff_web_research_requires_fetch() -> None:
+    feats = extract_question_features(
+        question="what are people saying online about this topic?",
+        workspace_id="ws-1",
+    )
+    reason_only_search = planner_post_retrieval_handoff(
+        features=feats,
+        tool_counts={"web_search": 1},
+    )
+    assert reason_only_search is None
+    reason_with_fetch = planner_post_retrieval_handoff(
+        features=feats,
+        tool_counts={"web_search": 1, "web_fetch": 1},
+    )
+    assert reason_with_fetch == "retrieval_completion_web_research"
+
+
 def test_question_features_to_dict_serializable() -> None:
     feats = extract_question_features(question="how many papers?", workspace_id="ws-1")
     payload = feats.to_dict()

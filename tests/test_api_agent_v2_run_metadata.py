@@ -32,6 +32,25 @@ def test_build_run_metadata_includes_canonical_base_fields() -> None:
     assert "resolved_chat_llm_model" in meta
 
 
+def test_build_run_metadata_includes_openrouter_reference_pricing() -> None:
+    settings = Settings(
+        extraction_llm_base_url="https://openrouter.ai/api/v1",
+        extraction_llm_model="openai/gpt-4o-mini",
+        chat_llm_model="openai/gpt-4o-mini",
+    )
+    meta = build_run_metadata(
+        settings=settings,
+        max_tool_calls=5,
+    )
+    pricing = meta.get("openrouter_reference_pricing_usd_per_1m")
+    assert isinstance(pricing, dict)
+    chat = pricing.get("chat")
+    assert isinstance(chat, dict)
+    assert chat.get("model_id") == "openai/gpt-4o-mini"
+    assert chat.get("prompt_usd_per_1m") == 0.15
+    assert chat.get("completion_usd_per_1m") == 0.6
+
+
 def test_apply_runtime_metadata_from_state_overrides_runtime_attribution() -> None:
     run_meta = {"run_kind": "old_kind", "graph_id": "old_graph"}
     patched = apply_runtime_metadata_from_state(

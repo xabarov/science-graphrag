@@ -44,7 +44,8 @@ SYSTEM_PROMPT = (
     "stats alone). Use idea_search for open semantic discovery; use paper_quote_search for "
     "verbatim evidence. When the user explicitly asks about the internet, the web, online "
     "discourse, or what people are saying outside the workspace corpus, start with web_search; "
-    "then use web_fetch for 1–3 relevant URLs when page text is needed. "
+    "then use web_fetch for 1–3 relevant URLs to ground the answer with page content. "
+    "For explicit web intent, do not finish with web_search-only metadata when fetchable URLs exist. "
     "Return findings through tool outputs only. Do not call final_answer."
 )
 

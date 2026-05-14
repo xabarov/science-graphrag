@@ -14,6 +14,9 @@ from science_graphrag.agent.debug_events_telemetry import (
 from science_graphrag.agent.llm.chat import effective_chat_llm_model
 from science_graphrag.agent.runtime import current_otel_trace_id_hex
 from science_graphrag.config import Settings
+from science_graphrag.llm.openrouter_model_registry import (
+    openrouter_reference_pricing_run_metadata,
+)
 
 
 def thread_insight_audit_fragment(
@@ -44,12 +47,20 @@ def thread_insight_audit_fragment(
 
 def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
     """LLM fields attached to agent run_metadata (extraction vs chat model split)."""
-    return {
+    meta = {
         "extraction_llm_model": settings.extraction_llm_model,
         "extraction_llm_base_url": settings.extraction_llm_base_url,
         "chat_llm_model": settings.chat_llm_model,
         "resolved_chat_llm_model": effective_chat_llm_model(settings),
     }
+    meta.update(
+        openrouter_reference_pricing_run_metadata(
+            base_url=settings.extraction_llm_base_url,
+            chat_model_id=str(meta.get("resolved_chat_llm_model") or ""),
+            extraction_model_id=settings.extraction_llm_model,
+        )
+    )
+    return meta
 
 
 def build_run_metadata(

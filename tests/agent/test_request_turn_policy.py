@@ -103,3 +103,34 @@ def test_plan_mode_seed_localized_to_russian() -> None:
     assert isinstance(items, list) and items
     text = " ".join(str(x.get("content") or "") for x in items if isinstance(x, dict)).lower()
     assert "уточн" in text and "источник" in text
+
+
+def test_agent_mode_web_followup_resets_plan_to_web_outline() -> None:
+    from science_graphrag.agent.context.research_plan_session import (
+        get_research_plan_snapshot_for_thread,
+    )
+    from science_graphrag.agent.context.session_store import clear_session_store_for_tests
+
+    try:
+        clear_session_store_for_tests()
+        build_agent_request_turn_context(
+            Settings.model_construct(),
+            thread_id="thr_web_followup",
+            question="Составь план исследования по объектному детектированию",
+            web_research_enabled=False,
+            agent_mode="plan",
+        )
+        build_agent_request_turn_context(
+            Settings.model_construct(),
+            thread_id="thr_web_followup",
+            question="поищи в интернете",
+            web_research_enabled=True,
+            agent_mode="agent",
+        )
+        plan = get_research_plan_snapshot_for_thread("thr_web_followup")
+    finally:
+        clear_session_store_for_tests()
+    assert isinstance(plan, dict)
+    assert plan.get("ui_mode") == "outline"
+    ids = [str(x.get("id") or "") for x in (plan.get("items") or []) if isinstance(x, dict)]
+    assert ids[:2] == ["01_web_scope", "02_web_search"]

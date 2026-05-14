@@ -48,6 +48,21 @@ describe("AskResearchPlanPanel", () => {
     expect(ol).toBeTruthy();
   });
 
+  it("uses concise seed scope copy for outline panel", () => {
+    renderWithTheme(
+      <AskResearchPlanPanel
+        t={t}
+        streamHint={null}
+        plan={{
+          ui_mode: "outline",
+          items: [{ id: "01_scope", content: "Уточнить цель запроса и критерии ответа.", status: "pending" }],
+        }}
+      />,
+    );
+    expect(screen.getByText("Уточнить цель запроса и критерии ответа.")).toBeTruthy();
+    expect(screen.queryByRole("checkbox")).toBeNull();
+  });
+
   it("renders checklist mode with disabled checkboxes", () => {
     renderWithTheme(
       <AskResearchPlanPanel
