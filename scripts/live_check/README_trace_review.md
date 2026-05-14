@@ -25,6 +25,15 @@ Use `--skip-e2e` for fast smoke (still runs HTTP suite checks against `--base-ur
 
 Optional: `--with-compaction-turns N` runs `compaction_turn_review.py` after the main artifact is written and merges `compaction_events` into `--out-json` via `--emit-merged-into` (defaults to the same path).
 
+For focused R3 diagnosis use:
+
+- `--compaction-mode focused_long_thread`
+- `--compaction-max-retries-per-turn 1` (or higher for bounded retries)
+
+This mode classifies slow timeout-like turns as deterministic `silent_hang_turn_N`
+when elapsed time crosses `--silent-hang-threshold-sec` (default `180`), while
+still reporting `http_timeout_turn_N` for regular timeout failures.
+
 For hotspot PRs, choose the exact `profile` / `suite` from
 `docs/runbooks/agent-trace-review-sop.md` §0.2. This README is the quick command
 reference; the SOP is the source of truth for Wave G blocking vs advisory policy.

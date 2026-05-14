@@ -1,0 +1,55 @@
+{
+  "run_metadata": {
+    "tier": "claims_holdout_v1",
+    "runtime_mode": "live_single_case_aggregate"
+  },
+  "summary": {
+    "case_count": 5,
+    "pass_count": 1,
+    "all_passed": false,
+    "mean_claim_recall": 0.1,
+    "mean_claim_precision": 0.0622
+  },
+  "cases": [
+    {
+      "case_id": "holdout_atss_v1",
+      "passed": true,
+      "claim_recall": 0.25,
+      "claim_precision": 0.1111111111111111,
+      "min_claim_recall": 0.22,
+      "source": "eval/results/r6-claims-holdout-atss-2026-05-13.json"
+    },
+    {
+      "case_id": "holdout_yolov3_v1",
+      "passed": false,
+      "claim_recall": 0.0,
+      "claim_precision": 0.0,
+      "min_claim_recall": 0.55,
+      "source": "eval/results/r6-claims-holdout-yolov3-2026-05-13.json"
+    },
+    {
+      "case_id": "holdout_yolox_v1",
+      "passed": false,
+      "claim_recall": 0.0,
+      "claim_precision": 0.0,
+      "min_claim_recall": 0.55,
+      "source": "eval/results/r6-claims-holdout-yolox-2026-05-13.json"
+    },
+    {
+      "case_id": "holdout_dino_v1",
+      "passed": false,
+      "claim_recall": 0.0,
+      "claim_precision": 0.0,
+      "min_claim_recall": 0.55,
+      "source": "eval/results/r6-claims-holdout-dino-2026-05-13.json"
+    },
+    {
+      "case_id": "holdout_deformable_detr_v1",
+      "passed": false,
+      "claim_recall": 0.25,
+      "claim_precision": 0.2,
+      "min_claim_recall": 0.55,
+      "source": "eval/results/r6-claims-holdout-deformable-detr-2026-05-13.json"
+    }
+  ]
+}

@@ -49,7 +49,66 @@ export AGENT_LIVE_WORKSPACE_ID=ws-pilot-od
   --out-md eval/results/trace-regression-r3-long-thread-heavy-YYYY-MM-DD.md
 ```
 
+### 2b. Representative lane (W3 — stable API + acceptance-shaped load)
+
+Use **stable** live-check API (`http://127.0.0.1:18787`) per project rules, then:
+
+1. **Formal acceptance-shaped trace-review** (requires workspace):
+
+```bash
+export AGENT_LIVE_BASE=http://127.0.0.1:18787
+export AGENT_LIVE_WORKSPACE_ID=ws-pilot-od
+.venv/bin/python scripts/live_check/agent_trace_review.py \
+  --suite acceptance \
+  --timeout 240 \
+  --out-json eval/results/diagnostics/trace-review-r3-representative-$(date -I).json \
+  --out-md eval/results/diagnostics/trace-review-r3-representative-$(date -I).md
+```
+
+2. **Compaction lane** merged into the same JSON (or standalone):
+
+```bash
+.venv/bin/python scripts/live_check/agent_trace_review.py \
+  --suite acceptance \
+  --with-compaction-turns 4 \
+  --compaction-mode focused_long_thread \
+  --compaction-max-retries-per-turn 1 \
+  --timeout 240 \
+  --out-json eval/results/diagnostics/trace-review-r3-representative-compaction-$(date -I).json \
+  --out-md eval/results/diagnostics/trace-review-r3-representative-compaction-$(date -I).md
+```
+
+**Operator decision matrix (record in this doc):**
+
+| Observation | Decision |
+|---------------|----------|
+| `side_llm_cache_read_ratio_avg >= 0.4` on acceptance lane + no trust regression | Eligible to revisit provider-gated → promote (per Wave H charter) |
+| Cache weak **and** latency/cost up vs paired baseline | Keep **provider-gated** or **operator-off** L4 (`SCIENCE_GRAPHRAG_AGENT_LLM_FULL_HISTORY_COMPACT_ENABLED`) |
+| `compaction_turn_review.failure_reason` non-null | Fix infra/timeout first; do not interpret cache until lane is green |
+
 **Record here after run:**
+
+| Field | Value |
+|-------|-------|
+| Representative JSON (path) | `eval/results/diagnostics/...` |
+| `side_llm_cache_read_ratio_avg` | |
+| `post_compact_paper_sources_restored_total` | |
+| `compaction_turn_review.failure_reason` | |
+| Operator decision | provider-gated / promote / operator-off |
+
+Representative acceptance lane (2026-05-13, rerun `r4`, bounded e2e + compaction):
+
+| Field | Value |
+|-------|-------|
+| Baseline JSON | `eval/results/diagnostics/trace-review-r3-representative-2026-05-13-r4.json` |
+| Candidate JSON | `eval/results/diagnostics/trace-review-r3-representative-candidate-2026-05-13-r4.json` |
+| Compare JSON/MD | `eval/results/diagnostics/trace-regression-r3-representative-2026-05-13-r4.json` / `...md` |
+| Compare status | `pass` |
+| `side_llm_cache_read_ratio_avg` (baseline / candidate) | `null / null` |
+| `post_compact_paper_sources_restored_total` (baseline / candidate) | `0 / 0` |
+| `compaction_turn_review.failure_reason` | `null` |
+| Additional failures in both lanes | `e2e_failed` (bounded timeout), `failed_check:agent_v2_malicious_deny` on candidate |
+| Operator decision | `provider-gated` (insufficient cache/paper evidence for promotion) |
 
 | Field | Value |
 |-------|-------|

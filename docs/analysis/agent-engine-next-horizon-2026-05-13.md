@@ -29,11 +29,11 @@ stabilization and depth pass, not a "more agents" pass.
 | Wave | Theme | Outcome | Start condition |
 |------|-------|---------|-----------------|
 | **R0** | Roadmap reconciliation | One source of truth for open gates / flags / artifacts. | **Done** (2026-05-13); matrix in companion doc. |
-| **R1** | Observability refactor | Trace-review and compare gates become maintainable modules. | Before new agent runtime gates. |
+| **R1** | Observability refactor | Trace-review and compare gates become maintainable modules. | **Done** (2026-05-13); keep future gates modular. |
 | **R2** | Chat contract (closed 2026-05-13) | SSE/product layers + `degraded_mode` + `product_step` policy frozen in spec; follow-ups: `agent_note` pilot (optional), tool-map maintenance. | **Done** — [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md); normative: [`../specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §R2. |
 | **R3** | Context memory | Long-thread compaction and `thread_insights` split into cost vs memory layers; **rollout `provider-gated`** until long-thread metrics clear (see baseline checklist). | R1 metrics available. |
 | **R4** | Real subagent runtime | **Slice delivered:** sync spawned `corpus_explore` child (fanout 1), SSE lifecycle + merge provenance in metadata. **R4-next:** hardening (cancellation/timeouts, paired latency compare) — no fanout>1 / no async child runtime until live evidence lanes are reliable. | R2 contract frozen (spec §R2); R4-next also needs repeatable live/trace lanes (R3 experience). |
-| **R5** | Benchmark promotion discipline | **Wave executed 2026-05-13:** judge stays **advisory** (strict calibration red); closeout [`r5-benchmark-promotion-discipline-closeout-2026-05-13.md`](./r5-benchmark-promotion-discipline-closeout-2026-05-13.md); manifest `eval/results/r5-wave-2026-05-13-manifest.json`. | Can run in parallel after R1. |
+| **R5** | Benchmark promotion discipline | **Wave executed 2026-05-13:** judge stays **advisory** (strict calibration red); closeout [`r5-benchmark-promotion-discipline-closeout-2026-05-13.md`](./r5-benchmark-promotion-discipline-closeout-2026-05-13.md); manifest `eval/results/r5-wave-2026-05-13-manifest.json`; only narrow residual policy / runner follow-ups remain. | Can run in parallel after R1; do not reopen as a broad feature wave. |
 | **R6** | Ingestion quality baseline | Corpus quality / claims / retrieval / dedup measured before headline updates. | Before publication metric refresh. |
 | **R7** | Ingestion architecture | Structured executor, year/venue writeback, dedup parity slices. | R6 baseline exists. |
 | **R8** | Artifact hygiene | Canonical vs diagnostics storage split, no noisy committed live dumps. | Before benchmark expansion scale-up. |
@@ -85,6 +85,29 @@ execution. It missed or under-specified:
   committing sensitive local paths, workspace ids, prompts, or corpus excerpts.
 
 These are included in the wave roadmap below rather than left as loose follow-ups.
+
+---
+
+## 1.4 Execution stance for the next cycle
+
+Before going wave by wave, keep four labels separate:
+
+- **done:** no new roadmap work beyond ordinary maintenance;
+- **residual follow-up:** wave is closed, but a narrow policy or refactor tail remains;
+- **blocked by evidence:** shipped code path exists, but rollout or expansion depends on live
+  signals;
+- **depends on baseline:** do not widen refactor or product scope until a measurement pass
+  identifies the bottleneck.
+
+Applied to the current roadmap:
+
+- **R1** is **done**; the remaining duty is to keep new gates modular.
+- **R5** is a **closed wave with residual follow-ups**, not a new broad execution track.
+- **R3** and **R4-next** are **blocked by evidence** rather than by missing implementation.
+- **R7** and **R9** both **depend on baseline** from **R6**.
+
+This distinction is intentional: it prevents us from mixing "code shipped", "operator trust",
+"promotion gate", and "product polish" into one vague next-step list.
 
 ---
 
@@ -605,6 +628,11 @@ write a smaller "behavior-preserving split" checklist first.
 - **Do not reopen R2 here:** any chat/SSE wording changes still go through spec alignment,
   not through the R3 lane.
 
+**Execution stance:** treat R3 as an **operator/evidence track**. The code path is already
+shipped; the remaining work is to make representative long-thread signals trustworthy enough
+to decide between `provider-gated`, `promote`, and `operator-off`, not to start another broad
+memory rewrite.
+
 **Scope:**
 
 - L4 `llm_history_compact`
@@ -632,6 +660,11 @@ write a smaller "behavior-preserving split" checklist first.
    - latency/cost;
    - memory influence audit.
 5. Keep `runtime_tool_summary` separate from `progress_tool_summary`.
+6. Stabilize the focused long-thread lane before using it as an authority for rollout
+   decisions: close or materially advance `[OPEN] Stabilize focused long-thread live probe
+   (R3) against hung /v2/agent/query` in [`refactor-backend.md`](../backlog/refactor-backend.md),
+   so operator evidence either completes with per-turn telemetry or fails fast with a
+   deterministic reason.
 
 **Already delivered inside this wave:**
 
@@ -715,6 +748,11 @@ slice**, but it **does** block irresponsible expansion: without repeatable long-
 cache / compaction observability, adding fanout, async children, or many new task types
 would increase complexity faster than evidence.
 
+**Execution stance:** treat R4-next as **hardening-only maintenance** of the shipped slice
+until evidence says otherwise. The slice itself is already real enough to maintain; what is
+not allowed is to quietly convert that maintenance track into fanout growth or a new async
+runtime program.
+
 **Preconditions (from R3 operator experience):**
 
 1. **Stable live contour** and predictable operator recovery (see long-running ops /
@@ -742,6 +780,12 @@ flowchart TD
   R4Slice --> R4Next
 ```
 
+**Implementation progress (2026-05-13, code inspection + paired lane prep):**
+
+- **Spawn cancel on parent failure:** `stream_phase_routing_leg_abort.py` + `ActiveRoutingLegAbortSpec` in `stream_lifecycle.py` cancel in-flight spawns when the parent hits **deadline** or **recursion limit** (terminal `timed_out` / `killed` semantics).
+- **Telemetry honesty:** SSE + sync JSON still record `agent_response_deadline_enforces_upstream_cancel: False` at the graph step level — meaning **HTTP client disconnect** is not yet wired as an automatic graph cancel (separate R4-next track if product requires it).
+- **Measurement lane:** operator paired compare remains [`docs/runbooks/r4-r3-paired-compare.md`](../runbooks/r4-r3-paired-compare.md); export `latency_p95_ms` when the lane script merges summaries.
+
 **R4-next work items (evidence-first; still no fanout>1 / no async child runtime until explicitly approved):**
 
 1. Harden **cancellation / timeout propagation** for the spawned path; ensure `killed`
@@ -752,6 +796,10 @@ flowchart TD
    provenance holes discovered in production-like traces.
 4. **Optional** second read-only child task type — only after (1)–(3) stay green; still
    **fanout 1** global policy until a later wave explicitly revisits fanout.
+
+**Explicitly out of scope for R4-next:** fanout > 1, async/background child runtime,
+coordinator children, or a broader zoo of task types. Any of those requires a dedicated ADR
+revision plus a separate evidence lane.
 
 **R4-next stop condition:** halt expansion and keep the shipped slice if lifecycle remains
 incomplete, paired latency regresses >25% without a clear fix, or live lanes remain too
@@ -801,6 +849,10 @@ Interpretation:
 
 **Goal:** keep LLM-as-judge useful without letting it become a false authority.
 
+**Execution stance:** **R5 is closed as a wave.** What remains is a narrow residual tail for
+policy and maintainability; this section should not be treated as a standing invitation to
+open another broad benchmark program while strict calibration remains red.
+
 **Scope:**
 
 - `agent_v3_quality_judge_v1`;
@@ -809,7 +861,7 @@ Interpretation:
 - cross-family research;
 - runner/report split.
 
-**Work items:**
+**Residual follow-ups only:**
 
 1. Keep current pilot/holdout frozen until a judge-prompt revision is explicitly
    started.
@@ -823,6 +875,10 @@ Interpretation:
    third "manual adjudication" lane.
 5. Split `eval/agent_v3_quality/runner.py` after R1 or in parallel if conflicts are low.
 6. Keep cost axis (`cost_delta`) next to quality axis in all summaries.
+
+**What is not left here:** reopening Wave D promotion, broadening the judge lane into a new
+gate family, or spending repeated live runtime on promotion experiments before a single
+coordinated remediation iteration is chosen.
 
 **Acceptance:**
 
@@ -858,6 +914,10 @@ on promotion. Use it as regression smell, not release gate.
 
 **Goal:** measure whether the corpus can support better answers before spending more
 cycles on runtime architecture.
+
+**Execution stance:** this is the baseline gate for the next non-runtime work. Do not widen
+R7 into a broad repair/refactor program, and do not reopen publication headline updates,
+until R6 tells us whether the larger bottleneck is runtime quality or corpus/ingest quality.
 
 **Scope:**
 
@@ -913,6 +973,10 @@ benchmark trust.
 
 **Depends on:** R6 baseline.
 
+**Execution stance:** R7 is intentionally downstream of R6. Treat it as a targeted repair
+track that consumes baseline findings, not as a parallel modernization wave that starts
+speculatively while the main quality bottleneck is still unknown.
+
 **Work items:**
 
 1. Claims structured executor standardization:
@@ -957,6 +1021,10 @@ extractor prompts further until gold tiers are clarified (`production_realistic`
 
 **Goal:** keep benchmark artifacts reviewable and prevent diagnostics from polluting
 canonical results.
+
+**Execution stance:** finish at least the policy/guardrail layer before the next benchmark
+or live-trace scale-up. If the full storage migration is too large for one pass, land the
+sanitizer/linter first and use that as the boundary preventing further hygiene drift.
 
 **Scope:**
 
@@ -1004,6 +1072,10 @@ users can understand.
 **Why this is last:** R9 should consume stable chat contract (R2), quality baseline
 (R6), and graph/retrieval evidence. Doing it earlier risks polishing the wrong
 runtime behavior.
+
+**Execution stance:** this is a consumer/product wave, not the current polish target. Do not
+treat R9 as the next default implementation step unless R6 already says the evidence path is
+stable enough to polish, or a prototype-only demo is explicitly requested.
 
 **Work items:**
 
@@ -1055,22 +1127,21 @@ R0 status reconciliation
   └─ R8 artifact hygiene (can start after R0; should finish before scale-up)
 ```
 
-Recommended order:
+Recommended order for the **next** cycle:
 
-1. **R0 + R1** first: remove ambiguity and protect the gate.
-2. **R3** operator policy: code is shipped; **rollout may remain `provider-gated`** until
-   representative long-thread metrics improve — maintain both **formal acceptance** and
-   **forced diagnostic** lanes per [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md).
-3. **R4 vertical slice** is **already delivered** (sync `corpus_explore`, fanout 1, SSE +
-   metadata) — treat as maintenance unless touching spawn/merge surfaces.
-4. **R4-next** (cancellation/timeouts, paired latency compare, optional second read-only
-   child type): start when live/trace lanes are **repeatable enough** to trust regression
-   numbers (includes mitigating hung `/v2/agent/query` focused-probe debt — see
-   [`refactor-backend.md`](../backlog/refactor-backend.md)); **not** blocked by “R3 must
-   promote first”, but **is** blocked by flaky measurement.
-5. **R6** in parallel if operator time is available: it may change priorities.
-6. **R5** as a calibration lane, not a blocker for R1/R2/R3/R4 slice maintenance.
-7. **R7/R8/R9** after the baseline tells us where product quality is bottlenecked.
+1. **R5 residual policy:** keep the judge lane advisory, choose at most one remediation
+   iteration, and do not reopen promotion work while strict calibration is red.
+2. **R3 evidence hardening:** maintain formal acceptance + forced diagnostic lanes, and
+   stabilize the focused long-thread probe so operator evidence becomes trustworthy.
+3. **R4-next hardening:** cancellation/timeouts, paired latency compare, and targeted
+   lifecycle gates for the shipped slice; keep it maintenance-first.
+4. **Benchmark/observability structural debt:** `eval/agent_v3_quality/runner.py` split is
+   **done** (`runner_branches.py` / `runner_report.py`); next structural targets remain trace-review
+   compare modules and `agent_trace_review.py` if gates grow further.
+5. **R6** baseline: **closed** (CV contour executed with BT2/BT4/BT5 + claims/citation/dedup artifacts; non-CV residual explicitly closed by feasibility waiver; claims holdout suite has heartbeat+timeout guard to avoid silent hangs). Baseline verdict keeps bottleneck at runtime/retrieval.
+6. **R7** targeted repairs: keep ingestion architecture in hold mode until runtime/retrieval stabilization changes bottleneck.
+7. **R8** artifact hygiene before the next expansion of benchmark/live artifact storage.
+8. **R9** answer-as-report remains design-only until runtime/retrieval evidence path is stable enough to polish.
 
 ---
 
@@ -1132,5 +1203,10 @@ In that case, the next best work is not another agent architecture wave. It is:
 | R3 long-thread live baseline (operator) | [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md) |
 | R4 subagent foundation (ADR-028) | [`028-agent-runtime-v3-subagents.md`](../adr/028-agent-runtime-v3-subagents.md) |
 | R2 chat contract closeout (SSE product layers) | [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md) |
+| R5 cross-family / promotion policy (residual) | [`agent-v3-quality-judge-cross-family-policy-2026-05-13.md`](./agent-v3-quality-judge-cross-family-policy-2026-05-13.md) |
+| R6 corpus baseline checklist + manifest scaffold | [`corpus-quality-baseline-after-agent-stabilization-2026-05.md`](./corpus-quality-baseline-after-agent-stabilization-2026-05.md); [`eval/results/corpus-quality-baseline-2026-05-13-manifest.json`](../../eval/results/corpus-quality-baseline-2026-05-13-manifest.json) |
+| R7 ingestion repairs (post-baseline gate) | [`r7-ingestion-repairs-from-baseline-2026-05.md`](./r7-ingestion-repairs-from-baseline-2026-05.md) |
+| R8 artifact hygiene policy + guard | [`benchmark-artifact-hygiene-policy-2026-05-13.md`](./benchmark-artifact-hygiene-policy-2026-05-13.md); [`scripts/check_canonical_eval_results.py`](../../scripts/check_canonical_eval_results.py) |
+| R9 answer-as-report roadmap | [`agent-answer-report-roadmap-2026-05.md`](./agent-answer-report-roadmap-2026-05.md) |
 | Ingestion LLM standardization | [`ingestion-llm-architecture-and-instructor-standardization-2026-04-27.md`](./ingestion-llm-architecture-and-instructor-standardization-2026-04-27.md) |
 | Ingest dedup complexity | [`ingest-entity-extraction-and-dedup-complexity-analysis-2026-04-27.md`](./ingest-entity-extraction-and-dedup-complexity-analysis-2026-04-27.md) |

@@ -24,6 +24,13 @@ TaskStatus = Literal["pending", "running", "completed", "failed", "cancelled", "
 LegKind = Literal["routing_leg", "spawned"]
 
 
+def _terminal_state_or_failed(terminal_state: str) -> TerminalState:
+    ts = str(terminal_state or "").strip()
+    if ts in {"succeeded", "failed", "cancelled", "killed", "timed_out"}:
+        return ts  # type: ignore[return-value]
+    return "failed"
+
+
 def _task_status_from_terminal_state(terminal_state: TerminalState) -> TaskStatus:
     if terminal_state == "succeeded":
         return "completed"
@@ -186,6 +193,69 @@ def build_spawned_subagent_run_row(
         "merge_provenance": dict(merge_provenance or {}) or None,
         "output_pointer": str(output_pointer or "").strip() or None,
     }
+
+
+def append_spawned_subagent_terminal_row(
+    *,
+    hook_chain_sink: list[dict[str, Any]] | None,
+    debug_events_out: list[dict[str, Any]] | None,
+    spawn_rows_out: list[dict[str, Any]],
+    subagent_id: str,
+    parent_turn_id: str | None,
+    spawn_reason: str,
+    task_type: str,
+    description: str,
+    terminal_state: str,
+    latency_ms: int | None = None,
+    failure_code: str | None = None,
+    execution_mode: Literal["sync", "background"] = "sync",
+    fanout_slot: int = 1,
+    merge_provenance: dict[str, Any] | None = None,
+    output_pointer: str | None = None,
+) -> dict[str, Any]:
+    """Append canonical spawned-leg hook + run-row payloads from one adapter."""
+    term = _terminal_state_or_failed(terminal_state)
+    if parent_turn_id:
+        hook_local: list[dict[str, Any]] = []
+        emit_subagent_start_hook(
+            out=hook_local,
+            subagent_id=subagent_id,
+            parent_turn_id=parent_turn_id,
+            spawn_reason=spawn_reason,
+            leg_kind="spawned",
+            execution_mode=execution_mode,
+        )
+        emit_subagent_stop_hook(
+            out=hook_local,
+            subagent_id=subagent_id,
+            parent_turn_id=parent_turn_id,
+            spawn_reason=spawn_reason,
+            terminal_state=term,
+            leg_kind="spawned",
+            latency_ms=latency_ms,
+            failure_code=failure_code,
+        )
+        if debug_events_out is not None:
+            debug_events_out.extend(hook_local)
+        elif hook_chain_sink is not None:
+            hook_chain_sink.extend(hook_local)
+    row = build_spawned_subagent_run_row(
+        subagent_id=subagent_id,
+        parent_turn_id=parent_turn_id,
+        spawn_reason=spawn_reason,
+        task_id=None,
+        task_type=task_type,
+        description=description,
+        execution_mode=execution_mode,
+        fanout_slot=fanout_slot,
+        terminal_state=term,
+        latency_ms=latency_ms,
+        failure_code=failure_code,
+        merge_provenance=merge_provenance,
+        output_pointer=output_pointer,
+    )
+    spawn_rows_out.append(row)
+    return row
 
 
 @dataclass
@@ -424,6 +494,7 @@ __all__ = [
     "SubagentSpawnCapacityError",
     "SubagentTaskSpec",
     "TerminalState",
+    "append_spawned_subagent_terminal_row",
     "build_subagent_runs_from_routing_log",
     "build_spawned_subagent_run_row",
     "merge_subagent_run_rows",

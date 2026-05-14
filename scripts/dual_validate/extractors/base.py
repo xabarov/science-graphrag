@@ -10,7 +10,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel
 from scripts.dual_validate.consistency_report import ConsistencyReport
+from scripts.dual_validate.consistency_report import ExtractorInfo
 from scripts.dual_validate.llm_client import DualValidateLLMClient, LLMCallSpec, prompt_hash
 from scripts.dual_validate.matcher import EmbeddingScorerProtocol
 
@@ -75,6 +77,7 @@ class ExtractorBase(ABC):
     """Layer-specific extractor — one concrete subclass per Corpus Gold Pack v1 layer."""
 
     layer_name: str = "abstract"
+    response_model: type[BaseModel] | None = None
 
     @abstractmethod
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
@@ -112,6 +115,77 @@ class ExtractorBase(ABC):
         except ValueError as exc:
             raise ValueError(f"extractor B ({self.layer_name}){suffix}: {exc}") from exc
 
+    def _safe_parse(self, raw: str, *, layer_label: str = "") -> Any:
+        """Compatibility alias for extractor parse wrappers with layer context."""
+        return self._safe_parse_json(raw, context=layer_label)
+
+    def _safe_relative_paths(self, pack_dir: Path) -> tuple[Path, Path]:
+        """Return ``(relative_pack_dir, relative_gold_json)`` with cwd fallback."""
+        gold_path = (pack_dir / "gold.json").resolve()
+        try:
+            rel_pack = pack_dir.resolve().relative_to(Path.cwd())
+            rel_gold = gold_path.relative_to(Path.cwd())
+        except ValueError:
+            rel_pack = pack_dir
+            rel_gold = gold_path
+        return rel_pack, rel_gold
+
+    def _extractor_b_info(
+        self,
+        run: ExtractorRunOutput | None,
+        *,
+        role: str,
+        source: str,
+        count: int,
+        dry_run_role: str = "llm_independent_extraction_dry_run",
+        dry_run_source: str = "dry-run (no LLM call)",
+    ) -> ExtractorInfo:
+        """Build ``ExtractorInfo`` for extractor-B with a shared dry-run branch."""
+        if run is None:
+            return ExtractorInfo(
+                role=dry_run_role,
+                source=dry_run_source,
+                count=0,
+            )
+        return ExtractorInfo(
+            role=role,
+            source=source,
+            model=run.call_spec.model,
+            base_url=run.call_spec.base_url,
+            prompt_hash=run.prompt_hash,
+            count=count,
+            usage_tokens=run.usage_tokens,
+            latency_ms=run.latency_ms,
+        )
+
+    def _summary_skeleton(
+        self,
+        *,
+        a_total: int,
+        b_total: int,
+        matched_pairs: list[dict[str, Any]],
+        unmatched_a: list[dict[str, Any]],
+        unmatched_b: list[dict[str, Any]],
+        embedding_used: bool = False,
+        field_agreements: dict[str, Any] | None = None,
+        extra: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Build standard summary with optional field_agreements/review extras."""
+        summary: dict[str, Any] = {
+            "a_total": int(a_total),
+            "b_total": int(b_total),
+            "matched": len(matched_pairs),
+            "matched_lexical": len(matched_pairs) if not embedding_used else 0,
+            "matched_embedding": len(matched_pairs) if embedding_used else 0,
+            "unmatched_a": len(unmatched_a),
+            "unmatched_b": len(unmatched_b),
+        }
+        if field_agreements:
+            summary["field_agreements"] = dict(field_agreements)
+        if extra:
+            summary.update(dict(extra))
+        return summary
+
     def run_for_pack(
         self,
         pack_dir: Path,
@@ -141,7 +215,13 @@ class ExtractorBase(ABC):
             spec = dataclasses.replace(spec, reasoning=dict(reasoning_override))
         if dry_run or client is None:
             return None, spec
-        result = client.call(spec)
+        if self.response_model is not None:
+            result = client.call_with_response_model(
+                spec,
+                response_model=self.response_model,
+            )
+        else:
+            result = client.call(spec)
         try:
             structured = self.parse_response(result.content)
         except Exception as exc:

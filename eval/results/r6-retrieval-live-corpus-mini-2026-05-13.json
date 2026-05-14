@@ -1,0 +1,476 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 3,
+    "case_ids": [
+      "live_corpus_methods_wide",
+      "live_yolov1_architecture",
+      "live_yolov1_training"
+    ],
+    "all_passed": true,
+    "retrieval_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "live_corpus_methods_wide",
+      "question": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
+      "question_preview": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 10,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": null
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 10,
+        "filter_work_id": null,
+        "resolved_work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 10,
+        "citations_returned": 10,
+        "top_hit_scores": [
+          0.5357432,
+          0.49597317,
+          0.4669217,
+          0.49544302,
+          0.4906314,
+          0.47383702,
+          0.4716772,
+          0.4563403
+        ],
+        "query_preview": "Which papers in the corpus discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines?",
+        "answer_synthesis": {
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "CenterNet"
+        ],
+        "datasets": [
+          "MS-COCO"
+        ],
+        "semantic_available": true,
+        "context_work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.5357432,
+          "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+          "document_id": "ca13b47e-ce47-47dd-8d65-54c3c31e9b62",
+          "chunk_fingerprint": "31aa4f420dcbd8b24b8b67aa814ffb4c6b25ecd62f92d845daa9f90d447ecfdb",
+          "section_path": "CenterNet: Keypoint Triplets for Object Detection",
+          "excerpt": "[44] X. Zeng, W. Ouyang, B. Yang, J. Yan, and X. Wang. Gated bi-directional cnn for object detection. In *European conference on computer vision*, pages 354–369. Springer, 2016.\n\n[45] S. Zhang, L. Wen, X. Bian, Z. Lei, and S. Z. Li. Single-shot refinement neural network for object detection. In *Proceedings of the IEEE conference on computer vision and pattern recognition*, pages 4203–4212, 2018.\n\n[46] R. Zhu, S. Zhang, X. Wang, L. Wen, H. Shi, L. Bo, and T. Mei. Scratchdet: Training single-shot object detectors from scratch. *Proceedings of the IEEE conference on computer vision and pattern r",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.49597317,
+          "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
+          "document_id": "d78549a6-f793-498c-bc76-38350b3aa694",
+          "chunk_fingerprint": "d7fe965bb3d49af07118b125a8f8dc179830c6488fcde32d8d2a20eb6f650685",
+          "section_path": "TOOD: Task-aligned One-stage Object Detection / 2. Related Work",
+          "excerpt": "## 2. Related Work\n\n**One-stage detectors.** OverFeat [25] is one of the earliest CNN-based one-stage detectors. Afterward, YOLO [22] was developed to directly predict bounding boxes and classification scores, without an additional stage to generate region proposals. SSD [18] introduces anchors with multi-scale predictions from multi-layer convolutional features, and Focal loss [16] was proposed to address the problem of class imbalance for one-stage detectors like RetinaNet. Keypoint-based detection methods, such as [3 11 34], address the detection problem by identifying and grouping multiple",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.4669217,
+          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
+          "document_id": "b946e138-68ad-42d4-a443-44b257bc24be",
+          "chunk_fingerprint": "679f4d8aa1599f162ffc00f4d1a390889fda9227f5ae9c67eba4faa25b385cf3",
+          "section_path": "Feature Pyramid Networks for Object Detection / 5. Experiments on Object Detection",
+          "excerpt": "In Table 2(f), we adopt Fast R-CNN on the single finest scale feature map of P2. Its result (33.4 AP) is marginally worse than that of using all pyramid levels (33.9 AP, Table 2(c)). We argue that this is because RoI pooling is a warping-like operation, which is less sensitive to the region’s scales. Despite the good accuracy of this variant, it is based on the RPN proposals of {Pk} and has thus already benefited from the pyramid representation.\n\n#### 5.2.2 Faster R-CNN (on consistent proposals)\n\nIn the above we used a fixed set of proposals to investigate the detectors. But in a Faster R-CNN ",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.49544302,
+          "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+          "document_id": "d8342dd6-7af5-4f83-ba84-9852c53449f6",
+          "chunk_fingerprint": "fed2607f42d7ce345a0729ef4bc905556acc1ec004a92a2e31939887d28a1c0f",
+          "section_path": "FCOS: Fully Convolutional One-Stage Object Detection",
+          "excerpt": "[5] Cheng-Yang Fu, Wei Liu, Ananth Ranga, Ambrish Tyagi, and Alexander Berg. DSSD: Deconvolutional single shot detector. arXiv preprint arXiv:1701.06659, 2017.\n\n[6] Ross Girshick. Fast R-CNN. In Proc. IEEE Conf. Comp. Vis. Patt. Recogn., pages 1440–1448, 2015.\n\n[7] Ross Girshick, Ilija Radosavovic, Georgia Gkioxari, Piotr Dollár, and Kaiming He. Detectron. https://github.com/facebookresearch/detectron, 2018.\n\n[8] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition. In Proc. IEEE Conf. Comp. Vis. Patt. Recogn., pages 770–778, 2016.\n\n[9] Tong He, C",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.4906314,
+          "work_id": "bc0d4f69-040a-428c-bc44-04ebf4c52dbc",
+          "document_id": "27d1cc88-6537-4762-b49c-8ef3548f4fba",
+          "chunk_fingerprint": "55e9804ebb6682db2ecc17171cf5ec2148afd9bc453fa69799cb6d883482c98e",
+          "section_path": "(document)",
+          "excerpt": "ng for OHEM (no 1:3 ratio, batch size 128, nms of\n.5) achieves 32.8 AP. This is a gap of 3.2 AP, showing FL\nis more effective than OHEM for training dense detectors.\nWe note that we tried other parameter setting and variants\nfor OHEM but did not achieve better results.\nHinge Loss: Finally, in early experiments, we attempted\nto train with the hinge loss [13] on pt, which sets loss to 0\nabove a certain value ofpt. However, this was unstable and\nwe did not manage to obtain meaningful results. Results\nexploring alternate loss functions are in the appendix.\n7\n\nbackbone AP AP 50 AP75 APS APM APL\nTwo",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 6,
+          "score": 0.47383702,
+          "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
+          "document_id": "e44420be-39be-484b-bebc-e345dfb20b61",
+          "chunk_fingerprint": "13a3fcc0b85eb26ce029184ffe8674f30181a9368862190c10dcf2f546a777f9",
+          "section_path": "Libra R-CNN: Towards Balanced Learning for Object Detection / 2. Related Work",
+          "excerpt": "## 2. Related Work\n\n**Model architectures for object detection.** Recently, object detection are popularized by both two-stage and single-stage detectors. Two-stage detectors were first introduced by R-CNN [8]. Gradually derived SPP [11], Fast R-CNN [7] and Faster R-CNN [28] promoted the developments furthermore. Faster R-CNN proposed region proposal network to improve the efficiency of detectors and allow the detectors to be trained end-to-end. After this meaningful milestone, lots of methods were introduced to enhance Faster R-CNN from different points. For example, FPN [19] tackled the scal",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 7,
+          "score": 0.4716772,
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+          "document_id": "c71a0669-e930-4dc3-97ff-721fd20b57bf",
+          "chunk_fingerprint": "30f7cbf3055cdcc41199e88c653d955c951968e71d95aa7e4a192ce98fff44d0",
+          "section_path": "EfficientDet: Scalable and Efficient Object Detection / 2. Related Work",
+          "excerpt": "## 2. Related Work\n\n**One-Stage Detectors:** Existing object detectors are mostly categorized by whether they have a region-of-interest proposal step (two-stage [11, 35, 5, 13]) or not (one-stage [36, 27, 33, 24]). While two-stage detectors tend to be more flexible and more accurate, one-stage detectors are often considered to be simpler and more efficient by leveraging predefined anchors [17]. Recently, one-stage detectors have attracted substantial attention due to their efficiency and simplicity [21, 42, 44]. In this paper, we mainly follow the one-stage detector design, and we show it is p",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 8,
+          "score": 0.4563403,
+          "work_id": "a0b67a5e-3fb9-49ab-9027-e1c574924527",
+          "document_id": "084b392d-695e-4052-8d73-777403785d63",
+          "chunk_fingerprint": "9de9b92433f5cc36f1d351512933172107d8d599c85ff8cff8720ac17f6da2b6",
+          "section_path": "R-FCN: Object Detection via Region-based Fully Convolutional Networks",
+          "excerpt": "[16] S. Mallat. A wavelet tour of signal processing. Academic press, 1999.\n\n[17] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi. You only look once: Unified, real-time object detection. In CVPR, 2016.\n\n[18] S. Ren, K. He, R. Girshick, and J. Sun. Faster R-CNN: Towards real-time object detection with region proposal networks. In NIPS, 2015.\n\n[19] S. Ren, K. He, R. Girshick, X. Zhang, and J. Sun. Object detection networks on convolutional feature maps. arXiv:1504.06066, 2015.\n\n[20] O. Russakovsky, J. Deng, H. Su, J. Krause, S. Satheesh, S. Ma, Z. Huang, A. Karpathy, A. Khosla, M. Bernstein, ",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 9,
+          "score": 0.4709261,
+          "work_id": "7dd806fd-db66-4c7b-8440-d98e0cab0827",
+          "document_id": "0d7b936e-91f0-4546-bbbd-6625bf1dc3d7",
+          "chunk_fingerprint": "0d63f738f474bd3252dad6581b7f64fe56b7ed91bb420f1b51a296cceb4f1799",
+          "section_path": "CornerNet: Detecting Objects as Paired Keypoints / 2 Related Works / 2.2 One-stage object detectors",
+          "excerpt": "### 2.2 One-stage object detectors\n\nOn the other hand, YOLO [Redmon et al., 2016] and SSD [Liu et al., 2016] have popularized the one-stage approach, which removes the RoI pooling step and detects objects in a single network. One-stage detectors are usually more computationally efficient than two-stage detectors while maintaining competitive performance on different challenging benchmarks.\n\nSSD places anchor boxes densely over feature maps from multiple scales, directly classifies and refines each anchor box. YOLO predicts bounding box coordinates directly from an image, and is later improved ",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 10,
+          "score": 0.46447015,
+          "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+          "document_id": "ca13b47e-ce47-47dd-8d65-54c3c31e9b62",
+          "chunk_fingerprint": "4a90b345d0051fbda550e633e7a684b0587dd5120c82f11e15f034998b745fc7",
+          "section_path": "CenterNet: Keypoint Triplets for Object Detection / 4. Experiments / 4.2. Comparisons with State-of-the-art Detectors",
+          "excerpt": "ourglass-52 | 511×511 | ori. | 41.6 | 59.4 | 44.2 | 22.5 | 43.1 | 54.1 | 34.8 | 55.7 | 60.1 | 38.6 | 63.3 | 76.9 |\n| CenterNet511 (single-scale) | Hourglass-104 | 511×511 | ori. | 44.9 | 62.4 | 48.1 | 25.6 | 47.4 | 57.4 | 36.1 | 58.4 | 63.3 | 41.3 | 67.1 | 80.2 |\n| CenterNet511 (multi-scale) | Hourglass-52 | 511×511 | ≤1.8× | 43.5 | 61.3 | 46.7 | 25.3 | 45.3 | 55.0 | 36.0 | 57.2 | 61.3 | 41.4 | 64.0 | 76.3 |\n| CenterNet511 (multi-scale) | Hourglass-104 | 511×511 | ≤1.8× | 47.0 | 64.5 | 50.7 | 28.9 | 49.9 | 58.9 | 37.5 | 60.3 | 64.8 | 45.1 | 68.3 | 79.7 |\n\nMeanwhile, it can be seen that the mos",
+          "chunk_kind": "result",
+          "language": "en"
+        }
+      ],
+      "answer": "The retrieved excerpts do not support this question. None of the excerpts discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines.",
+      "answer_preview": "The retrieved excerpts do not support this question. None of the excerpts discuss single-shot detectors and compare their speed-accuracy trade-offs to two-stage pipelines.",
+      "wall_clock_seconds": 2.079
+    },
+    {
+      "case_id": "live_yolov1_architecture",
+      "question": "Describe the three-step YOLO processing pipeline (resize, network, thresholding) as stated in this paper.",
+      "question_preview": "Describe the three-step YOLO processing pipeline (resize, network, thresholding) as stated in this paper.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 8,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "answer_rouge_l": 0.12807881773399016
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 8,
+        "filter_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "resolved_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 8,
+        "citations_returned": 8,
+        "top_hit_scores": [
+          0.6041294,
+          0.5935619,
+          0.5812252,
+          0.5940817,
+          0.5917043,
+          0.58249855,
+          0.5719416,
+          0.5664685
+        ],
+        "query_preview": "Describe the three-step YOLO processing pipeline (resize, network, thresholding) as stated in this paper.",
+        "answer_synthesis": {
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "YOLO"
+        ],
+        "datasets": [
+          "ImageNet",
+          "PASCAL VOC"
+        ],
+        "semantic_available": true,
+        "context_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.6041294,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "cc7c80b30a63206d86f92905acb27303915775b87d72746e4502380acb952ca7",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / Abstract",
+          "excerpt": "## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance.\n\nOur unified architecture is extremely fast. Our base YOLO model processes images in r",
+          "chunk_kind": "abstract",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.5935619,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "becb341513f3c1bc1705480c0cd05a139a01ea46871d2452c94ba9da5bc64931",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 2. Unified Detection / 2.1. Network Design",
+          "excerpt": "### 2.1. Network Design\n\nWe implement this model as a convolutional neural network and evaluate it on the PASCAL VOC detection dataset [9]. The initial convolutional layers of the network extract features from the image while the fully connected layers predict the output probabilities and coordinates.\n\nOur network architecture is inspired by the GoogLeNet model for image classification [34]. Our network has 24 convolutional layers followed by 2 fully connected layers. Instead of the inception modules used by GoogLeNet, we simply use $1 \\times 1$ reduction layers followed by $3 \\times 3$ convol",
+          "chunk_kind": "method",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.5812252,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "6c51ee01b4fb920c89d6aaeeee860ffe69e17bf2dd2dea443d9c289cf0f13ee5",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 1. Introduction",
+          "excerpt": "## 1. Introduction\n\nHumans glance at an image and instantly know what objects are in the image, where they are, and how they interact. The human visual system is fast and accurate, allowing us to perform complex tasks like driving with little conscious thought. Fast, accurate algorithms for object detection would allow computers to drive cars without specialized sensors, enable assistive devices to convey real-time scene information to human users, and unlock the potential for general purpose, responsive robotic systems.\n\nCurrent detection systems repurpose classifiers to perform detection. To",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.5940817,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "629185cf17b5f584ac288b9d2d0cbe9e4ed70bd92a3e3f28ceb3396a908612e7",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 2. Unified Detection",
+          "excerpt": "We train the network for about 135 epochs on the training and validation data sets from PASCAL VOC 2007 and 2012. When testing on 2012 we also include the VOC 2007 test data for training. Throughout training we use a batch size of 64, a momentum of 0.9 and a decay of 0.0005.\n\nOur learning rate schedule is as follows: For the first epochs we slowly raise the learning rate from $10^{-3}$ to $10^{-2}$. If we start at a high learning rate our model often diverges due to unstable gradients. We continue training with $10^{-2}$ for 75 epochs, then $10^{-3}$ for 30 epochs, and finally $10^{-4}$ for 30",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.5917043,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "5b543842f0b8627d466d8eb35fd87c1df5f4f61ea347aa173ab4eae80709b3e9",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection",
+          "excerpt": "Our network architecture is inspired by the GoogLeNet model for image classification [34]. Our network has 24 convolutional layers followed by 2 fully connected layers. Instead of the inception modules used by GoogLeNet, we simply use $1 \\times 1$ reduction layers followed by $3 \\times 3$ convolutional layers, similar to Lin et al [22]. The full network is shown in Figure 3.\n\nWe also train a fast version of YOLO designed to push the boundaries of fast object detection. Fast YOLO uses a neural network with fewer convolutional layers (9 instead of 24) and fewer filters in those layers. Other tha",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 6,
+          "score": 0.58249855,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "1d11e54e1418ef35630aeaeee2290537a800ad485efd2bfb72f57cce2b29fad3",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection",
+          "excerpt": "making predictions. Unlike sliding window and region proposal-based techniques, YOLO sees the entire image during training and test time so it implicitly encodes contextual information about classes as well as their appearance. Fast R-CNN, a top detection method [14], mistakes background patches in an image for objects because it can’t see the larger context. YOLO makes less than half the number of background errors compared to Fast R-CNN.\n\nThird, YOLO learns generalizable representations of objects. When trained on natural images and tested on artwork, YOLO outperforms top detection methods l",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 7,
+          "score": 0.5719416,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "a372face1d5b67d1f44f5f536a3b0c65d7f8963796f12d9ddf37629f4fffe3b8",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection",
+          "excerpt": "problem in computer vision. Detection pipelines generally start by extracting a set of robust features from input images (Haar [25], SIFT [23], HOG [4], convolutional features [6]). Then, classifiers [36, 21, 13, 10] or localizers [1, 32] are used to identify objects in the feature space. These classifiers or localizers are run either in sliding window fashion over the whole image or on some subset of regions in the image [35, 15, 39]. We compare the YOLO detection system to several top detection frameworks, highlighting key similarities and differences.\n\nDeformable parts models. Deformable pa",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 8,
+          "score": 0.5664685,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "5243e6fa2a4843ba7036436091ad349823f25813b50284f01d69b64ae8aa2acc",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection",
+          "excerpt": "# You Only Look Once: Unified, Real-Time Object Detection\n\nJoseph Redmon*, Santosh Divvala*†, Ross Girshick†, Ali Farhadi*†\n\nUniversity of Washington*, Allen Institute for AI†, Facebook AI Research†\n\nhttp://pjreddie.com/yolo/\n\n## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images ",
+          "chunk_kind": "body",
+          "language": "en"
+        }
+      ],
+      "answer": "1. **Resize**: The YOLO model processes images in their entirety, as stated in excerpt [6]: \"Unlike sliding window and region proposal-based techniques, YOLO sees the entire image during training and test time.\" This implies that the input image is resized to fit the network's input dimensions.\n\n2. **Network**: The network architecture is described in excerpt [2]: \"We implement this model as a convolutional neural network... The initial convolutional layers of the network extract features from the image while the fully connected layers predict the output probabilities and coordinates.\" The network consists of 24 convolutional layers followed by 2 fully connected layers, as mentioned in excerpt [5].\n\n3. **Thresholding**: Although not explicitly stated in the provided excerpts, the network predicts class probabilities and bounding box coordinates, which are likely thresholded to produce the final detections. This is implied in excerpt [1]: \"A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation.\"",
+      "answer_preview": "1. **Resize**: The YOLO model processes images in their entirety, as stated in excerpt [6]: \"Unlike sliding window and region proposal-based techniques, YOLO sees the entire image during training and test time.\" This implies that the input image is resized to fit the network's input dimensions.\n\n2. **Network**: The network architecture is described in excerpt [2]: \"We implement this model as a con",
+      "wall_clock_seconds": 4.464
+    },
+    {
+      "case_id": "live_yolov1_training",
+      "question": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
+      "question_preview": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
+      "metrics": {
+        "passed": true,
+        "contract_only": false,
+        "hit_count": 6,
+        "min_hit_count": 1,
+        "hit_ok": true,
+        "missing_chunk_fingerprints": [],
+        "work_id_ok": true,
+        "filter_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+      },
+      "retrieval_trace": {
+        "embedding": {
+          "embedding_model": "baai/bge-m3",
+          "vector_dim": 1024
+        },
+        "hit_count": 6,
+        "filter_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "resolved_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "qdrant_collection": "chunks",
+        "top_k_requested": 6,
+        "citations_returned": 6,
+        "top_hit_scores": [
+          0.5220522,
+          0.51627624,
+          0.51627624,
+          0.4802345,
+          0.4662965,
+          0.46617085
+        ],
+        "query_preview": "Summarize the training objective and loss formulation used in this work, citing the sections where they are defined.",
+        "answer_synthesis": {
+          "mode": "grounded_llm_paraphrase",
+          "second_stage_llm": true,
+          "model": "mistralai/mistral-small-3.2-24b-instruct"
+        },
+        "retrieval_mode": "vector",
+        "retrieval_policy": "section_boost_v1;back_matter_deprioritized;oversample_then_top_k",
+        "degraded": []
+      },
+      "graph_context": {
+        "methods": [
+          "YOLO"
+        ],
+        "datasets": [
+          "ImageNet",
+          "PASCAL VOC"
+        ],
+        "semantic_available": true,
+        "context_work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "degraded": [],
+        "error": null
+      },
+      "citations": [
+        {
+          "rank": 1,
+          "score": 0.5220522,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "ccf87b222b9203aeced4f157c1045c1f81c8d14358b7dcc7e3c865901ca8d06b",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection",
+          "excerpt": "During training we optimize the following, multi-part\n\nloss function:\n\n$\\lambda_{\\text{coord}} \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{obj}} \\left[ (x_i - \\hat{x}_i)^2 + (y_i - \\hat{y}_i)^2 \\right]$\n\n$+ \\lambda_{\\text{coord}} \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{obj}} \\left[ (\\sqrt{w_i} - \\sqrt{\\hat{w}_i})^2 + (\\sqrt{h_i} - \\sqrt{\\hat{h}_i})^2 \\right]$\n\n$+ \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{obj}} (C_i - \\hat{C}_i)^2$\n\n$+ \\lambda_{\\text{noobj}} \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{noobj}} (C_i - \\hat{C}_i)^2$\n\n$+ \\sum_{i=0}^",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 2,
+          "score": 0.51627624,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "9d0345dc55d7c73e4ecd781960dcecc54eafda38cc33fc49d2ee07131d9663df",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 2. Unified Detection",
+          "excerpt": "### 2.2. Training\n\nWe pretrain our convolutional layers on the ImageNet 1000-class competition dataset [30]. For pretraining we use the first 20 convolutional layers from Figure 3 followed by a average-pooling layer and a fully connected layer. We train this network for approximately a week and achieve a single crop top-5 accuracy of 88% on the ImageNet 2012 validation set, comparable to the GoogLeNet models in Caffe’s Model Zoo [24]. We use the Darknet framework for all training and inference [26].\n\nWe then convert the model to perform detection. Ren et al. show that adding both convolutional",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 3,
+          "score": 0.51627624,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "2d04e508e211fd56fadec572e3d099be8a26c24c3e0aefe9ddc88a1136e9a61f",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 2. Unified Detection / 2.2. Training",
+          "excerpt": "### 2.2. Training\n\nWe pretrain our convolutional layers on the ImageNet 1000-class competition dataset [30]. For pretraining we use the first 20 convolutional layers from Figure 3 followed by a average-pooling layer and a fully connected layer. We train this network for approximately a week and achieve a single crop top-5 accuracy of 88% on the ImageNet 2012 validation set, comparable to the GoogLeNet models in Caffe’s Model Zoo [24]. We use the Darknet framework for all training and inference [26].\n\nWe then convert the model to perform detection. Ren et al. show that adding both convolutional",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 4,
+          "score": 0.4802345,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "629185cf17b5f584ac288b9d2d0cbe9e4ed70bd92a3e3f28ceb3396a908612e7",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 2. Unified Detection",
+          "excerpt": "We train the network for about 135 epochs on the training and validation data sets from PASCAL VOC 2007 and 2012. When testing on 2012 we also include the VOC 2007 test data for training. Throughout training we use a batch size of 64, a momentum of 0.9 and a decay of 0.0005.\n\nOur learning rate schedule is as follows: For the first epochs we slowly raise the learning rate from $10^{-3}$ to $10^{-2}$. If we start at a high learning rate our model often diverges due to unstable gradients. We continue training with $10^{-2}$ for 75 epochs, then $10^{-3}$ for 30 epochs, and finally $10^{-4}$ for 30",
+          "chunk_kind": "body",
+          "language": "en"
+        },
+        {
+          "rank": 5,
+          "score": 0.4662965,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "36f8a413a16a09ab776943b733b0a72e845118e0e22ee998bda474aac0d32aa8",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 6. Conclusion",
+          "excerpt": "## 6. Conclusion\n\nWe introduce YOLO, a unified model for object detection. Our model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly corresponds to detection performance and the entire model is trained jointly.\n\nFast YOLO is the fastest general-purpose object detector in the literature and YOLO pushes the state-of-the-art in real-time object detection. YOLO also generalizes well to new domains making it ideal for applications that rely on fast, robust object detection.\n\nAcknowledgements: Thi",
+          "chunk_kind": "discussion",
+          "language": "en"
+        },
+        {
+          "rank": 6,
+          "score": 0.46617085,
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "document_id": "7d31611c-714f-4a48-84d2-16c3e46bcd93",
+          "chunk_fingerprint": "1e9346de4dc722e42dae22c90a1af4f57915aafc15bbf2e4f3f165acba0117f0",
+          "section_path": "You Only Look Once: Unified, Real-Time Object Detection / 2. Unified Detection / 2.2. Training",
+          "excerpt": "We train the network for about 135 epochs on the training and validation data sets from PASCAL VOC 2007 and 2012. When testing on 2012 we also include the VOC 2007 test data for training. Throughout training we use a batch size of 64, a momentum of 0.9 and a decay of 0.0005.\n\nOur learning rate schedule is as follows: For the first epochs we slowly raise the learning rate from $10^{-3}$ to $10^{-2}$. If we start at a high learning rate our model often diverges due to unstable gradients. We continue training with $10^{-2}$ for 75 epochs, then $10^{-3}$ for 30 epochs, and finally $10^{-4}$ for 30",
+          "chunk_kind": "body",
+          "language": "en"
+        }
+      ],
+      "answer": "The training objective and loss formulation is defined in excerpt [1]:\n\n1. The loss function is multi-part and optimized during training. It includes terms for coordinate regression, confidence scores for objects, and confidence scores for background. The loss function is defined as:\n\n   $\\lambda_{\\text{coord}} \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{obj}} \\left[ (x_i - \\hat{x}_i)^2 + (y_i - \\hat{y}_i)^2 \\right]$\n\n   $+ \\lambda_{\\text{coord}} \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{obj}} \\left[ (\\sqrt{w_i} - \\sqrt{\\hat{w}_i})^2 + (\\sqrt{h_i} - \\sqrt{\\hat{h}_i})^2 \\right]$\n\n   $+ \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{obj}} (C_i - \\hat{C}_i)^2$\n\n   $+ \\lambda_{\\text{noobj}} \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{noobj}} (C_i - \\hat{C}_i)^2$\n\n   $+ \\sum_{i=0}^\n\nThe training procedure, including the learning rate schedule, is detailed in excerpts [4] and [6]:\n\n2. The network is trained for about 135 epochs on the PASCAL VOC 2007 and 2012 datasets, with a batch size of 64, a momentum of 0.9, and a decay of 0.0005.\n\n3. The learning rate schedule is as follows:\n   - Initially, the learning rate is slowly increased from $10^{-3}$ to $10^{-2}$.\n   - Then, the learning rate is kept at $10^{-2}$ for 75 epochs.\n   - Next, the learning rate is reduced to $10^{-3}$ for 30 epochs.\n   - Finally, the learning rate is set to $10^{-4}$ for the last 30 epochs.",
+      "answer_preview": "The training objective and loss formulation is defined in excerpt [1]:\n\n1. The loss function is multi-part and optimized during training. It includes terms for coordinate regression, confidence scores for objects, and confidence scores for background. The loss function is defined as:\n\n   $\\lambda_{\\text{coord}} \\sum_{i=0}^{S^2} \\sum_{j=0}^{B} \\mathbb{1}_{ij}^{\\text{obj}} \\left[ (x_i - \\hat{x}_i)^2",
+      "wall_clock_seconds": 11.111
+    }
+  ]
+}

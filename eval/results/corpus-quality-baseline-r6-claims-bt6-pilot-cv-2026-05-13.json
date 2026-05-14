@@ -1,0 +1,155 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-13T21:09:28.925339+00:00",
+  "run_context": {
+    "base_url": "http://127.0.0.1:18787",
+    "workspace_id": "ws-pilot-od",
+    "suite": "heavy",
+    "profile": "default",
+    "run_kind": "supervisor_specialists_v3",
+    "graph_id": "supervisor_graph_v3",
+    "execution_diagnostics": {
+      "heartbeat_interval_sec": 60.0,
+      "e2e_subprocess_timeout_sec": null,
+      "stages": [
+        {
+          "stage": "http_suite",
+          "elapsed_ms": 340967.628,
+          "ok": true
+        },
+        {
+          "stage": "e2e_audit_subprocess",
+          "elapsed_ms": 0.069,
+          "ok": true
+        },
+        {
+          "stage": "merge_e2e_report_json",
+          "elapsed_ms": 0.102,
+          "ok": true
+        }
+      ]
+    },
+    "feature_flags": {
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "false",
+      "agent_claim_verification_enabled": null,
+      "agent_subagent_lifecycle_enhanced_enabled": null,
+      "agent_corpus_explore_enabled": null,
+      "agent_research_plan_subagent_enabled": null,
+      "agent_tool_use_summary_enabled": null,
+      "agent_side_llm_openrouter_cache_control_enabled": null,
+      "agent_llm_full_history_compact_enabled": null,
+      "agent_tool_message_microcompact_time_trigger_enabled": null,
+      "agent_e1_retrieval_hop_evidence_gate_enabled": null,
+      "agent_e1_retrieval_hop_min_payloads": null,
+      "agent_writer_terminal_single_pass_shadow_enabled": null
+    }
+  },
+  "checks": [
+    {
+      "name": "health",
+      "ok": false,
+      "detail": "timed out",
+      "data": {}
+    },
+    {
+      "name": "agent_v2_sync_json",
+      "ok": false,
+      "detail": "timed out",
+      "data": {}
+    },
+    {
+      "name": "multi_turn_digest",
+      "ok": true,
+      "detail": "ok",
+      "data": {
+        "thread_id": "live_check_5892737dbece",
+        "turn2_warnings": [
+          "weak_evidence",
+          "insufficient_evidence"
+        ],
+        "turn2_tools": [
+          "coordinator_gate",
+          "session_init",
+          "route_to_specialist",
+          "route_to_specialist",
+          "final_answer"
+        ]
+      }
+    },
+    {
+      "name": "agent_v2_sse",
+      "ok": false,
+      "detail": "peer closed connection without sending complete message body (incomplete chunked read)",
+      "data": {
+        "partial_event_count": 5
+      }
+    }
+  ],
+  "trace_timeline": [],
+  "metrics": {
+    "tool_error_rate": 0.0,
+    "missing_span_count": 0,
+    "compaction_event_count": 0,
+    "final_answer_missing_count": 0,
+    "latency_p95_ms": null,
+    "post_turn_compaction_wall_ms_p95": null,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0,
+    "side_llm_cache_read_ratio_avg": null,
+    "latency_p50_ms": null,
+    "insight_recall_at_k": null,
+    "stale_summary_error_rate": null,
+    "insight_stale_reason_rate": null,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "ptl_retry_count_per_compaction_avg": null,
+    "compaction_circuit_breaker_trips": 0,
+    "unnecessary_tool_calls_avg": null,
+    "hook_chain_event_count": 0,
+    "subagent_lifecycle_missing_count": 0,
+    "subagent_terminal_state_missing_count": 0,
+    "subagent_merge_provenance_missing_count": 0,
+    "subagent_timeout_count": 0,
+    "subagent_task_notification_count_avg": null,
+    "tool_search_miss_due_to_no_discovery_total": 0,
+    "tool_schema_bytes_saved_total": 0,
+    "tool_loop_repeat_max": 0,
+    "runtime_monitor_event_total": 0,
+    "runtime_monitor_degraded_total": 0,
+    "mcp_audit_event_total": 0,
+    "mcp_audit_deny_total": 0,
+    "lsp_audit_event_total": 0,
+    "lsp_audit_degraded_total": 0,
+    "claim_verification_verdict_parse_rate": null,
+    "live_trust_signal_avg": null,
+    "specialist_v3_merge_conflict_cases": 0,
+    "agent_usage_total_tokens_sum": null,
+    "writer_oscillation_count_max": 0,
+    "tool_use_summary_row_count_total": 0,
+    "post_compact_paper_sources_restored_cases": 0,
+    "post_compact_paper_sources_restored_total": 0
+  },
+  "verdict": {
+    "status": "fail",
+    "fail_reasons": [
+      "failed_check:agent_v2_sse",
+      "failed_check:agent_v2_sync_json",
+      "failed_check:health"
+    ],
+    "warn_reasons": []
+  },
+  "e2e_audit": null,
+  "phoenix_snapshot_path": null,
+  "acceptable_warns": [
+    "^claim_verification_verdict_parse_rate:absent_no_cv_rows$"
+  ]
+}

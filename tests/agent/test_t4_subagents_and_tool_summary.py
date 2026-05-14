@@ -17,6 +17,11 @@ from science_graphrag.agent.subagent_output_contract import (
     read_only_subagent_answer_matches_contract,
     research_plan_subagent_answer_matches_contract,
 )
+from science_graphrag.agent.subagents.react_subgraph_utils import (
+    fanout_suffixes,
+    last_assistant_text,
+    permission_denied_in_messages,
+)
 from science_graphrag.agent.subagents.corpus_explore_runtime import (
     create_corpus_explore_can_use_tool,
 )
@@ -234,3 +239,20 @@ def test_debug_events_telemetry_tool_use_summary_batch() -> None:
     )
     assert tel.get("tool_use_summary_row_count") == 2
     assert tel.get("tool_use_summary_compression_ratio_avg") == 3.0
+
+
+def test_shared_subgraph_utils_permission_last_text_and_fanout() -> None:
+    from langchain_core.messages import ToolMessage
+
+    bad_tool = AIMessage(content="not used")
+    # keep strict type behavior: non-ToolMessage should be ignored
+    assert not permission_denied_in_messages([bad_tool])
+    assert permission_denied_in_messages(
+        [ToolMessage(content='{"error":"permission_denied"}', name="x", tool_call_id="tc-1")]
+    )
+    assert last_assistant_text([AIMessage(content=""), AIMessage(content=" final text ")]) == "final text"
+    assert fanout_suffixes(max_fan=1, variant_prompt_suffixes=None, defaults=["a", "b"]) == [""]
+    assert fanout_suffixes(max_fan=2, variant_prompt_suffixes=None, defaults=["a", "b"]) == ["a", "b"]
+    assert fanout_suffixes(
+        max_fan=2, variant_prompt_suffixes=["x", "y", "z"], defaults=["a", "b"]
+    ) == ["x", "y"]

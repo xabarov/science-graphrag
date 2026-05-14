@@ -10,7 +10,7 @@ from typing import Any
 
 import typer
 
-from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow
+from eval.bench_common import run_single_case_json_outputs, run_suite_cli_flow, write_suite_outputs
 from eval.claims.article_source import read_claims_article
 from eval.claims.discover_cases import discover_claims_case_dirs, load_claims_case_tiers
 from eval.claims.heuristic_extract import extract_claims_anchor_harness
@@ -112,6 +112,7 @@ def _run_claims_suite(  # pylint: disable=too-many-arguments
     run_one: Callable[[Path], dict[str, Any]],
     json_out: Path | None,
     md_out: Path | None,
+    per_case_timeout_seconds: float = 0.0,
 ) -> None:
     tiers_map: dict[str, list[str]] | None = load_claims_case_tiers(path)
     if tier != "all":
@@ -130,19 +131,67 @@ def _run_claims_suite(  # pylint: disable=too-many-arguments
     if not cases:
         typer.echo(f"No claims cases found under {path}", err=True)
         raise typer.Exit(code=1)
-    payload = run_suite_cli_flow(
-        title="Claims benchmark suite",
-        cases=cases,
-        settings=settings,
-        run_one=run_one,
-        summarize=_summarize,
-        json_out=json_out,
-        md_out=md_out,
-        summary_from_reports=lambda reports: {
-            "all_passed": all(_claims_report_passed(r) for r in reports),
-            "claims_eval": True,
-        },
-    )
+    timed_mode = per_case_timeout_seconds > 0.0
+    if not timed_mode:
+        payload = run_suite_cli_flow(
+            title="Claims benchmark suite",
+            cases=cases,
+            settings=settings,
+            run_one=run_one,
+            summarize=_summarize,
+            json_out=json_out,
+            md_out=md_out,
+            summary_from_reports=lambda reports: {
+                "all_passed": all(_claims_report_passed(r) for r in reports),
+                "claims_eval": True,
+            },
+        )
+    else:
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
+
+        reports: list[dict[str, Any]] = []
+        typer.echo(
+            f"Claims suite heartbeat enabled: per-case timeout={per_case_timeout_seconds:.1f}s",
+            err=True,
+        )
+        total = len(cases)
+        for idx, case_path in enumerate(cases, start=1):
+            typer.echo(f"[claims-suite] case {idx}/{total} start: {case_path.name}", err=True)
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(run_one, case_path)
+                try:
+                    report = future.result(timeout=per_case_timeout_seconds)
+                except FutureTimeoutError:
+                    report = {
+                        "case_id": case_path.name,
+                        "metrics": {
+                            "passed": False,
+                            "contract_only": False,
+                            "contract_passed": False,
+                            "request_error": (
+                                f"per_case_timeout_exceeded ({per_case_timeout_seconds:.1f}s)"
+                            ),
+                        },
+                        "predictions": [],
+                        "wall_clock_seconds": round(per_case_timeout_seconds, 3),
+                        "extractor": "timeout_guard",
+                        "extraction_llm_enabled": settings.extraction_llm_enabled,
+                    }
+                reports.append(report)
+            status = "PASS" if _claims_report_passed(report) else "FAIL"
+            typer.echo(f"[claims-suite] case {idx}/{total} done: {case_path.name} -> {status}", err=True)
+        payload = write_suite_outputs(
+            title="Claims benchmark suite",
+            reports=reports,
+            settings=settings,
+            summarize=_summarize,
+            json_out=json_out,
+            md_out=md_out,
+            summary_from_reports=lambda reports: {
+                "all_passed": all(_claims_report_passed(r) for r in reports),
+                "claims_eval": True,
+            },
+        )
     if not bool(payload.get("summary", {}).get("all_passed", True)):
         raise typer.Exit(code=1)
 
@@ -179,6 +228,15 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     ),
     json_out: Path | None = typer.Option(None, "--json-out", help="Write JSON report path"),
     md_out: Path | None = typer.Option(None, "--md-out", help="Write Markdown summary path"),
+    per_case_timeout_seconds: float = typer.Option(
+        0.0,
+        "--per-case-timeout-seconds",
+        min=0.0,
+        help=(
+            "Optional timeout for each suite case; when >0, runner emits per-case heartbeat "
+            "and marks timed-out cases as failed instead of hanging silently."
+        ),
+    ),
 ) -> None:
     settings = get_settings()
 
@@ -210,6 +268,7 @@ def _cli(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             run_one=_run_one,
             json_out=json_out,
             md_out=md_out,
+            per_case_timeout_seconds=per_case_timeout_seconds,
         )
         return
 

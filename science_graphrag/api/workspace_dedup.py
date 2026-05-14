@@ -1,4 +1,4 @@
-"""Wave L workspace dedup: scan, conflicts queue, decide, audit."""
+"""Workspace dedup API: conflict queues and decision endpoints."""
 
 from __future__ import annotations
 
@@ -10,12 +10,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import desc, select
 
-from science_graphrag.api.dedup_jobs import (
-    dedup_job_to_dict,
-    get_dedup_job,
-    start_author_dedup_scan_job,
-    start_work_dedup_scan_job,
-)
 from science_graphrag.api.deps import StoreRegistry, get_stores
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.ingestion.embeddings import resolve_embedding_dim
@@ -49,33 +43,6 @@ class DedupDecideBody(BaseModel):
 
 class AuthorDedupDecideBody(BaseModel):
     decision: Literal["merge_a", "merge_b", "keep_separate", "skip"]
-
-
-@router.post("/{workspace_id}/dedup/scan")
-def post_dedup_scan(
-    workspace_id: str,
-    settings: Settings = Depends(get_settings),
-    stores: StoreRegistry = Depends(get_stores),
-) -> dict[str, Any]:
-    if not stores.neo4j.workspace_get(workspace_id):
-        raise HTTPException(status_code=404, detail="workspace_not_found")
-    rec = start_work_dedup_scan_job(workspace_id=workspace_id, settings=settings)
-    return {"job_id": rec.job_id, "kind": rec.kind, "status": rec.status}
-
-
-@router.get("/{workspace_id}/dedup/jobs/{job_id}")
-def get_dedup_scan_job(
-    workspace_id: str,
-    job_id: str,
-    settings: Settings = Depends(get_settings),
-    stores: StoreRegistry = Depends(get_stores),
-) -> dict[str, Any]:
-    if not stores.neo4j.workspace_get(workspace_id):
-        raise HTTPException(status_code=404, detail="workspace_not_found")
-    rec = get_dedup_job(job_id)
-    if not rec or rec.workspace_id != workspace_id:
-        raise HTTPException(status_code=404, detail="job_not_found")
-    return dedup_job_to_dict(rec)
 
 
 @router.get("/{workspace_id}/dedup/conflicts")
@@ -198,53 +165,7 @@ def post_dedup_conflict_decide(
         return {"ok": True, "merged": True, "keep_work_id": keep, "drop_work_id": drop}
 
 
-@router.get("/{workspace_id}/dedup/audit")
-def get_dedup_audit(
-    workspace_id: str,
-    limit: int = Query(default=80, ge=1, le=500),
-    settings: Settings = Depends(get_settings),
-    stores: StoreRegistry = Depends(get_stores),
-) -> dict[str, Any]:
-    if not stores.neo4j.workspace_get(workspace_id):
-        raise HTTPException(status_code=404, detail="workspace_not_found")
-
-    factory = _session_factory(settings)
-    with factory() as session:
-        q = (
-            select(WorkDedupMergeLog)
-            .where(WorkDedupMergeLog.workspace_id == workspace_id)
-            .order_by(desc(WorkDedupMergeLog.created_at))
-            .limit(limit)
-        )
-        rows = list(session.scalars(q).all())
-        return {
-            "items": [
-                {
-                    "id": r.id,
-                    "keep_work_id": r.keep_work_id,
-                    "drop_work_id": r.drop_work_id,
-                    "conflict_id": r.conflict_id,
-                    "created_at": r.created_at.isoformat() if r.created_at else None,
-                }
-                for r in rows
-            ],
-            "total": len(rows),
-        }
-
-
 # --- Author dedup (L2) ---
-
-
-@router.post("/{workspace_id}/dedup/authors/scan")
-def post_author_dedup_scan(
-    workspace_id: str,
-    settings: Settings = Depends(get_settings),
-    stores: StoreRegistry = Depends(get_stores),
-) -> dict[str, Any]:
-    if not stores.neo4j.workspace_get(workspace_id):
-        raise HTTPException(status_code=404, detail="workspace_not_found")
-    rec = start_author_dedup_scan_job(workspace_id=workspace_id, settings=settings)
-    return {"job_id": rec.job_id, "kind": rec.kind, "status": rec.status}
 
 
 @router.get("/{workspace_id}/dedup/authors/conflicts")
@@ -339,19 +260,3 @@ def post_author_dedup_decide(
         session.commit()
         return {"ok": True, "merged": bool(merged), "keep_author_id": keep, "drop_author_id": drop}
 
-
-@router.post("/{workspace_id}/dedup/institutions/scan")
-def post_institution_dedup_scan(
-    workspace_id: str,
-    stores: StoreRegistry = Depends(get_stores),
-) -> dict[str, Any]:
-    if not stores.neo4j.workspace_get(workspace_id):
-        raise HTTPException(status_code=404, detail="workspace_not_found")
-    return {
-        "gated": True,
-        "message": (
-            "Institution/venue smart dedup is gated by merge-catalog policy "
-            "(docs/specs/merge-catalog-wave-h.md). No graph changes."
-        ),
-        "items": [],
-    }

@@ -26,6 +26,7 @@ from math import comb
 from pathlib import Path
 from typing import Any, ClassVar
 
+from pydantic import BaseModel, Field
 from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
@@ -33,7 +34,6 @@ from scripts.dual_validate.consistency_report import (
 from scripts.dual_validate.extractors.base import (
     ExtractorBase,
     ExtractorRunOutput,
-    parse_json_object_lenient,
 )
 from scripts.dual_validate.llm_client import LLMCallSpec
 from scripts.dual_validate.matcher import EmbeddingScorerProtocol
@@ -70,6 +70,23 @@ DOMAIN HINT: {domain_hint}
 RECORDS:
 {records_block}
 """
+
+
+class DedupClusterModel(BaseModel):
+    cluster_id: str = Field(default="")
+    entity_ids: list[str] = Field(default_factory=list)
+    rationale: str = Field(default="")
+
+
+class DedupNegativePairModel(BaseModel):
+    pair_id: str = Field(default="")
+    entity_ids: list[str] = Field(default_factory=list)
+    rationale: str = Field(default="")
+
+
+class DedupResponseModel(BaseModel):
+    clusters: list[DedupClusterModel] = Field(default_factory=list)
+    negative_pairs: list[DedupNegativePairModel] = Field(default_factory=list)
 
 
 def _records_to_block(records: list[dict]) -> str:
@@ -217,6 +234,7 @@ class DedupExtractorBase(ExtractorBase):
     entity_type: ClassVar[str] = "abstract"
     domain_hint: ClassVar[str] = ""
     fixtures_subdir: ClassVar[str] = "dedup"
+    response_model = DedupResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         pack = fixtures_root / self.fixtures_subdir / f"{self.entity_type}s_v1"
@@ -245,10 +263,7 @@ class DedupExtractorBase(ExtractorBase):
         )
 
     def parse_response(self, raw_response: str) -> list[dict]:
-        try:
-            obj = parse_json_object_lenient(raw_response)
-        except ValueError as exc:
-            raise ValueError(f"extractor B (dedup/{self.entity_type}_v1): {exc}") from exc
+        obj = self._safe_parse(raw_response, layer_label=f"dedup/{self.entity_type}_v1")
         if not isinstance(obj, dict):
             raise ValueError("extractor B response: top-level must be a JSON object")
         return [

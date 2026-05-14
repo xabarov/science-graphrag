@@ -26,6 +26,7 @@ import json
 from pathlib import Path
 from typing import Any, ClassVar
 
+from pydantic import BaseModel, Field
 from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
@@ -33,7 +34,6 @@ from scripts.dual_validate.consistency_report import (
 from scripts.dual_validate.extractors.base import (
     ExtractorBase,
     ExtractorRunOutput,
-    parse_json_object_lenient,
 )
 from scripts.dual_validate.llm_client import LLMCallSpec
 from scripts.dual_validate.matcher import EmbeddingScorerProtocol, jaccard, tokenize
@@ -87,11 +87,24 @@ Output STRICTLY this JSON object — no prose, no markdown:
 """
 
 
+class AgentToolSequenceItemModel(BaseModel):
+    tool_name: str
+
+
+class AgentToolsResponseModel(BaseModel):
+    expected_tool_sequence: list[AgentToolSequenceItemModel | str] = Field(default_factory=list)
+    expected_works_corpus_ids: list[str] = Field(default_factory=list)
+    expected_methods_canonical: list[str] = Field(default_factory=list)
+    answer_reference_text: str = Field(default="")
+    expected_behavior: str = Field(default="answer")
+
+
 class AgentToolsLiveExtractor(ExtractorBase):
     """One extractor for all ``live_*`` cases in ``agent_tools_v1``."""
 
     layer_name = "agent_tools_live"
     fixtures_subdir: ClassVar[str] = "agent_tools_v1"
+    response_model = AgentToolsResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         base = fixtures_root / self.fixtures_subdir
@@ -120,10 +133,7 @@ class AgentToolsLiveExtractor(ExtractorBase):
         )
 
     def parse_response(self, raw_response: str) -> list[dict]:
-        try:
-            obj = parse_json_object_lenient(raw_response)
-        except ValueError as exc:
-            raise ValueError(f"extractor B (agent_tools_live): {exc}") from exc
+        obj = self._safe_parse(raw_response, layer_label="agent_tools_live")
         if not isinstance(obj, dict):
             raise ValueError("extractor B response: top-level must be a JSON object")
         tool_seq_raw = obj.get("expected_tool_sequence") or []

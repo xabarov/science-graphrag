@@ -104,20 +104,18 @@ def suite_summary_counts(case_reports: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def run_suite_cli_flow(
+def write_suite_outputs(
     *,
     title: str,
-    cases: list[Path],
+    reports: list[dict[str, Any]],
     settings: Settings,
-    run_one: Callable[[Path], dict[str, Any]],
     summarize: Callable[[dict[str, Any]], str],
     json_out: Path | None,
     md_out: Path | None,
     summary_from_reports: Callable[[list[dict[str, Any]]], dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Echo Markdown, optionally write JSON/Markdown suite artifacts (Typer CLI)."""
+    """Render and optionally persist suite payloads for precomputed reports."""
 
-    reports = [run_one(case_path) for case_path in cases]
     payload: dict[str, Any] = {
         "run_metadata": benchmark_run_metadata(settings),
         "summary": {
@@ -145,6 +143,31 @@ def run_suite_cli_flow(
         md_out.write_text(md_full, encoding="utf-8")
         typer.echo(f"Wrote Markdown suite summary to {md_out}", err=True)
     return payload
+
+
+def run_suite_cli_flow(
+    *,
+    title: str,
+    cases: list[Path],
+    settings: Settings,
+    run_one: Callable[[Path], dict[str, Any]],
+    summarize: Callable[[dict[str, Any]], str],
+    json_out: Path | None,
+    md_out: Path | None,
+    summary_from_reports: Callable[[list[dict[str, Any]]], dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Echo Markdown, optionally write JSON/Markdown suite artifacts (Typer CLI)."""
+
+    reports = [run_one(case_path) for case_path in cases]
+    return write_suite_outputs(
+        title=title,
+        reports=reports,
+        settings=settings,
+        summarize=summarize,
+        json_out=json_out,
+        md_out=md_out,
+        summary_from_reports=summary_from_reports,
+    )
 
 
 def run_single_case_json_outputs(

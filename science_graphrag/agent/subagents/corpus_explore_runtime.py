@@ -8,7 +8,7 @@ import uuid
 from time import perf_counter
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
@@ -38,6 +38,11 @@ from science_graphrag.agent.subagent_output_contract import (
 )
 from science_graphrag.agent.subagents.isolated_subagent_state import (
     build_isolated_subagent_initial_state,
+)
+from science_graphrag.agent.subagents.react_subgraph_utils import (
+    fanout_suffixes,
+    last_assistant_text,
+    permission_denied_in_messages,
 )
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.tool_execution_pipeline import build_tool_execution_node
@@ -329,9 +334,9 @@ def run_corpus_explore_subagent(
 
     latency_ms = int((perf_counter() - t_invoke0) * 1000)
     messages = list(final_state.get("messages") or [])
-    text = _last_assistant_text(messages)
+    text = last_assistant_text(messages)
     issues: list[str] = []
-    if _permission_denied_in_messages(messages):
+    if permission_denied_in_messages(messages):
         issues.append("tool_permission_denied")
     if not text.strip():
         issues.append("empty_assistant_output")
@@ -365,31 +370,6 @@ def run_corpus_explore_subagent(
     }
 
 
-def _permission_denied_in_messages(messages: list[Any]) -> bool:
-    for msg in messages:
-        if not isinstance(msg, ToolMessage):
-            continue
-        raw = getattr(msg, "content", None)
-        if not isinstance(raw, str):
-            continue
-        try:
-            data = json.loads(raw)
-        except Exception:  # noqa: BLE001
-            continue
-        if isinstance(data, dict) and data.get("error") == "permission_denied":
-            return True
-    return False
-
-
-def _last_assistant_text(messages: list[Any]) -> str:
-    for msg in reversed(messages):
-        if isinstance(msg, AIMessage):
-            t = str(msg.content or "").strip()
-            if t:
-                return t
-    return ""
-
-
 def _salvage_text() -> str:
     return (
         "Scope: corpus exploration\n"
@@ -411,15 +391,14 @@ def run_corpus_explore_fanout(
 ) -> list[dict[str, Any]]:
     """Run up to ``agent_corpus_explore_fanout_max`` exploration passes."""
     max_fan = max(1, int(getattr(settings, "agent_corpus_explore_fanout_max", 1) or 1))
-    if variant_prompt_suffixes:
-        suffixes = list(variant_prompt_suffixes)[:max_fan]
-    elif max_fan > 1:
-        suffixes = [
+    suffixes = fanout_suffixes(
+        max_fan=max_fan,
+        variant_prompt_suffixes=variant_prompt_suffixes,
+        defaults=[
             "Bias toward workspace_inspect + find_works for coverage.",
             "Bias toward paper_quote_search + idea_search for evidence density.",
-        ][:max_fan]
-    else:
-        suffixes = [""]
+        ],
+    )
     out: list[dict[str, Any]] = []
     for i, sfx in enumerate(suffixes):
         q = question if not sfx else f"{question}\n\nExploration variant {i + 1}: {sfx}"

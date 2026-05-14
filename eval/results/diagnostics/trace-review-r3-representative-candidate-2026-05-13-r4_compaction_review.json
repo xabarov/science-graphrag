@@ -1,0 +1,199 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-13T21:21:27.199820+00:00",
+  "thread_id": "compaction_review_c31d5af1926d",
+  "turns": 4,
+  "require_compaction_after": 2,
+  "mode": "focused_long_thread",
+  "max_retries_per_turn": 1,
+  "in_turn_heartbeat": true,
+  "turn_attempts": [
+    {
+      "turn": 1,
+      "attempt": 1,
+      "ok": true,
+      "failure_kind": null,
+      "failure_reason": null,
+      "elapsed_ms": 18758
+    },
+    {
+      "turn": 2,
+      "attempt": 1,
+      "ok": true,
+      "failure_kind": null,
+      "failure_reason": null,
+      "elapsed_ms": 4609
+    },
+    {
+      "turn": 3,
+      "attempt": 1,
+      "ok": true,
+      "failure_kind": null,
+      "failure_reason": null,
+      "elapsed_ms": 4358
+    },
+    {
+      "turn": 4,
+      "attempt": 1,
+      "ok": true,
+      "failure_kind": null,
+      "failure_reason": null,
+      "elapsed_ms": 4137
+    }
+  ],
+  "turn_reports": [
+    {
+      "thread_id": "compaction_review_c31d5af1926d",
+      "answer_class": "inventory",
+      "duration_ms": 3271,
+      "warnings": [],
+      "tool_trace_len": 6,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 1,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "l4_skip_reason": null,
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "attempt": 1,
+      "turn": 1
+    },
+    {
+      "thread_id": "compaction_review_c31d5af1926d",
+      "answer_class": "inventory",
+      "duration_ms": 4562,
+      "warnings": [],
+      "tool_trace_len": 6,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 2,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "l4_skip_reason": null,
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "attempt": 1,
+      "turn": 2
+    },
+    {
+      "thread_id": "compaction_review_c31d5af1926d",
+      "answer_class": "inventory",
+      "duration_ms": 4255,
+      "warnings": [],
+      "tool_trace_len": 6,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 3,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "l4_skip_reason": null,
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "attempt": 1,
+      "turn": 3
+    },
+    {
+      "thread_id": "compaction_review_c31d5af1926d",
+      "answer_class": "inventory",
+      "duration_ms": 4106,
+      "warnings": [],
+      "tool_trace_len": 6,
+      "compaction": {
+        "kind": "turn_digest",
+        "kinds": [
+          "turn_digest",
+          "rolling_memory",
+          "workspace_capsule"
+        ],
+        "trigger": "post_answer",
+        "digest_count": 4,
+        "boundary": {
+          "status": "idle"
+        }
+      },
+      "l4_skip_reason": null,
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0,
+      "attempt": 1,
+      "turn": 4
+    }
+  ],
+  "compaction_events": [
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "turn": 1,
+      "thread_id": "compaction_review_c31d5af1926d",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "workspace_capsule"
+      ],
+      "turn": 2,
+      "thread_id": "compaction_review_c31d5af1926d",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 3,
+      "thread_id": "compaction_review_c31d5af1926d",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    },
+    {
+      "type": "context_compacted",
+      "kinds": [
+        "turn_digest",
+        "rolling_memory",
+        "workspace_capsule"
+      ],
+      "turn": 4,
+      "thread_id": "compaction_review_c31d5af1926d",
+      "side_llm_cache_read_ratio": null,
+      "post_compact_paper_sources_restored_count": 0
+    }
+  ],
+  "failed_turn": null,
+  "failure_kind": null,
+  "failure_reason": null,
+  "verdict": {
+    "status": "pass",
+    "reasons": []
+  }
+}

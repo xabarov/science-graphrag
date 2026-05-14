@@ -10,6 +10,7 @@ from science_graphrag.agent.subagents.runtime import (
     SubagentRuntime,
     SubagentSpawnCapacityError,
     SubagentTaskSpec,
+    append_spawned_subagent_terminal_row,
     build_subagent_runs_from_routing_log,
     build_spawned_subagent_run_row,
     merge_subagent_run_rows,
@@ -157,3 +158,35 @@ def test_build_spawned_subagent_run_row_contains_task_and_provenance() -> None:
     merge_provenance = row.get("merge_provenance")
     assert isinstance(merge_provenance, dict)
     assert merge_provenance.get("source_kind") == "corpus_explore_result"
+
+
+def test_append_spawned_subagent_terminal_row_builds_hook_and_row() -> None:
+    hook_chain: list[dict] = []
+    rows: list[dict] = []
+    row = append_spawned_subagent_terminal_row(
+        hook_chain_sink=hook_chain,
+        debug_events_out=None,
+        spawn_rows_out=rows,
+        subagent_id="sa-x",
+        parent_turn_id="pt-x",
+        spawn_reason="corpus_explore",
+        task_type="corpus_explore",
+        description="Read-only corpus exploration child",
+        terminal_state="killed",
+        latency_ms=77,
+        failure_code="parent_recursion_limit",
+        execution_mode="sync",
+        fanout_slot=1,
+        merge_provenance={"source_kind": "corpus_explore_result"},
+        output_pointer="run_metadata.corpus_explore_results[0]",
+    )
+    assert len(rows) == 1
+    assert row is rows[0]
+    assert row["terminal_state"] == "killed"
+    assert row["task_status"] == "cancelled"
+    assert row["failure_code"] == "parent_recursion_limit"
+    merge_provenance = row.get("merge_provenance")
+    assert isinstance(merge_provenance, dict)
+    assert merge_provenance.get("source_kind") == "corpus_explore_result"
+    assert any(e.get("hook") == "subagent_start" for e in hook_chain)
+    assert any(e.get("hook") == "subagent_stop" for e in hook_chain)

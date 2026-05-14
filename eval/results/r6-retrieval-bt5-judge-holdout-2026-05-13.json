@@ -1,0 +1,71 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true,
+    "judge_prompt_fingerprint": "sha256-20:4a8a4e1fd59c0baace44",
+    "judge_schema_version": "retrieval_judge_v1",
+    "retrieval_artifact": "eval/results/r6-retrieval-live-corpus-holdout-2026-05-13.json",
+    "judge_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "judge_consistency_warnings": [
+      "judge_uses_same_model_as_extraction_set_RETRIEVAL_JUDGE_LLM_MODEL_to_diversify"
+    ]
+  },
+  "summary": {
+    "case_count": 2,
+    "mean_weighted_score": 6.7,
+    "all_passed": true,
+    "retrieval_judge_eval": true,
+    "per_case_score_breakdown": [
+      {
+        "case_id": "live_yolov1_intro",
+        "factuality": 3,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "weighted_score": 6.7,
+        "passed": true
+      },
+      {
+        "case_id": "live_yolov1_methods_combo",
+        "factuality": 3,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "weighted_score": 6.7,
+        "passed": true
+      }
+    ]
+  },
+  "cases": [
+    {
+      "case_id": "live_yolov1_intro",
+      "passed": true,
+      "weighted_score": 6.7,
+      "scores": {
+        "factuality": 3,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "justification": "The answer accurately reflects the information provided in the citation excerpts, demonstrating high factuality and coverage. The answer is coherent and clear, with no contradictions. The language is well-structured and easy to understand, although there is a minor redundancy in the second point where the same idea is repeated about YOLO seeing the entire image."
+      },
+      "wall_clock_seconds": 2.383
+    },
+    {
+      "case_id": "live_yolov1_methods_combo",
+      "passed": true,
+      "weighted_score": 6.7,
+      "scores": {
+        "factuality": 3,
+        "coverage": 3,
+        "no_contradictions": 2,
+        "language": 2,
+        "justification": ""
+      },
+      "wall_clock_seconds": 2.968
+    }
+  ]
+}

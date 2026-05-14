@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from eval.agent_v3_quality import runner as v3_runner
+from eval.agent_v3_quality import runner_branches as v3_runner_branches
 from eval.agent_v3_quality.runner import run_agent_branches_for_case, run_v3_quality_case
 
 
@@ -84,9 +85,9 @@ def test_http_transport_requires_distinct_bases_by_default() -> None:
 
 def test_subprocess_timeout_is_case_level_error(monkeypatch: pytest.MonkeyPatch) -> None:
     def _boom(*args, **kwargs):  # noqa: ANN002, ANN003
-        raise v3_runner.subprocess.TimeoutExpired(cmd="x", timeout=1.0)
+        raise v3_runner_branches.subprocess.TimeoutExpired(cmd="x", timeout=1.0)
 
-    monkeypatch.setattr(v3_runner.subprocess, "run", _boom)
+    monkeypatch.setattr(v3_runner_branches.subprocess, "run", _boom)
     row = run_v3_quality_case(
         _case("mini_workspace_stats_01"),
         baseline_runtime="langgraph_research_v1",
@@ -123,14 +124,14 @@ def test_progress_mode_sets_one_shot_heartbeat_env(
             "run_metadata": {},
             "duration_ms": 1,
         }
-        return v3_runner.subprocess.CompletedProcess(
+        return v3_runner_branches.subprocess.CompletedProcess(
             args=kwargs.get("args", []),
             returncode=0,
             stdout=json.dumps(payload),
             stderr="",
         )
 
-    monkeypatch.setattr(v3_runner.subprocess, "run", _ok)
+    monkeypatch.setattr(v3_runner_branches.subprocess, "run", _ok)
     row = run_v3_quality_case(
         _case("mini_workspace_stats_01"),
         baseline_runtime="langgraph_research_v1",

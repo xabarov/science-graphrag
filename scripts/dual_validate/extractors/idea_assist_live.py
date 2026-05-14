@@ -33,6 +33,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel, Field
 from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
@@ -40,7 +41,6 @@ from scripts.dual_validate.consistency_report import (
 from scripts.dual_validate.extractors.base import (
     ExtractorBase,
     ExtractorRunOutput,
-    parse_json_object_lenient,
 )
 from scripts.dual_validate.llm_client import LLMCallSpec
 from scripts.dual_validate.matcher import EmbeddingScorerProtocol
@@ -96,10 +96,29 @@ _VALID_REFHYP = {"plausible", "thin", "unrealistic", "absent"}
 _VALID_OVERALL = {"ok", "needs_revision"}
 
 
+class IdeaPoolRelevanceModel(BaseModel):
+    claim_id: str = Field(default="")
+    relevance: str = Field(default="unknown")
+    rationale: str = Field(default="")
+
+
+class IdeaAssistResponseModel(BaseModel):
+    pool_relevance: list[IdeaPoolRelevanceModel] = Field(default_factory=list)
+    pool_sufficiency: str = Field(default="sufficient")
+    pool_sufficiency_rationale: str = Field(default="")
+    forbidden_substrings_quality: str = Field(default="appropriate")
+    forbidden_substrings_rationale: str = Field(default="")
+    reference_hypothesis_quality: str = Field(default="absent")
+    reference_hypothesis_rationale: str = Field(default="")
+    overall_assessment: str = Field(default="ok")
+    issues: list[str] = Field(default_factory=list)
+
+
 class IdeaAssistLiveExtractor(ExtractorBase):
     """Independent LLM reviewer for ``idea_assist_v1/live_*`` packs."""
 
     layer_name = "idea_assist_live"
+    response_model = IdeaAssistResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         base = fixtures_root / "idea_assist_v1"
@@ -168,10 +187,7 @@ class IdeaAssistLiveExtractor(ExtractorBase):
         )
 
     def parse_response(self, raw_response: str) -> list[dict]:
-        try:
-            obj = parse_json_object_lenient(raw_response)
-        except ValueError as exc:
-            raise ValueError(f"extractor B (idea_assist_live): {exc}") from exc
+        obj = self._safe_parse(raw_response)
         if not isinstance(obj, dict):
             raise ValueError("extractor B response: top-level must be a JSON object")
         pool_raw = obj.get("pool_relevance") or []
@@ -257,7 +273,6 @@ class IdeaAssistLiveExtractor(ExtractorBase):
         unmatched_a: list[dict[str, Any]] = []
         unmatched_b: list[dict[str, Any]] = []
         if review is not None:
-            covered_ids = {e["claim_id"] for e in review["pool_relevance"]}
             for cid in a_pool:
                 hit = next(
                     (e for e in review["pool_relevance"] if e["claim_id"] == cid),
@@ -317,47 +332,29 @@ class IdeaAssistLiveExtractor(ExtractorBase):
             review_block = {}
             priority, why = ("medium", "dry-run: no extractor B review available")
 
-        gold_path = (pack_dir / "gold.json").resolve()
-        try:
-            rel_pack = pack_dir.resolve().relative_to(Path.cwd())
-            rel_gold = gold_path.relative_to(Path.cwd())
-        except ValueError:
-            rel_pack = pack_dir
-            rel_gold = gold_path
+        rel_pack, rel_gold = self._safe_relative_paths(pack_dir)
 
         a_info = ExtractorInfo(
             role="human_authored_existing_gold",
             source=str(rel_gold),
             count=len(a_pool),
         )
-        if run is None:
-            b_info = ExtractorInfo(
-                role="llm_independent_reviewer_dry_run",
-                source="dry-run (no LLM call)",
-                count=0,
-            )
-        else:
-            b_info = ExtractorInfo(
-                role="llm_independent_reviewer",
-                source="gold fixture review (not output generation)",
-                model=run.call_spec.model,
-                base_url=run.call_spec.base_url,
-                prompt_hash=run.prompt_hash,
-                count=len(matched_pairs) + len(unmatched_b),
-                usage_tokens=run.usage_tokens,
-                latency_ms=run.latency_ms,
-            )
+        b_info = self._extractor_b_info(
+            run,
+            role="llm_independent_reviewer",
+            source="gold fixture review (not output generation)",
+            count=len(matched_pairs) + len(unmatched_b),
+            dry_run_role="llm_independent_reviewer_dry_run",
+        )
 
-        summary = {
-            "a_total": len(a_pool),
-            "b_total": len(matched_pairs) + len(unmatched_b),
-            "matched": len(matched_pairs),
-            "matched_lexical": len(matched_pairs),
-            "matched_embedding": 0,
-            "unmatched_a": len(unmatched_a),
-            "unmatched_b": len(unmatched_b),
-            "review": review_block,
-        }
+        summary = self._summary_skeleton(
+            a_total=len(a_pool),
+            b_total=len(matched_pairs) + len(unmatched_b),
+            matched_pairs=matched_pairs,
+            unmatched_a=unmatched_a,
+            unmatched_b=unmatched_b,
+            extra={"review": review_block},
+        )
         return ConsistencyReport(
             pack_id=f"idea_assist_v1/{pack_dir.name}",
             pack_path=str(rel_pack),

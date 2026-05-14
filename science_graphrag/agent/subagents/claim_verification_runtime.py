@@ -8,7 +8,7 @@ import uuid
 from time import perf_counter
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import HumanMessage
 from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
@@ -35,6 +35,11 @@ from science_graphrag.agent.subagent_output_contract import (
     SYNTHESIZE_NOT_DELEGATE_DIRECTIVE,
     detect_handoff_phrase,
     verification_answer_matches_contract,
+)
+from science_graphrag.agent.subagents.react_subgraph_utils import (
+    fanout_suffixes,
+    last_assistant_text,
+    permission_denied_in_messages,
 )
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.tool_execution_pipeline import build_tool_execution_node
@@ -353,9 +358,9 @@ def run_claim_verification_subagent(
 
     latency_ms = int((perf_counter() - t_invoke0) * 1000)
     messages = list(final_state.get("messages") or [])
-    text = _last_assistant_text(messages)
+    text = last_assistant_text(messages)
     issues: list[str] = []
-    if _permission_denied_in_messages(messages):
+    if permission_denied_in_messages(messages):
         issues.append("tool_permission_denied")
     if not text.strip():
         issues.append("empty_assistant_output")
@@ -389,33 +394,8 @@ def run_claim_verification_subagent(
     }
 
 
-def _permission_denied_in_messages(messages: list[Any]) -> bool:
-    for msg in messages:
-        if not isinstance(msg, ToolMessage):
-            continue
-        raw = getattr(msg, "content", None)
-        if not isinstance(raw, str):
-            continue
-        try:
-            data = json.loads(raw)
-        except Exception:  # noqa: BLE001
-            continue
-        if isinstance(data, dict) and data.get("error") == "permission_denied":
-            return True
-    return False
-
-
-def _last_assistant_text(messages: list[Any]) -> str:
-    for msg in reversed(messages):
-        if isinstance(msg, AIMessage):
-            t = str(msg.content or "").strip()
-            if t:
-                return t
-    return ""
-
-
 def _salvage_text_from_messages(messages: list[Any]) -> str:
-    t = _last_assistant_text(messages)
+    t = last_assistant_text(messages)
     if t:
         return t
     return (
@@ -439,15 +419,14 @@ def run_claim_verification_fanout(
 ) -> list[dict[str, Any]]:
     """Run up to ``agent_claim_verification_fanout_max`` verification passes (research fanout)."""
     max_fan = max(1, int(getattr(settings, "agent_claim_verification_fanout_max", 1) or 1))
-    if variant_prompt_suffixes:
-        suffixes = list(variant_prompt_suffixes)[:max_fan]
-    elif max_fan > 1:
-        suffixes = [
+    suffixes = fanout_suffixes(
+        max_fan=max_fan,
+        variant_prompt_suffixes=variant_prompt_suffixes,
+        defaults=[
             "Prioritize paper_quote_search for verbatim evidence.",
             "Prioritize paper_profile for metadata consistency.",
-        ][:max_fan]
-    else:
-        suffixes = [""]
+        ],
+    )
     out: list[dict[str, Any]] = []
     for i, sfx in enumerate(suffixes):
         q = question if not sfx else f"{question}\n\nVariant {i + 1}: {sfx}"

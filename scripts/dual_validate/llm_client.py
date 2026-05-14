@@ -13,9 +13,14 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+import instructor
 from openai import APIError, OpenAI, RateLimitError
+from pydantic import BaseModel
 
 from science_graphrag.config import Settings
+from science_graphrag.llm.openrouter_model_registry import (
+    openrouter_auto_uses_instructor_structured_outputs,
+)
 
 
 @dataclass(frozen=True)
@@ -73,6 +78,8 @@ class DualValidateLLMClient:
 
     def __init__(self, *, api_key: str, base_url: str, timeout_seconds: float = 120.0) -> None:
         self._client = OpenAI(api_key=api_key, base_url=base_url, timeout=timeout_seconds)
+        self._base_url = base_url
+        self._instructor_clients: dict[instructor.Mode, Any] = {}
 
     def call(self, spec: LLMCallSpec, *, max_retries: int = 5) -> LLMCallResult:
         """Run one chat completion with jittered exponential backoff on transients.
@@ -142,6 +149,95 @@ class DualValidateLLMClient:
                     break
                 time.sleep(_compute_backoff(attempt, hint=_extract_retry_after(exc)))
         raise RuntimeError(f"LLM call failed after {max_retries} attempts: {last_err}")
+
+    def _resolve_instructor_mode(self, spec: LLMCallSpec) -> instructor.Mode:
+        if openrouter_auto_uses_instructor_structured_outputs(
+            base_url=self._base_url,
+            model_id=spec.model,
+        ):
+            return instructor.Mode.OPENROUTER_STRUCTURED_OUTPUTS
+        return instructor.Mode.TOOLS
+
+    def _instructor_client(self, mode: instructor.Mode) -> Any:
+        cached = self._instructor_clients.get(mode)
+        if cached is not None:
+            return cached
+        created = instructor.from_openai(self._client, mode=mode)
+        self._instructor_clients[mode] = created
+        return created
+
+    def call_with_response_model(
+        self,
+        spec: LLMCallSpec,
+        *,
+        response_model: type[BaseModel],
+        max_retries: int = 5,
+        validation_retries: int = 1,
+    ) -> LLMCallResult:
+        """Run one structured call via instructor.Maybe[response_model]."""
+
+        last_err: Exception | None = None
+        mode = self._resolve_instructor_mode(spec)
+        client = self._instructor_client(mode)
+        for attempt in range(max_retries):
+            t0 = time.perf_counter()
+            try:
+                extra_body: dict[str, Any] | None = None
+                if spec.reasoning is not None:
+                    extra_body = {"reasoning": dict(spec.reasoning)}
+                maybe = client.chat.completions.create(
+                    model=spec.model,
+                    messages=[
+                        {"role": "system", "content": spec.system_prompt},
+                        {"role": "user", "content": spec.user_prompt},
+                    ],
+                    temperature=spec.temperature,
+                    max_tokens=spec.max_tokens,
+                    response_model=instructor.Maybe(response_model),
+                    max_retries=validation_retries,
+                    extra_body=extra_body,
+                )
+                latency_ms = int((time.perf_counter() - t0) * 1000)
+                if getattr(maybe, "error", False):
+                    raise RuntimeError(
+                        str(getattr(maybe, "message", None) or "instructor_maybe_error")
+                    )
+                parsed = getattr(maybe, "result", None)
+                if parsed is None:
+                    raise RuntimeError("instructor_maybe_empty_result")
+                usage = getattr(maybe, "usage", None)
+                if usage is None:
+                    usage = getattr(getattr(maybe, "_raw_response", None), "usage", None)
+                if usage is None:
+                    usage = getattr(getattr(maybe, "raw_response", None), "usage", None)
+                tokens = {
+                    "prompt": int(getattr(usage, "prompt_tokens", 0)) if usage else 0,
+                    "completion": int(getattr(usage, "completion_tokens", 0)) if usage else 0,
+                    "total": int(getattr(usage, "total_tokens", 0)) if usage else 0,
+                }
+                return LLMCallResult(
+                    content=json.dumps(parsed.model_dump(mode="json"), ensure_ascii=False),
+                    prompt_hash=prompt_hash(spec),
+                    latency_ms=latency_ms,
+                    finish_reason=getattr(getattr(maybe, "_raw_response", None), "finish_reason", None),
+                    usage_tokens=tokens,
+                )
+            except RateLimitError as exc:
+                last_err = exc
+                time.sleep(_compute_backoff(attempt, hint=_extract_retry_after(exc)))
+            except APIError as exc:
+                last_err = exc
+                if attempt + 1 >= max_retries:
+                    break
+                time.sleep(_compute_backoff(attempt, hint=_extract_retry_after(exc)))
+            except RuntimeError as exc:
+                last_err = exc
+                if attempt + 1 >= max_retries:
+                    break
+                time.sleep(_compute_backoff(attempt, hint=None))
+        raise RuntimeError(
+            f"Structured LLM call failed after {max_retries} attempts: {last_err}"
+        )
 
 
 def _extract_retry_after(exc: Exception) -> float | None:

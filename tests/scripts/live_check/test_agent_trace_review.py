@@ -11,12 +11,15 @@ import types
 from pathlib import Path
 from typing import Any
 
+import pytest
 
 _REPO = Path(__file__).resolve().parents[3]
 _SCRIPT = _REPO / "scripts" / "live_check" / "agent_trace_review.py"
 
 
-def _run_script_subprocess(*, tmp_path: Path, profile: str) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
+def _run_script_subprocess(
+    *, tmp_path: Path, profile: str
+) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
     out_json = tmp_path / f"trace-review-subprocess-{profile}.json"
     out_md = tmp_path / f"trace-review-subprocess-{profile}.md"
     completed = subprocess.run(
@@ -141,6 +144,11 @@ def test_agent_trace_review_quick_profile_writes_contract_files(
     }
     schema_mod.build_acceptance_summary = lambda _review: {}
     monkeypatch.setitem(sys.modules, "trace_review_schema", schema_mod)
+
+    dotenv_mod = types.ModuleType("dotenv_util")
+    dotenv_mod.resolve_live_base_url = lambda url: str(url)  # type: ignore[misc]
+    dotenv_mod.load_dotenv_or_warn = lambda *_a, **_k: None  # type: ignore[misc]
+    monkeypatch.setitem(sys.modules, "dotenv_util", dotenv_mod)
 
     out_json = tmp_path / "trace-review.json"
     out_md = tmp_path / "trace-review.md"
@@ -320,7 +328,9 @@ def test_run_compaction_turn_review_surfaces_failure_reason(tmp_path: Path, monk
     assert out.get("failure_kind") == "http_timeout"
 
 
-def test_run_compaction_turn_review_timeout_sets_failure_reason(tmp_path: Path, monkeypatch) -> None:
+def test_run_compaction_turn_review_timeout_sets_failure_reason(
+    tmp_path: Path, monkeypatch
+) -> None:
     mod = _load_module()
     out_json = tmp_path / "compaction-timeout.json"
 
@@ -347,3 +357,123 @@ def test_run_compaction_turn_review_timeout_sets_failure_reason(tmp_path: Path, 
     assert out.get("timeout_expired") is True
     assert out.get("failure_reason") == "compaction_turn_review_timeout"
 
+
+def test_run_compaction_turn_review_forwards_mode_and_retries(tmp_path: Path, monkeypatch) -> None:
+    """CLI passes mode/retries; subprocess timeout uses wall budget (floor 120s for tiny per-turn timeouts)."""
+    mod = _load_module()
+    out_json = tmp_path / "compaction-mode.json"
+    captured: dict[str, Any] = {}
+
+    class _Completed:
+        returncode = 0
+        stdout = ""
+        stderr = ""
+
+    def _fake_run(cmd, **kwargs):  # type: ignore[no-untyped-def]
+        captured["cmd"] = list(cmd)
+        captured["subprocess_timeout"] = kwargs.get("timeout")
+        return _Completed()
+
+    monkeypatch.setattr(mod.subprocess, "run", _fake_run)
+    out = mod._run_compaction_turn_review(
+        base_url="http://127.0.0.1:65535",
+        workspace_id="ws1",
+        timeout=0.5,
+        turns=3,
+        require_after=2,
+        out_json=out_json,
+        emit_merged_into=None,
+        mode="focused_long_thread",
+        max_retries_per_turn=2,
+    )
+    assert out.get("ok") is True
+    cmd = captured.get("cmd") or []
+    assert "--mode" in cmd
+    assert "focused_long_thread" in cmd
+    assert "--max-retries-per-turn" in cmd
+    assert "2" in cmd
+    # Wall budget: max(120, timeout * turns * (1 + retries) * 1.25); floor 120 for tiny httpx timeouts.
+    assert captured.get("subprocess_timeout") == max(120.0, 0.5 * 3.0 * 3.0 * 1.25)
+
+
+def test_run_compaction_turn_review_subprocess_timeout_scales_past_floor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When timeout*turns*attempts exceeds 120s floor, subprocess timeout matches scaled wall budget."""
+    mod = _load_module()
+    out_json = tmp_path / "compaction-wall.json"
+    captured: dict[str, Any] = {}
+
+    class _Completed:
+        returncode = 0
+        stdout = ""
+        stderr = ""
+
+    def _fake_run(_cmd, **kwargs):  # type: ignore[no-untyped-def]
+        captured["subprocess_timeout"] = kwargs.get("timeout")
+        return _Completed()
+
+    monkeypatch.setattr(mod.subprocess, "run", _fake_run)
+    mod._run_compaction_turn_review(
+        base_url="http://127.0.0.1:65535",
+        workspace_id=None,
+        timeout=100.0,
+        turns=2,
+        require_after=1,
+        out_json=out_json,
+        emit_merged_into=None,
+        mode="focused_long_thread",
+        max_retries_per_turn=1,
+    )
+    assert captured.get("subprocess_timeout") == max(120.0, 100.0 * 2.0 * 2.0 * 1.25)
+
+
+def test_run_compaction_turn_review_prefers_top_level_failure_reason(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Merge metadata prefers JSON ``failure_reason`` over first ``verdict.reasons`` entry."""
+    mod = _load_module()
+    out_json = tmp_path / "compaction-top-fr.json"
+    out_json.write_text(
+        json.dumps(
+            {
+                "review_version": "trace-review-v1",
+                "failed_turn": 2,
+                "failure_kind": "silent_hang",
+                "failure_reason": "silent_hang_turn_2",
+                "verdict": {"status": "fail", "reasons": ["missing_compaction_kinds_turn_4"]},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    class _Completed:
+        returncode = 1
+        stdout = ""
+        stderr = ""
+
+    monkeypatch.setattr(mod.subprocess, "run", lambda *_a, **_k: _Completed())
+    out = mod._run_compaction_turn_review(
+        base_url="http://127.0.0.1:65535",
+        workspace_id=None,
+        timeout=1.0,
+        turns=4,
+        require_after=2,
+        out_json=out_json,
+        emit_merged_into=None,
+    )
+    assert out.get("failure_reason") == "silent_hang_turn_2"
+
+
+def test_json_safe_value_decodes_bytes_recursively() -> None:
+    mod = _load_module()
+    payload = {
+        "stdout_tail": b"ok\xff",
+        "nested": {"stderr_tail": b"fail\xfe"},
+        "list_like": [b"a", (b"b",)],
+    }
+    out = mod._json_safe_value(payload)
+    assert out["stdout_tail"] == "ok\ufffd"
+    assert out["nested"]["stderr_tail"] == "fail\ufffd"
+    assert out["list_like"] == ["a", ["b"]]

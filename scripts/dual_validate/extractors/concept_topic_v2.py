@@ -23,6 +23,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel, Field
 from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
@@ -30,7 +31,6 @@ from scripts.dual_validate.consistency_report import (
 from scripts.dual_validate.extractors.base import (
     ExtractorBase,
     ExtractorRunOutput,
-    parse_json_object_lenient,
 )
 from scripts.dual_validate.llm_client import LLMCallSpec
 from scripts.dual_validate.matcher import EmbeddingScorerProtocol
@@ -74,10 +74,22 @@ ARTICLE:
 _VALID_STATUS = {"present", "absent"}
 
 
+class ConceptLabelModel(BaseModel):
+    concept_id: str = Field(min_length=1)
+    status: str
+    evidence_quote: str = Field(default="")
+    rationale: str = Field(default="")
+
+
+class ConceptTopicResponseModel(BaseModel):
+    labels: list[ConceptLabelModel]
+
+
 class ConceptTopicV2Extractor(ExtractorBase):
     """Independent LLM extractor for ``concept_topic/corpus_*_v2`` packs."""
 
     layer_name = "concept_topic_v2"
+    response_model = ConceptTopicResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         base = fixtures_root / "concept_topic"
@@ -124,10 +136,7 @@ class ConceptTopicV2Extractor(ExtractorBase):
         )
 
     def parse_response(self, raw_response: str) -> list[dict]:
-        try:
-            obj = parse_json_object_lenient(raw_response)
-        except ValueError as exc:
-            raise ValueError(f"extractor B (concept_topic_v2): {exc}") from exc
+        obj = self._safe_parse(raw_response)
         labels_raw = obj.get("labels") if isinstance(obj, dict) else obj
         if not isinstance(labels_raw, list):
             raise ValueError("extractor B response: missing/invalid 'labels' list")
@@ -262,53 +271,34 @@ class ConceptTopicV2Extractor(ExtractorBase):
             a_total=len(a_labels),
         )
 
-        gold_path = (pack_dir / "gold.json").resolve()
-        try:
-            rel_pack = pack_dir.resolve().relative_to(Path.cwd())
-            rel_gold = gold_path.relative_to(Path.cwd())
-        except ValueError:
-            rel_pack = pack_dir
-            rel_gold = gold_path
+        rel_pack, rel_gold = self._safe_relative_paths(pack_dir)
 
         a_info = ExtractorInfo(
             role="human_authored_existing_gold",
             source=str(rel_gold),
             count=len(a_labels),
         )
-        if run is None:
-            b_info = ExtractorInfo(
-                role="llm_independent_extraction_dry_run",
-                source="dry-run (no LLM call)",
-                count=0,
-            )
-        else:
-            b_info = ExtractorInfo(
-                role="llm_independent_extraction",
-                source="article.md (re-labelled against frozen 25 concepts)",
-                model=run.call_spec.model,
-                base_url=run.call_spec.base_url,
-                prompt_hash=run.prompt_hash,
-                count=len(b_labels),
-                usage_tokens=run.usage_tokens,
-                latency_ms=run.latency_ms,
-            )
+        b_info = self._extractor_b_info(
+            run,
+            role="llm_independent_extraction",
+            source="article.md (re-labelled against frozen 25 concepts)",
+            count=len(b_labels),
+        )
 
-        summary = {
-            "a_total": len(a_labels),
-            "b_total": len(b_labels),
-            "matched": len(matched_pairs),
-            "matched_lexical": len(matched_pairs),
-            "matched_embedding": 0,
-            "unmatched_a": len(unmatched_a),
-            "unmatched_b": len(unmatched_b),
-            "field_agreements": {
+        summary = self._summary_skeleton(
+            a_total=len(a_labels),
+            b_total=len(b_labels),
+            matched_pairs=matched_pairs,
+            unmatched_a=unmatched_a,
+            unmatched_b=unmatched_b,
+            field_agreements={
                 "status": {
                     "agreed_present": agree_present,
                     "agreed_absent": agree_absent,
                     "flips": flip_count,
                 }
             },
-        }
+        )
         return ConsistencyReport(
             pack_id=f"concept_topic/{pack_dir.name}",
             pack_path=str(rel_pack),

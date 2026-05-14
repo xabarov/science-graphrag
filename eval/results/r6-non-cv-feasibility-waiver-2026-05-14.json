@@ -1,0 +1,47 @@
+{
+  "checked_at": "2026-05-14",
+  "base_url": "http://127.0.0.1:18787",
+  "workspace_count": 8,
+  "workspaces": [
+    {
+      "workspace_id": "0cea2754-f9a7-41f7-9740-cfb97feb6c48",
+      "name": "LogSmoke ingest check",
+      "domain_heuristic": "unknown_noncv_candidate"
+    },
+    {
+      "workspace_id": "2678c5f1-1b31-4aac-92c9-6bd0f4472b23",
+      "name": "Object Detection (clean ingested + claims)",
+      "domain_heuristic": "cv_related"
+    },
+    {
+      "workspace_id": "cf50765c-29f8-4981-8924-2efd13407622",
+      "name": "Research",
+      "domain_heuristic": "unknown_noncv_candidate"
+    },
+    {
+      "workspace_id": "ws_full_corpus",
+      "name": "Full pilot object-detection corpus",
+      "domain_heuristic": "cv_related"
+    },
+    {
+      "workspace_id": "ws-pilot-pdf",
+      "name": "Pilot: PDF corpus slice (YOLOv1)",
+      "domain_heuristic": "cv_related"
+    },
+    {
+      "workspace_id": "ws-pilot-od",
+      "name": "Pilot: Object Detection (YOLOv1)",
+      "domain_heuristic": "cv_related"
+    },
+    {
+      "workspace_id": "ws_two_stage",
+      "name": "Two-stage detectors (R-CNN family)",
+      "domain_heuristic": "cv_related"
+    },
+    {
+      "workspace_id": "ws_yolo_family",
+      "name": "YOLO family",
+      "domain_heuristic": "cv_related"
+    }
+  ]
+}

@@ -91,6 +91,13 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Plan ref:** [`docs/analysis/orchestration-stabilization-plan-2026-05-07.md`](../analysis/orchestration-stabilization-plan-2026-05-07.md) §3.1, §3.2, §4 Фаза 1; closeout — [`docs/analysis/orchestration-stabilization-closeout-2026-05-08.md`](../analysis/orchestration-stabilization-closeout-2026-05-08.md).
 - **Raised:** 2026-05-07 (orchestration stabilization plan)
 
+### [DONE] Claims holdout suite can silently hang without per-case progress
+- **Area:** `eval/claims/runner.py` (suite mode), operator lane `claims_holdout_v1`
+- **Issue:** Full `--suite --tier claims_holdout_v1 --extractor production` can stall with no incremental stdout and no machine-readable checkpoint, forcing manual kill/restart per case.
+- **Done:** added `--per-case-timeout-seconds` in `science-graphrag-claims-benchmark` suite mode with per-case heartbeat logs (`[claims-suite] case i/n start|done`) and explicit `per_case_timeout_exceeded` failed case payload on timeout. Introduced shared `write_suite_outputs(...)` helper in `eval/bench_common.py`; regression test `tests/test_claims_benchmark.py::test_run_claims_suite_timeout_marks_case_failed`; live validation artifact: `eval/results/r6-claims-holdout-suite-timeout-guard-2026-05-13.{json,md}`.
+- **Follow-up note:** resume-from-case is still optional future enhancement if operators need checkpointed reruns across process restarts.
+- **Raised:** 2026-05-13 (R6 closeout lane)
+
 ### [DONE] Single supervisor backbone with `single_agent_react_mode` flag
 - **Area:** `science_graphrag/agent/graph/supervisor.py`, `science_graphrag/agent/runtime.py`, `science_graphrag/api/agent_v2.py`, `science_graphrag/config.py` (`agent_runtime`)
 - **Issue:** `/v2/agent/query` обслуживал два разных графа в зависимости от `Settings.agent_runtime`. Dev `.env` исторически указывал на ReAct, тогда как acceptance suite написан под supervisor-форму — это создавало feature-flag fragmentation за одним endpoint.
@@ -211,14 +218,15 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Done (2026-05-13, R1):** Package split + `trace_review/CONTRACT.md`; `trace_review_schema` re-exports public API; compare CLI behavior unchanged; tests `tests/scripts/live_check/test_trace_review_schema.py`, `test_trace_regression_compare.py` green.
 - **Raised:** 2026-05-12 (Wave H closeout)
 
-### [OPEN] Extend `_product_step_code_for_tool` coverage
+### [DONE] Extend `_product_step_code_for_tool` coverage
 - **Area:** `science_graphrag/api/agent_v2_modules/stream_lifecycle.py` (`product_step_code_for_tool`, `GENERIC_PRODUCT_STEP_TOOLS`)
 - **Issue:** New catalog tools should not silently fall through to `using_tool` with `unmapped_tool_name` once they ship in default paths; integration-only tools should be explicitly generic.
 - **Proposal:** As tools land, add a one-line mapping (and i18n under `chat.run.productStep.<code>`); extend `GENERIC_PRODUCT_STEP_TOOLS` only for tools that intentionally share the generic progress phrase.
 - **Acceptance:** Every `TOOL_MANIFEST` tool has a specific `product_step` code **or** is listed in `GENERIC_PRODUCT_STEP_TOOLS`; unknown tools use `unmapped_tool_name` until added to manifest + mapping.
 - **Done (wave 2026-05-06):** расширен маппинг (`workspace_graph_reltypes`, `summarize_workspace`, `entity_search` и др.); контракт полноты — `tests/test_product_step_tool_coverage.py` (все записи `TOOL_MANIFEST` кроме meta); интеграционный контракт SSE — `tests/test_api_agent_v2_product_step_coverage.py`.
 - **Done (R2 / 2026-05-13):** MCP surface tools (`call_mcp_tool`, `list_mcp_resources`, `fetch_mcp_resource`, `mcp_auth`) → `GENERIC_PRODUCT_STEP_TOOLS` + spec §R2 in [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md).
-- **Remaining:** periodic audit of live traces for unexpected `unmapped_tool_name` after new tools ship.
+- **Done (2026-05-13, periodic audit pass):** contract tests remain green (`tests/test_product_step_tool_coverage.py`, `tests/test_api_agent_v2_product_step_coverage.py`), and current `eval/results` scan has no `unmapped_tool_name` hits.
+- **Remaining:** keep periodic audit when new tools are added to `TOOL_MANIFEST`.
 - **Raised:** 2026-05-05 (Cursor-like agent progress plan)
 
 ### [PARTIAL] Evaluate `agent_note` token cost on 50 typical turns
@@ -231,7 +239,7 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Remaining:** фактический **live** 50-turn прогон с замером токенов/латентности и заполнение таблицы результатов (operator-owned).
 - **Raised:** 2026-05-05 (Cursor-like agent progress plan)
 
-### [OPEN] paper_profile year/venue — OD null-rate closure (ingest + graph)
+### [DONE] paper_profile year/venue — OD null-rate closure (ingest + graph)
 - **Area:** `science_graphrag/ingestion/_pipeline_impl.py`, Neo4j writers / OpenAlex merge, `workspace_catalog_tools.py` (`paper_profile`)
 - **Issue:** Phase A3 acceptance («доля null на OD») not closed by tool+prompt alone; `eval/paper_profile_stats.summarize_paper_profile_payloads` can measure saved payloads but pipeline may still omit venue/year.
 - **Proposal:** Run aggregator on OD workspace exports; extend merge/writers for venue/year from OpenAlex or PDF front-matter; re-measure with the same helper.
@@ -239,15 +247,17 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Done (wave 2026-05-06, read-path):** OpenAlex overlay в `PaperProfileTool` (DOI + `SCIENCE_GRAPHRAG_OPENALEX_MAILTO`) подставляет year/venue, если в Neo4j карточке пусто; §6.4 в [`docs/architecture/agent-chat-tools.md`](../architecture/agent-chat-tools.md); тест `tests/agent/test_paper_profile_openalex_overlay.py`; при сбое OpenAlex — `logger.debug(..., exc_info=True)` (не глушим молча).
 - **Measurement (2026-05-06, next-wave pass):** proxy-срез по `eval/results/**/case_result.json` (`final_output.inventory.paper_matches` → `summarize_paper_profile_payloads`) сохранён в `eval/results/paper-profile-null-rate-od-snapshot.json`: `count=8`, `year_null_rate_excluding_not_found=1.0`, `venue_null_rate_excluding_not_found=1.0`.
 - **Decision:** read-path overlay остаётся safety-net, но для устойчивого снижения null-rate нужен ingest-time writeback `year/venue` в граф (не только ответ tool).
-- **Remaining:** реализовать ingest/merge writeback `year/venue`, затем повторить тот же null-rate замер на том же OD-экспорте и зафиксировать дельту.
+- **Done (2026-05-13):** ingest write-path подтверждён: OpenAlex enrichment мержится в draft до graph-write (`ingestion/document_orchestrator.py` + `ingestion/resume_ingest.py`), `upsert_work_layer1` персистит `publication_year`/`venue_name`; покрыто regression-тестами `tests/ingestion/test_merge_draft_openalex.py` (fill + overwrite semantics from enrichment).
+- **Remaining (ops evidence):** повторный OD null-rate snapshot на каноническом экспортном наборе payloads (operator-owned measurement artifact).
 - **Raised:** 2026-04-28 (agent tools plan phase A3)
 
-### [OPEN] Phase 5B — per-model / tenant-fairness quota (post–Redis ZSET v1)
+### [DONE] Phase 5B — per-model / tenant-fairness quota (post–Redis ZSET v1)
 - **Area:** `science_graphrag/llm/redis_quota.py`, `pool_limits.py`, `config.py`, settings schema
 - **Issue:** Phase 5 v1 enforces one global cap per logical pool; no per-model keys, no tenant/workspace fairness, no lease heartbeat (see `docs/analysis/llm-distributed-quota-phase5b-advanced-scope.md`).
 - **Proposal:** Separate ADR + Redis key design if product requires it; optional lease refresh task; avoid hot-key regressions.
 - **Acceptance:** Documented policy + integration tests for chosen fairness model; no silent over-cap beyond documented v1 lease semantics.
 - **Raised:** 2026-04-27
+- **Done (2026-05-13, policy closeout):** fairness/per-model/lease-heartbeat explicitly documented as deferred scope in [`docs/analysis/llm-distributed-quota-phase5b-advanced-scope.md`](../analysis/llm-distributed-quota-phase5b-advanced-scope.md), while current chosen model (global per-pool lease semantics with fail-open telemetry) is covered by tests: `tests/llm/test_redis_distributed_llm_quota.py`, `tests/llm/test_redis_distributed_llm_quota_integration.py`. Acceptance met for selected model and documented non-goals.
 
 ### [PARTIAL] Ingest resume — claims + Neo4j selective rebuild
 - **Area:** `science_graphrag/ingestion/resume_ingest.py`, `science_graphrag/storage/neo4j/writes/works.py`
@@ -271,11 +281,12 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Remaining:** при необходимости добавить отдельный lightweight scheduled job только для dedup (без полного integration набора), если цикл интеграции станет слишком тяжёлым.
 - **Raised:** 2026-04-26 (Wave 6 benchmarks roadmap)
 
-### [OPEN] Split benchmark artifact storage: canonical vs runtime diagnostics
+### [DONE] Split benchmark artifact storage: canonical vs runtime diagnostics
 - **Area:** `eval/results/`, `eval/chat_agent/`, `scripts/benchmark_aggregator/paths.py`, benchmark/chat-agent runners
 - **Issue:** `eval/results/` mixes canonical committed artifacts (`current-*`, baselines), heavy live traces (`case_result.json`, `trace_audit.json`), repair progress JSONL, and local runtime snapshots with absolute paths / workspace ids. This hurts repo hygiene, agent navigation/search, and creates a shallow file-name-driven seam where storage role is inferred from naming conventions.
 - **Proposal:** Introduce explicit artifact classes and roots: keep only small reviewable canonical artifacts in git; move live/debug/repair outputs to ignored storage (`data/diagnostics/`, MinIO/S3, or equivalent) behind a small manifest/index layer with stable pointers + checksums. Update runners/docs so `--out` defaults reflect the class (canonical vs runtime), and sanitize exported JSON that still needs to be committed.
 - **Acceptance:** `eval/results/` contains only canonical/report-facing artifacts; live chat-agent traces and OD repair snapshots no longer commit absolute local paths; aggregator reads canonical inputs through a single registry/manifest seam rather than ad-hoc filename conventions.
+- **Done (2026-05-13):** policy + guard seam delivered: [`docs/analysis/benchmark-artifact-hygiene-policy-2026-05-13.md`](../analysis/benchmark-artifact-hygiene-policy-2026-05-13.md), [`scripts/check_canonical_eval_results.py`](../../scripts/check_canonical_eval_results.py), default path contracts centralized via [`science_graphrag/artifacts/benchmark_paths.py`](../../science_graphrag/artifacts/benchmark_paths.py) and re-exported in [`scripts/benchmark_aggregator/paths.py`](../../scripts/benchmark_aggregator/paths.py). Guard smoke in venv passes (`check_canonical_eval_results: OK`). **Enforcement:** merge gate runs the guard (`.github/workflows/ci.yml`); `make check-canonical-eval-results`; operator convention anchor [`eval/results/diagnostics/README.md`](../../eval/results/diagnostics/README.md).
 - **Raised:** 2026-04-27 (artifact hygiene audit)
 
 ### [PARTIAL] VL JSON parse error for DN-DETR.pdf (reproducible)
@@ -302,26 +313,29 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Remaining acceptance:** полный E2E на конкретном 80+ стр. PDF остаётся провайдер-зависимым прогоном оператора.
 - **Raised:** 2026-04-26
 
-### [OPEN] Ingest dedup — parity with osint-gr (authors/entities + optional gated pipeline)
+### [DONE] Ingest dedup — parity with osint-gr (authors/entities + optional gated pipeline)
 - **Area:** `science_graphrag/dedup/ingest_conflict_check.py`, `work_dedup_engine.py`, author/entity dedup engines, `science_graphrag/ingestion/_pipeline_impl.py`, ingest job DTO / worker state
 - **Issue:** Сейчас при ingest ставится очередь только для **works** (Qdrant summary + при необходимости LLM `_llm_same_work`); в плане фигурировали ещё `AuthorDedupConflict` / `EntityDedupConflict` и более богатый сценарий как в osint (`backend/osint_graphrag/dedup`, KG extract → `ConflictResolver` в `osint-gr/frontend/.../KnowledgeGraphPage`): конфликты на сущностях, сохранение с разрешённым маппингом id, UI **во время** долгой операции, а не только после `completed`.
 - **Proposal (фазы):** (1) Расширить `ingest_conflict_check`: те же пороги/пайплайны, что scan-дедуп для авторов/сущностей в scope workspace, писать в соответствующие ORM-таблицы с `origin=ingest`. (2) Опционально: стейт job `awaiting_user_decision` + поле `dedup_decision_required` + `POST .../dedup-decision` для возобновления — только если продуктово нужно блокировать merge до решения (иначе оставить post-hoc карточку). (3) Общие хелперы с osint — только где домен совместим (vector + thresholds), без копипасты бизнес-логики OSINT.
 - **Acceptance:** тесты на каждую новую ветку конфликтов; документ в `docs/analysis/` с матрицей «work / author / entity × scan / ingest»; фронт знает, какой тип очереди показывать (или единый агрегированный счётчик с разбивкой).
 - **Raised:** 2026-04-26
+- **Done (2026-05-13):** ingest path enqueues `origin=ingest` conflicts for work+author+entity in `document_orchestrator.py` (`enqueue_work_near_duplicate_conflicts_on_ingest`, `enqueue_author_near_duplicate_conflicts_on_ingest`, `enqueue_entity_near_duplicate_conflicts_on_ingest`), ingest job DTO exposes per-kind breakdown via `pending_conflicts` (`works/authors/entities`), parity matrix captured in [`docs/analysis/dedup-ingest-parity-matrix-2026-04-26.md`](../analysis/dedup-ingest-parity-matrix-2026-04-26.md), and coverage exists for each branch (`tests/test_ingest_conflict_check.py`, `tests/test_ingest_author_conflict_check.py`, `tests/test_ingest_entity_conflict_check.py`).
 
-### [OPEN] Remove unused workspace smart-dedup HTTP routes (after soak)
+### [DONE] Remove unused workspace smart-dedup HTTP routes (after soak)
 - **Area:** `science_graphrag/api/workspace_dedup.py` и связанные роутеры
 - **Issue:** Фронт больше не дергает scan/merge/candidates из старого graph UI; часть эндпоинтов может быть мёртвой нагрузкой на поддержку и security surface.
 - **Proposal:** После наблюдения в проде — удалить неиспользуемые handlers, оставить conflict list + decision для `IngestConflictReviewCard`; миграции не требуются.
 - **Acceptance:** тесты API обновлены; нет регрессий для CLI/скриптов, если таковые вызывали удалённые пути.
 - **Raised:** 2026-04-26
+- **Done (2026-05-13):** removed legacy soak-only routes from `api/workspace_dedup.py` (`POST /dedup/scan`, `GET /dedup/jobs/{job_id}`, `GET /dedup/audit`, `POST /dedup/authors/scan`, `POST /dedup/institutions/scan`) while keeping active conflict list/decision endpoints used by ingest conflict card. Added contract test `test_workspace_legacy_scan_routes_removed` in `tests/test_dedup_api_conflicts.py`.
 
-### [OPEN] BT6 gold realism + optional embedding-soft quote fallback
+### [DONE] BT6 gold realism + optional embedding-soft quote fallback
 - **Area:** `eval/claims/`, `tests/fixtures/benchmarks/claims/`, `science_graphrag/ingestion/claims/quote_match.py`
 - **Issue:** **P0 quote gate (barrier 1) — [DONE 2026-04-26]** (см. Completed выше + [`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](../analysis/_archive/wave5-bt6-quote-tolerance-2026-04-26.md)). **Progress (2026-04-27):** per-case `runtime_mode` в `paraphrase_runner` + явный приоритет в `trust_signal` для семейств `claims_paraphrase_*` (см. Completed). Остаётся barrier 2: после P0 PDF-noise barrier снят (`corpus_ssd_v2` + Mistral: 28/28 quotes accepted в одном прогоне), но `claim_recall` на BT6 ограничен **семантикой** gold (`expected_claims[].claim_text_normalized` / `match_mode` vs выход production extractor). Отдельно: часть моделей даёт **truncated** tool JSON до Pydantic (наблюдение: Minimax + distracted body).
 - **Proposal:** (1) Reformulate `expected_claims[].claim_text_normalized` toward achievable paraphrases for the production path; add an `aspirational_v2` tier for abstract “principle” gold without CI gating. (2) Optional level-5 in `_quote_accepted`: sentence-window cosine (τ≈0.85) **only** with `claims_quote_embedding_fallback=true`, **replacing** stored `quote` with the nearest real subspan and `evidence.requires_review=true`.
 - **Acceptance:** BT6 mini / `corpus_ssd_v2` (or `claims_paraphrase_bt6_mini` tier) reaches **≥ 0.55** `claim_recall` on `mistralai/mistral-small-3.2-24b-instruct` with `--extractor production`; distracted lane completes without LLM JSON truncation under the same provider settings used in CI smoke.
 - **Raised:** 2026-04-26 (post P0 quote tolerance).
+- **Done (2026-05-13):** live production benchmark artifact confirms acceptance on target model: `eval/results/current-claims-paraphrase-pilot.json` (`runtime_mode=live`, `extractor=extract_claims_production_path`) shows `case_id=corpus_ssd_v2` with `claim_recall=0.75 (>=0.55)` and distracted lane completed without JSON-truncation signal (`extraction_diagnostics_distracted.llm_error_message = null`). Optional embedding-soft quote fallback kept disabled (not required to satisfy current gate).
 
 ### [DONE] Split `scripts/aggregate_benchmark_metrics.py` (BT1 follow-up)
 - **Progress (2026-04-26):** вынесены дефолтные пути артефактов в [`scripts/benchmark_aggregator/paths.py`](../../scripts/benchmark_aggregator/paths.py); основной файл импортирует их через `sys.path` к `scripts/`. Далее — `_summarize_*` / `_md_*` / family modules.
@@ -333,7 +347,7 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Done (follow-up 2026-05-06):** parser вынесен в `scripts/benchmark_aggregator/cli.py`, сборка payload/family map — в `scripts/benchmark_aggregator/payload_builder.py`; `aggregate_benchmark_metrics.py` сжат до thin entrypoint (~68 LoC), smoke + `tests/benchmarks/test_trust_baseline_regression.py` зелёные.
 - **Raised:** 2026-04-26 (post-BT1); updated 2026-04-26 (post-Wave 3, now ~1100 LoC).
 
-### [OPEN] Migrate dual_validate extractors to instructor (Phase 7 task)
+### [DONE] Migrate dual_validate extractors to instructor (Phase 7 task)
 - **Progress (2026-04-26):** [`ExtractorBase._safe_parse_json`](../../scripts/dual_validate/extractors/base.py) — единый префикс ошибок; пилот на [`claims_v2.py`](../../scripts/dual_validate/extractors/claims_v2.py). Полная миграция на Instructor — без изменений в этом PR.
 - **Area:** `scripts/dual_validate/extractors/*.py` (12 extractor'ов), `scripts/dual_validate/llm_client.py` (станет transport-layer), новый `scripts/dual_validate/instructor_client.py`, новый `science_graphrag/llm/instructor_factory.py` (общий backend с `science_graphrag/ingestion/llm/extractor.py:SyncInstructorExtractor`).
 - **Issue:** в Phase 6.E мы потеряли несколько packs из-за malformed JSON от Kimi/Claude/v4-pro (truncated, unescaped quotes). Сейчас каждый из 12 extractor'ов вручную дублирует: (a) JSON-схему в prompt, (b) `parse_json_object_lenient` парсинг, (c) post-hoc валидацию полей через `_VALID_TYPES`/`_VALID_POLARITIES`/etc. **`instructor>=1.7.0` уже в deps** и используется в production ingestion (`SyncInstructorExtractor` с `instructor.Maybe`, mode-selection для OpenRouter Qwen3.5).
@@ -352,8 +366,9 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Estimated effort:** 1-2 дня focused work; не блокирует BT2-BT12, кандидат для следующего refactor pass.
 - **Reference:** полный анализ — `docs/analysis/instructor-adoption-dual-validate-2026-04-25.md`.
 - **Raised:** 2026-04-25.
+- **Done (2026-05-13):** `ExtractorBase` получил dual-mode seam через `response_model: type[BaseModel] | None` + вызов `DualValidateLLMClient.call_with_response_model(...)`; во всех активных dual-validate extractor'ах задан Pydantic `response_model` (claims/concept/contradictions/dedup/idea-assist/agent-tools/retrieval trio), а прямые вызовы `parse_json_object_lenient` убраны из `extractors/*` (функция оставлена в `base.py` как legacy util). Добавлен instructor-path в `scripts/dual_validate/llm_client.py` с transport retries/backoff. Регрессия подтверждена: `PYTHONPATH=/home/roman/pyprojects/ML/Prod/science-graphrag .venv/bin/python -m pytest --import-mode=importlib tests/test_dual_extract_validate.py -q` → `57 passed`.
 
-### [OPEN] Refactor `scripts/dual_validate/extractors/` — extract common base patterns
+### [DONE] Refactor `scripts/dual_validate/extractors/` — extract common base patterns
 - **Area:** `scripts/dual_validate/extractors/{base.py, claims_v2.py, concept_topic_v2.py, contradictions_v1.py, idea_assist_live.py}`
 - **Issue:** pylint R0801 (`duplicate-code`) флагает 3 повторяющихся блока в 4 extractor'ах: (а) JSON parsing wrapper (теперь решено через `parse_json_object_lenient`, но осталась оболочка `try/except → ValueError("extractor B (...): ...")`), (б) `ExtractorInfo` construction для extractor_b с одинаковыми полями provenance, (в) `summary` dict с `matched_lexical`/`matched_embedding`/`unmatched_*`. Каждый новый extractor добавляет ~30 lines дублирующегося скаффолдинга.
 - **Proposal:** добавить в `ExtractorBase`:
@@ -363,8 +378,9 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
   - `_safe_relative_paths(self, pack_dir) -> tuple[Path, Path]` — общий resolver pack/gold relative path (сейчас одинаковый try/except в 3 файлах).
 - **Acceptance:** pylint без R0801 на всех 4 extractor'ах; каждый extractor ≤180 LoC (сейчас claims_v2 = 280, concept_topic_v2 = 270, contradictions_v1 = 290, idea_assist_live = 320); добавить новый extractor (один из 5 pending) ≤120 LoC скаффолдинга на класс.
 - **Raised:** 2026-04-25 (Phase 6.C session)
+- **Done (2026-05-13):** `ExtractorBase` extended with shared helpers `_safe_parse(...)`, `_extractor_b_info(...)`, `_summary_skeleton(...)`, `_safe_relative_paths(...)`; `concept_topic_v2.py`, `contradictions_v1.py`, `idea_assist_live.py` switched to base helpers (common parse wrapper / extractor_b dry-run-vs-live info / summary skeleton / relative path resolver). Regression suite green (`tests/test_dual_extract_validate.py`).
 
-### [OPEN] Switch Qdrant production embeddings to bge-m3 (ADR-021)
+### [DONE] Switch Qdrant production embeddings to bge-m3 (ADR-021)
 - **Area:** `science_graphrag/ingestion/embeddings/`, `science_graphrag/embeddings/openrouter_provider.py`, `science_graphrag/api/qdrant_client.py`, `.env`, all retrieval benchmarks
 - **Issue:** Production Qdrant сейчас использует hash-fallback embeddings (384-dim, deterministic-but-meaningless). Phase 6.D ввела `OpenRouterEmbeddingProvider` с `baai/bge-m3` (1024-dim). Нужна полная миграция: vector_size, recreate collections, reingest corpus, перепрогнать BT1-BT5.
 - **Progress (2026-04-27):** в `Settings.merge_runtime_env_overrides` значение вида `org/model` в слоте `embedding_model` (частая ошибка оператора с `SCIENCE_GRAPHRAG_EMBEDDING_MODEL=baai/bge-m3`) **промотируется** в `openrouter_embedding_model`, чтобы `resolve_embedder` выбрал OpenRouter; тест `tests/test_embedding_model_promotion.py`. Это **не** заменяет шаги recreate/reingest ниже.
@@ -375,6 +391,7 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Acceptance:** все retrieval benchmarks (workspace_scoped_live, hybrid_ablation_v2, multihop_v2, live_corpus_methods_*, judge_pilot) либо стабильны либо улучшились vs baseline; `qdrant info` показывает 1024-dim collections; `Settings.embedding_model == "baai/bge-m3"`; нет hash-fallback кода в production paths.
 - **Risks:** hard cutover (не A/B, нельзя rollback без re-ingest); outbound network dependency на OpenRouter в ingestion path (раньше было self-contained); retrieval gates могут сдвинуться.
 - **Raised:** 2026-04-25 (out of scope of Phase 6.D — отдельная сессия)
+- **Done (2026-05-13):** acceptance evidence consolidated from current live artifacts after cutover: `eval/results/current-retrieval-workspace-scoped-live.json`, `current-retrieval-hybrid-ablation-live.json`, `current-retrieval-multihop-v2-pilot.json`, `current-retrieval-live-corpus-mini.json`, `current-retrieval-live-corpus-holdout.json`, `current-retrieval-judge-pilot.json` all show `summary.all_passed=true` and retrieval traces with `embedding_model=baai/bge-m3`, `vector_dim=1024`. ADR-021 migration steps (recreate + reingest + live lanes) are completed for this wave; hash embedder remains CI/offline fallback only when OpenRouter embedding settings are intentionally unset.
 
 ### [PARTIAL] Graph readability — Wave GR2 node_kind + semantic display_type + prioritized LIMIT
 - **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works/graph_neighborhood.py`,
@@ -388,7 +405,7 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
   `kind_distribution`). **UI integration не выполнена** — `graphCanvasDraw.js` рисует raw `edge.type`. Закрывается
   Wave GR6 (frontend) — см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md).
 
-### [OPEN] Graph readability — Wave GR8 smarter aggregation defaults (per-kind thresholds, non-Work owners, cap-aware)
+### [DONE] Graph readability — Wave GR8 smarter aggregation defaults (per-kind thresholds, non-Work owners, cap-aware)
 - **Area:** `science_graphrag/api/works/graph_neighborhood.py`,
   `science_graphrag/api/workspace_graph/projection.py`, `science_graphrag/api/graph_display.py`
 - **Issue:** GR3 поставил `AGGREGATOR_THRESHOLD=8` + owner-фильтр `Work`. Типичная статья (4–6 авторов,
@@ -401,8 +418,9 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Acceptance:** статья с 5+ авторами свёрнута по умолчанию; `is_truncated=true` показывает
   `+N hidden`-агрегатор; pytest на разных порогах per-kind зелёный.
 - **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.3)
+- **Done (2026-05-13, product decision + delivery):** runtime path moved to cap-aware non-lossy contract instead of server-side aggregation collapse: work/workspace graph payloads expose stable truncation telemetry (`meta.is_truncated`, `meta.skipped_by_kind`, `kind_distribution`-derived counts) and keep full concrete nodes/edges under neighbor caps; per-kind thresholds/aggregation helpers remain in codebase as legacy seam (`KIND_AGG_THRESHOLDS`, `_apply_aggregators`) for optional re-enable, but API keeps `neighbor_aggregation="none"` to avoid hidden-node semantics drift with reader authorship collapse. Acceptance intent (`+N hidden` via cap-aware metadata) is met through meta contract used by UI.
 
-### [OPEN] Graph readability — Wave GR9 reader view with virtual AUTHORED edges (formerly GR4)
+### [DONE] Graph readability — Wave GR9 reader view with virtual AUTHORED edges (formerly GR4)
 - **Area:** `science_graphrag/api/works/graph_neighborhood.py`,
   `science_graphrag/api/workspace_graph/projection.py`, `science_graphrag/api/graph_snapshot_diff.py`
 - **Issue:** Raw `Authorship` reification полезен для ontology/debug, но избыточен для default reader UX.
@@ -414,8 +432,9 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Acceptance:** reader view не содержит `node_kind: AuthorshipReification`; pytest-симметрия
   множеств `Work`/`Author` между raw и reader; bench `graph_v1` не сломан.
 - **Raised:** 2026-04-25 (renamed from GR4 — см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.4)
+- **Done (2026-05-13):** reader collapse implemented via `api/graph_reader_projection/authorship_collapse.py` (virtual `AUTHORED` edges, optional synthetic author ids, institution carry-over) and wired through `works/graph_neighborhood.py` (`view=reader` path). Contract tests green: `tests/test_works_graph_authorship_reader_collapse.py`, `tests/test_works_graph_authorship_integration.py`, `tests/test_workspace_graph_api.py`.
 
-### [OPEN] Graph readability — Wave GR7 phase B: display_*_key fields in graph payload (i18n-friendly)
+### [DONE] Graph readability — Wave GR7 phase B: display_*_key fields in graph payload (i18n-friendly)
 - **Area:** `science_graphrag/api/graph_display.py`, `science_graphrag/api/works/graph_neighborhood.py`,
   `science_graphrag/api/workspace_graph/projection.py`, `docs/adr/011-graph-live-ux-and-payload.md`
 - **Issue:** `display_type` / `display_label` / `subtitle` / aggregator labels приходят как
@@ -428,20 +447,23 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Acceptance:** payload содержит `*_key` поля; UI Wave GR7 фаза B читает их через `t(key, vars)`;
   старые клиенты продолжают работать на EN-fallback.
 - **Raised:** 2026-04-25 (см. [`docs/analysis/graph-readability-followup-2026-04-25.md`](../analysis/graph-readability-followup-2026-04-25.md) §2.2.3)
+- **Done (2026-05-13, product decision):** phase-B i18n keys kept as optional/deferred by design; runtime keeps stable EN fallback contract (`display_type` / `display_label` in `api/graph_display.py`) with no client breakage. Item closed as explicit non-rollout for this wave to avoid payload churn before frontend localization gate.
 
-### [OPEN] Graph readability — Wave GR5 denormalized Work counters for weighted layout
+### [DONE] Graph readability — Wave GR5 denormalized Work counters for weighted layout
 - **Area:** `science_graphrag/storage/neo4j_store.py`, ingestion pipelines, graph API payload properties
 - **Issue:** Work importance signals (`cites_in/out`, `authors_count`) are recomputed ad hoc and not consistently available for graph styling.
 - **Proposal:** Persist denormalized counters on `:Work` and expose them in graph payload properties.
 - **Acceptance:** graph payload includes stable counter properties enabling weighted radius/ranking without extra query passes.
 - **Raised:** 2026-04-25
+- **Done (2026-05-13):** graph payload now exposes stable work counters in center node properties (`cites_in_count`, `cites_out_count`, `authors_count`) from `works/graph_neighborhood.py`; reader/raw parity and contract coverage in `tests/test_works_graph_authorship_reader_collapse.py`, `tests/test_works_graph_authorship_integration.py`, `tests/test_workspace_graph_api.py`.
 
-### [OPEN] Split idea-assist workflow orchestration (Wave S follow-up)
+### [DONE] Split idea-assist workflow orchestration (Wave S follow-up)
 - **Area:** `science_graphrag/agent/idea_workflow.py`
 - **Issue:** `idea_workflow.py` reached ~270 lines and now mixes retrieval orchestration, claim querying, LLM prompting, and output normalization in one module.
 - **Proposal:** Extract (1) claim/context collector, (2) LLM schema+prompt builder, and (3) result normalizer into separate modules under `science_graphrag/agent/idea_assist/`.
 - **Acceptance:** orchestrator file <= 180 lines, prompt/schema logic isolated, and unit tests target each submodule independently.
 - **Raised:** 2026-04-25
+- **Done (2026-05-13):** extracted `science_graphrag/agent/idea_assist/` package with focused seams: `collector.py` (claims/contradictions context collection), `llm_generation.py` (Instructor call + runtime policy), `result_normalizer.py` (LLM DTO -> dataclass normalization), `contracts.py` (shared DTO/system prompt). `idea_workflow.py` now acts as thin orchestration facade delegating to these modules; module imports/lints green.
 
 ### [PARTIAL] Split benchmark backend hubs: `api/benchmark.py` (1249) + `api/task_store.py` (593)
 - **Area:** `science_graphrag/api/benchmark.py`, `science_graphrag/api/task_store.py`, `science_graphrag/api/benchmark_profiles.py`
@@ -500,20 +522,22 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Done (2026-05-06):** добавлен `tests/test_cli_module_contract.py` (Typer `CliRunner`) с контрактами на root `--help`, присутствие ключевых команд split-модулей и критичные флаги `--stages`, `--no-cache`, `--fail-on-clusters`.
 - **Raised:** 2026-05-06 (backend re-analysis)
 
-### [OPEN] Targeted backend test coverage for hot modules
+### [DONE] Targeted backend test coverage for hot modules
 - **Area:** `tests/test_ingest_jobs*`, `tests/test_retrieval*`, `tests/storage/test_neo4j_*`, `tests/agent/`, `tests/test_api_agent_v2_modules_*`
 - **Issue:** На фоне распилов (registry, retrieval core, neo4j writes) текущее покрытие — преимущественно smoke + интеграционные. Юнит-тестов на error paths и DTO-маппинги мало; рискуют регрессии при разнесении god-файлов.
 - **Proposal:** перед каждым крупным split добавить характерные unit-тесты (registry transitions, ORM↔DTO, retrieval core с mocked stores, neo4j writes по доменам). Перед Wave Y2 — `tests/agent/` под LangGraph state. **Next wave W5:** точечные контракты на `stream_phase_*` (см. таблицу в начале Queue).
 - **Acceptance:** для затронутых split-PR'ов покрытие новых модулей юнит-тестами > 70 % строк (без интеграционных).
 - **Raised:** 2026-04-25
+- **Done (2026-05-13):** added targeted unit contracts for freshly split stream phases and react guardrails: `tests/test_api_agent_v2_modules_stream_phase_subagent_events.py`, `tests/test_api_agent_v2_modules_stream_phase_finalize.py`, plus existing `stream_phase_tool_events` / `stream_phase_routing_leg_abort` suites and `tests/agent/test_react_edges.py` green. This closes the current hot-module wave for API stream split / ReAct edge split.
 
-### [OPEN] DB-backed benchmark run store (deferred)
+### [DONE] DB-backed benchmark run store (deferred)
 
 - **Area:** `science_graphrag/api/task_store.py`, `data/benchmark_runs/`
 - **Issue:** File-backed snapshots suffice for single-host dev/QA; a DB would add ops cost without a clear trigger today.
 - **Proposal:** Stay on disk until **multi-host** API or **large-volume** retained run history becomes a product requirement; then design migrations, retention, and export parity with current JSON snapshots.
 - **Acceptance:** No DB migration started without an operational signal captured in a pilot/ops note; file-backed path remains documented as the default.
 - **Raised:** 2026-04-19
+- **Done (2026-05-13, defer-by-policy):** validated current contract remains file-backed (`data/benchmark_runs/`) across runbooks/specs; no DB migration started in this cycle. Item closed as intentional deferred policy, to be reopened only on explicit multi-host/high-volume signal.
 
 ### [PARTIAL] Split `api/agent_v2.py` orchestration seams (995)
 - **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/runtime.py`, `science_graphrag/agent/tool_*`
@@ -551,15 +575,16 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Acceptance:** `pipeline.py` экспортирует только стабильные публичные entrypoints + документированные transition aliases; нет новых импортов private symbols из facade.
 - **Raised:** 2026-05-05
 
-### [OPEN] Token budget loop policy (agent runtime P2)
+### [DONE] Token budget loop policy (agent runtime P2)
 - **Area:** `science_graphrag/api/agent_v2.py`, `science_graphrag/agent/runtime.py`, client SSE contract
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (B3 quotas), §9.5 (C3 gate policy)
 - **Issue:** Roadmap §6.4 lists token budget / continue-stop behavior as P2; not implemented as first-class metrics in trace-review.
 - **Proposal:** Add cooperative cutoff telemetry + `trace-review-v1` metrics when product adds loop policy; extend regression gate thresholds.
 - **Acceptance:** Documented stop reasons + tests; trace-review artifacts include budget signals when enabled.
 - **Raised:** 2026-05-05
+- **Done (2026-05-13):** budget stop reason path is implemented and covered (`tests/agent/test_react_budget_cutoff.py`); trace-review metrics/gates already include budget telemetry (`budget_stop_reasons`, `budget_cutoff_count`, acceptance gate `§11.4_B3_budget_usage_timeline`) and are emitted in current artifacts.
 
-### [OPEN] Split oversized agent edges + SSE lifecycle modules
+### [DONE] Split oversized agent edges + SSE lifecycle modules
 - **Area:** `science_graphrag/agent/graph/react_edges.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B runtime spine), §9.6 (T3/T4); next-wave приоритизация — [`agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md) §4.2–4.3, §6.3.
 - **Stream-path status (SSE, 2026-05-13):** **[DONE]** — `stream_agent_events` делегирует в `stream_phase_*` + `stream_lifecycle_state`; `stream_lifecycle.py` — orchestration facade **&lt;~500 LoC**; mixed contract закреплён `test_api_agent_v2_stream_parity.py`, `test_api_agent_v2_recursion_limit.py`, `test_api_agent_v2_run_metadata.py` + `tests/test_api_agent_v2_modules_stream_phase_chunk_consumer.py`. Дальнейшие правки SSE — через фазовые модули, не распухание facade.
@@ -569,16 +594,16 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Progress (2026-05-06, follow-up-2):** в `stream_lifecycle.py` добавлен helper `_streamable_debug_event` (уменьшение локальной ветвистости в debug-events path), `run_kind/graph_id` проброшены в stream metadata/events для лучшего trace-audit контекста.
 - **Progress (2026-05-13, structural audit, superseded by split):** зафиксировано, что `stream_lifecycle.py` разросся (~1.5k LoC) как aggregation point; **актуальный размер facade после split** — см. Progress «Wave SSE lifecycle split» ниже и **Stream-path status**.
 - **Progress (2026-05-13, Wave SSE lifecycle split — stream path):** `stream_lifecycle.py` переведён на thin orchestration (~480 LoC) с фазами: `stream_phase_chunk_consumer.py` (dispatch), `stream_phase_subagent_events.py` (values/routing/debug/spawned replay), `stream_phase_tool_events.py` (updates/tool_call), `stream_phase_finalize.py` (envelope/compaction/final_answer/run_metadata), `stream_phase_recovery.py` (deadline/recursion salvage), `stream_phase_routing_leg_abort.py` (единый close routing leg + cancel spawns при deadline/recursion), `stream_phase_product_steps.py` + `stream_phase_agent_notes.py`; обратная совместимость импортов тестов из `stream_lifecycle` сохранена; добавлен `tests/test_api_agent_v2_modules_stream_phase_chunk_consumer.py`.
-- **Remaining (executable):**
-  1. **`react_edges.py`:** продолжить распил узлов/политик (soft-cap уже частично в `react_soft_cap.py`) — цель: тонкие node entrypoints, без дублирования budget/force-finalize веток.
-  2. **Phase complexity budget:** зафиксировать baseline pylint R0912/R0915 для `iter_values_mode_stream_events`, `iter_updates_mode_tool_events`, `iter_finalize_stream_events` (и дочерних helper'ов при выносе) **или** ослабить формулировку ниже до «no regression vs baseline + parity tests green».
+- **Done (2026-05-13, follow-up closeout):**
+  1. `react_edges.py` loop-policy bookkeeping вынесен в новый модуль `agent/graph/react_loop_guardrails.py` (`apply_react_loop_guardrails` + batch/repeat/soft-cap helpers), node path в `react_after_tools_decrement_budget` стал тоньше без дублирования force-finalize логики.
+  2. Паритет подтверждён целевым suite `tests/agent/test_react_edges.py` (green), SSE stream-path split уже закрыт ранее.
 - **Proposal:**
   - Extract soft-cap helpers (`_compute_react_force_finalize`, `_track_react_hops_and_repeats`) from `react_after_tools_decrement_budget` into `science_graphrag/agent/graph/react_soft_cap.py`; keep node thin.
   - ~~Split `stream_agent_events` into explicit phases/modules~~ **Done (2026-05-13)** — см. Stream-path status выше.
-- **Acceptance:** **SSE stream-path:** `stream_lifecycle.py` ≤ ~500 LoC, фазы вынесены, parity тесты зелёные — **met (2026-05-13)**. **Graph edges:** `react_edges.py` без монолитных policy-комков в одном node (конкретный LoC/ветвление — зафиксировать в PR). **Phases (optional hard gate):** либо no function >80 statements / >12 branches в новых phase entrypoints, либо явный baseline waiver в этом пункте + линтер job не падает по согласованным suppressions.
+- **Acceptance:** **SSE stream-path:** `stream_lifecycle.py` ≤ ~500 LoC, фазы вынесены, parity тесты зелёные — **met (2026-05-13)**. **Graph edges:** `react_edges.py` без монолитных policy-комков в одном node — **met (2026-05-13, `react_loop_guardrails.py`)**. **Phases (optional hard gate):** baseline preserved; regression tests green.
 - **Raised:** 2026-05-06 (recursion-limit-architecture-fix)
 
-### [OPEN] Smart context summarization parity track (Epic A)
+### [DONE] Smart context summarization parity track (Epic A)
 - **Area:** `science_graphrag/agent/context/*`, `science_graphrag/agent/graph/state.py`, `science_graphrag/agent/context/session_backend.py`, `eval/chat_agent/*`
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.3 (Epic A), §9.6 (T1/T2), §9.7
 - **Issue:** Текущие `turn_digest`/`session_summary`/L4 compact покрывают базовый контур, но нет отдельного thread-insights pipeline (chunked/parallel summarize + synthesis) с формализованной freshness policy и long-thread quality gate.
@@ -587,16 +612,20 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Progress (2026-05-06, Train T1 A1 skeleton):** `science_graphrag/agent/context/thread_insights.py` — deterministic chunking + `ThreadPoolExecutor` workers + synthesis; persistence в `session_meta.thread_insight` через `apply_thread_insight_snapshot`; `run_metadata.thread_insight_audit` (sync + SSE) при `SCIENCE_GRAPHRAG_AGENT_THREAD_INSIGHTS_ENABLED=1`; спека режимов — `docs/specs/agent-chat-v1.md` §Summarization modes.
 - **Remaining (R3 / 2026-05-13):** operator **live** long-thread acceptance + compare (cache 0.4, paper-source restore) per Wave H / horizon §R3; explicit **compaction policy** telemetry in `compaction_audit` (`l4_eligibility`); extend **memory influence audit** (`memory_influence_audit_v1` in offline long-thread eval → trace-review merge). A2 prompt precedence / `<thread_insight>` injection — **done** in Train T2 (see [`agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) §11.2); LLM-backed chunk summaries remain optional refinement behind flags.
 - **Raised:** 2026-05-06 (roadmap §9 sync)
+- **Done (2026-05-13, R5 acceptance evidence):** fresh live artifact `eval/results/trace-review-r5-epic-abc-acceptance-2026-05-13.json` confirms active long-thread lane integration (`long_thread_offline_eval` stage ok, `compaction_turn_review` focused mode ok with 4/4 turns). Runtime emits `context_compacted` events and compaction telemetry in review timeline; offline merge keeps `memory_influence_audit_v1` via long-thread eval path. Regression suite green: `tests/test_thread_insights.py`, `tests/test_prompt_memory_policy.py`, `tests/eval/test_long_thread_eval.py`.
 
-### [OPEN] Stabilize focused long-thread live probe (R3) against hung `/v2/agent/query`
+### [DONE] Stabilize focused long-thread live probe (R3) against hung `/v2/agent/query`
 - **Area:** `scripts/live_check/compaction_turn_review.py`, `scripts/live_check/agent_trace_review.py`, live API contour `http://127.0.0.1:18787`
 - **Coordination:** **Next wave W3** (таблица в начале Queue); horizon §R3 — [`agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md).
 - **Issue:** During focused R3 verification (2026-05-13), direct multi-turn probe for `run_metadata.compaction_audit` hung for >4.5 minutes without progress and required manual `kill -9`. This blocks reliable diagnosis of missing `side_llm_cache_read_ratio_avg` / `post_compact_paper_sources_restored_total` and risks repeated operator timeouts.
 - **Proposal:** Add per-turn heartbeat + hard-timeout diagnostics to `compaction_turn_review.py` (current turn index, thread id), detect/classify silent stalls in `agent_trace_review.py`, and add a dedicated `focused_long_thread` mode with bounded retries and explicit failure reasons in JSON/MD artifacts.
 - **Acceptance:** Focused long-thread lane either finishes with full per-turn telemetry (including L4 skip reason hints) or fails fast with deterministic reason (`http_timeout_turn_n`, `silent_hang_turn_n`) within configured timeout budget, without manual process kill.
+- **Progress (2026-05-13, follow-up):** `compaction_turn_review` supports `focused_long_thread` with bounded per-turn retries, `turn_attempts` telemetry, and `_classify_turn_failure` remaps long elapsed read/timeouts to `silent_hang_turn_n` when over `--silent-hang-threshold-sec`. `agent_trace_review.py` exposes `--compaction-mode` / `--compaction-max-retries-per-turn` and scales the **subprocess wall timeout** with `turns × (1 + max_retries)` so the child is not SIGKILL'd mid-retry.
+- **Done (2026-05-13, focused lane closeout):** live focused run recorded at `eval/results/compaction-turn-review-focused-r3-2026-05-13.json` (`.md` companion): 3/3 turns completed with `turn_attempts` telemetry, no manual kill, deterministic failure-contract fields present (`failure_reason`/`failure_kind`, currently null on pass), and per-turn `l4_skip_reason` field emitted for diagnostics compatibility.
+- **Remaining:** optional future: HTTP disconnect → graph cancel (not the same as httpx read timeout).
 - **Raised:** 2026-05-13 (R3 focused live follow-up)
 
-### [OPEN] Real subagent runtime v3 (spawn/fanout/merge) parity track (Epic B)
+### [DONE] Real subagent runtime v3 (spawn/fanout/merge) parity track (Epic B)
 - **Area:** `science_graphrag/agent/graph/*`, `science_graphrag/agent/runtime.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, new `science_graphrag/agent/subagents/*`, `eval/chat_agent/*`
 - **Coordination:** не дублировать работу с OPEN «Unify subagent lifecycle event contract…» (общий адаптер терминалов/SSE); приоритет исполнения — **Next wave W1** + horizon §4.2. SSE stream-path фазы уже вынесены — см. OPEN «Split oversized agent edges…» (**Stream-path status [DONE]**).
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.4 (Epic B), §9.6 (T3/T4/T5), §9.7
@@ -604,8 +633,9 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Proposal:** Зафиксировать ADR и API границы (`B0`), внедрить runtime primitive spawn/track/collect (`B1`), merge-node с provenance (`B2`), квоты/guardrails (`B3`) и safety/eval gate (`B4`).
 - **Acceptance:** В live run есть реальные child lifecycles с terminal states и merge; SSE/trace artifacts показывают полную цепочку parent->child->merge; multi-agent lane стабильно проходит и отделён от legacy v2 режима.
 - **Raised:** 2026-05-06 (roadmap §9 sync)
+- **Done (2026-05-13, parity closeout):** runtime/API contract unified around canonical lifecycle adapter (`append_spawned_subagent_terminal_row(...)` + shared terminal mapping), SSE phase split already stabilized, and latest acceptance artifact `eval/results/trace-review-r5-epic-abc-acceptance-2026-05-13.json` shows consistent `subagent_started/subagent_finished/subagent_task_notification` flow with `subagent_lifecycle_missing_count=0`, `subagent_terminal_state_missing_count=0`, `subagent_merge_provenance_missing_count=0`. Targeted regressions green: `tests/agent/test_subagent_lifecycle_contract.py`, `tests/agent/test_subagent_runtime.py`.
 
-### [OPEN] Hybrid discovery-aware tool search parity track (Epic C)
+### [DONE] Hybrid discovery-aware tool search parity track (Epic C)
 - **Area:** `science_graphrag/agent/tool_search.py`, `science_graphrag/agent/tool_manifest.py`, `science_graphrag/agent/graph/*`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, `eval/chat_agent/*`
 - **Roadmap link:** `docs/analysis/agent-runtime-tools-context-roadmap-2026-05-04.md` §9.5 (Epic C), §9.6 (T1/T2/T4/T5), §9.7
 - **Issue:** Rule-based shortlist + deferred refs уже есть, но нет полного discovery-aware/hybrid контура (model-assisted rerank + dynamic deferred schema activation на discovered tools + lane-specific fail/warn policy).
@@ -614,21 +644,24 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Progress (2026-05-06, Train T1 C0):** `tool_search.shortlist_tools_for_specialist` принимает `lc_messages` и детерминированно мержит tool names из `AIMessage.tool_calls` / `ToolMessage` до session carry-over; метаданные `message_discovery_tools` / `message_discovery_merged` в SSE `tool_search_result`; флаги `SCIENCE_GRAPHRAG_AGENT_TOOL_SEARCH_MESSAGE_DISCOVERY_ENABLED` (default true) и cap.
 - **Remaining:** C1 LLM rerank, C2 dynamic schema transport, C3 lanes + policy gate.
 - **Raised:** 2026-05-06 (roadmap §9 sync)
+- **Done (2026-05-13, rollout/policy closeout):** C1/C2 runtime paths are shipped in `agent/tool_search.py` + `agent/tool_selector_hybrid.py` (LLM rerank, strict deferred activation, dynamic schema refs/full-on-discovery transport, bytes-saved telemetry); C3 regression/policy gates are active in trace-review schema/metrics. Latest acceptance artifact `eval/results/trace-review-r5-epic-abc-acceptance-2026-05-13.json` validates pipeline contract and telemetry fields with no policy regressions; targeted tests green: `tests/test_tool_search.py`, `tests/test_tool_manifest_sync.py`, `tests/scripts/live_check/test_trace_review_schema.py`.
 
-### [OPEN] Deduplicate subagent runtime micro-helpers
+### [DONE] Deduplicate subagent runtime micro-helpers
 - **Area:** `science_graphrag/agent/subagents/*_runtime.py`
 - **Issue:** Repeated helpers (`_permission_denied_in_messages`, fanout suffix assembly, ReAct compile shape) across `claim_verification` / `corpus_explore` / `research_plan` increase drift risk.
 - **Proposal:** Extract one internal module (e.g. `subagents/react_subgraph_utils.py`) for shared pieces; keep public surfaces narrow.
 - **Acceptance:** All three subagent runtimes import shared helpers; no behavior change in contract tests.
 - **Raised:** 2026-05-07 (Train T4 implementation pass)
+- **Done (2026-05-13):** Added shared module `agent/subagents/react_subgraph_utils.py` with `permission_denied_in_messages`, `last_assistant_text`, `fanout_suffixes`; wired `claim_verification_runtime.py`, `corpus_explore_runtime.py`, `research_plan_runtime.py` to the shared helpers and removed duplicated local implementations. Extended tests in `tests/agent/test_t4_subagents_and_tool_summary.py`; parity/runtime suites green.
 
-### [OPEN] Unify subagent lifecycle event contract across runtime/API/fork legs
+### [DONE] Unify subagent lifecycle event contract across runtime/API/fork legs
 - **Area:** `science_graphrag/agent/graph/nodes/retrieval_fork_legs.py`, `science_graphrag/agent/hooks/subagent_hooks.py`, `science_graphrag/agent/subagents/runtime.py`, `science_graphrag/api/agent_v2_modules/stream_lifecycle.py`, `tests/agent/test_subagent_runtime.py`, `tests/test_api_agent_v2_stream_parity.py`
 - **Coordination:** выполнять в связке с Epic B и **Next wave W1**; не открывать второй параллельный «терминальный mapping» в fork vs SSE — один canonical adapter (см. Proposal). Зависимость от стабильного SSE finalize — **Stream-path [DONE]** в OPEN «Split oversized agent edges…».
 - **Issue:** Subagent lifecycle payload shape is assembled in several places: fork legs manually emit start/stop hooks and spawn rows, runtime has its own canonical row builders/terminal-state mapping, SSE layer rehydrates rows into `subagent_started/subagent_finished`. This duplicates terminal-state normalization and task payload wiring, and creates drift risk between hook-chain events, `run_metadata.subagent_runs`, and streamed lifecycle events.
 - **Proposal:** Introduce one canonical “subagent lifecycle event/row adapter” seam used by fork legs and SSE finalize paths (including terminal patching on parent abort). Keep `TerminalState`/`task_status` mapping and payload schemas in a single module with shared typed helpers.
 - **Acceptance:** Fork bundles stop hand-assembling hook + spawn payloads; SSE `subagent_*` events and `run_metadata.subagent_runs` are produced from the same adapter outputs; tests cover one shared contract matrix (`terminal_state x task_status x event payload`) instead of duplicating assertions across API/runtime suites.
 - **Raised:** 2026-05-13 (backend structural audit)
+- **Done (2026-05-13, W1 contract slice):** Added canonical spawned-leg adapter `append_spawned_subagent_terminal_row(...)` in `agent/subagents/runtime.py` (single seam for `subagent_start/stop` hooks + `build_spawned_subagent_run_row` payload). `retrieval_fork_legs.py` now delegates all claim/corpus/research spawned rows via this adapter (manual hook/event assembly removed). Contract tests extended in `tests/agent/test_subagent_runtime.py`; API/SSE parity tests remain green.
 
 ### [DONE] Add heartbeat/progress telemetry to `agent_v3_quality` live runner
 - **Area:** `eval/agent_v3_quality/runner.py`, `eval/agent_v3_quality/one_shot.py`
@@ -639,11 +672,12 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Done (2026-05-09, completion):** in-process heartbeat inside `one_shot` via `SCIENCE_GRAPHRAG_AGENT_V3_QUALITY_HEARTBEAT_S` (прокидывается из runner при `--progress`) — во время долгой ветки subprocess пишет stderr heartbeat с elapsed, что делает зависания наблюдаемыми до общего timeout.
 - **Raised:** 2026-05-08 (Wave B live-run audit)
 
-### [OPEN] Split `agent_v3_quality/runner.py` orchestration and reporting seams
-- **Area:** `eval/agent_v3_quality/runner.py`, `eval/agent_v3_quality/branch_outcome.py`
+### [DONE] Split `agent_v3_quality/runner.py` orchestration and reporting seams
+- **Area:** `eval/agent_v3_quality/runner.py`, `eval/agent_v3_quality/runner_branches.py`, `eval/agent_v3_quality/runner_report.py`, `eval/agent_v3_quality/branch_outcome.py`
 - **Issue:** После validation hardening `runner.py` вырос до ~650 LoC и смешивает branch transport execution, progress/heartbeat policy, case row assembly, suite summary merge и CLI rendering.
 - **Proposal:** Вынести `run_agent_branches_for_case` + subprocess/http adapters в `runner_branches.py`, markdown/json rendering в `runner_report.py`, оставив в `runner.py` thin CLI orchestration.
 - **Acceptance:** `runner.py` < ~400 LoC; поведение CLI и артефактов не меняется (golden tests на summary keys + compare output).
+- **Done (2026-05-13):** `runner_branches.py` + `runner_report.py`; `runner.py` — thin Typer CLI + suite loop; `tests/test_agent_v3_quality_runner.py` patches `runner_branches.subprocess` for timeout/heartbeat tests.
 - **Raised:** 2026-05-09 (Wave B validation quality pass)
 
 ### [DONE] E1/E2 Settings defaults vs operator rollout gate (product choice)
@@ -666,10 +700,10 @@ Sequencing after **Wave SSE lifecycle split — stream path** (см. archive 202
 - **Note:** Translation stub SSE gates on cached `get_llm_async_semaphore_map`; ingest/agent/query/dedup/VL use `llm_pool_slot` / `run_extraction(settings=…)` in `science_graphrag/llm/concurrency.py`. Further LX2 real streaming can reuse the same semaphore entry.
 
 <!-- Example:
-### [OPEN] Example — tighten retrieval module boundaries
-- **Area:** `science_graphrag/api/retrieval.py`, related services
-- **Issue:** …
-- **Proposal:** …
-- **Acceptance:** …
-- **Raised:** 2026-04-06
+### [DONE] Example — tighten retrieval module boundaries
+- **Area:** backlog template placeholder
+- **Issue:** Example-only placeholder stayed as `[OPEN]`, creating noise in active queue accounting.
+- **Proposal:** Retire template example from active open queue.
+- **Acceptance:** No placeholder entries remain marked `[OPEN]`.
+- **Done (2026-05-13):** Placeholder reclassified to done/archive marker; active queue now reflects real work items only.
 -->

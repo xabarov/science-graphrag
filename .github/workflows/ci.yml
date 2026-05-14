@@ -33,6 +33,9 @@ jobs:
       - name: Tests (exclude integration)
         run: pytest tests -m "not integration" -q
 
+      - name: Canonical eval results guard (R8)
+        run: python scripts/check_canonical_eval_results.py
+
       - name: Chat agent contract runner (no LLM)
         run: python -m eval.chat_agent
 

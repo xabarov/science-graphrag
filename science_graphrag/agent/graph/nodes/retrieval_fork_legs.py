@@ -15,18 +15,13 @@ from science_graphrag.agent.forked_runtime import (
     run_research_plan_fork_bundle,
 )
 from science_graphrag.agent.graph.state import AgentState
-from science_graphrag.agent.hooks.subagent_hooks import TerminalState as SubagentHookTerminalState
-from science_graphrag.agent.hooks.subagent_hooks import (
-    emit_subagent_start_hook,
-    emit_subagent_stop_hook,
-)
 from science_graphrag.agent.subagents.specialist_results_v3 import (
     append_claim_verification_leg,
     append_corpus_explore_leg,
     append_research_plan_leg,
     parse_verdict_from_text,
 )
-from science_graphrag.agent.subagents.runtime import build_spawned_subagent_run_row
+from science_graphrag.agent.subagents.runtime import append_spawned_subagent_terminal_row
 from science_graphrag.api.deps import StoreRegistry
 from science_graphrag.config import Settings
 
@@ -38,18 +33,6 @@ def e1_subagents_allowed_for_retrieval_hop(*, settings: Settings, new_payloads: 
     min_n = int(getattr(settings, "agent_e1_retrieval_hop_min_payloads", 2) or 2)
     min_n = max(1, min(10, min_n))
     return len(new_payloads) >= min_n
-
-
-def _hook_terminal_state(term: str) -> SubagentHookTerminalState:
-    if term == "timed_out":
-        return "timed_out"
-    if term == "killed":
-        return "killed"
-    if term == "cancelled":
-        return "cancelled"
-    if term == "succeeded":
-        return "succeeded"
-    return "failed"
 
 
 def run_retrieval_fork_bundles(
@@ -101,49 +84,28 @@ def run_retrieval_fork_bundles(
             term = str(cv.get("terminal_state") or "failed")
             fc = cv.get("failure_code")
             lat = cv.get("latency_ms")
-            hook_local: list[dict[str, Any]] = []
-            if parent_tid:
-                emit_subagent_start_hook(
-                    out=hook_local,
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="claim_verification",
-                    leg_kind="spawned",
-                    execution_mode="sync",
-                )
-                emit_subagent_stop_hook(
-                    out=hook_local,
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="claim_verification",
-                    terminal_state=_hook_terminal_state(term),
-                    leg_kind="spawned",
-                    latency_ms=int(lat) if isinstance(lat, int) else None,
-                    failure_code=str(fc) if fc is not None else None,
-                )
-                extra_debug.extend(hook_local)
-            spawn_rows.append(
-                build_spawned_subagent_run_row(
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="claim_verification",
-                    task_id=None,
-                    task_type="claim_verification",
-                    description="Verify retrieved claims against cited evidence",
-                    execution_mode="sync",
-                    fanout_slot=1,
-                    terminal_state=term,
-                    latency_ms=int(lat) if isinstance(lat, int) else None,
-                    failure_code=str(fc) if fc is not None else None,
-                    merge_provenance={
-                        "strategy": "typed_specialist_results_v3",
-                        "source_kind": "claim_verification_result",
-                        "carried_keys": ["claim_verification_results", "specialist_results_v3"],
-                        "evidence_origin": f"subagent:{sid}",
-                        "parent_state_write": "bounded_append_only",
-                    },
-                    output_pointer=f"run_metadata.claim_verification_results[{len(cv_bucket)}]",
-                )
+            append_spawned_subagent_terminal_row(
+                hook_chain_sink=None,
+                debug_events_out=extra_debug,
+                spawn_rows_out=spawn_rows,
+                subagent_id=sid,
+                parent_turn_id=parent_tid or None,
+                spawn_reason="claim_verification",
+                task_type="claim_verification",
+                description="Verify retrieved claims against cited evidence",
+                execution_mode="sync",
+                fanout_slot=1,
+                terminal_state=term,
+                latency_ms=int(lat) if isinstance(lat, int) else None,
+                failure_code=str(fc) if fc is not None else None,
+                merge_provenance={
+                    "strategy": "typed_specialist_results_v3",
+                    "source_kind": "claim_verification_result",
+                    "carried_keys": ["claim_verification_results", "specialist_results_v3"],
+                    "evidence_origin": f"subagent:{sid}",
+                    "parent_state_write": "bounded_append_only",
+                },
+                output_pointer=f"run_metadata.claim_verification_results[{len(cv_bucket)}]",
             )
             working_v3 = append_claim_verification_leg(
                 working_v3,
@@ -209,49 +171,28 @@ def run_retrieval_fork_bundles(
             term = str(ce.get("terminal_state") or "failed")
             fc = ce.get("failure_code")
             lat = ce.get("latency_ms")
-            hook_local_ce: list[dict[str, Any]] = []
-            if parent_tid:
-                emit_subagent_start_hook(
-                    out=hook_local_ce,
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="corpus_explore",
-                    leg_kind="spawned",
-                    execution_mode="sync",
-                )
-                emit_subagent_stop_hook(
-                    out=hook_local_ce,
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="corpus_explore",
-                    terminal_state=_hook_terminal_state(term),
-                    leg_kind="spawned",
-                    latency_ms=int(lat) if isinstance(lat, int) else None,
-                    failure_code=str(fc) if fc is not None else None,
-                )
-                extra_debug.extend(hook_local_ce)
-            spawn_rows.append(
-                build_spawned_subagent_run_row(
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="corpus_explore",
-                    task_id=None,
-                    task_type="corpus_explore",
-                    description="Read-only corpus exploration child",
-                    execution_mode="sync",
-                    fanout_slot=1,
-                    terminal_state=term,
-                    latency_ms=int(lat) if isinstance(lat, int) else None,
-                    failure_code=str(fc) if fc is not None else None,
-                    merge_provenance={
-                        "strategy": "typed_specialist_results_v3",
-                        "source_kind": "corpus_explore_result",
-                        "carried_keys": ["corpus_explore_results", "specialist_results_v3"],
-                        "evidence_origin": f"subagent:{sid}",
-                        "parent_state_write": "bounded_append_only",
-                    },
-                    output_pointer=f"run_metadata.corpus_explore_results[{len(ce_bucket)}]",
-                )
+            append_spawned_subagent_terminal_row(
+                hook_chain_sink=None,
+                debug_events_out=extra_debug,
+                spawn_rows_out=spawn_rows,
+                subagent_id=sid,
+                parent_turn_id=parent_tid or None,
+                spawn_reason="corpus_explore",
+                task_type="corpus_explore",
+                description="Read-only corpus exploration child",
+                execution_mode="sync",
+                fanout_slot=1,
+                terminal_state=term,
+                latency_ms=int(lat) if isinstance(lat, int) else None,
+                failure_code=str(fc) if fc is not None else None,
+                merge_provenance={
+                    "strategy": "typed_specialist_results_v3",
+                    "source_kind": "corpus_explore_result",
+                    "carried_keys": ["corpus_explore_results", "specialist_results_v3"],
+                    "evidence_origin": f"subagent:{sid}",
+                    "parent_state_write": "bounded_append_only",
+                },
+                output_pointer=f"run_metadata.corpus_explore_results[{len(ce_bucket)}]",
             )
             working_ce = append_corpus_explore_leg(
                 working_ce,
@@ -314,49 +255,28 @@ def run_retrieval_fork_bundles(
             term = str(rp.get("terminal_state") or "failed")
             fc = rp.get("failure_code")
             lat = rp.get("latency_ms")
-            hook_local_rp: list[dict[str, Any]] = []
-            if parent_tid:
-                emit_subagent_start_hook(
-                    out=hook_local_rp,
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="research_plan",
-                    leg_kind="spawned",
-                    execution_mode="sync",
-                )
-                emit_subagent_stop_hook(
-                    out=hook_local_rp,
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="research_plan",
-                    terminal_state=_hook_terminal_state(term),
-                    leg_kind="spawned",
-                    latency_ms=int(lat) if isinstance(lat, int) else None,
-                    failure_code=str(fc) if fc is not None else None,
-                )
-                extra_debug.extend(hook_local_rp)
-            spawn_rows.append(
-                build_spawned_subagent_run_row(
-                    subagent_id=sid,
-                    parent_turn_id=parent_tid,
-                    spawn_reason="research_plan",
-                    task_id=None,
-                    task_type="research_plan",
-                    description="Read-only research plan child",
-                    execution_mode="sync",
-                    fanout_slot=1,
-                    terminal_state=term,
-                    latency_ms=int(lat) if isinstance(lat, int) else None,
-                    failure_code=str(fc) if fc is not None else None,
-                    merge_provenance={
-                        "strategy": "typed_specialist_results_v3",
-                        "source_kind": "research_plan_result",
-                        "carried_keys": ["research_plan_results", "specialist_results_v3"],
-                        "evidence_origin": f"subagent:{sid}",
-                        "parent_state_write": "bounded_append_only",
-                    },
-                    output_pointer=f"run_metadata.research_plan_results[{len(rp_bucket)}]",
-                )
+            append_spawned_subagent_terminal_row(
+                hook_chain_sink=None,
+                debug_events_out=extra_debug,
+                spawn_rows_out=spawn_rows,
+                subagent_id=sid,
+                parent_turn_id=parent_tid or None,
+                spawn_reason="research_plan",
+                task_type="research_plan",
+                description="Read-only research plan child",
+                execution_mode="sync",
+                fanout_slot=1,
+                terminal_state=term,
+                latency_ms=int(lat) if isinstance(lat, int) else None,
+                failure_code=str(fc) if fc is not None else None,
+                merge_provenance={
+                    "strategy": "typed_specialist_results_v3",
+                    "source_kind": "research_plan_result",
+                    "carried_keys": ["research_plan_results", "specialist_results_v3"],
+                    "evidence_origin": f"subagent:{sid}",
+                    "parent_state_write": "bounded_append_only",
+                },
+                output_pointer=f"run_metadata.research_plan_results[{len(rp_bucket)}]",
             )
             rw_ok = rp.get("research_plan_write_ok")
             issues_rp = list(rp.get("issues") or [])

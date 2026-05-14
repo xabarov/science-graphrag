@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
+import typer
 
 from eval.claims import runner as claims_runner_mod
 from eval.claims.heuristic_extract import extract_claims_anchor_harness
@@ -166,3 +167,31 @@ def test_all_gold_files_parse() -> None:
         data = json.loads(gold_path.read_text(encoding="utf-8"))
         sv = data.get("schema_version")
         assert sv in (1, 2, 3), f"{gold_path}: unsupported schema_version {sv!r}"
+
+
+def test_run_claims_suite_timeout_marks_case_failed(tmp_path: Path) -> None:
+    """Per-case timeout converts a hanging case into explicit failed report."""
+
+    def _slow_run_one(_case: Path) -> dict:
+        import time
+
+        time.sleep(0.2)
+        return {"case_id": "never", "metrics": {"passed": True}}
+
+    out_json = tmp_path / "suite.json"
+    with pytest.raises(typer.Exit) as exc:
+        claims_runner_mod._run_claims_suite(  # type: ignore[attr-defined]  # pylint: disable=protected-access
+            FIXTURES,
+            "claims_merge_contract",
+            settings=get_settings(),
+            run_one=_slow_run_one,
+            json_out=out_json,
+            md_out=None,
+            per_case_timeout_seconds=0.01,
+        )
+    assert exc.value.exit_code == 1
+    payload = json.loads(out_json.read_text(encoding="utf-8"))
+    assert payload["summary"]["all_passed"] is False
+    case0 = payload["cases"][0]
+    assert case0["metrics"]["passed"] is False
+    assert "per_case_timeout_exceeded" in case0["metrics"]["request_error"]

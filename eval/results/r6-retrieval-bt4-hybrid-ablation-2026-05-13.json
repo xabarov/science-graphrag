@@ -1,0 +1,283 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 8,
+    "case_ids": [
+      "ha_anchor_free",
+      "ha_classical_handcrafted",
+      "ha_compound_scaling",
+      "ha_focal_loss",
+      "ha_iou_loss_quality",
+      "ha_keypoint_corner",
+      "ha_set_prediction_transformer",
+      "ha_two_stage_rpn_evolution"
+    ],
+    "all_passed": false,
+    "hybrid_ablation_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "ha_anchor_free",
+      "question_preview": "Object detection methods that work without predefined anchor boxes (anchor-free).",
+      "metrics": {
+        "passed": false,
+        "mrr_vector": 0.0,
+        "mrr_hybrid": 0.0,
+        "mrr_delta": 0.0,
+        "mrr_delta_per_mode": {
+          "vector": 0.0,
+          "hybrid": 0.0
+        },
+        "hybrid_regression": false,
+        "min_mrr_delta_hybrid_minus_vector": 0.05,
+        "mrr_k": 10,
+        "relevant_count": 4,
+        "vector_hit_count": 5,
+        "hybrid_hit_count": 5,
+        "uuid_aware_mode": true
+      },
+      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then",
+      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ### 2.2. Anchor-free Detector\n\n**Keypoint-based method.** This type of anchor-free method first locates several pre-defined or self-learned keypoints, and then",
+      "wall_clock_seconds": 0.217014,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "ha_classical_handcrafted",
+      "question_preview": "Pre-deep-learning object detection using histogram-of-oriented-gradients and deformable parts models.",
+      "metrics": {
+        "passed": false,
+        "mrr_vector": 0.0,
+        "mrr_hybrid": 0.0,
+        "mrr_delta": 0.0,
+        "mrr_delta_per_mode": {
+          "vector": 0.0,
+          "hybrid": 0.0
+        },
+        "hybrid_regression": false,
+        "min_mrr_delta_hybrid_minus_vector": 0.05,
+        "mrr_k": 10,
+        "relevant_count": 2,
+        "vector_hit_count": 5,
+        "hybrid_hit_count": 5,
+        "uuid_aware_mode": true
+      },
+      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): # Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We",
+      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): # Object Detection with Discriminatively Trained Part Based Models\n\nPedro F. Felzenszwalb, Ross B. Girshick, David McAllester and Deva Ramanan\n\n**Abstract**—We",
+      "wall_clock_seconds": 0.391154,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "ha_compound_scaling",
+      "question_preview": "Compound scaling of depth, width, and input resolution for efficient object detection.",
+      "metrics": {
+        "passed": false,
+        "mrr_vector": 0.0,
+        "mrr_hybrid": 0.0,
+        "mrr_delta": 0.0,
+        "mrr_delta_per_mode": {
+          "vector": 0.0,
+          "hybrid": 0.0
+        },
+        "hybrid_regression": false,
+        "min_mrr_delta_hybrid_minus_vector": 0.05,
+        "mrr_k": 10,
+        "relevant_count": 1,
+        "vector_hit_count": 5,
+        "hybrid_hit_count": 5,
+        "uuid_aware_mode": true
+      },
+      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nModel efficiency has become increasingly important in computer vision. In this paper, we systematically study neural network architecture design c",
+      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ## Abstract\n\nModel efficiency has become increasingly important in computer vision. In this paper, we systematically study neural network architecture design c",
+      "wall_clock_seconds": 0.543687,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "ha_focal_loss",
+      "question_preview": "Focal loss for addressing extreme foreground-background class imbalance in dense object detection.",
+      "metrics": {
+        "passed": false,
+        "mrr_vector": 0.0,
+        "mrr_hybrid": 0.0,
+        "mrr_delta": 0.0,
+        "mrr_delta_per_mode": {
+          "vector": 0.0,
+          "hybrid": 0.0
+        },
+        "hybrid_regression": false,
+        "min_mrr_delta_hybrid_minus_vector": 0.05,
+        "mrr_k": 10,
+        "relevant_count": 2,
+        "vector_hit_count": 5,
+        "hybrid_hit_count": 5,
+        "uuid_aware_mode": true
+      },
+      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobabil",
+      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): Focal Loss for Dense Object Detection\nTsung-Yi Lin Priya Goyal Ross Girshick Kaiming He Piotr Doll ́ar\nFacebook AI Research (FAIR)\n0 0.2 0.4 0.6 0.8 1\nprobabil",
+      "wall_clock_seconds": 0.334258,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "ha_iou_loss_quality",
+      "question_preview": "IoU-based localisation loss and quality-aware classification for dense object detection.",
+      "metrics": {
+        "passed": false,
+        "mrr_vector": 0.0,
+        "mrr_hybrid": 0.0,
+        "mrr_delta": 0.0,
+        "mrr_delta_per_mode": {
+          "vector": 0.0,
+          "hybrid": 0.0
+        },
+        "hybrid_regression": false,
+        "min_mrr_delta_hybrid_minus_vector": 0.05,
+        "mrr_k": 10,
+        "relevant_count": 3,
+        "vector_hit_count": 5,
+        "hybrid_hit_count": 5,
+        "uuid_aware_mode": true
+      },
+      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ## 1. Introduction\n\nObject detection is a complex problem, requiring the solution of two main tasks. First, the detector must solve the recognition problem, to",
+      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ## 1. Introduction\n\nObject detection is a complex problem, requiring the solution of two main tasks. First, the detector must solve the recognition problem, to",
+      "wall_clock_seconds": 0.234828,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "ha_keypoint_corner",
+      "question_preview": "Object detection by predicting paired bounding-box keypoints (top-left and bottom-right corners).",
+      "metrics": {
+        "passed": false,
+        "mrr_vector": 0.0,
+        "mrr_hybrid": 0.0,
+        "mrr_delta": 0.0,
+        "mrr_delta_per_mode": {
+          "vector": 0.0,
+          "hybrid": 0.0
+        },
+        "hybrid_regression": false,
+        "min_mrr_delta_hybrid_minus_vector": 0.05,
+        "mrr_k": 10,
+        "relevant_count": 2,
+        "vector_hit_count": 5,
+        "hybrid_hit_count": 5,
+        "uuid_aware_mode": true
+      },
+      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ### 3.1 Overview\n\nIn CornerNet, we detect an object as a pair of keypoints—the top-left corner and bottom-right corner of the bounding box. A convolutional net",
+      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ### 3.1 Overview\n\nIn CornerNet, we detect an object as a pair of keypoints—the top-left corner and bottom-right corner of the bounding box. A convolutional net",
+      "wall_clock_seconds": 0.476777,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "ha_set_prediction_transformer",
+      "question_preview": "End-to-end set prediction with bipartite matching using transformer encoder-decoder for object detection.",
+      "metrics": {
+        "passed": false,
+        "mrr_vector": 0.0,
+        "mrr_hybrid": 0.0,
+        "mrr_delta": 0.0,
+        "mrr_delta_per_mode": {
+          "vector": 0.0,
+          "hybrid": 0.0
+        },
+        "hybrid_regression": false,
+        "min_mrr_delta_hybrid_minus_vector": 0.05,
+        "mrr_k": 10,
+        "relevant_count": 5,
+        "vector_hit_count": 5,
+        "hybrid_hit_count": 5,
+        "uuid_aware_mode": true
+      },
+      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): ## 1 Introduction\n\nThe goal of object detection is to predict a set of bounding boxes and category labels for each object of interest. Modern detectors address",
+      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): ## 1 Introduction\n\nThe goal of object detection is to predict a set of bounding boxes and category labels for each object of interest. Modern detectors address",
+      "wall_clock_seconds": 0.357234,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true
+      }
+    },
+    {
+      "case_id": "ha_two_stage_rpn_evolution",
+      "question_preview": "Region proposal network end-to-end training with shared convolutional features for two-stage detection.",
+      "metrics": {
+        "passed": false,
+        "mrr_vector": 0.0,
+        "mrr_hybrid": 0.0,
+        "mrr_delta": 0.0,
+        "mrr_delta_per_mode": {
+          "vector": 0.0,
+          "hybrid": 0.0
+        },
+        "hybrid_regression": false,
+        "min_mrr_delta_hybrid_minus_vector": 0.05,
+        "mrr_k": 10,
+        "relevant_count": 3,
+        "vector_hit_count": 5,
+        "hybrid_hit_count": 5,
+        "uuid_aware_mode": true
+      },
+      "answer_vector_preview": "Retrieved context (not LLM-paraphrased): #### 4-Step Alternating Training\n\nIn this paper, we adopt a pragmatic 4-step training algorithm to learn shared features via alternating optimization. In the f",
+      "answer_hybrid_preview": "Retrieved context (not LLM-paraphrased): #### 4-Step Alternating Training\n\nIn this paper, we adopt a pragmatic 4-step training algorithm to learn shared features via alternating optimization. In the f",
+      "wall_clock_seconds": 0.187304,
+      "run_metadata": {
+        "extraction_llm_enabled": true,
+        "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+        "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+        "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+        "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+        "semantic_extraction_enabled": true
+      }
+    }
+  ]
+}

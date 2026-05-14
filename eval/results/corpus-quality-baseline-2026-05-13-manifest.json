@@ -1,0 +1,27 @@
+{
+  "manifest_version": "corpus-quality-baseline-v1",
+  "generated_at": "2026-05-13",
+  "status": "r6_closed_with_non_cv_waiver",
+  "bottleneck_hypothesis": "runtime",
+  "workspaces": {
+    "cv": {"workspace_id": "ws-pilot-od", "notes": "Live CV contour used in 2026-05-13 runs."},
+    "non_cv": {
+      "workspace_id": null,
+      "notes": "Waived in this cycle; see docs/analysis/r6-non-cv-feasibility-waiver-2026-05-14.md and eval/results/r6-non-cv-feasibility-waiver-2026-05-14.json."
+    }
+  },
+  "artifacts": {
+    "claims_bt6_pilot": "eval/results/r6-claims-pilot-2026-05-13.json",
+    "claims_bt6_holdout": "eval/results/r6-claims-holdout-suite-timeout-guard-2026-05-13.json",
+    "citation_edge": "eval/results/r6-citation-edge-refs-mini-2026-05-13.json",
+    "retrieval_bt2": "eval/results/r6-retrieval-live-corpus-mini-2026-05-13.json",
+    "retrieval_bt4": "eval/results/r6-retrieval-bt4-hybrid-ablation-2026-05-13.json",
+    "retrieval_bt5": "eval/results/r6-retrieval-bt5-judge-holdout-2026-05-13.json",
+    "paper_profile_null_rate": "eval/results/paper-profile-null-rate-od-snapshot.json",
+    "work_dedup_report": "eval/results/r6-work-dedup-report-2026-05-13.json",
+    "author_entity_dedup": null,
+    "non_cv_feasibility_waiver": "eval/results/r6-non-cv-feasibility-waiver-2026-05-14.json"
+  },
+  "trust_signal_runtime_mode_required": "live",
+  "doc": "docs/analysis/corpus-quality-baseline-after-agent-stabilization-2026-05.md"
+}

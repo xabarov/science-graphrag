@@ -6,6 +6,7 @@ Advisory benchmark: same frozen prompts executed under **baseline** (`langgraph_
 - Implementation notes: `docs/analysis/agent-v3-quality-benchmark-implementation-plan-2026-05-08.md`
 - Case schema version: `agent_v3_quality_case_v1` (`gold.json`)
 - Artifact `review_version`: `agent-v3-quality-judge-v1`
+- **Runner layout:** `eval/agent_v3_quality/runner.py` (Typer CLI + suite loop), `runner_branches.py` (subprocess/http branch execution), `runner_report.py` (judge attach + Markdown render).
 
 ## Fixture contract
 

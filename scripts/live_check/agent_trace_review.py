@@ -261,6 +261,8 @@ def _run_compaction_turn_review(
     require_after: int,
     out_json: Path,
     emit_merged_into: Path | None,
+    mode: str = "default",
+    max_retries_per_turn: int = 0,
 ) -> dict[str, Any]:
     cmd = [
         str(_REPO_ROOT / ".venv" / "bin" / "python"),
@@ -277,11 +279,22 @@ def _run_compaction_turn_review(
         str(out_json),
         "--out-md",
         str(out_json.with_suffix(".md")),
+        "--mode",
+        str(mode),
+        "--max-retries-per-turn",
+        str(max(0, int(max_retries_per_turn))),
     ]
     if workspace_id:
         cmd.extend(["--workspace-id", workspace_id])
     if emit_merged_into:
         cmd.extend(["--emit-merged-into", str(emit_merged_into)])
+    # Wall-clock budget: each turn may retry (focused mode); each attempt can run up to httpx
+    # read timeout. Child retry backoff is not added here (small underestimate vs real wall time).
+    attempts_per_turn = max(1.0, 1.0 + float(max(0, int(max_retries_per_turn))))
+    wall_budget = max(
+        120.0,
+        float(timeout) * float(max(1, int(turns))) * attempts_per_turn * 1.25,
+    )
     try:
         completed = subprocess.run(
             cmd,
@@ -289,7 +302,7 @@ def _run_compaction_turn_review(
             text=True,
             env=os.environ.copy(),
             check=False,
-            timeout=max(120.0, float(timeout) * 4),
+            timeout=wall_budget,
         )
     except subprocess.TimeoutExpired as exc:
         return {
@@ -307,8 +320,11 @@ def _run_compaction_turn_review(
             report_blob = json.loads(out_json.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             report_blob = {}
-    failure_reason = None
-    if isinstance(report_blob.get("verdict"), dict):
+    failure_reason: str | None = None
+    top_raw = report_blob.get("failure_reason")
+    if isinstance(top_raw, str) and top_raw.strip():
+        failure_reason = top_raw.strip()
+    elif isinstance(report_blob.get("verdict"), dict):
         reasons = report_blob["verdict"].get("reasons") or []
         if isinstance(reasons, list) and reasons:
             failure_reason = str(reasons[0])
@@ -342,6 +358,19 @@ def _patch_run_context_execution_diagnostics(
         "stages": list(exec_stages),
     }
     doc["run_context"] = rc2
+
+
+def _json_safe_value(value: Any) -> Any:
+    """Recursively coerce values into JSON-serializable primitives."""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    if isinstance(value, dict):
+        return {str(k): _json_safe_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_json_safe_value(v) for v in value]
+    if isinstance(value, tuple):
+        return [_json_safe_value(v) for v in value]
+    return value
 
 
 def _checks_dict(checks: list[dict[str, Any]]) -> dict[str, bool]:
@@ -543,6 +572,18 @@ def main() -> int:
         type=Path,
         default=None,
         help="Path for compaction_turn_review --emit-merged-into (default: --out-json)",
+    )
+    parser.add_argument(
+        "--compaction-mode",
+        choices=["default", "focused_long_thread"],
+        default="default",
+        help="Compaction review mode for --with-compaction-turns lane.",
+    )
+    parser.add_argument(
+        "--compaction-max-retries-per-turn",
+        type=int,
+        default=int(os.environ.get("AGENT_LIVE_COMPACTION_RETRY_MAX", "0") or 0),
+        help="Retries passed to compaction_turn_review focused mode.",
     )
     parser.add_argument(
         "--out-json", type=Path, default=_REPO_ROOT / "eval" / "results" / "trace-review.json"
@@ -889,7 +930,8 @@ def main() -> int:
     args.out_json.parent.mkdir(parents=True, exist_ok=True)
     args.out_md.parent.mkdir(parents=True, exist_ok=True)
     args.out_json.write_text(
-        json.dumps(review_dict, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        json.dumps(_json_safe_value(review_dict), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
     )
     _write_markdown(args.out_md, review_dict)
 
@@ -908,6 +950,8 @@ def main() -> int:
                 require_after=args.require_compaction_after,
                 out_json=comp_json,
                 emit_merged_into=merge_target,
+                mode=str(args.compaction_mode),
+                max_retries_per_turn=int(args.compaction_max_retries_per_turn),
             ),
             heartbeat_interval_s=hb_sec,
         )
@@ -922,7 +966,8 @@ def main() -> int:
                     e2e_subprocess_timeout_sec=e2e_subprocess_timeout_sec,
                 )
                 merge_target.write_text(
-                    json.dumps(merged, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+                    json.dumps(_json_safe_value(merged), ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8",
                 )
                 review_dict = merged
                 if args.with_acceptance_summary:
@@ -937,7 +982,7 @@ def main() -> int:
                     e2e_subprocess_timeout_sec=e2e_subprocess_timeout_sec,
                 )
                 args.out_json.write_text(
-                    json.dumps(review_dict, ensure_ascii=False, indent=2) + "\n"
+                    json.dumps(_json_safe_value(review_dict), ensure_ascii=False, indent=2) + "\n"
                 )
                 if args.with_acceptance_summary:
                     review_dict["acceptance_summary"] = build_acceptance_summary(review_dict)

@@ -47,6 +47,22 @@ def _ctx() -> StreamLifecycleRequestContext:
     )
 
 
+def test_updates_chunk_without_tool_messages_yields_no_events() -> None:
+    """Empty updates.messages list should not emit tool_result events (W5 regression guard)."""
+
+    async def _run() -> None:
+        ctx = _ctx()
+        state = StreamAgentLifecycleState()
+        state.step = 1
+        chunk = ("updates", {"n": {"messages": []}})
+        events: list[dict[str, str]] = []
+        async for ev in iter_updates_mode_tool_events(ctx=ctx, state=state, chunk=chunk):
+            events.append(ev)
+        assert events == []
+
+    asyncio.run(_run())
+
+
 def test_tool_result_invalid_json_sets_error_field() -> None:
     """Non-JSON ToolMessage content should populate tool_result.error, not raise."""
 

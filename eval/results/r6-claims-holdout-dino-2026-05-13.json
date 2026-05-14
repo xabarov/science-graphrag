@@ -1,0 +1,577 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "holdout_dino_v1",
+    "metrics": {
+      "contract_only": false,
+      "contract_passed": true,
+      "passed": false,
+      "claim_recall": 0.0,
+      "claim_precision": 0.0,
+      "claim_precision_distracted": 0.0,
+      "precision_drop_with_distractors": 0.0,
+      "max_precision_drop_with_distractors": 0.15,
+      "paraphrase_scoring": true,
+      "claim_match_mode": "claim_id_or_normalized_text",
+      "expected_count": 5,
+      "predicted_count_plain": 16,
+      "predicted_count_distracted": 15,
+      "matched_claim_ids": [],
+      "missing_claim_ids": [
+        "dino_three_components",
+        "dino_swinl_63ap",
+        "dino_detr_scaling_overcomes_classical",
+        "dino_earlier_detr_slow_small_obj_negative",
+        "dino_classical_pipelines_scaling_negative"
+      ],
+      "min_claim_recall": 0.55
+    },
+    "predictions_plain": [
+      {
+        "claim_id": "4a1a3b30-fe4d-5160-8d6e-9ac1cb45e802",
+        "claim_text": "DINO scales well in both model size and data size.",
+        "claim_text_normalized": "dino scales well in both model size and data size.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "834adf2b-a6a0-5758-9dc2-00c4d0ab5e86",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "DINO scales well in both model size and data size.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "8300249a-d781-5366-8e44-345f6cc9c07d",
+        "claim_text": "After pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).",
+        "claim_text_normalized": "after pre-training on the objects 365 dataset with a swinl backbone, dino obtains the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap).",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "ecfe3b42-b30a-5201-870f-047bab029679",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "After pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "907ab286-2b16-5014-886e-9fe60e0d5957",
+        "claim_text": "DINO significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.",
+        "claim_text_normalized": "dino significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a9caa13e-eea3-58a4-9161-d3fa7dd7b656",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "45b3bff0-e221-5c8c-b82e-c80daf5fc55a",
+        "claim_text": "DINO contains a backbone, a multi-layer Transformer encoder, a multi-layer Transformer decoder, and multiple prediction heads.",
+        "claim_text_normalized": "dino contains a backbone, a multi-layer transformer encoder, a multi-layer transformer decoder, and multiple prediction heads.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "98c194ab-3121-5962-951e-0624ff9b4ffc",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "As a DETR-like model, DINO contains a backbone, a multi-layer Transformer encoder, a multi-layer Transformer decoder, and multiple prediction heads.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "aef50740-d7b0-5c60-adb7-8eda13ffb1f3",
+        "claim_text": "DINO formulates queries in the decoder as dynamic anchor boxes and refines them step-by-step across decoder layers.",
+        "claim_text_normalized": "dino formulates queries in the decoder as dynamic anchor boxes and refines them step-by-step across decoder layers.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "7fe3047a-d83e-563b-a619-f14d7d7a3542",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Following DAB-DETR [21], we formulate queries in decoder as dynamic anchor boxes and refine them step-by-step across decoder layers.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "24303ec2-3969-54e6-9b15-10e7c4356398",
+        "claim_text": "DINO adds ground truth labels and boxes with noises into the Transformer decoder layers to help stabilize bipartite matching during training.",
+        "claim_text_normalized": "dino adds ground truth labels and boxes with noises into the transformer decoder layers to help stabilize bipartite matching during training.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a1945ead-e6d4-5020-b536-e773604734f2",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Following DN-DETR [17], we add ground truth labels and boxes with noises into the Transformer decoder layers to help stabilize bipartite matching during training.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "bc2c5930-f907-599f-a84a-0d500025d140",
+        "claim_text": "DINO proposes a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+        "claim_text_normalized": "dino proposes a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "cec3a7fb-f8b9-56c3-a6fb-509df2c71110",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "First, to improve the one-to-one matching, we propose a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "04ac1a2a-6a24-5e1e-9825-35c675f0619b",
+        "claim_text": "DINO proposes a mixed query selection method to better initialize the queries.",
+        "claim_text_normalized": "dino proposes a mixed query selection method to better initialize the queries.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "aa6ac3b5-f32d-57e5-807b-4c866d87eab7",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Second, the dynamic anchor box formulation of queries links DETR-like models with classical two-stage models. Hence we propose a mixed query selection method, which helps better initialize the queries.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "941eaa96-1ab0-5fa3-9e46-7c72a627e115",
+        "claim_text": "DINO proposes a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+        "claim_text_normalized": "dino proposes a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "20e433ab-946a-56b5-800d-025f733baacc",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Third, to leverage the refined box information from later layers to help optimize the parameters of their adjacent early layers, we propose a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "a22cfc3a-6b1e-5483-8578-1b9435417aab",
+        "claim_text": "DINO trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5AP.",
+        "claim_text_normalized": "dino trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5ap.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a919fb3d-cf38-5836-908a-7cca968d22e1",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "In particular, DINO trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5AP.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "4f060414-5c80-5c0d-a75a-5c0e8fbc7bc1",
+        "claim_text": "After pre-training on the Objects 365 dataset with a SwinL backbone, DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks.",
+        "claim_text_normalized": "after pre-training on the objects 365 dataset with a swinl backbone, dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) benchmarks.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a25c2759-dfc7-5671-b710-2a0a876ecfd9",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "In addition, DINO scales well in both model size and data size. After pre-training on the Objects 365 [33] data set with a SwinL [23] backbone, DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks, as shown in Table 3.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "f6628df6-8cca-5eb4-9eb9-c9aa2ae6e800",
+        "claim_text": "Compared to SwinV 2-G, DINO reduces the model size to 1/15.",
+        "claim_text_normalized": "compared to swinv 2-g, dino reduces the model size to 1/15.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "c8294367-13f1-5935-a308-b9076b2edd8a",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Compared to other models on the leaderboard [1], we reduce the model size to 1/15 compared to SwinV 2-G [22].",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "1a030411-39d2-5024-a683-dc01b97dfff1",
+        "claim_text": "DINO is the first end-to-end Transformer detector to outperform state-of-the-art models on the COCO leaderboard.",
+        "claim_text_normalized": "dino is the first end-to-end transformer detector to outperform state-of-the-art models on the coco leaderboard.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "7e21d626-7c8f-51c7-beb0-8aded232a412",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "To the best of our knowledge, this is the first time that an end-to-end Transformer detector outperforms state-of-the-art (SOTA) models on the COCO leaderboard [1].",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "052cefb5-3dd1-5fc6-9cd8-f87e63118b47",
+        "claim_text": "DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks.",
+        "claim_text_normalized": "dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) benchmarks.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a7284752-8dbc-5a3c-b4b6-ed1e74a57f63",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "After pre-training on the Objects 365 [33] dataset with a SwinL [23] backbone, DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "f1147097-f36d-5ba9-88e1-902a8ffac62c",
+        "claim_text": "DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks with a publicly available SwinL backbone and a public dataset Objects 365.",
+        "claim_text_normalized": "dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) benchmarks with a publicly available swinl backbone and a public dataset objects 365.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "01840566-566c-5fdd-b340-a0d2f35544b3",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "In contrast, DINO achieves the SOTA result with a publicly available SwinL [23] backbone and a public dataset Objects 365 [33] (1.7M annotated images) only.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "ab3b8fc3-12ea-5272-a5a2-8e651cefa52d",
+        "claim_text": "DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs with ResNet-50 and multi-scale features, significantly outperforming the previous best DETR-like models.",
+        "claim_text_normalized": "dino achieves 49.4ap in 12 epochs and 51.3ap in 24 epochs with resnet-50 and multi-scale features, significantly outperforming the previous best detr-like models.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "bd7ffe1f-5e2c-5d51-a419-b666f3554e8b",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "As a result, DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs with ResNet-50 and multi-scale features, significantly outperforming the previous best DETR-like models.",
+            "section_path": null
+          }
+        ]
+      }
+    ],
+    "predictions_distracted": [
+      {
+        "claim_id": "4a1a3b30-fe4d-5160-8d6e-9ac1cb45e802",
+        "claim_text": "DINO scales well in both model size and data size.",
+        "claim_text_normalized": "dino scales well in both model size and data size.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "834adf2b-a6a0-5758-9dc2-00c4d0ab5e86",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "DINO scales well in both model size and data size.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "8300249a-d781-5366-8e44-345f6cc9c07d",
+        "claim_text": "After pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).",
+        "claim_text_normalized": "after pre-training on the objects 365 dataset with a swinl backbone, dino obtains the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap).",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "ecfe3b42-b30a-5201-870f-047bab029679",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "After pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "907ab286-2b16-5014-886e-9fe60e0d5957",
+        "claim_text": "DINO significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.",
+        "claim_text_normalized": "dino significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a9caa13e-eea3-58a4-9161-d3fa7dd7b656",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "45b3bff0-e221-5c8c-b82e-c80daf5fc55a",
+        "claim_text": "DINO contains a backbone, a multi-layer Transformer encoder, a multi-layer Transformer decoder, and multiple prediction heads.",
+        "claim_text_normalized": "dino contains a backbone, a multi-layer transformer encoder, a multi-layer transformer decoder, and multiple prediction heads.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "98c194ab-3121-5962-951e-0624ff9b4ffc",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "As a DETR-like model, DINO contains a backbone, a multi-layer Transformer encoder, a multi-layer Transformer decoder, and multiple prediction heads.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "aef50740-d7b0-5c60-adb7-8eda13ffb1f3",
+        "claim_text": "DINO formulates queries in the decoder as dynamic anchor boxes and refines them step-by-step across decoder layers.",
+        "claim_text_normalized": "dino formulates queries in the decoder as dynamic anchor boxes and refines them step-by-step across decoder layers.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "7fe3047a-d83e-563b-a619-f14d7d7a3542",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Following DAB-DETR [21], we formulate queries in decoder as dynamic anchor boxes and refine them step-by-step across decoder layers.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "24303ec2-3969-54e6-9b15-10e7c4356398",
+        "claim_text": "DINO adds ground truth labels and boxes with noises into the Transformer decoder layers to help stabilize bipartite matching during training.",
+        "claim_text_normalized": "dino adds ground truth labels and boxes with noises into the transformer decoder layers to help stabilize bipartite matching during training.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a1945ead-e6d4-5020-b536-e773604734f2",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Following DN-DETR [17], we add ground truth labels and boxes with noises into the Transformer decoder layers to help stabilize bipartite matching during training.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "bc2c5930-f907-599f-a84a-0d500025d140",
+        "claim_text": "DINO proposes a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+        "claim_text_normalized": "dino proposes a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "cec3a7fb-f8b9-56c3-a6fb-509df2c71110",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "First, to improve the one-to-one matching, we propose a contrastive denoising training by adding both positive and negative samples of the same ground truth at the same time.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "04ac1a2a-6a24-5e1e-9825-35c675f0619b",
+        "claim_text": "DINO proposes a mixed query selection method to better initialize the queries.",
+        "claim_text_normalized": "dino proposes a mixed query selection method to better initialize the queries.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "aa6ac3b5-f32d-57e5-807b-4c866d87eab7",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Second, the dynamic anchor box formulation of queries links DETR-like models with classical two-stage models. Hence we propose a mixed query selection method, which helps better initialize the queries.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "941eaa96-1ab0-5fa3-9e46-7c72a627e115",
+        "claim_text": "DINO proposes a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+        "claim_text_normalized": "dino proposes a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+        "claim_type": "method",
+        "polarity": "neutral",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "20e433ab-946a-56b5-800d-025f733baacc",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Third, to leverage the refined box information from later layers to help optimize the parameters of their adjacent early layers, we propose a new look forward twice scheme to correct the updated parameters with gradients from later layers.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "a22cfc3a-6b1e-5483-8578-1b9435417aab",
+        "claim_text": "DINO trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5AP.",
+        "claim_text_normalized": "dino trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5ap.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "9be48245-9dd9-5aad-8b9b-d68a05ebdf7b",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "As a result, DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs with ResNet-50 and multi-scale features, significantly outperforming the previous best DETR-like models. In particular, DINO trained in 12 epochs shows a more significant improvement on small objects, yielding an improvement of +7.5AP.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "4f060414-5c80-5c0d-a75a-5c0e8fbc7bc1",
+        "claim_text": "After pre-training on the Objects 365 dataset with a SwinL backbone, DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks.",
+        "claim_text_normalized": "after pre-training on the objects 365 dataset with a swinl backbone, dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) benchmarks.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a25c2759-dfc7-5671-b710-2a0a876ecfd9",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "In addition, DINO scales well in both model size and data size. After pre-training on the Objects 365 [33] data set with a SwinL [23] backbone, DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks, as shown in Table 3.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "cc80691e-4b91-555f-902d-cc5b9f098ce0",
+        "claim_text": "DINO reduces the model size to 1/15 compared to SwinV 2-G.",
+        "claim_text_normalized": "dino reduces the model size to 1/15 compared to swinv 2-g.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "8a100210-4259-504d-a4a2-12f4b9f5a585",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "Compared to other models on the leaderboard [1], we reduce the model size to 1/15 compared to SwinV 2-G [22].",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "1a030411-39d2-5024-a683-dc01b97dfff1",
+        "claim_text": "DINO is the first end-to-end Transformer detector to outperform state-of-the-art models on the COCO leaderboard.",
+        "claim_text_normalized": "dino is the first end-to-end transformer detector to outperform state-of-the-art models on the coco leaderboard.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "7e21d626-7c8f-51c7-beb0-8aded232a412",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "To the best of our knowledge, this is the first time that an end-to-end Transformer detector outperforms state-of-the-art (SOTA) models on the COCO leaderboard [1].",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "80531cbd-1e32-52c1-8619-3160590a09aa",
+        "claim_text": "DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks after pre-training on the Objects 365 dataset with a SwinL backbone.",
+        "claim_text_normalized": "dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) benchmarks after pre-training on the objects 365 dataset with a swinl backbone.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "0bf722fc-6a3f-5a58-aadb-1f6c7b8bff9a",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "After pre-training on the Objects 365 [33] dataset with a SwinL [23] backbone, DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks.",
+            "section_path": null
+          }
+        ]
+      },
+      {
+        "claim_id": "052cefb5-3dd1-5fc6-9cd8-f87e63118b47",
+        "claim_text": "DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks.",
+        "claim_text_normalized": "dino achieves the best results on both coco val 2017 (63.2ap) and test-dev (63.3ap) benchmarks.",
+        "claim_type": "mechanism",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "a7284752-8dbc-5a3c-b4b6-ed1e74a57f63",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "After pre-training on the Objects 365 [33] dataset with a SwinL [23] backbone, DINO achieves the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP) benchmarks.",
+            "section_path": null
+          }
+        ]
+      }
+    ],
+    "wall_clock_seconds": 98.015,
+    "extractor": "extract_claims_production_path",
+    "oracle_predictions": false,
+    "runtime_mode": "harness_substring",
+    "distractor_augmented": true,
+    "extraction_llm_enabled": true,
+    "extraction_diagnostics_plain": {
+      "stage_name": "claims_extraction",
+      "source": "llm",
+      "dropped_claim_count_too_short": 0,
+      "dropped_claim_count_no_evidence": 5,
+      "dropped_claim_count_quote_rejected": 5,
+      "evidence_quote_strict_count": 18,
+      "evidence_quote_strict_normalized_count": 0,
+      "evidence_quote_fuzzy_count": 3,
+      "evidence_quote_jaccard_count": 0,
+      "raw_claims_from_llm": 26,
+      "llm_error_message": null,
+      "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features, yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features, yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model.\", \"section_path\": null}]}, {\"claim_text\": \"DINO scales well in both model size and data size.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"DINO scales well in both model size and data size.\", \"section_path\": null}]}, {\"claim_text\": \"After pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"After pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).\", \"section_path\": null}]}, {\"claim_text\": \"DINO significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results.\", \"section_path\": null}]}, {\"claim_text\": \"DINO contains a backbone, a multi-layer Transformer encoder, a multi-layer Transformer decoder, and multiple prediction heads.\", \"claim_typ",
+      "claims_benchmark_compact_schema": true,
+      "claims_compact_fallback_used": false,
+      "claims_compact_fallback_reason": null
+    },
+    "extraction_diagnostics_distracted": {
+      "stage_name": "claims_extraction",
+      "source": "llm",
+      "dropped_claim_count_too_short": 0,
+      "dropped_claim_count_no_evidence": 5,
+      "dropped_claim_count_quote_rejected": 5,
+      "evidence_quote_strict_count": 19,
+      "evidence_quote_strict_normalized_count": 0,
+      "evidence_quote_fuzzy_count": 3,
+      "evidence_quote_jaccard_count": 0,
+      "raw_claims_from_llm": 27,
+      "llm_error_message": null,
+      "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features, yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"DINO achieves 49.4AP in 12 epochs and 51.3AP in 24 epochs on COCO with a ResNet-50 backbone and multi-scale features, yielding a significant improvement of +6.0AP and +2.7AP, respectively, compared to DN-DETR, the previous best DETR-like model.\", \"section_path\": null}]}, {\"claim_text\": \"DINO scales well in both model size and data size.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"DINO scales well in both model size and data size.\", \"section_path\": null}]}, {\"claim_text\": \"After pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"After pre-training on the Objects 365 dataset with a SwinL backbone, DINO obtains the best results on both COCO val 2017 (63.2AP) and test-dev (63.3AP).\", \"section_path\": null}]}, {\"claim_text\": \"DINO significantly reduces its model size and pre-training data size while achieving better results compared to other models on the leaderboard.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"Compared to other models on the leaderboard, DINO significantly reduces its model size and pre-training data size while achieving better results.\", \"section_path\": null}]}, {\"claim_text\": \"DINO contains a backbone, a multi-layer Transformer encoder, a multi-layer Transformer decoder, and multiple prediction heads.\", \"claim_typ",
+      "claims_benchmark_compact_schema": true,
+      "claims_compact_fallback_used": false,
+      "claims_compact_fallback_reason": null
+    }
+  }
+}

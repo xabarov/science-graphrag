@@ -9,6 +9,14 @@ Operator procedure for **Next wave W2** in [`refactor-backend.md`](../backlog/re
 - Workspace: e.g. `AGENT_LIVE_WORKSPACE_ID=ws-pilot-od`
 - Smoke: `.venv/bin/python scripts/live_check/agent_v2_http.py --base-url "$AGENT_LIVE_BASE" --workspace-id "$AGENT_LIVE_WORKSPACE_ID" --timeout 5`
 
+## R4-next W1 — spawn cancel / terminal semantics (code)
+
+When the parent graph hits **deadline** or **recursion limit**, `stream_phase_routing_leg_abort` closes the active routing leg and calls `SubagentRuntime.cancel_all(...)` so in-flight **spawned** children receive a terminal row (`timed_out` / `killed` with matching `failure_code`), not a silent "still running" leak in `run_metadata`.
+
+Contract tests: `tests/test_api_agent_v2_modules_stream_phase_routing_leg_abort.py`.
+
+**Not in this slice:** HTTP client disconnect → automatic graph cancel (`agent_response_deadline_enforces_upstream_cancel: false` telemetry remains honest until a dedicated product track).
+
 ## Baseline artifact
 
 Pick a fixed suite and flags (document in the artifact `run_context` or filename), then:
@@ -39,9 +47,14 @@ Use the repo compare entrypoint already used for trace regression (adjust paths 
 
 ```bash
 .venv/bin/python scripts/live_check/trace_regression_compare.py \
-  --baseline-json eval/results/r4-r3-baseline-<stamp>.json \
-  --candidate-json eval/results/r4-r3-candidate-<stamp>.json
+  --baseline eval/results/r4-r3-baseline-<stamp>.json \
+  --candidate eval/results/r4-r3-candidate-<stamp>.json \
+  --max-latency-p95-regress-ratio 1.25 \
+  --out-json eval/results/trace-regression-r4-r3-<stamp>.json \
+  --out-md eval/results/trace-regression-r4-r3-<stamp>.md
 ```
+
+The compare JSON/Markdown includes `delta_latency_p95` and per-side `latency_p95_ms` when present in trace-review `metrics`. Horizon budget: candidate **must not** exceed baseline `latency_p95_ms` by more than **25%** unless waived in the operator note.
 
 Record in the operator note:
 
@@ -59,3 +72,10 @@ For multi-turn compaction telemetry (W3), use:
 ```
 
 Optional: `--no-in-turn-heartbeat` disables stderr heartbeats during blocking JSON waits.
+
+## Latest operator example (2026-05-13)
+
+- Baseline: `eval/results/diagnostics/trace-review-r3-representative-2026-05-13-r4.json`
+- Candidate: `eval/results/diagnostics/trace-review-r3-representative-candidate-2026-05-13-r4.json`
+- Compare: `eval/results/diagnostics/trace-regression-r3-representative-2026-05-13-r4.{json,md}`
+- Result: compare `status=pass`; `latency_p95_ms` remained absent in both traces (delta `0.0`), so decision is based on qualitative lane stability + fail reasons (`e2e_failed` bounded timeout remained).

@@ -1,0 +1,112 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true
+  },
+  "case": {
+    "case_id": "holdout_yolov3_v1",
+    "metrics": {
+      "contract_only": false,
+      "contract_passed": true,
+      "passed": false,
+      "claim_recall": 0.0,
+      "claim_precision": 0.0,
+      "claim_precision_distracted": 0.0,
+      "precision_drop_with_distractors": 0.0,
+      "max_precision_drop_with_distractors": 0.15,
+      "paraphrase_scoring": true,
+      "claim_match_mode": "claim_id_or_normalized_text",
+      "expected_count": 4,
+      "predicted_count_plain": 1,
+      "predicted_count_distracted": 1,
+      "matched_claim_ids": [],
+      "missing_claim_ids": [
+        "yolov3_three_scale_predictions",
+        "yolov3_logistic_per_class",
+        "yolov3_speed_vs_retinanet",
+        "yolov3_strict_iou_underperform_negative"
+      ],
+      "min_claim_recall": 0.55
+    },
+    "predictions_plain": [
+      {
+        "claim_id": "a285552f-bdcb-5f2c-ba89-98622f8c625e",
+        "claim_text": "YOLOv 3 runs in 22 ms at 28.2 mAP at 320 x 320 resolution, as accurate as SSD but three times faster.",
+        "claim_text_normalized": "yolov 3 runs in 22 ms at 28.2 map at 320 x 320 resolution, as accurate as ssd but three times faster.",
+        "claim_type": "performance",
+        "polarity": "positive",
+        "confidence": 1.0,
+        "evidence": [
+          {
+            "evidence_id": "80ac58b3-09a7-5a4f-9785-acb61d82d502",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "At 320 x 320 YOLOv 3 runs in 22 ms at 28.2 mAP , as accurate as SSD but three times faster .",
+            "section_path": "—"
+          }
+        ]
+      }
+    ],
+    "predictions_distracted": [
+      {
+        "claim_id": "e7274a3d-ea2d-542f-a266-da6b1797eace",
+        "claim_text": "YOLOv 3 runs in 22 ms at 28.2 mAP at 320 x 320 resolution.",
+        "claim_text_normalized": "yolov 3 runs in 22 ms at 28.2 map at 320 x 320 resolution.",
+        "claim_type": "performance",
+        "polarity": "positive",
+        "confidence": 0.95,
+        "evidence": [
+          {
+            "evidence_id": "11e650dd-7cf9-52f8-a393-49c3562694b4",
+            "chunk_fingerprint": "benchmark_inline",
+            "quote": "At 320 x 320 YOLOv 3 runs in 22 ms at 28.2 mAP , as accurate as SSD but three times faster .",
+            "section_path": "—"
+          }
+        ]
+      }
+    ],
+    "wall_clock_seconds": 6.664,
+    "extractor": "extract_claims_production_path",
+    "oracle_predictions": false,
+    "runtime_mode": "harness_substring",
+    "distractor_augmented": true,
+    "extraction_llm_enabled": true,
+    "extraction_diagnostics_plain": {
+      "stage_name": "claims_extraction",
+      "source": "llm",
+      "dropped_claim_count_too_short": 0,
+      "dropped_claim_count_no_evidence": 0,
+      "dropped_claim_count_quote_rejected": 0,
+      "evidence_quote_strict_count": 1,
+      "evidence_quote_strict_normalized_count": 0,
+      "evidence_quote_fuzzy_count": 0,
+      "evidence_quote_jaccard_count": 0,
+      "raw_claims_from_llm": 1,
+      "llm_error_message": null,
+      "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"YOLOv 3 runs in 22 ms at 28.2 mAP at 320 x 320 resolution, as accurate as SSD but three times faster.\", \"claim_type\": \"performance\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"At 320 x 320 YOLOv 3 runs in 22 ms at 28.2 mAP , as accurate as SSD but three times faster .\", \"section_path\": \"—\"}]}]}",
+      "claims_benchmark_compact_schema": true,
+      "claims_compact_fallback_used": false,
+      "claims_compact_fallback_reason": null
+    },
+    "extraction_diagnostics_distracted": {
+      "stage_name": "claims_extraction",
+      "source": "llm",
+      "dropped_claim_count_too_short": 0,
+      "dropped_claim_count_no_evidence": 0,
+      "dropped_claim_count_quote_rejected": 0,
+      "evidence_quote_strict_count": 1,
+      "evidence_quote_strict_normalized_count": 0,
+      "evidence_quote_fuzzy_count": 0,
+      "evidence_quote_jaccard_count": 0,
+      "raw_claims_from_llm": 1,
+      "llm_error_message": null,
+      "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"YOLOv 3 runs in 22 ms at 28.2 mAP at 320 x 320 resolution.\", \"claim_type\": \"performance\", \"polarity\": \"positive\", \"confidence\": 0.95, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"At 320 x 320 YOLOv 3 runs in 22 ms at 28.2 mAP , as accurate as SSD but three times faster .\", \"section_path\": \"—\"}]}]}",
+      "claims_benchmark_compact_schema": true,
+      "claims_compact_fallback_used": false,
+      "claims_compact_fallback_reason": null
+    }
+  }
+}

@@ -25,6 +25,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel, Field
 from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
@@ -32,7 +33,6 @@ from scripts.dual_validate.consistency_report import (
 from scripts.dual_validate.extractors.base import (
     ExtractorBase,
     ExtractorRunOutput,
-    parse_json_object_lenient,
 )
 from scripts.dual_validate.llm_client import LLMCallSpec
 from scripts.dual_validate.matcher import (
@@ -94,10 +94,22 @@ _VALID_TYPES = {
 _VALID_SEVERITIES = {"direct", "nuanced"}
 
 
+class ContradictionsResponseModel(BaseModel):
+    contradiction_found: bool
+    claim_a_text: str = Field(default="")
+    claim_b_text: str = Field(default="")
+    claim_a_quote: str = Field(default="")
+    claim_b_quote: str = Field(default="")
+    contradiction_type: str = Field(default="")
+    severity: str = Field(default="")
+    rationale: str = Field(default="")
+
+
 class ContradictionsV1Extractor(ExtractorBase):
     """Independent LLM extractor for ``contradictions_v1/pair_*`` packs."""
 
     layer_name = "contradictions_v1"
+    response_model = ContradictionsResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         base = fixtures_root / "contradictions_v1"
@@ -139,10 +151,7 @@ class ContradictionsV1Extractor(ExtractorBase):
         )
 
     def parse_response(self, raw_response: str) -> list[dict]:
-        try:
-            obj = parse_json_object_lenient(raw_response)
-        except ValueError as exc:
-            raise ValueError(f"extractor B (contradictions_v1): {exc}") from exc
+        obj = self._safe_parse(raw_response)
         if not isinstance(obj, dict):
             raise ValueError("extractor B response: top-level must be a JSON object")
         found = bool(obj.get("contradiction_found"))
@@ -190,7 +199,7 @@ class ContradictionsV1Extractor(ExtractorBase):
         if not b_found:
             return (
                 "high",
-                "extractor B did not confirm the contradiction " "(unmatched_a=1, unmatched_b=0)",
+                "extractor B did not confirm the contradiction (unmatched_a=1, unmatched_b=0)",
             )
         if not type_match:
             return (
@@ -304,48 +313,30 @@ class ContradictionsV1Extractor(ExtractorBase):
                 text_score_b=0.0,
             )
 
-        gold_path = (pack_dir / "gold.json").resolve()
-        try:
-            rel_pack = pack_dir.resolve().relative_to(Path.cwd())
-            rel_gold = gold_path.relative_to(Path.cwd())
-        except ValueError:
-            rel_pack = pack_dir
-            rel_gold = gold_path
+        rel_pack, rel_gold = self._safe_relative_paths(pack_dir)
 
         a_info = ExtractorInfo(
             role="human_authored_existing_gold",
             source=str(rel_gold),
             count=1,
         )
-        if run is None:
-            b_info = ExtractorInfo(
-                role="llm_independent_extraction_dry_run",
-                source="dry-run (no LLM call)",
-                count=0,
-            )
-        else:
-            b_info = ExtractorInfo(
-                role="llm_independent_extraction",
-                source="article_a.md + article_b.md (paired)",
-                model=run.call_spec.model,
-                base_url=run.call_spec.base_url,
-                prompt_hash=run.prompt_hash,
-                count=1 if b_found else 0,
-                usage_tokens=run.usage_tokens,
-                latency_ms=run.latency_ms,
-            )
+        b_info = self._extractor_b_info(
+            run,
+            role="llm_independent_extraction",
+            source="article_a.md + article_b.md (paired)",
+            count=1 if b_found else 0,
+        )
 
         # Detect embedding promotion across both claim sides for summary metrics.
         emb_used = any(mp.get("match_source", "").find("embedding") >= 0 for mp in matched_pairs)
-        summary = {
-            "a_total": 1,
-            "b_total": 1 if b_found else 0,
-            "matched": len(matched_pairs),
-            "matched_lexical": 1 if (matched_pairs and not emb_used) else 0,
-            "matched_embedding": 1 if emb_used else 0,
-            "unmatched_a": len(unmatched_a),
-            "unmatched_b": len(unmatched_b),
-            "field_agreements": {
+        summary = self._summary_skeleton(
+            a_total=1,
+            b_total=1 if b_found else 0,
+            matched_pairs=matched_pairs,
+            unmatched_a=unmatched_a,
+            unmatched_b=unmatched_b,
+            embedding_used=emb_used,
+            field_agreements={
                 "contradiction_type": {
                     "agreed": (
                         1
@@ -381,7 +372,7 @@ class ContradictionsV1Extractor(ExtractorBase):
                     ),
                 },
             },
-        }
+        )
         return ConsistencyReport(
             pack_id=f"contradictions_v1/{pack_dir.name}",
             pack_path=str(rel_pack),

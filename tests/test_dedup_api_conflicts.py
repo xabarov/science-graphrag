@@ -152,3 +152,18 @@ def test_entity_conflicts_filter_workspace_origin_and_decide_guard(tmp_path):
         assert decide_res.json()["detail"] == "workspace_mismatch"
     finally:
         client.app.dependency_overrides.clear()
+
+
+def test_workspace_legacy_scan_routes_removed(tmp_path):
+    """Legacy smart-dedup scan/audit routes are removed after soak."""
+    db_url = f"sqlite+pysqlite:///{tmp_path / 'dedup_api_removed_routes.db'}"
+    settings = Settings(database_url=db_url)
+    client = _mk_client(settings)
+    try:
+        assert client.post("/v1/workspaces/ws-1/dedup/scan").status_code == 404
+        assert client.get("/v1/workspaces/ws-1/dedup/jobs/job-1").status_code == 404
+        assert client.get("/v1/workspaces/ws-1/dedup/audit").status_code == 404
+        assert client.post("/v1/workspaces/ws-1/dedup/authors/scan").status_code == 404
+        assert client.post("/v1/workspaces/ws-1/dedup/institutions/scan").status_code == 404
+    finally:
+        client.app.dependency_overrides.clear()

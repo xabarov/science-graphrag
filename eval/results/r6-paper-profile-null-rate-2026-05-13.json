@@ -1,0 +1,14 @@
+{
+  "count": 0,
+  "work_not_found": 0,
+  "year_null": 0,
+  "venue_null": 0,
+  "year_null_rate_excluding_not_found": 0.0,
+  "venue_null_rate_excluding_not_found": 0.0,
+  "source_artifacts": [
+    "./eval/results/diagnostics/trace-review-r3-representative-2026-05-13-r4.json",
+    "./eval/results/diagnostics/trace-review-r3-representative-candidate-2026-05-13-r4.json",
+    "./eval/results/corpus-quality-baseline-r6-cv-2026-05-13-r1.json",
+    "./eval/results/corpus-quality-baseline-r6-cv-candidate-2026-05-13-r1.json"
+  ]
+}

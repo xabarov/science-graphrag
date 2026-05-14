@@ -1,0 +1,39 @@
+{
+  "review_version": "trace-review-v1",
+  "generated_at": "2026-05-13T21:09:35.528554+00:00",
+  "thread_id": "compaction_review_5239e040e061",
+  "turns": 4,
+  "require_compaction_after": 2,
+  "mode": "focused_long_thread",
+  "max_retries_per_turn": 1,
+  "in_turn_heartbeat": true,
+  "turn_attempts": [
+    {
+      "turn": 1,
+      "attempt": 1,
+      "ok": false,
+      "failure_kind": "http_error",
+      "failure_reason": "http_error_turn_1:ReadError",
+      "elapsed_ms": 2
+    },
+    {
+      "turn": 1,
+      "attempt": 2,
+      "ok": false,
+      "failure_kind": "http_error",
+      "failure_reason": "http_error_turn_1:ReadError",
+      "elapsed_ms": 1
+    }
+  ],
+  "turn_reports": [],
+  "compaction_events": [],
+  "failed_turn": 1,
+  "failure_kind": "http_error",
+  "failure_reason": "http_error_turn_1:ReadError",
+  "verdict": {
+    "status": "fail",
+    "reasons": [
+      "http_error_turn_1:ReadError"
+    ]
+  }
+}

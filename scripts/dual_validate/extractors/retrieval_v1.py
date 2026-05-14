@@ -24,6 +24,7 @@ import re
 from pathlib import Path
 from typing import Any, ClassVar
 
+from pydantic import BaseModel, Field
 from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
@@ -31,7 +32,6 @@ from scripts.dual_validate.consistency_report import (
 from scripts.dual_validate.extractors.base import (
     ExtractorBase,
     ExtractorRunOutput,
-    parse_json_object_lenient,
 )
 from scripts.dual_validate.llm_client import LLMCallSpec
 from scripts.dual_validate.matcher import EmbeddingScorerProtocol
@@ -42,6 +42,24 @@ WORKSPACES_PATH = Path("tests/fixtures/benchmarks/retrieval/workspace_scoped_liv
 
 _INVENTORY_CACHE: dict[str, dict[str, str]] | None = None
 _TABLE_ROW = re.compile(r"^\|\s*`([a-z0-9_]+)`\s*\|\s*(.*?)\s*\|\s*([0-9n/a]+)\s*\|")
+
+
+class WorkspaceScopedResponseModel(BaseModel):
+    expected_corpus_work_ids: list[str] = Field(default_factory=list)
+    would_violate_workspace_with: list[str] = Field(default_factory=list)
+    rationale: str = Field(default="")
+
+
+class HybridAblationResponseModel(BaseModel):
+    relevant_corpus_work_ids: list[str] = Field(default_factory=list)
+    irrelevant_corpus_work_ids: list[str] = Field(default_factory=list)
+    rationale: str = Field(default="")
+
+
+class MultihopResponseModel(BaseModel):
+    expected_chain_corpus_work_ids: list[str] = Field(default_factory=list)
+    expected_node_canonical_names: list[str] = Field(default_factory=list)
+    rationale: str = Field(default="")
 
 
 def _load_inventory() -> dict[str, dict[str, str]]:
@@ -139,6 +157,7 @@ Output STRICTLY this JSON object — no prose, no markdown:
 class WorkspaceScopedLiveExtractor(ExtractorBase):
     layer_name = "workspace_scoped_live"
     fixtures_subdir: ClassVar[str] = "retrieval/workspace_scoped_live"
+    response_model = WorkspaceScopedResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         base = fixtures_root / self.fixtures_subdir
@@ -186,10 +205,7 @@ class WorkspaceScopedLiveExtractor(ExtractorBase):
         )
 
     def parse_response(self, raw_response: str) -> list[dict]:
-        try:
-            obj = parse_json_object_lenient(raw_response)
-        except ValueError as exc:
-            raise ValueError(f"extractor B (workspace_scoped_live): {exc}") from exc
+        obj = self._safe_parse(raw_response, layer_label="workspace_scoped_live")
         if not isinstance(obj, dict):
             raise ValueError("extractor B response: top-level must be a JSON object")
         return [
@@ -413,6 +429,7 @@ Output STRICTLY this JSON object — no prose, no markdown:
 class HybridAblationV2Extractor(ExtractorBase):
     layer_name = "hybrid_ablation_v2"
     fixtures_subdir: ClassVar[str] = "retrieval/hybrid_ablation_v2"
+    response_model = HybridAblationResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         base = fixtures_root / self.fixtures_subdir
@@ -443,10 +460,7 @@ class HybridAblationV2Extractor(ExtractorBase):
         )
 
     def parse_response(self, raw_response: str) -> list[dict]:
-        try:
-            obj = parse_json_object_lenient(raw_response)
-        except ValueError as exc:
-            raise ValueError(f"extractor B (hybrid_ablation_v2): {exc}") from exc
+        obj = self._safe_parse(raw_response, layer_label="hybrid_ablation_v2")
         if not isinstance(obj, dict):
             raise ValueError("extractor B response: top-level must be a JSON object")
         return [
@@ -637,9 +651,12 @@ Output STRICTLY this JSON object — no prose, no markdown:
 """
 
 
+
+
 class MultihopV2Extractor(ExtractorBase):
     layer_name = "multihop_v2"
     fixtures_subdir: ClassVar[str] = "retrieval/multihop_v2"
+    response_model = MultihopResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         base = fixtures_root / self.fixtures_subdir
@@ -683,10 +700,7 @@ class MultihopV2Extractor(ExtractorBase):
         )
 
     def parse_response(self, raw_response: str) -> list[dict]:
-        try:
-            obj = parse_json_object_lenient(raw_response)
-        except ValueError as exc:
-            raise ValueError(f"extractor B (multihop_v2): {exc}") from exc
+        obj = self._safe_parse(raw_response, layer_label="multihop_v2")
         if not isinstance(obj, dict):
             raise ValueError("extractor B response: top-level must be a JSON object")
         return [

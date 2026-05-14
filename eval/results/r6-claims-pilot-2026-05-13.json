@@ -1,0 +1,861 @@
+{
+  "run_metadata": {
+    "extraction_llm_enabled": true,
+    "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+    "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+    "layer1_prompt_fingerprint": "sha256-20:210f7e16d3e0a07ad571",
+    "semantic_prompt_fingerprint": "sha256-20:19c459f1df53094b0a19",
+    "semantic_extraction_enabled": true
+  },
+  "summary": {
+    "case_count": 10,
+    "case_ids": [
+      "corpus_cascade_rcnn_stages",
+      "corpus_centernet_triplet",
+      "corpus_cornernet_keypoints",
+      "corpus_detr_set_prediction",
+      "corpus_efficientdet_compound",
+      "corpus_faster_rcnn_rpn_shared",
+      "corpus_fpn_multiscale",
+      "corpus_mask_rcnn_mask_branch",
+      "corpus_retinanet_focal_imbalance",
+      "corpus_ssd_single_network"
+    ],
+    "all_passed": true,
+    "claims_eval": true
+  },
+  "cases": [
+    {
+      "case_id": "corpus_cascade_rcnn_stages",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.5,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 2,
+        "matched_claim_ids": [
+          "od_corpus_cascade_rcnn_increasing_iou_stages"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "005f6752-2c60-5fb2-b0d0-fb0deb38f1f9",
+          "claim_text": "The Cascade R-CNN consists of a sequence of detectors trained with increasing IoU thresholds.",
+          "claim_text_normalized": "the cascade r-cnn consists of a sequence of detectors trained with increasing iou thresholds.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "a922c234-b385-57d1-9e25-3994f968ff93",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The Cascade R-CNN consists of a sequence of detectors trained with increasing IoU thresholds",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "d4644dfc-5f89-5efd-9b65-9a3b78495f19",
+          "claim_text": "The detectors in Cascade R-CNN are sequentially more selective against close false positives.",
+          "claim_text_normalized": "the detectors in cascade r-cnn are sequentially more selective against close false positives.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "1a53e38b-f5b3-5d3b-bd6f-15e96d103e64",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "to be sequentially more selective against close false positives",
+              "section_path": "—"
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 5.995,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 2,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 2,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"The Cascade R-CNN consists of a sequence of detectors trained with increasing IoU thresholds.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"The Cascade R-CNN consists of a sequence of detectors trained with increasing IoU thresholds\", \"section_path\": \"—\"}]}, {\"claim_text\": \"The detectors in Cascade R-CNN are sequentially more selective against close false positives.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"to be sequentially more selective against close false positives\", \"section_path\": \"—\"}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_centernet_triplet",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.5,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 2,
+        "matched_claim_ids": [
+          "od_corpus_centernet_triplet_keypoints"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "217c4640-efa0-55c8-ac43-b70dbee2caf7",
+          "claim_text": "CenterNet detects each object as a triplet of keypoints, which improves both precision and recall.",
+          "claim_text_normalized": "centernet detects each object as a triplet of keypoints, which improves both precision and recall.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "d27aadb5-864c-5549-ac67-0a2c0b672d86",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Our approach, named CenterNet, detects each object as a triplet, rather than a pair, of keypoints, which improves both precision and recall.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "a89f7f23-1882-5896-b32f-64b46de75505",
+          "claim_text": "CenterNet explores the visual patterns within each cropped region with minimal costs.",
+          "claim_text_normalized": "centernet explores the visual patterns within each cropped region with minimal costs.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "7988c506-d05d-5bdf-8abd-1e40edd69730",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "This paper presents an efficient solution which explores the visual patterns within each cropped region with minimal costs.",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 8.501,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 2,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 2,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"CenterNet detects each object as a triplet of keypoints, which improves both precision and recall.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"Our approach, named CenterNet, detects each object as a triplet, rather than a pair, of keypoints, which improves both precision and recall.\", \"section_path\": null}]}, {\"claim_text\": \"CenterNet explores the visual patterns within each cropped region with minimal costs.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"This paper presents an efficient solution which explores the visual patterns within each cropped region with minimal costs.\", \"section_path\": null}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_cornernet_keypoints",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.3333333333333333,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 3,
+        "matched_claim_ids": [
+          "od_corpus_cornernet_paired_keypoints"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "a162407f-2045-524f-a349-f02643636558",
+          "claim_text": "CornerNet detects an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner.",
+          "claim_text_normalized": "cornernet detects an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "87e7523e-7e3e-545a-90dd-01a1210f2fb8",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We propose CornerNet, a new approach to object detection where we detect an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner, using a single convolution neural network.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "e45fce30-d69a-5acd-a4d6-f4813dca56e4",
+          "claim_text": "CornerNet uses a single convolution neural network to detect objects.",
+          "claim_text_normalized": "cornernet uses a single convolution neural network to detect objects.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "68f921d4-d31b-5811-ad65-8b17e7ed2a1f",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We propose CornerNet, a new approach to object detection where we detect an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner, using a single convolution neural network.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "ee27b703-2d07-521c-99c5-ebd7384b1f55",
+          "claim_text": "CornerNet eliminates the need for designing a set of anchor boxes commonly used in prior single-stage detectors.",
+          "claim_text_normalized": "cornernet eliminates the need for designing a set of anchor boxes commonly used in prior single-stage detectors.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "62b212fb-dc34-5de9-9fee-fd5f6b072de8",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "By detecting objects as paired keypoints, we eliminate the need for designing a set of anchor boxes commonly used in prior single-stage detectors.",
+              "section_path": "—"
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 5.506,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 3,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 3,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"CornerNet detects an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"We propose CornerNet, a new approach to object detection where we detect an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner, using a single convolution neural network.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"CornerNet uses a single convolution neural network to detect objects.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"We propose CornerNet, a new approach to object detection where we detect an object bounding box as a pair of keypoints, the top-left corner and the bottom-right corner, using a single convolution neural network.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"CornerNet eliminates the need for designing a set of anchor boxes commonly used in prior single-stage detectors.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"By detecting objects as paired keypoints, we eliminate the need for designing a set of anchor boxes commonly used in prior single-stage detectors.\", \"section_path\": \"—\"}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_detr_set_prediction",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.2,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 5,
+        "matched_claim_ids": [
+          "od_corpus_detr_set_prediction_pipeline"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "d0e916c8-3691-5f33-8984-e96d1bc1c66a",
+          "claim_text": "Object detection is framed as a direct set prediction problem.",
+          "claim_text_normalized": "object detection is framed as a direct set prediction problem.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "eedb44c3-dea3-510c-9beb-040a50dd35cf",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Object detection is framed as a direct set prediction problem.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "8c5c2878-7894-54f1-8186-eb188769d9d4",
+          "claim_text": "This approach streamlines the detection pipeline.",
+          "claim_text_normalized": "this approach streamlines the detection pipeline.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "2ad80d96-6001-5cbc-96a2-c8d831f82c84",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "This approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode prior knowledge about the task.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "6f37c4ea-36b5-5992-be1d-9d63d0478386",
+          "claim_text": "This approach removes the need for a non-maximum suppression procedure.",
+          "claim_text_normalized": "this approach removes the need for a non-maximum suppression procedure.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "990c08a5-520d-5442-9766-44d4348db945",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "This approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode prior knowledge about the task.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "b3431927-488d-5a98-b20c-4acca3a3aafd",
+          "claim_text": "This approach removes the need for anchor generation.",
+          "claim_text_normalized": "this approach removes the need for anchor generation.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "e0c7117d-7db3-5f8b-a3aa-a7ea73129bd2",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "This approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode prior knowledge about the task.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "8c7c9e70-c2e7-5f5e-be0b-c8bf6e9ae5e3",
+          "claim_text": "This approach removes the need for hand-designed components that explicitly encode prior knowledge about the task.",
+          "claim_text_normalized": "this approach removes the need for hand-designed components that explicitly encode prior knowledge about the task.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "021d2fbe-e890-5c51-b1d5-2342762922bf",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "This approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode prior knowledge about the task.",
+              "section_path": "—"
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 11.829,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 5,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 5,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"Object detection is framed as a direct set prediction problem.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"Object detection is framed as a direct set prediction problem.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"This approach streamlines the detection pipeline.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"This approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode prior knowledge about the task.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"This approach removes the need for a non-maximum suppression procedure.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"This approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode prior knowledge about the task.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"This approach removes the need for anchor generation.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"This approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode prior knowledge about the task.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"This approach removes the need for hand-designed components that explicitly encode prior knowledge about the task.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"This approach streamlines the detection pipeline, effectively removing the need for many hand-designed c",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_efficientdet_compound",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.5,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 2,
+        "matched_claim_ids": [
+          "od_corpus_efficientdet_compound_scaling"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "ea7d0f32-c65d-5b29-aba3-b6cea14346c9",
+          "claim_text": "The EfficientDet family of object detectors uses a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks simultaneously.",
+          "claim_text_normalized": "the efficientdet family of object detectors uses a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks simultaneously.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "9c12829a-cdcd-597d-841a-5e0deb375e70",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Second, we propose a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks at the same time.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "34a80a65-2708-5a67-ae1c-1a73ac39c18c",
+          "claim_text": "EfficientDet detectors achieve much better efficiency than prior art across a wide spectrum of resource constraints.",
+          "claim_text_normalized": "efficientdet detectors achieve much better efficiency than prior art across a wide spectrum of resource constraints.",
+          "claim_type": "comparison",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "5135c4cb-d54d-5afc-b151-1848aa13c357",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Based on these optimizations and better backbones, we have developed a new family of object detectors, called EfficientDet, which consistently achieve much better efficiency than prior art across a wide spectrum of resource constraints.",
+              "section_path": "—"
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 6.533,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 2,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 2,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"The EfficientDet family of object detectors uses a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks simultaneously.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"Second, we propose a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks at the same time.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"EfficientDet detectors achieve much better efficiency than prior art across a wide spectrum of resource constraints.\", \"claim_type\": \"comparison\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"Based on these optimizations and better backbones, we have developed a new family of object detectors, called EfficientDet, which consistently achieve much better efficiency than prior art across a wide spectrum of resource constraints.\", \"section_path\": \"—\"}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_faster_rcnn_rpn_shared",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.5,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 2,
+        "matched_claim_ids": [
+          "od_corpus_faster_rcnn_rpn_shared_features"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "aeabd92b-240d-5ef6-b5f8-257db1ec46da",
+          "claim_text": "The Region Proposal Network (RPN) shares full-image convolutional features with the detection network.",
+          "claim_text_normalized": "the region proposal network (rpn) shares full-image convolutional features with the detection network.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "0c908f46-fcf7-5191-9f38-64f56f4c3aa1",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In this work, we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "fdb107b1-7283-5177-9252-e593cd578887",
+          "claim_text": "The Region Proposal Network (RPN) enables nearly cost-free region proposals.",
+          "claim_text_normalized": "the region proposal network (rpn) enables nearly cost-free region proposals.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "893264fe-abec-57a5-82a5-095de1f9408d",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In this work, we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network, thus enabling nearly cost-free region proposals.",
+              "section_path": "—"
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 3.957,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 2,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 2,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"The Region Proposal Network (RPN) shares full-image convolutional features with the detection network.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"In this work, we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network\", \"section_path\": \"—\"}]}, {\"claim_text\": \"The Region Proposal Network (RPN) enables nearly cost-free region proposals.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"In this work, we introduce a Region Proposal Network (RPN) that shares full-image convolutional features with the detection network, thus enabling nearly cost-free region proposals.\", \"section_path\": \"—\"}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_fpn_multiscale",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.3333333333333333,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 3,
+        "matched_claim_ids": [
+          "od_corpus_fpn_multiscale_feature_pyramid"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "cd01fe0a-2845-5593-9512-d3c7a9bdfd3b",
+          "claim_text": "Feature pyramids are a basic component in recognition systems for detecting objects at different scales.",
+          "claim_text_normalized": "feature pyramids are a basic component in recognition systems for detecting objects at different scales.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "6497188f-9daf-53de-97d0-a9fe108cb36b",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Feature pyramids are a basic component in recognition systems for detecting objects at different scales.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "8d23a85d-a8b0-5db1-8c9f-a243d28b2e0e",
+          "claim_text": "The authors exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks to construct feature pyramids with marginal extra cost.",
+          "claim_text_normalized": "the authors exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks to construct feature pyramids with marginal extra cost.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "80e0b018-1fe2-55e6-8bce-36b86b22306a",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "In this paper, we exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks to construct feature pyramids with marginal extra cost.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "9bc508ed-f7c8-5b1d-807a-68f458114010",
+          "claim_text": "The architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications.",
+          "claim_text_normalized": "the architecture, called a feature pyramid network (fpn), shows significant improvement as a generic feature extractor in several applications.",
+          "claim_type": "mechanism",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "a5e73919-04a4-525f-811d-6b8ab3bbe5ce",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications.",
+              "section_path": "—"
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 7.355,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 3,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 3,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"Feature pyramids are a basic component in recognition systems for detecting objects at different scales.\", \"claim_type\": \"fact\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"Feature pyramids are a basic component in recognition systems for detecting objects at different scales.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"The authors exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks to construct feature pyramids with marginal extra cost.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"In this paper, we exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks to construct feature pyramids with marginal extra cost.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"The architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications.\", \"claim_type\": \"result\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications.\", \"section_path\": \"—\"}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_mask_rcnn_mask_branch",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 1.0,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 1,
+        "matched_claim_ids": [
+          "od_corpus_mask_rcnn_parallel_mask_branch"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "8e4ce56f-c594-5b44-bfba-1ca338a080ca",
+          "claim_text": "Mask R-CNN extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition.",
+          "claim_text_normalized": "mask r-cnn extends faster r-cnn by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "dda63edf-24aa-5209-ae02-362da76887d2",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The method, called Mask R-CNN, extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition.",
+              "section_path": "—"
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 3.602,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 1,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 1,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"Mask R-CNN extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"The method, called Mask R-CNN, extends Faster R-CNN by adding a branch for predicting an object mask in parallel with the existing branch for bounding box recognition.\", \"section_path\": \"—\"}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_retinanet_focal_imbalance",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.3333333333333333,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 3,
+        "matched_claim_ids": [
+          "od_corpus_retinanet_class_imbalance"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "8d00895a-a170-57df-b0e5-997f2e433f87",
+          "claim_text": "Two-stage object detectors like R-CNN achieve higher accuracy than one-stage detectors.",
+          "claim_text_normalized": "two-stage object detectors like r-cnn achieve higher accuracy than one-stage detectors.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "a13edabf-3b08-5723-b415-d12f1390666c",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The highest accuracy object detectors to date are based on a two-stage approach popularized by R-CNN, where a classifier is applied to a sparse set of candidate object locations. In contrast, one-stage detectors that are applied over a regular, dense sampling of possible object locations have the potential to be faster and simpler, but have trailed the accuracy of two-stage detectors thus far.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "c179781e-eddd-5490-81ca-1c9897c7b46b",
+          "claim_text": "One-stage object detectors are faster and simpler but have lower accuracy than two-stage detectors.",
+          "claim_text_normalized": "one-stage object detectors are faster and simpler but have lower accuracy than two-stage detectors.",
+          "claim_type": "comparison",
+          "polarity": "neutral",
+          "confidence": 0.9,
+          "evidence": [
+            {
+              "evidence_id": "e7d97c31-6ef8-5d59-a757-58569c291303",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "The highest accuracy object detectors to date are based on a two-stage approach popularized by R-CNN, where a classifier is applied to a sparse set of candidate object locations. In contrast, one-stage detectors that are applied over a regular, dense sampling of possible object locations have the potential to be faster and simpler, but have trailed the accuracy of two-stage detectors thus far.",
+              "section_path": null
+            }
+          ]
+        },
+        {
+          "claim_id": "910a3575-ade9-5248-9823-873f68f11323",
+          "claim_text": "The extreme foreground-background class imbalance is the central cause of the lower accuracy of one-stage detectors.",
+          "claim_text_normalized": "the extreme foreground-background class imbalance is the central cause of the lower accuracy of one-stage detectors.",
+          "claim_type": "mechanism",
+          "polarity": "neutral",
+          "confidence": 0.8,
+          "evidence": [
+            {
+              "evidence_id": "3c4b89fe-4cbf-5223-b8d3-cb352e38f083",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "We discover that the extreme foreground-background class imbalance encountered during training of dense detectors is the central cause.",
+              "section_path": null
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 5.947,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 3,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 3,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"Two-stage object detectors like R-CNN achieve higher accuracy than one-stage detectors.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The highest accuracy object detectors to date are based on a two-stage approach popularized by R-CNN, where a classifier is applied to a sparse set of candidate object locations. In contrast, one-stage detectors that are applied over a regular, dense sampling of possible object locations have the potential to be faster and simpler, but have trailed the accuracy of two-stage detectors thus far.\", \"section_path\": null}]}, {\"claim_text\": \"One-stage object detectors are faster and simpler but have lower accuracy than two-stage detectors.\", \"claim_type\": \"comparison\", \"polarity\": \"neutral\", \"confidence\": 0.9, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"The highest accuracy object detectors to date are based on a two-stage approach popularized by R-CNN, where a classifier is applied to a sparse set of candidate object locations. In contrast, one-stage detectors that are applied over a regular, dense sampling of possible object locations have the potential to be faster and simpler, but have trailed the accuracy of two-stage detectors thus far.\", \"section_path\": null}]}, {\"claim_text\": \"The extreme foreground-background class imbalance is the central cause of the lower accuracy of one-stage detectors.\", \"claim_type\": \"mechanism\", \"polarity\": \"neutral\", \"confidence\": 0.8, \"evidence\": [{\"chunk_fingerprint\": \"benchmark_inline\", \"quote\": \"We discover that the extreme foreground-background class imbalance encountered during training of dense detectors is the central cause.\", \"section_path\": null}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    },
+    {
+      "case_id": "corpus_ssd_single_network",
+      "metrics": {
+        "contract_only": false,
+        "contract_passed": true,
+        "passed": true,
+        "claim_recall": 1.0,
+        "claim_precision": 0.25,
+        "claim_match_mode": "claim_id_or_normalized_text",
+        "expected_count": 1,
+        "predicted_count": 4,
+        "matched_claim_ids": [
+          "od_corpus_ssd_single_network"
+        ],
+        "missing_claim_ids": [],
+        "min_claim_recall": 1.0
+      },
+      "predictions": [
+        {
+          "claim_id": "77270035-9fc7-55f5-9821-90888cb41594",
+          "claim_text": "SSD discretizes the output space of bounding boxes into a set of default boxes over different aspect ratios and scales per feature map location.",
+          "claim_text_normalized": "ssd discretizes the output space of bounding boxes into a set of default boxes over different aspect ratios and scales per feature map location.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "75d1050d-affb-512f-a420-59fbbde989f3",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "Our approach, named SSD, discretizes the output space of bounding boxes into a set of default boxes over different aspect ratios and scales per feature map location.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "aa066f6a-3912-5206-9115-1562a53a621e",
+          "claim_text": "SSD is simple relative to methods that require object proposals.",
+          "claim_text_normalized": "ssd is simple relative to methods that require object proposals.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "4575f9b0-fc71-582f-aa1a-c229062715a1",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "SSD is simple relative to methods that require object proposals because it completely eliminates proposal generation and subsequent pixel or feature resampling stages and encapsulates all computation in a single network.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "044eb7dc-f13c-5ad8-9afa-7d26d9f9dd01",
+          "claim_text": "SSD completely eliminates proposal generation and subsequent pixel or feature resampling stages.",
+          "claim_text_normalized": "ssd completely eliminates proposal generation and subsequent pixel or feature resampling stages.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "245d34eb-2099-50fb-8cdd-6a202df68882",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "SSD is simple relative to methods that require object proposals because it completely eliminates proposal generation and subsequent pixel or feature resampling stages and encapsulates all computation in a single network.",
+              "section_path": "—"
+            }
+          ]
+        },
+        {
+          "claim_id": "8c3947a1-0d2e-5caf-b388-7383b9ff9926",
+          "claim_text": "SSD encapsulates all computation in a single network.",
+          "claim_text_normalized": "ssd encapsulates all computation in a single network.",
+          "claim_type": "method",
+          "polarity": "positive",
+          "confidence": 1.0,
+          "evidence": [
+            {
+              "evidence_id": "a94366ab-5b9d-506d-a98d-12e974a7e0a2",
+              "chunk_fingerprint": "benchmark_inline",
+              "quote": "SSD is simple relative to methods that require object proposals because it completely eliminates proposal generation and subsequent pixel or feature resampling stages and encapsulates all computation in a single network.",
+              "section_path": "—"
+            }
+          ]
+        }
+      ],
+      "wall_clock_seconds": 9.284,
+      "extractor": "extract_claims_production_path",
+      "extraction_llm_enabled": true,
+      "extraction_diagnostics": {
+        "stage_name": "claims_extraction",
+        "source": "llm",
+        "dropped_claim_count_too_short": 0,
+        "dropped_claim_count_no_evidence": 0,
+        "dropped_claim_count_quote_rejected": 0,
+        "evidence_quote_strict_count": 4,
+        "evidence_quote_strict_normalized_count": 0,
+        "evidence_quote_fuzzy_count": 0,
+        "evidence_quote_jaccard_count": 0,
+        "raw_claims_from_llm": 4,
+        "llm_error_message": null,
+        "llm_raw_response_preview": "{\"claims\": [{\"claim_text\": \"SSD discretizes the output space of bounding boxes into a set of default boxes over different aspect ratios and scales per feature map location.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"Our approach, named SSD, discretizes the output space of bounding boxes into a set of default boxes over different aspect ratios and scales per feature map location.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"SSD is simple relative to methods that require object proposals.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"SSD is simple relative to methods that require object proposals because it completely eliminates proposal generation and subsequent pixel or feature resampling stages and encapsulates all computation in a single network.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"SSD completely eliminates proposal generation and subsequent pixel or feature resampling stages.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"SSD is simple relative to methods that require object proposals because it completely eliminates proposal generation and subsequent pixel or feature resampling stages and encapsulates all computation in a single network.\", \"section_path\": \"—\"}]}, {\"claim_text\": \"SSD encapsulates all computation in a single network.\", \"claim_type\": \"method\", \"polarity\": \"positive\", \"confidence\": 1.0, \"evidence\": [{\"chunk_fingerprint\": \"\", \"quote\": \"SSD is simple relative to methods that require object proposals because it completely eliminates proposal generation and subsequent pixel or feature resampling stages and encapsulates all computation in a single network.\", \"section_path\": \"—\"}]}]}",
+        "claims_benchmark_compact_schema": true,
+        "claims_compact_fallback_used": false,
+        "claims_compact_fallback_reason": null
+      }
+    }
+  ]
+}

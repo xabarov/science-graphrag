@@ -17,6 +17,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from pydantic import BaseModel, Field
 from scripts.dual_validate.consistency_report import (
     ConsistencyReport,
     ExtractorInfo,
@@ -72,10 +73,22 @@ _VALID_TYPES = {"method", "performance", "comparison", "finding", "limitation", 
 _VALID_POLARITIES = {"positive", "negative", "neutral"}
 
 
+class ClaimItemModel(BaseModel):
+    claim_text_normalized: str = Field(min_length=1)
+    claim_type: str = Field(default="finding")
+    polarity: str = Field(default="neutral")
+    evidence_quote_short: str = Field(default="")
+
+
+class ClaimsResponseModel(BaseModel):
+    claims: list[ClaimItemModel]
+
+
 class ClaimsV2Extractor(ExtractorBase):
     """Independent LLM extractor over ``article.md`` for ``corpus_<slug>_v2`` packs."""
 
     layer_name = "claims_v2"
+    response_model = ClaimsResponseModel
 
     def discover_packs(self, fixtures_root: Path) -> list[Path]:
         base = fixtures_root / "claims"
