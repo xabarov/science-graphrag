@@ -6,6 +6,7 @@ or defaults: fields are composed into `Settings` via multiple inheritance.
 
 from pydantic import BaseModel, ConfigDict, Field
 
+
 class AgentRuntimeFields(BaseModel):
     """Field group merged into :class:`science_graphrag.config.Settings`."""
 
@@ -426,13 +427,6 @@ class AgentRuntimeFields(BaseModel):
         description=(
             "Tool names stripped from the LLM rerank candidate pool before the LLM call "
             "(defense-in-depth; high-risk tools without discovery/rules path are also excluded)."
-        ),
-    )
-    agent_web_research_tools_enabled: bool = Field(
-        default=False,
-        description=(
-            "When true, register ``web_search`` / ``web_fetch`` in the agent tool registry "
-            "(academic host allowlist by default; see tool_manifest + web_research_tools)."
         ),
     )
     agent_doi_resolver_tool_enabled: bool = Field(
@@ -968,4 +962,3 @@ class AgentRuntimeFields(BaseModel):
             "``docker-compose.live-check.yml`` / ``scripts/live_check/README.md``)."
         ),
     )
-

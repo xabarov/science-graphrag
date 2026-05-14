@@ -51,6 +51,69 @@ def merge_research_plan_items(thread_id: str, items: list[dict[str, Any]]) -> di
     return plan
 
 
+def seed_research_plan_if_empty(
+    thread_id: str | None, *, question: str | None = None
+) -> dict[str, Any] | None:
+    """Create a deterministic starter plan for request-scoped UI plan mode.
+
+    The LLM/subagent may refine it later via ``research_plan_write``; this seed
+    keeps the UI panel useful even when write tools are disabled or no
+    retrieval payloads are available.
+    """
+    tid = (thread_id or "").strip()
+    if not tid:
+        return None
+    ent = get_session_for_thread(tid)
+    meta = ent.get("session_meta") or {}
+    if isinstance(meta, dict):
+        prev = meta.get("research_plan")
+        if isinstance(prev, dict) and isinstance(prev.get("items"), list) and prev["items"]:
+            return dict(prev)
+    q = " ".join(str(question or "").strip().split())[:240]
+    scope = f": {q}" if q else ""
+    has_ru = any(("а" <= ch.lower() <= "я") or ch.lower() == "ё" for ch in q)
+    if has_ru:
+        seed_items = [
+            {
+                "id": "01_scope",
+                "content": f"Уточнить исследовательский вопрос и рамки сравнения{scope}",
+                "status": "completed",
+            },
+            {
+                "id": "02_sources",
+                "content": "Найти наиболее релевантные источники и подтверждающие материалы в рабочей области.",
+                "status": "in_progress",
+            },
+            {
+                "id": "03_synthesis",
+                "content": "Сформировать выводы и итоговый ответ со ссылками на источники.",
+                "status": "pending",
+            },
+        ]
+    else:
+        seed_items = [
+            {
+                "id": "01_scope",
+                "content": f"Clarify the research question and comparison scope{scope}",
+                "status": "completed",
+            },
+            {
+                "id": "02_sources",
+                "content": "Find the most relevant workspace sources and evidence.",
+                "status": "in_progress",
+            },
+            {
+                "id": "03_synthesis",
+                "content": "Synthesize the answer with conclusions and citations.",
+                "status": "pending",
+            },
+        ]
+    return merge_research_plan_items(
+        tid,
+        seed_items,
+    )
+
+
 def get_research_plan_snapshot_for_thread(thread_id: str | None) -> dict[str, Any] | None:
     """Return persisted research plan dict when it has at least one item (for run_metadata / UI)."""
     tid = (thread_id or "").strip()

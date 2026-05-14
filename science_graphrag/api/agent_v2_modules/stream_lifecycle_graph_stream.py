@@ -105,6 +105,7 @@ async def stream_agent_events(
                 turn_ctx = build_agent_request_turn_context(
                     settings,
                     thread_id=thread_id,
+                    question=question,
                     web_research_enabled=web_research_enabled,
                     agent_mode=agent_mode,
                 )

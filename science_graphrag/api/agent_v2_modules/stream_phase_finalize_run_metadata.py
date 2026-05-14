@@ -188,7 +188,10 @@ def build_finalize_run_metadata(
     )
     if _rp_collect:
         run_meta["research_plan_results"] = _rp_collect
-    if thread_id and bool(getattr(settings, "agent_research_plan_tool_enabled", False)):
+    request_plan_mode = str(run_meta.get("request_agent_mode") or "").strip().lower() == "plan"
+    if thread_id and (
+        request_plan_mode or bool(getattr(settings, "agent_research_plan_tool_enabled", False))
+    ):
         from science_graphrag.agent.context.research_plan_session import (
             get_research_plan_snapshot_for_thread,
         )

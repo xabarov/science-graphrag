@@ -80,10 +80,9 @@ def build_tool_registry(stores: StoreRegistry, settings: Settings | None = None)
     out: list[BaseTool] = []
     out.extend(build_graph_tools(stores))
     out.extend(build_retrieval_tools(stores, settings))
-    if getattr(settings, "agent_web_research_tools_enabled", False):
-        from science_graphrag.agent.tools.web_research_tools import build_web_research_tools
+    from science_graphrag.agent.tools.web_research_tools import build_web_research_tools
 
-        out.extend(build_web_research_tools(settings=settings))
+    out.extend(build_web_research_tools(settings=settings))
     if getattr(settings, "agent_doi_resolver_tool_enabled", False):
         from science_graphrag.agent.tools.doi_resolver_tool import build_doi_resolver_tool
 

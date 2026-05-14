@@ -11,7 +11,6 @@ from science_graphrag.config import Settings
 
 def _all_optional_surface_settings() -> Settings:
     return Settings(
-        agent_web_research_tools_enabled=True,
         agent_doi_resolver_tool_enabled=True,
         agent_mcp_tools_enabled=True,
         agent_lsp_tool_enabled=True,
@@ -36,15 +35,13 @@ def test_build_tool_registry_names_match_tool_manifest() -> None:
 
 
 def test_default_registry_subset_of_manifest() -> None:
-    """Optional web/DOI tools are manifest-only until feature flags enable them."""
+    """Optional non-web tools are manifest-only until feature flags enable them."""
     stores = MagicMock()
     reg = build_tool_registry(stores, Settings())
     reg_names = {getattr(t, "name", "") for t in reg if getattr(t, "name", "")}
     man_names = {e.name for e in TOOL_MANIFEST}
     assert reg_names <= man_names
     optional = {
-        "web_search",
-        "web_fetch",
         "doi_resolver",
         "call_mcp_tool",
         "list_mcp_resources",

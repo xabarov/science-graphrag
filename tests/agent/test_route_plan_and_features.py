@@ -106,6 +106,17 @@ def test_question_features_workspace_stats_ru() -> None:
     assert feats.language in ("ru", "mixed")
 
 
+def test_question_features_ru_instruction_with_english_terms_stays_ru() -> None:
+    feats = extract_question_features(
+        question=(
+            "Для рабочей области Object Detection сравни статьи по transfer learning "
+            "in computer vision: сначала составь план исследования, затем дай ответ."
+        ),
+        workspace_id="ws-1",
+    )
+    assert feats.language == "ru"
+
+
 # ---------------------------------------------------------------------------
 # build_route_plan
 # ---------------------------------------------------------------------------

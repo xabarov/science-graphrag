@@ -102,6 +102,19 @@ def _writer_mode_from_state(state: AgentState) -> str:
     return "normal"
 
 
+def _answer_language_instruction(state: AgentState) -> str:
+    """Return an explicit answer-language instruction for the writer."""
+    meta = state.get("metadata") or {}
+    tp = meta.get("turn_policy") if isinstance(meta, dict) else None
+    qf = tp.get("question_features") if isinstance(tp, dict) else None
+    lang = str(qf.get("language") or "").strip().lower() if isinstance(qf, dict) else ""
+    if lang == "ru":
+        return "Answer language: Russian. Keep English paper titles, model names, and domain terms unchanged."
+    if lang == "en":
+        return "Answer language: English."
+    return "Answer language: match the user's instruction language; preserve technical titles as written."
+
+
 def _system_prompt_for_mode(mode: str, *, settings: Settings) -> str:
     if mode == "direct":
         base = DIRECT_SYSTEM_PROMPT
@@ -137,7 +150,10 @@ def _compile_writer_subgraph(
             )
             return cutoff
         context_message = HumanMessage(
-            content=f"specialist_results={_collect_writer_context(state)}"
+            content=(
+                f"{_answer_language_instruction(state)}\n"
+                f"specialist_results={_collect_writer_context(state)}"
+            )
         )
         base_msgs = [
             HumanMessage(content=system_prompt),

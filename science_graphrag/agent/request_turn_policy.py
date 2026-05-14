@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Literal
 
+from science_graphrag.agent.context.research_plan_session import seed_research_plan_if_empty
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
 from science_graphrag.config import Settings
 
@@ -29,6 +30,7 @@ def build_agent_request_turn_context(
     settings: Settings,
     *,
     thread_id: str | None,
+    question: str | None = None,
     web_research_enabled: bool | None,
     agent_mode: str,
 ) -> AgentRequestTurnContext:
@@ -37,6 +39,8 @@ def build_agent_request_turn_context(
     if mode not in {"agent", "plan"}:
         mode = "agent"
     warn_req = list(apply_plan_mode_thread_start(thread_id, mode))
+    if mode == "plan":
+        seed_research_plan_if_empty(thread_id, question=question)
     user_web = effective_web_research_user_enabled(web_research_enabled)
     warn_req.extend(compute_request_warnings(settings, web_research_user_enabled=user_web))
     tdl = compute_turn_tool_denylist(settings, web_research_user_enabled=user_web)
@@ -73,11 +77,8 @@ def compute_turn_tool_denylist(
     web_research_user_enabled: bool,
 ) -> list[str]:
     """Tool names denied for this turn (execution layer), e.g. user-disabled web."""
-    deny: list[str] = []
-    deploy_web = bool(getattr(settings, "agent_web_research_tools_enabled", False))
-    if deploy_web and not web_research_user_enabled:
-        deny.extend(sorted(WEB_RESEARCH_TOOL_NAMES))
-    return deny
+    _ = settings
+    return sorted(WEB_RESEARCH_TOOL_NAMES) if not web_research_user_enabled else []
 
 
 def compute_request_warnings(
@@ -85,13 +86,10 @@ def compute_request_warnings(
     *,
     web_research_user_enabled: bool,
 ) -> list[str]:
-    """Warnings when user asks for web but deployment does not allow it."""
-    out: list[str] = []
-    if web_research_user_enabled and not bool(
-        getattr(settings, "agent_web_research_tools_enabled", False)
-    ):
-        out.append("web_research_requested_but_disabled_by_server")
-    return out
+    """Request warnings (reserved for future per-turn policy hints)."""
+    _ = settings
+    _ = web_research_user_enabled
+    return []
 
 
 def apply_plan_mode_thread_start(
@@ -156,11 +154,11 @@ def build_request_run_metadata_fragment(
 ) -> dict[str, Any]:
     """Small fragment merged into run_metadata for UI transparency."""
     user_on = effective_web_research_user_enabled(web_research_enabled)
-    deploy_web = bool(getattr(settings, "agent_web_research_tools_enabled", False))
+    _ = settings
     return {
         "request_web_research_enabled": web_research_enabled,
         "effective_web_research_user_enabled": user_on,
-        "effective_web_research_tools": bool(deploy_web and user_on),
+        "effective_web_research_tools": bool(user_on),
         "request_agent_mode": (agent_mode or "agent").strip().lower(),
         "turn_tool_denylist": list(turn_tool_denylist),
         "request_turn_warnings": list(request_warnings),

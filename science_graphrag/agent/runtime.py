@@ -240,6 +240,7 @@ class RetrievalAgent:
         turn_ctx = build_agent_request_turn_context(
             self._settings,
             thread_id=thread_id,
+            question=question,
             web_research_enabled=web_research_enabled,
             agent_mode=agent_mode,
         )

@@ -183,6 +183,12 @@ def _detect_language(text: str) -> QuestionLanguage:
     has_ru = bool(_RU_LETTERS.search(text))
     has_en = bool(_EN_LETTERS.search(text))
     if has_ru and has_en:
+        # Mixed prompts often contain English paper titles / domain terms inside
+        # a Russian instruction. If there are at least a few Cyrillic tokens,
+        # keep the answer language Russian instead of drifting to English.
+        ru_words = _RU_LETTERS.findall(text)
+        if len(ru_words) >= 6:
+            return "ru"
         return "mixed"
     if has_ru:
         return "ru"

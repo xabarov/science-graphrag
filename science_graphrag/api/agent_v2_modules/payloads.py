@@ -264,8 +264,7 @@ class AgentQueryRequestV2(BaseModel):
         default=None,
         description=(
             "When false, deny ``web_search`` / ``web_fetch`` for this turn. "
-            "When true, allow if ``agent_web_research_tools_enabled`` on server. "
-            "When null/omitted, preserve legacy behavior (allow if server-enabled)."
+            "When true or null/omitted, keep web research tools enabled."
         ),
     )
 
@@ -419,7 +418,10 @@ def response_from_run(
     rpr = getattr(out, "research_plan_results", None)
     if isinstance(rpr, list) and rpr:
         run_metadata["research_plan_results"] = list(rpr)
-    if tid and bool(getattr(settings, "agent_research_plan_tool_enabled", False)):
+    request_plan_mode = str(run_metadata.get("request_agent_mode") or "").strip().lower() == "plan"
+    if tid and (
+        request_plan_mode or bool(getattr(settings, "agent_research_plan_tool_enabled", False))
+    ):
         from science_graphrag.agent.context.research_plan_session import (
             get_research_plan_snapshot_for_thread,
         )

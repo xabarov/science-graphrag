@@ -143,7 +143,7 @@ class WebFetchArgs(BaseModel):
 
 
 def build_web_research_tools(*, settings: Settings) -> list[Any]:
-    """Return LangChain tools gated by ``agent_web_research_tools_enabled`` at registry level."""
+    """Return LangChain web research tools."""
 
     @tool("web_search", args_schema=WebSearchArgs, return_direct=False)
     def web_search_tool(
