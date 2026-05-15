@@ -8,6 +8,7 @@ from science_graphrag.settings.llm_advanced_fields import merge_llm_advanced_int
 from science_graphrag.settings.secrets import SecretStore
 from science_graphrag.settings.snapshots import resolve_ingestion_fields
 from science_graphrag.settings.storage_runtime import merge_storage_runtime_fields
+from science_graphrag.settings.stored_bool import optional_stored_bool
 
 if TYPE_CHECKING:
     from science_graphrag.config import Settings
@@ -94,5 +95,89 @@ def _merge_persisted_agent_tools(
         try:
             n = int(raw)
         except (TypeError, ValueError):
-            return
-        non_secret_overrides["agent_supervisor_max_rounds"] = max(2, min(32, n))
+            pass
+        else:
+            non_secret_overrides["agent_supervisor_max_rounds"] = max(2, min(32, n))
+    if "external_research_default_enabled" in agent_tools:
+        raw = agent_tools.get("external_research_default_enabled")
+        b = optional_stored_bool(raw)
+        if b is not None:
+            non_secret_overrides["external_research_default_enabled"] = b
+    if "external_research_sources" in agent_tools:
+        src = agent_tools.get("external_research_sources")
+        if isinstance(src, dict):
+            for key, field in (
+                ("crossref", "external_research_source_crossref_enabled"),
+                ("arxiv", "external_research_source_arxiv_enabled"),
+                ("unpaywall", "external_research_source_unpaywall_enabled"),
+                ("openalex", "external_research_source_openalex_enabled"),
+            ):
+                if key not in src:
+                    continue
+                b = optional_stored_bool(src.get(key))
+                if b is not None:
+                    non_secret_overrides[field] = b
+    if "pdf_reading_mode" in agent_tools:
+        raw = agent_tools.get("pdf_reading_mode")
+        if raw in {"off", "ask", "auto_safe_oa"}:
+            non_secret_overrides["pdf_reading_mode"] = raw
+    if "agent_unpaywall_oa_tool_enabled" in agent_tools:
+        raw = agent_tools.get("agent_unpaywall_oa_tool_enabled")
+        b = optional_stored_bool(raw)
+        if b is not None:
+            non_secret_overrides["agent_unpaywall_oa_tool_enabled"] = b
+    if "agent_external_http_timeout_seconds" in agent_tools:
+        raw = agent_tools.get("agent_external_http_timeout_seconds")
+        try:
+            t = float(raw)
+        except (TypeError, ValueError):
+            pass
+        else:
+            non_secret_overrides["agent_external_http_timeout_seconds"] = max(5.0, min(120.0, t))
+    if "agent_external_max_calls_per_turn" in agent_tools:
+        raw = agent_tools.get("agent_external_max_calls_per_turn")
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            pass
+        else:
+            non_secret_overrides["agent_external_max_calls_per_turn"] = max(1, min(32, n))
+    if "agent_external_max_source_cards" in agent_tools:
+        raw = agent_tools.get("agent_external_max_source_cards")
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            pass
+        else:
+            non_secret_overrides["agent_external_max_source_cards"] = max(4, min(128, n))
+    if "agent_pdf_read_tool_enabled" in agent_tools:
+        raw = agent_tools.get("agent_pdf_read_tool_enabled")
+        b = optional_stored_bool(raw)
+        if b is not None:
+            non_secret_overrides["agent_pdf_read_tool_enabled"] = b
+    if "agent_pdf_read_max_bytes" in agent_tools:
+        raw = agent_tools.get("agent_pdf_read_max_bytes")
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            pass
+        else:
+            non_secret_overrides["agent_pdf_read_max_bytes"] = max(
+                100_000, min(100_000_000, n)
+            )
+    if "agent_pdf_read_max_pages" in agent_tools:
+        raw = agent_tools.get("agent_pdf_read_max_pages")
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            pass
+        else:
+            non_secret_overrides["agent_pdf_read_max_pages"] = max(1, min(500, n))
+    if "agent_pdf_read_cache_ttl_seconds" in agent_tools:
+        raw = agent_tools.get("agent_pdf_read_cache_ttl_seconds")
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            pass
+        else:
+            non_secret_overrides["agent_pdf_read_cache_ttl_seconds"] = max(0, min(86_400, n))

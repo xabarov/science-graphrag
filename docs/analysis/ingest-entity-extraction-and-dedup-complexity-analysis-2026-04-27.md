@@ -1,5 +1,9 @@
 # Ingest entity extraction and dedup complexity analysis (2026-04-27)
 
+**Doc status:** `reference`
+
+**Read hint:** complexity analysis of ingest/dedup paths; not weekly sprint backlog.
+
 **Status:** code-path analysis of the current implementation.
 
 **Primary question:** if a document produces `n` chunks, do current ingestion and dedup paths contain nonlinear operations of `O(n^2)` or higher, especially in LLM-dependent stages?

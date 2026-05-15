@@ -20,7 +20,15 @@ from science_graphrag.external_intent_markers import (
 )
 
 EXTERNAL_RESEARCH_TOOL_NAMES: frozenset[str] = frozenset(
-    {"web_search", "web_fetch", "arxiv_search", "arxiv_fetch", "unpaywall_lookup"}
+    {
+        "web_search",
+        "web_fetch",
+        "arxiv_search",
+        "arxiv_fetch",
+        "unpaywall_lookup",
+        "openalex_works_search",
+        "read_external_pdf",
+    }
 )
 WEB_RESEARCH_TOOL_NAMES: frozenset[str] = EXTERNAL_RESEARCH_TOOL_NAMES
 
@@ -76,7 +84,10 @@ def build_agent_request_turn_context(
             thread_id,
             question=question,
         )
-    user_web = effective_web_research_user_enabled(web_research_enabled)
+    user_web = effective_web_research_user_enabled(
+        web_research_enabled,
+        default_when_unspecified=bool(settings.external_research_default_enabled),
+    )
     warn_req.extend(compute_request_warnings(settings, web_research_user_enabled=user_web))
     tdl = compute_turn_tool_denylist(settings, web_research_user_enabled=user_web)
     frag = build_request_run_metadata_fragment(
@@ -85,6 +96,7 @@ def build_agent_request_turn_context(
         agent_mode=mode,
         turn_tool_denylist=tdl,
         request_warnings=warn_req,
+        external_research_default_enabled=bool(settings.external_research_default_enabled),
     )
     return AgentRequestTurnContext(
         mode=mode,
@@ -99,11 +111,19 @@ def utc_now_iso_z() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def effective_web_research_user_enabled(web_research_enabled: bool | None) -> bool:
-    """Legacy API clients send null/omit -> treat as enabled (previous behavior)."""
-    if web_research_enabled is None:
-        return True
-    return bool(web_research_enabled)
+def effective_web_research_user_enabled(
+    web_research_enabled: bool | None,
+    *,
+    default_when_unspecified: bool = True,
+) -> bool:
+    """Resolve per-request external research toggle.
+
+    When ``web_research_enabled`` is ``None``, use ``default_when_unspecified`` (persisted
+    operator default via ``Settings.external_research_default_enabled`` at call sites).
+    """
+    if web_research_enabled is not None:
+        return bool(web_research_enabled)
+    return bool(default_when_unspecified)
 
 
 def compute_turn_tool_denylist(
@@ -113,7 +133,7 @@ def compute_turn_tool_denylist(
 ) -> list[str]:
     """Tool names denied for this turn when the user disables external HTTP research.
 
-    Covers Crossref/arXiv/Unpaywall tools (see ``EXTERNAL_RESEARCH_TOOL_NAMES``).
+    Covers Crossref/arXiv/Unpaywall/OpenAlex tools (see ``EXTERNAL_RESEARCH_TOOL_NAMES``).
     """
     _ = settings
     return sorted(EXTERNAL_RESEARCH_TOOL_NAMES) if not web_research_user_enabled else []
@@ -189,9 +209,13 @@ def build_request_run_metadata_fragment(
     agent_mode: str,
     turn_tool_denylist: list[str],
     request_warnings: list[str],
+    external_research_default_enabled: bool = True,
 ) -> dict[str, Any]:
     """Small fragment merged into run_metadata for UI transparency."""
-    user_on = effective_web_research_user_enabled(web_research_enabled)
+    user_on = effective_web_research_user_enabled(
+        web_research_enabled,
+        default_when_unspecified=bool(external_research_default_enabled),
+    )
     _ = settings
     return {
         "request_web_research_enabled": web_research_enabled,

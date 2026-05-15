@@ -144,7 +144,7 @@ export function useAskPerformAgentSubmit({
   setHistory,
 }) {
   return useCallback(
-    async (queryText, { workIdForTurn, userStructuredAnswer } = {}) => {
+    async (queryText, { workIdForTurn, userStructuredAnswer, pdfReadRequest } = {}) => {
       const q = String(queryText || "").trim();
       if (!q) return;
       const turnWorkId = workIdForTurn != null ? String(workIdForTurn).trim() : String(workId || "").trim();
@@ -163,6 +163,7 @@ export function useAskPerformAgentSubmit({
             threadId: submitSid || null,
             historyDigest,
             userStructuredAnswer: userStructuredAnswer && typeof userStructuredAnswer === "object" ? userStructuredAnswer : null,
+            pdfReadRequest: pdfReadRequest && typeof pdfReadRequest === "object" ? pdfReadRequest : null,
             webResearchEnabled,
             agentMode,
           });

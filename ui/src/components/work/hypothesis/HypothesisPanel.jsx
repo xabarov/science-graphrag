@@ -109,7 +109,7 @@ export default function HypothesisPanel({
           ))}
         </Box>
       ) : null}
-      <AgentToolTrace toolTrace={toolTrace} />
+      <AgentToolTrace toolTrace={toolTrace} t={t} />
     </Box>
   );
 }

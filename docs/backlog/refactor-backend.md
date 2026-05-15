@@ -24,7 +24,7 @@ Planned structural work for Python packages under this repo (not day-to-day lint
 
 **Wave status (2026-05-15):** W1–W5 **baseline deliverables are in tree**; global acceptance gate (4 bullets in charter) is **partially met** — live contour evidence and long regression compare remain operator-owned before calling the wave “closed”.
 
-Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream_phase_*`). Источники: [`agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md) (§4.2 R4-next, §6.3 API seams, §R3 измеримость), [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md) (E1/E2 operator gate, paired compare).
+Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream_phase_*`). Источники: [`agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md) (§4.2 R4-next, §6.3 API seams, §R3 измеримость), [`agent-engine-feature-status-2026-05-13.md`](../analysis/agent-engine-feature-status-2026-05-13.md) (E1/E2 operator gate, defaults vs rollout stance). Детальный лог волн D–H — только исторический stub [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md).
 
 #### Wave charter (большая взаимосвязанная волна)
 
@@ -87,6 +87,7 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Raised:** 2026-05-14, **updated:** 2026-05-15
 
 ### [PARTIAL] Split graph neighborhood response assembly
+- **Progress (2026-05-15):** Neo4j neighbor row queries moved to `science_graphrag/api/works/graph_neighborhood_neo4j_queries.py`; payload module imports them; **view/raw vs reader post-processing** moved to `science_graphrag/api/works/graph_neighborhood_payload_view.py` (`apply_neighborhood_view_shape`).
 - **Area:** `science_graphrag/api/works/graph_neighborhood.py`, `science_graphrag/api/works/graph_neighborhood_payload.py`, `science_graphrag/api/works/graph_neighborhood_institutions.py`, `science_graphrag/api/graph_reader_projection/`, `science_graphrag/api/workspace_graph/`
 - **Issue:** Reader vs raw assembly, counters, truncation metadata, and legacy aggregation knobs are split across modules, but **view-specific** builders (`reader_payload` / `raw_payload`) and shared truncation/display helpers are still not isolated — the next graph UX change can still touch multiple files.
 - **Proposal:** Extract view-specific payload builders (`reader_payload.py`, `raw_payload.py`), center-node/counter mapping, and truncation/display metadata helpers on top of the existing `graph_reader_projection` package. Keep the router-facing module as orchestration and compatibility glue.
@@ -108,6 +109,7 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Raised:** 2026-05-14, **updated:** 2026-05-15
 
 ### [OPEN] Reduce live-check entrypoint size after trace-review split
+- **Parallel track:** safe alongside external-research-tools; E2E JSON cache extracted to `scripts/live_check/trace_review/e2e_report_cache.py` (2026-05-15); `http_suite` split into `http_suite_core` + `http_suite_agent_v2`.
 - **Area:** `scripts/live_check/trace_review/orchestrator_main_runner.py`, `scripts/live_check/trace_review/orchestrator_argparse.py`, `scripts/live_check/trace_review/agent_trace_review_orchestrator.py`, `scripts/live_check/trace_review/artifact_pipeline.py`, `scripts/live_check/trace_review/artifact_writers.py`, `scripts/live_check/compaction_turn_review.py`, `scripts/live_check/compaction_review/*`, `scripts/live_check/agent_od_workspace_e2e_audit.py`, `scripts/live_check/agent_trace_review.py`
 - **Issue:** Исторически оркестрация и compaction review были сосредоточены в крупных entry-модулях; это повышало стоимость правок R3/R4 evidence и heartbeat-политик.
 - **Proposal:** (1) Нарезать `orchestrator_main_runner` по вертикали стадий (например `orchestrator_run_http_and_e2e.py`, `orchestrator_run_artifacts.py`, общий `orchestrator_run_context.py` для `run_context` / feature_flags). (2) Вынести из `compaction_turn_review` слой `httpx` + retry + сбор отчёта в подмодули `scripts/live_check/compaction_review/`. (3) Продолжить дробление OD audit в `agent_od_audit/` по мере роста.
@@ -116,6 +118,7 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Raised:** 2026-05-14, **updated:** 2026-05-14 (operator/live-check depth slice)
 
 ### [OPEN] Split dual-validate retrieval extractor
+- **Progress (2026-05-15):** consistency report bodies in `retrieval_v1_consistency_reports.py`; `retrieval_v1.py` re-export facade; pack IO in `retrieval_v1_pack_io.py` (`discover_pack_directories`, `read_pack_gold_json`); classes in `retrieval_v1_workspace_scoped.py` / `retrieval_v1_hybrid_ablation.py` / `retrieval_v1_multihop.py`.
 - **Area:** `scripts/dual_validate/extractors/retrieval_v1.py`, `scripts/dual_validate/extractors/base.py`
 - **Issue:** [`retrieval_v1.py`](../../scripts/dual_validate/extractors/retrieval_v1.py) остаётся **~663** LoC после выноса prompts/schemas/inventory/ranking; цель ≤350 LoC не достигнута.
 - **Proposal:** Extract retrieval-specific matching/scoring and summary rendering into helper modules, keeping the extractor class focused on loading inputs, calling the LLM client, and composing the result.
@@ -185,10 +188,9 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Proposal:** (1) Разгрузить [`inspector.py`](../../science_graphrag/api/benchmark/inspector.py) (preview/compare/diagnostics shards). (2) `task_store.py` довести до orchestration-only с явными seams к [`benchmark_task_store_core.py`](../../science_graphrag/api/benchmark_task_store_core.py) + serializers. (3) Catalog/runs оставить тонкими HTTP слоями над use-cases.
 - **Acceptance:** входной router-пакет без «god-файла» > ~350 LoC; новые семейства benchmark подключаются через catalog adapter без правок inspector/compare; `task_store` не содержит JSON snapshot plumbing.
 - **Synergy:** **Wave M/P/Q/R/S** в `ontology-benchmarks-roadmap-2026-04-24.md` — каждое семейство не упирается в один файл.
-- **Remaining:** сплит inspector + финальный orchestration-only `task_store.py`.
+- **Progress (2026-05-15):** `inspector.py` is a **re-export facade**; comparison payloads → `inspector_comparison_payloads.py`, evidence links → `inspector_evidence_links.py`, highlights → `inspector_highlights.py` (with `_append_layer1_mismatch_issues` / `_append_layer2_semantic_issues`). `task_store.py` already orchestration-only facade over `benchmark_task_store_core`.
+- **Remaining:** optional further split of compare/preview-heavy paths in `routes_runs.py` if they grow again; keep catalog/runs as thin HTTP over use-cases per acceptance.
 - **Raised:** 2026-04-25, **updated:** 2026-05-15 (актуальные пути и LoC)
-
-### [PARTIAL] Standardize ingestion LLM seams around structured executor
 - **Area:** `science_graphrag/ingestion/llm/`, `science_graphrag/ingestion/claims/extractor.py`, `science_graphrag/ingestion/vl_pdf.py`, `science_graphrag/ingestion/_pipeline_impl.py`
 - **Issue:** production ingestion still mixes patterns: metadata/authorships/references/semantic go through `SyncInstructorExtractor` + shared `run_extraction`, but claims and VL paths diverge in diagnostics/retry/test surface.
 - **Proposal:** (1) move claims onto the same structured seam: shared schema modules + `run_extraction(...)` + typed diagnostics; (2) extractor factory/presets from `Settings` instead of manual `SyncInstructorExtractor` wiring per call-site; (3) VL stays non-Instructor but shares low-level transport/telemetry; (4) document `stage -> seam` matrix in architecture/docs + tests.
@@ -231,10 +233,10 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Remaining:** stage registry / declarative graph (if we remove remaining conditional branches in orchestrator) + final migration of tests/scripts off legacy import paths. `ingestion/pipeline.py` is the public facade; private export surface from `_pipeline_impl` should stay minimal.
 - **Raised:** 2026-05-05
 
-### [OPEN] External research: OpenAlex search + Semantic Scholar tools
+### [OPEN] External research: Semantic Scholar tools
 - **Area:** `science_graphrag/agent/tools/external/`, `science_graphrag/agent/tool_manifest.py`, `science_graphrag/agent/request_turn_policy.py`
-- **Issue:** ADR 030 + `unpaywall_lookup` cover assembly and OA-by-DOI; `doi_resolver` already hits OpenAlex by DOI. Product gap vs `docs/analysis/sci-tools.md`: **search** across works (OpenAlex), citations/graph (Semantic Scholar), without duplicating DOI resolution paths.
-- **Proposal:** add bounded `openalex_works_search` / `semantic_scholar_*` modules under `external/`, reuse `http_transport`, operator flags in `Settings`, extend `EXTERNAL_RESEARCH_TOOL_NAMES` when user web-toggle applies.
-- **Acceptance:** httpx-mocked unit tests, manifest/registry sync tests, product_step mapping, shortlist rules documented for each new name.
-- **Raised:** 2026-05-15
+- **Issue:** `openalex_works_search` is shipped (see `docs/analysis/external-research-tools-workplan-2026-05-15.md` Phase 3). Remaining product gap vs `docs/analysis/sci-tools.md`: **citation-aware** discovery via Semantic Scholar (`semantic_scholar_search`, `semantic_scholar_paper`, later references/citations) without duplicating DOI resolution (`doi_resolver` owns OpenAlex-by-DOI).
+- **Proposal:** add bounded `semantic_scholar_*` modules under `external/`, reuse `http_transport`, optional API key in secret store, operator flags in `Settings`, extend `EXTERNAL_RESEARCH_TOOL_NAMES` when user web-toggle applies; manifest + product_step + mock HTTP tests per tool.
+- **Acceptance:** httpx-mocked unit tests, manifest/registry sync tests, product_step mapping, documented per-tool denylist/toggle; optional live smoke when key/rate limits allow.
+- **Raised:** 2026-05-15, **updated:** 2026-05-15 (OpenAlex search split out as delivered; backlog tracks Semantic Scholar only)
 

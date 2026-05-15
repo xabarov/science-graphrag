@@ -1,5 +1,9 @@
 # Reader UX & translation roadmap — 2026-04-25
 
+**Doc status:** `reference`
+
+**Read hint:** reader/translation UX waves; not agent benchmark queue.
+
 **Дата:** 2026-04-25
 **Статус:** living working doc; новая серия волн **RX (Reader eXperience)** + поддерживающая серия **LX (LLM Concurrency)** в [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md). Закрывает накопившиеся болевые точки страницы `/reader` и Reader-таба внутри Workspace.
 

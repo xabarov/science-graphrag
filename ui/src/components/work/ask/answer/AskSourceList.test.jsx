@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 import React from "react";
-import { describe, expect, it, afterEach } from "vitest";
+import { describe, expect, it, afterEach, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { ThemeProvider } from "@mui/material/styles";
@@ -46,7 +46,17 @@ const testMessages = {
   "askPanel.citation.linkGraph": "Graph",
   "askPanel.citation.linkWeb": "Open link",
   "askPanel.citation.tooltipWebSource": "Open external source",
+  "askPanel.citation.linkReadPdf": "Read PDF",
+  "askPanel.citation.tooltipReadPdf": "Read PDF and extract text",
   "askPanel.citation.noWork": "No work",
+  "askPanel.citation.trust.external": "External",
+  "askPanel.citation.trust.abstract": "Abstract",
+  "askPanel.citation.trust.metadataOnly": "Metadata only",
+  "askPanel.citation.trust.fullText": "Full text",
+  "askPanel.citation.trust.webSummary": "Web summary",
+  "askPanel.citation.trust.oaLink": "OA link",
+  "askPanel.citation.trust.pdfRead": "PDF read",
+  "askPanel.citation.fallback.host_not_allowed": "URL blocked",
   "askPanel.chunkLabel": "chunk",
 };
 
@@ -183,5 +193,77 @@ describe("AskSourceList", () => {
     expect(link.textContent).toContain("Open link");
     expect(screen.getByText("Web sources")).toBeTruthy();
     expect(screen.getByText("Source #1")).toBeTruthy();
+  });
+
+  it("renders Read PDF action for PDF-like web sources", () => {
+    const onReadPdfSource = vi.fn();
+    renderWithTheme(
+      <AskSourceList
+        t={t}
+        answerClass="grounded_explanation"
+        onReadPdfSource={onReadPdfSource}
+        pdfReadingMode="ask"
+        citations={[
+          {
+            source_type: "web",
+            title: "ArXiv PDF",
+            url: "https://arxiv.org/pdf/1706.03762.pdf",
+            excerpt: "Transformer paper",
+          },
+        ]}
+        chatDetailLevel="detailed"
+      />,
+    );
+    const btn = screen.getByRole("button", { name: "Read PDF and extract text" });
+    expect(btn).toBeTruthy();
+    btn.click();
+    expect(onReadPdfSource).toHaveBeenCalledWith("https://arxiv.org/pdf/1706.03762.pdf");
+  });
+
+  it("hides Read PDF action when pdf reading mode is off", () => {
+    renderWithTheme(
+      <AskSourceList
+        t={t}
+        answerClass="grounded_explanation"
+        onReadPdfSource={() => {}}
+        pdfReadingMode="off"
+        citations={[
+          {
+            source_type: "web",
+            title: "Publisher PDF",
+            url: "https://example.org/paper.pdf",
+            excerpt: "Body",
+          },
+        ]}
+        chatDetailLevel="detailed"
+      />,
+    );
+    expect(screen.queryByRole("button", { name: "Read PDF and extract text" })).toBeNull();
+  });
+
+  it("renders trust badges and fallback for web citation", () => {
+    renderWithTheme(
+      <AskSourceList
+        t={t}
+        answerClass="grounded_explanation"
+        citations={[
+          {
+            source_type: "web",
+            title: "Blocked",
+            url: "https://publisher.example/x",
+            excerpt: "Meta",
+            is_external: true,
+            evidence_mode: "abstract",
+            provenance_kind: "arxiv_abstract",
+            fallback_reason: "host_not_allowed",
+          },
+        ]}
+        chatDetailLevel="detailed"
+      />,
+    );
+    expect(screen.getByTestId("citation-trust-badges-0")).toBeTruthy();
+    expect(screen.getByText("External")).toBeTruthy();
+    expect(screen.getByText("Abstract")).toBeTruthy();
+    expect(screen.getByTestId("citation-fallback-0").textContent).toContain("URL blocked");
   });
 });

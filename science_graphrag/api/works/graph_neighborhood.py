@@ -10,11 +10,13 @@ from science_graphrag.api.works.graph_neighborhood_aggregation import (
     _append_neighbor_edge,
     parse_aggregator_id,
 )
+from science_graphrag.api.works.graph_neighborhood_neo4j_queries import (
+    _work_neighbors_rows,
+    load_work_graph_workspace_internal_ids,
+)
 from science_graphrag.api.works.graph_neighborhood_payload import (
     MAX_WORK_GRAPH_NEIGHBORS,
     _work_graph_neighborhood_payload,
-    _work_neighbors_rows,
-    load_work_graph_workspace_internal_ids,
 )
 from science_graphrag.stores.registry import StoreRegistry
 

@@ -1,8 +1,51 @@
 # Документация SciGraph
 
-Индекс актуальных материалов. Исторические черновики и расширенные рассуждения — в [idea.md](idea.md).
+Индекс материалов по ролям: **active** (читать в первую очередь), **reference** (справочники и контракты), **historical** (архив, черновики, не default для LLM).
 
-## Продукт и план
+**LLM / Cursor:** дефолтный вход для планов в `docs/analysis/` — [analysis/ACTIVE.md](analysis/ACTIVE.md). Сводка последних правок навигации: [CHANGELOG-docs.md](CHANGELOG-docs.md). Зоны, исключённые из типового индекса контекста (см. корневой `.cursorignore`): `docs/analysis/_archive/`, `docs/analysis/_snippets/`, `docs/idea.md`, `docs/pilot/`, тяжёлые артефакты под `eval/results/diagnostics/` и `eval/results/multimodel/`.
+
+## Active entrypoints (начать здесь)
+
+| Документ | Описание |
+|----------|----------|
+| [../README.md](../README.md) | Краткий PRD: пользователи, MVP-сценарии, non-goals |
+| [roadmap.md](roadmap.md) | Roadmap фаз 0–7, архитектура верхнего уровня, риски |
+| [analysis/ACTIVE.md](analysis/ACTIVE.md) | Короткий порядок чтения для агента: unified plan, horizon, feature matrix, benchmarks, backlog |
+| [analysis/README.md](analysis/README.md) | Hub `docs/analysis/`: таблицы «куда смотреть», политика контекста, индекс файлов |
+| [runbooks/deploy.md](runbooks/deploy.md) | Docker Compose, политика ранней упаковки сервисов |
+| [runbooks/benchmark-decision-gate.md](runbooks/benchmark-decision-gate.md) | GO / CONDITIONAL-GO / NO-GO |
+| [adr/README.md](adr/README.md) | Индекс ADR |
+| [specs/README.md](specs/README.md) | Индекс контрактов извлечения и API |
+
+## Reference (справочники и операции)
+
+| Документ | Описание |
+|----------|----------|
+| [runbooks/benchmark-driven-dev-loop.md](runbooks/benchmark-driven-dev-loop.md) | Короткий benchmark-цикл (CLI, compare, UI `/benchmark`) |
+| [runbooks/roadmap-next-waves.md](runbooks/roadmap-next-waves.md) | Волны Wave A–H и I–L |
+| [runbooks/user-journeys-retrieval-v1.md](runbooks/user-journeys-retrieval-v1.md) | Сценарии Phase 5: corpus → query → evidence |
+| [runbooks/benchmark-program-status.md](runbooks/benchmark-program-status.md) | Сводка семейств бенчмарков: core vs advisory |
+| [runbooks/benchmark-pilot-advisory-runs.md](runbooks/benchmark-pilot-advisory-runs.md) | Чеклист advisory: live retrieval + claims + aggregate |
+| [runbooks/pilot-checklist.md](runbooks/pilot-checklist.md) | Phase 7: pilot package, KPI, GO/NO-GO |
+| [benchmarks/README.md](benchmarks/README.md) | Индекс бенчмарков и eval |
+| [architecture/README.md](architecture/README.md) | Индекс архитектурных заметок |
+| [backlog/refactor-backend.md](backlog/refactor-backend.md), [backlog/refactor-frontend.md](backlog/refactor-frontend.md) | Структурный долг `[OPEN]` |
+
+## Historical / archive (не default для LLM)
+
+| Документ / зона | Описание |
+|-----------------|----------|
+| [idea.md](idea.md) | Расширенные черновики онтологии и промптов |
+| [analysis/_archive/](analysis/_archive/) | Завершённые волны, полные тексты закрытых планов |
+| [analysis/_snippets/](analysis/_snippets/) | Промпт-дампы, JSON-сэмплы |
+| [pilot/README.md](pilot/README.md) | Архивная зона pilot-заметок (часто только индекс) |
+| [analysis/_archive/workspace-experience-gap-2026-04-24.md](analysis/_archive/workspace-experience-gap-2026-04-24.md) | [HISTORICAL] Wave I–L; активное продолжение — [workspace-ux-redesign-2026-04-25.md](analysis/workspace-ux-redesign-2026-04-25.md) |
+
+---
+
+## Продукт и план (детальная таблица)
+
+Расширенный каталог; верхние секции **Active entrypoints** / **Reference** задают приоритет чтения.
 
 | Документ | Описание |
 |----------|----------|

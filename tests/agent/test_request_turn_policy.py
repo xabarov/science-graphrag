@@ -12,6 +12,7 @@ from science_graphrag.config import Settings
 
 def test_effective_web_research_user_enabled_none_is_true() -> None:
     assert effective_web_research_user_enabled(None) is True
+    assert effective_web_research_user_enabled(None, default_when_unspecified=False) is False
     assert effective_web_research_user_enabled(True) is True
     assert effective_web_research_user_enabled(False) is False
 
@@ -21,6 +22,8 @@ def test_compute_turn_tool_denylist_when_deploy_on_user_off() -> None:
     assert compute_turn_tool_denylist(st, web_research_user_enabled=False) == [
         "arxiv_fetch",
         "arxiv_search",
+        "openalex_works_search",
+        "read_external_pdf",
         "unpaywall_lookup",
         "web_fetch",
         "web_search",
@@ -167,3 +170,15 @@ def test_agent_mode_web_followup_resets_plan_to_web_outline() -> None:
     assert plan.get("ui_mode") == "outline"
     ids = [str(x.get("id") or "") for x in (plan.get("items") or []) if isinstance(x, dict)]
     assert ids[:2] == ["01_web_scope", "02_web_search"]
+
+
+def test_build_agent_request_turn_context_respects_persisted_external_default_off() -> None:
+    st = Settings.model_construct(external_research_default_enabled=False)
+    ctx = build_agent_request_turn_context(
+        st,
+        thread_id=None,
+        web_research_enabled=None,
+        agent_mode="agent",
+    )
+    assert ctx.run_metadata_fragment["effective_web_research_user_enabled"] is False
+    assert "web_search" in ctx.turn_tool_denylist

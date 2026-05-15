@@ -138,11 +138,12 @@ def patch_agent_tools_settings(
     body: UpdateAgentToolsSettingsRequest,
     actor: str = Depends(require_settings_access),
 ) -> SettingsSnapshotResponse:
+    raw = body.model_dump(exclude_unset=True, mode="python")
     try:
         snapshot = _SETTINGS_SERVICE.update_agent_tools_settings(
             base_settings=get_settings(),
             actor=actor,
-            agent_supervisor_max_rounds=body.agent_supervisor_max_rounds,
+            patch=raw,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc

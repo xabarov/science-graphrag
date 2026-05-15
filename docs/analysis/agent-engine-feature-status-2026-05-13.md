@@ -1,6 +1,8 @@
 # Agent engine feature status — R0 reconciliation (2026-05-13)
 
-**Role:** companion to [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §R0. Single place for **flag / default / evidence / decision / next action** after Wave D–H.
+**Doc status:** `active`
+
+**Read hint:** companion to [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §R0 — **flag / default / evidence / decision / next action** after Wave D–H (not a standalone backlog narrative).
 
 **Status:** reconciled with `science_graphrag/config.py` as of repo state at R0 closeout.
 
@@ -9,12 +11,12 @@
 ## 1. Canonical sources (read order)
 
 1. **`science_graphrag/config.py`** — authoritative **Pydantic `Settings` defaults** (what a fresh process gets unless env overrides).
-2. **`agent-engine-and-benchmarks-next-waves-2026-05-09.md`** — live engineering queue narrative + artifact pointers (synced 2026-05-12).
+2. **`agent-engine-next-horizon-2026-05-13.md`** — live engineering queue narrative + artifact pointers.
 3. **Wave closeouts** — evidence and operator checklists:
    - [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md)
    - [`wave-d-promotion-operator-closeout-2026-05-12.md`](./wave-d-promotion-operator-closeout-2026-05-12.md)
    - [`pre-f-closure-readiness-2026-05-12.md`](./pre-f-closure-readiness-2026-05-12.md)
-   - E1/E2 detail: [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md) (linked from next-waves §3)
+   - E1/E2 detail: [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md)
 4. **Structural backlog** — implementation debt not resolved by doc edits: [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md).
 
 **Terminology (do not conflate):**
@@ -32,8 +34,8 @@
 
 | Feature / knob | Settings default | Operator / rollout gate | Latest evidence (pointer) | Decision | Next action |
 |----------------|------------------|-------------------------|---------------------------|----------|-------------|
-| **E1** `corpus_explore` + `research_plan` (`agent_corpus_explore_enabled`, `agent_research_plan_subagent_enabled`, `agent_e1_retrieval_hop_evidence_gate_enabled`) | `True` / `True` / `True` | **Operator rollout gate:** paired live p95 regression; do not treat as “safe for production” until a new compare clears latency. | [`eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-baseline.json`](../../eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-baseline.json) (+ candidate); [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §3.1. | **promote** (Settings defaults + hop gate shipped); **rerun evidence** on material code changes. | Re-evaluate after R4 subagent runtime or new paired compare; latency-sensitive stacks: `SCIENCE_GRAPHRAG_AGENT_CORPUS_EXPLORE_ENABLED=0`, `SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_SUBAGENT_ENABLED=0` (and related knobs in `.env.example` R0 block). |
-| **E2** `tool_use_summary` + cache hint (`agent_tool_use_summary_enabled`, `agent_side_llm_openrouter_cache_control_enabled`) | `True` / `True` | **Operator rollout gate:** heavy live `side_llm_cache_read_ratio_avg` below 0.4 target; PR3 open in next-waves. | [`eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md`](../../eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md); [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §3.2. | **promote** (cache-prefix code + telemetry); **keep off** *product trust* for summarization rows until ratio ≥ 0.4 or explicit policy; OpenRouter cache hint remains independent of whether summaries fire. | Heavy live rerun after PR1+2 or set `SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED=false` until gate passes. |
+| **E1** `corpus_explore` + `research_plan` (`agent_corpus_explore_enabled`, `agent_research_plan_subagent_enabled`, `agent_e1_retrieval_hop_evidence_gate_enabled`) | `True` / `True` / `True` | **Operator rollout gate:** paired live p95 regression; do not treat as “safe for production” until a new compare clears latency. | [`eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-baseline.json`](../../eval/results/agent-corpus-explore-research-plan-acceptance-2026-05-13-baseline.json) (+ candidate); context in [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §1.2/§R4. | **promote** (Settings defaults + hop gate shipped); **rerun evidence** on material code changes. | Re-evaluate after R4 subagent runtime or new paired compare; latency-sensitive stacks: `SCIENCE_GRAPHRAG_AGENT_CORPUS_EXPLORE_ENABLED=0`, `SCIENCE_GRAPHRAG_AGENT_RESEARCH_PLAN_SUBAGENT_ENABLED=0` (and related knobs in `.env.example` R0 block). |
+| **E2** `tool_use_summary` + cache hint (`agent_tool_use_summary_enabled`, `agent_side_llm_openrouter_cache_control_enabled`) | `True` / `True` | **Operator rollout gate:** heavy live `side_llm_cache_read_ratio_avg` below 0.4 target. | [`eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md`](../../eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md); context in [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §1.2. | **promote** (cache-prefix code + telemetry); **keep off** *product trust* for summarization rows until ratio ≥ 0.4 or explicit policy; OpenRouter cache hint remains independent of whether summaries fire. | Heavy live rerun after PR1+2 or set `SCIENCE_GRAPHRAG_AGENT_TOOL_USE_SUMMARY_ENABLED=false` until gate passes. |
 | **Wave H L4** `agent_llm_full_history_compact_enabled` | `True` | **Promote** for code + offline harness; **operator compare** still recommended on provider/model change. | [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md); offline harness `side_llm_cache_read_ratio` cited in horizon §1.1. | **promote** (docs + defaults aligned). | Long-thread live acceptance when changing OpenRouter model / cache behavior. |
 | **Wave H microcompact** `agent_tool_message_microcompact_time_trigger_enabled` | `True` | **Effective default off:** microcompact runs only when `agent_tool_history_compact_enabled` is `True` (Settings default **`False`**). | [`science_graphrag/agent/tool_message_compact.py`](../../science_graphrag/agent/tool_message_compact.py) guard; [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md) (when compact is on). | **promote** for *field* default; clarify **effective** behavior in runbooks. | If product wants microcompact in production, enable `agent_tool_history_compact_enabled` deliberately and re-run acceptance. |
 | **`agent_note`** `agent_note_enabled` | `False` | None (already off by default). | [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §1.3; live 50-turn token pilot still open (operator). | **keep off** (default). | **Postponed (R2 2026-05-13):** optional only; not part of canonical minimal contract — see [`docs/specs/agent-chat-v1.md`](../specs/agent-chat-v1.md) §R2; run live pilot when product requests default-on. |
@@ -110,8 +112,8 @@ refreshing operator trust after a provider/model switch.
 
 | Track | When to rerun | Primary commands / artifacts |
 |-------|----------------|------------------------------|
-| **E1** paired latency | After supervisor / subagent / retrieval hop logic changes | `scripts/live_check/agent_trace_review.py` + `trace_regression_compare.py` vs pinned baseline JSON under `eval/results/`; see [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §3.1 and baseline row in §2 above. |
-| **E2** cache ratio | After PRs touching tool-use summary / OpenRouter cache hint paths | Heavy live per [`README_trace_review.md`](../../scripts/live_check/README_trace_review.md) §4; compare artifact [`eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md`](../../eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md) pointer in §3.2 next-waves. |
+| **E1** paired latency | After supervisor / subagent / retrieval hop logic changes | `scripts/live_check/agent_trace_review.py` + `trace_regression_compare.py` vs pinned baseline JSON under `eval/results/`; see baseline row in §2 and [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §R4. |
+| **E2** cache ratio | After PRs touching tool-use summary / OpenRouter cache hint paths | Heavy live per [`README_trace_review.md`](../../scripts/live_check/README_trace_review.md) §4; compare artifact [`eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md`](../../eval/results/trace-regression-wave-e-2026-05-13-e2-v5.md). |
 | **Wave H long-thread** | After OpenRouter model / cache-behavior change | `long_thread_compaction_eval.py` + acceptance notes in [`wave-h-rollout-decision-2026-05-12.md`](./wave-h-rollout-decision-2026-05-12.md). |
 
 Update **only** the `evidence / decision / next action` columns in §2 after a run completes —

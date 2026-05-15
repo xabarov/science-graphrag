@@ -4,6 +4,8 @@ This module exists to shrink `science_graphrag/config.py` without changing env v
 or defaults: fields are composed into `Settings` via multiple inheritance.
 """
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -335,6 +337,84 @@ class AgentRuntimeFields(BaseModel):
         description=(
             "Hard cap on supervisor routing decisions (entries in routing_log with from=supervisor) "
             "before forcing writer_agent to avoid endless specialist ping-pong."
+        ),
+    )
+    external_research_default_enabled: bool = Field(
+        default=True,
+        description=(
+            "When the client omits per-request ``web_research_enabled`` (null), use this as the "
+            "default for external scholarly HTTP tools (Crossref/arXiv/Unpaywall)."
+        ),
+    )
+    external_research_source_crossref_enabled: bool = Field(
+        default=True,
+        description="Operator: include Crossref-backed ``web_search`` / ``web_fetch`` tools.",
+    )
+    external_research_source_arxiv_enabled: bool = Field(
+        default=True,
+        description="Operator: include arXiv ``arxiv_search`` / ``arxiv_fetch`` tools.",
+    )
+    external_research_source_unpaywall_enabled: bool = Field(
+        default=True,
+        description="Operator: allow ``unpaywall_lookup`` when ``agent_unpaywall_oa_tool_enabled``.",
+    )
+    external_research_source_openalex_enabled: bool = Field(
+        default=True,
+        description="Operator: include OpenAlex ``openalex_works_search`` tool.",
+    )
+    pdf_reading_mode: Literal["off", "ask", "auto_safe_oa"] = Field(
+        default="ask",
+        description=(
+            "UI/product default for PDF reading in chat (full pipeline in later phases): "
+            "``off`` | ``ask`` | ``auto_safe_oa``."
+        ),
+    )
+    agent_pdf_read_tool_enabled: bool = Field(
+        default=True,
+        description="Operator: include ``read_external_pdf`` tool in external research assembly.",
+    )
+    agent_pdf_read_max_bytes: int = Field(
+        default=8_000_000,
+        ge=100_000,
+        le=100_000_000,
+        description="Max PDF download size for ``read_external_pdf``.",
+    )
+    agent_pdf_read_max_pages: int = Field(
+        default=30,
+        ge=1,
+        le=500,
+        description="Max page count allowed by ``read_external_pdf`` extraction step.",
+    )
+    agent_pdf_read_cache_ttl_seconds: int = Field(
+        default=300,
+        ge=0,
+        le=86_400,
+        description="TTL for in-process cache of external PDF read results.",
+    )
+    agent_external_http_timeout_seconds: float = Field(
+        default=25.0,
+        ge=5.0,
+        le=120.0,
+        description=(
+            "Shared HTTP client timeout (seconds) for native external scholarly tools "
+            "(Crossref, arXiv Atom, Unpaywall, OpenAlex works search, streamed web_fetch GET)."
+        ),
+    )
+    agent_external_max_calls_per_turn: int = Field(
+        default=8,
+        ge=1,
+        le=32,
+        description=(
+            "Operator cap on external scholarly tool invocations per turn (reserved for "
+            "enforcement; surfaced in settings UI)."
+        ),
+    )
+    agent_external_max_source_cards: int = Field(
+        default=24,
+        ge=4,
+        le=128,
+        description=(
+            "Operator cap on source cards / evidence rows per answer (reserved; surfaced in UI)."
         ),
     )
     agent_react_max_consecutive_same_batch: int = Field(

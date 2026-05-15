@@ -1,3 +1,12 @@
+# Habr article draft (stub)
+
+**Status:** this stub preserves the stable path referenced by analysis docs.
+
+Current narrative and pinned evidence are maintained in:
+
+- [`../analysis/habr-article-narrative-and-measurement-plan-2026-07.md`](../analysis/habr-article-narrative-and-measurement-plan-2026-07.md)
+
+If a full article body is needed again under `docs/report/`, restore it in this file while keeping the same path.
 # SciGraph: GraphRAG для научной библиотеки — граф знаний, агент с инструментами и честная оценка
 
 > Выпускной проект курса **OTUS NLP Advanced**.

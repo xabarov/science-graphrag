@@ -43,8 +43,11 @@ def test_v2_sync_json(monkeypatch) -> None:
         citations = [{"work_id": "w1", "title": "Test Work"}]
         tool_trace = [{"step": 1, "tool": "edge_search", "args_summary": {"node_id": "w1"}}]
 
+    captured_run_kwargs: dict[str, object] = {}
+
     class _FakeAgent:
         def run(self, **_kwargs):
+            captured_run_kwargs.update(_kwargs)
             return _FakeOut()
 
     monkeypatch.setattr(sync_agent_query_mod, "build_agent", lambda **_kwargs: _FakeAgent())
@@ -55,7 +58,10 @@ def test_v2_sync_json(monkeypatch) -> None:
     try:
         resp = client.post(
             "/v2/agent/query",
-            json={"question": "What is BERT?"},
+            json={
+                "question": "What is BERT?",
+                "pdf_read_request": {"pdf_url": "https://arxiv.org/pdf/1706.03762.pdf"},
+            },
             headers={"Accept": "application/json"},
         )
     finally:
@@ -67,6 +73,9 @@ def test_v2_sync_json(monkeypatch) -> None:
     assert data["answer"] == "Test answer"
     assert "phoenix_trace_id" in data
     assert "tool_trace" in data
+    assert captured_run_kwargs.get("pdf_read_request") == {
+        "pdf_url": "https://arxiv.org/pdf/1706.03762.pdf"
+    }
 
 
 def test_v2_sse_stream(monkeypatch) -> None:

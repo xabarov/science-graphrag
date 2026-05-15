@@ -19,3 +19,12 @@ def test_agent_query_request_accepts_ui_fields() -> None:
     )
     assert m.agent_mode == "plan"
     assert m.web_research_enabled is False
+
+
+def test_agent_query_request_accepts_pdf_read_request() -> None:
+    m = AgentQueryRequestV2(
+        question="hi",
+        pdf_read_request={"pdf_url": "https://arxiv.org/pdf/1706.03762.pdf"},
+    )
+    assert isinstance(m.pdf_read_request, dict)
+    assert m.pdf_read_request == {"pdf_url": "https://arxiv.org/pdf/1706.03762.pdf"}

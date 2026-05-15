@@ -1,6 +1,6 @@
 # Pre-F closure — Wave D promotion evidence (operator bundle)
 
-**Purpose:** single checklist to satisfy [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §8.1 before treating the judge lane as promotion-ready.
+**Purpose:** single checklist for judge-lane promotion readiness before treating the lane as promotion-ready. Current source of truth: [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) + [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md). Historical wave plan link: [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) (stub).
 
 **Prerequisites:** repo root, `.venv`, live dev stack, `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY` set (see [`long-running-ops.mdc`](../../.cursor/rules/long-running-ops.mdc)); optional explicit `AGENT_LIVE_BASE` URL for the target contour.
 

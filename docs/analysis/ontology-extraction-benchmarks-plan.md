@@ -1,5 +1,9 @@
 # Онтология · извлечение · бенчмарки — единый план (точка входа)
 
+**Doc status:** `active`
+
+**Read hint:** ontology ↔ extraction ↔ benchmarks entry; pair with [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md) for BT queue.
+
 **Назначение:** одна страница «куда смотреть и в каком порядке» по оси ontology ↔ extraction ↔ benchmarks, без дублирования длинных инвентаризаций. Для общего master-plan по агенту + остаточным работам + benchmark strategy используйте [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md). Обновляется по мере закрытия BT/O-потоков.
 
 **Не путать с другими планами:**

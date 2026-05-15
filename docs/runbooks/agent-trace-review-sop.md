@@ -2,6 +2,8 @@
 
 Стандартный порядок отсмотра надежности для runtime-изменений в agent chat.
 
+**Planning context (live):** [`../analysis/ACTIVE.md`](../analysis/ACTIVE.md), [`../analysis/agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md) §Wave G / trace-review, [`../analysis/agent-engine-feature-status-2026-05-13.md`](../analysis/agent-engine-feature-status-2026-05-13.md). Исторический детальный лог волн — stub [`../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md).
+
 Цель: любой агент/разработчик запускает одинаковый цикл проверки без ручного
 описания шагов, с артефактами JSON/MD, пригодными для PR и регрессии.
 
@@ -331,8 +333,8 @@ Numeric gate (пример) поверх того же `trace_regression_compare
 ## 9) Wave H — context compaction maturity
 
 Wave H — context compaction maturity (см.
-[`docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md)
-§6).
+[`docs/analysis/agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md),
+компаньон [`docs/analysis/agent-engine-feature-status-2026-05-13.md`](../analysis/agent-engine-feature-status-2026-05-13.md)).
 
 ### 9.1 Когда запускать
 

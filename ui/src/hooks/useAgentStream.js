@@ -61,6 +61,7 @@ export function useAgentStream({
       historyDigest = null,
       clientIdleMs = null,
       userStructuredAnswer = null,
+      pdfReadRequest = null,
       webResearchEnabled = false,
       agentMode = "agent",
     }) => {
@@ -97,6 +98,9 @@ export function useAgentStream({
               : {}),
             ...(userStructuredAnswer && typeof userStructuredAnswer === "object"
               ? { user_structured_answer: userStructuredAnswer }
+              : {}),
+            ...(pdfReadRequest && typeof pdfReadRequest === "object"
+              ? { pdf_read_request: pdfReadRequest }
               : {}),
           }),
           signal: controller.signal,

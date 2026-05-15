@@ -4,7 +4,7 @@
 Validates each response has citations with work_id + chunk_fingerprint when hits exist.
 Usage: BASE=http://127.0.0.1:8787 .venv/bin/python scripts/pilot_spot_check.py
 
-Paste JSON output into docs/pilot/wave-d-exit-record.md (Citation spot-check section).
+Store JSON output in the pilot release record (citation spot-check section).
 """
 
 from __future__ import annotations

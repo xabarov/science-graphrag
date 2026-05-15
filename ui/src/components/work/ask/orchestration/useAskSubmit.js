@@ -105,6 +105,7 @@ export function useAskSubmit({
       threadId = null,
       historyDigest = null,
       userStructuredAnswer = null,
+      pdfReadRequest = null,
       webResearchEnabled = false,
       agentMode = "agent",
     }) => {
@@ -122,6 +123,7 @@ export function useAskSubmit({
           historyDigest,
           clientIdleMs: idleMs,
           userStructuredAnswer,
+          pdfReadRequest,
           webResearchEnabled,
           agentMode,
         });
@@ -154,6 +156,9 @@ export function useAskSubmit({
             agent_mode: agentMode,
             ...(userStructuredAnswer && typeof userStructuredAnswer === "object"
               ? { user_structured_answer: userStructuredAnswer }
+              : {}),
+            ...(pdfReadRequest && typeof pdfReadRequest === "object"
+              ? { pdf_read_request: pdfReadRequest }
               : {}),
           },
           { signal: controller.signal },

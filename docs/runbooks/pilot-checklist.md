@@ -10,7 +10,7 @@ Use for a **narrow scientific subdomain** before widening scope. This document i
 | **Corpus size** | 10–50 representative PDFs — ingest and corpus notes: [pilot-corpus-wave-d.md](pilot-corpus-wave-d.md) |
 | **Environment** | `docker compose` stack per [deploy.md](deploy.md) (Neo4j, Postgres, Qdrant; optional API on 8787) |
 | **Branch / commit** | `b2886bc66e2c2d4676be38b5915f71082fc63bed` (pilot engineering slice; refresh on final sign-off) |
-| **Owner** | Sign-off and KPI capture: [docs/pilot/wave-d-exit-record.md](../pilot/wave-d-exit-record.md) |
+| **Owner** | Sign-off and KPI capture in team notes/release record for the pilot run |
 
 ## Preconditions (hard)
 
@@ -67,5 +67,5 @@ Use for a **narrow scientific subdomain** before widening scope. This document i
 - [ ] File backlog items: ontology expansion, merge CI graph case, idea-assist (post-MVP).
 - [ ] Store pilot summary (1–2 pages): dates, KPI table, decision, link to committed `benchmark-metrics-summary` and git ref.
 
-**Interim record (2026-04-06):** [docs/pilot/wave-d-exit-record.md](../pilot/wave-d-exit-record.md) updated to **CONDITIONAL-GO** with explicit blockers (full corpus ingest + KPI still open). Replace with final GO/NO-GO when the pilot window closes.
+**Interim record (2026-04-06):** **CONDITIONAL-GO** with explicit blockers (full corpus ingest + KPI still open). Replace with final GO/NO-GO in the pilot release record when the pilot window closes.
 

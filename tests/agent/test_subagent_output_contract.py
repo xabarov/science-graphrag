@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from science_graphrag.agent.subagent_output_contract import (
+    EVIDENCE_TRUST_DIRECTIVE,
     SYNTHESIZE_NOT_DELEGATE_DIRECTIVE,
     detect_handoff_phrase,
     maybe_prepend_handoff_warning,
@@ -26,6 +27,13 @@ def test_writer_suffix_keeps_web_search_metadata_after_fetch_failures() -> None:
     s = writer_system_prompt_suffix(settings=st, writer_mode="normal")
     assert "web_search returned external_web metadata" in s
     assert "blanket refusal" in s
+
+
+def test_writer_suffix_includes_evidence_trust_directive() -> None:
+    st = Settings.model_construct(agent_writer_verification_output_format_enabled=False)
+    s = writer_system_prompt_suffix(settings=st, writer_mode="normal")
+    assert EVIDENCE_TRUST_DIRECTIVE.split()[0] in s
+    assert "evidence_mode" in s
 
 
 def test_verification_format_block_when_flag_enabled() -> None:

@@ -280,6 +280,13 @@ class AgentQueryRequestV2(BaseModel):
             "When true or null/omitted, keep web research tools enabled."
         ),
     )
+    pdf_read_request: dict[str, Any] | None = Field(
+        default=None,
+        description=(
+            "Optional explicit PDF-read action from UI. "
+            "Current schema: ``{pdf_url: https://...}``."
+        ),
+    )
 
     @field_validator("thread_id", mode="before")
     @classmethod
@@ -302,6 +309,16 @@ class AgentQueryRequestV2(BaseModel):
         if isinstance(v, dict) and v:
             return dict(v)
         return None
+
+    @field_validator("pdf_read_request", mode="before")
+    @classmethod
+    def _coerce_pdf_read_request(cls, v: object) -> dict[str, Any] | None:
+        if v is None or not isinstance(v, dict):
+            return None
+        pdf_url = str(v.get("pdf_url") or "").strip()
+        if not pdf_url:
+            return None
+        return {"pdf_url": pdf_url[:2048]}
 
     @field_validator("agent_mode", mode="before")
     @classmethod

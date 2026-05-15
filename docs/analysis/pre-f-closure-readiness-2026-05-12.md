@@ -1,6 +1,6 @@
 # Pre-F closure — readiness summary (2026-05-12)
 
-Cross-links: wave plan [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md), Wave D operator bundle [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md), E1 decision [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md).
+Cross-links: active roadmap [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md), feature matrix [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md), Wave D operator bundle [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md), E1 decision [`wave-e-e1-rollout-decision-2026-05-10.md`](./wave-e-e1-rollout-decision-2026-05-10.md).
 
 ## What was closed in-repo (this pass)
 

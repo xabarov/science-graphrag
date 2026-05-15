@@ -112,6 +112,8 @@ def test_hydrate_binds_title_only_citations_via_inventory_and_paper_profile():
     )
     assert out[0].get("work_id") == "wid-1"
     assert out[0].get("excerpt") == "We propose transformers."
+    assert out[0].get("provenance_kind") == "workspace_metadata"
+    assert out[0].get("evidence_mode") == "abstract"
 
 
 def test_hydrate_falls_back_to_chunk_store():
@@ -128,6 +130,8 @@ def test_hydrate_falls_back_to_chunk_store():
         chunk_store=FakeStore(),
     )
     assert out[0].get("excerpt") == "From Qdrant."
+    assert out[0].get("provenance_kind") == "workspace_full_text"
+    assert out[0].get("evidence_mode") == "full_text"
 
 
 def test_hydrate_synthesizes_citations_from_quote_candidates_when_empty() -> None:
@@ -147,6 +151,10 @@ def test_hydrate_synthesizes_citations_from_quote_candidates_when_empty() -> Non
             "work_id": "w-q1",
             "chunk_id": "fp-q1",
             "excerpt": "Trade-off evidence.",
+            "provenance_kind": "workspace_full_text",
+            "evidence_quality": "strong",
+            "evidence_mode": "full_text",
+            "is_external": False,
         }
     ]
 
@@ -165,7 +173,16 @@ def test_hydrate_synthesizes_citations_from_inventory_when_empty() -> None:
             ]
         },
     )
-    assert out == [{"work_id": "wid-graph", "title": "Graph Coverage Paper"}]
+    assert out == [
+        {
+            "work_id": "wid-graph",
+            "title": "Graph Coverage Paper",
+            "provenance_kind": "workspace_metadata",
+            "evidence_quality": "weak",
+            "evidence_mode": "metadata_only",
+            "is_external": False,
+        }
+    ]
 
 
 def test_hydrate_merges_web_sources_arxiv_search_into_citations() -> None:
@@ -186,6 +203,30 @@ def test_hydrate_merges_web_sources_arxiv_search_into_citations() -> None:
     assert len(out) == 1
     assert out[0].get("source_type") == "web"
     assert out[0].get("url") == "https://arxiv.org/abs/2301.07012"
+    assert out[0].get("provenance_kind") == "arxiv_abstract"
+    assert out[0].get("evidence_mode") == "abstract"
+    assert out[0].get("is_external") is True
+
+
+def test_hydrate_merges_web_sources_pdf_read_into_citations() -> None:
+    out = hydrate_citations_for_ui(
+        [],
+        quote_candidates=[],
+        chunk_store=None,
+        web_sources=[
+            {
+                "title": "PDF Source",
+                "url": "https://example.org/paper.pdf",
+                "source_tool": "read_external_pdf",
+                "snippet": "Extracted text",
+            }
+        ],
+    )
+    assert len(out) == 1
+    assert out[0].get("source_type") == "web"
+    assert out[0].get("provenance_kind") == "extracted_pdf_text"
+    assert out[0].get("evidence_mode") == "pdf_read"
+    assert out[0].get("evidence_quality") == "strong"
 
 
 def test_hydrate_merges_web_sources_into_citations() -> None:
@@ -207,9 +248,41 @@ def test_hydrate_merges_web_sources_into_citations() -> None:
     assert out[0].get("source_type") == "web"
     assert out[0].get("url") == "https://doi.org/10.1234/example"
     assert out[0].get("doi") == "10.1234/example"
+    assert out[0].get("provenance_kind") == "crossref_metadata"
+    assert out[0].get("evidence_mode") == "metadata_only"
 
 
-def test_inject_work_ids_skips_web_source_citations() -> None:
+def test_hydrate_attaches_web_fetch_failure_to_matching_web_citation() -> None:
+    messages = [
+        ToolMessage(
+            content=json.dumps(
+                {
+                    "ok": False,
+                    "error": "host_not_allowed",
+                    "detail": "blocked",
+                    "url": "https://publisher.example/paper",
+                    "sse_hint": {"type": "web_fetched", "url": "https://publisher.example/paper"},
+                }
+            ),
+            name="web_fetch",
+            tool_call_id="tc-wf",
+        ),
+    ]
+    citations = [
+        {
+            "source_type": "web",
+            "title": "Paper",
+            "url": "https://publisher.example/paper",
+        }
+    ]
+    out = hydrate_citations_for_ui(
+        citations,
+        quote_candidates=[],
+        chunk_store=None,
+        messages=messages,
+    )
+    assert out[0].get("fallback_reason") == "host_not_allowed"
+    assert out[0].get("fallback_message")
     citations = [
         {
             "source_type": "web",
@@ -222,3 +295,75 @@ def test_inject_work_ids_skips_web_source_citations() -> None:
     }
     inject_work_ids_from_inventory(citations, inventory)
     assert "work_id" not in citations[0]
+
+
+def test_hydrate_merges_openalex_web_sources() -> None:
+    out = hydrate_citations_for_ui(
+        [],
+        quote_candidates=[],
+        chunk_store=None,
+        web_sources=[
+            {
+                "title": "OA Work",
+                "url": "https://doi.org/10.9999/oa",
+                "doi": "10.9999/oa",
+                "source_tool": "openalex_works_search",
+                "snippet": "year=2022",
+            }
+        ],
+    )
+    assert len(out) == 1
+    assert out[0].get("provenance_kind") == "openalex_metadata"
+    assert out[0].get("source_tool") == "openalex_works_search"
+
+
+def test_hydrate_attaches_doi_resolver_openalex_lineage_without_work_id() -> None:
+    messages = [
+        ToolMessage(
+            content=json.dumps(
+                {
+                    "ok": True,
+                    "normalized_doi": "10.5555/lineage",
+                    "metadata_source": "openalex",
+                    "metadata": {"title": "X"},
+                }
+            ),
+            name="doi_resolver",
+            tool_call_id="tc-doi",
+        ),
+    ]
+    citations = [{"doi": "10.5555/lineage", "title": "X"}]
+    out = hydrate_citations_for_ui(
+        citations,
+        quote_candidates=[],
+        chunk_store=None,
+        messages=messages,
+    )
+    assert out[0].get("provenance_kind") == "openalex_metadata"
+    assert out[0].get("is_external") is True
+
+
+def test_hydrate_attaches_unpaywall_failure_by_doi() -> None:
+    messages = [
+        ToolMessage(
+            content=json.dumps(
+                {
+                    "ok": False,
+                    "error": "unpaywall_request_failed",
+                    "normalized_doi": "10.4444/fail",
+                    "row_count": 0,
+                    "evidence_origin": "external_web",
+                }
+            ),
+            name="unpaywall_lookup",
+            tool_call_id="tc-u",
+        ),
+    ]
+    citations = [{"doi": "10.4444/fail", "title": "Y"}]
+    out = hydrate_citations_for_ui(
+        citations,
+        quote_candidates=[],
+        chunk_store=None,
+        messages=messages,
+    )
+    assert out[0].get("fallback_reason") == "source_unreachable"

@@ -1,5 +1,9 @@
 # LLM concurrency, semaphore, and timeout hardening plan (2026-04-27)
 
+**Doc status:** `reference`
+
+**Read hint:** LLM concurrency/timeout operator plan; orthogonal to benchmark BT queue.
+
 **Status:** phased hardening plan (Phases 2–4 implemented in-repo; Phase 5 v1 distributed quota implemented — see Phase 5 section below).
 
 **Primary goal:** make LLM concurrency control and timeout behavior consistent, enforceable, observable, and configurable from the settings UI for both:
@@ -627,11 +631,11 @@ This is important because ingestion load is operationally very different from in
 
 ### Delivered
 
-- **Retries:** `Settings.agent_chat_max_retries`, `agent_classifier_max_retries`; `build_chat_model(..., max_retries=...)`; classifier uses dedicated retries; agent graph spans use `agent_chat_transport_max_attempts(settings)` instead of ingestion `EXTRACT_MAYBE_*` ([`science_graphrag/agent/llm/chat.py`](../science_graphrag/agent/llm/chat.py), nodes + [`supervisor.py`](../science_graphrag/agent/graph/supervisor.py), [`llm_turn_classifier.py`](../science_graphrag/agent/coordination/llm_turn_classifier.py)).
-- **Graph thread pool:** `agent_graph_invoke_max_workers` (0 = auto); lazy `ThreadPoolExecutor` in [`invoke_timeout.py`](../science_graphrag/agent/graph/invoke_timeout.py); one-time WARNING if effective size differs from an already-created pool; [`runtime.py`](../science_graphrag/agent/runtime.py) passes `settings`.
-- **Cooperative cutoff:** `agent_min_llm_hop_reserve_seconds`; `react_chat_response_budget_cutoff` in retrieval/graph `chat_node` ([`react_edges.py`](../science_graphrag/agent/graph/react_edges.py), specialist nodes).
+- **Retries:** `Settings.agent_chat_max_retries`, `agent_classifier_max_retries`; `build_chat_model(..., max_retries=...)`; classifier uses dedicated retries; agent graph spans use `agent_chat_transport_max_attempts(settings)` instead of ingestion `EXTRACT_MAYBE_*` ([`science_graphrag/agent/llm/chat.py`](../../science_graphrag/agent/llm/chat.py), nodes + [`supervisor.py`](../../science_graphrag/agent/graph/supervisor.py), [`llm_turn_classifier.py`](../../science_graphrag/agent/coordination/llm_turn_classifier.py)).
+- **Graph thread pool:** `agent_graph_invoke_max_workers` (0 = auto); lazy `ThreadPoolExecutor` in [`invoke_timeout.py`](../../science_graphrag/agent/graph/invoke_timeout.py); one-time WARNING if effective size differs from an already-created pool; [`runtime.py`](../../science_graphrag/agent/runtime.py) passes `settings`.
+- **Cooperative cutoff:** `agent_min_llm_hop_reserve_seconds`; `react_chat_response_budget_cutoff` in retrieval/graph `chat_node` ([`react_edges.py`](../../science_graphrag/agent/graph/react_edges.py), specialist nodes).
 - **Post-deadline observability:** `Future.add_done_callback` → span event `agent.graph_invoke_finished_after_response_deadline`, process counter, optional hook, INFO log (logging failures swallowed in callback); [`docs/runbooks/agent-chat-v2.md`](../runbooks/agent-chat-v2.md) updated.
-- **Settings / UI / PATCH:** keys in [`llm_advanced_fields.py`](../science_graphrag/settings/llm_advanced_fields.py), [`settings_llm_runtime_patch.py`](../science_graphrag/api/settings_llm_runtime_patch.py), UI [`llmRuntimeOverrideKeys.js`](../ui/src/pages/SettingsPage/llmRuntimeOverrideKeys.js), i18n; `.env.example` lines for Phase 4.
+- **Settings / UI / PATCH:** keys in [`llm_advanced_fields.py`](../../science_graphrag/settings/llm_advanced_fields.py), [`settings_llm_runtime_patch.py`](../../science_graphrag/api/settings_llm_runtime_patch.py), UI [`llmRuntimeOverrideKeys.js`](../../ui/src/pages/SettingsPage/llmRuntimeOverrideKeys.js), i18n; `.env.example` lines for Phase 4.
 - **Spike (no prod wiring):** [`docs/analysis/agent-graph-subprocess-isolation-spike-2026-04-27.md`](agent-graph-subprocess-isolation-spike-2026-04-27.md).
 
 ### Acceptance
@@ -649,10 +653,10 @@ This is important because ingestion load is operationally very different from in
 
 ### Delivered (v1)
 
-- **Core:** [`science_graphrag/llm/redis_quota.py`](../science_graphrag/llm/redis_quota.py), [`science_graphrag/llm/concurrency.py`](../science_graphrag/llm/concurrency.py), [`science_graphrag/llm/pool_limits.py`](../science_graphrag/llm/pool_limits.py); settings in [`config.py`](../science_graphrag/config.py), [`settings/llm_advanced_fields.py`](../science_graphrag/settings/llm_advanced_fields.py), API patch in [`api/settings_llm_runtime_patch.py`](../science_graphrag/api/settings_llm_runtime_patch.py).
-- **Async parity:** [`api/translation.py`](../science_graphrag/api/translation.py) acquires/releases distributed quota in a thread pool and emits the same acquire-finished span contract as sync paths.
+- **Core:** [`science_graphrag/llm/redis_quota.py`](../../science_graphrag/llm/redis_quota.py), [`science_graphrag/llm/concurrency.py`](../../science_graphrag/llm/concurrency.py), [`science_graphrag/llm/pool_limits.py`](../../science_graphrag/llm/pool_limits.py); settings in [`config.py`](../../science_graphrag/config.py), [`settings/llm_advanced_fields.py`](../../science_graphrag/settings/llm_advanced_fields.py), API patch in [`api/settings_llm_runtime_patch.py`](../../science_graphrag/api/settings_llm_runtime_patch.py).
+- **Async parity:** [`api/translation.py`](../../science_graphrag/api/translation.py) acquires/releases distributed quota in a thread pool and emits the same acquire-finished span contract as sync paths.
 - **Fail-open:** Redis client or `EVAL` errors → proceed without global cap; span `llm.distributed_quota.fail_open` + WARNING logs.
-- **Settings UI / i18n:** advanced group + operator copy in [`ui/src/pages/SettingsPage/LlmSettingsPanel.jsx`](../ui/src/pages/SettingsPage/LlmSettingsPanel.jsx).
+- **Settings UI / i18n:** advanced group + operator copy in [`ui/src/pages/SettingsPage/LlmSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/LlmSettingsPanel.jsx).
 - **Tests:** unit + integration-style (`tests/llm/test_redis_distributed_llm_quota*.py`), API smoke for schema/snapshot/PATCH (`tests/test_api_smoke.py`), translation route (`tests/api/test_translation_distributed_quota.py`).
 
 ### Residual risks (v1)

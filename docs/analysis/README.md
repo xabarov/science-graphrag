@@ -1,16 +1,33 @@
 # Analysis docs (`docs/analysis/`)
 
 Planning hub for engineering tracks, deep dives, and measurement spines. **Product phases (0–7):** [`../roadmap.md`](../roadmap.md). **Operational benchmark waves (gate, CI):** [`../runbooks/roadmap-next-waves.md`](../runbooks/roadmap-next-waves.md) and [`../runbooks/benchmark-decision-gate.md`](../runbooks/benchmark-decision-gate.md).
+Quick default entrypoint for agents: [`ACTIVE.md`](./ACTIVE.md).
+
+## LLM context read policy
+
+If you work through Cursor/LLM context, prefer this read order:
+
+1. This index (`README.md`) + target runbook/spec/ADR for the task.
+2. `Entry points / live plans` from the tables below.
+3. `Reference-only` docs only when the task explicitly needs deep historical inventory.
+
+Treat these as **archival / non-default** in normal agent context (matches root `.cursorignore`):
+
+- [`_archive/`](./_archive/)
+- [`_snippets/`](./_snippets/README.md)
+- [`../idea.md`](../idea.md)
+- [`../pilot/`](../pilot/README.md)
+- Heavy eval artifacts: `eval/results/diagnostics/**`, `eval/results/multimodel/**` (paths under repo root; not under `docs/` but excluded from default indexing)
 
 ## How this folder is organized
 
-| Role | Meaning |
-|------|---------|
-| **Entry points / live plans** | Weekly navigation and canonical roadmaps still in flight |
-| **Closeout / evidence** | Finished program outputs with artifact pointers (full text usually stays in root) |
-| **Stub → `_archive/`** | Stable URL in root; historical body stored under `_archive/` |
-| **Reference-only** | Large inventories — not the live BT queue |
-| **`_snippets/`** | Prompt dumps, trace JSON excerpts — not roadmaps ([`_snippets/README.md`](./_snippets/README.md)) |
+| Role | Meaning | Typical `Doc status` |
+|------|---------|----------------------|
+| **Entry points / live plans** | Weekly navigation and canonical roadmaps still in flight | `active` |
+| **Closeout / evidence** | Finished program outputs with artifact pointers (full text may stay in root) | `reference` |
+| **Stub → `_archive/`** | Stable URL in root; historical body under `_archive/` or git history | `historical stub` |
+| **Reference-only** | Large inventories — not the live BT queue | `reference` |
+| **`_snippets/`** | Prompt dumps, trace JSON excerpts — not roadmaps ([`_snippets/README.md`](./_snippets/README.md)) | (n/a) |
 
 ---
 
@@ -23,7 +40,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 | **Agent unified plan: доработки + benchmark strategy** | [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md) |
 | **Agent next horizon: architecture / chat / ingestion / refactor after D–H** | [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) |
 | **Agent R0: feature flags matrix (companion)** | [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md) |
-| **Agent engine + benchmarks — следующие волны (D / E / F / G / H)** | [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) |
+| **Agent engine + benchmarks — previous waves (archived detail)** | [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) (stub) |
 | **Agent v3 quality benchmark spec** | [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](./agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) |
 | **Agent v3 quality benchmark implementation plan** | [`agent-v3-quality-benchmark-implementation-plan-2026-05-08.md`](./agent-v3-quality-benchmark-implementation-plan-2026-05-08.md) |
 | **Ontology · extraction · benchmarks (one entry)** | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
@@ -43,7 +60,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 | Agent master-plan: remaining work + benchmarks | [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md) |
 | Agent next horizon: architecture / chat / ingestion / refactor | [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) |
 | Agent R0: feature flags matrix (companion) | [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md) |
-| Agent engine + benchmarks — next waves D/E/F/G/H | [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) |
+| Agent engine + benchmarks — previous waves D/E/F/G/H | [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) (stub) |
 | Agent v3 quality benchmark spec | [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](./agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md) |
 | Agent v3 quality benchmark implementation plan | [`agent-v3-quality-benchmark-implementation-plan-2026-05-08.md`](./agent-v3-quality-benchmark-implementation-plan-2026-05-08.md) |
 | Ontology · extraction · benchmarks | [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) |
@@ -109,6 +126,15 @@ Prompt dumps and JSON excerpts live under [`_snippets/`](./_snippets/README.md) 
 
 ---
 
+## Archive & deletion policy
+
+1. **Incoming links:** before deleting or moving a `docs/**/*.md` path, search the repo (`rg` / IDE references). If anything links here, keep a **stub** at the old path (short redirect + “full text in git history or `_archive/`”).
+2. **Prefer move over delete:** completed long write-ups go to [`_archive/`](./_archive/) with a root stub row in the **Closed / superseded** section below.
+3. **Stable URLs:** Habr, release notes, and external bookmarks may target root `docs/analysis/<name>.md` — do not break without a stub.
+4. **Non-default LLM context:** aligns with root `.cursorignore` (`_archive`, `_snippets`, `idea.md`, `pilot/`, heavy `eval/results/…`).
+
+---
+
 ## Reference-only (large inventory / completed gold — not the live BT queue)
 
 | Doc | Role |
@@ -143,7 +169,7 @@ Stable URLs and backlinks may still point at these root paths — open the link,
 
 ## Publication / Habr (measurement spine — does not replace engineering roadmaps)
 
-[`habr-article-narrative-and-measurement-plan-2026-07.md`](./habr-article-narrative-and-measurement-plan-2026-07.md) — pinned `eval/results/habr-window-*`, links to [`../report/habr-article-2026-04-29.md`](../report/habr-article-2026-04-29.md) and claims benchmark contract.
+[`habr-article-narrative-and-measurement-plan-2026-07.md`](./habr-article-narrative-and-measurement-plan-2026-07.md) — pinned `eval/results/habr-window-*`, links to [`../report/habr-article-2026-04-29.md`](../report/habr-article-2026-04-29.md) (stub) and claims benchmark contract.
 
 ---
 
@@ -164,7 +190,7 @@ Sorted alphabetically. See sections above for roles; stubs point into `_archive/
 | `agent-chat-frontend-verification-gaps-next-wave.md` | Stub → archived frontend verification checklist |
 | `agent-chat-prod-rollout-2026-04-27.md` | Prod rollout |
 | `agent-chat-tools-and-trace-audit-master-2026-04-28.md` | Eval / trace audit |
-| `agent-engine-and-benchmarks-next-waves-2026-05-09.md` | Agent engine + benchmarks — next waves |
+| `agent-engine-and-benchmarks-next-waves-2026-05-09.md` | Stub → archived detailed wave log |
 | `agent-engine-feature-status-2026-05-13.md` | Agent R0: feature flags matrix (companion) |
 | `agent-engine-next-horizon-2026-05-13.md` | Agent next horizon: architecture / chat / ingestion / refactor |
 | `r2-chat-contract-closeout-2026-05-13.md` | R2 chat SSE product contract closeout (degraded_mode, product layers, doc sync) |

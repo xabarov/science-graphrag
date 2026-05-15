@@ -1,5 +1,9 @@
 # Chat agent: OD workspace restoration and trusted eval plan (2026-04-27)
 
+**Doc status:** `reference`
+
+**Read hint:** OD proving-ground execution plan; pair with trust-audit / agent unified plan when measuring chat quality.
+
 **Status:** proposed execution plan / companion analysis for chat-agent quality work.
 
 **Primary goal:** turn the object-detection lane into a **trustworthy chat-agent proving ground** for answer quality, tool routing, and reasoning-path analysis, using both stable scripted cases and Phoenix traces.

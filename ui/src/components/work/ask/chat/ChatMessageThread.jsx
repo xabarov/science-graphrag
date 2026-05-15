@@ -48,6 +48,9 @@ import { useChatThreadScroll } from "./useChatThreadScroll.js";
  *   deleteDisabled?: boolean,
  *   openStructuredQuestion?: { request_id: string, questions: unknown[] } | null,
  *   onStructuredAnswersSubmit?: (payload: { request_id: string, answers: unknown[] }) => void | Promise<void>,
+ *   pdfReadingMode?: "off" | "ask" | "auto_safe_oa",
+ *   onReadPdfSource?: (url: string) => void | Promise<void>,
+ *   pdfReadState?: { isActive?: boolean, url?: string, error?: string, mode?: string } | null,
  * }} props
  */
 export function ChatMessageThread({
@@ -78,6 +81,9 @@ export function ChatMessageThread({
   deleteDisabled = false,
   openStructuredQuestion = null,
   onStructuredAnswersSubmit,
+  pdfReadingMode = "ask",
+  onReadPdfSource = null,
+  pdfReadState = null,
 }) {
   const { confirm } = useFeedback();
   const tk = useTheme().appTokens;
@@ -158,6 +164,8 @@ export function ChatMessageThread({
           onCopyAssistantEntry={onCopyAssistantEntry}
           onOpenMetadata={setMetaEntry}
           onConfirmDelete={handleConfirmDelete}
+          pdfReadingMode={pdfReadingMode}
+          onReadPdfSource={onReadPdfSource}
         />
       ))}
 
@@ -177,6 +185,9 @@ export function ChatMessageThread({
           onToggleRetrievalJson={onToggleRetrievalJson}
           streamEvents={streamEvents}
           isLoading={isLoading}
+          pdfReadingMode={pdfReadingMode}
+          onReadPdfSource={onReadPdfSource}
+          pdfReadState={pdfReadState}
         />
       ) : null}
 

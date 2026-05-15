@@ -1,5 +1,9 @@
 # Light theme roadmap — 2026-04-27
 
+**Doc status:** `reference`
+
+**Read hint:** UI theme/token roadmap; orthogonal to agent engine plans.
+
 **Status:** draft — **LT0 (visual contract + inventory) complete as of §10**  
 **Scope:** `ui/` application shell, shared components, page surfaces, graph/reader/chat, settings entry point for theme preference  
 **Primary context:** `ui/src/main.jsx`, `ui/src/styles.css`, `ui/src/components/common/index.jsx`, `ui/src/components/layout/DashboardLayout/Drawer.jsx`, `ui/src/components/layout/DashboardLayout/DashboardLayout.jsx`, `ui/src/components/work/MarkdownViewCore.jsx`, `ui/src/components/work/PdfViewer.jsx`, `ui/src/components/graph/canvas/graphCanvasStyle.js`

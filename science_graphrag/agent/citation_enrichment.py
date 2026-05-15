@@ -7,28 +7,25 @@ from typing import Any
 
 from langchain_core.messages import ToolMessage
 
-from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
-
-_PASSAGE_KEYS = (
-    "excerpt",
-    "snippet",
-    "text",
-    "quote_text",
-    "chunk_text",
-    "passage",
-    "body",
-    "content",
+from science_graphrag.agent.evidence_trust import (
+    EVIDENCE_MEDIUM,
+    EVIDENCE_WEAK,
+    FALLBACK_UNKNOWN,
+    MODE_ABSTRACT,
+    MODE_METADATA_ONLY,
+    PROVENANCE_CROSSREF_METADATA,
+    PROVENANCE_OPENALEX_METADATA,
+    apply_trust_labels_to_citations,
+    citation_has_passage,
+    citation_is_web_evidence,
+    human_fallback_message,
+    normalize_tool_error_to_fallback_reason,
+    trust_fields_for_web_source_row,
 )
+from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
+from science_graphrag.ingestion.dedup import normalize_doi
 
 _WEB_CITATION_SNIPPET_CAP = 2000
-
-
-def _citation_has_passage(c: dict[str, Any]) -> bool:
-    for k in _PASSAGE_KEYS:
-        v = c.get(k)
-        if isinstance(v, str) and v.strip():
-            return True
-    return False
 
 
 def _norm(value: object) -> str:
@@ -65,6 +62,10 @@ def _citation_dicts_from_web_sources(
             "url": url,
             "title": title,
         }
+        st_tool = _norm(row.get("source_tool"))
+        if st_tool:
+            cit["source_tool"] = st_tool
+        cit.update(trust_fields_for_web_source_row(row))
         doi = _norm(row.get("doi"))
         if doi:
             cit["doi"] = doi
@@ -187,7 +188,7 @@ def merge_paper_profile_abstracts_into_citations(
     if not abstracts_by_work:
         return
     for c in citations:
-        if _citation_has_passage(c):
+        if citation_has_passage(c):
             continue
         wid = _norm(c.get("work_id"))
         if not wid:
@@ -218,6 +219,150 @@ def _collect_cited_work_ids_from_specialist_results(
             if isinstance(cited, list):
                 out.extend(_norm(x) for x in cited if _norm(x))
     return out
+
+
+def _url_match_key(url: str) -> str:
+    return str(url or "").strip().rstrip("/").lower()
+
+
+def _iter_tool_payload_dicts(messages: list[Any] | None, *, tool_name: str):
+    """Yield dict JSON payloads from ``ToolMessage`` rows for a normalized tool name (in order)."""
+
+    want = normalize_tool_call_name(tool_name)
+    for msg in list(messages or []):
+        if not isinstance(msg, ToolMessage):
+            continue
+        if normalize_tool_call_name(str(getattr(msg, "name", "") or "")) != want:
+            continue
+        raw = str(msg.content or "").strip()
+        if not raw:
+            continue
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(payload, dict):
+            yield payload
+
+
+def _attach_doi_resolver_provenance_from_messages(
+    citations: list[dict[str, Any]],
+    messages: list[Any] | None,
+) -> None:
+    """Hint provenance from successful ``doi_resolver`` for DOI-only citations (no ``work_id``)."""
+
+    by_doi: dict[str, str] = {}
+    for payload in _iter_tool_payload_dicts(messages, tool_name="doi_resolver"):
+        if payload.get("ok") is not True:
+            continue
+        nd = normalize_doi(str(payload.get("normalized_doi") or ""))
+        if not nd:
+            continue
+        msrc = str(payload.get("metadata_source") or "").strip().lower()
+        if msrc == "openalex":
+            by_doi[nd] = "openalex"
+        elif msrc == "crossref_fallback":
+            by_doi[nd] = "crossref_fallback"
+
+    if not by_doi:
+        return
+    for c in citations:
+        if not isinstance(c, dict):
+            continue
+        if _norm(c.get("work_id")):
+            continue
+        nd = normalize_doi(str(c.get("doi") or ""))
+        if not nd or nd not in by_doi:
+            continue
+        if str(c.get("provenance_kind") or "").strip():
+            continue
+        src = by_doi[nd]
+        has_p = citation_has_passage(c)
+        if src == "openalex":
+            c["provenance_kind"] = PROVENANCE_OPENALEX_METADATA
+            c["evidence_quality"] = EVIDENCE_MEDIUM if has_p else EVIDENCE_WEAK
+            c["evidence_mode"] = MODE_ABSTRACT if has_p else MODE_METADATA_ONLY
+            c["is_external"] = True
+        else:
+            c["provenance_kind"] = PROVENANCE_CROSSREF_METADATA
+            c["evidence_quality"] = EVIDENCE_MEDIUM if has_p else EVIDENCE_WEAK
+            c["evidence_mode"] = MODE_ABSTRACT if has_p else MODE_METADATA_ONLY
+            c["is_external"] = True
+
+
+def _attach_unpaywall_lookup_failures_from_messages(
+    citations: list[dict[str, Any]],
+    messages: list[Any] | None,
+) -> None:
+    """Attach fallback hints when ``unpaywall_lookup`` failed for a DOI."""
+
+    failures: dict[str, tuple[str, str]] = {}
+    for payload in _iter_tool_payload_dicts(messages, tool_name="unpaywall_lookup"):
+        if payload.get("ok") is not False:
+            continue
+        err = payload.get("error")
+        reason = normalize_tool_error_to_fallback_reason(str(err) if err is not None else None)
+        if not reason:
+            reason = FALLBACK_UNKNOWN
+        msg_txt = human_fallback_message(reason)
+        nd = normalize_doi(str(payload.get("normalized_doi") or ""))
+        if not nd:
+            item = payload.get("item")
+            if isinstance(item, dict):
+                nd = normalize_doi(str(item.get("doi") or ""))
+        if nd:
+            failures[nd] = (reason, msg_txt)
+
+    if not failures:
+        return
+    for c in citations:
+        if not isinstance(c, dict):
+            continue
+        nd = normalize_doi(str(c.get("doi") or ""))
+        if not nd or nd not in failures:
+            continue
+        reason, msg_txt = failures[nd]
+        if not str(c.get("fallback_reason") or "").strip():
+            c["fallback_reason"] = reason
+        if not str(c.get("fallback_message") or "").strip():
+            c["fallback_message"] = msg_txt
+
+
+def _attach_web_fetch_failures_from_messages(
+    citations: list[dict[str, Any]],
+    messages: list[Any] | None,
+) -> None:
+    """When ``web_fetch`` failed for a URL, attach fallback hints to matching web citations."""
+    failures: dict[str, tuple[str, str]] = {}
+    for payload in _iter_tool_payload_dicts(messages, tool_name="web_fetch"):
+        if payload.get("ok") is not False:
+            continue
+        err = payload.get("error")
+        reason = normalize_tool_error_to_fallback_reason(str(err) if err is not None else None)
+        if not reason:
+            reason = FALLBACK_UNKNOWN
+        msg_txt = human_fallback_message(reason)
+        url = str(payload.get("url") or "").strip()
+        hint = payload.get("sse_hint")
+        if isinstance(hint, dict) and not url:
+            url = str(hint.get("url") or "").strip()
+        if not url:
+            continue
+        failures[_url_match_key(url)] = (reason, msg_txt)
+
+    if not failures:
+        return
+    for c in citations:
+        if not isinstance(c, dict) or not citation_is_web_evidence(c):
+            continue
+        key = _url_match_key(str(c.get("url") or ""))
+        if not key or key not in failures:
+            continue
+        reason, msg_txt = failures[key]
+        if not str(c.get("fallback_reason") or "").strip():
+            c["fallback_reason"] = reason
+        if not str(c.get("fallback_message") or "").strip():
+            c["fallback_message"] = msg_txt
 
 
 def _merge_web_sources_into_citations(
@@ -367,7 +512,7 @@ def merge_quote_candidates_into_citations(
         by_work.setdefault(wid, []).append(row)
 
     for c in citations:
-        if _citation_has_passage(c):
+        if citation_has_passage(c):
             continue
         wid = _norm(c.get("work_id"))
         if not wid:
@@ -390,7 +535,7 @@ def fill_passages_from_chunk_store(
     if not callable(getter):
         return
     for c in citations:
-        if _citation_has_passage(c):
+        if citation_has_passage(c):
             continue
         wid = _norm(c.get("work_id"))
         fp = _citation_chunk_key(c)
@@ -435,4 +580,8 @@ def hydrate_citations_for_ui(
     )
     merge_paper_profile_abstracts_into_citations(merged, abstracts)
     _merge_web_sources_into_citations(merged, list(web_sources or []), max_web=8)
+    _attach_web_fetch_failures_from_messages(merged, messages)
+    _attach_unpaywall_lookup_failures_from_messages(merged, messages)
+    _attach_doi_resolver_provenance_from_messages(merged, messages)
+    apply_trust_labels_to_citations(merged)
     return merged

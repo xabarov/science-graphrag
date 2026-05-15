@@ -1,5 +1,9 @@
 # Миграция с smolagents на LangChain / LangGraph — анализ и план Wave Y
 
+**Doc status:** `reference`
+
+**Read hint:** deep migration history/plan for Wave Y. For current runtime priorities start with [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md), [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md), and [`ACTIVE.md`](./ACTIVE.md).
+
 **Дата:** 2026-04-25
 **Статус:** living working doc; новый трек `Wave Y-LangGraph`, не пересекается с волнами ingest-async (U–W), benchmark-onthology (M–T) и observability (X-Phoenix).
 **Цель:** зафиксировать, где сегодня используется `smolagents`, спроектировать целевую архитектуру агентного слоя на `LangChain` + `LangGraph` (multi-agent ready), и оформить пошаговый план перехода с чеклистами, сохраняя совместимость с UI/бенчмарками и Phoenix-разметкой.

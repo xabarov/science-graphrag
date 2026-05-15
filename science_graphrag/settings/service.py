@@ -43,6 +43,24 @@ from science_graphrag.settings.storage_runtime import (
 if TYPE_CHECKING:
     from science_graphrag.config import Settings
 
+_AGENT_TOOLS_PATCH_ALLOWLIST: frozenset[str] = frozenset(
+    {
+        "agent_supervisor_max_rounds",
+        "external_research_default_enabled",
+        "external_research_sources",
+        "pdf_reading_mode",
+        "agent_unpaywall_oa_tool_enabled",
+        "agent_external_http_timeout_seconds",
+        "agent_external_max_calls_per_turn",
+        "agent_external_max_source_cards",
+        "agent_pdf_read_tool_enabled",
+        "agent_pdf_read_max_bytes",
+        "agent_pdf_read_max_pages",
+        "agent_pdf_read_cache_ttl_seconds",
+    }
+)
+
+
 _UNSET_CHAT_MODEL = object()
 
 
@@ -234,15 +252,68 @@ class SettingsService:
         *,
         base_settings: Settings,
         actor: str,
-        agent_supervisor_max_rounds: int,
+        patch: dict[str, Any],
     ) -> SettingsSnapshot:
-        """Persist allowlisted agent runtime knobs (Wave E slice)."""
+        """Persist allowlisted agent runtime knobs (partial PATCH)."""
+        filtered = {k: v for k, v in dict(patch or {}).items() if k in _AGENT_TOOLS_PATCH_ALLOWLIST}
+        if not filtered:
+            return self.get_snapshot(base_settings)
 
-        bounded = max(2, min(32, int(agent_supervisor_max_rounds)))
         with self._lock:
             payload = self._repository.load()
             at = {k: v for k, v in dict(payload.get("agent_tools") or {}).items() if k != "_meta"}
-            at["agent_supervisor_max_rounds"] = bounded
+
+            if "agent_supervisor_max_rounds" in filtered:
+                at["agent_supervisor_max_rounds"] = max(
+                    2, min(32, int(filtered["agent_supervisor_max_rounds"]))
+                )
+            if "external_research_default_enabled" in filtered:
+                at["external_research_default_enabled"] = bool(
+                    filtered["external_research_default_enabled"]
+                )
+            if "external_research_sources" in filtered:
+                inc = filtered["external_research_sources"]
+                prev = dict(at.get("external_research_sources") or {})
+                if isinstance(inc, dict):
+                    for key in ("crossref", "arxiv", "unpaywall", "openalex"):
+                        if key in inc and isinstance(inc[key], bool):
+                            prev[key] = bool(inc[key])
+                    at["external_research_sources"] = prev
+            if "pdf_reading_mode" in filtered:
+                mode = filtered["pdf_reading_mode"]
+                if mode in {"off", "ask", "auto_safe_oa"}:
+                    at["pdf_reading_mode"] = mode
+            if "agent_unpaywall_oa_tool_enabled" in filtered:
+                at["agent_unpaywall_oa_tool_enabled"] = bool(
+                    filtered["agent_unpaywall_oa_tool_enabled"]
+                )
+            if "agent_external_http_timeout_seconds" in filtered:
+                at["agent_external_http_timeout_seconds"] = max(
+                    5.0, min(120.0, float(filtered["agent_external_http_timeout_seconds"]))
+                )
+            if "agent_external_max_calls_per_turn" in filtered:
+                at["agent_external_max_calls_per_turn"] = max(
+                    1, min(32, int(filtered["agent_external_max_calls_per_turn"]))
+                )
+            if "agent_external_max_source_cards" in filtered:
+                at["agent_external_max_source_cards"] = max(
+                    4, min(128, int(filtered["agent_external_max_source_cards"]))
+                )
+            if "agent_pdf_read_tool_enabled" in filtered:
+                at["agent_pdf_read_tool_enabled"] = bool(filtered["agent_pdf_read_tool_enabled"])
+            if "agent_pdf_read_max_bytes" in filtered:
+                at["agent_pdf_read_max_bytes"] = max(
+                    100_000, min(100_000_000, int(filtered["agent_pdf_read_max_bytes"]))
+                )
+            if "agent_pdf_read_max_pages" in filtered:
+                at["agent_pdf_read_max_pages"] = max(
+                    1, min(500, int(filtered["agent_pdf_read_max_pages"]))
+                )
+            if "agent_pdf_read_cache_ttl_seconds" in filtered:
+                at["agent_pdf_read_cache_ttl_seconds"] = max(
+                    0, min(86_400, int(filtered["agent_pdf_read_cache_ttl_seconds"]))
+                )
+
             at["_meta"] = {
                 "last_updated_at": _now_iso(),
                 "last_updated_by": actor,

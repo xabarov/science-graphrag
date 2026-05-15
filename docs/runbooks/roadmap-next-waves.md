@@ -62,7 +62,7 @@ Foundation LangGraph/LangChain добавлен без изменения runtim
 
 ## Wave D — Phase 7: пилот и KPI
 
-**Прогресс (2026-04-06):** зафиксированы целевой домен и артефакты пилота — [pilot-checklist.md](pilot-checklist.md), запись выхода [docs/pilot/wave-d-exit-record.md](../pilot/wave-d-exit-record.md), корпус [pilot-corpus-wave-d.md](pilot-corpus-wave-d.md). Добавлены: скрипт `./scripts/pilot_ingest_cv_corpus.sh`, live-обвязка `ui/` к `/v1/works*`, расширенный smoke в `tests/test_api_smoke.py`; промежуточное **CONDITIONAL-GO** в exit record до полного корпуса и KPI.
+**Прогресс (2026-04-06):** зафиксированы целевой домен и артефакты пилота — [pilot-checklist.md](pilot-checklist.md), корпус [pilot-corpus-wave-d.md](pilot-corpus-wave-d.md), release-note запись с промежуточным **CONDITIONAL-GO** до полного корпуса и KPI. Добавлены: скрипт `./scripts/pilot_ingest_cv_corpus.sh`, live-обвязка `ui/` к `/v1/works*`, расширенный smoke в `tests/test_api_smoke.py`.
 
 1. Pilot package: [pilot-checklist.md](pilot-checklist.md) (предусловие — не слабее **CONDITIONAL-GO** по [benchmark-decision-gate.md](benchmark-decision-gate.md)).
 2. Зафиксировать KPI: корректность цитат (выборочно), полнота `retrieval_trace`, p95 latency для `/v1/query` и списка works — таблица в чеклисте.

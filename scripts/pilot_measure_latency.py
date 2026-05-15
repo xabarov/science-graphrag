@@ -4,7 +4,8 @@
 Usage (from repo root, .venv active or use .venv/bin/python):
   BASE=http://127.0.0.1:8787 N=40 .venv/bin/python scripts/pilot_measure_latency.py
 
-Requires a running API; records are written for wave-d-exit-record / pilot-checklist.
+Requires a running API. Attach KPI numbers to ``docs/runbooks/pilot-checklist.md``
+or your release record when filing a pilot.
 """
 
 from __future__ import annotations

@@ -1,5 +1,9 @@
 # Agent unified plan — доработки и бенчмарки (2026-05-08)
 
+**Doc status:** `active`
+
+**Read hint:** canonical agent/planning entrypoint. If unsure where to start, use this document first (or [`ACTIVE.md`](./ACTIVE.md)).
+
 **Статус:** каноническая точка входа по оси **agent runtime / orchestration / trace-review / benchmark program**.
 
 **Зачем этот документ:** собрать в одном месте:

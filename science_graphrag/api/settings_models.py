@@ -42,19 +42,89 @@ class SettingsSchemaResponse(BaseModel):
     sections: list[dict[str, Any]]
 
 
-class UpdateAgentToolsSettingsRequest(BaseModel):
-    """Wave E: minimal persisted agent operator knobs (allowlisted)."""
+class ExternalResearchSourcesPatch(BaseModel):
+    """Partial per-source toggles for native external scholarly HTTP tools."""
 
     model_config = ConfigDict(extra="forbid")
 
-    agent_supervisor_max_rounds: int = Field(
-        ...,
+    crossref: bool | None = None
+    arxiv: bool | None = None
+    unpaywall: bool | None = None
+    openalex: bool | None = None
+
+
+class UpdateAgentToolsSettingsRequest(BaseModel):
+    """Persisted agent_tools allowlist (partial PATCH supported)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    agent_supervisor_max_rounds: int | None = Field(
+        default=None,
         ge=2,
         le=32,
         description=(
             "Max supervisor routing legs per turn before writer handoff "
             "(Settings.agent_supervisor_max_rounds)."
         ),
+    )
+    external_research_default_enabled: bool | None = Field(
+        default=None,
+        description=(
+            "Default external scholarly tools when the client omits per-request "
+            "``web_research_enabled`` (null)."
+        ),
+    )
+    external_research_sources: ExternalResearchSourcesPatch | None = Field(
+        default=None,
+        description="Partial map for Crossref/arXiv/Unpaywall/OpenAlex tool availability.",
+    )
+    pdf_reading_mode: Literal["off", "ask", "auto_safe_oa"] | None = Field(
+        default=None,
+        description="PDF reading in chat (product default; pipeline phases follow).",
+    )
+    agent_unpaywall_oa_tool_enabled: bool | None = Field(
+        default=None,
+        description="Register ``unpaywall_lookup`` when true (operator gate).",
+    )
+    agent_external_http_timeout_seconds: float | None = Field(
+        default=None,
+        ge=5.0,
+        le=120.0,
+        description="Shared HTTP timeout for native external scholarly tools.",
+    )
+    agent_external_max_calls_per_turn: int | None = Field(
+        default=None,
+        ge=1,
+        le=32,
+        description="Reserved cap on external tool calls per turn (surfaced in UI).",
+    )
+    agent_external_max_source_cards: int | None = Field(
+        default=None,
+        ge=4,
+        le=128,
+        description="Reserved cap on source cards per answer (surfaced in UI).",
+    )
+    agent_pdf_read_tool_enabled: bool | None = Field(
+        default=None,
+        description="Register ``read_external_pdf`` tool when true (operator gate).",
+    )
+    agent_pdf_read_max_bytes: int | None = Field(
+        default=None,
+        ge=100_000,
+        le=100_000_000,
+        description="Max external PDF download size for ``read_external_pdf``.",
+    )
+    agent_pdf_read_max_pages: int | None = Field(
+        default=None,
+        ge=1,
+        le=500,
+        description="Max pages extracted by ``read_external_pdf``.",
+    )
+    agent_pdf_read_cache_ttl_seconds: int | None = Field(
+        default=None,
+        ge=0,
+        le=86_400,
+        description="In-process cache TTL for ``read_external_pdf`` results.",
     )
 
 

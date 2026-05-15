@@ -1,5 +1,9 @@
 # Ingestion LLM architecture and Instructor standardization — 2026-04-27
 
+**Doc status:** `reference`
+
+**Read hint:** deep architecture/reference plan for ingestion seams. For active priorities use [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md), [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md), and [`ACTIVE.md`](./ACTIVE.md).
+
 > **Done-index:** этот файл — план/архитектура без shipped-checklist; сводка по закрытым работам в других analysis-доках — [`completed-work-snapshot.md`](./completed-work-snapshot.md#ingestion-llm-and-instructor-standardization).
 
 ## TL;DR

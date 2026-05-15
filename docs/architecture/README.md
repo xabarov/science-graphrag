@@ -12,6 +12,8 @@
 
 ## Agent chat
 
+**Live planning entrypoints:** [`../analysis/ACTIVE.md`](../analysis/ACTIVE.md), [`../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md), [`../analysis/agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md). Deep runtime/tools reference: [`../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md`](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md).
+
 | Документ | Описание |
 |----------|----------|
 | [agent-runtime-overview-ru.md](agent-runtime-overview-ru.md) | Русскоязычный обзор архитектуры агентного рантайма: режимы, поток одного запроса, целевой `v3` контур |

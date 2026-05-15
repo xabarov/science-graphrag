@@ -28,9 +28,9 @@ Deep link (Phoenix 13.x UI): `http://127.0.0.1:16006/projects/science-graphrag/t
 
 ## 3) `PHOENIX_TRACE_SCOPE=extraction_llm`
 
-Код: [`science_graphrag/observability/scope.py`](../science_graphrag/observability/scope.py) — allowlist дополнен `llm.vl_pdf`, `llm.claims_extraction`, CHAIN `ingest.extract_claims.llm`.
+Код: [`science_graphrag/observability/scope.py`](../../science_graphrag/observability/scope.py) — allowlist дополнен `llm.vl_pdf`, `llm.claims_extraction`, CHAIN `ingest.extract_claims.llm`.
 
-Тест: [`tests/observability/test_extraction_llm_scope.py`](../tests/observability/test_extraction_llm_scope.py).
+Тест: [`tests/observability/test_extraction_llm_scope.py`](../../tests/observability/test_extraction_llm_scope.py).
 
 ## 4) Команды для воспроизведения
 

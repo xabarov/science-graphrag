@@ -126,6 +126,7 @@ export default {
   "benchmark.inspector.compareBanner":
     "Opened from compare: metric {{metric}} vs baseline run {{baseline}}… — current run is the candidate.",
   "benchmark.inspector.raw.toggle": "Raw payloads (article, gold, prediction, diff, diagnostics)",
+  "benchmark.inspector.raw.diagnosticsPayload": "Diagnostics (JSON)",
   "benchmark.inspector.evidence.title": "Evidence & paths",
   "benchmark.inspector.evidence.empty": "No artifact pointers available.",
   "benchmark.inspector.evidence.lastRun": "Last completed run (hint)",

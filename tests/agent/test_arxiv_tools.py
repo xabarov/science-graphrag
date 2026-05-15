@@ -66,7 +66,7 @@ class _FakeClient:
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings.model_construct(agent_web_search_http_timeout_seconds=5.0)
+    return Settings.model_construct(agent_external_http_timeout_seconds=5.0)
 
 
 def test_build_search_query_categories_and_dates() -> None:

@@ -1,10 +1,14 @@
 # External Research Tools: ADR 030 vs Implementation Review
 
+**Doc status:** `reference`
+
+**Read hint:** reconciliation note vs ADR 030; execution queue — workplan doc in same folder.
+
 Date: 2026-05-15
 
 This note reconciles three layers:
 
-- `docs/analysis/sci-tools.md` — broad landscape of useful academic research tools and MCP servers.
+- `docs/analysis/sci-tools.md` — archived landscape stub (historical long-form content lives in git history).
 - `docs/adr/030-external-research-tools-architecture.md` — accepted in-repo architecture for native external HTTP tools.
 - Current implementation under `science_graphrag/agent/tools/`, manifest, request policy, routing features, and tests.
 
@@ -45,13 +49,13 @@ The main gap is not the architecture, but **coverage and evidence level**:
 | `arxiv_search` | arXiv Atom API | Search preprints; returns metadata, abstracts, abs/pdf links | Included in external research tools; denied when `web_research_enabled=false`; shortlist keeps it for arXiv intent | Unit coverage for query building and Atom parsing; prior live/API evidence from arXiv work | **Stable** for metadata/abstract search. No PDF extraction by design. |
 | `arxiv_fetch` | arXiv Atom API | Fetch one arXiv record by id/URL | Included in external research tools; denied when `web_research_enabled=false`; shortlist keeps it for arXiv intent | Unit coverage for id resolution, fetch, empty feed, unsupported PDF text; prior live/API evidence | **Stable** for metadata/abstract fetch. PDF text explicitly unsupported. |
 | `unpaywall_lookup` | Unpaywall v2 | Given DOI, return OA status and best OA landing/PDF URL; does not download PDF | Included when `agent_unpaywall_oa_tool_enabled=true`; denied when `web_research_enabled=false`; shortlist keeps it for OA/Unpaywall intent | Mock-backed unit coverage for invalid DOI, success payload, registry factory flag, shortlist | **Implementation-stable but not live-validated**. Needs one live trace against a real DOI before calling production-proven. |
+| `openalex_works_search` | OpenAlex `/works` | Metadata literature discovery by query (+ optional publication year filter) | Included when `external_research_source_openalex_enabled=true`; denied when `web_research_enabled=false` | Mock-backed tests in `tests/agent/test_openalex_works_search_tools.py`; registry/manifest sync | **Stable by unit contract**; optional live smoke still recommended |
 | `doi_resolver` | OpenAlex by DOI + Crossref fallback + Neo4j workspace mapping | Normalize DOI/URL, fetch metadata, optionally map to workspace Work id | Separately gated by `agent_doi_resolver_tool_enabled`; not currently in `EXTERNAL_RESEARCH_TOOL_NAMES` | Existing resolver/helper tests and manifest sync when enabled | **Stable as metadata bridge**, but semantically distinct from web-research toggle. |
 
 ## Not Implemented Yet
 
 The broad tool landscape from `sci-tools.md` includes several categories not yet implemented as native tools:
 
-- `openalex_works_search` / `search_openalex`: broad literature search across OpenAlex. We intentionally did **not** add an OpenAlex-by-DOI tool because `doi_resolver` already owns that path.
 - `semantic_scholar_search`, `semantic_scholar_paper`, `semantic_scholar_citations`, `semantic_scholar_references`: high-value for citation graph and related papers.
 - `pubmed_search` / `pubmed_fetch`: useful for biomedical/clinical domains, lower priority for the current CS/ML-heavy workflows unless corpus direction shifts.
 - `biorxiv_search` / `medrxiv_search`: preprint complement for biomedical domains.
@@ -126,7 +130,7 @@ Recommended model:
 | `unpaywall_lookup` | Available by default with external research | No separate ordinary toggle | It is low-friction DOI enrichment. Users should not have to learn a separate OA-source switch. |
 | `doi_resolver` | Operator-gated, recommended on for research workspaces | Admin/settings toggle, not composer toggle | It is metadata infrastructure and workspace mapping, not a “browse the web” action from the user's perspective. |
 | MCP tools | Off by default unless configured | Admin/settings section; optional advanced runtime toggle | High variance, auth-dependent, and can expose broad external capabilities. |
-| Future OpenAlex search | On by default once stable; part of external research | No separate ordinary toggle | It should complement Crossref as normal scholarly discovery. |
+| `openalex_works_search` | On by default where `external_research_source_openalex_enabled=true`; part of external research | No separate ordinary toggle | It complements Crossref as normal scholarly discovery; keep optional live-smoke evidence lane. |
 | Future Semantic Scholar citation tools | Off or beta until live-tested | Advanced source selector / admin beta toggle | Citation graph can be high-volume, rate-limited, and may require clearer provenance. |
 | Future PDF download/read/extract | Off by default until pipeline-grade | Suggested action in chat + admin setting; not a simple composer toggle | Long-running, heavier safety/storage implications. |
 
@@ -134,13 +138,13 @@ Recommended model:
 
 Add a compact **“External Research”** settings card rather than many scattered flags:
 
-- **Main switch:** “Allow external scholarly research tools” (`web_search`, `web_fetch`, arXiv, Unpaywall, future OpenAlex search).
+- **Main switch:** “Allow external scholarly research tools” (`web_search`, `web_fetch`, arXiv, Unpaywall, `openalex_works_search`).
 - **Default for new chats:** `On` / `Off` / “Ask each time” (initial recommendation: `Off` for privacy-sensitive installs, `On` for local research workspaces).
 - **Sources list (collapsed by default):**
   - Crossref metadata search: On, stable.
   - arXiv metadata/abstracts: On, stable.
   - Unpaywall OA lookup: On, needs live validation label until smoke-tested.
-  - OpenAlex search: Planned.
+  - OpenAlex search: On by default where enabled; stable by unit contract, optional live-smoke lane.
   - Semantic Scholar: Planned / beta once implemented.
 - **Advanced section:** timeouts, max bytes, MCP tools, PDF extraction, source-specific beta flags.
 
@@ -159,7 +163,7 @@ Agent Tools
 │  ├─ Crossref metadata search          [status: stable]
 │  ├─ arXiv metadata / abstracts        [status: stable]
 │  ├─ Unpaywall OA lookup               [status: unit-tested / needs live smoke]
-│  ├─ OpenAlex search                   [planned]
+│  ├─ OpenAlex search                   [stable-by-contract / optional live smoke]
 │  └─ Semantic Scholar citation graph   [planned / beta]
 ├─ Full-text / PDF
 │  ├─ PDF reading in chat               [Off | Ask | Auto safe OA]
@@ -382,19 +386,16 @@ Backend/product implication:
 
 Priority order:
 
-1. **`openalex_works_search`**  
-   Best next native tool. It complements `doi_resolver` without duplicating it. Useful for broad discovery, author/year filters, and stable metadata. Should use `external_research_user_agent`, `Settings` flag, `source_family="openalex"`, mock-backed tests, and product_step mapping.
-
-2. **`semantic_scholar_search` + `semantic_scholar_paper`**  
+1. **`semantic_scholar_search` + `semantic_scholar_paper`**  
    Adds citation-aware discovery and richer paper cards. Keep citations/references as follow-up tools to avoid a giant first payload.
 
-3. **`semantic_scholar_references` / `semantic_scholar_citations`**  
+2. **`semantic_scholar_references` / `semantic_scholar_citations`**  
    Add only after paper lookup is stable. Needs result caps and clear citation graph semantics.
 
-4. **PDF extraction pipeline**  
+3. **PDF extraction pipeline**  
    Do not implement as a small LangChain HTTP tool. Treat as a bounded ingestion/artifact subsystem: download, parse, cache, sectionize, expose excerpts. Needs timeout/checkpoint rules.
 
-5. **PubMed / bioRxiv / medRxiv**  
+4. **PubMed / bioRxiv / medRxiv**  
    Add when the corpus or user workflows need biomedical coverage. These are domain expansions, not core architecture blockers.
 
 ## Stable vs Not Yet Proven
@@ -403,6 +404,7 @@ Stable enough for normal agent use:
 
 - `web_fetch` guardrails and cache behavior.
 - `arxiv_search` / `arxiv_fetch` metadata and abstract flows.
+- `openalex_works_search` discovery flow (unit-contract stable; operator live smoke optional).
 - `doi_resolver` DOI metadata bridge when enabled.
 
 Stable by unit contract but needing live proof:
@@ -414,7 +416,6 @@ Not implemented / not stable:
 
 - PDF reading and section extraction.
 - Semantic Scholar tools.
-- OpenAlex search tools.
 - PubMed / bioRxiv / medRxiv tools.
 - Stateful reading list and export workflow.
 
@@ -628,6 +629,8 @@ ADR 030, the current native implementation, and the broader `sci-tools.md` lands
 
 The architecture is in good shape. The next improvement should be either:
 
-1. add live smoke evidence for `unpaywall_lookup` / Crossref, or
-2. implement `openalex_works_search` as the next native source under `external/`.
+1. add live smoke evidence for `unpaywall_lookup` / Crossref / `openalex_works_search`, or
+2. continue toward Semantic Scholar / PDF pipeline per roadmap.
+
+**Execution detail:** Phase 3 **closeout** (optional OpenAlex live smoke, diagnostics `status` decision) and Phase 4 **staged delivery** (PDF artifact pipeline → SSE → trust → Ask UI → live matrix) are spelled out in `docs/analysis/external-research-tools-workplan-2026-05-15.md` (Phase 3 **Remaining / Closeout**, Phase 4 Stages 1–8, PR slicing PR 4b–PR 9).
 

@@ -27,6 +27,15 @@ WEB_FETCH_FAILURE_SYNTHESIS_DIRECTIVE: Final[str] = (
     "full-text claims, and cite the available URLs."
 )
 
+EVIDENCE_TRUST_DIRECTIVE: Final[str] = (
+    "Evidence honesty: structured citations may include provenance_kind and evidence_mode. "
+    "Do not claim you read the full PDF or full article text unless evidence_mode is full_text or "
+    "provenance is workspace_full_text or extracted_pdf_text from actual extraction. "
+    "When evidence_mode is metadata_only, abstract, web_summary, or oa_link, state that limitation "
+    "explicitly and avoid passage-level claims you cannot ground. Prefer stronger evidence over "
+    "weaker metadata when they disagree."
+)
+
 VERIFICATION_OUTPUT_FORMAT_BLOCK: Final[str] = (
     "When producing the user-visible answer inside final_answer.answer, use this exact section "
     "layout (markdown lines, English labels):\n"
@@ -81,7 +90,11 @@ def verification_format_enabled(*, settings: "Settings") -> bool:
 
 def writer_system_prompt_suffix(*, settings: "Settings", writer_mode: str) -> str:
     """Extra system text for writer (synthesize + optional verification layout)."""
-    parts = [SYNTHESIZE_NOT_DELEGATE_DIRECTIVE, WEB_FETCH_FAILURE_SYNTHESIS_DIRECTIVE]
+    parts = [
+        SYNTHESIZE_NOT_DELEGATE_DIRECTIVE,
+        WEB_FETCH_FAILURE_SYNTHESIS_DIRECTIVE,
+        EVIDENCE_TRUST_DIRECTIVE,
+    ]
     if writer_mode == "normal" and verification_format_enabled(settings=settings):
         parts.append(VERIFICATION_OUTPUT_FORMAT_BLOCK)
     return "\n\n".join(parts)

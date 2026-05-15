@@ -1,5 +1,9 @@
 # Agent chat frontend UI/UX implementation plan — 2026-04-26
 
+**Doc status:** `reference`
+
+**Read hint:** agent chat UI scope; runtime/tools — [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md).
+
 **Status:** draft; **architecture baseline (2026-04-27):** упрощённый single-graph agent (см. slim [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md)); этот документ описывает **UI/UX** поверх существующего SSE.  
 **Scope:** `ui/` chat experience for agent turns, stream progress, subagent visibility, typed result blocks  
 **Primary context:** [`agent-runtime-tools-context-roadmap-2026-05-04.md`](./agent-runtime-tools-context-roadmap-2026-05-04.md), `docs/specs/agent-chat-v1.md`

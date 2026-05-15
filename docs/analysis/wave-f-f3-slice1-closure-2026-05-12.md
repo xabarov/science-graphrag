@@ -1,6 +1,6 @@
 # Wave F — F3-slice1 closure note (2026-05-12)
 
-**Source plan:** [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §4.3 (`quote_evidence_grounding`, `negative_case_refusal`).
+**Source plan:** [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) (R5/R6 context). Historical wave row: [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) (stub).
 
 ## What “slice1” means here
 
@@ -24,4 +24,4 @@ Any **older** pilot JSON captured before `pilot_quote_grounding_01` / `pilot_neg
 
 ## Not in slice1
 
-- **`multi_workspace_inspect`** remains in pilot for stress coverage but is **not** a default-on routing gate while Wave E1 is **keep gated** (see plan §4.3 dependencies).
+- **`multi_workspace_inspect`** remains in pilot for stress coverage but is **not** a default-on routing gate while Wave E1 is **keep gated** (see E1 operator gate in feature-status matrix).

@@ -1,5 +1,9 @@
 # Graph communities & Neo4j GDS — план кластеризации, центральности и semantic zoom
 
+**Doc status:** `reference`
+
+**Read hint:** GDS/communities roadmap; complements graph readability follow-up.
+
 **Дата:** 2026-04-27
 **Статус:** living working doc, кандидат в треке E (Graph UX). Дополняет, **не заменяет** [`graph-readability-followup-2026-04-25.md`](./graph-readability-followup-2026-04-25.md): тот фокусируется на читаемости подписей и правой панели (Wave GR6–GR12), а здесь — про **структурную читаемость графа** (кластеризация, центральность, semantic zoom).
 

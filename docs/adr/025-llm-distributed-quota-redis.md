@@ -5,7 +5,7 @@
 
 ## Context
 
-Process-local `threading.Semaphore` pools ([`science_graphrag/llm/concurrency.py`](../science_graphrag/llm/concurrency.py)) cap LLM calls per API worker only. Multiple `uvicorn` workers or separate ingest/agent processes can still exceed operator-intended **global** concurrency toward the same provider.
+Process-local `threading.Semaphore` pools ([`science_graphrag/llm/concurrency.py`](../../science_graphrag/llm/concurrency.py)) cap LLM calls per API worker only. Multiple `uvicorn` workers or separate ingest/agent processes can still exceed operator-intended **global** concurrency toward the same provider.
 
 Phase 5 of [llm-concurrency-semaphore-and-timeout-hardening-plan-2026-04-27.md](../analysis/llm-concurrency-semaphore-and-timeout-hardening-plan-2026-04-27.md) requires optional **distributed** enforcement.
 

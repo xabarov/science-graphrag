@@ -1,8 +1,9 @@
 # Wave H rollout decision (2026-05-12)
 
-**Контекст:** Wave H plan
-[`docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](agent-engine-and-benchmarks-next-waves-2026-05-09.md)
-§6 — context compaction maturity. Этот документ фиксирует итог волны и решение
+**Контекст:** Wave H/R3 context compaction maturity in
+[`docs/analysis/agent-engine-next-horizon-2026-05-13.md`](agent-engine-next-horizon-2026-05-13.md).
+Historical detailed wave log: [`docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](agent-engine-and-benchmarks-next-waves-2026-05-09.md) (stub).
+Этот документ фиксирует итог волны и решение
 по operator-facing rollout.
 
 ## Что закрыто в этой волне
@@ -139,7 +140,7 @@ Backend:
 Документация / артефакты:
 - `docs/analysis/wave-h-side-llm-inventory-2026-05-12.md` (новый)
 - `docs/analysis/wave-h-rollout-decision-2026-05-12.md` (этот файл)
-- `docs/analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md` (Wave H rollout row)
+- `docs/analysis/agent-engine-next-horizon-2026-05-13.md` (R3/R4 rollout stance)
 - `docs/runbooks/agent-trace-review-sop.md` (обновлён под §H1 / §H2)
 - `eval/results/wave_h/baseline-long-thread-2026-05-12.{json,md}` (новый)
 - `eval/results/wave_h/candidate-long-thread-2026-05-12.{json,md}` (новый)

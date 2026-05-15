@@ -1,5 +1,9 @@
 # Agent v3 quality benchmark — implementation plan (2026-05-08)
 
+**Doc status:** `reference`
+
+**Read hint:** implementation companion to the LLM-judge plan doc.
+
 **Статус:** implementation plan for the advisory family proposed in [`agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md`](./agent-v3-quality-llm-judge-benchmark-plan-2026-05-08.md).
 
 **Цель:** перевести benchmark-идею в конкретную рабочую программу изменений по коду, fixture'ам, CLI, артефактам и runbook'ам.

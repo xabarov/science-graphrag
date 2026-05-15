@@ -55,6 +55,12 @@ export function useAskPanelOrchestration({
   /** While a run is in flight: scope + session the submit belongs to (survives sidebar switches). */
   const [streamingTarget, setStreamingTarget] = useState(null);
   const streamFailureRef = useRef("");
+  const [pdfReadState, setPdfReadState] = useState({
+    isActive: false,
+    url: "",
+    error: "",
+    mode: "",
+  });
   /** When storage head matches this turn id, do not refill composer from `recent[0]` (avoids scopeKey churn after submit). */
   const composerSuppressHydrateTurnIdRef = useRef("");
 
@@ -247,6 +253,38 @@ export function useAskPanelOrchestration({
     return t("askPanel.agentStreamingHint");
   }, [isLoading, streamingTarget, scopeKey, activeSessionId, t]);
 
+  const pdfReadingMode = useMemo(
+    () =>
+      String(
+        normalized?.run_metadata?.agent_tools?.effective?.resolved_pdf_reading_mode ??
+          normalized?.run_metadata?.request_pdf_reading_mode ??
+          "ask",
+      ),
+    [normalized],
+  );
+
+  const onReadPdfSource = useCallback(
+    async (pdfUrlRaw) => {
+      const pdfUrl = String(pdfUrlRaw || "").trim();
+      if (!pdfUrl || isLoading || pdfReadingMode === "off") return;
+      setPdfReadState({ isActive: true, url: pdfUrl, error: "", mode: "running" });
+      try {
+        await performAgentSubmit(t("askPanel.pdfRead.queryStub"), {
+          pdfReadRequest: { pdf_url: pdfUrl },
+        });
+        setPdfReadState({ isActive: false, url: pdfUrl, error: "", mode: "done" });
+      } catch (exc) {
+        setPdfReadState({
+          isActive: false,
+          url: pdfUrl,
+          error: formatAskAgentUiError(t, String(exc?.message || exc || "")),
+          mode: "failed",
+        });
+      }
+    },
+    [isLoading, pdfReadingMode, performAgentSubmit, t],
+  );
+
   /** @see ./askPanelOrchestrationContract.js — keep `ASK_PANEL_ORCHESTRATION_RETURN_KEYS` aligned when changing this object. */
   return {
     t,
@@ -296,6 +334,9 @@ export function useAskPanelOrchestration({
     researchPlanStreamHint,
     openStructuredQuestion,
     onStructuredAnswersSubmit,
+    pdfReadingMode,
+    onReadPdfSource,
+    pdfReadState,
     webResearchEnabled,
     agentMode,
     setWebResearchEnabled,

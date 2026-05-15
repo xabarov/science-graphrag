@@ -121,6 +121,8 @@ _No open items._
 - **Done:** 2026-05-14 — toolbar: [`workspaceToolbarModel.js`](../../ui/src/components/graph/workspace/workspaceToolbarModel.js) + `WorkspaceToolbarFiltersRow` / `WorkspaceToolbarPanelsRow`; flow: `GraphFlowInner`, `useGraphFlowState`, `useGraphFlowSelectionHandlers`, `GraphFlowToolbar`, `GraphFlowViewport`, `graphFlowConstants`, `graphFlowNodeTypes`; detail: `detailSections/*` + [`graphNodeDetailSectionSx.js`](../../ui/src/components/graph/shell/detail/graphNodeDetailSectionSx.js); workspace: `useGraphWorkspacePanelState` / `Actions` / `CommunityMap`, `sections/*`, seam map [`workspace/README.md`](../../ui/src/components/graph/workspace/README.md); `npm run lint` + vitest `src/components/graph` green.
 
 ### [OPEN] Workspace page — `useWorkspacePageCore` + `workspaceStore` API surface
+- **Progress (2026-05-15):** `utils/workspaceStore/` split; `useWorkspaceGraphStats`, `useWorkspaceIngestJobStream` extracted; **2026-05-15** — `useWorkspacePageWorkSelection`, `useWorkspacePageWorkspaceMutations` extracted from `useWorkspacePageCore.jsx` (core ~201 LoC).
+- **Parallel track:** safe to run alongside external-research-tools workplan (no overlap with Agent Tools settings / Ask PDF source cards); see parallel backlog plan 2026-05-15.
 - **Area:** [`useWorkspacePageCore.jsx`](../../ui/src/pages/WorkspacePage/useWorkspacePageCore.jsx), [`utils/workspaceStore.js`](../../ui/src/utils/workspaceStore.js)
 - **Issue:** Page core ~381 LOC orchestrates navigation, ingest, papers, errors; `workspaceStore` ~399 LOC bundles many HTTP entrypoints — hard to test in isolation and easy to regress ingest timeouts vs reads.
 - **Proposal:** Slice `useWorkspacePageCore` by concern (bootstrap vs ingest vs papers/summary); split `workspaceStore` into focused modules + thin re-export facade (same import path for callers).
@@ -128,6 +130,7 @@ _No open items._
 - **Raised:** 2026-05-14 (frontend landscape audit)
 
 ### [OPEN] Benchmark — case inspector shell + run-group hook
+- **Progress (2026-05-15):** inspector formatting + `JsonBlock` extracted to `benchmarkCaseInspectorFormatting.js` / `BenchmarkCaseInspectorJsonBlock.jsx`; grouped-run polling/finalize moved to `useBenchmarkRunGroupPolling.js`; **2026-05-15** — shell split into `BenchmarkCaseInspectorHeader`, `BenchmarkCaseInspectorHeadlineSection`, `BenchmarkCaseInspectorEvidencePanel`, `BenchmarkCaseInspectorRawAccordion`; batch seeding effects → `useBenchmarkRunGroupBatchSeed.js`.
 - **Area:** [`BenchmarkCaseInspectorShell.jsx`](../../ui/src/pages/BenchmarkPage/caseInspector/BenchmarkCaseInspectorShell.jsx), [`useBenchmarkRunGroup.js`](../../ui/src/pages/BenchmarkPage/useBenchmarkRunGroup.js)
 - **Issue:** Inspector shell ~377 LOC; run-group hook ~315 LOC — operator UI and polling/state interleave.
 - **Proposal:** Extract data hooks (`useBenchmarkCaseInspector*` already partial — extend), split shell sections; isolate run-group polling/prefs behind a narrow hook API.
@@ -142,10 +145,10 @@ _No open items._
 - **Raised:** 2026-05-14 (deep audit; continues 2026-05-14 Ask **[DONE]** intent)
 
 ### [OPEN] Settings — page + storage/LLM panels (incremental)
-- **Area:** [`SettingsPage.jsx`](../../ui/src/pages/SettingsPage.jsx), [`StorageSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/StorageSettingsPanel.jsx), [`LlmSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/LlmSettingsPanel.jsx)
-- **Issue:** Shell and panels ~284–295 LOC each — acceptable but will grow with new backends; no structural map beyond `storage/` subtrees yet.
-- **Proposal:** Incremental extraction only when touching settings (avoid wide refactor); prefer hooks `use*SettingsPanel` per tab.
-- **Acceptance:** touched files shrink or gain submodule; `vitest` for `pages/SettingsPage/` green.
+- **Area:** [`SettingsPage.jsx`](../../ui/src/pages/SettingsPage.jsx), [`StorageSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/StorageSettingsPanel.jsx), [`LlmSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/LlmSettingsPanel.jsx), [`AgentToolsSettingsPanel.jsx`](../../ui/src/pages/SettingsPage/AgentToolsSettingsPanel.jsx)
+- **Issue:** Shell and panels ~284–295 LOC each are acceptable but will grow with new backends; `AgentToolsSettingsPanel` reached ~466 LOC after the first real operator UI pass, mixing layout, diagnostics rows, cards, and form state.
+- **Proposal:** Incremental extraction only when touching settings (avoid wide refactor); prefer hooks `use*SettingsPanel` per tab and split `AgentToolsSettingsPanel` into `AgentToolsResearchCard`, `AgentToolsDiagnosticsTable`, `AgentToolsRuntimeCards`, and a small panel shell.
+- **Acceptance:** touched files shrink or gain submodule; `AgentToolsSettingsPanel` trends below ~260 LOC with leaf cards under ~220 LOC; `vitest` for `pages/SettingsPage/` green.
 - **Raised:** 2026-05-14 (landscape audit)
 
 ### [DONE] Graph canvas — `useGraphCanvasMvpController` decomposition (sub-hooks + tests)

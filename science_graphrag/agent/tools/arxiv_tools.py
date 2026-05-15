@@ -247,6 +247,10 @@ def _web_sources_from_items(
             "doi": doi,
             "source_tool": source_tool,
             "snippet": snippet,
+            "provenance_kind": "arxiv_abstract",
+            "evidence_quality": "medium",
+            "evidence_mode": "abstract",
+            "is_external": True,
         }
         out.append(row)
     return out
@@ -258,7 +262,7 @@ def _arxiv_http_get(
     settings: Settings,
     params: dict[str, Any] | None = None,
 ) -> tuple[int, str, str | None]:
-    timeout = float(settings.agent_web_search_http_timeout_seconds)
+    timeout = float(settings.agent_external_http_timeout_seconds)
     try:
         with httpx.Client(timeout=timeout, follow_redirects=True) as client:
             r = client.get(

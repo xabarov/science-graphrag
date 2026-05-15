@@ -57,8 +57,8 @@ def build_settings_sections_catalog() -> list[dict[str, Any]]:
             "label": "Agent tools",
             "status": "ready",
             "description": (
-                "Operator knobs for agent runtime (supervisor limits); "
-                "separate from LLM provider settings."
+                "External scholarly research defaults, PDF policy, MCP integration flags, "
+                "supervisor limits, and diagnostics (separate from LLM provider settings)."
             ),
         },
     ]

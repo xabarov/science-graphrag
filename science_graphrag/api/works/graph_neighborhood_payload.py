@@ -13,26 +13,14 @@ from science_graphrag.api.graph_display import (
     resolve_node_kind,
 )
 from science_graphrag.api.graph_reader_meta import enrich_reader_graph_meta
-from science_graphrag.api.graph_reader_projection.authorship_collapse import (
-    build_authorship_to_reader_author_map,
-    collapse_authorship_for_reader_view,
-)
 from science_graphrag.api.graph_reader_projection.authorship_enrich import enrich_authorship_nodes
-from science_graphrag.api.graph_reader_projection.authorship_meta import (
-    compute_authorship_projection_meta,
-    strip_reader_only_authorship_properties,
-)
 from science_graphrag.api.works.graph_neighborhood_aggregation import (
     _append_neighbor_edge,
-    _enrich_edges_with_display,
     _has_semantic_layer_cypher,
 )
-from science_graphrag.api.works.graph_neighborhood_institutions import (
-    INSTITUTION_ATTACH_CAP,
-    attach_institutions_raw,
-    attach_institutions_reader,
-    fetch_work_authorship_institutions,
-)
+from science_graphrag.api.works.graph_neighborhood_institutions import INSTITUTION_ATTACH_CAP
+from science_graphrag.api.works.graph_neighborhood_neo4j_queries import _work_neighbors_rows
+from science_graphrag.api.works.graph_neighborhood_payload_view import apply_neighborhood_view_shape
 from science_graphrag.api.workspace_graph.claims_projection import build_claim_graph_slice_for_work
 from science_graphrag.api.workspace_graph.projection import (
     annotate_membership_and_cites,
@@ -41,81 +29,6 @@ from science_graphrag.api.workspace_graph.projection import (
 )
 
 MAX_WORK_GRAPH_NEIGHBORS = 300
-
-
-def load_work_graph_workspace_internal_ids(
-    session: Neo4jSession,
-    *,
-    workspace_id: str,
-    center_work_id: str,
-) -> tuple[set[str] | None, str | None]:
-    """Load internal ``Work`` ids for workspace membership annotation.
-
-    Returns ``(internal_ids, None)`` on success. On failure returns
-    ``(None, "workspace_not_found")`` or ``(None, "work_not_in_workspace")``.
-    """
-    row = session.run(
-        """
-        MATCH (ws:Workspace {id: $wid})
-        OPTIONAL MATCH (ws)-[:CONTAINS]->(cw:Work {id: $work_id})
-        OPTIONAL MATCH (ws)-[:CONTAINS]->(iw:Work)
-        RETURN ws.id AS wid,
-               cw.id AS center_member,
-               collect(DISTINCT iw.id) AS internal_ids
-        """,
-        wid=str(workspace_id).strip(),
-        work_id=str(center_work_id).strip(),
-    ).single()
-    if not row or not str(row.get("wid") or "").strip():
-        return None, "workspace_not_found"
-    if not str(row.get("center_member") or "").strip():
-        return None, "work_not_in_workspace"
-    raw = row.get("internal_ids") or []
-    iws = {str(x) for x in raw if x}
-    return iws, None
-
-
-def _work_neighbors_rows(
-    session: Neo4jSession,
-    *,
-    work_id: str,
-    lim: int,
-    priority_types: tuple[str, ...],
-    prefer_priority: bool,
-    exclude_ids: list[str] | None = None,
-) -> list[Any]:
-    q = """
-        MATCH (w:Work {id: $id})-[r]-(n)
-        WHERE ($prefer_priority AND any(l IN labels(n) WHERE l IN $priority_types))
-           OR ((NOT $prefer_priority) AND NOT any(l IN labels(n) WHERE l IN $priority_types))
-        """
-    if exclude_ids:
-        q += " AND NOT coalesce(n.id, toString(elementId(n))) IN $exclude_ids "
-    q += """
-        OPTIONAL MATCH (n)-[:OF_AUTHOR]->(auth:Author)
-        OPTIONAL MATCH (n)-[:AFFILIATED_WITH]->(inst:Institution)
-        RETURN coalesce(n.id, toString(elementId(n))) AS nid, labels(n) AS labs, type(r) AS rt,
-               coalesce(n.title, n.name, n.full_name, '') AS nlabel,
-               coalesce(startNode(r).id, toString(elementId(startNode(r)))) AS src_id,
-               coalesce(endNode(r).id, toString(elementId(endNode(r)))) AS tgt_id,
-               n.publication_year AS n_pub_year, coalesce(n.doi, '') AS n_doi, coalesce(n.arxiv_id, '') AS n_arxiv,
-               coalesce(n.venue_name, '') AS n_venue, coalesce(n.country, '') AS n_country,
-               coalesce(n.venue_type, '') AS n_venue_type, coalesce(n.issn, '') AS n_issn,
-               n.author_position AS n_ash_pos, coalesce(n.raw_affiliation, '') AS n_ash_aff,
-               n.is_corresponding AS n_ash_corr, coalesce(auth.full_name, '') AS n_ash_author,
-               coalesce(inst.name, '') AS n_ash_inst,
-               coalesce(auth.id, '') AS n_auth_id
-        LIMIT $lim
-    """
-    params: dict[str, Any] = {
-        "id": work_id,
-        "lim": lim,
-        "priority_types": list(priority_types),
-        "prefer_priority": bool(prefer_priority),
-    }
-    if exclude_ids:
-        params["exclude_ids"] = exclude_ids
-    return list(session.run(q, **params))
 
 
 def _work_graph_neighborhood_payload(  # pylint: disable=too-many-arguments,too-many-locals,too-many-branches,too-many-statements
@@ -314,26 +227,17 @@ def _work_graph_neighborhood_payload(  # pylint: disable=too-many-arguments,too-
         nodes, edges = merge_nodes_edges_lists(nodes, edges, cn, ce)
         claims_meta = {"include_claims": True, "claims_included": True, **cm}
     enrich_authorship_nodes(session, nodes)
-    vnorm = str(view or "reader").strip().lower()
-    inst_rows: list[dict[str, Any]] = []
-    if include_institutions:
-        inst_rows = fetch_work_authorship_institutions(session, work_id, INSTITUTION_ATTACH_CAP)
-    ash_author_map: dict[str, str] = {}
-    if include_institutions and vnorm == "reader":
-        ash_author_map = build_authorship_to_reader_author_map(nodes, edges, center_id)
-    institutions_attached = 0
-    if vnorm == "raw":
-        strip_reader_only_authorship_properties(nodes)
-    if include_institutions and vnorm == "raw":
-        institutions_attached = attach_institutions_raw(nodes, edges, inst_rows)
-    if vnorm == "reader":
-        nodes, edges = collapse_authorship_for_reader_view(nodes, edges, center_id)
-    if include_institutions and vnorm == "reader":
-        institutions_attached = attach_institutions_reader(nodes, edges, inst_rows, ash_author_map)
-    reader_authorship_projection = (
-        compute_authorship_projection_meta(center_id, edges) if vnorm == "reader" else None
+    nodes, edges, institutions_attached, reader_authorship_projection = (
+        apply_neighborhood_view_shape(
+            session,
+            work_id=work_id,
+            center_id=center_id,
+            view=view,
+            nodes=nodes,
+            edges=edges,
+            include_institutions=include_institutions,
+        )
     )
-    _enrich_edges_with_display(center_id, nodes, edges)
     # GR8 neighbor aggregation disabled (2026-04-28): concrete nodes within caps only.
     # ``aggregator_threshold`` / ``aggregator_disabled_kinds`` are accepted but ignored.
     if workspace_internal_work_ids is not None and str(workspace_id or "").strip():

@@ -98,6 +98,7 @@ async def post_agent_query_v2(
                 user_structured_answer=body.user_structured_answer,
                 web_research_enabled=body.web_research_enabled,
                 agent_mode=body.agent_mode,
+                pdf_read_request=body.pdf_read_request,
             )
         )
 

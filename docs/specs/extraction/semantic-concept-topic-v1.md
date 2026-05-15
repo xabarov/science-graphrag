@@ -2,8 +2,8 @@
 
 Статус: **спецификация (Wave N)** — контракт и benchmark harness; production ingestion **не** реализована в этом scope.
 
-- Scope и anti-bloat: [ADR 004](../adr/004-ontology-v1-scope.md), [ontology-v1-mvp.md](../ontology-v1-mvp.md)
-- Архитектурное решение v1.5: [ADR 013](../adr/013-concept-research-topic-ontology-v1-5.md)
+- Scope и anti-bloat: [ADR 004](../../adr/004-ontology-v1-scope.md), [ontology-v1-mvp.md](../ontology-v1-mvp.md)
+- Архитектурное решение v1.5: [ADR 013](../../adr/013-concept-research-topic-ontology-v1-5.md)
 
 ## Цель
 
@@ -79,4 +79,4 @@
 
 ## Production gate (явно)
 
-Production LLM-extractor, узлы `:Concept` / `:ResearchTopic` в Neo4j и векторные коллекции разрешены **только** после отдельного PR и выполнения условий из [ADR 013](../adr/013-concept-research-topic-ontology-v1-5.md) (recall на frozen mini, 7 зелёных ночей advisory, promotion review).
+Production LLM-extractor, узлы `:Concept` / `:ResearchTopic` в Neo4j и векторные коллекции разрешены **только** после отдельного PR и выполнения условий из [ADR 013](../../adr/013-concept-research-topic-ontology-v1-5.md) (recall на frozen mini, 7 зелёных ночей advisory, promotion review).

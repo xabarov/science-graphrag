@@ -78,6 +78,7 @@ async def stream_agent_events(
     user_structured_answer: dict[str, Any] | None = None,
     web_research_enabled: bool | None = None,
     agent_mode: str = "agent",
+    pdf_read_request: dict[str, Any] | None = None,
 ) -> AsyncIterator[dict[str, str]]:
     """Emit SSE events from LangGraph chunks."""
     started = perf_counter()
@@ -127,6 +128,7 @@ async def stream_agent_events(
                     client_idle_ms=client_idle_ms,
                     settings=settings,
                     user_structured_answer=user_structured_answer,
+                    pdf_read_request=pdf_read_request,
                     turn_tool_denylist=turn_ctx.turn_tool_denylist,
                 )
                 prompt_memory_audit_initial: dict[str, Any] | None = None

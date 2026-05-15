@@ -1,5 +1,7 @@
 import React from "react";
 import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { useTheme } from "@mui/material/styles";
 
 import { AskAnswerPanel } from "../answer/AskAnswerPanel.jsx";
 import {
@@ -11,6 +13,26 @@ import ChatUserBubble from "./ChatUserBubble.jsx";
 
 /**
  * Live pending user message + streaming or loading assistant region.
+ *
+ * @param {{
+ *   t: (key: string, vars?: Record<string, string>) => string,
+ *   chatDetailLevel?: "simple" | "detailed",
+ *   pendingUserQuery: string,
+ *   liveNormalized: unknown | null,
+ *   locked: boolean,
+ *   inWorkspace: boolean,
+ *   workId: string,
+ *   workspaceWorkId: string | null,
+ *   workspaceId?: string,
+ *   agentToolTrace: unknown[],
+ *   retrievalJsonOpen: boolean,
+ *   onToggleRetrievalJson: () => void,
+ *   streamEvents: unknown[],
+ *   isLoading: boolean,
+ *   pdfReadingMode?: "off" | "ask" | "auto_safe_oa",
+ *   onReadPdfSource?: (url: string) => void | Promise<void>,
+ *   pdfReadState?: { isActive?: boolean, url?: string, error?: string, mode?: string } | null,
+ * }} props
  */
 export default function ChatPendingStreamBlock({
   t,
@@ -27,7 +49,25 @@ export default function ChatPendingStreamBlock({
   onToggleRetrievalJson,
   streamEvents,
   isLoading,
+  pdfReadingMode = "ask",
+  onReadPdfSource = null,
+  pdfReadState = null,
 }) {
+  const tk = useTheme().appTokens;
+  const pdfProgressText =
+    pdfReadState &&
+    typeof pdfReadState === "object" &&
+    pdfReadState.isActive &&
+    String(pdfReadState.mode || "").trim() === "running"
+      ? t("askPanel.pdfRead.progress", { url: String(pdfReadState.url || "") })
+      : "";
+  const pdfErrorText =
+    pdfReadState &&
+    typeof pdfReadState === "object" &&
+    !pdfReadState.isActive &&
+    String(pdfReadState.mode || "").trim() === "failed"
+      ? String(pdfReadState.error || "").trim()
+      : "";
   return (
     <Box sx={{ mb: 2.25 }}>
       <ChatUserBubble text={pendingUserQuery} />
@@ -50,7 +90,19 @@ export default function ChatPendingStreamBlock({
                 streamEvents={streamEvents}
                 isRunActive={isLoading}
                 chatDetailLevel={chatDetailLevel}
+                pdfReadingMode={pdfReadingMode}
+                onReadPdfSource={onReadPdfSource}
               />
+              {pdfProgressText ? (
+                <Typography sx={{ mt: 0.5, fontSize: "0.72rem", color: tk.text.muted }}>
+                  {pdfProgressText}
+                </Typography>
+              ) : null}
+              {pdfErrorText ? (
+                <Typography sx={{ mt: 0.5, fontSize: "0.72rem", color: "rgba(239, 68, 68, 0.8)" }}>
+                  {pdfErrorText}
+                </Typography>
+              ) : null}
             </AgentAssistantTurnShell>
           ) : isLoading ? (
             <AgentAssistantTurnShell dense sx={{ mt: 1 }}>
@@ -62,6 +114,16 @@ export default function ChatPendingStreamBlock({
                 embedded
                 chatDetailLevel={chatDetailLevel}
               />
+              {pdfProgressText ? (
+                <Typography sx={{ mt: 0.5, fontSize: "0.72rem", color: tk.text.muted }}>
+                  {pdfProgressText}
+                </Typography>
+              ) : null}
+              {pdfErrorText ? (
+                <Typography sx={{ mt: 0.5, fontSize: "0.72rem", color: "rgba(239, 68, 68, 0.8)" }}>
+                  {pdfErrorText}
+                </Typography>
+              ) : null}
             </AgentAssistantTurnShell>
           ) : null}
         </Box>

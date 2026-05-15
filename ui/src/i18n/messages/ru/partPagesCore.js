@@ -175,6 +175,9 @@ export default {
     "Neo4j, Qdrant, Postgres, Redis, обязательный MinIO/S3 и локальные пути-зеркало для blob/артефактов.",
   "settings.snapshot.benchmark.label": "Бенчмарк",
   "settings.snapshot.benchmark.description": "Настройки teacher/student и параметры запуска бенчмарков.",
+  "settings.snapshot.agent_tools.label": "Инструменты агента",
+  "settings.snapshot.agent_tools.description":
+    "Дефолты внешнего поиска, политика PDF, флаги MCP, лимиты supervisor и диагностика источников.",
   "settings.snapshot.security.label": "Безопасность и доступ",
   "settings.snapshot.security.description": "Права, модель доступа и управление секретами.",
   "settings.snapshot.diagnostics.label": "Диагностика",

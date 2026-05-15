@@ -326,7 +326,7 @@ def _web_search_impl(
     rows = max(1, min(int(max_results), _WEB_SEARCH_MAX_RESULTS))
     params = {"query": query.strip(), "rows": rows, "mailto": mailto}
     url = _CROSSREF_WORKS_URL
-    search_timeout = float(settings.agent_web_search_http_timeout_seconds)
+    search_timeout = float(settings.agent_external_http_timeout_seconds)
     try:
         with httpx.Client(timeout=search_timeout) as client:
             r = client.get(
@@ -372,6 +372,10 @@ def _web_search_impl(
             "doi": str(it.get("doi") or "").strip(),
             "source_tool": "web_search",
             "snippet": "",
+            "provenance_kind": "crossref_metadata",
+            "evidence_quality": "weak",
+            "evidence_mode": "metadata_only",
+            "is_external": True,
         }
         for it in items
         if isinstance(it, dict)
@@ -461,7 +465,7 @@ def _web_fetch_impl(
     text = ""
     status = 0
     final_url = url
-    fetch_timeout = float(settings.agent_web_fetch_http_timeout_seconds)
+    fetch_timeout = float(settings.agent_external_http_timeout_seconds)
     try:
         with httpx.Client(
             timeout=fetch_timeout,
@@ -570,6 +574,10 @@ def _web_fetch_impl(
                 "doi": "",
                 "source_tool": "web_fetch",
                 "snippet": (summary or text)[:_WEB_FETCH_SUMMARY_CHAR_CAP],
+                "provenance_kind": "web_page_summary",
+                "evidence_quality": "variable",
+                "evidence_mode": "web_summary",
+                "is_external": True,
             }
         ],
         "evidence_origin": "external_web",

@@ -127,7 +127,7 @@ export function AgentRunInspector({
 
           <AgentStreamEventLines t={t} events={streamEvents} />
 
-          {retrievalMode === "agent" ? <AgentToolTrace toolTrace={agentToolTrace} /> : null}
+          {retrievalMode === "agent" ? <AgentToolTrace toolTrace={agentToolTrace} t={t} /> : null}
 
           <Typography sx={{ fontWeight: 600, fontSize: "0.8125rem", mt: 1.5, mb: 0.5 }}>{t("askPanel.graphContext.title")}</Typography>
           <Typography sx={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.55)" }}>

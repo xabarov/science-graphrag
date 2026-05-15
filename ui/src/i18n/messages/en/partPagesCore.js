@@ -176,6 +176,9 @@ export default {
     "Neo4j, Qdrant, Postgres, Redis, mandatory MinIO/S3, and local mirror paths for blobs/artifacts.",
   "settings.snapshot.benchmark.label": "Benchmark",
   "settings.snapshot.benchmark.description": "Teacher/student defaults and benchmark-specific execution knobs.",
+  "settings.snapshot.agent_tools.label": "Agent tools",
+  "settings.snapshot.agent_tools.description":
+    "External research defaults, PDF policy, MCP flags, supervisor limits, and source diagnostics.",
   "settings.snapshot.security.label": "Security & Access",
   "settings.snapshot.security.description": "Permissions, access model, and secret governance.",
   "settings.snapshot.diagnostics.label": "Diagnostics",

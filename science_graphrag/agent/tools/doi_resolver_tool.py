@@ -147,7 +147,7 @@ def _doi_resolve_body(
         cr = _crossref_fallback(
             doi,
             settings,
-            http_timeout_seconds=float(settings.agent_web_search_http_timeout_seconds),
+            http_timeout_seconds=float(settings.agent_external_http_timeout_seconds),
         )
         if cr:
             meta_src = "crossref_fallback"

@@ -144,6 +144,9 @@ export default function AskPanel({
                 restartDisabled={o.isLoading}
                 openStructuredQuestion={o.openStructuredQuestion}
                 onStructuredAnswersSubmit={o.onStructuredAnswersSubmit}
+                pdfReadingMode={o.pdfReadingMode}
+                onReadPdfSource={o.onReadPdfSource}
+                pdfReadState={o.pdfReadState}
               />
               <ChatComposer
                 t={o.t}

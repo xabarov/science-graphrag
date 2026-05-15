@@ -4,7 +4,7 @@
 
 **Replaces (archived in git history):** `habr-article-experiment-window-plan-2026-05.md`, `habr-article-plan-2026-06.md`.
 
-**Primary article draft:** [`docs/report/habr-article-2026-04-29.md`](../report/habr-article-2026-04-29.md)
+**Primary article draft path:** [`docs/report/habr-article-2026-04-29.md`](../report/habr-article-2026-04-29.md) (stable stub; current narrative source is this plan)
 
 **Benchmark contract (claims paraphrase / BT6):** [`docs/benchmarks/ontology-claims-benchmark-v1.md`](../benchmarks/ontology-claims-benchmark-v1.md) — Appendix A
 
@@ -47,7 +47,7 @@
 
 - **`docs/analysis/README.md`** lists long-lived product tracks (agent chat, graph UX, ingest, ontology roadmaps). The Habr line is **not** a substitute for those docs; it is a **short publication + measurement spine** so article numbers stay tied to `eval/results/` and Appendix A.
 - **Ontology / benchmarks (engineering)** — [`ontology-extraction-benchmarks-plan.md`](ontology-extraction-benchmarks-plan.md) + trust-audit; this Habr plan only guards **what goes into the Habr draft** (live-only headlines, no pilot/holdout mixing).
-- **`docs/report/habr-article-2026-04-29.md`** should remain the single reader-facing narrative; new waves add rows to manifests + **minimal** deltas in §4.1 / TL;DR.
+- **`docs/report/habr-article-2026-04-29.md`** stays as stable path/stub for backlinks; current reader-facing narrative is maintained in this plan, with new waves added as manifest rows + **minimal** deltas in §4.1 / TL;DR.
 
 ---
 

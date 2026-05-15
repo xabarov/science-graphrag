@@ -5,7 +5,7 @@
 с явной причиной. Это вход для PR'ов миграции и для последующего decision note по
 `side_llm_cache_read_ratio_avg`.
 
-Источник плана: [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §6.2.
+Источник плана: [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) (R3/R4 context); historical wave log: [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) (stub).
 
 ## Что считается side-LLM в смысле Wave H
 

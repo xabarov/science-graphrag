@@ -1,5 +1,9 @@
 # Method ontology: rich description, semantic dedup, and benchmark roadmap (2026-04-27)
 
+**Doc status:** `reference`
+
+**Read hint:** method ontology / dedup roadmap; pair with ontology extraction plan for priorities.
+
 **Context:** In the workspace graph UI, `Method` nodes currently behave mostly like **labels**. Users can see method names and match them visually, but they cannot answer the more important product question: **what does this method actually do?** For scientific methods, the answer often requires a compact but rich description, sometimes including equations or notation that should survive as Markdown/LaTeX rather than being flattened into a plain one-line string.
 
 **Related request:** Prevent duplicate `Method` nodes during ingestion, especially when multiple chunks or different papers mention the same method under different surface forms. Existing dedup logic already covers part of the problem, but today it is mostly **embedding-first + review queue**, not a full **ingest-time canonicalization** pipeline.

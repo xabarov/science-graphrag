@@ -1,5 +1,9 @@
 # Agent v3 quality LLM-as-a-judge benchmark — plan (2026-05-08)
 
+**Doc status:** `reference`
+
+**Read hint:** advisory LLM-judge benchmark spec; core engineering queue — [`agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](./agent-unified-plan-doing-and-benchmarks-2026-05-08.md).
+
 **Статус:** proposed advisory benchmark family for `langgraph_supervisor_v3`.
 
 **Роль:** отдельный quality-benchmark поверх уже существующего engineering stack:

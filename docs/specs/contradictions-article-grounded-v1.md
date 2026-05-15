@@ -72,4 +72,4 @@ Work–Work `CONTRADICTS` is a **navigation rollup**: it signals tension between
 
 - [`ontology-claims-v1.md`](./ontology-claims-v1.md) — claim / evidence epistemic layer.
 - [`../adr/017-hypothesis-idea-assist-advisory.md`](../adr/017-hypothesis-idea-assist-advisory.md) — advisory vs persisted graph.
-- [`tests/fixtures/benchmarks/contradictions_v1/`](../tests/fixtures/benchmarks/contradictions_v1/) — gold schema.
+- [`tests/fixtures/benchmarks/contradictions_v1/`](../../tests/fixtures/benchmarks/contradictions_v1/) — gold schema.

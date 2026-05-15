@@ -59,6 +59,7 @@ def format_user_with_memory(
     paper_sources_items: list[dict[str, Any]] | None = None,
     research_plan_block: str | None = None,
     structured_user_answer_block: str | None = None,
+    pdf_read_request_block: str | None = None,
     server_time_utc_iso: str | None = None,
 ) -> str:
     """Build the first user message, optionally prefixing server/client memory (CH4+CH5).
@@ -71,7 +72,8 @@ def format_user_with_memory(
 
     ``paper_sources_items`` re-injects recent paper refs after CH5 compaction (§10.5.2).
 
-    ``research_plan_block`` / ``structured_user_answer_block`` are optional XML-ish carry-over
+    ``research_plan_block`` / ``structured_user_answer_block`` / ``pdf_read_request_block``
+    are optional XML-ish carry-over
     fragments (session_meta re-attach and ask-user roundtrip).
 
     ``server_time_utc_iso`` is injected for every turn so the model can reason about recency
@@ -143,6 +145,9 @@ def format_user_with_memory(
     sua = (structured_user_answer_block or "").strip()
     if sua:
         parts.append(sua)
+    prr = (pdf_read_request_block or "").strip()
+    if prr:
+        parts.append(prr)
     if parts:
         parts.append("")
     parts.append(question)

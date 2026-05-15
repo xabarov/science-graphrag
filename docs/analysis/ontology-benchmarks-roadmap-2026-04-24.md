@@ -1,5 +1,9 @@
 # Карта развития: онтология, индексы, бенчмарки и retrieval — Wave M–T
 
+**Doc status:** `reference`
+
+**Read hint:** large historical/reference inventory. For active queue use [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md), [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md), and [`ACTIVE.md`](./ACTIVE.md).
+
 > **Точка входа (с 2026-05):** еженедельные приоритеты и ссылки по оси онтология / извлечение / бенчмарки — в [`ontology-extraction-benchmarks-plan.md`](ontology-extraction-benchmarks-plan.md). Этот файл — **длинная справочная инвентаризация** Wave M–T (в т.ч. §7.x); актуальная очередь BT — в [`ontology-benchmarks-trust-audit-2026-04-25.md`](ontology-benchmarks-trust-audit-2026-04-25.md). Не дублируйте таблицы отсюда в новые планы.
 
 **Дата:** 2026-04-24 (история ниже до 2026-04-25; trust-audit вынесен в отдельный документ)

@@ -251,7 +251,7 @@ def test_update_agent_tools_settings_persists_supervisor_rounds(tmp_path: Path) 
     snap = service.update_agent_tools_settings(
         base_settings=base,
         actor="tester",
-        agent_supervisor_max_rounds=7,
+        patch={"agent_supervisor_max_rounds": 7},
     )
     assert snap.agent_tools["agent_supervisor_max_rounds"] == 7
     assert snap.agent_tools["effective"]["resolved_agent_supervisor_max_rounds"] == 7
@@ -267,13 +267,70 @@ def test_update_agent_tools_settings_clamps_supervisor_rounds(tmp_path: Path) ->
     snap = service.update_agent_tools_settings(
         base_settings=base,
         actor="tester",
-        agent_supervisor_max_rounds=32,
+        patch={"agent_supervisor_max_rounds": 32},
     )
     assert snap.agent_tools["effective"]["resolved_agent_supervisor_max_rounds"] == 32
 
     snap2 = service.update_agent_tools_settings(
         base_settings=base,
         actor="tester",
-        agent_supervisor_max_rounds=99,
+        patch={"agent_supervisor_max_rounds": 99},
     )
     assert snap2.agent_tools["effective"]["resolved_agent_supervisor_max_rounds"] == 32
+
+
+def test_update_agent_tools_settings_partial_patch_and_snapshot_sources(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings(
+        openalex_mailto="ops@example.com",
+        agent_unpaywall_oa_tool_enabled=True,
+    )
+    snap = service.update_agent_tools_settings(
+        base_settings=base,
+        actor="tester",
+        patch={
+            "external_research_default_enabled": False,
+            "external_research_sources": {"crossref": True, "arxiv": False, "openalex": False},
+            "pdf_reading_mode": "off",
+            "agent_external_http_timeout_seconds": 40.0,
+        },
+    )
+    assert snap.agent_tools["effective"]["resolved_external_research_default_enabled"] is False
+    assert snap.agent_tools["effective"]["resolved_external_research_sources"]["arxiv"] is False
+    assert snap.agent_tools["effective"]["resolved_external_research_sources"]["openalex"] is False
+    assert snap.agent_tools["effective"]["resolved_pdf_reading_mode"] == "off"
+    assert snap.agent_tools["effective"]["resolved_agent_external_http_timeout_seconds"] == 40.0
+    ids = {row["id"] for row in snap.agent_tools.get("sources", [])}
+    assert ids == {"crossref", "arxiv", "unpaywall", "openalex", "semantic_scholar"}
+    cross = next(x for x in snap.agent_tools["sources"] if x["id"] == "crossref")
+    assert cross["tier"] == "stable"
+    rt = service.build_runtime_settings(base)
+    assert rt.external_research_default_enabled is False
+    assert rt.external_research_source_arxiv_enabled is False
+    assert rt.external_research_source_openalex_enabled is False
+    assert rt.agent_external_http_timeout_seconds == 40.0
+
+
+def test_update_agent_tools_settings_persists_pdf_limits(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings()
+    snap = service.update_agent_tools_settings(
+        base_settings=base,
+        actor="tester",
+        patch={
+            "agent_pdf_read_tool_enabled": False,
+            "agent_pdf_read_max_bytes": 5_000_000,
+            "agent_pdf_read_max_pages": 20,
+            "agent_pdf_read_cache_ttl_seconds": 120,
+        },
+    )
+    eff = snap.agent_tools["effective"]
+    assert eff["resolved_agent_pdf_read_tool_enabled"] is False
+    assert eff["resolved_agent_pdf_read_max_bytes"] == 5_000_000
+    assert eff["resolved_agent_pdf_read_max_pages"] == 20
+    assert eff["resolved_agent_pdf_read_cache_ttl_seconds"] == 120
+    rt = service.build_runtime_settings(base)
+    assert rt.agent_pdf_read_tool_enabled is False
+    assert rt.agent_pdf_read_max_bytes == 5_000_000
+    assert rt.agent_pdf_read_max_pages == 20
+    assert rt.agent_pdf_read_cache_ttl_seconds == 120

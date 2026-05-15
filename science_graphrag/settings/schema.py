@@ -135,6 +135,98 @@ def build_settings_schema() -> dict[str, Any]:
     ]
     agent_tools_fields: list[dict[str, Any]] = [
         {
+            "id": "external_research_default_enabled",
+            "type": "boolean",
+            "required": False,
+            "group": "research_sources",
+            "description": (
+                "Default external scholarly HTTP tools on when the client omits "
+                "per-request web_research_enabled (null)."
+            ),
+        },
+        {
+            "id": "external_research_sources",
+            "type": "object",
+            "required": False,
+            "group": "research_sources",
+            "description": "Per-source toggles: crossref, arxiv, unpaywall, openalex (operator).",
+        },
+        {
+            "id": "pdf_reading_mode",
+            "type": "string",
+            "required": False,
+            "group": "pdf",
+            "description": "PDF reading in chat: off | ask | auto_safe_oa (product default).",
+        },
+        {
+            "id": "agent_unpaywall_oa_tool_enabled",
+            "type": "boolean",
+            "required": False,
+            "group": "research_sources",
+            "description": "Register unpaywall_lookup tool (operator gate).",
+        },
+        {
+            "id": "agent_external_http_timeout_seconds",
+            "type": "number",
+            "required": False,
+            "min": 5.0,
+            "max": 120.0,
+            "group": "advanced",
+            "description": "Shared HTTP timeout for native external scholarly tools.",
+        },
+        {
+            "id": "agent_external_max_calls_per_turn",
+            "type": "integer",
+            "required": False,
+            "min": 1,
+            "max": 32,
+            "group": "advanced",
+            "description": "Reserved cap on external tool calls per turn (surfaced in UI).",
+        },
+        {
+            "id": "agent_external_max_source_cards",
+            "type": "integer",
+            "required": False,
+            "min": 4,
+            "max": 128,
+            "group": "advanced",
+            "description": "Reserved cap on source cards per answer (surfaced in UI).",
+        },
+        {
+            "id": "agent_pdf_read_tool_enabled",
+            "type": "boolean",
+            "required": False,
+            "group": "pdf",
+            "description": "Register read_external_pdf tool (operator gate).",
+        },
+        {
+            "id": "agent_pdf_read_max_bytes",
+            "type": "integer",
+            "required": False,
+            "min": 100000,
+            "max": 100000000,
+            "group": "pdf",
+            "description": "Max bytes downloaded by read_external_pdf.",
+        },
+        {
+            "id": "agent_pdf_read_max_pages",
+            "type": "integer",
+            "required": False,
+            "min": 1,
+            "max": 500,
+            "group": "pdf",
+            "description": "Max pages extracted by read_external_pdf.",
+        },
+        {
+            "id": "agent_pdf_read_cache_ttl_seconds",
+            "type": "integer",
+            "required": False,
+            "min": 0,
+            "max": 86400,
+            "group": "pdf",
+            "description": "Cache TTL for read_external_pdf responses.",
+        },
+        {
             "id": "agent_supervisor_max_rounds",
             "type": "integer",
             "required": False,
@@ -148,7 +240,7 @@ def build_settings_schema() -> dict[str, Any]:
         },
     ]
     return {
-        "version": 11,
+        "version": 12,
         "sections": [
             {
                 "id": "general",

@@ -153,6 +153,7 @@ class RetrievalAgent:
         user_structured_answer: dict[str, Any] | None = None,
         web_research_enabled: bool | None = None,
         agent_mode: str = "agent",
+        pdf_read_request: dict[str, Any] | None = None,
     ) -> AgentRunOutput:
         tid = (thread_id or "").strip() or None
         session_id = tid or str(uuid.uuid4())
@@ -216,6 +217,7 @@ class RetrievalAgent:
                 user_structured_answer=user_structured_answer,
                 web_research_enabled=web_research_enabled,
                 agent_mode=agent_mode,
+                pdf_read_request=pdf_read_request,
             )
 
     def _run_langgraph(  # pylint: disable=too-many-locals
@@ -231,6 +233,7 @@ class RetrievalAgent:
         user_structured_answer: dict[str, Any] | None = None,
         web_research_enabled: bool | None = None,
         agent_mode: str = "agent",
+        pdf_read_request: dict[str, Any] | None = None,
     ) -> AgentRunOutput:
         from science_graphrag.agent.request_turn_policy import (
             build_agent_request_turn_context,
@@ -254,6 +257,7 @@ class RetrievalAgent:
                 history_digest=history_digest,
                 client_idle_ms=client_idle_ms,
                 user_structured_answer=user_structured_answer,
+                pdf_read_request=pdf_read_request,
                 turn_tool_denylist=turn_ctx.turn_tool_denylist,
                 warn_req=turn_ctx.warn_req,
                 req_meta_frag=turn_ctx.run_metadata_fragment,
@@ -272,6 +276,7 @@ class RetrievalAgent:
         history_digest: list[dict[str, Any]] | None = None,
         client_idle_ms: int | None = None,
         user_structured_answer: dict[str, Any] | None = None,
+        pdf_read_request: dict[str, Any] | None = None,
         turn_tool_denylist: list[str],
         warn_req: list[str],
         req_meta_frag: dict[str, Any],
@@ -293,6 +298,7 @@ class RetrievalAgent:
             client_idle_ms=client_idle_ms,
             settings=self._settings,
             user_structured_answer=user_structured_answer,
+            pdf_read_request=pdf_read_request,
             turn_tool_denylist=turn_tool_denylist,
         )
         pm_meta: dict[str, Any] | None = None

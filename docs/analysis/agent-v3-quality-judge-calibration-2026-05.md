@@ -1,14 +1,14 @@
 # Agent v3 quality — LLM judge calibration (Wave D)
 
-**Статус документа (2026-05-10):** актуален; отражает закрытый в репозитории **инструментарий** Wave D; live acceptance — по [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) §8.1.
+**Статус документа (2026-05-10):** актуален; отражает закрытый в репозитории **инструментарий** Wave D; live acceptance tracked in [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) (judge remains advisory).
 
 **Pre-F operator bundle (2026-05-12):** consolidated checklist + artifact index — [`pre-f-closure-wave-d-evidence-2026-05-12.md`](./pre-f-closure-wave-d-evidence-2026-05-12.md).
 
-This note complements Wave D in [`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md).
+This note complements the judge/promotion track in [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) and [`agent-engine-feature-status-2026-05-13.md`](./agent-engine-feature-status-2026-05-13.md).
 
 ## Calibration window (6–10 pilot cases, 3 runs)
 
-Fixture list: [`../tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json`](../tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json).
+Fixture list: [`tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json`](../../tests/fixtures/benchmarks/agent_v3_quality/calibration_window_case_ids.json).
 
 From repo root (live stack + `SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY`; optional explicit `AGENT_LIVE_BASE=http://127.0.0.1:18787`):
 

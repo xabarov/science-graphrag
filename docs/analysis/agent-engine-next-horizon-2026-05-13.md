@@ -1,7 +1,11 @@
 # Agent engine next horizon — architecture, chat, ingestion, refactor (2026-05-13)
 
-**Status:** new planning entry after
-[`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md)
+**Doc status:** `active`
+
+**Read hint:** active strategy roadmap (primary live planning doc). Start from [`ACTIVE.md`](./ACTIVE.md), then this file.
+
+**Status:** current planning entry; replaces the former detailed wave log
+[`agent-engine-and-benchmarks-next-waves-2026-05-09.md`](./agent-engine-and-benchmarks-next-waves-2026-05-09.md) (now archived stub)
 is effectively complete. **Update 2026-05-13:** **R2** chat contract wave is **closed** (see [`r2-chat-contract-closeout-2026-05-13.md`](./r2-chat-contract-closeout-2026-05-13.md)); **R3** code/docs increment ships `compaction_audit.l4_eligibility` + offline `memory_influence_audit_v1`, and **operator live evidence is recorded** in [`r3-long-thread-live-baseline-2026-05-13.md`](./r3-long-thread-live-baseline-2026-05-13.md) — current **rollout stance is `provider-gated`**: formal acceptance/compare lanes are stable, but representative long-thread cache / L4 activation signals are still insufficient for unconditional promotion (forced diagnostic probes add partial signal only). That plan closed most of Waves D/E/F/G/H in code or evidence,
 with important operator exceptions: Wave D promotion is still deferred; **E1/E2 ship
 `True` defaults in `Settings` but remain under an operator rollout gate** (paired live
@@ -497,14 +501,14 @@ contains a mix of done, default-on, gated, and "operator recommended" statements
 This wave prevents the next plan from inheriting contradictory status.
 
 **Canonical precedence:** (1) `science_graphrag/config.py` field defaults;
-(2) `agent-engine-and-benchmarks-next-waves-2026-05-09.md` queue + artifact pointers;
+(2) `agent-engine-feature-status-2026-05-13.md` matrix + artifact pointers;
 (3) wave closeouts below; (4) [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md)
 for structural follow-ups. When narrative and defaults disagree, split **Settings
 default** vs **operator rollout gate** (never both in one vague sentence).
 
 **Inputs:**
 
-- `agent-engine-and-benchmarks-next-waves-2026-05-09.md`
+- `agent-engine-and-benchmarks-next-waves-2026-05-09.md` (historical stub / prior detailed log)
 - `wave-h-rollout-decision-2026-05-12.md`
 - `wave-d-promotion-operator-closeout-2026-05-12.md`
 - `pre-f-closure-readiness-2026-05-12.md`

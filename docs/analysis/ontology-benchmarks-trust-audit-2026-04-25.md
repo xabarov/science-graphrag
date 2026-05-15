@@ -1,10 +1,14 @@
 # Ontology & Benchmarks — Trust Audit & Follow-up Plan (2026-04-25)
 
+**Doc status:** `active`
+
+**Read hint:** active BT/trust queue reference. Use with [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) and [`ACTIVE.md`](./ACTIVE.md).
+
 **Дата:** 2026-04-25 (Trust Audit), последнее обновление — 2026-04-27 (BT6 per-case `runtime_mode` + `trust_signal` на `claims_paraphrase_*`; P0 quote tolerance — [`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](./_archive/wave5-bt6-quote-tolerance-2026-04-26.md)); ADR-021 Phase 0 / BT2-BT5 / Wave 6 gate — см. [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) §0 и §10 + backlog
 **Тип:** review + plan (living doc)
 **Статус:** **Gold side DONE (Corpus Gold Pack v1 Phase 0–6).** Runner side: **BT1 ✅**, **BT5 ✅**, **BT3 pilot JSON зелёный (Wave 6)** — см. [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md); **BT2/BT4** — качество retrieval / `mrr_delta` всё ещё в работе; **BT6** — P0 quote gate ✅ ([`_archive/wave5-bt6-quote-tolerance-2026-04-26.md`](./_archive/wave5-bt6-quote-tolerance-2026-04-26.md)), live `trust_signal` на pilot/holdout + gold realism — OPEN. **BT8 slice:** `current-agent-tools-judge-pilot.json` не `missing_file`. **BT12 slice:** bench + aggregate **без** ingest-time `:CONTRADICTS`. **BT7, BT9–BT11 + хвосты BT2/BT4/BT6/BT12 — OPEN**
-**Связанные документы:** [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) (единая точка входа по оси), [`ontology-benchmarks-roadmap-2026-04-24.md`](ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T полная инвентаризация), [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) (мастер-план; **§10 — исторический лог**), [`completed-work-snapshot.md`](./completed-work-snapshot.md) (сжатый индекс Done по `docs/analysis/`), [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md) (layout + §6; пофазный лог — [`_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md`](./_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md)), [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md) (план Phase 7 рефакторинга dual_validate), [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md) (Wave 6 — gate/phantom policy).
-**Аналог по графу:** [`graph-readability-followup-2026-04-25.md`](graph-readability-followup-2026-04-25.md) (там — UX-аудит, тут — измерительный).
+**Связанные документы:** [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md) (единая точка входа по оси), [`ontology-benchmarks-roadmap-2026-04-24.md`](./ontology-benchmarks-roadmap-2026-04-24.md) (Wave M–T полная инвентаризация), [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) (мастер-план; **§10 — исторический лог**), [`completed-work-snapshot.md`](./completed-work-snapshot.md) (сжатый индекс Done по `docs/analysis/`), [`corpus-gold-pack-v1-2026-04-25.md`](./corpus-gold-pack-v1-2026-04-25.md) (layout + §6; пофазный лог — [`_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md`](./_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md)), [`instructor-adoption-dual-validate-2026-04-25.md`](./instructor-adoption-dual-validate-2026-04-25.md) (план Phase 7 рефакторинга dual_validate), [`_archive/wave6-benchmarks-quality-2026-04-26.md`](./_archive/wave6-benchmarks-quality-2026-04-26.md) (Wave 6 — gate/phantom policy).
+**Аналог по графу:** [`graph-readability-followup-2026-04-25.md`](./graph-readability-followup-2026-04-25.md) (там — UX-аудит, тут — измерительный).
 
 ---
 
@@ -57,7 +61,7 @@ phantom-зелёные на runner-level (ВСЁ ЕЩЁ):
 
 1. **BT1 (honest decision_gate)** — теперь это **самый дешёвый high-leverage PR** во всей серии: у нас уже есть готовое gold для 8 семей и validated промоушены — `trust_signal` объект может ссылаться на `validation_status` из gold-пакетов. ~0.5-1 день. Закрывает «искажение» в gate напрямую, без необходимости сначала строить runners.
 2. **BT2..BT12 (real runners)** — каждый теперь **1-2 дня** вместо «1-3 дня + придумать gold», потому что gold уже валидирован. Можно делать параллельно (см. file conflict matrix).
-3. **Phase 7 (Instructor refactor)** — opportunistic, не блокирует BT-серию, см. [`instructor-adoption-dual-validate-2026-04-25.md`](instructor-adoption-dual-validate-2026-04-25.md).
+3. **Phase 7 (Instructor refactor)** — opportunistic, не блокирует BT-серию, см. [`instructor-adoption-dual-validate-2026-04-25.md`](./instructor-adoption-dual-validate-2026-04-25.md).
 
 **Дальнейшая структура документа:** §0.1 — snapshot Wave 4 (что закрылось ночью 2026-04-26). §1-§4 — исходный аудит (2026-04-25 утро), оставлен для контекста. §5 — план BT1-BT12 (BT0 в нём заменён на ссылку на закрывшую его серию Phase 0-6; **BT1/BT2/BT4/BT5/BT6 теперь имеют `Wave 4 status:` пометки**). §6-§9 — изменения в других документах, acceptance, ссылки.
 
@@ -120,7 +124,7 @@ advisory_individual_failures   = 14   # 6 (workspace_scoped_live) + 8 (hybrid_ab
 | Honest live fail артефакты | 0 | 2 (`workspace_scoped_live`, `hybrid_ablation_live`) |
 | Live ingested papers в Qdrant | 0 (только graph-eval-* collections) | 5 (yolov1/v2/v3/x + r-cnn) |
 
-**Что делать дальше:** см. [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md) §10 — единственный актуальный план следующих действий. Краткая выжимка: `Robust ingest orchestration` → `Backfill ws_full_corpus="*"` → расширение корпуса до 16-20 paper → re-run BT2/BT4/BT5 → BT3 multihop + BT6 production extractor → BT7..BT12 фоном к продуктовому Раунду 8 (WX1+WX2+WX5).
+**Что делать дальше:** для **текущей** очереди BT и приоритетов — этот документ §0, [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md), индекс [`README.md`](./README.md), вход агента [`ACTIVE.md`](./ACTIVE.md). Раздел **§10** в [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) — **исторический** журнал волн (не основной sprint backlog). Сжатая выжимка дорожки 2026-04 (контекст): `Robust ingest orchestration` → `Backfill ws_full_corpus="*"` → расширение корпуса до 16-20 paper → re-run BT2/BT4/BT5 → BT3 multihop + BT6 production extractor → BT7..BT12 фоном к продуктовому Раунду 8 (WX1+WX2+WX5).
 
 ---
 
@@ -285,7 +289,7 @@ advisory-фантомы (зелёные by construction):
 
 Перед серией BT2..BT12 заранее построен единый «золотой пакет» поверх существующих 35+ статей object-detection (`tests/fixtures/benchmarks/layer1/*_realpdf/`), чтобы серия BT свелась к «инструментировать готовый gold», а не «исследовать домен на лету».
 
-**Полный план + layout + acceptance:** [`corpus-gold-pack-v1-2026-04-25.md`](corpus-gold-pack-v1-2026-04-25.md). **Пофазный execution log (Phase 0–6.E):** [`_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md`](./_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md).
+**Полный план + layout + acceptance:** [`corpus-gold-pack-v1-2026-04-25.md`](./corpus-gold-pack-v1-2026-04-25.md). **Пофазный execution log (Phase 0–6.E):** [`_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md`](./_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md).
 
 **Краткий итог Phase 0–6 (детали — в основной плане):**
 
@@ -667,7 +671,7 @@ flowchart LR
 
 ### Аналог в графовом аудите
 
-- [`graph-readability-followup-2026-04-25.md`](graph-readability-followup-2026-04-25.md) — там же по структуре: что сделано формально vs что реально работает в UI.
+- [`graph-readability-followup-2026-04-25.md`](./graph-readability-followup-2026-04-25.md) — там же по структуре: что сделано формально vs что реально работает в UI.
 
 ---
 

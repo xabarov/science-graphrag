@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { getBenchmarkRun, runBenchmark } from "../../services/benchmarkApi.js";
+import { runBenchmark } from "../../services/benchmarkApi.js";
 import {
   aggregateGroupStatus,
   BENCHMARK_TERMINAL_RUN_STATUSES,
@@ -9,15 +9,10 @@ import {
   createRunGroupId,
   humanizeGroupStartError,
   loadRecentCompareSetups,
-  pushRecentCompareSetup,
-  saveLastRunGroup,
 } from "./benchmarkRunGroup.js";
-import {
-  getExperimentsForPack,
-  getLauncherPresetForExperiment,
-  getUiRunnableExperiments,
-  RUN_MODE_GROUPED,
-} from "./experimentCatalog.js";
+import { RUN_MODE_GROUPED } from "./experimentCatalog.js";
+import { useBenchmarkRunGroupBatchSeed } from "./useBenchmarkRunGroupBatchSeed.js";
+import { useBenchmarkRunGroupPolling } from "./useBenchmarkRunGroupPolling.js";
 
 /**
  * Grouped / batch benchmark execution: URL runMode, batch selection, start + poll + finalize, recent setups.
@@ -65,10 +60,7 @@ export function useBenchmarkRunGroup({
     groupChildrenRef.current = groupChildren;
   }, [groupChildren]);
 
-  const seededPackRef = useRef(/** @type {string | null} */ (null));
   const finalizedGroupRef = useRef(/** @type {string | null} */ (null));
-  const defaultBatchExperimentsSeededRef = useRef(false);
-  const batchModelsSeededRef = useRef(false);
 
   const profileOptionsForBatch = useMemo(() => {
     const seen = new Set();
@@ -84,101 +76,22 @@ export function useBenchmarkRunGroup({
     return out;
   }, [models]);
 
-  useEffect(() => {
-    if (executionMode !== RUN_MODE_GROUPED || !runLabQuery.packId) return;
-    if (seededPackRef.current === runLabQuery.packId) return;
-    seededPackRef.current = runLabQuery.packId;
-    defaultBatchExperimentsSeededRef.current = true;
-    const fromPack = getExperimentsForPack(runLabQuery.packId)
-      .map((e) => e.id)
-      .filter((id) => Boolean(getLauncherPresetForExperiment(id)));
-    setBatchExperimentIds(fromPack);
-  }, [executionMode, runLabQuery.packId]);
+  useBenchmarkRunGroupBatchSeed({
+    executionMode,
+    runLabQuery,
+    activeFamilyModelProfile,
+    setBatchExperimentIds,
+    setBatchModelProfileIds,
+  });
 
-  useEffect(() => {
-    if (executionMode !== RUN_MODE_GROUPED) {
-      defaultBatchExperimentsSeededRef.current = false;
-      return;
-    }
-    if (runLabQuery.packId) return;
-    if (defaultBatchExperimentsSeededRef.current) return;
-    defaultBatchExperimentsSeededRef.current = true;
-    setBatchExperimentIds(getUiRunnableExperiments().map((e) => e.id));
-  }, [executionMode, runLabQuery.packId]);
-
-  useEffect(() => {
-    if (executionMode !== RUN_MODE_GROUPED) {
-      batchModelsSeededRef.current = false;
-      return;
-    }
-    if (batchModelsSeededRef.current) return;
-    batchModelsSeededRef.current = true;
-    const mp = activeFamilyModelProfile || "env_default";
-    setBatchModelProfileIds([mp]);
-  }, [executionMode, activeFamilyModelProfile]);
-
-  const needsGroupPoll = useMemo(
-    () => groupChildren.some((c) => c.runId && !BENCHMARK_TERMINAL_RUN_STATUSES.includes(c.status)),
-    [groupChildren],
-  );
-
-  useEffect(() => {
-    if (!needsGroupPoll) return;
-    let cancelled = false;
-    async function tick() {
-      const current = groupChildrenRef.current;
-      const updates = await Promise.all(
-        current.map(async (c) => {
-          if (!c.runId || BENCHMARK_TERMINAL_RUN_STATUSES.includes(c.status)) return c;
-          try {
-            const resp = await getBenchmarkRun(c.runId);
-            const payload = resp?.data || resp;
-            return { ...c, status: payload?.status || c.status, run: payload };
-          } catch {
-            return c;
-          }
-        }),
-      );
-      if (!cancelled) setGroupChildren(updates);
-    }
-    void tick();
-    const intervalId = window.setInterval(() => void tick(), 2000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(intervalId);
-    };
-  }, [needsGroupPoll]);
-
-  useEffect(() => {
-    if (needsGroupPoll) return;
-    if (!groupMeta?.groupId) return;
-    if (!groupChildren.length) return;
-    if (finalizedGroupRef.current === groupMeta.groupId) return;
-    if (groupChildren.some((c) => c.status === "queued")) return;
-    const allResolved = groupChildren.every(
-      (c) => !c.runId || BENCHMARK_TERMINAL_RUN_STATUSES.includes(c.status),
-    );
-    if (!allResolved) return;
-    finalizedGroupRef.current = groupMeta.groupId;
-    const runIds = groupChildren.map((c) => c.runId).filter(Boolean);
-    pushRecentCompareSetup({
-      groupId: groupMeta.groupId,
-      experimentIds: [...new Set(groupChildren.map((c) => c.experimentId))],
-      modelProfileIds: [...new Set(groupChildren.map((c) => c.modelProfileId))],
-      runIds,
-    });
-    saveLastRunGroup({
-      groupId: groupMeta.groupId,
-      startedAt: groupMeta.startedAt,
-      completedAt: Date.now(),
-      aggregateStatus: aggregateGroupStatus(groupChildren, BENCHMARK_TERMINAL_RUN_STATUSES),
-      children: groupChildren,
-    });
-    if (runIds[0]) {
-      window.localStorage.setItem("benchmark:lastRunId", runIds[0]);
-    }
-    setRecentSetupsVersion((v) => v + 1);
-  }, [needsGroupPoll, groupMeta, groupChildren]);
+  useBenchmarkRunGroupPolling({
+    groupChildrenRef,
+    groupChildren,
+    setGroupChildren,
+    groupMeta,
+    setRecentSetupsVersion,
+    finalizedGroupRef,
+  });
 
   const setExecutionModeInUrl = useCallback(
     (mode) => {

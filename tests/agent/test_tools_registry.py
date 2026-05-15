@@ -32,6 +32,8 @@ def test_build_tool_registry_includes_core_and_catalog_tools() -> None:
     assert "arxiv_search" in uniq
     assert "arxiv_fetch" in uniq
     assert "unpaywall_lookup" in uniq
+    assert "openalex_works_search" in uniq
+    assert "read_external_pdf" in uniq
 
 
 def test_build_retrieval_tools_includes_web_research() -> None:
@@ -44,6 +46,31 @@ def test_build_retrieval_tools_includes_web_research() -> None:
     assert "arxiv_search" in names
     assert "arxiv_fetch" in names
     assert "unpaywall_lookup" in names
+    assert "openalex_works_search" in names
+    assert "read_external_pdf" in names
+
+
+def test_build_retrieval_tools_skips_openalex_when_disabled() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+    from science_graphrag.config import Settings
+
+    st = Settings(external_research_source_openalex_enabled=False)
+    tools = build_retrieval_tools(_fake_stores(), settings=st)
+    names = {getattr(t, "name", "") for t in tools}
+    assert "openalex_works_search" not in names
+    assert "web_search" in names
+
+
+def test_build_retrieval_tools_skips_crossref_when_disabled() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+    from science_graphrag.config import Settings
+
+    st = Settings(external_research_source_crossref_enabled=False)
+    tools = build_retrieval_tools(_fake_stores(), settings=st)
+    names = {getattr(t, "name", "") for t in tools}
+    assert "web_search" not in names
+    assert "web_fetch" not in names
+    assert "arxiv_search" in names
 
 
 def test_cypher_query_tool_rejects_write() -> None:

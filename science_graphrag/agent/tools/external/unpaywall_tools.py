@@ -89,6 +89,10 @@ def _parse_success(norm: str, request_url: str, data: dict[str, Any]) -> dict[st
                 "doi": norm,
                 "source_tool": "unpaywall_lookup",
                 "snippet": f"oa_status={oa_status}" if oa_status else "",
+                "provenance_kind": "unpaywall_oa_link",
+                "evidence_quality": "weak",
+                "evidence_mode": "oa_link",
+                "is_external": True,
             }
         )
     row_count = 1 if is_oa or oa_status else 0
@@ -111,7 +115,7 @@ def _unpaywall_lookup_impl(doi: str, *, settings: Settings) -> dict[str, Any]:
     email = quote(_unpaywall_email(settings), safe="")
     path_doi = quote(norm.lower(), safe="")
     request_url = f"{_UNPAYWALL_API_BASE}/{path_doi}?email={email}"
-    timeout = float(settings.agent_unpaywall_http_timeout_seconds)
+    timeout = float(settings.agent_external_http_timeout_seconds)
     ua = external_research_user_agent(settings)
     try:
         with httpx.Client(timeout=timeout) as client:

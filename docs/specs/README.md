@@ -35,4 +35,7 @@
 | Документ | Стадия |
 |----------|--------|
 | [agent-chat-v1.md](agent-chat-v1.md) | `POST /v2/agent/query` — envelope + SSE vocabulary (волны CH* в спеке — метки поставки, не отдельные продукты) |
-| [Анализ: slim roadmap](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) | Продуктовый канон: упрощённый LangGraph-чат; **rule-based `tool_search` v1** в коде (`science_graphrag/agent/tool_search.py`); compaction / session memory — по roadmap; [полный архив](../analysis/_archive/chat-agent-system-roadmap-full-2026-04-26.md) |
+| [analysis/ACTIVE.md](../analysis/ACTIVE.md) | Дефолтный порядок чтения планов агента |
+| [Анализ: unified plan](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md) | Канон по остаточным работам агента и benchmark strategy |
+| [Анализ: next horizon](../analysis/agent-engine-next-horizon-2026-05-13.md) | Текущая волновая дорожная карта после D–H |
+| [Анализ: slim roadmap](../analysis/agent-runtime-tools-context-roadmap-2026-05-04.md) | Глубокий справочник: tools, compaction, история CH*; **rule-based `tool_search` v1** в коде (`science_graphrag/agent/tool_search.py`); [полный архив](../analysis/_archive/chat-agent-system-roadmap-full-2026-04-26.md) |

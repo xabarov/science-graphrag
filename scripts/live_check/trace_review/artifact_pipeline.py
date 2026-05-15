@@ -6,7 +6,6 @@ verdict flakes, and runtime attribution.
 
 from __future__ import annotations
 
-import json
 import os
 from argparse import Namespace
 from datetime import UTC, datetime
@@ -19,6 +18,7 @@ from .artifact_writers import (
     merge_compaction_into_review_file,
     write_trace_review_outputs,
 )
+from .e2e_report_cache import E2eReportJsonCache
 from .orchestrator_report import checks_dict as _checks_dict
 from .orchestrator_report import (
     server_agent_runtime_from_checks as _server_agent_runtime_from_checks,
@@ -28,15 +28,6 @@ from .orchestrator_run_context import build_trace_review_run_context_payload
 from .orchestrator_stage_runner import execute_trace_stage as _execute_trace_stage
 from .orchestrator_subprocess import run_compaction_turn_review as _run_compaction_turn_review
 from .orchestrator_subprocess import run_phoenix_pull as _run_phoenix_pull
-
-
-def _load_e2e_report_json(path: Path) -> dict[str, Any] | None:
-    """Parse E2E report JSON from disk; return ``None`` on missing/invalid payload."""
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, TypeError, ValueError):
-        return None
-    return raw if isinstance(raw, dict) else None
 
 
 def run_trace_review_artifact_phases_after_http_e2e(
@@ -62,24 +53,11 @@ def run_trace_review_artifact_phases_after_http_e2e(
         verdict_from_signals,
     )
 
-    _e2e_report_memo: dict[str, Any] | None = None
-    _e2e_report_loaded = False
-
-    def _get_e2e_report_dict() -> dict[str, Any] | None:
-        """Load the on-disk E2E report at most once per orchestration run."""
-        nonlocal _e2e_report_memo, _e2e_report_loaded, _e2e_report_loaded
-        if _e2e_report_loaded:
-            return _e2e_report_memo
-        _e2e_report_loaded = True
-        if not report_json_path or not report_json_path.exists() or args.skip_e2e:
-            _e2e_report_memo = None
-            return None
-        _e2e_report_memo = _load_e2e_report_json(report_json_path)
-        return _e2e_report_memo
+    e2e_cache = E2eReportJsonCache(report_json_path, skip_e2e=bool(args.skip_e2e))
 
     def _merge_timeline() -> Any:
         merged = merge_e2e_report_json_into_review(cases=[], workspace_postgres=None)
-        report_obj = _get_e2e_report_dict()
+        report_obj = e2e_cache.get()
         if report_obj is None:
             return merged
         cases = report_obj.get("cases") or []
@@ -101,7 +79,7 @@ def run_trace_review_artifact_phases_after_http_e2e(
     phoenix_snap_path: str | None = None
     phoenix_pull_meta: dict[str, Any] | None = None
     if args.with_phoenix and report_json_path and report_json_path.exists() and not args.skip_e2e:
-        report_obj = _get_e2e_report_dict()
+        report_obj = e2e_cache.get()
         if report_obj is None:
             phoenix_pull_meta = {"ok": False, "error": "report_parse_failed"}
         else:
@@ -135,7 +113,7 @@ def run_trace_review_artifact_phases_after_http_e2e(
     sse_bad = _sse_missing_final(checks)
 
     e2e_retryable_provider_flakes_only = False
-    report_for_verdict = _get_e2e_report_dict()
+    report_for_verdict = e2e_cache.get()
     if report_for_verdict is not None:
         e2e_retryable_provider_flakes_only = e2e_failures_are_retryable_provider_flakes(
             report_for_verdict
@@ -189,7 +167,7 @@ def run_trace_review_artifact_phases_after_http_e2e(
         )
     run_kind, graph_id = orchestrator_env.runtime_attribution_from_env()
     if report_json_path and report_json_path.exists() and (run_kind is None or graph_id is None):
-        report_obj = _get_e2e_report_dict()
+        report_obj = e2e_cache.get()
         if report_obj is not None:
             cases = report_obj.get("cases") or []
             if isinstance(cases, list):

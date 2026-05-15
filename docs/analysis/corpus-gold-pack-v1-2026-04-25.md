@@ -1,5 +1,9 @@
 # Corpus Gold Pack v1 — план benchmark-фикстур поверх 30+ статей (2026-04-25)
 
+**Doc status:** `reference`
+
+**Read hint:** historical gold-pack build/reference doc. For active benchmark queue use [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md), [`ontology-extraction-benchmarks-plan.md`](./ontology-extraction-benchmarks-plan.md), and [`ACTIVE.md`](./ACTIVE.md).
+
 **Дата:** 2026-04-25
 **Тип:** plan + spec (история построения фикстур)
 **Статус:** **Phase 0–6 complete** (gold delivered 2026-04-26). Документ остаётся **источником ссылок** для README фикстур и секций §3–§4, §6–§8; пофазный лог §5 вынесен в [`_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md`](./_archive/corpus-gold-pack-v1-phase-log-2026-04-25.md); сводка Done — [`completed-work-snapshot.md`](./completed-work-snapshot.md#corpus-gold-pack-v1). Актуальная серия runner'ов BT — [`ontology-benchmarks-trust-audit-2026-04-25.md`](./ontology-benchmarks-trust-audit-2026-04-25.md) + [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) §10.

@@ -58,6 +58,7 @@ def build_initial_agent_state(
     client_idle_ms: int | None = None,
     settings: Settings | None = None,
     user_structured_answer: dict[str, Any] | None = None,
+    pdf_read_request: dict[str, Any] | None = None,
     turn_tool_denylist: list[str] | None = None,
     server_time_utc_iso: str | None = None,
 ) -> dict[str, Any]:
@@ -130,6 +131,16 @@ def build_initial_agent_state(
         )
         pre_debug.extend(evs)
         structured_answer_block = sfx
+    pdf_read_block: str | None = None
+    if isinstance(pdf_read_request, dict):
+        pdf_url = str(pdf_read_request.get("pdf_url") or "").strip()
+        if pdf_url:
+            pdf_read_block = (
+                "<pdf_read_request>\n"
+                "User explicitly requested reading this external PDF via tool call.\n"
+                f"- pdf_url: {pdf_url}\n"
+                "</pdf_read_request>"
+            )
     rp_block: str | None = None
     if tid_stripped and bool(getattr(st, "agent_research_plan_tool_enabled", False)):
         rp_block = research_plan_prompt_block(tid_stripped)
@@ -149,6 +160,7 @@ def build_initial_agent_state(
         paper_sources_items=paper_sources_items,
         research_plan_block=rp_block,
         structured_user_answer_block=structured_answer_block,
+        pdf_read_request_block=pdf_read_block,
         server_time_utc_iso=_time_iso,
     )
     if post_compact_paper_sources_restored_count and tid_stripped:

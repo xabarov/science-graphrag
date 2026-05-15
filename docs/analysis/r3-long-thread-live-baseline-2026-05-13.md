@@ -1,5 +1,7 @@
 # R3 — long-thread live acceptance baseline (operator checklist)
 
+**Read hint:** operator evidence checklist. For active queue use [`ACTIVE.md`](./ACTIVE.md).
+
 **Role:** executable checklist for **R3** in [`agent-engine-next-horizon-2026-05-13.md`](./agent-engine-next-horizon-2026-05-13.md) §R3 — complements offline harness (`scripts/live_check/long_thread_compaction_eval.py`) with **live** trace-review evidence.
 
 **Status:** operator evidence lane executed (2026-05-13 rerun; **2026-05-14 stabilization pass** below) — code/docs side is shipped (`compaction_audit.l4_eligibility` + offline `memory_influence_audit_v1`), live pairwise artifacts are now present, but final rollout stance remains **provider-gated** until long-thread cache/compaction signal is observed in a representative acceptance lane.

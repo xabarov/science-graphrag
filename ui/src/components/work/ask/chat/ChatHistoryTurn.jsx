@@ -31,6 +31,8 @@ export default function ChatHistoryTurn({
   onCopyAssistantEntry,
   onOpenMetadata,
   onConfirmDelete,
+  pdfReadingMode = "ask",
+  onReadPdfSource = null,
 }) {
   return (
     <Box
@@ -70,6 +72,8 @@ export default function ChatHistoryTurn({
                 streamEvents={Array.isArray(entry.details?.stream_events) ? entry.details.stream_events : []}
                 isRunActive={false}
                 chatDetailLevel={chatDetailLevel}
+                pdfReadingMode={pdfReadingMode}
+                onReadPdfSource={onReadPdfSource}
               />
             </AgentAssistantTurnShell>
           ) : (

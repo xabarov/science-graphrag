@@ -65,6 +65,8 @@ def product_step_code_for_tool(tool_name: str) -> str | None:
         "arxiv_search": "searching_literature",
         "arxiv_fetch": "gathering_evidence",
         "unpaywall_lookup": "gathering_evidence",
+        "openalex_works_search": "searching_literature",
+        "read_external_pdf": "gathering_evidence",
         "doi_resolver": "paper_metadata",
         "lsp_tool": "exploring_graph",
         "runtime_monitor_get": "summarizing_workspace",

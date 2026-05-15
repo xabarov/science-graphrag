@@ -58,8 +58,7 @@ class _FakeClient:
 @pytest.fixture
 def settings() -> Settings:
     return Settings.model_construct(
-        agent_web_search_http_timeout_seconds=5.0,
-        agent_unpaywall_http_timeout_seconds=5.0,
+        agent_external_http_timeout_seconds=5.0,
         openalex_mailto="ops@example.com",
     )
 
@@ -95,7 +94,7 @@ def test_build_unpaywall_tools_registers_name(settings: Settings) -> None:
 def test_build_external_research_tools_respects_unpaywall_flag(settings: Settings) -> None:
     off = Settings.model_construct(
         agent_unpaywall_oa_tool_enabled=False,
-        agent_web_search_http_timeout_seconds=5.0,
+        agent_external_http_timeout_seconds=5.0,
     )
     names_off = {getattr(t, "name", "") for t in build_external_research_tools(settings=off)}
     assert "unpaywall_lookup" not in names_off

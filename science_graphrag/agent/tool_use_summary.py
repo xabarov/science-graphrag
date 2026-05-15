@@ -210,7 +210,16 @@ def summarize_tool_result_payload_dict(
     if out_chars > max_out:
         merged_minimal: dict[str, Any] = {
             k: merged[k]
-            for k in ("ok", "error", "row_count", "empty_reason", "workspace_id", "work_id")
+            for k in (
+                "ok",
+                "error",
+                "row_count",
+                "empty_reason",
+                "workspace_id",
+                "work_id",
+                "web_sources",
+                "evidence_origin",
+            )
             if k in merged
         }
         merged_minimal["_tool_use_summary"] = summary_obj

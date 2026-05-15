@@ -1,5 +1,9 @@
 # Graph readability follow-up — диагноз GR2/GR3 и план Wave GR6–GR12
 
+**Doc status:** `reference`
+
+**Read hint:** graph UX / readability working doc; not the agent benchmark queue.
+
 **Дата:** 2026-04-25
 **Статус:** living working doc; продолжение [`_archive/graph-ux-aggregation-roadmap-2026-04-25.md`](_archive/graph-ux-aggregation-roadmap-2026-04-25.md) [HISTORICAL]. Закрывает реальные пробелы между «декларативно done» и «видно пользователю» по треку **E** в [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md).
 

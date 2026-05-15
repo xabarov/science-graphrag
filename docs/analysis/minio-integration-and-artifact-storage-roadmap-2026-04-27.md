@@ -1,5 +1,9 @@
 # MinIO integration and artifact storage roadmap (2026-04-27)
 
+**Doc status:** `reference`
+
+**Read hint:** object-storage seam roadmap; not the agent/benchmark backlog.
+
 **Status:** proposed architecture and operations roadmap.
 
 **Primary goal:** reduce repository noise and local-host coupling by introducing an explicit object-storage seam for large runtime artifacts, while keeping small canonical benchmark artifacts reviewable in git and structured state in Postgres/Neo4j/Qdrant.

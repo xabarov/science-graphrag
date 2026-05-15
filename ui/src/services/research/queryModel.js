@@ -99,7 +99,10 @@ export function buildAskAnswerRationale(normalized, ctx) {
   return bullets.slice(0, 5);
 }
 
-/** Normalize `/v1/query` JSON for UI rendering (pure). */
+/** Normalize `/v1/query` JSON for UI rendering (pure).
+ * Citations may include Phase 2 trust fields from the API: provenance_kind, evidence_quality,
+ * evidence_mode, is_external, fallback_reason, fallback_message.
+ */
 export function normalizeQueryResponse(raw) {
   if (raw == null || typeof raw !== "object") {
     return {

@@ -1,5 +1,9 @@
 # Benchmark panel: research-first redesign plan (2026-04-27)
 
+**Doc status:** `reference`
+
+**Read hint:** benchmark UI product plan; not the agent engine backlog.
+
 **Status:** proposed product/UX analysis and phased implementation plan. **Phase 0, Phase 1, Phase 2 (client slice), Phase 4 (benchmark-aware case inspector), Phase 3 (matrix / overview slice), and Phase 5 (legacy demotion)** are implemented in the UI (see **Implementation status (agent handoff)**). Optional backend **`run-group`** API still TBD.
 
 **Primary goal:** redesign the benchmark panel so it supports the benchmark program that the final report actually argues for: **run one experiment or a batch, compare model/method variants, and read the resulting metrics without needing to mentally translate internal QA machinery**.

@@ -94,6 +94,31 @@ describe("useAskSubmit", () => {
     });
   });
 
+  it("passes pdfReadRequest to streamAgent", async () => {
+    const { useAskSubmit } = await import("./useAskSubmit.js");
+    const { result } = renderHook(() =>
+      useAskSubmit({
+        workspaceId: "ws-1",
+        onResult: vi.fn(),
+        useStreamingAgent: true,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.submit({
+        query: "[pdf-read-action]",
+        threadId: "sess-1",
+        historyDigest: null,
+        pdfReadRequest: { pdf_url: "https://arxiv.org/pdf/1706.03762.pdf" },
+      });
+    });
+
+    expect(lastStreamPayload).toMatchObject({
+      question: "[pdf-read-action]",
+      pdfReadRequest: { pdf_url: "https://arxiv.org/pdf/1706.03762.pdf" },
+    });
+  });
+
   it("exposes abort with submit hook", async () => {
     const { useAskSubmit } = await import("./useAskSubmit.js");
     const { result } = renderHook(() =>

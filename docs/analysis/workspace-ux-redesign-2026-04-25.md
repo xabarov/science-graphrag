@@ -1,5 +1,9 @@
 # Workspace UX redesign — диагноз и план Wave WX1–WX6
 
+**Doc status:** `reference`
+
+**Read hint:** historical redesign diagnosis/plan for Workspace UX. For active product queue start from [`ACTIVE.md`](./ACTIVE.md), then use current backlog/runbooks.
+
 **Дата:** 2026-04-25
 **Статус:** living working doc; продолжение [`_archive/workspace-experience-gap-2026-04-24.md`](_archive/workspace-experience-gap-2026-04-24.md) [HISTORICAL]. Закрывает реальные пробелы между «панель работает» и «учёный понимает, в каком корпусе он находится и что происходит при загрузке» по треку **F (Workspace experience)** в [`master-roadmap-and-refactor-plan-2026-04-25.md`](master-roadmap-and-refactor-plan-2026-04-25.md).
 

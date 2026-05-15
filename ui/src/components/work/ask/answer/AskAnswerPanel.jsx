@@ -23,6 +23,8 @@ import {
   shouldSuppressPostRunStreamSummary,
 } from "../../agent/index.js";
 import MarkdownView from "../../markdown/MarkdownView.jsx";
+import AgentToolTrace from "../../agent/AgentToolTrace.jsx";
+import { formatEvidenceSummaryForDisplay } from "./evidenceSummaryFormat.js";
 import { AskSourceList } from "./AskSourceList.jsx";
 import { mergeQuoteCandidatesIntoCitations } from "./citationHydration.js";
 import { deriveAnswerClass } from "./askSourcePresentation.js";
@@ -76,12 +78,13 @@ export function AskAnswerPanel({
   streamEvents = [],
   isRunActive = false,
   chatDetailLevel = "simple",
+  pdfReadingMode = "ask",
+  onReadPdfSource = null,
 }) {
   void locked;
   void workId;
   void inWorkspace;
   void workspaceWorkId;
-  void agentToolTrace;
   void retrievalJsonOpen;
   void onToggleRetrievalJson;
 
@@ -162,6 +165,15 @@ export function AskAnswerPanel({
         <Alert severity="info" sx={{ mb: 1, fontSize: "0.8125rem", backgroundColor: tk.surface.panelAlt }}>
           {t("askPanel.answer.degraded")}
         </Alert>
+      ) : null}
+
+      {!isRunActive && formatEvidenceSummaryForDisplay(t, normalized?.evidence_summary) ? (
+        <Typography
+          data-testid="ask-evidence-summary"
+          sx={{ fontSize: "0.72rem", color: tk.text.muted, mb: 1, lineHeight: 1.45 }}
+        >
+          {formatEvidenceSummaryForDisplay(t, normalized.evidence_summary)}
+        </Typography>
       ) : null}
 
       {!isRunActive ? (
@@ -259,6 +271,15 @@ export function AskAnswerPanel({
         </>
       ) : null}
 
+      {!isRunActive && retrievalMode === "agent" && chatDetailLevel === "detailed" && Array.isArray(agentToolTrace) && agentToolTrace.length > 0 ? (
+        <Box sx={{ mt: 1, mb: 0.5 }} data-testid="ask-agent-tool-trace-block">
+          <Typography sx={{ fontWeight: 600, fontSize: "0.75rem", color: tk.text.muted, mb: 0.35 }}>
+            {t("askPanel.toolTrace.title")}
+          </Typography>
+          <AgentToolTrace toolTrace={agentToolTrace} t={t} />
+        </Box>
+      ) : null}
+
       <AskSourceList
         t={t}
         citations={citations}
@@ -267,6 +288,8 @@ export function AskAnswerPanel({
         isRunActive={isRunActive}
         hideStructuredCitations={hideStructuredCitations}
         chatDetailLevel={chatDetailLevel}
+        pdfReadingMode={pdfReadingMode}
+        onReadPdfSource={onReadPdfSource}
       />
     </Box>
   );

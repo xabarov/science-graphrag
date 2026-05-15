@@ -16,6 +16,7 @@ import LlmSettingsPanel from "./SettingsPage/LlmSettingsPanel.jsx";
 import SecuritySettingsPanel from "./SettingsPage/SecuritySettingsPanel.jsx";
 import StorageSettingsPanel from "./SettingsPage/StorageSettingsPanel.jsx";
 import BenchmarkSettingsPanel from "./SettingsPage/BenchmarkSettingsPanel.jsx";
+import AgentToolsSettingsPanel from "./SettingsPage/AgentToolsSettingsPanel.jsx";
 import SettingsLayout from "./SettingsPage/SettingsLayout.jsx";
 import { PlaceholderSettingsSection } from "./SettingsPage/PlaceholderSettingsSection.jsx";
 import { useSettingsPageBootstrap } from "./SettingsPage/useSettingsPageBootstrap.js";
@@ -27,6 +28,7 @@ import {
   updateLlmSettings,
   updateStorageSettings,
   updateBenchmarkSettings,
+  updateAgentToolsSettings,
 } from "./SettingsPage/settingsApi.js";
 import { formatResearchApiError } from "../services/researchApi.js";
 import { useI18n } from "../i18n/useI18n.js";
@@ -62,6 +64,9 @@ export default function SettingsPage() {
   const [benchmarkDirty, setBenchmarkDirty] = useState(false);
   const [benchmarkSaveError, setBenchmarkSaveError] = useState("");
   const [benchmarkSaving, setBenchmarkSaving] = useState(false);
+  const [agentToolsDirty, setAgentToolsDirty] = useState(false);
+  const [agentToolsSaveError, setAgentToolsSaveError] = useState("");
+  const [agentToolsSaving, setAgentToolsSaving] = useState(false);
 
   const sections = useMemo(() => snapshot?.sections || [], [snapshot]);
   const activeSection = useMemo(
@@ -122,6 +127,20 @@ export default function SettingsPage() {
       setStorageSaveError(formatResearchApiError(error) || t("settings.storage.saveError"));
     } finally {
       setStorageSaving(false);
+    }
+  }
+
+  async function handleSaveAgentTools(payload) {
+    setAgentToolsSaving(true);
+    setAgentToolsSaveError("");
+    try {
+      const next = await updateAgentToolsSettings(payload);
+      setSnapshot(next);
+      setAgentToolsDirty(false);
+    } catch (error) {
+      setAgentToolsSaveError(formatResearchApiError(error) || t("settings.agentTools.saveError"));
+    } finally {
+      setAgentToolsSaving(false);
     }
   }
 
@@ -239,6 +258,17 @@ export default function SettingsPage() {
         />
       );
     }
+    if (activeSection.id === "agent_tools") {
+      return (
+        <AgentToolsSettingsPanel
+          agentTools={snapshot?.agent_tools}
+          saving={agentToolsSaving}
+          saveError={agentToolsSaveError}
+          onSave={handleSaveAgentTools}
+          onDirtyChange={setAgentToolsDirty}
+        />
+      );
+    }
     const labelKey = `settings.snapshot.${activeSection.id}.label`;
     const descKey = `settings.snapshot.${activeSection.id}.description`;
     const title = t(labelKey) !== labelKey ? t(labelKey) : activeSection.label;
@@ -279,7 +309,7 @@ export default function SettingsPage() {
       onSelectSection={setActiveSectionId}
       heading={t("settings.page.heading")}
       subheading={`${t("settings.page.subheadingPrefix")}${schema ? t("settings.page.subheadingSchema", { version: schema.version }) : ""}`}
-      dirty={dirtyHint || ingestionDirty || generalDirty || storageDirty || benchmarkDirty}
+      dirty={dirtyHint || ingestionDirty || generalDirty || storageDirty || benchmarkDirty || agentToolsDirty}
     >
       <Box sx={{ mb: 2, display: "flex", flexWrap: "wrap", gap: 0.75 }}>
         <CursorIconAction component={Link} to="/admin" title={t("settings.page.adminHub")}>

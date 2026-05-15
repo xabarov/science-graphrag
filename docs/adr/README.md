@@ -2,6 +2,8 @@
 
 Краткие зафиксированные архитектурные и продуктовые решения. Полная каноническая модель данных и SoT появятся в `docs/architecture/` по мере Phase 1–2.
 
+**Живые планы и очереди (не ADR):** индекс [`../README.md`](../README.md) (секции Active / Reference); для агента — [`../analysis/ACTIVE.md`](../analysis/ACTIVE.md), [`../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md`](../analysis/agent-unified-plan-doing-and-benchmarks-2026-05-08.md), [`../analysis/agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md). Длинные analysis-инвентаризации и архивные stub — см. [`../analysis/README.md`](../analysis/README.md).
+
 ## Формат
 
 - **Status**: Accepted | Proposed | Superseded

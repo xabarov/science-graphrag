@@ -127,6 +127,7 @@ export default {
   "benchmark.inspector.compareBanner":
     "Переход из сравнения: метрика {{metric}} относительно baseline {{baseline}}… — текущий прогон — кандидат.",
   "benchmark.inspector.raw.toggle": "Сырые данные (статья, gold, предсказание, diff, diagnostics)",
+  "benchmark.inspector.raw.diagnosticsPayload": "Диагностика (JSON)",
   "benchmark.inspector.evidence.title": "Артефакты и пути",
   "benchmark.inspector.evidence.empty": "Нет доступных путей к артефактам.",
   "benchmark.inspector.evidence.lastRun": "Последний завершённый прогон (подсказка)",

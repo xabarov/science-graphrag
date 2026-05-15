@@ -3,6 +3,7 @@
 **Purpose:** One short page for agents and humans: what is **already shipped** or **closed**, with pointers to canonical roadmaps and backlog `[DONE]` rows. **Living master table:** [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roadmap-and-refactor-plan-2026-04-25.md) §2 + §0; **structural debt:** [`../backlog/refactor-backend.md`](../backlog/refactor-backend.md), [`../backlog/refactor-frontend.md`](../backlog/refactor-frontend.md). **Authoritative gate numbers:** [`eval/results/benchmark-trust-baseline.json`](../../eval/results/benchmark-trust-baseline.json) (not §10 narrative tables).
 
 **Last rolled up:** 2026-05-04.
+**Staleness note (2026-05-15):** this is a historical rollup snapshot, not a live queue. For active priorities use [`README.md`](./README.md) and live plans linked there.
 
 ---
 
