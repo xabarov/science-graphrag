@@ -246,6 +246,7 @@ class RetrievalAgent:
             question=question,
             web_research_enabled=web_research_enabled,
             agent_mode=agent_mode,
+            pdf_read_request=pdf_read_request,
         )
         try:
             return self._run_langgraph_inner(

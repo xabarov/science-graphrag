@@ -181,3 +181,11 @@ def _merge_persisted_agent_tools(
             pass
         else:
             non_secret_overrides["agent_pdf_read_cache_ttl_seconds"] = max(0, min(86_400, n))
+    if "agent_pdf_read_cache_max_entries" in agent_tools:
+        raw = agent_tools.get("agent_pdf_read_cache_max_entries")
+        try:
+            n = int(raw)
+        except (TypeError, ValueError):
+            pass
+        else:
+            non_secret_overrides["agent_pdf_read_cache_max_entries"] = max(16, min(10_000, n))

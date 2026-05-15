@@ -126,6 +126,12 @@ class UpdateAgentToolsSettingsRequest(BaseModel):
         le=86_400,
         description="In-process cache TTL for ``read_external_pdf`` results.",
     )
+    agent_pdf_read_cache_max_entries: int | None = Field(
+        default=None,
+        ge=16,
+        le=10_000,
+        description="Max in-process cached PDF read entries (LRU).",
+    )
 
 
 class UpdateGeneralSettingsRequest(BaseModel):
@@ -159,6 +165,8 @@ class UpdateIngestionSettingsRequest(BaseModel):
 
 
 class UpdateLlmSettingsRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     base_url: HttpUrl
     model: str = Field(..., min_length=1, max_length=256)
     vl_model: str | None = Field(
@@ -179,6 +187,13 @@ class UpdateLlmSettingsRequest(BaseModel):
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     timeout_seconds: float = Field(default=180.0, ge=1.0, le=900.0)
     api_key: str | None = Field(default=None, min_length=1, max_length=4096)
+    vision_api_key: str | None = Field(
+        default=None,
+        max_length=4096,
+        description=(
+            "Managed vision-only API key (omit field to leave unchanged; null or empty clears)."
+        ),
+    )
     runtime_overrides: LlmRuntimeOverridesPatch | None = Field(
         default=None,
         description="Optional LLM concurrency, agent, and dedup timeout overrides (Phase 3).",

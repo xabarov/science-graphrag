@@ -21,7 +21,9 @@ from science_graphrag.agent.context.post_turn import apply_turn_digest_to_thread
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.hooks import run_post_compact_hooks
 from science_graphrag.agent.llm.chat import effective_chat_llm_model
+from science_graphrag.agent.pdf_read_contract import PDF_READ_USER_MESSAGE_TOKEN
 from science_graphrag.agent.runtime import current_otel_trace_id_hex
+from science_graphrag.agent.runtime_answer_salvage import RUNTIME_FALLBACK_ANSWER
 from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
 from science_graphrag.agent.subagents.lifecycle_contract import sse_subagent_finished_routing_leg
 from science_graphrag.agent.subagents.runtime import parent_turn_routing_terminal_on_stream_finalize
@@ -47,6 +49,56 @@ from science_graphrag.llm.openrouter_model_registry import openrouter_reference_
 from science_graphrag.stores.registry import StoreRegistry
 
 logger = logging.getLogger(__name__)
+
+
+def _prefetch_pdf_citation_rows(prefetch_payload: dict[str, Any]) -> list[dict[str, Any]]:
+    rows = list(prefetch_payload.get("web_sources") or [])
+    out: list[dict[str, Any]] = []
+    for raw in rows[:3]:
+        if not isinstance(raw, dict):
+            continue
+        url = str(raw.get("url") or "").strip()
+        title = str(raw.get("title") or raw.get("source") or url).strip()
+        if not url:
+            continue
+        out.append(
+            {
+                "source_type": "web",
+                "url": url,
+                "title": title or url,
+                "source_tool": "read_external_pdf",
+            }
+        )
+    return out
+
+
+def _should_replace_fallback_with_pdf_prefetch(
+    *,
+    question: str,
+    final_answer: str | None,
+    prefetch_payload: dict[str, Any] | None,
+) -> bool:
+    if not isinstance(prefetch_payload, dict) or not bool(prefetch_payload.get("ok")):
+        return False
+    if not str(prefetch_payload.get("summary") or "").strip():
+        return False
+    q = str(question or "").strip()
+    if q not in {"", PDF_READ_USER_MESSAGE_TOKEN, "[pdf-read-action]"}:
+        return False
+    ans = str(final_answer or "").strip()
+    if not ans:
+        return True
+    if ans == RUNTIME_FALLBACK_ANSWER:
+        return True
+    ans_l = ans.lower()
+    return any(
+        marker in ans_l
+        for marker in (
+            "cannot directly read external pdf",
+            "unable to access the content of the pdf",
+            "pdf full-text extraction is not available",
+        )
+    )
 
 
 def agent_chat_llm_run_metadata(settings: Settings) -> dict[str, Any]:
@@ -108,6 +160,19 @@ async def iter_finalize_stream_events(
         initial_citations=state.citations,
         request_turn_warnings=list(ctx.request_turn_warnings or []),
     )
+    if _should_replace_fallback_with_pdf_prefetch(
+        question=question,
+        final_answer=final_answer,
+        prefetch_payload=state.prefetched_pdf_result,
+    ):
+        pf = dict(state.prefetched_pdf_result or {})
+        final_answer = str(pf.get("summary") or "").strip()
+        if not citations:
+            citations = _prefetch_pdf_citation_rows(pf)
+        ws = list(envelope.get("warnings") or [])
+        if "answer_salvaged_from_pdf_prefetch" not in ws:
+            ws.append("answer_salvaged_from_pdf_prefetch")
+        envelope["warnings"] = ws
 
     settings = ctx.settings
     parent_turn_id_str = ctx.parent_turn_id_str

@@ -6,7 +6,9 @@ from typing import Any
 import pytest
 
 from science_graphrag.config import Settings
+from science_graphrag.settings.repository import SettingsRepository
 from science_graphrag.settings.secret_display import mask_short_secret
+from science_graphrag.settings.secrets import SecretStore
 from science_graphrag.settings.service import LlmTestDraft, SettingsService
 from science_graphrag.settings.storage_runtime import mask_url_userinfo
 
@@ -322,6 +324,7 @@ def test_update_agent_tools_settings_persists_pdf_limits(tmp_path: Path) -> None
             "agent_pdf_read_max_bytes": 5_000_000,
             "agent_pdf_read_max_pages": 20,
             "agent_pdf_read_cache_ttl_seconds": 120,
+            "agent_pdf_read_cache_max_entries": 400,
         },
     )
     eff = snap.agent_tools["effective"]
@@ -329,8 +332,58 @@ def test_update_agent_tools_settings_persists_pdf_limits(tmp_path: Path) -> None
     assert eff["resolved_agent_pdf_read_max_bytes"] == 5_000_000
     assert eff["resolved_agent_pdf_read_max_pages"] == 20
     assert eff["resolved_agent_pdf_read_cache_ttl_seconds"] == 120
+    assert eff["resolved_agent_pdf_read_cache_max_entries"] == 400
     rt = service.build_runtime_settings(base)
     assert rt.agent_pdf_read_tool_enabled is False
     assert rt.agent_pdf_read_max_bytes == 5_000_000
     assert rt.agent_pdf_read_max_pages == 20
     assert rt.agent_pdf_read_cache_ttl_seconds == 120
+    assert rt.agent_pdf_read_cache_max_entries == 400
+
+
+def test_update_llm_settings_persists_vision_api_key_secret(tmp_path: Path) -> None:
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    service = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
+    base = Settings(extraction_llm_api_key="sk-base")
+    service.update_llm_settings(
+        base_settings=base,
+        base_url="https://openrouter.ai/api/v1",
+        model="m1",
+        temperature=0.0,
+        timeout_seconds=60.0,
+        actor="t",
+        api_key="sk-default-vault",
+        vision_api_key="sk-vision-vault",
+    )
+    runtime = service.build_runtime_settings(base)
+    assert runtime.extraction_llm_api_key == "sk-default-vault"
+    assert runtime.vl_api_key == "sk-vision-vault"
+    snap = service.get_snapshot(base)
+    assert snap.llm["status"]["has_saved_vision_secret"] is True
+
+
+def test_delete_llm_vision_secret_clears_vault(tmp_path: Path) -> None:
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    service = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
+    base = Settings(extraction_llm_api_key="sk-base", vl_api_key="sk-env-vl")
+    service.update_llm_settings(
+        base_settings=base,
+        base_url="https://openrouter.ai/api/v1",
+        model="m1",
+        temperature=0.0,
+        timeout_seconds=60.0,
+        actor="t",
+        api_key="sk-default-vault",
+        vision_api_key="sk-vision-vault",
+    )
+    service.delete_llm_vision_secret(base_settings=base)
+    snap = service.get_snapshot(base)
+    assert snap.llm["status"]["has_saved_vision_secret"] is False
+    rt = service.build_runtime_settings(base)
+    assert rt.vl_api_key == "sk-env-vl"

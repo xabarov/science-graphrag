@@ -30,8 +30,6 @@ const AGENT_RUNTIME_SLUGS = ["langgraph_research_v1", "langgraph_supervisor_v1",
  *   keysByGroup: Record<string, string[]>,
  *   advancedOpen: boolean,
  *   setAdvancedOpen: (v: boolean) => void,
- *   chatModel: string,
- *   setChatModel: (v: string) => void,
  *   restoreRecommendedDefaults: () => void,
  * }} props
  */
@@ -46,8 +44,6 @@ export default function LlmAdvancedSettingsCard({
   keysByGroup,
   advancedOpen,
   setAdvancedOpen,
-  chatModel,
-  setChatModel,
   restoreRecommendedDefaults,
 }) {
   const { t } = useI18n();
@@ -183,24 +179,6 @@ export default function LlmAdvancedSettingsCard({
       </Box>
       <Typography sx={{ marginTop: 0.75, fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.5 }}>{t("llm.advanced.intro")}</Typography>
       <Collapse in={advancedOpen}>
-        <Box
-          sx={{
-            marginTop: 1.5,
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-            gap: 1.5,
-          }}
-        >
-          <TextField
-            label={t("llm.field.chatModel")}
-            size="small"
-            value={chatModel}
-            onChange={(e) => setChatModel(e.target.value)}
-            sx={fieldSx}
-            fullWidth
-            helperText={t("llm.hint.chatModelFallback")}
-          />
-        </Box>
         <Box sx={{ marginTop: 1.5, display: "flex", gap: 1, flexWrap: "wrap" }}>
           <CursorSmallButton type="button" onClick={restoreRecommendedDefaults}>
             {t("llm.advanced.restoreRecommended")}

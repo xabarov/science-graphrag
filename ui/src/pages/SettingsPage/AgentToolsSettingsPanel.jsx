@@ -44,6 +44,7 @@ function buildDraft(agentTools) {
   const pdfMaxBytes = parseFiniteNumber(e.resolved_agent_pdf_read_max_bytes, 8000000);
   const pdfMaxPages = parseFiniteNumber(e.resolved_agent_pdf_read_max_pages, 30);
   const pdfCacheTtl = parseFiniteNumber(e.resolved_agent_pdf_read_cache_ttl_seconds, 300);
+  const pdfCacheMaxEntries = parseFiniteNumber(e.resolved_agent_pdf_read_cache_max_entries, 256);
   return {
     externalResearchDefault: Boolean(e.resolved_external_research_default_enabled),
     sources: {
@@ -62,6 +63,7 @@ function buildDraft(agentTools) {
     agentPdfReadMaxBytes: pdfMaxBytes,
     agentPdfReadMaxPages: pdfMaxPages,
     agentPdfReadCacheTtlSeconds: pdfCacheTtl,
+    agentPdfReadCacheMaxEntries: pdfCacheMaxEntries,
   };
 }
 
@@ -188,6 +190,10 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
       agent_pdf_read_cache_ttl_seconds: Math.max(
         0,
         Math.min(86400, Math.trunc(parseFiniteNumber(draft.agentPdfReadCacheTtlSeconds, 300))),
+      ),
+      agent_pdf_read_cache_max_entries: Math.max(
+        16,
+        Math.min(10000, Math.trunc(parseFiniteNumber(draft.agentPdfReadCacheMaxEntries, 256))),
       ),
     };
     await onSave(payload);
@@ -557,6 +563,23 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
                 }))
               }
               inputProps={{ min: 0, max: 86400 }}
+              sx={fieldSx}
+            />
+            <TextField
+              label={t("settings.agentTools.pdfCacheMaxEntries")}
+              type="number"
+              size="small"
+              value={draft.agentPdfReadCacheMaxEntries}
+              onChange={(e) =>
+                setDraft((d) => ({
+                  ...d,
+                  agentPdfReadCacheMaxEntries: parseFiniteNumber(
+                    e.target.value,
+                    d.agentPdfReadCacheMaxEntries,
+                  ),
+                }))
+              }
+              inputProps={{ min: 16, max: 10000 }}
               sx={fieldSx}
             />
           </Box>

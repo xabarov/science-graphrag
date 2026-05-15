@@ -44,8 +44,8 @@ from science_graphrag.api.agent_v2_modules.payloads import (
 from science_graphrag.api.agent_v2_modules.payloads import (
     thread_insight_audit_fragment,
 )
-from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
+from science_graphrag.stores.registry import StoreRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +87,9 @@ async def execute_agent_query_v2_json_response(
             user_structured_answer=body.user_structured_answer,
             web_research_enabled=body.web_research_enabled,
             agent_mode=body.agent_mode,
-            pdf_read_request=body.pdf_read_request,
+            pdf_read_request=(
+                body.pdf_read_request.model_dump() if body.pdf_read_request is not None else None
+            ),
         )
     except AgentGraphDeadlineExceeded as exc:
         duration_ms = int((perf_counter() - started) * 1000)

@@ -108,6 +108,7 @@ export default {
   "askPanel.pdfRead.progress": "Чтение PDF: {{url}}",
   "askPanel.pdfRead.failed": "Не удалось прочитать PDF. Повторите попытку или откройте источник напрямую.",
   "askPanel.pdfRead.queryStub": "[pdf-read-action]",
+  "askPanel.pdfRead.userTurnLabel": "Чтение PDF (извлечение текста)",
   "askPanel.toolTrace.title": "Трассировка инструментов",
   "askPanel.chunkLabel": "чанк",
   "askPanel.openReader": "Открыть чтение",

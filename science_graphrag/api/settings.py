@@ -75,6 +75,8 @@ def patch_llm_settings(
         kwargs["vl_base_url"] = body.vl_base_url
     if "chat_model" in raw:
         kwargs["chat_model"] = body.chat_model
+    if "vision_api_key" in raw:
+        kwargs["vision_api_key"] = body.vision_api_key
     if body.runtime_overrides is not None:
         adv = body.runtime_overrides.model_dump(exclude_unset=True, exclude_none=True)
         if adv:
@@ -170,9 +172,18 @@ def patch_benchmark_settings(
 
 
 @router.delete("/llm/secret", response_model=SettingsSnapshotResponse)
-def delete_llm_secret(actor: str = Depends(require_settings_access)) -> SettingsSnapshotResponse:
-    del actor
+def delete_llm_secret(
+    _actor: str = Depends(require_settings_access),
+) -> SettingsSnapshotResponse:
     snapshot = _SETTINGS_SERVICE.delete_llm_secret(base_settings=get_settings())
+    return _settings_snapshot_response(snapshot)
+
+
+@router.delete("/llm/vision-secret", response_model=SettingsSnapshotResponse)
+def delete_llm_vision_secret(
+    _actor: str = Depends(require_settings_access),
+) -> SettingsSnapshotResponse:
+    snapshot = _SETTINGS_SERVICE.delete_llm_vision_secret(base_settings=get_settings())
     return _settings_snapshot_response(snapshot)
 
 

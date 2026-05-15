@@ -240,3 +240,9 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Acceptance:** httpx-mocked unit tests, manifest/registry sync tests, product_step mapping, documented per-tool denylist/toggle; optional live smoke when key/rate limits allow.
 - **Raised:** 2026-05-15, **updated:** 2026-05-15 (OpenAlex search split out as delivered; backlog tracks Semantic Scholar only)
 
+### [OPEN] Durable PDF read artifacts (cross-process)
+- **Area:** `science_graphrag/agent/tools/external/pdf_read_*`, future `stores/` or Postgres
+- **Issue:** Phase 4 ships in-process LRU+TTL cache and optional prefetch job bookkeeping only; workers lose cache on restart and there is no durable artifact row for audit/replay.
+- **Proposal:** add persisted artifact metadata (url hash, sizes, status, excerpt pointer) keyed by `parent_turn_id` / workspace; optional object storage for raw bytes; align GC with operator TTL knobs.
+- **Acceptance:** repeat read after cold start hits persisted excerpt or cleanly refetches; trace-review shows stable `artifact_id`; repository unit tests.
+- **Raised:** 2026-05-15

@@ -121,6 +121,7 @@ def normalize_tool_error_to_fallback_reason(error: str | None) -> str | None:
         "doi_parse_failed": FALLBACK_METADATA_ONLY_FALLBACK,
         "invalid_doi": FALLBACK_METADATA_ONLY_FALLBACK,
         "host_not_allowed": FALLBACK_HOST_NOT_ALLOWED,
+        "private_host_not_allowed": FALLBACK_HOST_NOT_ALLOWED,
         "unsupported_scheme": FALLBACK_HOST_NOT_ALLOWED,
         "redirect_host_not_allowed": FALLBACK_REDIRECT_BLOCKED,
         "redirect_unsupported_scheme": FALLBACK_REDIRECT_BLOCKED,
@@ -160,9 +161,7 @@ def human_fallback_message(reason: str | None) -> str:
         FALLBACK_PDF_TOO_LARGE: "PDF exceeds configured size limit.",
         FALLBACK_PDF_PARSE_FAILED: "PDF text extraction failed.",
         FALLBACK_PDF_PAGE_LIMIT: "PDF exceeds configured page limit.",
-        FALLBACK_UNSUPPORTED_PDF_TEXT: (
-            "PDF full-text extraction is not available here."
-        ),
+        FALLBACK_UNSUPPORTED_PDF_TEXT: ("PDF full-text extraction is not available here."),
         FALLBACK_UNKNOWN: "A tool step failed; see trace for details.",
     }.get(reason, "Evidence step failed; see trace for details.")
 
@@ -204,7 +203,7 @@ def trust_fields_for_web_source_row(row: dict[str, Any]) -> dict[str, Any]:
     if st == "read_external_pdf":
         return {
             "provenance_kind": PROVENANCE_EXTRACTED_PDF_TEXT,
-            "evidence_quality": EVIDENCE_STRONG,
+            "evidence_quality": EVIDENCE_VARIABLE,
             "evidence_mode": MODE_PDF_READ,
             "is_external": True,
         }
@@ -289,7 +288,7 @@ def apply_trust_labels_to_citations(citations: list[dict[str, Any]]) -> None:
             or str(c.get("evidence_mode") or "").strip() == MODE_PDF_READ
         ):
             c.setdefault("provenance_kind", PROVENANCE_EXTRACTED_PDF_TEXT)
-            c.setdefault("evidence_quality", EVIDENCE_STRONG)
+            c.setdefault("evidence_quality", EVIDENCE_VARIABLE)
             c.setdefault("evidence_mode", MODE_PDF_READ)
             c.setdefault("is_external", False)
             continue

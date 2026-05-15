@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 
+import { PDF_READ_USER_MESSAGE_TOKEN } from "../../../../services/research/pdfReadUi.js";
 import { patchAskSession as patchAskSessionRequest } from "../../../../services/researchApi.js";
 import { rememberAskHistory } from "../session/askHistoryState.js";
 import {
@@ -145,13 +146,19 @@ export function useAskPerformAgentSubmit({
 }) {
   return useCallback(
     async (queryText, { workIdForTurn, userStructuredAnswer, pdfReadRequest } = {}) => {
-      const q = String(queryText || "").trim();
-      if (!q) return;
+      const rawQ = String(queryText || "");
+      const qTrim = rawQ.trim();
+      const pdfUrl =
+        pdfReadRequest && typeof pdfReadRequest === "object"
+          ? String(pdfReadRequest.pdf_url || "").trim()
+          : "";
+      if (!qTrim && !pdfUrl) return null;
+      const q = qTrim || PDF_READ_USER_MESSAGE_TOKEN;
       const turnWorkId = workIdForTurn != null ? String(workIdForTurn).trim() : String(workId || "").trim();
       const submitSk = scopeKeyRef.current;
       const submitSid = String(activeSessionId || "").trim();
       setStreamingTarget({ scopeKey: submitSk, sessionId: submitSid });
-      setPendingUserQuery(q);
+      setPendingUserQuery(q === PDF_READ_USER_MESSAGE_TOKEN ? t("askPanel.pdfRead.userTurnLabel") : q);
       setQuery("");
       try {
         const historyForDigest = submitSid ? getAskSessionEntries(submitSk, submitSid) : getActiveSessionEntries(submitSk);
@@ -206,7 +213,7 @@ export function useAskPerformAgentSubmit({
             setNormalized,
             bumpSessions,
           });
-          return;
+          return { ok: false };
         }
 
         const nextNormalized = pack.normalized;
@@ -232,6 +239,7 @@ export function useAskPerformAgentSubmit({
           setNormalized,
           bumpSessions,
         });
+        return { ok: true, normalized: nextNormalized, toolTrace: persistedToolTrace };
       } finally {
         setPendingUserQuery("");
         setStreamingTarget(null);

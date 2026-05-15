@@ -25,7 +25,7 @@ from science_graphrag.settings.llm_test_probe_service import (
 from science_graphrag.settings.repository import SettingsRepository
 from science_graphrag.settings.runtime_overlay import build_non_secret_overrides
 from science_graphrag.settings.schema import build_settings_schema
-from science_graphrag.settings.secret_store_keys import LLM_API_KEY
+from science_graphrag.settings.secret_store_keys import LLM_API_KEY, LLM_VISION_API_KEY
 from science_graphrag.settings.secrets import SecretStore
 from science_graphrag.settings.service_runtime_merge import (
     merged_runtime_candidate_from_persisted_payload,
@@ -57,11 +57,13 @@ _AGENT_TOOLS_PATCH_ALLOWLIST: frozenset[str] = frozenset(
         "agent_pdf_read_max_bytes",
         "agent_pdf_read_max_pages",
         "agent_pdf_read_cache_ttl_seconds",
+        "agent_pdf_read_cache_max_entries",
     }
 )
 
 
 _UNSET_CHAT_MODEL = object()
+_UNSET_VISION_API_KEY = object()
 
 
 def _now_iso() -> str:
@@ -95,6 +97,9 @@ class SettingsService:
         api_key = self._secret_store.get_secret(LLM_API_KEY)
         if api_key:
             payload["extraction_llm_api_key"] = api_key
+        vision_key = self._secret_store.get_secret(LLM_VISION_API_KEY)
+        if vision_key:
+            payload["vl_api_key"] = vision_key.strip()
         if not payload:
             return base_settings
         return base_settings.model_copy(update=payload)
@@ -125,6 +130,7 @@ class SettingsService:
         chat_model: Any = _UNSET_CHAT_MODEL,
         vl_model: Any = _UNSET_CHAT_MODEL,
         vl_base_url: Any = _UNSET_CHAT_MODEL,
+        vision_api_key: Any = _UNSET_VISION_API_KEY,
         advanced_patch: dict[str, Any] | None = None,
     ) -> SettingsSnapshot:
         """Persist editable LLM config and optionally replace the managed secret."""
@@ -187,6 +193,16 @@ class SettingsService:
             self._repository.save(payload)
             if api_key is not None:
                 self._secret_store.set_secret(LLM_API_KEY, api_key.strip())
+            if vision_api_key is not _UNSET_VISION_API_KEY:
+                raw_v = vision_api_key
+                if raw_v is None:
+                    self._secret_store.delete_secret(LLM_VISION_API_KEY)
+                else:
+                    stripped = str(raw_v).strip()
+                    if stripped:
+                        self._secret_store.set_secret(LLM_VISION_API_KEY, stripped)
+                    else:
+                        self._secret_store.delete_secret(LLM_VISION_API_KEY)
         return self.get_snapshot(base_settings)
 
     def update_ingestion_settings(
@@ -313,6 +329,10 @@ class SettingsService:
                 at["agent_pdf_read_cache_ttl_seconds"] = max(
                     0, min(86_400, int(filtered["agent_pdf_read_cache_ttl_seconds"]))
                 )
+            if "agent_pdf_read_cache_max_entries" in filtered:
+                at["agent_pdf_read_cache_max_entries"] = max(
+                    16, min(10_000, int(filtered["agent_pdf_read_cache_max_entries"]))
+                )
 
             at["_meta"] = {
                 "last_updated_at": _now_iso(),
@@ -437,9 +457,15 @@ class SettingsService:
         return self.get_snapshot(base_settings)
 
     def delete_llm_secret(self, *, base_settings: Settings) -> SettingsSnapshot:
-        """Remove the managed LLM secret while keeping non-secret config intact."""
+        """Remove the managed default LLM secret while keeping non-secret config intact."""
         with self._lock:
             self._secret_store.delete_secret(LLM_API_KEY)
+        return self.get_snapshot(base_settings)
+
+    def delete_llm_vision_secret(self, *, base_settings: Settings) -> SettingsSnapshot:
+        """Remove the managed vision-only LLM secret (falls back to default/env)."""
+        with self._lock:
+            self._secret_store.delete_secret(LLM_VISION_API_KEY)
         return self.get_snapshot(base_settings)
 
     def test_llm_connection(  # pylint: disable=too-many-locals

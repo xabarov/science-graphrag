@@ -33,6 +33,7 @@ class StreamAgentLifecycleState:
     last_progress_label_mono: float = 0.0
     note_counter: dict[str, int] = field(default_factory=lambda: {"emitted": 0})
     seen_first_tool_result_per_specialist: set[str] = field(default_factory=set)
+    prefetched_pdf_result: dict[str, Any] | None = None
 
 
 @dataclass

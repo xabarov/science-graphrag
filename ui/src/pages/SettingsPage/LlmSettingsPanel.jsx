@@ -6,11 +6,15 @@ import { useI18n } from "../../i18n/useI18n.js";
 import { outlinedAppTextFieldSx, settingsAlertMutedSx, settingsCardSx } from "../../theme/settingsFormSx.js";
 import LlmAdvancedSettingsCard from "./LlmAdvancedSettingsCard.jsx";
 import LlmConnectionTestCard from "./LlmConnectionTestCard.jsx";
-import LlmCredentialsSettingsCard from "./LlmCredentialsSettingsCard.jsx";
-import LlmProviderSettingsCard from "./LlmProviderSettingsCard.jsx";
+import LlmQuickStartCard from "./LlmQuickStartCard.jsx";
+import LlmSecretsCard from "./LlmSecretsCard.jsx";
+import LlmTaskOverridesCard from "./LlmTaskOverridesCard.jsx";
 import { computeSaveBlockingMessage } from "./llmSaveValidation.js";
-import { credentialAlertBody, credentialAlertSeverity, providerSummary } from "./llmSettingsMeta.js";
-import { buildAdvValuesFromLlm, buildRuntimeOverridesPayload } from "./llmSettingsPayload.js";
+import {
+  buildAdvValuesFromLlm,
+  buildLlmSettingsSubmitPayload,
+  buildRuntimeOverridesPayload,
+} from "./llmSettingsPayload.js";
 import { LLM_RUNTIME_OVERRIDE_KEYS, schemaGroupForKey } from "./llmRuntimeOverrideKeys.js";
 
 export default function LlmSettingsPanel({
@@ -22,6 +26,7 @@ export default function LlmSettingsPanel({
   testResult,
   onSave,
   onDeleteSecret,
+  onDeleteVisionSecret,
   onTestSaved,
   onTestDraft,
   onDirtyChange,
@@ -42,11 +47,14 @@ export default function LlmSettingsPanel({
   const [apiKey, setApiKey] = useState("");
   const [revealDraftKey, setRevealDraftKey] = useState(false);
   const [replaceKey, setReplaceKey] = useState(false);
+  const [visionApiKey, setVisionApiKey] = useState("");
+  const [revealVisionDraftKey, setRevealVisionDraftKey] = useState(false);
+  const [replaceVisionKey, setReplaceVisionKey] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [advValues, setAdvValues] = useState(() => buildAdvValuesFromLlm(llm));
 
   const hasSavedSecret = Boolean(llm?.status?.has_saved_secret);
-  const secretSource = llm?.status?.secret_source;
+  const hasSavedVisionSecret = Boolean(llm?.status?.has_saved_vision_secret);
 
   const llmSchemaFields = useMemo(() => {
     const sec = schema?.sections?.find((s) => s.id === "llm");
@@ -74,10 +82,8 @@ export default function LlmSettingsPanel({
     setBaseUrl(llm.base_url || "");
     setModel(llm.model || "");
     setChatModel(llm.chat_model || "");
-    const pVm = (llm.vl_model || "").trim();
-    const pVb = (llm.vl_base_url || "").trim();
-    setVlModel(pVm || (llm.effective?.resolved_vl_model ?? "") || "");
-    setVlBaseUrl(pVb || (llm.effective?.resolved_vl_base_url ?? "") || "");
+    setVlModel((llm.vl_model || "").trim());
+    setVlBaseUrl((llm.vl_base_url || "").trim());
     setTemperature(String(llm.temperature ?? 0));
     setTimeoutSeconds(String(llm.effective?.resolved_timeout_seconds ?? 180));
     setAdvValues(buildAdvValuesFromLlm(llm));
@@ -98,23 +104,15 @@ export default function LlmSettingsPanel({
     return false;
   }, [llm, advValues]);
 
-  const baselineVlModel = useMemo(() => {
-    const p = (llm?.vl_model || "").trim();
-    return p || (llm?.effective?.resolved_vl_model || "").trim();
-  }, [llm]);
-
-  const baselineVlBaseUrl = useMemo(() => {
-    const p = (llm?.vl_base_url || "").trim();
-    return p || (llm?.effective?.resolved_vl_base_url || "").trim();
-  }, [llm]);
-
   const providerDirty = useMemo(() => {
+    const persistedVm = (llm?.vl_model || "").trim();
+    const persistedVb = (llm?.vl_base_url || "").trim();
     return (
       baseUrl !== (llm?.base_url || "") ||
       model !== (llm?.model || "") ||
       chatModel !== (llm?.chat_model || "") ||
-      vlModel.trim() !== baselineVlModel ||
-      vlBaseUrl.trim() !== baselineVlBaseUrl ||
+      vlModel.trim() !== persistedVm ||
+      vlBaseUrl.trim() !== persistedVb ||
       Number(temperature) !== Number(llm?.temperature ?? 0) ||
       Number(timeoutSeconds) !== Number(llm?.effective?.resolved_timeout_seconds ?? 180) ||
       Boolean(apiKey) ||
@@ -123,8 +121,6 @@ export default function LlmSettingsPanel({
   }, [
     apiKey,
     baseUrl,
-    baselineVlBaseUrl,
-    baselineVlModel,
     chatModel,
     llm,
     model,
@@ -135,7 +131,9 @@ export default function LlmSettingsPanel({
     vlModel,
   ]);
 
-  const dirty = providerDirty || advDirty;
+  const visionKeyDirty = useMemo(() => replaceVisionKey && Boolean(visionApiKey.trim()), [replaceVisionKey, visionApiKey]);
+
+  const dirty = providerDirty || advDirty || visionKeyDirty;
 
   const advancedValidationMessage = computeSaveBlockingMessage(t, advValues, timeoutSeconds);
 
@@ -159,23 +157,29 @@ export default function LlmSettingsPanel({
 
   function submit() {
     if (advancedValidationMessage) return;
-    const payload = {
-      base_url: baseUrl,
+    const payload = buildLlmSettingsSubmitPayload({
+      baseUrl,
       model,
-      vl_model: vlModel.trim(),
-      vl_base_url: vlBaseUrl.trim(),
-      chat_model: chatModel.trim(),
+      chatModel,
       temperature: Number(temperature),
-      timeout_seconds: Number(timeoutSeconds),
-      ...(replaceKey && apiKey ? { api_key: apiKey } : {}),
-    };
-    if (advDirty) {
-      payload.runtime_overrides = buildRuntimeOverridesPayload(advValues);
-    }
+      timeoutSeconds: Number(timeoutSeconds),
+      vlModel,
+      vlBaseUrl,
+      llm,
+      replaceKey,
+      apiKey,
+      replaceVisionKey,
+      visionApiKey,
+      advDirty,
+      advValues,
+    });
     onSave(payload);
     setApiKey("");
     setReplaceKey(false);
     setRevealDraftKey(false);
+    setVisionApiKey("");
+    setReplaceVisionKey(false);
+    setRevealVisionDraftKey(false);
   }
 
   function buildDraftPayload(useSavedSecret) {
@@ -193,44 +197,37 @@ export default function LlmSettingsPanel({
     onTestDraft(buildDraftPayload(apiKey ? false : true));
   }
 
-  const alertBody = credentialAlertBody(llm, t);
-  const alertSev = credentialAlertSeverity(secretSource, llm?.status?.configured);
-
-  const credentialsBlurbSecond =
-    secretSource === "server_managed"
-      ? t("llm.credentials.blurbVault")
-      : secretSource === "environment"
-        ? t("llm.credentials.blurbEnv")
-        : t("llm.credentials.blurbNone");
-
-  const replaceHelper = hasSavedSecret
-    ? t("llm.credentials.helperReplace")
-    : secretSource === "environment"
-      ? t("llm.credentials.helperSaveOverridesEnv")
-      : t("llm.credentials.helperSaveFirst");
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-      <LlmProviderSettingsCard
+      <LlmQuickStartCard
         tk={tk}
         cardSx={cardSx}
         fieldSx={fieldSx}
+        llm={llm}
         baseUrl={baseUrl}
         setBaseUrl={setBaseUrl}
-        model={model}
-        setModel={setModel}
-        vlModel={vlModel}
-        setVlModel={setVlModel}
-        vlBaseUrl={vlBaseUrl}
-        setVlBaseUrl={setVlBaseUrl}
         temperature={temperature}
         setTemperature={setTemperature}
         timeoutSeconds={timeoutSeconds}
         setTimeoutSeconds={setTimeoutSeconds}
-        providerSummaryLine={providerSummary(llm, t)}
       />
 
-      <LlmCredentialsSettingsCard
+      <LlmTaskOverridesCard
+        tk={tk}
+        cardSx={cardSx}
+        fieldSx={fieldSx}
+        llm={llm}
+        model={model}
+        setModel={setModel}
+        chatModel={chatModel}
+        setChatModel={setChatModel}
+        vlModel={vlModel}
+        setVlModel={setVlModel}
+        vlBaseUrl={vlBaseUrl}
+        setVlBaseUrl={setVlBaseUrl}
+      />
+
+      <LlmSecretsCard
         tk={tk}
         cardSx={cardSx}
         fieldSx={fieldSx}
@@ -247,13 +244,17 @@ export default function LlmSettingsPanel({
         setApiKey={setApiKey}
         revealDraftKey={revealDraftKey}
         setRevealDraftKey={setRevealDraftKey}
+        replaceVisionKey={replaceVisionKey}
+        setReplaceVisionKey={setReplaceVisionKey}
+        visionApiKey={visionApiKey}
+        setVisionApiKey={setVisionApiKey}
+        revealVisionDraftKey={revealVisionDraftKey}
+        setRevealVisionDraftKey={setRevealVisionDraftKey}
         onDeleteSecret={onDeleteSecret}
+        onDeleteVisionSecret={onDeleteVisionSecret}
         onSubmit={submit}
-        alertSev={alertSev}
-        alertBody={alertBody}
-        credentialsBlurbSecond={credentialsBlurbSecond}
-        replaceHelper={replaceHelper}
         hasSavedSecret={hasSavedSecret}
+        hasSavedVisionSecret={hasSavedVisionSecret}
       />
 
       <LlmConnectionTestCard
@@ -275,8 +276,6 @@ export default function LlmSettingsPanel({
         keysByGroup={keysByGroup}
         advancedOpen={advancedOpen}
         setAdvancedOpen={setAdvancedOpen}
-        chatModel={chatModel}
-        setChatModel={setChatModel}
         restoreRecommendedDefaults={restoreRecommendedDefaults}
       />
     </Box>

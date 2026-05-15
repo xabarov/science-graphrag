@@ -10,6 +10,7 @@ import {
   AgentRunHeader,
 } from "../../agent/index.js";
 import ChatUserBubble from "./ChatUserBubble.jsx";
+import { isPdfReadUserMessage } from "../../../../services/research/pdfReadUi.js";
 
 /**
  * Live pending user message + streaming or loading assistant region.
@@ -54,6 +55,9 @@ export default function ChatPendingStreamBlock({
   pdfReadState = null,
 }) {
   const tk = useTheme().appTokens;
+  const pendingBubbleText = isPdfReadUserMessage(pendingUserQuery)
+    ? t("askPanel.pdfRead.userTurnLabel")
+    : pendingUserQuery;
   const pdfProgressText =
     pdfReadState &&
     typeof pdfReadState === "object" &&
@@ -70,7 +74,7 @@ export default function ChatPendingStreamBlock({
       : "";
   return (
     <Box sx={{ mb: 2.25 }}>
-      <ChatUserBubble text={pendingUserQuery} />
+      <ChatUserBubble text={pendingBubbleText} />
       <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
         <Box sx={{ minWidth: 0, maxWidth: "min(880px, 100%)" }}>
           {liveNormalized ? (

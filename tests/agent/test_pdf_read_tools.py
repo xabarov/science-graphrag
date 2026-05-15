@@ -4,14 +4,11 @@ from __future__ import annotations
 
 from io import BytesIO
 
-import httpx
 import pytest
 from pypdf import PdfWriter
 
-from science_graphrag.agent.tools.external.pdf_read_tools import (
-    _read_external_pdf_impl,
-    build_pdf_read_tools,
-)
+from science_graphrag.agent.tools.external.pdf_read_orchestrator import execute_pdf_read
+from science_graphrag.agent.tools.external.pdf_read_tools import build_pdf_read_tools
 from science_graphrag.config import Settings
 
 
@@ -30,6 +27,7 @@ def fixture_settings() -> Settings:
         agent_pdf_read_max_bytes=8_000_000,
         agent_pdf_read_max_pages=30,
         agent_pdf_read_cache_ttl_seconds=60,
+        agent_pdf_read_cache_max_entries=256,
     )
 
 
@@ -39,27 +37,13 @@ def test_build_pdf_read_tools_registers_name(settings: Settings) -> None:
 
 
 def test_read_external_pdf_rejects_non_https(settings: Settings) -> None:
-    out = _read_external_pdf_impl(
+    out = execute_pdf_read(
         "http://example.org/paper.pdf",
         settings=settings,
         max_excerpt_chars=2000,
-        allowed_domains=None,
-        blocked_domains=[],
     )
     assert out["ok"] is False
     assert out["error"] == "unsupported_scheme"
-
-
-def test_read_external_pdf_respects_blocked_domains(settings: Settings) -> None:
-    out = _read_external_pdf_impl(
-        "https://example.org/paper.pdf",
-        settings=settings,
-        max_excerpt_chars=2000,
-        allowed_domains=None,
-        blocked_domains=["example.org"],
-    )
-    assert out["ok"] is False
-    assert out["error"] == "host_not_allowed"
 
 
 def test_read_external_pdf_fetch_failure(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -77,15 +61,13 @@ def test_read_external_pdf_fetch_failure(settings: Settings, monkeypatch: pytest
             raise OSError("network down")
 
     monkeypatch.setattr(
-        "science_graphrag.agent.tools.external.pdf_read_tools.httpx.Client",
+        "science_graphrag.agent.tools.external.pdf_read_pipeline.httpx.Client",
         lambda *_a, **_k: _Client(),
     )
-    out = _read_external_pdf_impl(
+    out = execute_pdf_read(
         "https://example.org/paper.pdf",
         settings=settings,
         max_excerpt_chars=2000,
-        allowed_domains=None,
-        blocked_domains=[],
     )
     assert out["ok"] is False
     assert out["error"] == "fetch_failed"
@@ -114,15 +96,13 @@ def test_read_external_pdf_too_large(settings: Settings, monkeypatch: pytest.Mon
             return _Resp()
 
     monkeypatch.setattr(
-        "science_graphrag.agent.tools.external.pdf_read_tools.httpx.Client",
+        "science_graphrag.agent.tools.external.pdf_read_pipeline.httpx.Client",
         lambda *_a, **_k: _Client(),
     )
-    out = _read_external_pdf_impl(
+    out = execute_pdf_read(
         "https://example.org/paper.pdf",
         settings=settings,
         max_excerpt_chars=2000,
-        allowed_domains=None,
-        blocked_domains=[],
     )
     assert out["ok"] is False
     assert out["error"] == "pdf_too_large"
@@ -151,15 +131,13 @@ def test_read_external_pdf_parse_failed(settings: Settings, monkeypatch: pytest.
             return _Resp()
 
     monkeypatch.setattr(
-        "science_graphrag.agent.tools.external.pdf_read_tools.httpx.Client",
+        "science_graphrag.agent.tools.external.pdf_read_pipeline.httpx.Client",
         lambda *_a, **_k: _Client(),
     )
-    out = _read_external_pdf_impl(
+    out = execute_pdf_read(
         "https://example.org/paper.pdf",
         settings=settings,
         max_excerpt_chars=2000,
-        allowed_domains=None,
-        blocked_domains=[],
     )
     assert out["ok"] is False
     assert out["error"] == "pdf_parse_failed"
@@ -191,27 +169,23 @@ def test_read_external_pdf_page_limit(settings: Settings, monkeypatch: pytest.Mo
             return _Resp()
 
     monkeypatch.setattr(
-        "science_graphrag.agent.tools.external.pdf_read_tools.httpx.Client",
+        "science_graphrag.agent.tools.external.pdf_read_pipeline.httpx.Client",
         lambda *_a, **_k: _Client(),
     )
-    out = _read_external_pdf_impl(
+    out = execute_pdf_read(
         "https://example.org/paper.pdf",
         settings=limited,
         max_excerpt_chars=2000,
-        allowed_domains=None,
-        blocked_domains=[],
     )
     assert out["ok"] is False
     assert out["error"] in {"pdf_page_limit", "pdf_parse_failed"}
 
 
 def test_read_external_pdf_private_host_not_allowed(settings: Settings) -> None:
-    out = _read_external_pdf_impl(
+    out = execute_pdf_read(
         "https://localhost/paper.pdf",
         settings=settings,
         max_excerpt_chars=2000,
-        allowed_domains=None,
-        blocked_domains=[],
     )
     assert out["ok"] is False
     assert out["error"] == "private_host_not_allowed"

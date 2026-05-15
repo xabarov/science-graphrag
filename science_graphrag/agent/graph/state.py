@@ -11,6 +11,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langgraph.graph.message import add_messages
 
 from science_graphrag.agent.request_turn_policy import utc_now_iso_z
+from science_graphrag.agent.tools.external.pdf_read_pipeline import sanitize_pdf_url_for_prompt
 from science_graphrag.config import Settings, get_settings
 
 
@@ -135,10 +136,11 @@ def build_initial_agent_state(
     if isinstance(pdf_read_request, dict):
         pdf_url = str(pdf_read_request.get("pdf_url") or "").strip()
         if pdf_url:
+            safe = sanitize_pdf_url_for_prompt(pdf_url)
             pdf_read_block = (
                 "<pdf_read_request>\n"
                 "User explicitly requested reading this external PDF via tool call.\n"
-                f"- pdf_url: {pdf_url}\n"
+                f"- pdf_url: {safe}\n"
                 "</pdf_read_request>"
             )
     rp_block: str | None = None

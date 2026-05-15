@@ -22,6 +22,7 @@ import { PlaceholderSettingsSection } from "./SettingsPage/PlaceholderSettingsSe
 import { useSettingsPageBootstrap } from "./SettingsPage/useSettingsPageBootstrap.js";
 import {
   deleteLlmSecret,
+  deleteLlmVisionSecret,
   testLlmConnection,
   updateGeneralSettings,
   updateIngestionSettings,
@@ -172,6 +173,19 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleDeleteVisionSecret() {
+    setSaving(true);
+    setSaveError("");
+    try {
+      const next = await deleteLlmVisionSecret();
+      setSnapshot(next);
+    } catch (error) {
+      setSaveError(formatResearchApiError(error) || t("settings.page.removeVisionKeyError"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function handleTest(payload) {
     setTesting(true);
     setTestResult(null);
@@ -213,6 +227,7 @@ export default function SettingsPage() {
           testResult={testResult}
           onSave={handleSave}
           onDeleteSecret={handleDeleteSecret}
+          onDeleteVisionSecret={handleDeleteVisionSecret}
           onTestSaved={() => handleTest({ use_saved_secret: true })}
           onTestDraft={(payload) => handleTest(payload)}
           onDirtyChange={setDirtyHint}

@@ -5,13 +5,14 @@ from __future__ import annotations
 import json
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.debug_events_telemetry import (
     extract_runtime_telemetry_from_debug_events,
 )
 from science_graphrag.agent.llm.chat import effective_chat_llm_model
+from science_graphrag.agent.pdf_read_contract import PDF_READ_USER_MESSAGE_TOKEN
 from science_graphrag.agent.runtime import current_otel_trace_id_hex
 from science_graphrag.config import Settings
 from science_graphrag.llm.openrouter_model_registry import (
@@ -235,8 +236,19 @@ def deferred_topic_answer(question: str) -> str:
     )
 
 
+class PdfReadRequest(BaseModel):
+    """Typed explicit PDF read action from Ask UI (mirrors persisted JSON shape)."""
+
+    pdf_url: str = Field(..., min_length=8, max_length=2048)
+
+    @field_validator("pdf_url", mode="before")
+    @classmethod
+    def _strip_pdf_url(cls, v: object) -> str:
+        return str(v or "").strip()
+
+
 class AgentQueryRequestV2(BaseModel):
-    question: str = Field(..., min_length=1)
+    question: str = Field(default="", min_length=0, max_length=120_000)
     workspace_id: str | None = None
     max_tool_calls: int | None = Field(default=None, ge=1, le=30)
     thread_id: str | None = Field(
@@ -276,17 +288,26 @@ class AgentQueryRequestV2(BaseModel):
         description=(
             "When false, deny external HTTP research tools for this turn "
             "(``web_search`` / ``web_fetch`` / ``arxiv_search`` / ``arxiv_fetch`` / "
-            "``unpaywall_lookup``). "
-            "When true or null/omitted, keep web research tools enabled."
+            "``unpaywall_lookup`` / ``openalex_works_search``). "
+            "``read_external_pdf`` remains available when the client sends a typed "
+            "``pdf_read_request`` (explicit user PDF action), subject to "
+            "``pdf_reading_mode`` / ``agent_pdf_read_tool_enabled``."
         ),
     )
-    pdf_read_request: dict[str, Any] | None = Field(
+    pdf_read_request: PdfReadRequest | None = Field(
         default=None,
-        description=(
-            "Optional explicit PDF-read action from UI. "
-            "Current schema: ``{pdf_url: https://...}``."
-        ),
+        description="Optional explicit PDF-read action from UI (HTTPS ``pdf_url``).",
     )
+
+    @model_validator(mode="after")
+    def _require_question_or_pdf_read(self) -> AgentQueryRequestV2:
+        q = str(self.question or "").strip()
+        legacy_stub = "[pdf-read-action]"
+        if self.pdf_read_request is None and not q:
+            raise ValueError("question must be non-empty unless pdf_read_request is provided")
+        if self.pdf_read_request is not None and (not q or q == legacy_stub):
+            self.question = PDF_READ_USER_MESSAGE_TOKEN
+        return self
 
     @field_validator("thread_id", mode="before")
     @classmethod
@@ -312,13 +333,17 @@ class AgentQueryRequestV2(BaseModel):
 
     @field_validator("pdf_read_request", mode="before")
     @classmethod
-    def _coerce_pdf_read_request(cls, v: object) -> dict[str, Any] | None:
-        if v is None or not isinstance(v, dict):
+    def _coerce_pdf_read_request(cls, v: object) -> PdfReadRequest | None:
+        if v is None:
+            return None
+        if isinstance(v, PdfReadRequest):
+            return v
+        if not isinstance(v, dict):
             return None
         pdf_url = str(v.get("pdf_url") or "").strip()
         if not pdf_url:
             return None
-        return {"pdf_url": pdf_url[:2048]}
+        return PdfReadRequest(pdf_url=pdf_url[:2048])
 
     @field_validator("agent_mode", mode="before")
     @classmethod
@@ -490,6 +515,7 @@ def response_from_run(
 __all__ = [
     "AgentQueryRequestV2",
     "AgentQueryResponseV2",
+    "PdfReadRequest",
     "agent_chat_llm_run_metadata",
     "apply_runtime_metadata_from_state",
     "merge_hook_chain_events_into_run_metadata",

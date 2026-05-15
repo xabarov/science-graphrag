@@ -442,3 +442,22 @@ Implementation: [`science_graphrag/api/workspace_graph/router.py`](../../science
 
 - **`progress_pct`**: `float | null` (0..1) — взвешенный прогресс по стадиям (running = 0.5 веса), чтобы UI рисовал общий бар без «рваных» процентов.
 - **`stages[i].expected_duration_ms`**: `int | null` — средняя длительность стадии по последним успешным jobs (Postgres), подсказка для ETA на фронте.
+
+## 7) Settings — LLM snapshot (Settings page)
+
+Реализация: `GET/PATCH /v1/settings/llm`, `DELETE /v1/settings/llm/secret`, `DELETE /v1/settings/llm/vision-secret` в [`science_graphrag/api/settings.py`](../../science_graphrag/api/settings.py); снимок материализуется через [`science_graphrag/settings/snapshot_llm.py`](../../science_graphrag/settings/snapshot_llm.py) и [`science_graphrag/settings/llm_runtime.py`](../../science_graphrag/settings/llm_runtime.py).
+
+**`GET /v1/settings`** — в `llm` помимо `status`, `effective`, `advanced_controls` ожидаются:
+
+- **`tasks`**: нормализованные профили задач (`extraction`, `chat`, `vision`, `embeddings`) с полями модели и **masked** метаданными ключа (`source`, опционально `masked`).
+- **`diagnostics`**: операторский блок (`operator_env_variables`, `notes`) — для раскрываемой секции «для операторов», не для основного UX.
+
+**`PATCH /v1/settings/llm`** — тело включает обязательные поля провайдера (`base_url`, `model`, `temperature`, `timeout_seconds`) и опционально:
+
+- **`chat_model`**, **`vl_model`**, **`vl_base_url`** — клиент может опускать поля, если persisted значение не меняется (рекомендуемый контракт для UI: не «материализовать» унаследованные из env дефолты в JSON при сохранении несвязанных полей).
+- **`api_key`** — сохраняется в server secret store как основной OpenAI-compatible ключ.
+- **`vision_api_key`** — отдельный UI-managed ключ для PDF/Vision; пустая строка может трактоваться как сброс override (см. обработку в API).
+
+**`DELETE /v1/settings/llm/vision-secret`** — удаляет только vault-запись vision-ключа; основной `llm.api_key` и прочие поля не трогаются. После удаления effective vision снова наследует env/default по правилам resolver.
+
+Клиент: `ui/src/pages/SettingsPage/settingsApi.js` (`deleteLlmVisionSecret`, `updateLlmSettings`).

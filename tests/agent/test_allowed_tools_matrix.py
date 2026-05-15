@@ -109,3 +109,29 @@ def test_turn_tool_denylist_denies_named_tools() -> None:
     body = json.loads(str(getattr(msgs[0], "content", "") or ""))
     assert body.get("error") == "permission_denied"
     assert "turn_tool_denylist" in str(body.get("reason") or "")
+
+
+def test_apply_allowed_tools_matrix_filters_turn_tool_denylist() -> None:
+    tools = [_named_tool("arxiv_fetch"), _named_tool("read_external_pdf")]
+    st = Settings(
+        agent_allowed_tools_matrix_enabled=True,
+    )
+    state = build_initial_agent_state(
+        question="hi",
+        workspace_id=None,
+        max_tool_calls=4,
+        agent_runtime="langgraph_research_v1",
+        settings=st,
+        turn_tool_denylist=["arxiv_fetch"],
+    )
+    out, meta = apply_allowed_tools_matrix(tools, settings=st, state=state)
+    names = {getattr(t, "name", "") for t in out}
+    assert "arxiv_fetch" not in names
+    assert "read_external_pdf" in names
+    removed = list(meta.get("removed") or [])
+    assert any(
+        isinstance(row, dict)
+        and row.get("tool") == "arxiv_fetch"
+        and row.get("reason") == "turn_tool_denylist"
+        for row in removed
+    )

@@ -634,3 +634,15 @@ The architecture is in good shape. The next improvement should be either:
 
 **Execution detail:** Phase 3 **closeout** (optional OpenAlex live smoke, diagnostics `status` decision) and Phase 4 **staged delivery** (PDF artifact pipeline → SSE → trust → Ask UI → live matrix) are spelled out in `docs/analysis/external-research-tools-workplan-2026-05-15.md` (Phase 3 **Remaining / Closeout**, Phase 4 Stages 1–8, PR slicing PR 4b–PR 9).
 
+## Phase 4 honest closure (2026-05-15) — shipped in repo
+
+- **Typed API:** `PdfReadRequest` + relaxed `question` when `pdf_read_request` is present; machine token `__sg_pdf_read_action__` replaces legacy `"[pdf-read-action]"` in the canonical path.
+- **Orchestrator:** `pdf_read_orchestrator.execute_pdf_read` is the single fetch/parse/cache path for `read_external_pdf` and optional SSE prefetch (`pdf_read_validating` / `pdf_read_downloading` / `pdf_read_extracting`) before the LangGraph stream.
+- **Pipeline/cache:** `pdf_read_pipeline` (policy + fetch + parse), `BoundedTtlPdfReadCache` (LRU + TTL), operator knob `agent_pdf_read_cache_max_entries` (Settings + snapshot + PATCH allowlist).
+- **Policy:** `EXTERNAL_RESEARCH_WEB_TOOL_NAMES` vs `read_external_pdf`; explicit `pdf_read_request` bypasses web-research denylist for PDF only; `pdf_reading_mode=off` blocks agent PDF unless explicit request; LLM `allowed_domains` / `blocked_domains` on the tool are ignored (server policy).
+- **Evidence:** PDF success uses `evidence_quality=variable`; failed `read_external_pdf` hydrates citations like `web_fetch` / `unpaywall` failures.
+- **UI:** Native token + i18n user-turn label; pdf-only submit; product-step strings for PDF prefetch.
+- **Live matrix:** Operator checklist in `scripts/live_check/pdf_read_live_matrix.md` (after `make dev-up` + `config-check`).
+
+**Residual:** durable artifact store / DB-backed job IDs beyond in-process cache — see `docs/backlog/refactor-backend.md` for follow-up.
+

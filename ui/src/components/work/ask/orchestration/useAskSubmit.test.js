@@ -2,6 +2,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+import { PDF_READ_USER_MESSAGE_TOKEN } from "../../../../services/research/pdfReadUi.js";
 let lastStreamPayload = null;
 /** @type {"minimal" | "many_events"} */
 let streamScenario = "minimal";
@@ -106,7 +107,7 @@ describe("useAskSubmit", () => {
 
     await act(async () => {
       await result.current.submit({
-        query: "[pdf-read-action]",
+        query: PDF_READ_USER_MESSAGE_TOKEN,
         threadId: "sess-1",
         historyDigest: null,
         pdfReadRequest: { pdf_url: "https://arxiv.org/pdf/1706.03762.pdf" },
@@ -114,7 +115,32 @@ describe("useAskSubmit", () => {
     });
 
     expect(lastStreamPayload).toMatchObject({
-      question: "[pdf-read-action]",
+      question: PDF_READ_USER_MESSAGE_TOKEN,
+      pdfReadRequest: { pdf_url: "https://arxiv.org/pdf/1706.03762.pdf" },
+    });
+  });
+
+  it("allows pdf-only submit by coercing question to server token", async () => {
+    const { useAskSubmit } = await import("./useAskSubmit.js");
+    const { result } = renderHook(() =>
+      useAskSubmit({
+        workspaceId: "ws-1",
+        onResult: vi.fn(),
+        useStreamingAgent: true,
+      }),
+    );
+
+    await act(async () => {
+      await result.current.submit({
+        query: "",
+        threadId: "sess-1",
+        historyDigest: null,
+        pdfReadRequest: { pdf_url: "https://arxiv.org/pdf/1706.03762.pdf" },
+      });
+    });
+
+    expect(lastStreamPayload).toMatchObject({
+      question: PDF_READ_USER_MESSAGE_TOKEN,
       pdfReadRequest: { pdf_url: "https://arxiv.org/pdf/1706.03762.pdf" },
     });
   });

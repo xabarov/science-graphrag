@@ -15,10 +15,15 @@ from science_graphrag.agent.graph.errors import (
     AgentGraphRecursionLimitExceeded,
 )
 from science_graphrag.agent.graph.state import build_initial_agent_state
+from science_graphrag.agent.pdf_read_contract import (
+    PDF_READ_DEFAULT_EXCERPT_CHARS,
+    PDF_READ_USER_MESSAGE_TOKEN,
+)
 from science_graphrag.agent.request_turn_policy import (
     build_agent_request_turn_context,
     clear_plan_mode_after_plan_turn,
 )
+from science_graphrag.agent.runtime_answer_salvage import RUNTIME_FALLBACK_ANSWER
 from science_graphrag.agent.subagents.lifecycle import subagent_lifecycle_enhanced_enabled
 from science_graphrag.agent.subagents.runtime import (
     RoutingSubagentLegLedger,
@@ -109,6 +114,7 @@ async def stream_agent_events(
                     question=question,
                     web_research_enabled=web_research_enabled,
                     agent_mode=agent_mode,
+                    pdf_read_request=pdf_read_request,
                 )
                 graph = _stream_lifecycle_mod.build_retrieval_graph(stores, settings)
                 session_summary = ""
@@ -231,6 +237,60 @@ async def stream_agent_events(
                                 "message": (
                                     "history_digest was not a JSON array of objects; it was ignored"
                                 ),
+                            }
+                        )
+                    }
+
+                _pdf_url = (
+                    str(pdf_read_request.get("pdf_url") or "").strip()
+                    if isinstance(pdf_read_request, dict)
+                    else ""
+                )
+                _q_strip = str(question or "").strip()
+                _pdf_prefetch_turn = bool(_pdf_url) and (
+                    not _q_strip
+                    or _q_strip == PDF_READ_USER_MESSAGE_TOKEN
+                    or _q_strip == "[pdf-read-action]"
+                )
+                if _pdf_prefetch_turn:
+
+                    def _pdf_prefetch() -> None:
+                        from science_graphrag.agent.tools.external.pdf_read_orchestrator import (
+                            execute_pdf_read,
+                        )
+
+                        state.prefetched_pdf_result = execute_pdf_read(
+                            _pdf_url,
+                            settings=settings,
+                            max_excerpt_chars=PDF_READ_DEFAULT_EXCERPT_CHARS,
+                            job_id=None,
+                        )
+
+                    yield {
+                        "data": json.dumps(
+                            {
+                                "type": "product_step",
+                                "code": "pdf_read_validating",
+                                "tool": "read_external_pdf",
+                            }
+                        )
+                    }
+                    yield {
+                        "data": json.dumps(
+                            {
+                                "type": "product_step",
+                                "code": "pdf_read_downloading",
+                                "tool": "read_external_pdf",
+                            }
+                        )
+                    }
+                    await asyncio.to_thread(_pdf_prefetch)
+                    yield {
+                        "data": json.dumps(
+                            {
+                                "type": "product_step",
+                                "code": "pdf_read_extracting",
+                                "tool": "read_external_pdf",
                             }
                         )
                     }
@@ -378,6 +438,23 @@ async def stream_agent_events(
                     initial_state=initial_state,
                 ):
                     yield ev
+                if _pdf_prefetch_turn and state.prefetched_pdf_result:
+                    pf = state.prefetched_pdf_result
+                    if (
+                        str(state.final_answer or "").strip() == RUNTIME_FALLBACK_ANSWER
+                        and isinstance(pf, dict)
+                        and bool(pf.get("ok"))
+                        and str(pf.get("summary") or "").strip()
+                    ):
+                        logger.warning(
+                            "pdf_prefetch_summary_unused_fallback_answer",
+                            extra={
+                                "agent_metrics": {
+                                    "pdf_url": _pdf_url[:256],
+                                    "summary_chars": len(str(pf.get("summary") or "")),
+                                }
+                            },
+                        )
             finally:
                 clear_plan_mode_after_plan_turn(thread_id, requested_plan=_requested_plan_cleanup)
     except Exception as exc:  # noqa: BLE001

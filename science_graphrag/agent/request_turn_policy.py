@@ -13,6 +13,7 @@ from science_graphrag.agent.context.research_plan_session import (
     seed_research_plan_if_empty,
 )
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
+from science_graphrag.agent.pdf_read_contract import PDF_READ_USER_MESSAGE_TOKEN
 from science_graphrag.config import Settings
 from science_graphrag.external_intent_markers import (
     ARXIV_MARKERS,
@@ -29,6 +30,10 @@ EXTERNAL_RESEARCH_TOOL_NAMES: frozenset[str] = frozenset(
         "openalex_works_search",
         "read_external_pdf",
     }
+)
+# External HTTP tools denied when the user disables web research (PDF is gated separately).
+EXTERNAL_RESEARCH_WEB_TOOL_NAMES: frozenset[str] = frozenset(
+    EXTERNAL_RESEARCH_TOOL_NAMES - frozenset({"read_external_pdf"})
 )
 WEB_RESEARCH_TOOL_NAMES: frozenset[str] = EXTERNAL_RESEARCH_TOOL_NAMES
 
@@ -66,6 +71,7 @@ def build_agent_request_turn_context(
     question: str | None = None,
     web_research_enabled: bool | None,
     agent_mode: str,
+    pdf_read_request: dict[str, Any] | None = None,
 ) -> AgentRequestTurnContext:
     """Apply session plan_mode start-of-turn + compute denylist and transparency metadata."""
     mode = (agent_mode or "agent").strip().lower()
@@ -89,7 +95,19 @@ def build_agent_request_turn_context(
         default_when_unspecified=bool(settings.external_research_default_enabled),
     )
     warn_req.extend(compute_request_warnings(settings, web_research_user_enabled=user_web))
-    tdl = compute_turn_tool_denylist(settings, web_research_user_enabled=user_web)
+    explicit_pdf = bool(
+        isinstance(pdf_read_request, dict) and str(pdf_read_request.get("pdf_url") or "").strip()
+    )
+    q_raw = str(question or "").strip()
+    explicit_pdf_only_turn = explicit_pdf and (
+        not q_raw or q_raw == PDF_READ_USER_MESSAGE_TOKEN or q_raw == "[pdf-read-action]"
+    )
+    tdl = compute_turn_tool_denylist(
+        settings,
+        web_research_user_enabled=user_web,
+        explicit_pdf_read_request=explicit_pdf,
+        explicit_pdf_only_turn=explicit_pdf_only_turn,
+    )
     frag = build_request_run_metadata_fragment(
         settings,
         web_research_enabled=web_research_enabled,
@@ -97,6 +115,7 @@ def build_agent_request_turn_context(
         turn_tool_denylist=tdl,
         request_warnings=warn_req,
         external_research_default_enabled=bool(settings.external_research_default_enabled),
+        request_pdf_reading_mode=str(getattr(settings, "pdf_reading_mode", "ask") or "ask"),
     )
     return AgentRequestTurnContext(
         mode=mode,
@@ -130,13 +149,23 @@ def compute_turn_tool_denylist(
     settings: Settings,
     *,
     web_research_user_enabled: bool,
+    explicit_pdf_read_request: bool = False,
+    explicit_pdf_only_turn: bool = False,
 ) -> list[str]:
-    """Tool names denied for this turn when the user disables external HTTP research.
-
-    Covers Crossref/arXiv/Unpaywall/OpenAlex tools (see ``EXTERNAL_RESEARCH_TOOL_NAMES``).
-    """
-    _ = settings
-    return sorted(EXTERNAL_RESEARCH_TOOL_NAMES) if not web_research_user_enabled else []
+    """Compute per-turn tool denylist (web research toggle + PDF policy + operator gates)."""
+    deny: set[str] = set()
+    if explicit_pdf_only_turn:
+        deny.update(EXTERNAL_RESEARCH_WEB_TOOL_NAMES)
+    if not web_research_user_enabled:
+        deny.update(EXTERNAL_RESEARCH_WEB_TOOL_NAMES)
+        if not explicit_pdf_read_request:
+            deny.add("read_external_pdf")
+    if not bool(getattr(settings, "agent_pdf_read_tool_enabled", True)):
+        deny.add("read_external_pdf")
+    pdf_mode = str(getattr(settings, "pdf_reading_mode", "ask") or "ask").strip().lower()
+    if pdf_mode == "off" and not explicit_pdf_read_request:
+        deny.add("read_external_pdf")
+    return sorted(deny)
 
 
 def compute_request_warnings(
@@ -210,6 +239,7 @@ def build_request_run_metadata_fragment(
     turn_tool_denylist: list[str],
     request_warnings: list[str],
     external_research_default_enabled: bool = True,
+    request_pdf_reading_mode: str | None = None,
 ) -> dict[str, Any]:
     """Small fragment merged into run_metadata for UI transparency."""
     user_on = effective_web_research_user_enabled(
@@ -217,7 +247,7 @@ def build_request_run_metadata_fragment(
         default_when_unspecified=bool(external_research_default_enabled),
     )
     _ = settings
-    return {
+    out: dict[str, Any] = {
         "request_web_research_enabled": web_research_enabled,
         "effective_web_research_user_enabled": user_on,
         "effective_web_research_tools": bool(user_on),
@@ -225,10 +255,14 @@ def build_request_run_metadata_fragment(
         "turn_tool_denylist": list(turn_tool_denylist),
         "request_turn_warnings": list(request_warnings),
     }
+    if request_pdf_reading_mode:
+        out["request_pdf_reading_mode"] = str(request_pdf_reading_mode).strip().lower()
+    return out
 
 
 __all__ = [
     "EXTERNAL_RESEARCH_TOOL_NAMES",
+    "EXTERNAL_RESEARCH_WEB_TOOL_NAMES",
     "WEB_RESEARCH_TOOL_NAMES",
     "AgentRequestTurnContext",
     "AgentUiMode",

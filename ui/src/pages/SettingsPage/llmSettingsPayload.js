@@ -51,3 +51,74 @@ export function buildRuntimeOverridesPayload(advValues) {
   }
   return o;
 }
+
+/**
+ * Build PATCH /v1/settings/llm body. VL / chat overrides are included only when they
+ * differ from persisted snapshot values so unrelated saves do not materialize inherited defaults.
+ *
+ * @param {{
+ *   baseUrl: string,
+ *   model: string,
+ *   chatModel: string,
+ *   temperature: number,
+ *   timeoutSeconds: number,
+ *   vlModel: string,
+ *   vlBaseUrl: string,
+ *   llm: object,
+ *   replaceKey: boolean,
+ *   apiKey: string,
+ *   replaceVisionKey: boolean,
+ *   visionApiKey: string,
+ *   advDirty: boolean,
+ *   advValues: object,
+ * }} opts
+ */
+export function buildLlmSettingsSubmitPayload(opts) {
+  const {
+    baseUrl,
+    model,
+    chatModel,
+    temperature,
+    timeoutSeconds,
+    vlModel,
+    vlBaseUrl,
+    llm,
+    replaceKey,
+    apiKey,
+    replaceVisionKey,
+    visionApiKey,
+    advDirty,
+    advValues,
+  } = opts;
+
+  const persistedVm = (llm?.vl_model || "").trim();
+  const persistedVb = (llm?.vl_base_url || "").trim();
+  const persistedCm = (llm?.chat_model || "").trim();
+
+  const payload = {
+    base_url: baseUrl,
+    model,
+    temperature: Number(temperature),
+    timeout_seconds: Number(timeoutSeconds),
+  };
+
+  if (chatModel.trim() !== persistedCm) {
+    payload.chat_model = chatModel.trim();
+  }
+  if (vlModel.trim() !== persistedVm) {
+    payload.vl_model = vlModel.trim();
+  }
+  if (vlBaseUrl.trim() !== persistedVb) {
+    payload.vl_base_url = vlBaseUrl.trim();
+  }
+  if (replaceKey && apiKey) {
+    payload.api_key = apiKey;
+  }
+  if (replaceVisionKey && visionApiKey.trim()) {
+    payload.vision_api_key = visionApiKey.trim();
+  }
+  if (advDirty) {
+    payload.runtime_overrides = buildRuntimeOverridesPayload(advValues);
+  }
+  return payload;
+}

@@ -328,6 +328,60 @@ def _attach_unpaywall_lookup_failures_from_messages(
             c["fallback_message"] = msg_txt
 
 
+def _attach_read_external_pdf_failures_from_messages(
+    citations: list[dict[str, Any]],
+    messages: list[Any] | None,
+) -> None:
+    """Attach fallback hints when ``read_external_pdf`` failed (URL-keyed like ``web_fetch``)."""
+
+    failures: dict[str, tuple[str, str, str]] = {}
+    for payload in _iter_tool_payload_dicts(messages, tool_name="read_external_pdf"):
+        if payload.get("ok") is not False:
+            continue
+        err = payload.get("error")
+        reason = normalize_tool_error_to_fallback_reason(str(err) if err is not None else None)
+        if not reason:
+            reason = FALLBACK_UNKNOWN
+        msg_txt = human_fallback_message(reason)
+        url = str(payload.get("url") or "").strip()
+        hint = payload.get("sse_hint")
+        if isinstance(hint, dict) and not url:
+            url = str(hint.get("url") or "").strip()
+        if not url:
+            continue
+        failures[_url_match_key(url)] = (reason, msg_txt, url)
+
+    if not failures:
+        return
+
+    existing = {_url_match_key(str(c.get("url") or "")) for c in citations if isinstance(c, dict)}
+    for key, (reason, msg_txt, display_url) in failures.items():
+        if key and key not in existing:
+            citations.append(
+                {
+                    "source_type": "web",
+                    "url": display_url,
+                    "title": display_url,
+                    "source_tool": "read_external_pdf",
+                    "fallback_reason": reason,
+                    "fallback_message": msg_txt,
+                }
+            )
+            existing.add(key)
+
+    for c in citations:
+        if not isinstance(c, dict) or not citation_is_web_evidence(c):
+            continue
+        key = _url_match_key(str(c.get("url") or ""))
+        if not key or key not in failures:
+            continue
+        reason, msg_txt, _disp = failures[key]
+        if not str(c.get("fallback_reason") or "").strip():
+            c["fallback_reason"] = reason
+        if not str(c.get("fallback_message") or "").strip():
+            c["fallback_message"] = msg_txt
+
+
 def _attach_web_fetch_failures_from_messages(
     citations: list[dict[str, Any]],
     messages: list[Any] | None,
@@ -581,6 +635,7 @@ def hydrate_citations_for_ui(
     merge_paper_profile_abstracts_into_citations(merged, abstracts)
     _merge_web_sources_into_citations(merged, list(web_sources or []), max_web=8)
     _attach_web_fetch_failures_from_messages(merged, messages)
+    _attach_read_external_pdf_failures_from_messages(merged, messages)
     _attach_unpaywall_lookup_failures_from_messages(merged, messages)
     _attach_doi_resolver_provenance_from_messages(merged, messages)
     apply_trust_labels_to_citations(merged)

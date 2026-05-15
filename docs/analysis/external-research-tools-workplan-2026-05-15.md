@@ -355,6 +355,8 @@ flowchart TD
 
 ### Acceptance (Phase 4)
 
+**Status (2026-05-15):** Core backend+UI path shipped — typed `pdf_read_request`, `execute_pdf_read` orchestrator, bounded LRU+TTL cache, SSE prefetch steps, denylist/`pdf_reading_mode` alignment, citation hydration on PDF failures, variable evidence quality, Ask UI token+i18n. Durable cross-process artifact persistence remains backlog (see implementation review “Phase 4 honest closure”).
+
 - Explicit PDF read produces visible progress + persisted artifact + answer grounded in extracted evidence with correct trust labels.
 - Agent never silently claims full-text reading when extraction did not run or failed.
 

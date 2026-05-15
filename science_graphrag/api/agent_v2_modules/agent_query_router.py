@@ -70,6 +70,7 @@ async def post_agent_query_v2(
         _deferred_topic_answer(body.question) if _looks_like_deferred_topic(body.question) else None
     )
 
+    pdf_rr = body.pdf_read_request.model_dump() if body.pdf_read_request is not None else None
     if wants_sse:
         if deferred_topic_answer:
             return EventSourceResponse(
@@ -98,7 +99,7 @@ async def post_agent_query_v2(
                 user_structured_answer=body.user_structured_answer,
                 web_research_enabled=body.web_research_enabled,
                 agent_mode=body.agent_mode,
-                pdf_read_request=body.pdf_read_request,
+                pdf_read_request=pdf_rr,
             )
         )
 

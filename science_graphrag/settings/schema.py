@@ -227,6 +227,15 @@ def build_settings_schema() -> dict[str, Any]:
             "description": "Cache TTL for read_external_pdf responses.",
         },
         {
+            "id": "agent_pdf_read_cache_max_entries",
+            "type": "integer",
+            "required": False,
+            "min": 16,
+            "max": 10000,
+            "group": "pdf",
+            "description": "Max in-process cached PDF read entries (LRU).",
+        },
+        {
             "id": "agent_supervisor_max_rounds",
             "type": "integer",
             "required": False,

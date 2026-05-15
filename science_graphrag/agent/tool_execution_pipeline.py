@@ -230,6 +230,7 @@ def apply_allowed_tools_matrix(
     deny = set(settings.agent_tool_denylist_always or [])
     mode_deny = (settings.agent_tool_denylist_by_mode or {}).get(mode) or []
     deny.update(str(x).strip() for x in mode_deny if str(x).strip())
+    turn_deny = _turn_tool_denylist_from_state(state)
 
     policy_map = settings.agent_tool_allowlist_by_tool_policy or {}
     allow_for_policy = policy_map.get(pol)
@@ -238,6 +239,10 @@ def apply_allowed_tools_matrix(
     for t in tools:
         n = normalize_tool_call_name(getattr(t, "name", "") or "")
         if not n:
+            continue
+        if n in turn_deny:
+            names["denylist_hits"].append(n)
+            names["removed"].append({"tool": n, "reason": "turn_tool_denylist"})
             continue
         if n in deny:
             names["denylist_hits"].append(n)

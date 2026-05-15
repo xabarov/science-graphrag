@@ -180,6 +180,8 @@ def test_settings_snapshot_endpoint_smoke() -> None:
     assert "vl_api_key_explicit_env" in st
     assert "resolved_vl_model" in payload["llm"]["effective"]
     assert "resolved_vl_base_url" in payload["llm"]["effective"]
+    assert "tasks" in payload["llm"]
+    assert "diagnostics" in payload["llm"]
     assert "benchmark" in payload
     assert "layer1" in payload["benchmark"]["by_family"]
     assert payload["benchmark"]["by_family"]["layer1"]["model_profile"]
@@ -399,6 +401,45 @@ def test_settings_llm_patch_and_delete_secret_smoke(tmp_path: Path, monkeypatch:
     else:
         assert deleted["llm"]["status"]["configured"] is True
     assert "ingestion" in deleted
+
+
+def test_settings_llm_vision_secret_patch_and_delete_smoke(tmp_path: Path, monkeypatch: Any) -> None:
+    """PATCH /v1/settings/llm can persist vision API key; DELETE clears vault entry."""
+
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+
+    client = _client()
+    patch_res = client.patch(
+        "/v1/settings/llm",
+        json={
+            "base_url": "https://openrouter.ai/api/v1",
+            "model": "mistralai/mistral-small-3.2-24b-instruct",
+            "temperature": 0.1,
+            "timeout_seconds": 120,
+            "api_key": "sk-demo-secret-vision-flow",
+            "vision_api_key": "sk-vision-only-secret",
+        },
+    )
+    assert patch_res.status_code == 200
+    body = patch_res.json()
+    assert body["llm"]["status"]["has_saved_secret"] is True
+    assert body["llm"]["status"]["has_saved_vision_secret"] is True
+
+    delete_res = client.delete("/v1/settings/llm/vision-secret")
+    assert delete_res.status_code == 200
+    deleted = delete_res.json()
+    assert deleted["llm"]["status"]["has_saved_vision_secret"] is False
+    assert deleted["llm"]["status"]["has_saved_secret"] is True
 
 
 def test_settings_llm_patch_distributed_quota_runtime_fields(

@@ -164,6 +164,9 @@ def build_agent_tools_snapshot(
     persisted_pdf_max_bytes = _persisted_int(agent_tools_cfg, "agent_pdf_read_max_bytes")
     persisted_pdf_max_pages = _persisted_int(agent_tools_cfg, "agent_pdf_read_max_pages")
     persisted_pdf_cache_ttl = _persisted_int(agent_tools_cfg, "agent_pdf_read_cache_ttl_seconds")
+    persisted_pdf_cache_max_entries = _persisted_int(
+        agent_tools_cfg, "agent_pdf_read_cache_max_entries"
+    )
 
     src_cfg = agent_tools_cfg.get("external_research_sources") or {}
     persisted_sources: dict[str, Any] = {}
@@ -196,6 +199,7 @@ def build_agent_tools_snapshot(
         "agent_pdf_read_max_bytes": persisted_pdf_max_bytes,
         "agent_pdf_read_max_pages": persisted_pdf_max_pages,
         "agent_pdf_read_cache_ttl_seconds": persisted_pdf_cache_ttl,
+        "agent_pdf_read_cache_max_entries": persisted_pdf_cache_max_entries,
         "external_research_sources": persisted_sources or None,
         "effective": {
             "resolved_agent_supervisor_max_rounds": int(
@@ -228,6 +232,9 @@ def build_agent_tools_snapshot(
             ),
             "resolved_agent_pdf_read_cache_ttl_seconds": int(
                 getattr(merged_settings, "agent_pdf_read_cache_ttl_seconds", 300)
+            ),
+            "resolved_agent_pdf_read_cache_max_entries": int(
+                getattr(merged_settings, "agent_pdf_read_cache_max_entries", 256)
             ),
             "resolved_external_research_sources": {
                 "crossref": bool(merged_settings.external_research_source_crossref_enabled),

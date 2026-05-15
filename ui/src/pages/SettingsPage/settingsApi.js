@@ -62,6 +62,13 @@ export async function deleteLlmSecret() {
   return res.data;
 }
 
+export async function deleteLlmVisionSecret() {
+  const res = await apiClient.delete(buildApiUrl("/v1/settings/llm/vision-secret"), {
+    headers: authHeaders(),
+  });
+  return res.data;
+}
+
 export async function testLlmConnection(payload) {
   const res = await apiClient.post(buildApiUrl("/v1/settings/llm/test"), payload, {
     headers: authHeaders(),

@@ -13,6 +13,7 @@ import { useAskWorkContext } from "./useAskWorkContext.js";
 import { useAskPerformAgentSubmit } from "./useAskPerformAgentSubmit.js";
 import { formatAskAgentUiError } from "./askAgentUiErrors.js";
 import { deriveAskPanelScopeEyebrow } from "./askPanelScopePresentation.js";
+import { PDF_READ_USER_MESSAGE_TOKEN } from "../../../../services/research/pdfReadUi.js";
 import { useAskPanelClipboard } from "./useAskPanelClipboard.js";
 import { useAskPanelStreamArtifacts } from "./useAskPanelStreamArtifacts.js";
 
@@ -269,7 +270,7 @@ export function useAskPanelOrchestration({
       if (!pdfUrl || isLoading || pdfReadingMode === "off") return;
       setPdfReadState({ isActive: true, url: pdfUrl, error: "", mode: "running" });
       try {
-        await performAgentSubmit(t("askPanel.pdfRead.queryStub"), {
+        await performAgentSubmit(PDF_READ_USER_MESSAGE_TOKEN, {
           pdfReadRequest: { pdf_url: pdfUrl },
         });
         setPdfReadState({ isActive: false, url: pdfUrl, error: "", mode: "done" });

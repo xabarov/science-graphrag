@@ -15,11 +15,14 @@ export function providerSummary(llm, t) {
   } else {
     bits.push(t("llm.summary.noCredential"));
   }
-  if (llm?.effective?.resolved_model) {
-    bits.push(t("llm.summary.model", { model: llm.effective.resolved_model }));
+  const tasks = llm?.tasks;
+  const extractionModel = tasks?.extraction?.model || llm?.effective?.resolved_model;
+  const chatModel = tasks?.chat?.model || llm?.effective?.resolved_chat_model;
+  if (extractionModel) {
+    bits.push(t("llm.summary.model", { model: extractionModel }));
   }
-  if (llm?.effective?.resolved_chat_model) {
-    bits.push(t("llm.summary.chatModel", { model: llm.effective.resolved_chat_model }));
+  if (chatModel && chatModel !== extractionModel) {
+    bits.push(t("llm.summary.chatModel", { model: chatModel }));
   }
   if (llm?.effective?.resolved_base_url) {
     bits.push(llm.effective.resolved_base_url);
@@ -46,7 +49,7 @@ export function credentialAlertBody(llm, t) {
   if (src === "environment") {
     return {
       primary: t("llm.credentials.fromEnv", { masked: maskedSuffix }),
-      hint: st.env_key_hint || null,
+      hint: t("llm.credentials.fromEnvHint"),
     };
   }
   return {

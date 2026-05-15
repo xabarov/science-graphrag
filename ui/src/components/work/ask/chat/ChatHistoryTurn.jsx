@@ -11,6 +11,7 @@ import { AskAnswerPanel } from "../answer/AskAnswerPanel.jsx";
 import { AgentAssistantTurnShell } from "../../agent/index.js";
 import MarkdownView from "../../markdown/MarkdownView.jsx";
 import ChatUserBubble from "./ChatUserBubble.jsx";
+import { isPdfReadUserMessage } from "../../../../services/research/pdfReadUi.js";
 
 /**
  * One completed turn in the ask thread (user bubble + assistant body + actions).
@@ -52,7 +53,9 @@ export default function ChatHistoryTurn({
         },
       }}
     >
-      <ChatUserBubble text={entry.query} />
+      <ChatUserBubble
+        text={isPdfReadUserMessage(entry.query) ? t("askPanel.pdfRead.userTurnLabel") : entry.query}
+      />
       <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
         <Box sx={{ position: "relative", width: "100%", maxWidth: "min(880px, 100%)" }}>
           {entry.details && typeof entry.details === "object" ? (

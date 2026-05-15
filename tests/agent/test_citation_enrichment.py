@@ -226,9 +226,23 @@ def test_hydrate_merges_web_sources_pdf_read_into_citations() -> None:
     assert out[0].get("source_type") == "web"
     assert out[0].get("provenance_kind") == "extracted_pdf_text"
     assert out[0].get("evidence_mode") == "pdf_read"
-    assert out[0].get("evidence_quality") == "strong"
+    assert out[0].get("evidence_quality") == "variable"
 
 
+def test_hydrate_attaches_read_external_pdf_failure_from_messages() -> None:
+    payload = json.dumps(
+        {
+            "ok": False,
+            "error": "pdf_too_large",
+            "url": "https://example.org/paper.pdf",
+            "web_sources": [],
+        }
+    )
+    messages = [ToolMessage(content=payload, tool_call_id="1", name="read_external_pdf")]
+    out = hydrate_citations_for_ui([], quote_candidates=[], chunk_store=None, messages=messages)
+    assert len(out) == 1
+    assert out[0].get("url") == "https://example.org/paper.pdf"
+    assert out[0].get("fallback_reason") == "pdf_too_large"
 def test_hydrate_merges_web_sources_into_citations() -> None:
     out = hydrate_citations_for_ui(
         [],

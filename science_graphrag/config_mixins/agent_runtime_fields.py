@@ -391,6 +391,12 @@ class AgentRuntimeFields(BaseModel):
         le=86_400,
         description="TTL for in-process cache of external PDF read results.",
     )
+    agent_pdf_read_cache_max_entries: int = Field(
+        default=256,
+        ge=16,
+        le=10_000,
+        description="Max in-process cached PDF read entries (LRU eviction beyond TTL).",
+    )
     agent_external_http_timeout_seconds: float = Field(
         default=25.0,
         ge=5.0,

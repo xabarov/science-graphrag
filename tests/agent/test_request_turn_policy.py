@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from science_graphrag.agent.pdf_read_contract import PDF_READ_USER_MESSAGE_TOKEN
 from science_graphrag.agent.request_turn_policy import (
+    EXTERNAL_RESEARCH_TOOL_NAMES,
     build_agent_request_turn_context,
     compute_turn_tool_denylist,
     effective_web_research_user_enabled,
@@ -19,15 +21,63 @@ def test_effective_web_research_user_enabled_none_is_true() -> None:
 
 def test_compute_turn_tool_denylist_when_deploy_on_user_off() -> None:
     st = Settings.model_construct()
-    assert compute_turn_tool_denylist(st, web_research_user_enabled=False) == [
-        "arxiv_fetch",
-        "arxiv_search",
-        "openalex_works_search",
-        "read_external_pdf",
-        "unpaywall_lookup",
-        "web_fetch",
-        "web_search",
-    ]
+    assert compute_turn_tool_denylist(st, web_research_user_enabled=False) == sorted(
+        EXTERNAL_RESEARCH_TOOL_NAMES
+    )
+
+
+def test_compute_turn_tool_denylist_web_off_allows_pdf_when_explicit() -> None:
+    st = Settings.model_construct()
+    deny = compute_turn_tool_denylist(
+        st,
+        web_research_user_enabled=False,
+        explicit_pdf_read_request=True,
+    )
+    assert "read_external_pdf" not in deny
+    assert "web_search" in deny
+
+
+def test_compute_turn_tool_denylist_pdf_only_turn_blocks_web_tools() -> None:
+    st = Settings.model_construct()
+    deny = compute_turn_tool_denylist(
+        st,
+        web_research_user_enabled=True,
+        explicit_pdf_read_request=True,
+        explicit_pdf_only_turn=True,
+    )
+    assert "read_external_pdf" not in deny
+    assert "web_fetch" in deny
+    assert "web_search" in deny
+
+
+def test_compute_turn_tool_denylist_pdf_mode_off_blocks_without_explicit() -> None:
+    st = Settings.model_construct(pdf_reading_mode="off")
+    deny = compute_turn_tool_denylist(
+        st,
+        web_research_user_enabled=True,
+        explicit_pdf_read_request=False,
+    )
+    assert "read_external_pdf" in deny
+
+
+def test_compute_turn_tool_denylist_pdf_mode_off_allows_explicit() -> None:
+    st = Settings.model_construct(pdf_reading_mode="off")
+    deny = compute_turn_tool_denylist(
+        st,
+        web_research_user_enabled=True,
+        explicit_pdf_read_request=True,
+    )
+    assert "read_external_pdf" not in deny
+
+
+def test_compute_turn_tool_denylist_operator_disables_pdf_tool() -> None:
+    st = Settings.model_construct(agent_pdf_read_tool_enabled=False)
+    deny = compute_turn_tool_denylist(
+        st,
+        web_research_user_enabled=True,
+        explicit_pdf_read_request=True,
+    )
+    assert "read_external_pdf" in deny
 
 
 def test_build_agent_request_turn_context_metadata_keys() -> None:
@@ -40,6 +90,7 @@ def test_build_agent_request_turn_context_metadata_keys() -> None:
     )
     assert ctx.turn_tool_denylist
     assert ctx.run_metadata_fragment.get("effective_web_research_tools") is False
+    assert ctx.run_metadata_fragment.get("request_pdf_reading_mode") == "ask"
 
 
 def test_plan_mode_seeds_research_plan(monkeypatch) -> None:
@@ -182,3 +233,17 @@ def test_build_agent_request_turn_context_respects_persisted_external_default_of
     )
     assert ctx.run_metadata_fragment["effective_web_research_user_enabled"] is False
     assert "web_search" in ctx.turn_tool_denylist
+
+
+def test_build_agent_request_turn_context_pdf_token_turn_denies_web_fetch() -> None:
+    st = Settings.model_construct()
+    ctx = build_agent_request_turn_context(
+        st,
+        thread_id=None,
+        question=PDF_READ_USER_MESSAGE_TOKEN,
+        web_research_enabled=True,
+        agent_mode="agent",
+        pdf_read_request={"pdf_url": "https://arxiv.org/pdf/1706.03762.pdf"},
+    )
+    assert "read_external_pdf" not in ctx.turn_tool_denylist
+    assert "web_fetch" in ctx.turn_tool_denylist

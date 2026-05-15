@@ -200,9 +200,11 @@ def test_build_non_secret_overrides_merges_pdf_read_limits() -> None:
             "agent_pdf_read_max_bytes": 5000000,
             "agent_pdf_read_max_pages": 22,
             "agent_pdf_read_cache_ttl_seconds": 77,
+            "agent_pdf_read_cache_max_entries": 400,
         },
     )
     assert overlay["agent_pdf_read_tool_enabled"] is False
     assert overlay["agent_pdf_read_max_bytes"] == 5000000
     assert overlay["agent_pdf_read_max_pages"] == 22
     assert overlay["agent_pdf_read_cache_ttl_seconds"] == 77
+    assert overlay["agent_pdf_read_cache_max_entries"] == 400

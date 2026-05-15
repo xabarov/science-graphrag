@@ -203,3 +203,23 @@ def test_build_runtime_settings_managed_secret_overlays_extraction(
     base = Settings()
     runtime = svc.build_runtime_settings(base)
     assert runtime.extraction_llm_api_key == "sk-from-vault"
+
+
+def test_build_runtime_settings_managed_vision_secret_overlays_vl_api_key(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Server-managed vision secret overrides vl_api_key for merged runtime Settings."""
+    monkeypatch.chdir(tmp_path)
+    _clear_llm_api_env(monkeypatch)
+    monkeypatch.setenv("SCIENCE_GRAPHRAG_API_KEY", "sk-shared")
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    secrets.set_secret("llm.api_key", "sk-default-vault")
+    secrets.set_secret("llm.vision_api_key", "sk-vision-vault")
+    svc = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
+    base = Settings()
+    runtime = svc.build_runtime_settings(base)
+    assert runtime.extraction_llm_api_key == "sk-default-vault"
+    assert runtime.vl_api_key == "sk-vision-vault"

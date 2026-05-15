@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { formatResearchApiError, normalizeQueryResponse, postAgentQueryV2 } from "../../../../services/researchApi.js";
 import { useAgentStream } from "../../../../hooks/useAgentStream.js";
+import { PDF_READ_USER_MESSAGE_TOKEN } from "../../../../services/research/pdfReadUi.js";
 import { withStreamEventReceiveTime } from "../answer/withStreamEventReceiveTime.js";
 
 /**
@@ -109,7 +110,14 @@ export function useAskSubmit({
       webResearchEnabled = false,
       agentMode = "agent",
     }) => {
-      if (!String(query || "").trim()) return null;
+      if (!String(query || "").trim() && !(pdfReadRequest && String(pdfReadRequest.pdf_url || "").trim())) {
+        return null;
+      }
+      const pdfUrlPart =
+        pdfReadRequest && typeof pdfReadRequest === "object"
+          ? String(pdfReadRequest.pdf_url || "").trim()
+          : "";
+      const questionOut = String(query || "").trim() || (pdfUrlPart ? PDF_READ_USER_MESSAGE_TOKEN : "");
 
       if (useStreamingAgent) {
         lastStreamNormalizedRef.current = null;
@@ -117,7 +125,7 @@ export function useAskSubmit({
         toolTraceCaptureRef.current = [];
         const idleMs = Math.max(0, Date.now() - (lastClientActivityMsRef.current || Date.now()));
         await streamAgent({
-          question: query,
+          question: questionOut,
           maxToolCalls: 8,
           threadId,
           historyDigest,
@@ -146,7 +154,7 @@ export function useAskSubmit({
         const idleMs = Math.max(0, Date.now() - (lastClientActivityMsRef.current || Date.now()));
         const res = await postAgentQueryV2(
           {
-            question: query,
+            question: questionOut,
             workspace_id: workspaceId || null,
             max_tool_calls: 8,
             thread_id: threadId || null,

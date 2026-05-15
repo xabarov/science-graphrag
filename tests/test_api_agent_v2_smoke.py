@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessage
 
+from science_graphrag.agent.pdf_read_contract import PDF_READ_USER_MESSAGE_TOKEN
 from science_graphrag.api.agent import router as agent_router
 from science_graphrag.api.agent_v2 import router as agent_v2_router
 from science_graphrag.api.agent_v2_modules import stream_lifecycle as agent_v2_stream_lifecycle
@@ -76,6 +77,41 @@ def test_v2_sync_json(monkeypatch) -> None:
     assert captured_run_kwargs.get("pdf_read_request") == {
         "pdf_url": "https://arxiv.org/pdf/1706.03762.pdf"
     }
+
+
+def test_v2_sync_json_normalizes_pdf_only_question_token(monkeypatch) -> None:
+    class _FakeOut:
+        answer = "Test answer"
+        citations = []
+        tool_trace = []
+
+    captured_run_kwargs: dict[str, object] = {}
+
+    class _FakeAgent:
+        def run(self, **_kwargs):
+            captured_run_kwargs.update(_kwargs)
+            return _FakeOut()
+
+    monkeypatch.setattr(sync_agent_query_mod, "build_agent", lambda **_kwargs: _FakeAgent())
+    test_app = _build_test_app()
+    client = TestClient(test_app)
+    client.app.dependency_overrides[get_settings] = lambda: Settings()
+    client.app.dependency_overrides[get_stores] = lambda: _EMPTY_STORES
+    try:
+        resp = client.post(
+            "/v2/agent/query",
+            json={
+                "question": "   ",
+                "pdf_read_request": {"pdf_url": "https://arxiv.org/pdf/1706.03762.pdf"},
+            },
+            headers={"Accept": "application/json"},
+        )
+    finally:
+        client.app.dependency_overrides.pop(get_settings, None)
+        client.app.dependency_overrides.pop(get_stores, None)
+
+    assert resp.status_code == 200, resp.text
+    assert captured_run_kwargs.get("question") == PDF_READ_USER_MESSAGE_TOKEN
 
 
 def test_v2_sse_stream(monkeypatch) -> None:
