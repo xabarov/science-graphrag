@@ -19,6 +19,9 @@ def test_effective_web_research_user_enabled_none_is_true() -> None:
 def test_compute_turn_tool_denylist_when_deploy_on_user_off() -> None:
     st = Settings.model_construct()
     assert compute_turn_tool_denylist(st, web_research_user_enabled=False) == [
+        "arxiv_fetch",
+        "arxiv_search",
+        "unpaywall_lookup",
         "web_fetch",
         "web_search",
     ]
@@ -55,6 +58,36 @@ def test_plan_mode_seeds_research_plan(monkeypatch) -> None:
     )
     assert ctx.mode == "plan"
     assert captured == {"thread_id": "thr_plan", "question": "Составь план"}
+
+
+def test_agent_mode_arxiv_followup_resets_plan_to_arxiv_outline() -> None:
+    from science_graphrag.agent.context.research_plan_session import (
+        get_research_plan_snapshot_for_thread,
+    )
+    from science_graphrag.agent.context.session_store import clear_session_store_for_tests
+
+    try:
+        clear_session_store_for_tests()
+        build_agent_request_turn_context(
+            Settings.model_construct(),
+            thread_id="thr_arxiv_followup",
+            question="Составь план исследования по объектному детектированию",
+            web_research_enabled=False,
+            agent_mode="plan",
+        )
+        build_agent_request_turn_context(
+            Settings.model_construct(),
+            thread_id="thr_arxiv_followup",
+            question="поищи препринты на arxiv",
+            web_research_enabled=True,
+            agent_mode="agent",
+        )
+        plan = get_research_plan_snapshot_for_thread("thr_arxiv_followup")
+    finally:
+        clear_session_store_for_tests()
+    assert isinstance(plan, dict)
+    ids = [str(x.get("id") or "") for x in (plan.get("items") or []) if isinstance(x, dict)]
+    assert ids[:2] == ["01_arxiv_scope", "02_arxiv_search"]
 
 
 def test_plan_mode_seed_is_visible_as_snapshot() -> None:

@@ -29,6 +29,9 @@ def test_build_tool_registry_includes_core_and_catalog_tools() -> None:
     assert "format_bibliography_gost" in uniq
     assert "web_search" in uniq
     assert "web_fetch" in uniq
+    assert "arxiv_search" in uniq
+    assert "arxiv_fetch" in uniq
+    assert "unpaywall_lookup" in uniq
 
 
 def test_build_retrieval_tools_includes_web_research() -> None:
@@ -38,6 +41,9 @@ def test_build_retrieval_tools_includes_web_research() -> None:
     names = {getattr(t, "name", "") for t in tools}
     assert "web_search" in names
     assert "web_fetch" in names
+    assert "arxiv_search" in names
+    assert "arxiv_fetch" in names
+    assert "unpaywall_lookup" in names
 
 
 def test_cypher_query_tool_rejects_write() -> None:

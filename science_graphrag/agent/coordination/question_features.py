@@ -20,6 +20,12 @@ from science_graphrag.agent.coordination.deterministic import (
     _GRAPH_INTENT_HINTS,
     graph_intent_heuristic,
 )
+from science_graphrag.external_intent_markers import (
+    ARXIV_MARKERS,
+    UNPAYWALL_LOOKUP_MARKERS,
+    WEB_RESEARCH_MARKERS_EN,
+    WEB_RESEARCH_MARKERS_RU,
+)
 
 QuestionLanguage = Literal["en", "ru", "mixed", "unknown"]
 
@@ -86,23 +92,6 @@ _QUOTE_VERBATIM_MARKERS: tuple[str, ...] = (
 )
 
 
-# Explicit internet / web research intent (retrieval must keep web_search / web_fetch).
-_WEB_RESEARCH_MARKERS_RU: tuple[str, ...] = (
-    "интернет",
-    "в интернете",
-    "веб",
-    "что говорят",
-    "сейчас обсуждают",
-)
-_WEB_RESEARCH_MARKERS_EN: tuple[str, ...] = (
-    "web",
-    "internet",
-    "online",
-    "current discussion",
-    "what are people saying",
-)
-
-
 _RU_LETTERS = re.compile(r"[а-яё]", re.IGNORECASE)
 _EN_LETTERS = re.compile(r"[a-z]", re.IGNORECASE)
 
@@ -134,6 +123,8 @@ class QuestionFeatures:
     asks_for_anchor_free_quote: bool = False
     asks_for_relations: bool = False  # cited / paths / cypher / lineage
     asks_for_web_research: bool = False
+    asks_for_arxiv: bool = False
+    asks_for_unpaywall: bool = False
 
     matched_markers: tuple[str, ...] = field(default_factory=tuple)
 
@@ -153,6 +144,8 @@ class QuestionFeatures:
             "asks_for_anchor_free_quote": bool(self.asks_for_anchor_free_quote),
             "asks_for_relations": bool(self.asks_for_relations),
             "asks_for_web_research": bool(self.asks_for_web_research),
+            "asks_for_arxiv": bool(self.asks_for_arxiv),
+            "asks_for_unpaywall": bool(self.asks_for_unpaywall),
             "matched_markers": list(self.matched_markers),
         }
 
@@ -191,6 +184,8 @@ class QuestionFeatures:
             asks_for_anchor_free_quote=bool(payload.get("asks_for_anchor_free_quote")),
             asks_for_relations=bool(payload.get("asks_for_relations")),
             asks_for_web_research=bool(payload.get("asks_for_web_research")),
+            asks_for_arxiv=bool(payload.get("asks_for_arxiv")),
+            asks_for_unpaywall=bool(payload.get("asks_for_unpaywall")),
             matched_markers=markers,
         )
 
@@ -225,7 +220,27 @@ def _has_any(text: str, markers: tuple[str, ...]) -> tuple[bool, list[str]]:
     return (bool(hits), hits)
 
 
-def extract_question_features(
+def _match_external_research_intent(qn: str) -> tuple[bool, bool, bool, list[str]]:
+    """Return (asks_web, asks_arxiv, asks_unpaywall, marker_hits)."""
+    hits: list[str] = []
+    wr_ru, h_ru = _has_any(qn, WEB_RESEARCH_MARKERS_RU)
+    hits.extend(h_ru)
+    wr_en, h_en = _has_any(qn, WEB_RESEARCH_MARKERS_EN)
+    hits.extend(h_en)
+    asks_web = bool(wr_ru or wr_en)
+
+    asks_arxiv, h_arx = _has_any(qn, ARXIV_MARKERS)
+    hits.extend(h_arx)
+    if re.search(r"\d{4}\.\d{4,5}(?:v\d+)?", qn):
+        asks_arxiv = True
+        hits.append("arxiv_id_shape")
+
+    asks_unpaywall, h_unp = _has_any(qn, UNPAYWALL_LOOKUP_MARKERS)
+    hits.extend(h_unp)
+    return asks_web, asks_arxiv, asks_unpaywall, hits
+
+
+def extract_question_features(  # pylint: disable=too-many-locals
     *,
     question: str,
     workspace_id: str | None,
@@ -269,11 +284,8 @@ def extract_question_features(
                 matched.append(needle)
                 break
 
-    asks_web_ru, hits_web_ru = _has_any(qn, _WEB_RESEARCH_MARKERS_RU)
-    matched.extend(hits_web_ru)
-    asks_web_en, hits_web_en = _has_any(qn, _WEB_RESEARCH_MARKERS_EN)
-    matched.extend(hits_web_en)
-    asks_web = bool(asks_web_ru or asks_web_en)
+    asks_web, asks_arxiv, asks_unpaywall, ext_hits = _match_external_research_intent(qn)
+    matched.extend(ext_hits)
 
     return QuestionFeatures(
         raw_question=raw,
@@ -289,6 +301,8 @@ def extract_question_features(
         asks_for_anchor_free_quote=asks_anchor_free,
         asks_for_relations=asks_relations,
         asks_for_web_research=asks_web,
+        asks_for_arxiv=asks_arxiv,
+        asks_for_unpaywall=asks_unpaywall,
         matched_markers=tuple(dict.fromkeys(matched)),  # de-dupe, preserve order
     )
 

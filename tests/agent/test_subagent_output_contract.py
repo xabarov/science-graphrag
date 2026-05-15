@@ -21,6 +21,13 @@ def test_synthesize_directive_present_in_writer_suffix() -> None:
     assert SYNTHESIZE_NOT_DELEGATE_DIRECTIVE.split()[0] in s
 
 
+def test_writer_suffix_keeps_web_search_metadata_after_fetch_failures() -> None:
+    st = Settings.model_construct(agent_writer_verification_output_format_enabled=False)
+    s = writer_system_prompt_suffix(settings=st, writer_mode="normal")
+    assert "web_search returned external_web metadata" in s
+    assert "blanket refusal" in s
+
+
 def test_verification_format_block_when_flag_enabled() -> None:
     st = Settings.model_construct(agent_writer_verification_output_format_enabled=True)
     s = writer_system_prompt_suffix(settings=st, writer_mode="normal")

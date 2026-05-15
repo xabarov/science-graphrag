@@ -230,3 +230,37 @@ def test_derive_retrieval_completion_state_web_fetch_ready() -> None:
         has_payloads=True,
     )
     assert cs == "minimal_bundle_ready"
+
+
+def test_derive_retrieval_completion_state_arxiv_search_ready() -> None:
+    from science_graphrag.agent.coordination.route_planner import (
+        derive_retrieval_completion_state,
+    )
+
+    feats = extract_question_features(
+        question="List arXiv preprints on object detection",
+        workspace_id=None,
+    )
+    cs = derive_retrieval_completion_state(
+        features=feats,
+        tool_counts={"arxiv_search": 1},
+        has_payloads=True,
+    )
+    assert cs == "minimal_bundle_ready"
+
+
+def test_derive_retrieval_completion_state_arxiv_without_tool_is_insufficient() -> None:
+    from science_graphrag.agent.coordination.route_planner import (
+        derive_retrieval_completion_state,
+    )
+
+    feats = extract_question_features(
+        question="Find arXiv papers about transformers",
+        workspace_id=None,
+    )
+    cs = derive_retrieval_completion_state(
+        features=feats,
+        tool_counts={"find_works": 1},
+        has_payloads=True,
+    )
+    assert cs == "evidence_insufficient"

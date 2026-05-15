@@ -34,6 +34,89 @@ from science_graphrag.agent.coordination.route_plan import (
 from science_graphrag.agent.coordination.turn_policy import TurnPolicy
 
 
+def _pure_arxiv_discovery_intent(features: QuestionFeatures) -> bool:
+    """Whether arXiv-specific completion rules apply (standalone preprint discovery).
+
+    When the user also asks for catalog resolution, dual-evidence compare, quotes,
+    relations, etc., retrieval completion must follow those rules instead of
+    short-circuiting on ``arxiv_search`` alone.
+    """
+    if not features.asks_for_arxiv:
+        return False
+    return not any(
+        (
+            features.asks_for_dual_evidence,
+            features.asks_for_compare,
+            features.asks_for_catalog_resolution,
+            features.asks_for_workspace_stats,
+            features.asks_for_bibliography_gost,
+            features.asks_for_anchor_free_quote,
+            features.asks_for_quotes,
+            features.asks_for_relations,
+        )
+    )
+
+
+def _planner_external_web_arxiv_handoff(  # pylint: disable=too-many-return-statements
+    *,
+    features: QuestionFeatures,
+    tool_counts: dict[str, int],
+) -> str | None:
+    """Web / arXiv / combined handoff reasons, or ``None`` when rules do not apply."""
+    if (
+        features.asks_for_web_research
+        and features.asks_for_arxiv
+        and _pure_arxiv_discovery_intent(features)
+    ):
+        web_ok = tool_counts.get("web_fetch", 0) > 0
+        arxiv_ok = tool_counts.get("arxiv_search", 0) > 0 or tool_counts.get("arxiv_fetch", 0) > 0
+        if web_ok and arxiv_ok:
+            return "retrieval_completion_web_arxiv_research"
+        return None
+
+    if features.asks_for_web_research:
+        if tool_counts.get("web_fetch", 0) > 0:
+            return "retrieval_completion_web_research"
+        return None
+
+    if _pure_arxiv_discovery_intent(features):
+        if tool_counts.get("arxiv_fetch", 0) > 0 or tool_counts.get("arxiv_search", 0) > 0:
+            return "retrieval_completion_arxiv_research"
+        return None
+
+    return None
+
+
+def _derive_external_research_completion(  # pylint: disable=too-many-return-statements
+    *,
+    features: QuestionFeatures,
+    tool_counts: dict[str, int],
+) -> CompletionSignalId | None:
+    """Map web/arXiv tool counts to completion_state, or ``None`` to fall through."""
+    if (
+        features.asks_for_web_research
+        and features.asks_for_arxiv
+        and _pure_arxiv_discovery_intent(features)
+    ):
+        web_ok = tool_counts.get("web_fetch", 0) > 0
+        arxiv_ok = tool_counts.get("arxiv_search", 0) > 0 or tool_counts.get("arxiv_fetch", 0) > 0
+        if web_ok and arxiv_ok:
+            return "minimal_bundle_ready"
+        if tool_counts.get("web_search", 0) > 0 and not web_ok:
+            return "evidence_insufficient"
+        return "any_specialist_payload"
+    if features.asks_for_web_research:
+        if tool_counts.get("web_fetch", 0) > 0:
+            return "minimal_bundle_ready"
+        if tool_counts.get("web_search", 0) > 0:
+            return "evidence_insufficient"
+    if _pure_arxiv_discovery_intent(features):
+        if tool_counts.get("arxiv_fetch", 0) > 0 or tool_counts.get("arxiv_search", 0) > 0:
+            return "minimal_bundle_ready"
+        return "evidence_insufficient"
+    return None
+
+
 def _writer_only_plan(reason: str) -> RoutePlan:
     return RoutePlan(
         steps=(
@@ -220,12 +303,9 @@ def planner_post_retrieval_handoff(  # pylint: disable=too-many-return-statement
     if "workspace_inspect" in tool_names and features.asks_for_workspace_stats:
         return "retrieval_completion_workspace_stats"
 
-    # Explicit web/internet requests are considered minimally complete only after at
-    # least one ``web_fetch`` call (web_search-only is metadata, often too shallow).
-    if features.asks_for_web_research:
-        if tool_counts.get("web_fetch", 0) > 0:
-            return "retrieval_completion_web_research"
-        return None
+    ext = _planner_external_web_arxiv_handoff(features=features, tool_counts=tool_counts)
+    if ext is not None:
+        return ext
 
     if (
         {"find_works", "paper_profile"}.issubset(tool_names)
@@ -282,11 +362,9 @@ def derive_retrieval_completion_state(
         if features.asks_for_workspace_stats and tool_counts.get("workspace_inspect", 0) > 0:
             return "any_specialist_payload"
         return "evidence_insufficient"
-    if features.asks_for_web_research:
-        if tool_counts.get("web_fetch", 0) > 0:
-            return "minimal_bundle_ready"
-        if tool_counts.get("web_search", 0) > 0:
-            return "evidence_insufficient"
+    ext_cs = _derive_external_research_completion(features=features, tool_counts=tool_counts)
+    if ext_cs is not None:
+        return ext_cs
     handoff = planner_post_retrieval_handoff(
         features=features,
         tool_counts=tool_counts,

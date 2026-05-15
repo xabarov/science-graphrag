@@ -123,6 +123,32 @@ def test_question_features_asks_for_web_research_en_online() -> None:
     assert feats.asks_for_web_research is True
 
 
+def test_question_features_asks_for_arxiv_preprint() -> None:
+    feats = extract_question_features(
+        question="Find recent preprints on arXiv about object detection",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_arxiv is True
+    assert "arxiv" in feats.matched_markers
+
+
+def test_question_features_asks_for_arxiv_id_shape() -> None:
+    feats = extract_question_features(
+        question="Summarize paper 2301.07012 and related work",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_arxiv is True
+    assert "arxiv_id_shape" in feats.matched_markers
+
+
+def test_question_features_asks_for_unpaywall_open_access() -> None:
+    feats = extract_question_features(
+        question="Is there a legal open access PDF for DOI 10.1038/nature12373?",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_unpaywall is True
+
+
 def test_question_features_ru_instruction_with_english_terms_stays_ru() -> None:
     feats = extract_question_features(
         question=(
@@ -575,6 +601,50 @@ def test_planner_post_retrieval_handoff_web_research_requires_fetch() -> None:
         tool_counts={"web_search": 1, "web_fetch": 1},
     )
     assert reason_with_fetch == "retrieval_completion_web_research"
+
+
+def test_planner_post_retrieval_handoff_arxiv_search_or_fetch() -> None:
+    feats = extract_question_features(
+        question="Find recent arXiv preprints about diffusion models",
+        workspace_id=None,
+    )
+    assert feats.asks_for_arxiv is True
+    assert (
+        planner_post_retrieval_handoff(features=feats, tool_counts={"arxiv_search": 1})
+        == "retrieval_completion_arxiv_research"
+    )
+    assert (
+        planner_post_retrieval_handoff(features=feats, tool_counts={"arxiv_fetch": 1})
+        == "retrieval_completion_arxiv_research"
+    )
+
+
+def test_planner_post_retrieval_handoff_arxiv_does_not_short_circuit_dual_evidence() -> None:
+    raw = (
+        "Compare evidence for two different object-detection works in this workspace: "
+        "use find_works twice with different title keywords, then call paper_profile "
+        "for two distinct work_ids. Mention arxiv:2301.07012 as an example id."
+    )
+    feats = extract_question_features(question=raw, workspace_id="ws-1")
+    assert feats.asks_for_dual_evidence is True
+    assert feats.asks_for_arxiv is True
+    assert planner_post_retrieval_handoff(features=feats, tool_counts={"arxiv_search": 1}) is None
+
+
+def test_planner_post_retrieval_handoff_web_and_arxiv_when_both_intents() -> None:
+    feats = extract_question_features(
+        question="Search arXiv for GAN papers and also fetch what people say online about GANs",
+        workspace_id=None,
+    )
+    assert feats.asks_for_arxiv is True
+    assert feats.asks_for_web_research is True
+    assert (
+        planner_post_retrieval_handoff(
+            features=feats,
+            tool_counts={"web_fetch": 1, "arxiv_search": 1},
+        )
+        == "retrieval_completion_web_arxiv_research"
+    )
 
 
 def test_question_features_to_dict_serializable() -> None:

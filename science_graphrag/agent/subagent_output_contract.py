@@ -20,6 +20,13 @@ SYNTHESIZE_NOT_DELEGATE_DIRECTIVE: Final[str] = (
     "limitations)."
 )
 
+WEB_FETCH_FAILURE_SYNTHESIS_DIRECTIVE: Final[str] = (
+    "When web_search returned external_web metadata but one or more web_fetch calls failed, do not "
+    "turn the answer into a blanket refusal. Use the web_search titles/DOIs/URLs as limited web "
+    "sources, clearly say that full-text fetch failed for those URLs, avoid inventing quotes or "
+    "full-text claims, and cite the available URLs."
+)
+
 VERIFICATION_OUTPUT_FORMAT_BLOCK: Final[str] = (
     "When producing the user-visible answer inside final_answer.answer, use this exact section "
     "layout (markdown lines, English labels):\n"
@@ -74,7 +81,7 @@ def verification_format_enabled(*, settings: "Settings") -> bool:
 
 def writer_system_prompt_suffix(*, settings: "Settings", writer_mode: str) -> str:
     """Extra system text for writer (synthesize + optional verification layout)."""
-    parts = [SYNTHESIZE_NOT_DELEGATE_DIRECTIVE]
+    parts = [SYNTHESIZE_NOT_DELEGATE_DIRECTIVE, WEB_FETCH_FAILURE_SYNTHESIS_DIRECTIVE]
     if writer_mode == "normal" and verification_format_enabled(settings=settings):
         parts.append(VERIFICATION_OUTPUT_FORMAT_BLOCK)
     return "\n\n".join(parts)

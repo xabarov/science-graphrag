@@ -1,7 +1,8 @@
-"""External web research tools (P0.3) — academic allowlist, bounded fetch + cache."""
+"""External web research tools (P0.3) — public URL fetch, bounded size + cache."""
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import threading
 import time
@@ -15,13 +16,14 @@ from pydantic import BaseModel, Field
 
 from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_safe_for_generation
 from science_graphrag.agent.tools.base import ToolResult
+from science_graphrag.agent.tools.external.http_transport import external_research_user_agent
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.enrichment.openalex import OPENALEX_MAILTO_FALLBACK
 from science_graphrag.llm.concurrency import invoke_chat_gated
 
-# --- Policy defaults (product / roadmap) ---
-_DEFAULT_ACADEMIC_HOST_SUFFIXES: tuple[str, ...] = (
+# --- Search policy defaults (Crossref search remains explicitly academic-scoped). ---
+_DEFAULT_SEARCH_HOST_SUFFIXES: tuple[str, ...] = (
     "arxiv.org",
     "pubmed.ncbi.nlm.nih.gov",
     "semanticscholar.org",
@@ -30,6 +32,10 @@ _DEFAULT_ACADEMIC_HOST_SUFFIXES: tuple[str, ...] = (
     "biorxiv.org",
     "api.crossref.org",
 )
+
+# --- Fetch SSRF guardrails: deny private/internal targets by default. ---
+_PRIVATE_HOSTNAMES: frozenset[str] = frozenset({"localhost", "localhost.localdomain"})
+_PRIVATE_HOST_SUFFIXES: tuple[str, ...] = (".local", ".internal", ".localhost")
 
 # --- Public schema alignment (keep in sync with WebFetchArgs.prompt max_length) ---
 _WEB_FETCH_CACHE_KEY_PROMPT_CHARS = 512
@@ -68,7 +74,7 @@ def _web_fetch_cache_key(
     blocked_domains: list[str],
 ) -> str:
     """Stable composite key: same fetch policy + URL + prompt must hit same cache entry."""
-    allow = sorted({str(x).strip().lower() for x in _parse_allowlist(allowed_domains)})
+    allow = sorted({str(x).strip().lower() for x in _parse_search_allowlist(allowed_domains)})
     blocked_sorted = sorted(
         {str(x).strip().lower() for x in blocked_domains if str(x).strip()},
     )
@@ -81,9 +87,9 @@ def _web_fetch_cache_key(
     return json.dumps(payload, ensure_ascii=False, sort_keys=True)
 
 
-def _parse_allowlist(raw: list[str] | None) -> list[str]:
+def _parse_search_allowlist(raw: list[str] | None) -> list[str]:
     if not raw:
-        return list(_DEFAULT_ACADEMIC_HOST_SUFFIXES)
+        return list(_DEFAULT_SEARCH_HOST_SUFFIXES)
     return [str(x).strip().lower() for x in raw if str(x).strip()]
 
 
@@ -122,11 +128,63 @@ def _host_allowed(hostname: str, allowed: list[str], blocked: list[str]) -> bool
     return False
 
 
+def _host_blocked(hostname: str, blocked: list[str]) -> bool:
+    h = (hostname or "").strip().lower().rstrip(".")
+    if not h:
+        return False
+    for b in blocked:
+        b = str(b).strip().lower().rstrip(".")
+        if b and (h == b or h.endswith("." + b)):
+            return True
+    return False
+
+
+def _host_matches_allowed(hostname: str, allowed_domains: list[str] | None) -> bool:
+    allowed = [str(x).strip().lower().rstrip(".") for x in allowed_domains or [] if str(x).strip()]
+    if not allowed:
+        return True
+    h = (hostname or "").strip().lower().rstrip(".")
+    return any(h == a or h.endswith("." + a) for a in allowed)
+
+
+def _hostname_is_private(hostname: str) -> bool:
+    h = (hostname or "").strip().lower().rstrip(".")
+    if not h:
+        return True
+    if h in _PRIVATE_HOSTNAMES:
+        return True
+    if any(h.endswith(suffix) for suffix in _PRIVATE_HOST_SUFFIXES):
+        return True
+    try:
+        ip = ipaddress.ip_address(h)
+    except ValueError:
+        return False
+    return not ip.is_global
+
+
+def _fetch_host_policy_error(
+    hostname: str,
+    *,
+    allowed_domains: list[str] | None,
+    blocked_domains: list[str],
+) -> tuple[str, str] | None:
+    h = (hostname or "").strip().lower().rstrip(".")
+    if not h:
+        return ("host_not_allowed", "")
+    if _host_blocked(h, blocked_domains):
+        return ("host_blocked", h)
+    if _hostname_is_private(h):
+        return ("private_host_not_allowed", h)
+    if not _host_matches_allowed(h, allowed_domains):
+        return ("host_not_allowed", h)
+    return None
+
+
 class WebSearchArgs(BaseModel):
     query: str = Field(..., min_length=1, max_length=512)
     allowed_domains: list[str] | None = Field(
         default=None,
-        description="Optional host suffix allowlist; defaults to academic-only set from roadmap.",
+        description="Optional host suffix allowlist; defaults to Crossref academic search hosts.",
     )
     blocked_domains: list[str] | None = Field(default=None, description="Optional host denylist.")
     max_results: int = Field(default=5, ge=1, le=_WEB_SEARCH_MAX_RESULTS)
@@ -138,7 +196,10 @@ class WebFetchArgs(BaseModel):
         default="Summarize the scholarly content in 5 bullet points.",
         max_length=_WEB_FETCH_CACHE_KEY_PROMPT_CHARS,
     )
-    allowed_domains: list[str] | None = Field(default=None)
+    allowed_domains: list[str] | None = Field(
+        default=None,
+        description="Optional host suffix allowlist. Defaults to public internet HTTPS hosts.",
+    )
     blocked_domains: list[str] | None = Field(default=None)
 
 
@@ -244,7 +305,7 @@ def _web_search_impl(
     blocked_domains: list[str],
     max_results: int,
 ) -> dict[str, Any]:
-    allow = _parse_allowlist(allowed_domains)
+    allow = _parse_search_allowlist(allowed_domains)
     if not _host_allowed("api.crossref.org", allow, blocked_domains):
         return {
             "ok": False,
@@ -271,7 +332,7 @@ def _web_search_impl(
             r = client.get(
                 url,
                 params=params,
-                headers={"User-Agent": f"science-graphrag/0.1 (mailto:{mailto})"},
+                headers={"User-Agent": external_research_user_agent(settings)},
             )
             r.raise_for_status()
             data = r.json()
@@ -341,9 +402,8 @@ def _web_fetch_impl(
     allowed_domains: list[str] | None,
     blocked_domains: list[str],
 ) -> dict[str, Any]:
-    allow = _parse_allowlist(allowed_domains)
     parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"}:
+    if parsed.scheme != "https":
         return {
             "ok": False,
             "error": "unsupported_scheme",
@@ -360,11 +420,17 @@ def _web_fetch_impl(
             },
         }
     host = (parsed.hostname or "").lower()
-    if not _host_allowed(host, allow, blocked_domains):
+    host_policy_error = _fetch_host_policy_error(
+        host,
+        allowed_domains=allowed_domains,
+        blocked_domains=blocked_domains,
+    )
+    if host_policy_error is not None:
+        error, detail = host_policy_error
         return {
             "ok": False,
-            "error": "host_not_allowed",
-            "detail": host,
+            "error": error,
+            "detail": detail,
             "row_count": 0,
             "summary": "",
             "evidence_origin": "external_web",
@@ -402,7 +468,11 @@ def _web_fetch_impl(
             follow_redirects=True,
             max_redirects=_WEB_FETCH_MAX_REDIRECTS,
         ) as client:
-            with client.stream("GET", url, headers={"User-Agent": "science-graphrag/0.1"}) as r:
+            with client.stream(
+                "GET",
+                url,
+                headers={"User-Agent": external_research_user_agent(settings)},
+            ) as r:
                 status = int(r.status_code)
                 r.raise_for_status()
                 chunks: list[bytes] = []
@@ -438,11 +508,19 @@ def _web_fetch_impl(
         }
 
     final_host = (urlparse(final_url).hostname or "").lower()
-    if not _host_allowed(final_host, allow, blocked_domains):
+    final_policy_error = _fetch_host_policy_error(
+        final_host,
+        allowed_domains=allowed_domains,
+        blocked_domains=blocked_domains,
+    )
+    if final_policy_error is not None:
+        error, detail = final_policy_error
         return {
             "ok": False,
-            "error": "redirect_host_not_allowed",
-            "detail": final_host,
+            "error": (
+                "redirect_" + error if error != "host_not_allowed" else "redirect_host_not_allowed"
+            ),
+            "detail": detail,
             "row_count": 0,
             "summary": "",
             "evidence_origin": "external_web",
@@ -463,13 +541,14 @@ def _web_fetch_impl(
                 max_tokens=_WEB_FETCH_SUMMARIZE_MAX_TOKENS,
                 timeout_seconds=_WEB_FETCH_SUMMARIZE_TIMEOUT_SECONDS,
             )
+            excerpt = text[:_WEB_FETCH_LLM_EXCERPT_CHAR_CAP]
             msgs = ensure_messages_safe_for_generation(
                 [
                     HumanMessage(
                         content=(
                             "Summarize the following web page excerpt for a researcher. "
                             "Be factual; if content is not scholarly, say so.\n\n"
-                            f"URL: {final_url}\n\nEXCERPT:\n{text[:_WEB_FETCH_LLM_EXCERPT_CHAR_CAP]}\n\nTASK:\n{prompt}"
+                            f"URL: {final_url}\n\nEXCERPT:\n{excerpt}\n\nTASK:\n{prompt}"
                         )
                     ),
                 ]

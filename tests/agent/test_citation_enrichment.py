@@ -168,6 +168,26 @@ def test_hydrate_synthesizes_citations_from_inventory_when_empty() -> None:
     assert out == [{"work_id": "wid-graph", "title": "Graph Coverage Paper"}]
 
 
+def test_hydrate_merges_web_sources_arxiv_search_into_citations() -> None:
+    out = hydrate_citations_for_ui(
+        [],
+        quote_candidates=[],
+        chunk_store=None,
+        web_sources=[
+            {
+                "title": "Neural Foo",
+                "url": "https://arxiv.org/abs/2301.07012",
+                "doi": "",
+                "source_tool": "arxiv_search",
+                "snippet": "Abstract text",
+            }
+        ],
+    )
+    assert len(out) == 1
+    assert out[0].get("source_type") == "web"
+    assert out[0].get("url") == "https://arxiv.org/abs/2301.07012"
+
+
 def test_hydrate_merges_web_sources_into_citations() -> None:
     out = hydrate_citations_for_ui(
         [],

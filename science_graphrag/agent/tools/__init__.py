@@ -5,12 +5,12 @@ from langchain_core.tools import BaseTool
 from science_graphrag.agent.tools.cypher_query import CypherQueryTool, _make_cypher_query_tool
 from science_graphrag.agent.tools.edge_search import EdgeSearchTool, _make_edge_search_tool
 from science_graphrag.agent.tools.entity_search import EntitySearchTool
+from science_graphrag.agent.tools.external import build_external_research_tools
 from science_graphrag.agent.tools.final_answer import FinalAnswerTool, _make_final_answer_tool
 from science_graphrag.agent.tools.idea_search import IdeaSearchTool, _make_idea_search_tool
 from science_graphrag.agent.tools.plan_mode_tools import build_plan_mode_tools
 from science_graphrag.agent.tools.product_interaction_tools import build_product_interaction_tools
 from science_graphrag.agent.tools.summarize_workspace import SummarizeWorkspaceTool
-from science_graphrag.agent.tools.web_research_tools import build_web_research_tools
 from science_graphrag.agent.tools.workspace_paper_tools import build_workspace_paper_langchain_tools
 from science_graphrag.agent.tools.worktree_isolation_tools import build_worktree_isolation_tools
 from science_graphrag.config import Settings, get_settings
@@ -20,7 +20,7 @@ from science_graphrag.stores.registry import StoreRegistry
 def _append_agent_surface_tools(
     out: list[BaseTool], stores: StoreRegistry, settings: Settings
 ) -> None:
-    """Feature-gated MCP/LSP/monitor + product interaction tools (shared by retrieval + full registry)."""
+    """Feature-gated MCP/LSP/monitor + product tools shared by retrieval and full registry."""
     if getattr(settings, "agent_mcp_tools_enabled", False):
         from science_graphrag.agent.tools.mcp_surface import build_mcp_surface_tools
 
@@ -58,13 +58,13 @@ def build_retrieval_tools(
         ),
     ]
     out = catalog + core
-    out.extend(build_web_research_tools(settings=settings))
+    out.extend(build_external_research_tools(settings=settings))
     _append_agent_surface_tools(out, stores, settings)
     return out
 
 
 def build_graph_tools(stores: StoreRegistry) -> list[BaseTool]:
-    """Tools for graph specialist node (structural graph only; work full-text is find_works in retrieval)."""
+    """Graph specialist: structural Neo4j only (work full-text via find_works in retrieval)."""
     return [
         _make_cypher_query_tool(stores.neo4j),
         _make_edge_search_tool(stores.neo4j),

@@ -153,6 +153,42 @@ def _ensure_web_tools_in_picked(
             have.add(nm)
 
 
+def _ensure_arxiv_tools_in_picked(
+    picked: list[BaseTool],
+    tools: list[BaseTool],
+    *,
+    asks_for_arxiv: bool,
+) -> None:
+    """Keep arXiv tools available when the user explicitly asks for arXiv/preprint research."""
+    if not asks_for_arxiv:
+        return
+    have = {getattr(t, "name", "") for t in picked}
+    for nm in ("arxiv_search", "arxiv_fetch"):
+        if nm in have:
+            continue
+        hit = next((t for t in tools if getattr(t, "name", "") == nm), None)
+        if hit is not None:
+            picked.append(hit)
+            have.add(nm)
+
+
+def _ensure_unpaywall_tool_in_picked(
+    picked: list[BaseTool],
+    tools: list[BaseTool],
+    *,
+    asks_for_unpaywall: bool,
+) -> None:
+    """Keep Unpaywall OA lookup when the user explicitly asks for OA / Unpaywall-by-DOI."""
+    if not asks_for_unpaywall:
+        return
+    have = {getattr(t, "name", "") for t in picked}
+    if "unpaywall_lookup" in have:
+        return
+    hit = next((t for t in tools if getattr(t, "name", "") == "unpaywall_lookup"), None)
+    if hit is not None:
+        picked.append(hit)
+
+
 def _ensure_final_answer_in_picked(picked: list[BaseTool], tools: list[BaseTool]) -> None:
     names = {getattr(t, "name", "") for t in picked}
     if "final_answer" in names:
@@ -361,6 +397,8 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
     session: dict[str, Any] | None = None,
     lc_messages: Sequence[Any] | None = None,
     asks_for_web_research: bool = False,
+    asks_for_arxiv: bool = False,
+    asks_for_unpaywall: bool = False,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Return possibly narrowed tool list and debug meta for SSE / run_metadata."""
     if not settings.agent_rule_tool_search_enabled:
@@ -430,6 +468,16 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             tools,
             asks_for_web_research=asks_for_web_research,
         )
+        _ensure_arxiv_tools_in_picked(
+            picked,
+            tools,
+            asks_for_arxiv=asks_for_arxiv,
+        )
+        _ensure_unpaywall_tool_in_picked(
+            picked,
+            tools,
+            asks_for_unpaywall=asks_for_unpaywall,
+        )
     core_exempt = (
         _RETRIEVAL_CORE_EXEMPT
         if (specialist == "retrieval_agent" or for_single_agent)
@@ -437,6 +485,10 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
     )
     if asks_for_web_research and (specialist == "retrieval_agent" or for_single_agent):
         core_exempt = frozenset(core_exempt) | frozenset({"web_search", "web_fetch"})
+    if asks_for_arxiv and (specialist == "retrieval_agent" or for_single_agent):
+        core_exempt = frozenset(core_exempt) | frozenset({"arxiv_search", "arxiv_fetch"})
+    if asks_for_unpaywall and (specialist == "retrieval_agent" or for_single_agent):
+        core_exempt = frozenset(core_exempt) | frozenset({"unpaywall_lookup"})
     if strict_on:
         picked, strict_removed_tools = apply_strict_deferred_activation_filter(
             picked,
@@ -475,6 +527,16 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             picked,
             tools,
             asks_for_web_research=asks_for_web_research,
+        )
+        _ensure_arxiv_tools_in_picked(
+            picked,
+            tools,
+            asks_for_arxiv=asks_for_arxiv,
+        )
+        _ensure_unpaywall_tool_in_picked(
+            picked,
+            tools,
+            asks_for_unpaywall=asks_for_unpaywall,
         )
 
     meta_out = _shortlist_build_rules_meta(
@@ -555,7 +617,7 @@ def build_tool_search_result_debug_event(
     return ev
 
 
-def shortlist_tools_for_single_agent(
+def shortlist_tools_for_single_agent(  # pylint: disable=too-many-arguments
     tools: list[BaseTool],
     *,
     question: str,
@@ -565,6 +627,8 @@ def shortlist_tools_for_single_agent(
     session: dict[str, Any] | None = None,
     lc_messages: Sequence[Any] | None = None,
     asks_for_web_research: bool = False,
+    asks_for_arxiv: bool = False,
+    asks_for_unpaywall: bool = False,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Rule-based shortlist for single-agent ReAct (full registry in one bind_tools surface)."""
 
@@ -579,4 +643,6 @@ def shortlist_tools_for_single_agent(
         session=session,
         lc_messages=lc_messages,
         asks_for_web_research=asks_for_web_research,
+        asks_for_arxiv=asks_for_arxiv,
+        asks_for_unpaywall=asks_for_unpaywall,
     )

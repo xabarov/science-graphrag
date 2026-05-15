@@ -510,6 +510,28 @@ def test_hybrid_llm_rerank_merges_selector_meta(
     assert "final_answer" in {getattr(t, "name", "") for t in out}
 
 
+def test_shortlist_retrieval_keeps_arxiv_tools_when_asks_for_arxiv() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    out, _meta = shortlist_tools_for_specialist(
+        tools,
+        question="Find recent preprints on arXiv about transformers",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        asks_for_arxiv=True,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "arxiv_search" in names
+    assert "arxiv_fetch" in names
+
+
 def test_shortlist_retrieval_keeps_web_tools_when_asks_for_web_research() -> None:
     from science_graphrag.agent.tools import build_retrieval_tools
 
@@ -530,3 +552,24 @@ def test_shortlist_retrieval_keeps_web_tools_when_asks_for_web_research() -> Non
     names = {getattr(t, "name", "") for t in out}
     assert "web_search" in names
     assert "web_fetch" in names
+
+
+def test_shortlist_retrieval_keeps_unpaywall_when_asks_for_unpaywall() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    out, _meta = shortlist_tools_for_specialist(
+        tools,
+        question="Check open-access URL for this DOI via unpaywall",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        asks_for_unpaywall=True,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "unpaywall_lookup" in names

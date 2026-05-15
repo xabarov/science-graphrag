@@ -25,6 +25,8 @@ class ToolManifestEntry:
     #: tool unless it was rule-scored, merged from message history, session carry-over, or is part
     #: of the retrieval core trio baseline (workspace_inspect / paper_profile / find_works).
     strict_deferred_requires_discovery: bool = False
+    #: Optional taxonomy for external HTTP tools (ADR 030); ``None`` for non-external tools.
+    source_family: str | None = None
 
 
 # Names must match LangChain @tool function names.
@@ -146,6 +148,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "Academic web search (Crossref-backed)",
         "tool://web_search",
         True,
+        source_family="crossref",
     ),
     ToolManifestEntry(
         "web_fetch",
@@ -158,6 +161,65 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "Fetch and summarize allowed scholarly URLs",
         "tool://web_fetch",
         True,
+        source_family="http",
+    ),
+    ToolManifestEntry(
+        "arxiv_search",
+        "external",
+        (
+            "arxiv",
+            "preprint",
+            "paper",
+            "literature",
+            "abstract",
+            "pdf",
+            "cs.CV",
+            "external",
+            "search",
+        ),
+        "medium",
+        "corpus",
+        "retrieval_agent",
+        False,
+        "Search arXiv preprints via the official Atom API",
+        "tool://arxiv_search",
+        True,
+        source_family="arxiv",
+    ),
+    ToolManifestEntry(
+        "arxiv_fetch",
+        "external",
+        (
+            "arxiv",
+            "preprint",
+            "paper",
+            "abstract",
+            "metadata",
+            "pdf",
+            "external",
+            "fetch",
+        ),
+        "medium",
+        "corpus",
+        "retrieval_agent",
+        False,
+        "Fetch one arXiv record (metadata + abstract) by id or URL",
+        "tool://arxiv_fetch",
+        True,
+        source_family="arxiv",
+    ),
+    ToolManifestEntry(
+        "unpaywall_lookup",
+        "external",
+        ("doi", "open access", "oa", "unpaywall", "pdf", "url", "license", "literature"),
+        "medium",
+        "corpus",
+        "retrieval_agent",
+        False,
+        "Look up OA status and best open-access URL for a DOI (Unpaywall API)",
+        "tool://unpaywall_lookup",
+        True,
+        source_family="unpaywall",
     ),
     ToolManifestEntry(
         "doi_resolver",
@@ -170,6 +232,7 @@ TOOL_MANIFEST: tuple[ToolManifestEntry, ...] = (
         "Resolve DOI or DOI URL to metadata and optional workspace work id",
         "tool://doi_resolver",
         True,
+        source_family="openalex",
     ),
     ToolManifestEntry(
         "call_mcp_tool",

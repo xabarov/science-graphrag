@@ -260,6 +260,77 @@ def reset_research_plan_for_explicit_web_followup(
     return plan
 
 
+def reset_research_plan_for_explicit_arxiv_followup(
+    thread_id: str | None,
+    *,
+    question: str | None = None,
+) -> dict[str, Any] | None:
+    """Replace current thread plan with a concise arXiv/preprint research outline.
+
+    Used when a follow-up turn explicitly shifts intent to arXiv discovery, so
+    the right panel does not keep showing stale corpus-plan bullets.
+    """
+    tid = (thread_id or "").strip()
+    if not tid:
+        return None
+    q = " ".join(str(question or "").strip().split())
+    has_ru = any(("а" <= ch.lower() <= "я") or ch.lower() == "ё" for ch in q)
+    if has_ru:
+        rows = [
+            {
+                "id": "01_arxiv_scope",
+                "content": "Уточнить arXiv/preprint вопрос и критерии релевантности.",
+                "status": "pending",
+            },
+            {
+                "id": "02_arxiv_search",
+                "content": "Найти релевантные препринты через arxiv_search.",
+                "status": "pending",
+            },
+            {
+                "id": "03_arxiv_fetch",
+                "content": "При необходимости уточнить метаданные/abstract через arxiv_fetch.",
+                "status": "pending",
+            },
+            {
+                "id": "04_arxiv_synthesis",
+                "content": "Собрать выводы и ссылки на arXiv (abs/pdf).",
+                "status": "pending",
+            },
+        ]
+    else:
+        rows = [
+            {
+                "id": "01_arxiv_scope",
+                "content": "Clarify the arXiv/preprint question and relevance criteria.",
+                "status": "pending",
+            },
+            {
+                "id": "02_arxiv_search",
+                "content": "Find relevant preprints via arxiv_search.",
+                "status": "pending",
+            },
+            {
+                "id": "03_arxiv_fetch",
+                "content": "Optionally refine metadata/abstract via arxiv_fetch.",
+                "status": "pending",
+            },
+            {
+                "id": "04_arxiv_synthesis",
+                "content": "Synthesize findings and cite arXiv abs/pdf URLs.",
+                "status": "pending",
+            },
+        ]
+    plan = {
+        "schema_version": "research_plan_v1",
+        "items": rows[:200],
+        "updated_at": time.time(),
+        "ui_mode": "outline",
+    }
+    get_session_memory_backend().patch_session_meta(tid, patch={"research_plan": plan})
+    return plan
+
+
 def get_research_plan_snapshot_for_thread(thread_id: str | None) -> dict[str, Any] | None:
     """Return persisted research plan dict when it has at least one item (for run_metadata / UI)."""
     tid = (thread_id or "").strip()

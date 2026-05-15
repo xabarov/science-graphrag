@@ -231,3 +231,10 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Remaining:** stage registry / declarative graph (if we remove remaining conditional branches in orchestrator) + final migration of tests/scripts off legacy import paths. `ingestion/pipeline.py` is the public facade; private export surface from `_pipeline_impl` should stay minimal.
 - **Raised:** 2026-05-05
 
+### [OPEN] External research: OpenAlex search + Semantic Scholar tools
+- **Area:** `science_graphrag/agent/tools/external/`, `science_graphrag/agent/tool_manifest.py`, `science_graphrag/agent/request_turn_policy.py`
+- **Issue:** ADR 030 + `unpaywall_lookup` cover assembly and OA-by-DOI; `doi_resolver` already hits OpenAlex by DOI. Product gap vs `docs/analysis/sci-tools.md`: **search** across works (OpenAlex), citations/graph (Semantic Scholar), without duplicating DOI resolution paths.
+- **Proposal:** add bounded `openalex_works_search` / `semantic_scholar_*` modules under `external/`, reuse `http_transport`, operator flags in `Settings`, extend `EXTERNAL_RESEARCH_TOOL_NAMES` when user web-toggle applies.
+- **Acceptance:** httpx-mocked unit tests, manifest/registry sync tests, product_step mapping, shortlist rules documented for each new name.
+- **Raised:** 2026-05-15
+

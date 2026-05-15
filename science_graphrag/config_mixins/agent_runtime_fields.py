@@ -544,6 +544,16 @@ class AgentRuntimeFields(BaseModel):
         le=120.0,
         description="HTTP timeout seconds for streamed ``web_fetch`` GET (includes TLS/TTFB).",
     )
+    agent_unpaywall_oa_tool_enabled: bool = Field(
+        default=True,
+        description="When true, register ``unpaywall_lookup`` (Unpaywall OA URL for DOI).",
+    )
+    agent_unpaywall_http_timeout_seconds: float = Field(
+        default=25.0,
+        ge=5.0,
+        le=120.0,
+        description="HTTP timeout seconds for ``unpaywall_lookup`` GET to api.unpaywall.org.",
+    )
     agent_tool_history_compact_enabled: bool = Field(
         default=False,
         description=(

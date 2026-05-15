@@ -85,6 +85,8 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             session=sess,
             lc_messages=list(state.get("messages") or []),
             asks_for_web_research=feats.asks_for_web_research,
+            asks_for_arxiv=feats.asks_for_arxiv,
+            asks_for_unpaywall=feats.asks_for_unpaywall,
         )
         tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
         compiled = _cached_subgraph(tools)

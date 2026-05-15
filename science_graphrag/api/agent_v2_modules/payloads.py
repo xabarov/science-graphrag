@@ -274,7 +274,9 @@ class AgentQueryRequestV2(BaseModel):
     web_research_enabled: bool | None = Field(
         default=None,
         description=(
-            "When false, deny ``web_search`` / ``web_fetch`` for this turn. "
+            "When false, deny external HTTP research tools for this turn "
+            "(``web_search`` / ``web_fetch`` / ``arxiv_search`` / ``arxiv_fetch`` / "
+            "``unpaywall_lookup``). "
             "When true or null/omitted, keep web research tools enabled."
         ),
     )

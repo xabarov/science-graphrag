@@ -11,6 +11,7 @@ from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 from science_graphrag.agent.tools.base import ToolResult
+from science_graphrag.agent.tools.external.http_transport import external_research_user_agent
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.dedup import find_doi_in_text, normalize_doi
@@ -31,7 +32,7 @@ class DoiResolverArgs(BaseModel):
 
 
 def _crossref_fallback(
-    doi: str, mailto: str, *, http_timeout_seconds: float
+    doi: str, settings: Settings, *, http_timeout_seconds: float
 ) -> dict[str, Any] | None:
     enc = quote(doi, safe="")
     url = f"https://api.crossref.org/works/{enc}"
@@ -39,7 +40,7 @@ def _crossref_fallback(
         with httpx.Client(timeout=float(http_timeout_seconds)) as client:
             r = client.get(
                 url,
-                headers={"User-Agent": f"science-graphrag/0.1 (mailto:{mailto})"},
+                headers={"User-Agent": external_research_user_agent(settings)},
             )
             if r.status_code == 404:
                 return None
@@ -83,7 +84,7 @@ def build_doi_resolver_tool(store: Neo4jGraphStore, settings: Settings):
         doi_or_url: str,
         workspace_id: str | None = None,
     ) -> dict[str, Any]:
-        """Normalize DOI/URL, fetch OpenAlex metadata (Crossref fallback), map to workspace Work id."""
+        """Normalize DOI/URL; OpenAlex metadata with Crossref fallback; map to workspace Work id."""
         res = run_tool_result_with_span(
             tool_name="doi_resolver",
             tool_parameters={"doi_or_url": doi_or_url[:120], "workspace_id": workspace_id},
@@ -145,7 +146,7 @@ def _doi_resolve_body(
     else:
         cr = _crossref_fallback(
             doi,
-            mailto,
+            settings,
             http_timeout_seconds=float(settings.agent_web_search_http_timeout_seconds),
         )
         if cr:

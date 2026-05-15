@@ -20,6 +20,13 @@ def fixture_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
     return Settings()
 
 
+def _clear_web_fetch_cache() -> None:
+    lock = getattr(web_research_tools_mod, "_FETCH_CACHE_LOCK")
+    cache = getattr(web_research_tools_mod, "_FETCH_CACHE")
+    with lock:
+        cache.clear()
+
+
 def test_web_fetch_rejects_unsupported_scheme(settings: Settings) -> None:
     out = _web_fetch_impl(
         "ftp://arxiv.org/abs/1234.5678",
@@ -30,6 +37,30 @@ def test_web_fetch_rejects_unsupported_scheme(settings: Settings) -> None:
     )
     assert out["ok"] is False
     assert out["error"] == "unsupported_scheme"
+
+
+def test_web_fetch_rejects_plain_http(settings: Settings) -> None:
+    out = _web_fetch_impl(
+        "http://example.org/paper",
+        "summarize",
+        settings=settings,
+        allowed_domains=None,
+        blocked_domains=[],
+    )
+    assert out["ok"] is False
+    assert out["error"] == "unsupported_scheme"
+
+
+def test_web_fetch_rejects_private_hosts(settings: Settings) -> None:
+    out = _web_fetch_impl(
+        "https://127.0.0.1/private",
+        "summarize",
+        settings=settings,
+        allowed_domains=None,
+        blocked_domains=[],
+    )
+    assert out["ok"] is False
+    assert out["error"] == "private_host_not_allowed"
 
 
 def test_web_fetch_cache_miss_on_different_prompt(
@@ -88,8 +119,7 @@ def test_web_fetch_cache_miss_on_different_prompt(
         "science_graphrag.agent.tools.web_research_tools.build_chat_model",
         lambda *_a, **_k: MagicMock(),
     )
-    with web_research_tools_mod._FETCH_CACHE_LOCK:
-        web_research_tools_mod._FETCH_CACHE.clear()
+    _clear_web_fetch_cache()
 
     url = "https://arxiv.org/abs/1234.5678"
     out1 = _web_fetch_impl(
@@ -111,8 +141,7 @@ def test_web_fetch_cache_miss_on_different_prompt(
     assert out1.get("summary") == "SummaryA"
     assert out2.get("summary") == "SummaryB"
     assert out2.get("cache_hit") is not True
-    with web_research_tools_mod._FETCH_CACHE_LOCK:
-        web_research_tools_mod._FETCH_CACHE.clear()
+    _clear_web_fetch_cache()
 
 
 def test_web_fetch_rejects_disallowed_redirect_host(
@@ -162,6 +191,176 @@ def test_web_fetch_rejects_disallowed_redirect_host(
     assert out["ok"] is False
     assert out["error"] == "redirect_host_not_allowed"
     assert out["detail"] == "evil.example"
+
+
+def test_web_fetch_rejects_private_redirect_host(
+    monkeypatch: pytest.MonkeyPatch,
+    settings: Settings,
+) -> None:
+    class _FakeResp:
+        status_code = 200
+        url = "https://169.254.169.254/latest/meta-data"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def iter_bytes(self):
+            yield b"secret"
+
+    class _FakeClient:
+        def __init__(self, **_kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def stream(self, *_args, **_kwargs):
+            return _FakeResp()
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.tools.web_research_tools.httpx.Client",
+        _FakeClient,
+    )
+    out = _web_fetch_impl(
+        "https://doi.org/10.1000/demo",
+        "summarize",
+        settings=settings,
+        allowed_domains=None,
+        blocked_domains=[],
+    )
+    assert out["ok"] is False
+    assert out["error"] == "redirect_private_host_not_allowed"
+    assert out["detail"] == "169.254.169.254"
+
+
+def test_web_fetch_allows_common_scholarly_publisher_redirects(
+    monkeypatch: pytest.MonkeyPatch,
+    settings: Settings,
+) -> None:
+    class _FakeResp:
+        status_code = 200
+        url = "https://www.taylorfrancis.com/chapters/mono/10.1201/demo"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def iter_bytes(self):
+            yield b"<html><body>publisher page</body></html>"
+
+    class _FakeClient:
+        def __init__(self, **_kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def stream(self, *_args, **_kwargs):
+            return _FakeResp()
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.tools.web_research_tools.httpx.Client",
+        _FakeClient,
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.tools.web_research_tools.invoke_chat_gated",
+        lambda *_a, **_kw: SimpleNamespace(content="Publisher summary"),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.tools.web_research_tools.build_chat_model",
+        lambda *_a, **_kw: MagicMock(),
+    )
+    _clear_web_fetch_cache()
+
+    out = _web_fetch_impl(
+        "https://doi.org/10.1201/demo",
+        "summarize",
+        settings=settings,
+        allowed_domains=None,
+        blocked_domains=[],
+    )
+
+    assert out["ok"] is True
+    assert out["url"] == "https://www.taylorfrancis.com/chapters/mono/10.1201/demo"
+    assert out["summary"] == "Publisher summary"
+    _clear_web_fetch_cache()
+
+
+def test_web_fetch_allows_public_https_by_default(
+    monkeypatch: pytest.MonkeyPatch,
+    settings: Settings,
+) -> None:
+    class _FakeResp:
+        status_code = 200
+        url = "https://publisher.example/articles/demo"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def raise_for_status(self) -> None:
+            return None
+
+        def iter_bytes(self):
+            yield b"<html><body>public page</body></html>"
+
+    class _FakeClient:
+        def __init__(self, **_kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return False
+
+        def stream(self, *_args, **_kwargs):
+            return _FakeResp()
+
+    monkeypatch.setattr(
+        "science_graphrag.agent.tools.web_research_tools.httpx.Client",
+        _FakeClient,
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.tools.web_research_tools.invoke_chat_gated",
+        lambda *_a, **_kw: SimpleNamespace(content="Public summary"),
+    )
+    monkeypatch.setattr(
+        "science_graphrag.agent.tools.web_research_tools.build_chat_model",
+        lambda *_a, **_kw: MagicMock(),
+    )
+    _clear_web_fetch_cache()
+
+    out = _web_fetch_impl(
+        "https://publisher.example/articles/demo",
+        "summarize",
+        settings=settings,
+        allowed_domains=None,
+        blocked_domains=[],
+    )
+
+    assert out["ok"] is True
+    assert out["summary"] == "Public summary"
+    _clear_web_fetch_cache()
 
 
 def test_doi_resolver_graph_match_when_workspace_misses_global_hit(

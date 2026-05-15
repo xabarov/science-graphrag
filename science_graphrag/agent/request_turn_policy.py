@@ -1,4 +1,4 @@
-"""Per-request agent controls (web research toggle, plan mode, server time hints)."""
+"""Per-request agent controls (external HTTP research toggle, plan mode, server time hints)."""
 
 from __future__ import annotations
 
@@ -8,28 +8,23 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 
 from science_graphrag.agent.context.research_plan_session import (
+    reset_research_plan_for_explicit_arxiv_followup,
     reset_research_plan_for_explicit_web_followup,
     seed_research_plan_if_empty,
 )
 from science_graphrag.agent.context.session_backend import get_session_memory_backend
 from science_graphrag.config import Settings
+from science_graphrag.external_intent_markers import (
+    ARXIV_MARKERS,
+    WEB_FOLLOWUP_INTENT_MARKERS,
+)
 
-WEB_RESEARCH_TOOL_NAMES: frozenset[str] = frozenset({"web_search", "web_fetch"})
+EXTERNAL_RESEARCH_TOOL_NAMES: frozenset[str] = frozenset(
+    {"web_search", "web_fetch", "arxiv_search", "arxiv_fetch", "unpaywall_lookup"}
+)
+WEB_RESEARCH_TOOL_NAMES: frozenset[str] = EXTERNAL_RESEARCH_TOOL_NAMES
 
 AgentUiMode = Literal["agent", "plan"]
-
-_WEB_INTENT_MARKERS: tuple[str, ...] = (
-    "интернет",
-    "в интернете",
-    "веб",
-    "что говорят",
-    "сейчас обсуждают",
-    "web",
-    "internet",
-    "online",
-    "current discussion",
-    "what are people saying",
-)
 
 
 @dataclass(frozen=True)
@@ -46,7 +41,14 @@ def _asks_for_web_followup(question: str | None) -> bool:
     q = " ".join(str(question or "").strip().lower().split())
     if not q:
         return False
-    return any(marker in q for marker in _WEB_INTENT_MARKERS)
+    return any(marker in q for marker in WEB_FOLLOWUP_INTENT_MARKERS)
+
+
+def _asks_for_arxiv_followup(question: str | None) -> bool:
+    q = " ".join(str(question or "").strip().lower().split())
+    if not q:
+        return False
+    return any(marker in q for marker in ARXIV_MARKERS)
 
 
 def build_agent_request_turn_context(
@@ -64,7 +66,12 @@ def build_agent_request_turn_context(
     warn_req = list(apply_plan_mode_thread_start(thread_id, mode))
     if mode == "plan":
         seed_research_plan_if_empty(thread_id, question=question)
-    if mode == "agent" and _asks_for_web_followup(question):
+    if mode == "agent" and _asks_for_arxiv_followup(question):
+        reset_research_plan_for_explicit_arxiv_followup(
+            thread_id,
+            question=question,
+        )
+    elif mode == "agent" and _asks_for_web_followup(question):
         reset_research_plan_for_explicit_web_followup(
             thread_id,
             question=question,
@@ -104,9 +111,12 @@ def compute_turn_tool_denylist(
     *,
     web_research_user_enabled: bool,
 ) -> list[str]:
-    """Tool names denied for this turn (execution layer), e.g. user-disabled web."""
+    """Tool names denied for this turn when the user disables external HTTP research.
+
+    Covers Crossref/arXiv/Unpaywall tools (see ``EXTERNAL_RESEARCH_TOOL_NAMES``).
+    """
     _ = settings
-    return sorted(WEB_RESEARCH_TOOL_NAMES) if not web_research_user_enabled else []
+    return sorted(EXTERNAL_RESEARCH_TOOL_NAMES) if not web_research_user_enabled else []
 
 
 def compute_request_warnings(
@@ -194,6 +204,7 @@ def build_request_run_metadata_fragment(
 
 
 __all__ = [
+    "EXTERNAL_RESEARCH_TOOL_NAMES",
     "WEB_RESEARCH_TOOL_NAMES",
     "AgentRequestTurnContext",
     "AgentUiMode",
