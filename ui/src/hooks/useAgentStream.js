@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { buildApiUrl } from "../services/apiClient.js";
-import { flushAgentSseEventBuffer } from "../services/agent/agentStreamParse.js";
+import { consumeAgentSseReader } from "../services/agent/agentStreamConsume.js";
+import { resumeAgentStream } from "../services/agent/agentStreamResume.js";
 
 /** @typedef {'user_cancel' | 'replaced_by_new_request'} AgentStreamAbortReason */
 
@@ -24,6 +25,8 @@ export function useAgentStream({
   onStart,
   onFinish,
   onMalformedFrame,
+  onRunStarted,
+  onSeq,
 }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const abortRef = useRef(null);
@@ -40,6 +43,8 @@ export function useAgentStream({
     onStart,
     onFinish,
     onMalformedFrame,
+    onRunStarted,
+    onSeq,
   });
   useEffect(() => {
     cbRef.current = {
@@ -50,8 +55,10 @@ export function useAgentStream({
       onStart,
       onFinish,
       onMalformedFrame,
+      onRunStarted,
+      onSeq,
     };
-  }, [onEvent, onFinalAnswer, onError, onAbort, onStart, onFinish, onMalformedFrame]);
+  }, [onEvent, onFinalAnswer, onError, onAbort, onStart, onFinish, onMalformedFrame, onRunStarted, onSeq]);
 
   const stream = useCallback(
     async ({
@@ -133,36 +140,18 @@ export function useAgentStream({
         }
 
         const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-        let streamEmittedError = false;
-        const sseHandlers = {
+        const { sawFinalAnswer, streamEmittedError } = await consumeAgentSseReader(reader, {
           onEvent: (ev) => cbRef.current.onEvent?.(ev),
           onFinalAnswer: (ev) => {
             sawFinalAnswerRef.current = true;
             cbRef.current.onFinalAnswer?.(ev);
           },
-          onError: (msg) => {
-            if (sawFinalAnswerRef.current) return;
-            streamEmittedError = true;
-            cbRef.current.onError?.(msg);
-          },
+          onError: (msg) => cbRef.current.onError?.(msg),
+          onRunStarted: (ev) => cbRef.current.onRunStarted?.(ev),
           onParseError: (err) => cbRef.current.onMalformedFrame?.(err),
-        };
-
-        let keepReading = true;
-        while (keepReading) {
-          const { done, value } = await reader.read();
-          if (done) {
-            keepReading = false;
-            continue;
-          }
-          buffer += decoder.decode(value, { stream: true });
-          buffer = flushAgentSseEventBuffer(buffer, sseHandlers);
-        }
-
-        buffer += decoder.decode();
-        flushAgentSseEventBuffer(buffer, sseHandlers);
+          onSeq: (seq) => cbRef.current.onSeq?.(seq),
+        });
+        sawFinalAnswerRef.current = sawFinalAnswer;
 
         if (!sawFinalAnswerRef.current && !controller.signal.aborted && !streamEmittedError) {
           cbRef.current.onError?.("Stream ended before a final answer was received.");
@@ -193,10 +182,74 @@ export function useAgentStream({
     [workspaceId],
   );
 
+  const resumeStream = useCallback(
+    async ({ runId, afterSeq = 0 }) => {
+      const rid = String(runId || "").trim();
+      if (!rid) return;
+
+      if (abortRef.current) {
+        abortIntentRef.current = "replaced_by_new_request";
+        abortRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      setIsStreaming(true);
+      sawFinalAnswerRef.current = false;
+      cbRef.current.onStart?.();
+
+      try {
+        const result = await resumeAgentStream({
+          runId: rid,
+          afterSeq,
+          signal: controller.signal,
+          onEvent: (ev) => cbRef.current.onEvent?.(ev),
+          onFinalAnswer: (ev) => {
+            sawFinalAnswerRef.current = true;
+            cbRef.current.onFinalAnswer?.(ev);
+          },
+          onError: (msg) => cbRef.current.onError?.(msg),
+          onRunStarted: (ev) => cbRef.current.onRunStarted?.(ev),
+        });
+        if (result?.lastSeq != null) {
+          cbRef.current.onSeq?.(result.lastSeq);
+        }
+        if (!sawFinalAnswerRef.current && result?.sawFinalAnswer) {
+          sawFinalAnswerRef.current = true;
+        }
+        // Resume is an idempotent reconnect: an empty/partial replay can happen when the
+        // server-side run is still active or the client already consumed the buffered tail.
+        // Do not turn that into a user-visible failed answer; the Ask layer keeps the
+        // in-flight snapshot and can reconnect again.
+      } catch (err) {
+        if (err?.name === "AbortError") {
+          const intent = abortIntentRef.current;
+          abortIntentRef.current = null;
+          if (intent === "user_cancel" || intent === "replaced_by_new_request") {
+            cbRef.current.onAbort?.({ reason: intent });
+          }
+          return;
+        }
+        cbRef.current.onError?.(String(err?.message || err));
+      } finally {
+        const ownsAbortSlot = abortRef.current === controller;
+        if (ownsAbortSlot) {
+          abortRef.current = null;
+        }
+        abortIntentRef.current = null;
+        if (ownsAbortSlot) {
+          setIsStreaming(false);
+          cbRef.current.onFinish?.();
+        }
+      }
+    },
+    [],
+  );
+
   const abort = useCallback(() => {
     abortIntentRef.current = "user_cancel";
     abortRef.current?.abort?.();
   }, []);
 
-  return { stream, isStreaming, abort };
+  return { stream, resumeStream, isStreaming, abort };
 }

@@ -62,5 +62,6 @@ export const ASK_PANEL_ORCHESTRATION_RETURN_KEYS = Object.freeze(
     "agentMode",
     "setWebResearchEnabled",
     "setAgentMode",
+    "resumeUiStatus",
   ].sort((a, b) => a.localeCompare(b)),
 );

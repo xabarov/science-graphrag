@@ -14,6 +14,11 @@ vi.mock("../../../../services/researchApi.js", async (importOriginal) => {
   };
 });
 
+import {
+  appendAskSessionTurnToSession,
+  createAskSession,
+  setActiveAskSession,
+} from "../session/askSessionState.js";
 import { useAskSessionLifecycle } from "./useAskSessionLifecycle.js";
 
 function stubLocalStorage() {
@@ -131,5 +136,46 @@ describe("useAskSessionLifecycle", () => {
       await new Promise((r) => setTimeout(r, 0));
     });
     expect(setError).toHaveBeenCalledWith("list failed");
+  });
+
+  it("hydrates composer query from history but does not override workId without URL", async () => {
+    const setWorkId = vi.fn();
+    const setQuery = vi.fn();
+    const scopeKey = "standalone-ws:ws-hydrate";
+    const sessionId = createAskSession(scopeKey);
+    setActiveAskSession(scopeKey, sessionId);
+    appendAskSessionTurnToSession(scopeKey, sessionId, {
+      query: "prior question",
+      workId: "w-from-history",
+      answer: "ok",
+    });
+
+    renderHook(() =>
+      useAskSessionLifecycle({
+        scopeKey,
+        locked: false,
+        scopedWorkId: null,
+        workspaceId: "ws-hydrate",
+        initialWorkId: "",
+        urlSessionId: "",
+        onUrlSessionIdChange: undefined,
+        serverSync: false,
+        sessionTick: 0,
+        bumpSessions: noop,
+        activeSessionId: sessionId,
+        setError: noop,
+        setHistory: noop,
+        setQuery,
+        setWorkId,
+        composerSuppressHydrateTurnIdRef,
+      }),
+    );
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+
+    expect(setQuery).toHaveBeenCalledWith("prior question");
+    expect(setWorkId).not.toHaveBeenCalled();
   });
 });

@@ -33,7 +33,6 @@ import {
  *   setError: (v: unknown) => void,
  *   setHistory: (entries: unknown[]) => void,
  *   setQuery: (q: string) => void,
- *   setWorkId: (id: string) => void,
  *   composerSuppressHydrateTurnIdRef: { current: string },
  * }} args
  */
@@ -52,7 +51,6 @@ export function useAskSessionLifecycle({
   setError,
   setHistory,
   setQuery,
-  setWorkId,
   composerSuppressHydrateTurnIdRef,
 }) {
   useEffect(() => {
@@ -118,9 +116,7 @@ export function useAskSessionLifecycle({
       return;
     }
     composerSuppressHydrateTurnIdRef.current = "";
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- composer draft only; scope stays URL-driven
     setQuery(recent[0].query);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setWorkId(recent[0].workId);
-  }, [locked, initialWorkId, scopeKey, composerSuppressHydrateTurnIdRef, setQuery, setWorkId]);
+  }, [locked, initialWorkId, scopeKey, composerSuppressHydrateTurnIdRef, setQuery]);
 }

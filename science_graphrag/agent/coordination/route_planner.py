@@ -32,6 +32,7 @@ from science_graphrag.agent.coordination.route_plan import (
     TerminationRule,
 )
 from science_graphrag.agent.coordination.turn_policy import TurnPolicy
+from science_graphrag.agent.web_evidence_policy import web_evidence_sufficient_for_product_query
 
 
 def _pure_arxiv_discovery_intent(features: QuestionFeatures) -> bool:
@@ -91,8 +92,10 @@ def _derive_external_research_completion(  # pylint: disable=too-many-return-sta
     *,
     features: QuestionFeatures,
     tool_counts: dict[str, int],
+    tool_payloads: list[dict] | None = None,
 ) -> CompletionSignalId | None:
     """Map web/arXiv tool counts to completion_state, or ``None`` to fall through."""
+    payloads = [p for p in (tool_payloads or []) if isinstance(p, dict)]
     if (
         features.asks_for_web_research
         and features.asks_for_arxiv
@@ -106,9 +109,18 @@ def _derive_external_research_completion(  # pylint: disable=too-many-return-sta
             return "evidence_insufficient"
         return "any_specialist_payload"
     if features.asks_for_web_research:
+        requires_official = bool(features.asks_for_official_product_research)
+        if payloads:
+            sufficient, _reason = web_evidence_sufficient_for_product_query(
+                payloads,
+                requires_official=requires_official,
+            )
+            if sufficient:
+                return "minimal_bundle_ready"
+            return "evidence_insufficient"
         if tool_counts.get("web_fetch", 0) > 0:
             return "minimal_bundle_ready"
-        if tool_counts.get("web_search", 0) > 0:
+        if tool_counts.get("web_search", 0) > 0 or tool_counts.get("official_web_lookup", 0) > 0:
             return "evidence_insufficient"
     if _pure_arxiv_discovery_intent(features):
         if tool_counts.get("arxiv_fetch", 0) > 0 or tool_counts.get("arxiv_search", 0) > 0:
@@ -348,6 +360,7 @@ def derive_retrieval_completion_state(
     features: QuestionFeatures,
     tool_counts: dict[str, int],
     has_payloads: bool,
+    tool_payloads: list[dict] | None = None,
 ) -> CompletionSignalId:
     """Pick a typed ``completion_state`` for a retrieval-specialist hop.
 
@@ -362,7 +375,11 @@ def derive_retrieval_completion_state(
         if features.asks_for_workspace_stats and tool_counts.get("workspace_inspect", 0) > 0:
             return "any_specialist_payload"
         return "evidence_insufficient"
-    ext_cs = _derive_external_research_completion(features=features, tool_counts=tool_counts)
+    ext_cs = _derive_external_research_completion(
+        features=features,
+        tool_counts=tool_counts,
+        tool_payloads=tool_payloads,
+    )
     if ext_cs is not None:
         return ext_cs
     handoff = planner_post_retrieval_handoff(

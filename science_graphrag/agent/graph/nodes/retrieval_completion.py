@@ -39,6 +39,7 @@ def annotate_retrieval_completion_state(
             features=features,
             tool_counts=tool_counts,
             has_payloads=bool(new_payloads or specialist_results.get(specialist_name)),
+            tool_payloads=new_payloads,
         )
         return annotate_completion_state(sr3, completion_state=str(cs))
     except Exception:  # noqa: BLE001

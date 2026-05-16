@@ -19,6 +19,7 @@ def settings() -> Settings:
     return Settings(
         agent_external_http_timeout_seconds=15.0,
         openalex_mailto="test@example.org",
+        semantic_scholar_api_key=None,
     )
 
 

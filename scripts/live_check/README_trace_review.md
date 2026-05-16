@@ -152,6 +152,17 @@ Dual-run artifact + rollout notes: `eval/results/runtime-v3-rollout-decision-202
 explicitly and re-run trace-review / long-thread acceptance. See
 [`agent-engine-feature-status-2026-05-13.md`](../analysis/agent-engine-feature-status-2026-05-13.md) §8.
 
+## 4.3 External web research smoke (product / internet)
+
+```bash
+export AGENT_LIVE_BASE=http://127.0.0.1:18787
+export AGENT_LIVE_WORKSPACE_ID=ws-pilot-od
+.venv/bin/python scripts/live_check/external_web_research_smoke.py \
+  --write-json eval/results/external-web-research-smoke.json
+```
+
+See `docs/agent/external_research_runtime_acceptance.md` → **Web evidence quality gates**.
+
 ## 5) Pull Phoenix snapshots for offline review
 
 ```bash

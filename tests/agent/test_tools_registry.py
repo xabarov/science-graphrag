@@ -27,6 +27,7 @@ def test_build_tool_registry_includes_core_and_catalog_tools() -> None:
     assert "workspace_graph_reltypes" in uniq
     assert "find_works" in uniq
     assert "format_bibliography_gost" in uniq
+    assert "official_web_lookup" in uniq
     assert "web_search" in uniq
     assert "web_fetch" in uniq
     assert "arxiv_search" in uniq
@@ -43,6 +44,7 @@ def test_build_retrieval_tools_includes_web_research() -> None:
 
     tools = build_retrieval_tools(_fake_stores())
     names = {getattr(t, "name", "") for t in tools}
+    assert "official_web_lookup" in names
     assert "web_search" in names
     assert "web_fetch" in names
     assert "arxiv_search" in names
@@ -85,7 +87,8 @@ def test_build_retrieval_tools_skips_crossref_when_disabled() -> None:
     tools = build_retrieval_tools(_fake_stores(), settings=st)
     names = {getattr(t, "name", "") for t in tools}
     assert "web_search" not in names
-    assert "web_fetch" not in names
+    assert "official_web_lookup" in names
+    assert "web_fetch" in names
     assert "arxiv_search" in names
 
 

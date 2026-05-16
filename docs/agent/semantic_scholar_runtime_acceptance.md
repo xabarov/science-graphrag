@@ -66,12 +66,15 @@ Run from repo root with project venv.
 - Command:
   - `.venv/bin/python scripts/live_check/semantic_scholar_smoke.py --query "attention is all you need"`
 - Observed:
-  - `search_http_status=429`
-  - body: `{"message":"Too Many Requests ... apply for a key ..."}`
-  - exit code: `1`
+  - API key visible from repo `.env` through `Settings`
+  - `search_http_status=200`
+  - `search_results=1`
+  - `paper_http_status=200`
+  - `paper_title=Attention is All you Need`
+  - exit code: `0`
 - Interpretation:
-  - Runtime/failure contract is correct (non-200 -> non-zero with response snippet).
-  - Source remains `needs_live_smoke`; mark as live-verified only after a green run in the target operator contour (API key/quota window permitting).
+  - Keyed live smoke is green for Phase 5A search + paper lookup.
+  - The script waits before the second request to respect Semantic Scholar's 1 request/second cumulative key limit.
 
 ## Notes for operators
 

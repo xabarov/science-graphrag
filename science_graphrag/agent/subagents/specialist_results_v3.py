@@ -87,6 +87,19 @@ def empty_specialist_results_v3() -> dict[str, Any]:
     }
 
 
+def append_writer_directive(prev: dict[str, Any] | None, extra: str) -> dict[str, Any]:
+    """Append free-text guidance for the writer merge block."""
+    text = str(extra or "").strip()
+    if not text:
+        return prev if isinstance(prev, dict) else empty_specialist_results_v3()
+    blob = dict(prev) if isinstance(prev, dict) else empty_specialist_results_v3()
+    merge = dict(blob.get("merge") or {})
+    existing = str(merge.get("writer_directive") or "").strip()
+    merge["writer_directive"] = f"{existing}\n{text}".strip() if existing else text
+    blob["merge"] = merge
+    return blob
+
+
 def annotate_completion_state(
     prev: dict[str, Any] | None, *, completion_state: str
 ) -> dict[str, Any]:
@@ -404,6 +417,7 @@ def serialize_for_writer(prev: dict[str, Any] | None, *, max_chars: int = 12000)
 
 __all__ = [
     "COMPLETION_STATE_VALUES",
+    "append_writer_directive",
     "annotate_completion_state",
     "append_claim_verification_leg",
     "append_corpus_explore_leg",

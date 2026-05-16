@@ -17,15 +17,21 @@ from science_graphrag.agent.tools.external.semantic_scholar_tools import (
     build_semantic_scholar_tools,
 )
 from science_graphrag.agent.tools.external.unpaywall_tools import build_unpaywall_tools
-from science_graphrag.agent.tools.web_research_tools import build_web_research_tools
+from science_graphrag.agent.tools.web_research_tools import (
+    build_crossref_web_search_tools,
+    build_official_web_lookup_tools,
+    build_web_fetch_tools,
+)
 from science_graphrag.config import Settings
 
 
 def build_external_research_tools(*, settings: Settings) -> list[Any]:
     """Return all LangChain tools that hit external scholarly HTTP APIs."""
     out: list[Any] = []
+    out.extend(build_official_web_lookup_tools(settings=settings))
+    out.extend(build_web_fetch_tools(settings=settings))
     if bool(getattr(settings, "external_research_source_crossref_enabled", True)):
-        out.extend(build_web_research_tools(settings=settings))
+        out.extend(build_crossref_web_search_tools(settings=settings))
     if bool(getattr(settings, "external_research_source_arxiv_enabled", True)):
         out.extend(build_arxiv_tools(settings=settings))
     if settings.agent_unpaywall_oa_tool_enabled and bool(

@@ -35,6 +35,14 @@ export default function LlmConnectionTestCard({
         ? t("llm.test.unexpected")
         : result?.error_kind || t("llm.test.connectionError");
 
+  const tasksSummary = Array.isArray(result?.tasks) ? result.tasks : null;
+  const taskLabelById = {
+    extraction: t("llm.card.extraction"),
+    chat: t("llm.card.chat"),
+    vision: t("llm.card.vision"),
+    embeddings: t("llm.card.embeddings"),
+  };
+
   return (
     <Box
       sx={{
@@ -76,6 +84,23 @@ export default function LlmConnectionTestCard({
               .filter(Boolean)
               .join(" | ")}
           </Typography>
+          {tasksSummary?.length ? (
+            <Box sx={{ marginTop: 1.25 }}>
+              {tasksSummary.map((taskResult) => {
+                const ok = taskResult.status === "connected";
+                const label = taskLabelById[taskResult.task] || taskResult.task;
+                const statusText = t(ok ? "llm.test.taskOk" : "llm.test.taskError");
+                return (
+                  <Typography
+                    key={taskResult.task}
+                    sx={{ fontSize: "0.75rem", color: ok ? tk.state.successFg : tk.state.dangerFg }}
+                  >
+                    {`${statusText} · ${label}: ${taskResult.message || taskResult.error_kind || "-"}`}
+                  </Typography>
+                );
+              })}
+            </Box>
+          ) : null}
         </Alert>
       ) : null}
     </Box>

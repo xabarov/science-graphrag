@@ -44,6 +44,9 @@ export default {
   "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Запрос…",
   "askPanel.agentStreamingHint": "Агент обрабатывает запрос — первый ответ может занять 20–40 с.",
+  "askPanel.agentResumingHint": "Подключаемся к незавершённому запуску агента…",
+  "askPanel.agentRunInterrupted":
+    "Запрос был прерван (переход на другую страницу или обрыв соединения). Повторите вопрос или дождитесь завершения ответа в фоне.",
   "askPanel.agentIncompleteTurn":
     "Ответ не сохранён. Если видите красную строку ошибки под заголовком чата — прочитайте её; иначе повторите запрос.",
   "askPanel.runQuery": "Выполнить запрос",

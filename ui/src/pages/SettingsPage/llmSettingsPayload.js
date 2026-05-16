@@ -76,6 +76,10 @@ export function buildRuntimeOverridesPayload(advValues) {
  *   embeddingsModel: string,
  *   embeddingsTimeoutSeconds: number,
  *   embeddingsApiKey: string,
+ *   clearApiKey?: boolean,
+ *   clearChatApiKey?: boolean,
+ *   clearVisionApiKey?: boolean,
+ *   clearEmbeddingsApiKey?: boolean,
  *   advDirty: boolean,
  *   advValues: object,
  * }} opts
@@ -101,6 +105,10 @@ export function buildLlmSettingsSubmitPayload(opts) {
     embeddingsModel,
     embeddingsTimeoutSeconds,
     embeddingsApiKey,
+    clearApiKey,
+    clearChatApiKey,
+    clearVisionApiKey,
+    clearEmbeddingsApiKey,
     advDirty,
     advValues,
   } = opts;
@@ -136,15 +144,23 @@ export function buildLlmSettingsSubmitPayload(opts) {
 
   if (apiKey.trim()) {
     payload.api_key = apiKey.trim();
+  } else if (clearApiKey) {
+    payload.api_key = null;
   }
   if (chatApiKey.trim()) {
     payload.chat_api_key = chatApiKey.trim();
+  } else if (clearChatApiKey) {
+    payload.chat_api_key = null;
   }
   if (visionApiKey.trim()) {
     payload.vision_api_key = visionApiKey.trim();
+  } else if (clearVisionApiKey) {
+    payload.vision_api_key = null;
   }
   if (embeddingsApiKey.trim()) {
     payload.embeddings_api_key = embeddingsApiKey.trim();
+  } else if (clearEmbeddingsApiKey) {
+    payload.embeddings_api_key = null;
   }
   if (advDirty) {
     payload.runtime_overrides = buildRuntimeOverridesPayload(advValues);

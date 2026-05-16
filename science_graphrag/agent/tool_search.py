@@ -144,7 +144,7 @@ def _ensure_web_tools_in_picked(
     if not asks_for_web_research:
         return
     have = {getattr(t, "name", "") for t in picked}
-    for nm in ("web_search", "web_fetch"):
+    for nm in ("official_web_lookup", "web_search", "web_fetch"):
         if nm in have:
             continue
         hit = next((t for t in tools if getattr(t, "name", "") == nm), None)
@@ -484,7 +484,9 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
         else frozenset()
     )
     if asks_for_web_research and (specialist == "retrieval_agent" or for_single_agent):
-        core_exempt = frozenset(core_exempt) | frozenset({"web_search", "web_fetch"})
+        core_exempt = frozenset(core_exempt) | frozenset(
+            {"official_web_lookup", "web_search", "web_fetch"}
+        )
     if asks_for_arxiv and (specialist == "retrieval_agent" or for_single_agent):
         core_exempt = frozenset(core_exempt) | frozenset({"arxiv_search", "arxiv_fetch"})
     if asks_for_unpaywall and (specialist == "retrieval_agent" or for_single_agent):

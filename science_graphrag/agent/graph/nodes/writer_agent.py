@@ -297,6 +297,34 @@ def _ensure_terminal_final_answer_tool_call(
     ]
 
 
+def _drop_non_final_tool_calls_from_tail(messages: list[Any]) -> list[Any]:
+    """Strip trailing AI tool-call messages that are not ``final_answer``.
+
+    Writer is terminal-only; if the model emits a stray tool call (e.g. arxiv_search),
+    keeping it in the tail can route the parent graph to ``END`` without a completed
+    ``final_answer``. We keep full history except the trailing non-terminal tool-call tail.
+    """
+    if not messages:
+        return messages
+    out = list(messages)
+    while out:
+        last = out[-1]
+        if not isinstance(last, AIMessage):
+            break
+        tool_calls = list(getattr(last, "tool_calls", None) or [])
+        if not tool_calls:
+            break
+        only_final = all(
+            str((tc or {}).get("name") or "").strip() == "final_answer"
+            for tc in tool_calls
+            if isinstance(tc, dict)
+        )
+        if only_final:
+            break
+        out.pop()
+    return out
+
+
 def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
     """Build writer specialist callable for supervisor graph."""
     subgraph_cache: dict[tuple[tuple[str, ...], str], Any] = {}
@@ -334,6 +362,7 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
         compiled = _cached_subgraph(tools, mode)
         next_state = compiled.invoke(state)
         messages = list(next_state.get("messages") or [])
+        messages = _drop_non_final_tool_calls_from_tail(messages)
         messages = _ensure_terminal_final_answer_tool_call(
             messages,
             citations=[

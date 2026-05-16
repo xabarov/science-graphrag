@@ -19,6 +19,10 @@ import {
 } from "../../../../services/research/pdfReadUi.js";
 import { useAskPanelClipboard } from "./useAskPanelClipboard.js";
 import { useAskPanelStreamArtifacts } from "./useAskPanelStreamArtifacts.js";
+import { useAskInflightResume } from "./useAskInflightResume.js";
+import { patchInflightRunSnapshot } from "../session/askRunPersistence.js";
+import { readAskComposerDraft, writeAskComposerDraft } from "../session/askComposerDraft.js";
+import { normalizeWorkListItem } from "../answer/workListLabel.js";
 
 /**
  * Ask panel state, session scope, effects, and submit/session handlers.
@@ -30,6 +34,7 @@ import { useAskPanelStreamArtifacts } from "./useAskPanelStreamArtifacts.js";
  *   workspaceId?: string,
  *   urlSessionId?: string,
  *   onUrlSessionIdChange?: (sessionId: string) => void,
+ *   onUrlWorkIdChange?: (workId: string) => void,
  * }} props
  */
 export function useAskPanelOrchestration({
@@ -39,6 +44,7 @@ export function useAskPanelOrchestration({
   workspaceId = "",
   urlSessionId = "",
   onUrlSessionIdChange,
+  onUrlWorkIdChange,
 }) {
   const { t } = useI18n();
   const locked = Boolean(scopedWorkId && String(scopedWorkId).trim());
@@ -68,13 +74,42 @@ export function useAskPanelOrchestration({
   });
   /** When storage head matches this turn id, do not refill composer from `recent[0]` (avoids scopeKey churn after submit). */
   const composerSuppressHydrateTurnIdRef = useRef("");
+  const inflightRunIdRef = useRef("");
+  const inflightLastSeqRef = useRef(0);
+  const pendingUserQueryRef = useRef("");
+  const streamEventsRef = useRef([]);
+  const agentToolTraceRef = useRef([]);
+  const [resumeUiStatus, setResumeUiStatus] = useState("idle");
 
-  const { workDetailsForChip, workspaceSearchOptions, searchWorks, onArticlePicked, handleWorkIdChange } = useAskWorkContext({
+  const {
+    workDetailsForChip,
+    workspaceSearchOptions,
+    searchWorks,
+    onArticlePicked: pickArticle,
+    handleWorkIdChange: changeWorkId,
+  } = useAskWorkContext({
     workspaceId,
     locked,
     workId,
     setWorkId,
   });
+
+  const handleWorkIdChange = useCallback(
+    (next) => {
+      changeWorkId(next);
+      onUrlWorkIdChange?.(next);
+    },
+    [changeWorkId, onUrlWorkIdChange],
+  );
+
+  const onArticlePicked = useCallback(
+    (item) => {
+      pickArticle(item);
+      const row = normalizeWorkListItem(item);
+      if (row.work_id) onUrlWorkIdChange?.(row.work_id);
+    },
+    [pickArticle, onUrlWorkIdChange],
+  );
 
   const { onCopyUserText, onCopyAssistantEntry } = useAskPanelClipboard();
 
@@ -93,6 +128,19 @@ export function useAskPanelOrchestration({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reload prefs when Ask scope changes
     setComposerPrefs(readAskComposerPrefs(scopeKey));
   }, [scopeKey]);
+
+  useEffect(() => {
+    pendingUserQueryRef.current = pendingUserQuery;
+  }, [pendingUserQuery]);
+
+  useEffect(() => {
+    streamEventsRef.current = streamEvents;
+  }, [streamEvents]);
+
+  useEffect(() => {
+    agentToolTraceRef.current = agentToolTrace;
+  }, [agentToolTrace]);
+
   const bumpSessions = useCallback(() => setSessionTick((v) => v + 1), []);
   const setWebResearchEnabled = useCallback(
     (next) => {
@@ -132,7 +180,6 @@ export function useAskPanelOrchestration({
     setError,
     setHistory,
     setQuery,
-    setWorkId,
     composerSuppressHydrateTurnIdRef,
   });
 
@@ -149,7 +196,36 @@ export function useAskPanelOrchestration({
     return ["chat.thread.prompts.standalone.1", "chat.thread.prompts.standalone.2", "chat.thread.prompts.standalone.3"];
   }, [locked, inWorkspace, corpusWorkspaceOnly]);
 
-  const { submit, isLoading, abort } = useAskSubmit({
+  const persistInflightSnapshot = useCallback(
+    (patch = {}) => {
+      const runId = inflightRunIdRef.current;
+      if (!runId) return;
+      patchInflightRunSnapshot({
+        runId,
+        scopeKey: scopeKeyRef.current,
+        sessionId: String(activeSessionId || "").trim(),
+        workspaceId: String(workspaceId || "").trim(),
+        pendingUserQuery: pendingUserQueryRef.current,
+        lastSeq: inflightLastSeqRef.current,
+        streamEvents: streamEventsRef.current,
+        agentToolTrace: agentToolTraceRef.current,
+        workId: String(workId || "").trim(),
+        status: "running",
+        ...patch,
+      });
+    },
+    [activeSessionId, workspaceId, workId],
+  );
+
+  const {
+    submit,
+    resumeStream,
+    isLoading,
+    abort,
+    streamEventsCaptureRef,
+    toolTraceCaptureRef,
+    lastStreamNormalizedRef,
+  } = useAskSubmit({
     workspaceId,
     onStart: () => {
       streamFailureRef.current = "";
@@ -158,19 +234,58 @@ export function useAskPanelOrchestration({
       setRetrievalJsonOpen(false);
       setAgentToolTrace([]);
       setStreamEvents([]);
+      setResumeUiStatus("running");
+    },
+    onFinish: () => {
+      setResumeUiStatus("idle");
     },
     onResult: setNormalized,
-    onToolTrace: setAgentToolTrace,
+    onToolTrace: (trace) => {
+      const nextTrace = Array.isArray(trace) ? trace : [];
+      agentToolTraceRef.current = nextTrace;
+      setAgentToolTrace(nextTrace);
+      persistInflightSnapshot({ agentToolTrace: nextTrace });
+    },
+    onRunStarted: (ev) => {
+      const rid = String(ev?.run_id || "").trim();
+      if (!rid) return;
+      inflightRunIdRef.current = rid;
+      persistInflightSnapshot({ runId: rid });
+    },
+    onSeq: (seq) => {
+      inflightLastSeqRef.current = seq;
+      persistInflightSnapshot({ lastSeq: seq });
+    },
     onStreamEvent: (event) => {
       if (!event || typeof event !== "object") return;
-      setStreamEvents((prev) => [...prev, event].slice(-80));
+      const next = [...streamEventsRef.current, event].slice(-80);
+      streamEventsRef.current = next;
+      persistInflightSnapshot({ streamEvents: next });
+      setStreamEvents(next);
     },
     onError: (msg) => {
       const formatted = formatAskAgentUiError(t, msg);
       streamFailureRef.current = formatted;
       setError(formatted);
+      patchInflightRunSnapshot({ status: "failed" });
     },
   });
+
+  useEffect(() => {
+    const sid = String(activeSessionId || "").trim();
+    if (!sid) return;
+    const draft = readAskComposerDraft(scopeKey, sid);
+    if (draft && !isLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setQuery(draft);
+    }
+  }, [scopeKey, activeSessionId, isLoading]);
+
+  useEffect(() => {
+    const sid = String(activeSessionId || "").trim();
+    if (!sid || isLoading) return;
+    writeAskComposerDraft(scopeKey, sid, query);
+  }, [scopeKey, activeSessionId, query, isLoading]);
 
   const { webResearchEnabled, agentMode } = composerPrefs;
 
@@ -188,6 +303,7 @@ export function useAskPanelOrchestration({
     locked,
     inWorkspace,
     corpusWorkspaceOnly,
+    workspaceId,
     bumpSessions,
     serverSync,
     t,
@@ -200,6 +316,39 @@ export function useAskPanelOrchestration({
     setError,
     setNormalized,
     setHistory,
+    onUrlSessionIdChange,
+    inflightRunIdRef,
+    inflightLastSeqRef,
+  });
+
+  useAskInflightResume({
+    scopeKey,
+    activeSessionId,
+    onUrlSessionIdChange,
+    workspaceId,
+    locked,
+    inWorkspace,
+    corpusWorkspaceOnly,
+    workId,
+    serverSync,
+    scopeKeyRef,
+    streamFailureRef,
+    composerSuppressHydrateTurnIdRef,
+    resumeStream,
+    streamEventsCaptureRef,
+    toolTraceCaptureRef,
+    lastStreamNormalizedRef,
+    setStreamEvents,
+    setAgentToolTrace,
+    setPendingUserQuery,
+    setStreamingTarget,
+    setQuery,
+    setHistory,
+    setNormalized,
+    setError,
+    bumpSessions,
+    setResumeUiStatus,
+    t,
   });
 
   const {
@@ -239,6 +388,7 @@ export function useAskPanelOrchestration({
     setHistory,
     setQuery,
     setWorkId,
+    onUrlWorkIdChange,
     setNormalized,
     setError,
     onUrlSessionIdChange,
@@ -252,11 +402,14 @@ export function useAskPanelOrchestration({
   const scopeEyebrow = deriveAskPanelScopeEyebrow(t, { inWorkspace, locked, corpusWorkspaceOnly });
 
   const streamingHint = useMemo(() => {
+    if (resumeUiStatus === "resuming") {
+      return t("askPanel.agentResumingHint");
+    }
     if (!isLoading || !streamingTarget) return "";
     if (streamingTarget.scopeKey !== scopeKey) return "";
     if (String(streamingTarget.sessionId || "") !== String(activeSessionId || "")) return "";
     return t("askPanel.agentStreamingHint");
-  }, [isLoading, streamingTarget, scopeKey, activeSessionId, t]);
+  }, [isLoading, streamingTarget, scopeKey, activeSessionId, resumeUiStatus, t]);
 
   const pdfReadingMode = useMemo(
     () =>
@@ -376,5 +529,6 @@ export function useAskPanelOrchestration({
     agentMode,
     setWebResearchEnabled,
     setAgentMode,
+    resumeUiStatus,
   };
 }

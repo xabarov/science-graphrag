@@ -27,6 +27,15 @@ WEB_FETCH_FAILURE_SYNTHESIS_DIRECTIVE: Final[str] = (
     "full-text claims, and cite the available URLs."
 )
 
+NEGATIVE_CLAIM_GUARD_DIRECTIVE: Final[str] = (
+    "Negative-claim guard: do not state that official announcements, releases, or vendor pages "
+    "'were not found', 'are not recorded', or 'do not exist' unless specialist_results include "
+    "an official_web_lookup or web_fetch from an official-tier source (vendor docs, GitHub org, "
+    "primary product site) that explicitly supports absence. "
+    "If only scholarly/metadata sources were retrieved, say evidence is limited to those sources "
+    "and that official vendor pages were not successfully fetched in this run."
+)
+
 EVIDENCE_TRUST_DIRECTIVE: Final[str] = (
     "Evidence honesty: structured citations may include provenance_kind and evidence_mode. "
     "Do not claim you read the full PDF or full article text unless evidence_mode is full_text or "
@@ -93,6 +102,7 @@ def writer_system_prompt_suffix(*, settings: "Settings", writer_mode: str) -> st
     parts = [
         SYNTHESIZE_NOT_DELEGATE_DIRECTIVE,
         WEB_FETCH_FAILURE_SYNTHESIS_DIRECTIVE,
+        NEGATIVE_CLAIM_GUARD_DIRECTIVE,
         EVIDENCE_TRUST_DIRECTIVE,
     ]
     if writer_mode == "normal" and verification_format_enabled(settings=settings):

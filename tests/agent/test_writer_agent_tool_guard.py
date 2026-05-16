@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 from langchain_core.messages import AIMessage, ToolMessage
 
 from science_graphrag.agent.graph.nodes.writer_agent import (
+    _drop_non_final_tool_calls_from_tail,
     _ensure_final_answer_tool,
     _ensure_terminal_final_answer_tool_call,
 )
@@ -59,3 +60,19 @@ def test_existing_final_answer_tool_call_is_not_duplicated() -> None:
     ]
     out = _ensure_terminal_final_answer_tool_call(msgs)
     assert out == msgs
+
+
+def test_drop_non_final_tool_calls_from_tail_for_writer_terminal() -> None:
+    msgs = [
+        AIMessage(content="intermediate synthesis"),
+        AIMessage(
+            content="",
+            tool_calls=[
+                {"name": "arxiv_search", "id": "c2", "args": {"query": "sam"}, "type": "tool_call"}
+            ],
+        ),
+    ]
+    out = _drop_non_final_tool_calls_from_tail(msgs)
+    assert len(out) == 1
+    assert isinstance(out[0], AIMessage)
+    assert not getattr(out[0], "tool_calls", None)

@@ -136,7 +136,7 @@ describe("LlmSettingsPanel distributed quota UX", () => {
   it("renders embeddings HTTP controls with localized card title", () => {
     renderPanel();
     expect(screen.getByText("Embeddings")).toBeTruthy();
-    expect(screen.getByLabelText("Embeddings model")).toBeTruthy();
+    expect(screen.getAllByLabelText("Model").length).toBeGreaterThanOrEqual(4);
     expect(screen.queryByText(/Mode:/i)).toBeNull();
     expect(screen.queryByText(/research agent/i)).toBeNull();
   });
@@ -163,7 +163,7 @@ describe("LlmSettingsPanel distributed quota UX", () => {
     renderPanel();
     fireEvent.click(screen.getByRole("button", { name: "Ollama qwen3-embedding" }));
     expect(screen.getByDisplayValue("qwen3-embedding:0.6b")).toBeTruthy();
-    expect(screen.getByLabelText("Model (extraction / text)").value).toBe("openai/gpt-4o-mini");
+    expect(screen.getAllByLabelText("Model")[0].value).toBe("openai/gpt-4o-mini");
     const baseUrls = screen.getAllByLabelText("Base URL");
     expect(baseUrls[0].value).toBe("https://openrouter.ai/api/v1");
     expect(baseUrls[baseUrls.length - 1].value).toBe("http://localhost:11434/v1");
@@ -174,7 +174,7 @@ describe("LlmSettingsPanel distributed quota UX", () => {
     const openRouterButtons = screen.getAllByRole("button", { name: "OpenRouter" });
     fireEvent.click(openRouterButtons[1]);
     fireEvent.click(screen.getByRole("button", { name: "Ollama qwen3-embedding" }));
-    expect(screen.getByLabelText("Model (extraction / text)").value).toBe("mistralai/mistral-small-3.2-24b-instruct");
+    expect(screen.getAllByLabelText("Model")[0].value).toBe("mistralai/mistral-small-3.2-24b-instruct");
     expect(screen.getByDisplayValue("qwen3-embedding:0.6b")).toBeTruthy();
     const baseUrls = screen.getAllByLabelText("Base URL");
     expect(baseUrls[0].value).toBe("https://openrouter.ai/api/v1");

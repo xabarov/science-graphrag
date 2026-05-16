@@ -45,6 +45,9 @@ export default {
   "askPanel.retrieval.agent": "agent",
   "askPanel.runQueryLoading": "Querying…",
   "askPanel.agentStreamingHint": "Agent is working — first tokens may take 20–40s.",
+  "askPanel.agentResumingHint": "Reconnecting to the in-progress agent run…",
+  "askPanel.agentRunInterrupted":
+    "The request was interrupted (navigation or connection loss). Retry the question or wait for the answer to finish in the background.",
   "askPanel.agentIncompleteTurn":
     "No answer was saved. Read the red error under the chat header if present, or try again.",
   "askPanel.runQuery": "Run query",

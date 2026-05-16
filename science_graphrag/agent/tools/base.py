@@ -18,6 +18,18 @@ class ToolResult:
 def _tool_span_payload_preview(payload: dict[str, Any]) -> dict[str, Any]:
     """Small subset of tool payload for Phoenix TOOL span output."""
 
+    if "ok" in payload:
+        preview_ok: dict[str, Any] = {"ok": bool(payload.get("ok"))}
+        if payload.get("ok") is False:
+            for key in ("error", "detail"):
+                if key in payload:
+                    val = str(payload[key])
+                    preview_ok[key] = val[:240] if len(val) > 240 else val
+        else:
+            preview_ok["row_count"] = payload.get("row_count")
+        if preview_ok:
+            return preview_ok
+
     if "answer" in payload and isinstance(payload.get("answer"), str):
         ans = str(payload["answer"])
         return {
@@ -63,7 +75,11 @@ def run_tool_result_with_span(
 ) -> ToolResult:
     """Run a tool body under a Phoenix TOOL span with safe output (LangChain + legacy paths)."""
 
-    from science_graphrag.observability.spans import SpanAttributes, traced_tool_span
+    from science_graphrag.observability.spans import (
+        SpanAttributes,
+        set_span_attribute,
+        traced_tool_span,
+    )
     from science_graphrag.observability.spans.decorators import MIME_TYPE_JSON
 
     with traced_tool_span(
@@ -72,11 +88,15 @@ def run_tool_result_with_span(
         tool_parameters=tool_parameters,
     ):
         res = fn()
+        payload = dict(res.payload)
+        preview = _tool_span_payload_preview(payload)
+        if "ok" in payload:
+            set_span_attribute("tool.result_ok", bool(payload.get("ok")))
         SpanAttributes.set_output(
             SpanAttributes.tool_result_preview(
                 row_count=res.row_count,
                 truncated=res.truncated,
-                preview=_tool_span_payload_preview(dict(res.payload)),
+                preview=preview,
             ),
             mime_type=MIME_TYPE_JSON,
         )

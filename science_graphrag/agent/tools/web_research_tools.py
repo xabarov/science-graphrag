@@ -18,6 +18,11 @@ from science_graphrag.agent.llm.chat import build_chat_model, ensure_messages_sa
 from science_graphrag.agent.tools.base import ToolResult
 from science_graphrag.agent.tools.external.http_transport import external_research_user_agent
 from science_graphrag.agent.tools.trace_wrappers import run_tool_result_with_span
+from science_graphrag.agent.web_evidence_policy import (
+    classify_source_tier,
+    enrich_web_source,
+    official_source_candidates,
+)
 from science_graphrag.config import Settings
 from science_graphrag.ingestion.enrichment.openalex import OPENALEX_MAILTO_FALLBACK
 from science_graphrag.llm.concurrency import invoke_chat_gated
@@ -190,6 +195,10 @@ class WebSearchArgs(BaseModel):
     max_results: int = Field(default=5, ge=1, le=_WEB_SEARCH_MAX_RESULTS)
 
 
+class OfficialWebLookupArgs(BaseModel):
+    query: str = Field(..., min_length=1, max_length=512)
+
+
 class WebFetchArgs(BaseModel):
     url: str = Field(..., min_length=8, max_length=2048)
     prompt: str = Field(
@@ -203,8 +212,54 @@ class WebFetchArgs(BaseModel):
     blocked_domains: list[str] | None = Field(default=None)
 
 
-def build_web_research_tools(*, settings: Settings) -> list[Any]:
-    """Return LangChain web research tools."""
+def build_official_web_lookup_tools(*, settings: Settings) -> list[Any]:  # noqa: ARG001
+    """Curated vendor/docs URLs (independent of Crossref toggle)."""
+
+    @tool("official_web_lookup", args_schema=OfficialWebLookupArgs, return_direct=False)
+    def official_web_lookup_tool(query: str) -> dict[str, Any]:
+        """Return curated official vendor/docs/GitHub URLs for known products (no API key)."""
+        res = run_tool_result_with_span(
+            tool_name="official_web_lookup",
+            tool_parameters={"query": query[:_WEB_SEARCH_TRACE_QUERY_PREVIEW_CHARS]},
+            fn=lambda: _wrap_official_web_lookup(query),
+        )
+        return res.payload
+
+    return [official_web_lookup_tool]
+
+
+def build_web_fetch_tools(*, settings: Settings) -> list[Any]:
+    """HTTPS fetch + summarize (used for official and scholarly URLs)."""
+
+    @tool("web_fetch", args_schema=WebFetchArgs, return_direct=False)
+    def web_fetch_tool(
+        url: str,
+        prompt: str = "Summarize the scholarly content in 5 bullet points.",
+        allowed_domains: list[str] | None = None,
+        blocked_domains: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Fetch a URL (GET, bounded size) and summarize with the chat LLM when allowed."""
+        res = run_tool_result_with_span(
+            tool_name="web_fetch",
+            tool_parameters={
+                "url": url[:_WEB_FETCH_TRACE_URL_PREVIEW_CHARS],
+                "prompt_len": len(prompt or ""),
+            },
+            fn=lambda: _wrap_web_fetch(
+                url,
+                prompt,
+                settings=settings,
+                allowed_domains=allowed_domains,
+                blocked_domains=blocked_domains or [],
+            ),
+        )
+        return res.payload
+
+    return [web_fetch_tool]
+
+
+def build_crossref_web_search_tools(*, settings: Settings) -> list[Any]:
+    """Crossref metadata search only (no fetch)."""
 
     @tool("web_search", args_schema=WebSearchArgs, return_direct=False)
     def web_search_tool(
@@ -234,31 +289,58 @@ def build_web_research_tools(*, settings: Settings) -> list[Any]:
         )
         return res.payload
 
-    @tool("web_fetch", args_schema=WebFetchArgs, return_direct=False)
-    def web_fetch_tool(
-        url: str,
-        prompt: str = "Summarize the scholarly content in 5 bullet points.",
-        allowed_domains: list[str] | None = None,
-        blocked_domains: list[str] | None = None,
-    ) -> dict[str, Any]:
-        """Fetch a URL (GET, bounded size) and summarize with the chat LLM when allowed."""
-        res = run_tool_result_with_span(
-            tool_name="web_fetch",
-            tool_parameters={
-                "url": url[:_WEB_FETCH_TRACE_URL_PREVIEW_CHARS],
-                "prompt_len": len(prompt or ""),
-            },
-            fn=lambda: _wrap_web_fetch(
-                url,
-                prompt,
-                settings=settings,
-                allowed_domains=allowed_domains,
-                blocked_domains=blocked_domains or [],
-            ),
-        )
-        return res.payload
+    return [web_search_tool]
 
-    return [web_search_tool, web_fetch_tool]
+
+def build_web_research_tools(*, settings: Settings) -> list[Any]:
+    """Return all web research tools (official lookup + Crossref search + fetch)."""
+    out: list[Any] = []
+    out.extend(build_official_web_lookup_tools(settings=settings))
+    out.extend(build_crossref_web_search_tools(settings=settings))
+    out.extend(build_web_fetch_tools(settings=settings))
+    return out
+
+
+def _wrap_official_web_lookup(query: str) -> ToolResult:
+    pl = _official_web_lookup_impl(query)
+    return ToolResult(payload=pl, row_count=int(pl.get("row_count") or 0))
+
+
+def _official_web_lookup_impl(query: str) -> dict[str, Any]:
+    items = official_source_candidates(query)
+    web_sources = [
+        enrich_web_source(
+            {
+                "title": str(it.get("title") or it.get("url") or "").strip(),
+                "url": str(it.get("url") or "").strip(),
+                "doi": "",
+                "snippet": "",
+                "provenance_kind": "official_web_metadata",
+                "evidence_quality": "strong",
+                "evidence_mode": "metadata_only",
+                "is_external": True,
+            },
+            source_tool="official_web_lookup",
+        )
+        for it in items
+        if isinstance(it, dict) and str(it.get("url") or "").strip()
+    ]
+    return {
+        "ok": True,
+        "row_count": len(items),
+        "items": items,
+        "web_sources": web_sources,
+        "evidence_origin": "external_web",
+        "mode": "official_catalog",
+        "sse_hint": {
+            "type": "web_fetched",
+            "url": "",
+            "status": 200,
+            "bytes": None,
+            "cache_hit": False,
+            "mode": "official_catalog",
+        },
+    }
 
 
 def _wrap_web_search(
@@ -366,17 +448,19 @@ def _web_search_impl(
             items.append({"title": title, "doi": doi, "url": link})
     n = len(items)
     web_sources = [
-        {
-            "title": str(it.get("title") or "").strip() or str(it.get("url") or "").strip(),
-            "url": str(it.get("url") or "").strip(),
-            "doi": str(it.get("doi") or "").strip(),
-            "source_tool": "web_search",
-            "snippet": "",
-            "provenance_kind": "crossref_metadata",
-            "evidence_quality": "weak",
-            "evidence_mode": "metadata_only",
-            "is_external": True,
-        }
+        enrich_web_source(
+            {
+                "title": str(it.get("title") or "").strip() or str(it.get("url") or "").strip(),
+                "url": str(it.get("url") or "").strip(),
+                "doi": str(it.get("doi") or "").strip(),
+                "snippet": "",
+                "provenance_kind": "crossref_metadata",
+                "evidence_quality": "weak",
+                "evidence_mode": "metadata_only",
+                "is_external": True,
+            },
+            source_tool="web_search",
+        )
         for it in items
         if isinstance(it, dict)
         and (str(it.get("url") or "").strip() or str(it.get("title") or "").strip())
@@ -568,17 +652,23 @@ def _web_fetch_impl(
         "url": final_url,
         "summary": summary or text[:_WEB_FETCH_FALLBACK_TEXT_CHAR_CAP],
         "web_sources": [
-            {
-                "title": (urlparse(final_url).hostname or final_url).strip()[:512],
-                "url": final_url,
-                "doi": "",
-                "source_tool": "web_fetch",
-                "snippet": (summary or text)[:_WEB_FETCH_SUMMARY_CHAR_CAP],
-                "provenance_kind": "web_page_summary",
-                "evidence_quality": "variable",
-                "evidence_mode": "web_summary",
-                "is_external": True,
-            }
+            enrich_web_source(
+                {
+                    "title": (urlparse(final_url).hostname or final_url).strip()[:512],
+                    "url": final_url,
+                    "doi": "",
+                    "snippet": (summary or text)[:_WEB_FETCH_SUMMARY_CHAR_CAP],
+                    "provenance_kind": (
+                        "official_web_summary"
+                        if classify_source_tier(final_url) == "official"
+                        else "web_page_summary"
+                    ),
+                    "evidence_quality": "variable",
+                    "evidence_mode": "web_summary",
+                    "is_external": True,
+                },
+                source_tool="web_fetch",
+            )
         ],
         "evidence_origin": "external_web",
         "sse_hint": {
@@ -593,4 +683,9 @@ def _web_fetch_impl(
     return payload
 
 
-__all__ = ["build_web_research_tools"]
+__all__ = [
+    "build_crossref_web_search_tools",
+    "build_official_web_lookup_tools",
+    "build_web_fetch_tools",
+    "build_web_research_tools",
+]

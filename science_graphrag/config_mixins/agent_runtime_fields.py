@@ -841,6 +841,19 @@ class AgentRuntimeFields(BaseModel):
         le=2_592_000,
         description="TTL (seconds) for each agent session Redis key; refreshed on every turn.",
     )
+    agent_stream_resume_enabled: bool = Field(
+        default=True,
+        description=(
+            "Buffer Agent v2 SSE runs in-process and expose GET "
+            "/v2/agent/query/runs/{run_id}/stream for client reconnect after navigation."
+        ),
+    )
+    agent_stream_resume_ttl_seconds: int = Field(
+        default=3600,
+        ge=60,
+        le=86_400,
+        description="TTL (seconds) for buffered agent run events in the process-local resume store.",
+    )
     agent_compaction_rolling_memory_min_digests: int = Field(
         default=3,
         ge=1,

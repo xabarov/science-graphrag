@@ -16,6 +16,7 @@ import { buildAppTheme } from "./theme/buildAppTheme.js";
 import DashboardLayout from "./components/layout/DashboardLayout/DashboardLayout.jsx";
 import { ADMIN_MODE_STORAGE_KEY } from "./components/layout/adminVisibility.js";
 import { SHELL_NAVIGATION_INTENT_EVENT } from "./components/layout/shellNavigationEvents.js";
+import { buildShellToolHref, resolveDrawerChatHref } from "./components/layout/shellNavHref.js";
 import { mergeTraceabilityParams } from "./routing/index.js";
 
 const DRAWER_EXPANDED_KEY = "sidebarExpanded";
@@ -83,6 +84,41 @@ function ShellApp() {
     </ThemeProvider>
   );
 }
+
+describe("trace scope routing contract (Graph ↔ Chat)", () => {
+  it("Graph(workspace-wide) → Chat → Graph keeps workspace-wide without work_id", () => {
+    const graphWide = "/graph?workspace_id=ws-1&node=n1";
+    const chatHref = resolveDrawerChatHref({
+      locationSearch: graphWide.split("?")[1] || "",
+      workspaceId: "ws-1",
+    });
+    expect(chatHref).not.toContain("work_id=");
+    expect(chatHref).toContain("workspace_id=ws-1");
+
+    const backToGraph = buildShellToolHref("/graph", {
+      locationSearch: chatHref.split("?")[1] || "",
+      workspaceId: "ws-1",
+    });
+    expect(backToGraph).not.toContain("work_id=");
+    expect(backToGraph).toContain("node=n1");
+  });
+
+  it("Graph(article) → Chat → Graph preserves the same work_id", () => {
+    const graphArticle = "/graph?workspace_id=ws-1&work_id=w-article&node=n1";
+    const chatHref = resolveDrawerChatHref({
+      locationSearch: graphArticle.split("?")[1] || "",
+      workspaceId: "ws-1",
+    });
+    expect(chatHref).toContain("work_id=w-article");
+
+    const backToGraph = buildShellToolHref("/graph", {
+      locationSearch: chatHref.split("?")[1] || "",
+      workspaceId: "ws-1",
+    });
+    expect(backToGraph).toContain("work_id=w-article");
+    expect(backToGraph).toContain("node=n1");
+  });
+});
 
 describe("graph navigation — DashboardLayout shell (Phase 4)", () => {
   beforeEach(() => {

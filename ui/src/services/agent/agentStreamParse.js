@@ -47,8 +47,12 @@ export function flushAgentSseEventBuffer(buffer, handlers = {}) {
     onEvent?.(event);
     if (event.type === "final_answer") {
       onFinalAnswer?.(event);
+    } else if (event.type === "run_interrupted") {
+      const code = String(event.code || "agent_run_cancelled");
+      onError?.(code);
     } else if (event.type === "error") {
-      onError?.(String(event.detail || event.error || "Stream error"));
+      const code = String(event.code || "").trim();
+      onError?.(code || String(event.detail || event.error || "Stream error"));
     }
   }
 

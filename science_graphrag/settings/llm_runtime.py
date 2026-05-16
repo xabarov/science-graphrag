@@ -292,6 +292,7 @@ def resolve_llm_runtime_views(
         "resolved_vl_base_url": resolved_vl_base_url,
         "resolved_embeddings_mode": embeddings_public_mode(emb),
         "resolved_embeddings_base_url": resolved_emb_base_url,
+        "resolved_embeddings_model": emb_label,
         "resolved_embeddings_timeout_seconds": float(emb.get("timeout_seconds", 60.0)),
     }
 

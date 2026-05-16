@@ -26,6 +26,37 @@ class LlmTestDraft(BaseModel):
     temperature: float | None = None
     timeout_seconds: float | None = None
     use_saved_secret: bool = True
+    task: str = "extraction"
+
+
+def _effective_for_task(effective: dict[str, Any], task: str) -> tuple[str, str, float, float]:
+    if task == "chat":
+        return (
+            str(effective.get("resolved_chat_base_url") or effective["resolved_base_url"]),
+            str(effective.get("resolved_chat_model") or effective["resolved_model"]),
+            float(effective.get("resolved_chat_timeout_seconds") or effective["resolved_timeout_seconds"]),
+            float(effective.get("resolved_chat_temperature") or effective["resolved_temperature"]),
+        )
+    if task == "vision":
+        return (
+            str(effective.get("resolved_vl_base_url") or effective["resolved_base_url"]),
+            str(effective.get("resolved_vl_model") or effective["resolved_model"]),
+            float(effective.get("resolved_vl_timeout_seconds") or effective["resolved_timeout_seconds"]),
+            float(effective.get("resolved_vl_temperature") or effective["resolved_temperature"]),
+        )
+    if task == "embeddings":
+        return (
+            str(effective.get("resolved_embeddings_base_url") or effective["resolved_base_url"]),
+            str(effective.get("resolved_embeddings_model") or "baai/bge-m3"),
+            float(effective.get("resolved_embeddings_timeout_seconds") or 60.0),
+            0.0,
+        )
+    return (
+        str(effective["resolved_base_url"]),
+        str(effective["resolved_model"]),
+        float(effective["resolved_timeout_seconds"]),
+        float(effective["resolved_temperature"]),
+    )
 
 
 def run_settings_llm_test_probe(
@@ -39,32 +70,53 @@ def run_settings_llm_test_probe(
     """Run probe against effective settings with optional draft overrides."""
     effective = deepcopy(effective_llm_snapshot)
     candidate = draft or LlmTestDraft()
+    task = str(candidate.task or "extraction").strip().lower()
+    if task not in {"extraction", "chat", "vision", "embeddings"}:
+        task = "extraction"
 
-    base_url = (candidate.base_url or effective["resolved_base_url"]).strip().rstrip("/")
-    model = (candidate.model or effective["resolved_model"]).strip()
+    task_base_url, task_model, task_timeout_seconds, task_temperature = _effective_for_task(
+        effective,
+        task,
+    )
+    base_url = (candidate.base_url or task_base_url).strip().rstrip("/")
+    model = (candidate.model or task_model).strip()
     timeout_seconds = float(
         candidate.timeout_seconds
         if candidate.timeout_seconds is not None
-        else effective["resolved_timeout_seconds"]
+        else task_timeout_seconds
     )
     temperature = float(
         candidate.temperature
         if candidate.temperature is not None
-        else effective["resolved_temperature"]
+        else task_temperature
     )
     api_key = (candidate.api_key or "").strip() if candidate.api_key is not None else None
     api_key_source = "draft" if api_key else "missing"
     if not api_key and candidate.use_saved_secret:
-        api_key = secret_store.get_secret(LLM_API_KEY)
+        if task == "chat":
+            api_key = secret_store.get_secret("llm.chat_api_key") or secret_store.get_secret(LLM_API_KEY)
+        elif task == "vision":
+            api_key = secret_store.get_secret("llm.vision_api_key") or secret_store.get_secret(LLM_API_KEY)
+        elif task == "embeddings":
+            api_key = secret_store.get_secret("llm.embeddings_api_key") or secret_store.get_secret(LLM_API_KEY)
+        else:
+            api_key = secret_store.get_secret(LLM_API_KEY)
         if api_key:
             api_key_source = "secret_store"
     if not api_key and candidate.use_saved_secret:
-        env_fallback = (base_settings.extraction_llm_api_key or "").strip()
+        if task == "chat":
+            env_fallback = (base_settings.chat_llm_api_key or base_settings.extraction_llm_api_key or "").strip()
+        elif task == "vision":
+            env_fallback = (base_settings.resolved_vl_api_key or "").strip()
+        elif task == "embeddings":
+            env_fallback = (base_settings.embeddings_api_key or base_settings.extraction_llm_api_key or "").strip()
+        else:
+            env_fallback = (base_settings.extraction_llm_api_key or "").strip()
         if env_fallback:
             api_key = env_fallback
             api_key_source = "env_fallback"
 
-    return probe_fn(
+    out = probe_fn(
         base_url=base_url,
         model=model,
         timeout_seconds=timeout_seconds,
@@ -72,6 +124,8 @@ def run_settings_llm_test_probe(
         api_key=api_key,
         used_saved_secret=(api_key_source == "secret_store"),
     )
+    out["task"] = task
+    return out
 
 
 __all__ = ["LlmTestDraft", "run_settings_llm_test_probe"]

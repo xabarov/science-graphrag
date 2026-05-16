@@ -24,12 +24,14 @@ from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.graph.supervisor_decisions import question_features_from_agent_state
 from science_graphrag.agent.subagents.specialist_results_v3 import (
     append_parent_tool_leg,
+    append_writer_directive,
     empty_specialist_results_v3,
     prior_specialist_results_v3,
 )
 from science_graphrag.agent.tool_execution_pipeline import apply_allowed_tools_matrix
 from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_retrieval_tools
+from science_graphrag.agent.web_evidence_policy import writer_directive_for_web_evidence
 from science_graphrag.config import Settings
 from science_graphrag.stores.registry import StoreRegistry
 
@@ -118,6 +120,13 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             specialist_results=specialist_results,
             specialist_name=SPECIALIST_NAME,
         )
+        if new_payloads and feats.asks_for_web_research:
+            web_directive = writer_directive_for_web_evidence(
+                new_payloads,
+                requires_official=feats.asks_for_official_product_research,
+            )
+            if web_directive:
+                sr3 = append_writer_directive(sr3, web_directive)
 
         meta_out = dict(state.get("metadata") or {})
         spawn_rows = list(meta_out.get("subagent_spawn_rows") or [])

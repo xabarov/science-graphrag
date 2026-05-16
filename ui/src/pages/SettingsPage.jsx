@@ -25,6 +25,7 @@ import {
 import { PlaceholderSettingsSection } from "./SettingsPage/PlaceholderSettingsSection.jsx";
 import { useSettingsPageBootstrap } from "./SettingsPage/useSettingsPageBootstrap.js";
 import {
+  testLlmTaskConnection,
   testLlmConnection,
   updateGeneralSettings,
   updateIngestionSettings,
@@ -187,6 +188,38 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleTestSavedAllTasks() {
+    setTesting(true);
+    setTestResult(null);
+    const taskOrder = ["extraction", "chat", "vision", "embeddings"];
+    try {
+      const taskResults = await Promise.all(
+        taskOrder.map((task) => testLlmTaskConnection({ task, use_saved_secret: true })),
+      );
+      const firstFailed = taskResults.find((item) => item.status !== "connected");
+      setTestResult({
+        status: firstFailed ? "error" : "connected",
+        error_kind: firstFailed?.error_kind || null,
+        message: firstFailed ? t("settings.page.connectionFailed") : t("llm.test.connected"),
+        tasks: taskResults.map((item, idx) => ({
+          task: taskOrder[idx],
+          status: item.status,
+          error_kind: item.error_kind || null,
+          message: item.message || "",
+          resolved: item.resolved || null,
+        })),
+      });
+    } catch (error) {
+      setTestResult({
+        status: "error",
+        error_kind: "request_failed",
+        message: formatResearchApiError(error) || t("settings.page.connectionFailed"),
+      });
+    } finally {
+      setTesting(false);
+    }
+  }
+
   function renderSection() {
     if (!activeSection) return null;
     if (activeSection.id === "general") {
@@ -210,7 +243,7 @@ export default function SettingsPage() {
           saveError={saveError}
           testResult={testResult}
           onSave={handleSave}
-          onTestSaved={() => handleTest({ use_saved_secret: true })}
+          onTestSaved={handleTestSavedAllTasks}
           onTestDraft={(payload) => handleTest(payload)}
           onDirtyChange={setDirtyHint}
         />

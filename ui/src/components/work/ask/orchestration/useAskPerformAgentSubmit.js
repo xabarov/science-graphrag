@@ -1,100 +1,11 @@
 import { useCallback } from "react";
 
 import { PDF_READ_USER_MESSAGE_TOKEN } from "../../../../services/research/pdfReadUi.js";
-import { patchAskSession as patchAskSessionRequest } from "../../../../services/researchApi.js";
-import { rememberAskHistory } from "../session/askHistoryState.js";
-import {
-  appendAskSessionTurn,
-  appendAskSessionTurnToSession,
-  buildAgentHistoryDigest,
-  getActiveSessionEntries,
-  getAskSessionEntries,
-  readAskSessionUi,
-  renameAskSession,
-} from "../session/askSessionState.js";
-import {
-  buildAskFailureNormalizedStub,
-  buildAskSessionTurnRecord,
-  buildAskTurnDetailsFromNormalized,
-  maybeRenameFirstAskSessionTurn,
-  patchServerAskSessionTitleIfSynced,
-  patchServerAskSessionTurnsIfSynced,
-  persistAskAgentTurnLocal,
-} from "../session/askAgentTurnPersistence.js";
-
-/** Fixed retrieval depth for API compatibility (no UI control). */
-const ASK_DEFAULT_TOP_K = 5;
-
-/**
- * @param {{
- *   sk: string,
- *   submitSid: string,
- *   q: string,
- *   turn: ReturnType<typeof buildAskSessionTurnRecord>,
- *   serverSync: boolean,
- *   scopeKeyRef: { current: string },
- *   composerSuppressHydrateTurnIdRef: { current: string },
- *   setHistory: (entries: unknown[]) => void,
- *   setNormalized: (v: unknown) => void,
- *   bumpSessions: () => void,
- * }} ctx
- */
-async function commitPersistedTurnToUiAndServer(ctx) {
-  const {
-    sk,
-    submitSid,
-    q,
-    turn,
-    serverSync,
-    scopeKeyRef,
-    composerSuppressHydrateTurnIdRef,
-    setHistory,
-    setNormalized,
-    bumpSessions,
-  } = ctx;
-  const { viewingThisRun, entriesAfter, composerTurnId } = persistAskAgentTurnLocal({
-    sk,
-    submitSid,
-    turn,
-    rememberAskHistory,
-    appendAskSessionTurn,
-    appendAskSessionTurnToSession,
-    readAskSessionUi,
-    getAskSessionEntries,
-    getActiveSessionEntries,
-    scopeKeyRef,
-  });
-  if (viewingThisRun) {
-    setHistory(submitSid ? getAskSessionEntries(sk, submitSid) : getActiveSessionEntries(sk));
-  }
-  composerSuppressHydrateTurnIdRef.current = composerTurnId;
-  const autoTitle = maybeRenameFirstAskSessionTurn({
-    sk,
-    submitSid,
-    q,
-    entriesAfterLength: entriesAfter.length,
-    renameAskSession,
-  });
-  if (autoTitle != null) {
-    await patchServerAskSessionTitleIfSynced({
-      serverSync,
-      sk,
-      submitSid,
-      autoTitle,
-      viewingThisRun,
-      patchAskSessionRequest: patchAskSessionRequest,
-    });
-  }
-  setNormalized(null);
-  bumpSessions();
-  await patchServerAskSessionTurnsIfSynced({
-    serverSync,
-    sk,
-    submitSid,
-    entriesAfter,
-    patchAskSessionRequest: patchAskSessionRequest,
-  });
-}
+import { ensureActiveAskSessionId, getAskSessionEntries, getActiveSessionEntries } from "../session/askSessionState.js";
+import { buildAgentHistoryDigest } from "../session/askSessionState.js";
+import { writeInflightRunSnapshot } from "../session/askRunPersistence.js";
+import { writeAskComposerDraft } from "../session/askComposerDraft.js";
+import { finalizeAgentStreamTurn } from "./askStreamTurnFinalize.js";
 
 /**
  * Agent submit + local/server turn persistence for Ask panel.
@@ -108,6 +19,7 @@ async function commitPersistedTurnToUiAndServer(ctx) {
  *   locked: boolean,
  *   inWorkspace: boolean,
  *   corpusWorkspaceOnly: boolean,
+ *   workspaceId: string,
  *   bumpSessions: () => void,
  *   serverSync: boolean,
  *   t: (key: string) => string,
@@ -120,6 +32,9 @@ async function commitPersistedTurnToUiAndServer(ctx) {
  *   setError: (e: unknown) => void,
  *   setNormalized: (v: unknown) => void,
  *   setHistory: (entries: unknown[]) => void,
+ *   onUrlSessionIdChange?: (sessionId: string) => void,
+ *   inflightRunIdRef: { current: string },
+ *   inflightLastSeqRef: { current: number },
  * }} args
  */
 export function useAskPerformAgentSubmit({
@@ -131,6 +46,7 @@ export function useAskPerformAgentSubmit({
   locked,
   inWorkspace,
   corpusWorkspaceOnly,
+  workspaceId,
   bumpSessions,
   serverSync,
   t,
@@ -143,6 +59,9 @@ export function useAskPerformAgentSubmit({
   setError,
   setNormalized,
   setHistory,
+  onUrlSessionIdChange,
+  inflightRunIdRef,
+  inflightLastSeqRef,
 }) {
   return useCallback(
     async (queryText, { workIdForTurn, userStructuredAnswer, pdfReadRequest } = {}) => {
@@ -156,10 +75,28 @@ export function useAskPerformAgentSubmit({
       const q = qTrim || PDF_READ_USER_MESSAGE_TOKEN;
       const turnWorkId = workIdForTurn != null ? String(workIdForTurn).trim() : String(workId || "").trim();
       const submitSk = scopeKeyRef.current;
-      const submitSid = String(activeSessionId || "").trim();
+      const submitSid = String(activeSessionId || "").trim() || ensureActiveAskSessionId(submitSk);
+      if (submitSid && submitSid !== String(activeSessionId || "").trim()) {
+        onUrlSessionIdChange?.(submitSid);
+        bumpSessions();
+      }
       setStreamingTarget({ scopeKey: submitSk, sessionId: submitSid });
-      setPendingUserQuery(q === PDF_READ_USER_MESSAGE_TOKEN ? t("askPanel.pdfRead.userTurnLabel") : q);
+      const pendingLabel = q === PDF_READ_USER_MESSAGE_TOKEN ? t("askPanel.pdfRead.userTurnLabel") : q;
+      setPendingUserQuery(pendingLabel);
+      writeAskComposerDraft(submitSk, submitSid, "");
       setQuery("");
+      writeInflightRunSnapshot({
+        runId: inflightRunIdRef.current || `pending-${submitSid}`,
+        scopeKey: submitSk,
+        sessionId: submitSid,
+        workspaceId: String(workspaceId || "").trim(),
+        pendingUserQuery: pendingLabel,
+        lastSeq: 0,
+        streamEvents: [],
+        agentToolTrace: [],
+        status: "running",
+        workId: turnWorkId,
+      });
       try {
         const historyForDigest = submitSid ? getAskSessionEntries(submitSk, submitSid) : getActiveSessionEntries(submitSk);
         const historyDigest = buildAgentHistoryDigest(historyForDigest);
@@ -177,76 +114,34 @@ export function useAskPerformAgentSubmit({
         } catch (submitExc) {
           composerSuppressHydrateTurnIdRef.current = "";
           setQuery(q);
+          writeInflightRunSnapshot(null);
           throw submitExc;
         }
         const queryMode =
           locked || inWorkspace ? "workspace" : corpusWorkspaceOnly ? "workspace_corpus" : turnWorkId ? "scoped" : "global";
-        const sk = submitSk;
-        const persistedStreamEvents = Array.isArray(pack?.streamEvents) ? pack.streamEvents : [];
-        const persistedToolTrace = Array.isArray(pack?.agentToolTrace) ? pack.agentToolTrace : [];
 
-        if (!pack?.normalized) {
-          const rawFail = String(streamFailureRef.current || "").trim();
-          streamFailureRef.current = "";
-          const failMsg = rawFail || t("askPanel.agentIncompleteTurn");
-          setError(failMsg);
-          const nextNormalized = buildAskFailureNormalizedStub(failMsg);
-          const details = buildAskTurnDetailsFromNormalized(nextNormalized, persistedStreamEvents, persistedToolTrace);
-          const turn = buildAskSessionTurnRecord({
-            query: q,
-            turnWorkId,
-            topK: ASK_DEFAULT_TOP_K,
-            queryMode,
-            answerText: failMsg,
-            citationCount: 0,
-            details,
-          });
-          await commitPersistedTurnToUiAndServer({
-            sk,
-            submitSid,
-            q,
-            turn,
-            serverSync,
-            scopeKeyRef,
-            composerSuppressHydrateTurnIdRef,
-            setHistory,
-            setNormalized,
-            bumpSessions,
-          });
-          return {
-            ok: false,
-            streamEvents: persistedStreamEvents,
-            agentToolTrace: persistedToolTrace,
-          };
-        }
-
-        const nextNormalized = pack.normalized;
-        const details = buildAskTurnDetailsFromNormalized(nextNormalized, persistedStreamEvents, persistedToolTrace);
-        const turn = buildAskSessionTurnRecord({
-          query: q,
+        return finalizeAgentStreamTurn({
+          pack,
+          queryText: q,
           turnWorkId,
-          topK: ASK_DEFAULT_TOP_K,
           queryMode,
-          answerText: nextNormalized.answer,
-          citationCount: nextNormalized.citations.length,
-          details,
-        });
-        await commitPersistedTurnToUiAndServer({
-          sk,
+          submitSk,
           submitSid,
-          q,
-          turn,
           serverSync,
           scopeKeyRef,
           composerSuppressHydrateTurnIdRef,
           setHistory,
           setNormalized,
           bumpSessions,
+          streamFailureRef,
+          t,
+          setError,
         });
-        return { ok: true, normalized: nextNormalized, toolTrace: persistedToolTrace };
       } finally {
         setPendingUserQuery("");
         setStreamingTarget(null);
+        inflightRunIdRef.current = "";
+        inflightLastSeqRef.current = 0;
       }
     },
     [
@@ -258,6 +153,7 @@ export function useAskPerformAgentSubmit({
       locked,
       inWorkspace,
       corpusWorkspaceOnly,
+      workspaceId,
       bumpSessions,
       serverSync,
       t,
@@ -270,6 +166,9 @@ export function useAskPerformAgentSubmit({
       setError,
       setNormalized,
       setHistory,
+      onUrlSessionIdChange,
+      inflightRunIdRef,
+      inflightLastSeqRef,
     ],
   );
 }

@@ -6,8 +6,9 @@ import HubOutlinedIcon from "@mui/icons-material/HubOutlined";
 import { AskPanel } from "../components/work/ask/index.js";
 import { useWorkspaceContext } from "../components/layout/useWorkspaceContext.js";
 import { useI18n } from "../i18n/useI18n.js";
-import { persistWorkId } from "./WorkspacePage/utils/workContext.js";
 import { CursorIconAction } from "../components/common/index.js";
+import { persistLastChatHref } from "../components/layout/shellNavHref.js";
+import { CHAT_PATH } from "../routes/paths.js";
 
 /** Standalone chat entry — full-height GPT-like layout. */
 export default function ChatPage() {
@@ -33,9 +34,22 @@ export default function ChatPage() {
     [searchParams, setSearchParams],
   );
 
+  const onUrlWorkIdChange = useCallback(
+    (workId) => {
+      const p = new URLSearchParams(searchParams);
+      const next = String(workId || "").trim();
+      if (next) p.set("work_id", next);
+      else p.delete("work_id");
+      setSearchParams(p, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
   useEffect(() => {
-    if (initialWorkId.trim()) persistWorkId(initialWorkId);
-  }, [initialWorkId]);
+    const qs = searchParams.toString();
+    const href = qs ? `${CHAT_PATH}?${qs}` : CHAT_PATH;
+    persistLastChatHref(href);
+  }, [searchParams]);
 
   /** Keep `workspace_id` in the URL once shell knows it — stabilizes ask scope vs late `activeWorkspaceId`. */
   useEffect(() => {
@@ -77,6 +91,7 @@ export default function ChatPage() {
         showPageChrome={false}
         urlSessionId={askSessionUrl}
         onUrlSessionIdChange={onAskSessionUrlChange}
+        onUrlWorkIdChange={onUrlWorkIdChange}
         fillAvailableHeight
       />
     </Box>

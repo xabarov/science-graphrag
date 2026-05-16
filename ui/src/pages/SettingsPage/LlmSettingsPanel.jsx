@@ -99,6 +99,10 @@ export default function LlmSettingsPanel({
     String(llm?.tasks?.embeddings?.timeout_seconds ?? 60),
   );
   const [embeddingsApiKey, setEmbeddingsApiKey] = useState("");
+  const [clearApiKey, setClearApiKey] = useState(false);
+  const [clearChatApiKey, setClearChatApiKey] = useState(false);
+  const [clearVisionApiKey, setClearVisionApiKey] = useState(false);
+  const [clearEmbeddingsApiKey, setClearEmbeddingsApiKey] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [advValues, setAdvValues] = useState(() => buildAdvValuesFromLlm(llm));
 
@@ -151,6 +155,14 @@ export default function LlmSettingsPanel({
     setEmbeddingsBaseUrl(embeddingsBaseUrlValue(llm, nextTasks));
     setEmbeddingsModel(embeddingsModelValue(llm, nextTasks));
     setEmbeddingsTimeoutSeconds(stringValue(valueFromTask(nextTasks, "embeddings", "timeout_seconds", 60)));
+    setApiKey("");
+    setChatApiKey("");
+    setVisionApiKey("");
+    setEmbeddingsApiKey("");
+    setClearApiKey(false);
+    setClearChatApiKey(false);
+    setClearVisionApiKey(false);
+    setClearEmbeddingsApiKey(false);
   }, [llm]);
 
   const advDirty = useMemo(() => {
@@ -243,21 +255,33 @@ export default function LlmSettingsPanel({
     if (patch.model !== undefined) setModel(patch.model);
     if (patch.temperature !== undefined) setTemperature(patch.temperature);
     if (patch.timeoutSeconds !== undefined) setTimeoutSeconds(patch.timeoutSeconds);
-    if (patch.apiKey !== undefined) setApiKey(patch.apiKey);
+    if (patch.apiKey !== undefined) {
+      setApiKey(patch.apiKey);
+      setClearApiKey(!patch.apiKey?.trim());
+    }
     if (patch.chatModel !== undefined) setChatModel(patch.chatModel);
     if (patch.chatBaseUrl !== undefined) setChatBaseUrl(patch.chatBaseUrl);
     if (patch.chatTemperature !== undefined) setChatTemperature(patch.chatTemperature);
     if (patch.chatTimeoutSeconds !== undefined) setChatTimeoutSeconds(patch.chatTimeoutSeconds);
-    if (patch.chatApiKey !== undefined) setChatApiKey(patch.chatApiKey);
+    if (patch.chatApiKey !== undefined) {
+      setChatApiKey(patch.chatApiKey);
+      setClearChatApiKey(!patch.chatApiKey?.trim());
+    }
     if (patch.vlModel !== undefined) setVlModel(patch.vlModel);
     if (patch.vlBaseUrl !== undefined) setVlBaseUrl(patch.vlBaseUrl);
     if (patch.vlTemperature !== undefined) setVlTemperature(patch.vlTemperature);
     if (patch.vlTimeoutSeconds !== undefined) setVlTimeoutSeconds(patch.vlTimeoutSeconds);
-    if (patch.visionApiKey !== undefined) setVisionApiKey(patch.visionApiKey);
+    if (patch.visionApiKey !== undefined) {
+      setVisionApiKey(patch.visionApiKey);
+      setClearVisionApiKey(!patch.visionApiKey?.trim());
+    }
     if (patch.embeddingsBaseUrl !== undefined) setEmbeddingsBaseUrl(patch.embeddingsBaseUrl);
     if (patch.embeddingsModel !== undefined) setEmbeddingsModel(patch.embeddingsModel);
     if (patch.embeddingsTimeoutSeconds !== undefined) setEmbeddingsTimeoutSeconds(patch.embeddingsTimeoutSeconds);
-    if (patch.embeddingsApiKey !== undefined) setEmbeddingsApiKey(patch.embeddingsApiKey);
+    if (patch.embeddingsApiKey !== undefined) {
+      setEmbeddingsApiKey(patch.embeddingsApiKey);
+      setClearEmbeddingsApiKey(!patch.embeddingsApiKey?.trim());
+    }
   }
 
   /** @param {import("./llmProviderPresets.js").LlmPresetFormValues} values */
@@ -288,6 +312,10 @@ export default function LlmSettingsPanel({
       embeddingsModel,
       embeddingsTimeoutSeconds: Number(embeddingsTimeoutSeconds),
       embeddingsApiKey,
+      clearApiKey,
+      clearChatApiKey,
+      clearVisionApiKey,
+      clearEmbeddingsApiKey,
       advDirty,
       advValues,
     });
@@ -296,6 +324,10 @@ export default function LlmSettingsPanel({
     setChatApiKey("");
     setVisionApiKey("");
     setEmbeddingsApiKey("");
+    setClearApiKey(false);
+    setClearChatApiKey(false);
+    setClearVisionApiKey(false);
+    setClearEmbeddingsApiKey(false);
   }
 
   function buildDraftPayload(useSavedSecret) {
@@ -311,6 +343,26 @@ export default function LlmSettingsPanel({
 
   function handleDraftTest() {
     onTestDraft(buildDraftPayload(apiKey.trim() ? false : true));
+  }
+
+  function handleApiKeyChange(value) {
+    setApiKey(value);
+    setClearApiKey(false);
+  }
+
+  function handleChatApiKeyChange(value) {
+    setChatApiKey(value);
+    setClearChatApiKey(false);
+  }
+
+  function handleVisionApiKeyChange(value) {
+    setVisionApiKey(value);
+    setClearVisionApiKey(false);
+  }
+
+  function handleEmbeddingsApiKeyChange(value) {
+    setEmbeddingsApiKey(value);
+    setClearEmbeddingsApiKey(false);
   }
 
   const saveDisabled = saving || Boolean(advancedValidationMessage) || !dirty;
@@ -359,22 +411,24 @@ export default function LlmSettingsPanel({
         subtitle={t("llm.card.extractionHint")}
         headerExtra={<LlmTaskPresetActions tk={tk} task="extraction" onApply={applyPresetPatch} />}
       >
-        <TextField
-          label={t("llm.field.baseUrl")}
-          size="small"
-          value={baseUrl}
-          onChange={(e) => setBaseUrl(e.target.value)}
-          sx={fieldSx}
-          fullWidth
-        />
-        <TextField
-          label={t("llm.field.model")}
-          size="small"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          sx={fieldSx}
-          fullWidth
-        />
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
+          <TextField
+            label={t("llm.field.modelShort")}
+            size="small"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+          <TextField
+            label={t("llm.field.baseUrl")}
+            size="small"
+            value={baseUrl}
+            onChange={(e) => setBaseUrl(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+        </Box>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
           <TextField
             label={t("llm.field.temperature")}
@@ -397,7 +451,7 @@ export default function LlmSettingsPanel({
         <LlmSecretTextField
           label={t("llm.field.apiKey")}
           value={apiKey}
-          onChange={setApiKey}
+          onChange={handleApiKeyChange}
           fieldSx={fieldSx}
           placeholder={t("llm.card.apiKeyPlaceholder")}
           revealTask="extraction"
@@ -412,23 +466,25 @@ export default function LlmSettingsPanel({
         subtitle={t("llm.hint.chatModelFallback")}
         headerExtra={<LlmTaskPresetActions tk={tk} task="chat" onApply={applyPresetPatch} />}
       >
-        <TextField
-          label={t("llm.field.chatModel")}
-          size="small"
-          value={chatModel}
-          onChange={(e) => setChatModel(e.target.value)}
-          sx={fieldSx}
-          fullWidth
-        />
-        <TextField
-          label={t("llm.field.chatBaseUrl")}
-          size="small"
-          value={chatBaseUrl}
-          onChange={(e) => setChatBaseUrl(e.target.value)}
-          sx={fieldSx}
-          fullWidth
-          placeholder={(llm?.effective?.resolved_chat_base_url || "").trim() || undefined}
-        />
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
+          <TextField
+            label={t("llm.field.modelShort")}
+            size="small"
+            value={chatModel}
+            onChange={(e) => setChatModel(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+          <TextField
+            label={t("llm.field.baseUrl")}
+            size="small"
+            value={chatBaseUrl}
+            onChange={(e) => setChatBaseUrl(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+            placeholder={(llm?.effective?.resolved_chat_base_url || "").trim() || undefined}
+          />
+        </Box>
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
           <TextField
             label={t("llm.field.temperature")}
@@ -450,7 +506,7 @@ export default function LlmSettingsPanel({
         <LlmSecretTextField
           label={t("llm.field.apiKey")}
           value={chatApiKey}
-          onChange={setChatApiKey}
+          onChange={handleChatApiKeyChange}
           fieldSx={fieldSx}
           placeholder={t("llm.card.chatKeyPlaceholder")}
           revealTask="chat"
@@ -467,7 +523,7 @@ export default function LlmSettingsPanel({
       >
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
           <TextField
-            label={t("llm.field.vlModel")}
+            label={t("llm.field.modelShort")}
             size="small"
             value={vlModel}
             onChange={(e) => setVlModel(e.target.value)}
@@ -476,7 +532,7 @@ export default function LlmSettingsPanel({
             placeholder={(llm?.effective?.resolved_vl_model || "").trim() || undefined}
           />
           <TextField
-            label={t("llm.field.vlBaseUrl")}
+            label={t("llm.field.baseUrl")}
             size="small"
             value={vlBaseUrl}
             onChange={(e) => setVlBaseUrl(e.target.value)}
@@ -507,7 +563,7 @@ export default function LlmSettingsPanel({
         <LlmSecretTextField
           label={t("llm.field.apiKey")}
           value={visionApiKey}
-          onChange={setVisionApiKey}
+          onChange={handleVisionApiKeyChange}
           fieldSx={fieldSx}
           placeholder={t("llm.card.visionKeyPlaceholder")}
           revealTask="vision"
@@ -522,23 +578,25 @@ export default function LlmSettingsPanel({
         subtitle={t("llm.card.embeddingsHint")}
         headerExtra={<LlmTaskPresetActions tk={tk} task="embeddings" onApply={applyPresetPatch} />}
       >
-        <TextField
-          label={t("llm.field.baseUrl")}
-          size="small"
-          value={embeddingsBaseUrl}
-          onChange={(e) => setEmbeddingsBaseUrl(e.target.value)}
-          sx={fieldSx}
-          fullWidth
-        />
-        <TextField
-          label={t("llm.embeddings.model")}
-          size="small"
-          value={embeddingsModel}
-          onChange={(e) => setEmbeddingsModel(e.target.value)}
-          sx={fieldSx}
-          fullWidth
-          placeholder={(tasks.embeddings?.model_label || "").trim() || undefined}
-        />
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
+          <TextField
+            label={t("llm.field.modelShort")}
+            size="small"
+            value={embeddingsModel}
+            onChange={(e) => setEmbeddingsModel(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+            placeholder={(tasks.embeddings?.model_label || "").trim() || undefined}
+          />
+          <TextField
+            label={t("llm.field.baseUrl")}
+            size="small"
+            value={embeddingsBaseUrl}
+            onChange={(e) => setEmbeddingsBaseUrl(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+        </Box>
         <TextField
           label={`${t("llm.field.timeout")} (${t("llm.field.secondsSuffix")})`}
           size="small"
@@ -550,7 +608,7 @@ export default function LlmSettingsPanel({
         <LlmSecretTextField
           label={t("llm.field.apiKey")}
           value={embeddingsApiKey}
-          onChange={setEmbeddingsApiKey}
+          onChange={handleEmbeddingsApiKeyChange}
           fieldSx={fieldSx}
           placeholder={t("llm.card.embeddingsKeyPlaceholder")}
           revealTask="embeddings"

@@ -19,16 +19,23 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import time
 from urllib.parse import quote
 
 import httpx
+
+from science_graphrag.config import Settings
 
 _S2_GRAPH_BASE = "https://api.semanticscholar.org/graph/v1"
 
 
 def _headers() -> dict[str, str]:
     headers = {"User-Agent": "science-graphrag-semantic-scholar-smoke/1.0"}
-    key = (os.getenv("SCIENCE_GRAPHRAG_SEMANTIC_SCHOLAR_API_KEY") or "").strip()
+    key = (
+        os.getenv("SCIENCE_GRAPHRAG_SEMANTIC_SCHOLAR_API_KEY")
+        or getattr(Settings(), "semantic_scholar_api_key", "")
+        or ""
+    ).strip()
     if key:
         headers["x-api-key"] = key
     return headers
@@ -88,6 +95,12 @@ def main() -> int:
         help="Optional paper id for lookup; when omitted, uses first search hit",
     )
     p.add_argument("--timeout", type=float, default=20.0)
+    p.add_argument(
+        "--request-interval-seconds",
+        type=float,
+        default=1.1,
+        help="Minimum pause before the second S2 request; default respects the 1 request/second key limit.",
+    )
     args = p.parse_args()
 
     try:
@@ -99,6 +112,7 @@ def main() -> int:
             if not paper_id:
                 print("paper_lookup_skipped: no paper id from search (empty results)")
                 return 0
+            time.sleep(max(0.0, args.request_interval_seconds))
             paper_status = _paper(client, paper_id)
     except (httpx.HTTPError, OSError) as exc:
         print(f"transport_error: {exc}", file=sys.stderr)

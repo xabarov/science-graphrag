@@ -667,6 +667,35 @@ def test_settings_llm_test_uses_service_result(tmp_path: Path, monkeypatch: Any)
     assert payload["resolved"]["model"] == "demo/model"
 
 
+def test_settings_llm_test_accepts_task_selector(tmp_path: Path, monkeypatch: Any) -> None:
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    seen: dict[str, Any] = {}
+
+    def _fake_test(*_args: Any, **kwargs: Any) -> dict[str, Any]:
+        seen["draft"] = kwargs.get("draft")
+        return {"status": "connected", "message": "OK"}
+
+    monkeypatch.setattr(service, "test_llm_connection", _fake_test)
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+    client = _client()
+    res = client.post(
+        "/v1/settings/llm/test",
+        json={"task": "embeddings", "use_saved_secret": True},
+    )
+    assert res.status_code == 200
+    assert res.json()["status"] == "connected"
+    assert getattr(seen["draft"], "task") == "embeddings"
+
+
 def test_workspaces_list_smoke(monkeypatch: Any) -> None:
     """GET /v1/workspaces lists Neo4j-backed workspaces (mocked store)."""
 

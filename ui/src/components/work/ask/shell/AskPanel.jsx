@@ -19,6 +19,7 @@ export default function AskPanel({
   workspaceId = "",
   urlSessionId = "",
   onUrlSessionIdChange,
+  onUrlWorkIdChange,
   fillAvailableHeight = false,
 }) {
   const { confirm } = useFeedback();
@@ -30,6 +31,7 @@ export default function AskPanel({
     workspaceId,
     urlSessionId,
     onUrlSessionIdChange,
+    onUrlWorkIdChange,
   });
 
   const showResearchPlanPanel = useMemo(() => {

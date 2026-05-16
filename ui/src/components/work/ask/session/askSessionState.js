@@ -295,3 +295,14 @@ export function getActiveSessionEntries(scopeKey) {
   const active = bundle.sessions.find((s) => s.id === bundle.activeId);
   return active ? active.entries : [];
 }
+
+/**
+ * Ensure the scope has an active session and return its id.
+ *
+ * @param {string} scopeKey
+ * @returns {string}
+ */
+export function ensureActiveAskSessionId(scopeKey) {
+  const bundle = ensureActiveSession(scopeKey);
+  return String(bundle.activeId || "").trim();
+}

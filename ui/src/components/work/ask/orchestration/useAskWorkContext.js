@@ -61,14 +61,19 @@ export function useAskWorkContext({ workspaceId, locked, workId, setWorkId }) {
       setWorkDetailsForChip(row);
     }
     setWorkId(row.work_id);
-  }, [setWorkId]);
+    if (!locked) persistWorkId(row.work_id);
+  }, [locked, setWorkId]);
 
   const handleWorkIdChange = useCallback(
     (next) => {
       setWorkId(next);
-      if (!String(next || "").trim()) setWorkDetailsForChip(null);
+      if (!String(next || "").trim()) {
+        setWorkDetailsForChip(null);
+        return;
+      }
+      if (!locked) persistWorkId(next);
     },
-    [setWorkId],
+    [locked, setWorkId],
   );
 
   useEffect(() => {
@@ -133,10 +138,6 @@ export function useAskWorkContext({ workspaceId, locked, workId, setWorkId }) {
       clearTimeout(tid);
     };
   }, [workId]);
-
-  useEffect(() => {
-    if (!locked && workId.trim()) persistWorkId(workId);
-  }, [locked, workId]);
 
   return {
     workDetailsForChip,

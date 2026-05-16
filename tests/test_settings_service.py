@@ -250,6 +250,55 @@ def test_test_llm_connection_marks_saved_secret_source_only_for_secret_store(
     assert captured["used_saved_secret"] is True
 
 
+def test_test_llm_connection_resolves_task_specific_secret_and_model(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    captured: dict[str, Any] = {}
+
+    def _fake_probe(**kwargs: Any) -> dict[str, Any]:
+        captured.clear()
+        captured.update(kwargs)
+        return {"status": "connected", "message": "OK", "resolved": {}}
+
+    monkeypatch.setattr("science_graphrag.settings.service.run_llm_connection_probe", _fake_probe)
+    base = Settings(api_key="", extraction_llm_api_key="", vl_api_key="")
+    service.update_llm_settings(
+        base_settings=base,
+        actor="tester",
+        tasks_patch={
+            "chat": {"base_url": "https://chat.example/v1", "model": "chat-x"},
+            "embeddings": {
+                "mode": "http",
+                "base_url": "https://emb.example/v1",
+                "model": "bge-x",
+                "timeout_seconds": 77,
+            },
+        },
+        chat_api_key="chat-secret",
+        embeddings_api_key="emb-secret",
+    )
+
+    service.test_llm_connection(
+        base_settings=base,
+        actor="tester",
+        draft=LlmTestDraft(task="chat", use_saved_secret=True),
+    )
+    assert captured["model"] == "chat-x"
+    assert captured["base_url"] == "https://chat.example/v1"
+    assert captured["api_key"] == "chat-secret"
+
+    service.test_llm_connection(
+        base_settings=base,
+        actor="tester",
+        draft=LlmTestDraft(task="embeddings", use_saved_secret=True),
+    )
+    assert captured["model"] == "bge-x"
+    assert captured["base_url"] == "https://emb.example/v1"
+    assert captured["timeout_seconds"] == 77.0
+    assert captured["api_key"] == "emb-secret"
+
+
 def test_update_llm_settings_persists_ollama_like_tasks(tmp_path: Path) -> None:
     service = SettingsService(repo_root=tmp_path)
     base = Settings(api_key="", extraction_llm_api_key="", vl_api_key="")

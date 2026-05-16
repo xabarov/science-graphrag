@@ -281,6 +281,91 @@ describe("useAgentStream", () => {
     expect(result.current.isStreaming).toBe(false);
   });
 
+  it("resumeStream does not report incomplete when final answer appears in replay fallback", async () => {
+    const enc = new TextEncoder();
+    const emptyDelta = new ReadableStream({
+      start(controller) {
+        controller.close();
+      },
+    });
+    const replayWithFinal = new ReadableStream({
+      start(controller) {
+        controller.enqueue(enc.encode('data: {"type":"final_answer","answer":"ok","citations":[],"tool_trace":[]}\n\n'));
+        controller.close();
+      },
+    });
+    globalThis.fetch
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: { get: (h) => (String(h).toLowerCase() === "content-type" ? "text/event-stream" : null) },
+        body: emptyDelta,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        headers: { get: (h) => (String(h).toLowerCase() === "content-type" ? "text/event-stream" : null) },
+        body: replayWithFinal,
+      });
+
+    const onError = vi.fn();
+    const onFinalAnswer = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError,
+        onFinalAnswer,
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.resumeStream({ runId: "run-1", afterSeq: 3 });
+    });
+    expect(onFinalAnswer).toHaveBeenCalledWith(expect.objectContaining({ type: "final_answer", answer: "ok" }));
+    expect(onError).not.toHaveBeenCalledWith("Resume stream ended before a final answer was received.");
+  });
+
+  it("resumeStream treats empty replay as non-terminal reconnect", async () => {
+    const empty = new ReadableStream({
+      start(controller) {
+        controller.close();
+      },
+    });
+    globalThis.fetch.mockResolvedValueOnce({
+      ok: true,
+      headers: { get: (h) => (String(h).toLowerCase() === "content-type" ? "text/event-stream" : null) },
+      body: empty,
+    });
+
+    const onError = vi.fn();
+    const onFinalAnswer = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError,
+        onFinalAnswer,
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.resumeStream({ runId: "run-2", afterSeq: 0 });
+    });
+    expect(onFinalAnswer).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalledWith("Resume stream ended before a final answer was received.");
+  });
+
+  it("resumeStream ignores local pending run ids without fetching", async () => {
+    const onError = vi.fn();
+    const { result } = renderHook(() =>
+      useAgentStream({
+        onError,
+        onFinalAnswer: vi.fn(),
+        onEvent: vi.fn(),
+      }),
+    );
+    await act(async () => {
+      await result.current.resumeStream({ runId: "pending-sess-1", afterSeq: 0 });
+    });
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+  });
+
   it("keeps stream identity when callback props change", () => {
     const onErrorA = vi.fn();
     const onErrorB = vi.fn();

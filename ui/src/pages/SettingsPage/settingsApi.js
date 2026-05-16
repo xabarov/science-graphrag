@@ -86,3 +86,7 @@ export async function testLlmConnection(payload) {
   });
   return res.data;
 }
+
+export async function testLlmTaskConnection({ task, use_saved_secret = true }) {
+  return testLlmConnection({ task, use_saved_secret });
+}

@@ -35,6 +35,7 @@ import {
  *   setHistory: (entries: unknown[]) => void,
  *   setQuery: (q: string) => void,
  *   setWorkId: (id: string) => void,
+ *   onUrlWorkIdChange?: (workId: string) => void,
  *   setNormalized: (v: unknown) => void,
  *   setError: (v: unknown) => void,
  *   onUrlSessionIdChange?: (sessionId: string) => void,
@@ -54,6 +55,7 @@ export function useAskPanelSessionHandlers({
   setHistory,
   setQuery,
   setWorkId,
+  onUrlWorkIdChange,
   setNormalized,
   setError,
   onUrlSessionIdChange,
@@ -84,11 +86,25 @@ export function useAskPanelSessionHandlers({
           /* non-fatal */
         }
       }
-      setWorkId(String(entry.workId || "").trim());
+      const nextWorkId = String(entry.workId || "").trim();
+      setWorkId(nextWorkId);
+      onUrlWorkIdChange?.(nextWorkId);
       setQuery(String(entry.query || "").trim());
       await performAgentSubmit(String(entry.query || "").trim(), { workIdForTurn: entry.workId });
     },
-    [abort, activeSessionId, bumpSessions, isLoading, performAgentSubmit, serverSync, scopeKeyRef, setHistory, setQuery, setWorkId],
+    [
+      abort,
+      activeSessionId,
+      bumpSessions,
+      isLoading,
+      onUrlWorkIdChange,
+      performAgentSubmit,
+      serverSync,
+      scopeKeyRef,
+      setHistory,
+      setQuery,
+      setWorkId,
+    ],
   );
 
   const onClearChat = useCallback(async () => {

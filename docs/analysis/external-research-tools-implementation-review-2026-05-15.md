@@ -99,7 +99,7 @@ These should not run in regular unit CI by default; use an explicit live marker 
 Latest operator evidence (2026-05-16):
 
 - OpenAlex smoke: **green** (`http_status=200`, `results=1`) via `scripts/live_check/openalex_smoke.py`.
-- Semantic Scholar smoke: **observed 429 Too Many Requests** on search in current contour; failure contract behaves correctly and source remains `needs_live_smoke` until a green run is recorded.
+- Semantic Scholar smoke: **green after keyed run** (`search_http_status=200`, `search_results=1`, `paper_http_status=200`, `paper_title=Attention is All you Need`); prior unauth/keyless result was `429 Too Many Requests`.
 - MCP adapter smoke: **green** with host stub + `docker-compose.mcp-live-check.yml` (`http_status=200`, `rpc_ok=1`).
 - MCP agent E2E: **green** via `scripts/live_check/mcp_agent_e2e_smoke.py` (`call_mcp_tool` + `mcp_audit_summary` on sync JSON `/v2/agent/query`).
 - Settings source-test endpoint: OpenAlex green, Semantic Scholar `http_429`, MCP green after persisted adapter URL override (`/v1/settings/agent_tools/test_source`).

@@ -365,6 +365,7 @@ class TestLlmConnectionRequest(BaseModel):
     timeout_seconds: float | None = Field(default=None, ge=1.0, le=900.0)
     api_key: str | None = Field(default=None, min_length=1, max_length=4096)
     use_saved_secret: bool = True
+    task: Literal["extraction", "chat", "vision", "embeddings"] = "extraction"
 
 
 class UpdateStorageSettingsRequest(BaseModel):

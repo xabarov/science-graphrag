@@ -167,4 +167,39 @@ describe("buildLlmSettingsSubmitPayload", () => {
     expect(p.tasks.embeddings.timeout_seconds).toBe(30);
     expect(p.embeddings_api_key).toBe("sk-emb");
   });
+
+  it("can explicitly clear per-task stored keys when provider preset switches", () => {
+    const p = buildLlmSettingsSubmitPayload({
+      baseUrl: baseLlm.base_url,
+      model: baseLlm.model,
+      chatModel: "",
+      chatBaseUrl: "",
+      chatTemperature: 0,
+      chatTimeoutSeconds: 180,
+      temperature: 0,
+      timeoutSeconds: 180,
+      vlModel: "",
+      vlBaseUrl: "",
+      vlTemperature: 0,
+      vlTimeoutSeconds: 300,
+      llm: baseLlm,
+      apiKey: "",
+      chatApiKey: "",
+      visionApiKey: "",
+      embeddingsBaseUrl: "https://openrouter.ai/api/v1",
+      embeddingsModel: "baai/bge-m3",
+      embeddingsTimeoutSeconds: 60,
+      embeddingsApiKey: "",
+      clearApiKey: true,
+      clearChatApiKey: true,
+      clearVisionApiKey: true,
+      clearEmbeddingsApiKey: true,
+      advDirty: false,
+      advValues: {},
+    });
+    expect(p.api_key).toBeNull();
+    expect(p.chat_api_key).toBeNull();
+    expect(p.vision_api_key).toBeNull();
+    expect(p.embeddings_api_key).toBeNull();
+  });
 });

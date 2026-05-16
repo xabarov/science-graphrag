@@ -15,6 +15,8 @@ import { withStreamEventReceiveTime } from "../answer/withStreamEventReceiveTime
  *  onStart?: () => void,
  *  onFinish?: () => void,
  *  onStreamEvent?: (event: unknown) => void,
+ *  onRunStarted?: (event: { run_id?: string, thread_id?: string }) => void,
+ *  onSeq?: (seq: number) => void,
  *  useStreamingAgent?: boolean
  * }} params
  */
@@ -26,6 +28,8 @@ export function useAskSubmit({
   onStart,
   onFinish,
   onStreamEvent,
+  onRunStarted,
+  onSeq,
   useStreamingAgent = true,
 }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -37,8 +41,10 @@ export function useAskSubmit({
   const streamEventsCaptureRef = useRef([]);
   const toolTraceCaptureRef = useRef([]);
 
-  const { stream: streamAgent, isStreaming, abort: abortStream } = useAgentStream({
+  const { stream: streamAgent, resumeStream: resumeAgent, isStreaming, abort: abortStream } = useAgentStream({
     workspaceId,
+    onRunStarted: (event) => onRunStarted?.(event),
+    onSeq: (seq) => onSeq?.(seq),
     onEvent: (event) => {
       const stamped = withStreamEventReceiveTime(event);
       if (stamped && typeof stamped === "object") {
@@ -229,5 +235,29 @@ export function useAskSubmit({
     abortRef.current = null;
   }, [abortStream]);
 
-  return { submit, isLoading: isActive, abortRef, abort };
+  const resumeStream = useCallback(
+    async ({ runId, afterSeq = 0 }) => {
+      lastStreamNormalizedRef.current = null;
+      streamEventsCaptureRef.current = [];
+      toolTraceCaptureRef.current = [];
+      await resumeAgent({ runId, afterSeq });
+      return {
+        normalized: lastStreamNormalizedRef.current,
+        streamEvents: [...streamEventsCaptureRef.current],
+        agentToolTrace: [...toolTraceCaptureRef.current],
+      };
+    },
+    [resumeAgent],
+  );
+
+  return {
+    submit,
+    resumeStream,
+    isLoading: isActive,
+    abortRef,
+    abort,
+    streamEventsCaptureRef,
+    toolTraceCaptureRef,
+    lastStreamNormalizedRef,
+  };
 }

@@ -20,6 +20,7 @@ from science_graphrag.agent.coordination.deterministic import (
     _GRAPH_INTENT_HINTS,
     graph_intent_heuristic,
 )
+from science_graphrag.agent.web_evidence_policy import asks_for_official_product_research
 from science_graphrag.external_intent_markers import (
     ARXIV_MARKERS,
     UNPAYWALL_LOOKUP_MARKERS,
@@ -123,6 +124,7 @@ class QuestionFeatures:
     asks_for_anchor_free_quote: bool = False
     asks_for_relations: bool = False  # cited / paths / cypher / lineage
     asks_for_web_research: bool = False
+    asks_for_official_product_research: bool = False
     asks_for_arxiv: bool = False
     asks_for_unpaywall: bool = False
 
@@ -144,6 +146,7 @@ class QuestionFeatures:
             "asks_for_anchor_free_quote": bool(self.asks_for_anchor_free_quote),
             "asks_for_relations": bool(self.asks_for_relations),
             "asks_for_web_research": bool(self.asks_for_web_research),
+            "asks_for_official_product_research": bool(self.asks_for_official_product_research),
             "asks_for_arxiv": bool(self.asks_for_arxiv),
             "asks_for_unpaywall": bool(self.asks_for_unpaywall),
             "matched_markers": list(self.matched_markers),
@@ -184,6 +187,9 @@ class QuestionFeatures:
             asks_for_anchor_free_quote=bool(payload.get("asks_for_anchor_free_quote")),
             asks_for_relations=bool(payload.get("asks_for_relations")),
             asks_for_web_research=bool(payload.get("asks_for_web_research")),
+            asks_for_official_product_research=bool(
+                payload.get("asks_for_official_product_research")
+            ),
             asks_for_arxiv=bool(payload.get("asks_for_arxiv")),
             asks_for_unpaywall=bool(payload.get("asks_for_unpaywall")),
             matched_markers=markers,
@@ -287,6 +293,10 @@ def extract_question_features(  # pylint: disable=too-many-locals
     asks_web, asks_arxiv, asks_unpaywall, ext_hits = _match_external_research_intent(qn)
     matched.extend(ext_hits)
 
+    asks_official_product = bool(asks_web and asks_for_official_product_research(qn))
+    if asks_official_product:
+        matched.append("official_product_research")
+
     return QuestionFeatures(
         raw_question=raw,
         normalized_question=qn,
@@ -301,6 +311,7 @@ def extract_question_features(  # pylint: disable=too-many-locals
         asks_for_anchor_free_quote=asks_anchor_free,
         asks_for_relations=asks_relations,
         asks_for_web_research=asks_web,
+        asks_for_official_product_research=asks_official_product,
         asks_for_arxiv=asks_arxiv,
         asks_for_unpaywall=asks_unpaywall,
         matched_markers=tuple(dict.fromkeys(matched)),  # de-dupe, preserve order

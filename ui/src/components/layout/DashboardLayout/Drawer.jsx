@@ -17,8 +17,8 @@ import { CursorIconButton } from "../../common/index.js";
 import { useI18n } from "../../../i18n/useI18n.js";
 import { isAdminModeEnabled } from "../adminVisibility.js";
 import { useWorkspaceContext } from "../useWorkspaceContext.js";
-import { appendWorkspaceQuery } from "../../../utils/workspaceStore.js";
-import { getLastWorkId } from "../../../pages/WorkspacePage/utils/workContext.js";
+import { buildShellToolHref, resolveDrawerChatHref } from "../shellNavHref.js";
+import { GRAPH_PATH, READER_PATH } from "../../../routes/paths.js";
 import { dispatchShellNavigationIntent } from "../shellNavigationEvents.js";
 import darkLogo from "../../../assets/logo/dark-logo.png";
 import lightLogo from "../../../assets/logo/light-logo.png";
@@ -51,17 +51,14 @@ export default function Drawer({ onNavigate }) {
 
   const userMenu = useMemo(() => {
     const wid = activeWorkspaceId || "";
-    const sp = new URLSearchParams(location.search || "");
-    const workFromUrl = sp.get("work_id") || "";
-    const readerWorkId = (workFromUrl || getLastWorkId()).trim();
-    const readerHref = readerWorkId
-      ? appendWorkspaceQuery(`/reader?work_id=${encodeURIComponent(readerWorkId)}`, wid)
-      : "";
+    const locSearch = location.search || "";
+    const readerHref = buildShellToolHref(READER_PATH, { locationSearch: locSearch, workspaceId: wid });
+    const readerWorkId = new URLSearchParams(readerHref.split("?")[1] || "").get("work_id") || "";
 
     const base = [
       { to: getLastWorkspaceHref(), label: t("shell.drawer.workspace"), icon: <FolderOpenOutlinedIcon /> },
     ];
-    if (readerHref) {
+    if (readerWorkId) {
       base.push({
         to: readerHref,
         label: t("shell.drawer.reader"),
@@ -69,8 +66,16 @@ export default function Drawer({ onNavigate }) {
       });
     }
     base.push(
-      { to: appendWorkspaceQuery("/graph", wid), label: t("shell.drawer.graph"), icon: <AccountTreeOutlinedIcon /> },
-      { to: appendWorkspaceQuery("/chat", wid), label: t("shell.drawer.chat"), icon: <ChatBubbleOutlineOutlinedIcon /> },
+      {
+        to: buildShellToolHref(GRAPH_PATH, { locationSearch: locSearch, workspaceId: wid }),
+        label: t("shell.drawer.graph"),
+        icon: <AccountTreeOutlinedIcon />,
+      },
+      {
+        to: resolveDrawerChatHref({ locationSearch: locSearch, workspaceId: wid }),
+        label: t("shell.drawer.chat"),
+        icon: <ChatBubbleOutlineOutlinedIcon />,
+      },
     );
     return base;
   }, [t, activeWorkspaceId, getLastWorkspaceHref, location.search]);
