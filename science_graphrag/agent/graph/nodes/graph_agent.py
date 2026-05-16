@@ -12,6 +12,7 @@ from langgraph.graph import END, StateGraph
 from science_graphrag.agent.coordination.route_planner import (
     derive_graph_completion_state,
 )
+from science_graphrag.agent.graph.nodes.retrieval_subgraph import merge_react_subgraph_debug_events
 from science_graphrag.agent.graph.react_edges import (
     react_after_tools_decrement_budget,
     react_chat_response_budget_cutoff,
@@ -35,15 +36,12 @@ from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
 )
-from science_graphrag.agent.tool_search import (
-    build_tool_search_result_debug_event,
-    shortlist_tools_for_specialist,
-)
+from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_graph_tools
-from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import SpanAttributes, add_span_event, llm_span
+from science_graphrag.stores.registry import StoreRegistry
 
 SPECIALIST_NAME = "graph_agent"
 SYSTEM_PROMPT = (
@@ -240,14 +238,12 @@ def build_graph_agent_node(stores: StoreRegistry, settings: Settings):
             "specialist_results": specialist_results,
             "specialist_results_v3": sr3,
             "current_specialist": SPECIALIST_NAME,
-            "debug_events": [
-                build_tool_search_result_debug_event(specialist=SPECIALIST_NAME, meta=meta),
-                *(
-                    [{"type": "tool_permissions", "matrix": mtx}]
-                    if not bool(mtx.get("skipped"))
-                    else []
-                ),
-            ],
+            "debug_events": merge_react_subgraph_debug_events(
+                specialist=SPECIALIST_NAME,
+                tool_search_meta=meta,
+                permissions_matrix=mtx,
+                subgraph_state=next_state,
+            ),
         }
 
     return graph_agent_node

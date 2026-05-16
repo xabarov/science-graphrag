@@ -53,7 +53,7 @@ function makeAgentTools() {
       mcp_server_denylist_count: 0,
       mcp_server_denylist_preview: [],
       mcp_auth_model: "delegation_required",
-      mcp_adapter_url_source: "environment",
+      mcp_adapter_url_source: "settings",
     },
     credentials: {
       research_contact_email_status: "configured",
@@ -150,5 +150,32 @@ describe("AgentToolsSettingsPanel", () => {
     const payload = onSave.mock.calls[0][0];
     expect(payload.agent_mcp_request_timeout_seconds).toBe(30);
     expect(payload.agent_mcp_server_denylist).toEqual(["evil"]);
+    expect(payload.agent_mcp_http_base_url).toBe("");
+  });
+
+  it("runs per-source test callback", async () => {
+    const onTestSource = vi.fn().mockResolvedValue({ ok: true });
+    const withOpenAlexRow = {
+      ...makeAgentTools(),
+      sources: [
+        { id: "openalex", label: "OpenAlex", tier: "stable", status: "ok", last_test: null, last_error: null },
+      ],
+    };
+    render(
+      <ThemeProvider theme={theme}>
+        <I18nProvider>
+          <AgentToolsSettingsPanel
+            agentTools={withOpenAlexRow}
+            saving={false}
+            saveError=""
+            onSave={vi.fn()}
+            onDirtyChange={vi.fn()}
+            onTestSource={onTestSource}
+          />
+        </I18nProvider>
+      </ThemeProvider>,
+    );
+    fireEvent.click(screen.getAllByText(/Test|Проверить/i)[0]);
+    await waitFor(() => expect(onTestSource).toHaveBeenCalled());
   });
 });

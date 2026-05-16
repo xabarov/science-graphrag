@@ -241,11 +241,11 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Operator live lane (2026-05-16):** smoke observed `403 Forbidden` in current contour; treat as non-green evidence and keep status `needs_live_smoke` until a successful run is recorded in target contour.
 - **Raised:** 2026-05-15, **updated:** 2026-05-16 (Phase 5A core tools shipped)
 
-### [OPEN] MCP Integrations UI: operator test buttons and adapter URL policy decision
+### [DONE] MCP Integrations UI: operator test buttons and adapter URL policy decision
 - **Area:** `ui/src/pages/SettingsPage/AgentToolsSettingsPanel.jsx`, `science_graphrag/api/settings_models.py`, `science_graphrag/settings/service.py`
-- **Issue:** Phase 6 shipped with env-only adapter URL and diagnostics-only Integrations card; per-source **Test connection** actions and explicit MCP adapter URL edit policy in Settings are still unresolved.
-- **Proposal:** add operator-triggered test buttons (MCP, Semantic Scholar, OpenAlex) with last-run stamp/error; decide and document whether `agent_mcp_http_base_url` remains env-only or becomes persisted allowlist PATCH with masking/restart semantics.
-- **Acceptance:** operator can launch smoke checks from Settings and see last outcome; adapter URL policy is explicit and reflected consistently in API model, snapshot, and docs.
+- **Issue (closed):** Phase 6 shipped with env-only adapter URL and diagnostics-only Integrations card; per-source **Test connection** actions and explicit MCP adapter URL edit policy in Settings were unresolved.
+- **Done:** Added operator-triggered source tests (`/v1/settings/agent_tools/test_source`) for MCP/OpenAlex/Semantic Scholar with persisted `source_diagnostics` (`last_test`, `last_error`, `last_ok`); Settings UI now has per-source **Test** buttons and MCP-specific test action. Added persisted `agent_mcp_http_base_url` allowlist PATCH field and snapshot source marker (`environment` vs `settings`) with diagnostics in Integrations card.
+- **Acceptance:** operators can run tests from Settings and see latest outcome; MCP adapter URL policy is explicit and reflected in API model, settings service, runtime overlay, snapshot, UI, and tests.
 - **Raised:** 2026-05-16
 
 ### [OPEN] Rename OpenRouter-specific HTTP embeddings module to neutral OpenAI-compatible name

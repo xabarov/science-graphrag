@@ -66,12 +66,12 @@ Run from repo root with project venv.
 - Command:
   - `.venv/bin/python scripts/live_check/semantic_scholar_smoke.py --query "attention is all you need"`
 - Observed:
-  - `search_http_status=403`
-  - body: `{"message":"Forbidden"}`
+  - `search_http_status=429`
+  - body: `{"message":"Too Many Requests ... apply for a key ..."}`
   - exit code: `1`
 - Interpretation:
   - Runtime/failure contract is correct (non-200 -> non-zero with response snippet).
-  - Source remains `needs_live_smoke`; mark as live-verified only after a green run in the target operator contour (API policy/key/quota permitting).
+  - Source remains `needs_live_smoke`; mark as live-verified only after a green run in the target operator contour (API key/quota window permitting).
 
 ## Notes for operators
 

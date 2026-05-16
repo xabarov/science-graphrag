@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from science_graphrag.settings.agent_tools_mcp import normalize_mcp_server_denylist
 from science_graphrag.settings.llm_advanced_fields import merge_llm_advanced_into_overrides
 from science_graphrag.settings.llm_task_persisted import get_normalized_llm_tasks
 from science_graphrag.settings.secrets import SecretStore
 from science_graphrag.settings.snapshots import resolve_ingestion_fields
 from science_graphrag.settings.storage_runtime import merge_storage_runtime_fields
-from science_graphrag.settings.agent_tools_mcp import normalize_mcp_server_denylist
 from science_graphrag.settings.stored_bool import optional_stored_bool
 
 if TYPE_CHECKING:
@@ -261,3 +261,6 @@ def _merge_persisted_agent_tools(
         non_secret_overrides["agent_mcp_server_denylist"] = normalize_mcp_server_denylist(
             agent_tools.get("agent_mcp_server_denylist")
         )
+    if "agent_mcp_http_base_url" in agent_tools:
+        raw = str(agent_tools.get("agent_mcp_http_base_url") or "").strip().rstrip("/")
+        non_secret_overrides["agent_mcp_http_base_url"] = raw if raw else None

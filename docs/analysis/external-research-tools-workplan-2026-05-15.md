@@ -104,10 +104,16 @@ Purpose: turn the existing `agent_tools` section from a placeholder/operator sli
 - **Frontend:** dedicated `AgentToolsSettingsPanel` — research controls + inline source diagnostics, PDF mode select, read-only MCP summary, mailto/credentials line, advanced limits in accordion, dirty/save wiring and Vitest coverage; layout pass for density (header save, two-column research + diagnostics on wide viewports).
 - **Tests:** API PATCH + snapshot contract tests; panel rendering / save / localized credentials status.
 
-**Deferred (explicitly not in this slice)**
+**Deferred (explicitly not in this slice, now closed in follow-up)**
 
-- **Credentials card:** per-source **Test** / live-smoke trigger buttons (workplan bullet below still open; diagnostics rows may show `last_test` / `last_error` when populated by future hooks or manual updates).
-- **Integrations card:** operator editing of MCP adapter URL / denylist in UI (snapshot remains read-only summary; policy stays env / restart path until a later phase).
+- **Credentials card:** per-source **Test** / live-smoke trigger buttons.
+- **Integrations card:** operator editing of MCP adapter URL / denylist in UI.
+
+**Follow-up closeout (2026-05-16 evening):**
+
+- Added operator source-test endpoint `POST /v1/settings/agent_tools/test_source` (`openalex`, `semantic_scholar`, `mcp`) with persisted diagnostics (`last_test`, `last_error`, `last_ok`, `last_http_status`).
+- Settings UI now exposes per-source **Test** buttons and MCP-specific test action in Integrations advanced section.
+- MCP adapter URL policy updated: `agent_mcp_http_base_url` is now persisted via allowlisted PATCH (`/v1/settings/agent_tools`) with explicit snapshot source marker (`environment` vs `settings`).
 
 ### Backend
 
@@ -373,7 +379,7 @@ Purpose: add citation-aware discovery once current sources and trust model are s
 
 **Operator acceptance runbook:** use `docs/agent/semantic_scholar_runtime_acceptance.md` → **Operator acceptance checklist** for exact commands and expected outputs (unit contract, registry, live smoke, failure contract).
 
-**Latest live lane note (2026-05-16):** Semantic Scholar smoke in current contour returned `403 Forbidden`; treat as non-green evidence and keep `needs_live_smoke` until a successful operator run is recorded.
+**Latest live lane note (2026-05-16):** Semantic Scholar smoke in current contour returned `429 Too Many Requests`; treat as non-green evidence and keep `needs_live_smoke` until a successful operator run is recorded.
 
 ### Backend
 
@@ -407,7 +413,7 @@ Purpose: add citation-aware discovery once current sources and trust model are s
 
 Purpose: keep MCP available for advanced integrations without making native tools depend on it.
 
-**Status (2026-05-16) — Phase 6 shipped (operator slice):** expanded `agent_tools.integrations` snapshot (operator state, timeout, denylist preview, auth model); allowlisted PATCH for `agent_mcp_request_timeout_seconds` and `agent_mcp_server_denylist` (adapter base URL remains **env-only**); Integrations card with explicit states + MCP advanced fields; operator smoke `scripts/live_check/mcp_adapter_smoke.py`; isolation test that native external tools register independently of MCP gate failures. See `docs/agent/mcp_runtime_acceptance.md`.
+**Status (2026-05-16) — Phase 6 shipped (operator slice):** expanded `agent_tools.integrations` snapshot (operator state, timeout, denylist preview, auth model); allowlisted PATCH for `agent_mcp_request_timeout_seconds`, `agent_mcp_server_denylist`, and persisted `agent_mcp_http_base_url`; Integrations card with explicit states + MCP advanced fields + test action; operator smokes `mcp_adapter_smoke.py` + **agent E2E** `mcp_agent_e2e_smoke.py` (host stub `mcp_jsonrpc_stub.py`, compose overlay `docker-compose.mcp-live-check.yml`); retrieval specialist now forwards subgraph `debug_events` so `mcp_audit_summary` appears in sync JSON `run_metadata`; source-test endpoint `/v1/settings/agent_tools/test_source` writes latest MCP/OpenAlex/S2 diagnostics. Isolation test confirms native external tools remain independent of MCP gate failures. See `docs/agent/mcp_runtime_acceptance.md`.
 
 **Operator acceptance runbook:** use `docs/agent/mcp_runtime_acceptance.md` → **Operator acceptance checklist** for exact commands and expected outputs (snapshot/overlay/isolation/UI/live smoke).
 

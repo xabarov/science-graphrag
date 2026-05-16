@@ -70,6 +70,18 @@ Use before release or when validating multi-worker / real LLM stacks where in-pr
 
 [`docs/specs/agent-chat-v1.md`](../../docs/specs/agent-chat-v1.md) — envelope and SSE vocabulary.
 
+## MCP live acceptance (external research Phase 6)
+
+Operator-only; not default CI. Runbook: [`docs/agent/mcp_runtime_acceptance.md`](../../docs/agent/mcp_runtime_acceptance.md).
+
+| Script | Purpose |
+|--------|---------|
+| `mcp_jsonrpc_stub.py` | Minimal JSON-RPC adapter on host (`--host 0.0.0.0 --port 19999`) |
+| `mcp_adapter_smoke.py` | `tools/list` against adapter URL |
+| `mcp_agent_e2e_smoke.py` | Full `/v2/agent/query` + `call_mcp_tool` + `mcp_audit_summary` |
+
+Compose overlay: `docker-compose.mcp-live-check.yml` (use with `docker-compose.live-check.yml` for stable API).
+
 ## Standardized trace review
 
 Canonical **`trace-review-v1`** workflow: [`README_trace_review.md`](./README_trace_review.md) and operator SOP

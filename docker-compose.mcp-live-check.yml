@@ -1,0 +1,14 @@
+# MCP live-check overlay: enable MCP surface in API + point at host stub.
+#
+# Usage (stable API, no reload — recommended for long agent queries):
+#   COMPOSE_FILE=docker-compose.dev.yml:docker-compose.live-check.yml:docker-compose.mcp-live-check.yml \
+#     docker compose up -d api --force-recreate
+#
+# Start stub on host first (bind all interfaces for host.docker.internal):
+#   .venv/bin/python scripts/live_check/mcp_jsonrpc_stub.py --host 0.0.0.0 --port 19999
+
+services:
+  api:
+    environment:
+      SCIENCE_GRAPHRAG_AGENT_MCP_TOOLS_ENABLED: "1"
+      SCIENCE_GRAPHRAG_AGENT_MCP_HTTP_BASE_URL: ${SCIENCE_GRAPHRAG_AGENT_MCP_HTTP_BASE_URL:-http://host.docker.internal:19999/rpc}

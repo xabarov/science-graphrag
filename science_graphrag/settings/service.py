@@ -8,6 +8,9 @@ from pathlib import Path
 from threading import Lock
 from typing import TYPE_CHECKING, Any
 
+import httpx
+
+from science_graphrag.settings.agent_tools_mcp import normalize_mcp_server_denylist
 from science_graphrag.settings.benchmark_defaults import (
     merge_persisted_benchmark_family,
     normalize_benchmark_family_key,
@@ -34,7 +37,6 @@ from science_graphrag.settings.runtime_llm_bootstrap import (
     ensure_llm_runtime_bootstrap_from_env,
     llm_bootstrap_applied,
 )
-from science_graphrag.settings.agent_tools_mcp import normalize_mcp_server_denylist
 from science_graphrag.settings.runtime_overlay import build_non_secret_overrides
 from science_graphrag.settings.schema import build_settings_schema
 from science_graphrag.settings.secret_store_keys import (
@@ -80,6 +82,7 @@ _AGENT_TOOLS_PATCH_ALLOWLIST: frozenset[str] = frozenset(
         "agent_pdf_read_durable_cache_enabled",
         "agent_mcp_request_timeout_seconds",
         "agent_mcp_server_denylist",
+        "agent_mcp_http_base_url",
     }
 )
 
@@ -474,6 +477,9 @@ class SettingsService:
                 at["agent_mcp_server_denylist"] = normalize_mcp_server_denylist(
                     filtered["agent_mcp_server_denylist"]
                 )
+            if "agent_mcp_http_base_url" in filtered:
+                raw_base = str(filtered["agent_mcp_http_base_url"] or "").strip()
+                at["agent_mcp_http_base_url"] = raw_base.rstrip("/") if raw_base else ""
 
             at["_meta"] = {
                 "last_updated_at": _now_iso(),
@@ -488,6 +494,138 @@ class SettingsService:
             validate_settings_model_roundtrip(candidate)
             self._repository.save(payload)
         return self.get_snapshot(base_settings)
+
+    def test_agent_tool_source(
+        self,
+        *,
+        base_settings: Settings,
+        actor: str,
+        source_id: str,
+    ) -> dict[str, Any]:
+        """Run a short operator smoke for one external source and persist diagnostics."""
+        del actor  # Reserved for audit expansion.
+        sid = str(source_id or "").strip()
+        checked_at = _now_iso()
+        ok = False
+        detail = "unknown_source"
+        status = 0
+
+        try:
+            if sid == "openalex":
+                ok, detail, status = self._probe_openalex(base_settings)
+            elif sid == "semantic_scholar":
+                ok, detail, status = self._probe_semantic_scholar(base_settings)
+            elif sid == "mcp":
+                ok, detail, status = self._probe_mcp_adapter(base_settings)
+            else:
+                raise ValueError(f"unsupported source_id={sid!r}")
+        finally:
+            with self._lock:
+                payload = self._repository.load()
+                at = {
+                    k: v for k, v in dict(payload.get("agent_tools") or {}).items() if k != "_meta"
+                }
+                diag = dict(at.get("source_diagnostics") or {})
+                diag[sid] = {
+                    "last_test": checked_at,
+                    "last_ok": bool(ok),
+                    "last_error": "" if ok else str(detail),
+                    "last_http_status": int(status or 0),
+                }
+                at["source_diagnostics"] = diag
+                at["_meta"] = {
+                    "last_updated_at": checked_at,
+                    "last_updated_by": "source_test",
+                }
+                payload["agent_tools"] = at
+                self._repository.save(payload)
+
+        return {
+            "source_id": sid,
+            "ok": bool(ok),
+            "detail": str(detail),
+            "checked_at": checked_at,
+        }
+
+    @staticmethod
+    def _probe_openalex(base_settings: Settings) -> tuple[bool, str, int]:
+        mailto = str(getattr(base_settings, "openalex_mailto", "") or "").strip()
+        headers = {"User-Agent": "science-graphrag-openalex-smoke/1.0"}
+        if mailto:
+            headers["From"] = mailto
+        url = "https://api.openalex.org/works"
+        params = {"search": "attention is all you need", "per-page": 1}
+        try:
+            with httpx.Client(timeout=12.0) as client:
+                resp = client.get(url, params=params, headers=headers)
+        except (httpx.HTTPError, OSError) as exc:
+            return False, f"transport_error:{exc}", 0
+        if resp.status_code != 200:
+            return False, f"http_{resp.status_code}", int(resp.status_code)
+        try:
+            body = resp.json()
+        except ValueError as exc:
+            return False, f"json_error:{exc}", 200
+        rows = body.get("results") if isinstance(body, dict) else None
+        if not isinstance(rows, list):
+            return False, "invalid_json_shape:results", 200
+        return True, f"ok:results={len(rows)}", 200
+
+    @staticmethod
+    def _probe_semantic_scholar(base_settings: Settings) -> tuple[bool, str, int]:
+        key = str(getattr(base_settings, "semantic_scholar_api_key", "") or "").strip()
+        headers = {"User-Agent": "science-graphrag-semantic-scholar-smoke/1.0"}
+        if key:
+            headers["x-api-key"] = key
+        url = "https://api.semanticscholar.org/graph/v1/paper/search"
+        params = {"query": "attention is all you need", "limit": 1, "fields": "paperId,title"}
+        try:
+            with httpx.Client(timeout=12.0) as client:
+                resp = client.get(url, params=params, headers=headers)
+        except (httpx.HTTPError, OSError) as exc:
+            return False, f"transport_error:{exc}", 0
+        if resp.status_code != 200:
+            return False, f"http_{resp.status_code}", int(resp.status_code)
+        try:
+            body = resp.json()
+        except ValueError as exc:
+            return False, f"json_error:{exc}", 200
+        rows = body.get("data") if isinstance(body, dict) else None
+        if not isinstance(rows, list):
+            return False, "invalid_json_shape:data", 200
+        return True, f"ok:results={len(rows)}", 200
+
+    @staticmethod
+    def _probe_mcp_adapter(base_settings: Settings) -> tuple[bool, str, int]:
+        base = str(getattr(base_settings, "agent_mcp_http_base_url", "") or "").strip()
+        if not base:
+            return False, "missing_base_url", 0
+        payload = {
+            "jsonrpc": "2.0",
+            "id": "settings-mcp-test",
+            "method": "tools/list",
+            "params": {"server": "smoke"},
+        }
+        try:
+            with httpx.Client(
+                timeout=float(
+                    getattr(base_settings, "agent_mcp_request_timeout_seconds", 15.0) or 15.0
+                )
+            ) as client:
+                resp = client.post(base, json=payload)
+        except (httpx.HTTPError, OSError) as exc:
+            return False, f"transport_error:{exc}", 0
+        if resp.status_code != 200:
+            return False, f"http_{resp.status_code}", int(resp.status_code)
+        try:
+            body = resp.json()
+        except ValueError as exc:
+            return False, f"json_error:{exc}", 200
+        if not isinstance(body, dict):
+            return False, "invalid_json_shape:object", 200
+        if body.get("error"):
+            return False, "rpc_error", 200
+        return True, "ok", 200
 
     def update_storage_settings(  # pylint: disable=too-many-branches
         self,

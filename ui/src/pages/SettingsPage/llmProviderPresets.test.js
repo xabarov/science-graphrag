@@ -4,17 +4,38 @@ import {
   OLLAMA_LOCAL_BASE_URL,
   OLLAMA_PLACEHOLDER_API_KEY,
   getLlmProviderPreset,
+  getTaskPresetPatch,
   isProbableOllamaBaseUrl,
+  mergePresetPatches,
 } from "./llmProviderPresets.js";
 import { buildLlmSettingsSubmitPayload } from "./llmSettingsPayload.js";
 
 describe("llmProviderPresets", () => {
-  it("ollama preset uses local OpenAI-compatible endpoint and placeholder key", () => {
+  it("ollama global preset uses local endpoint, gemma4 chat, qwen embeddings", () => {
     const p = getLlmProviderPreset("ollama");
     expect(p.baseUrl).toBe(OLLAMA_LOCAL_BASE_URL);
+    expect(p.model).toBe("gemma4");
     expect(p.apiKey).toBe(OLLAMA_PLACEHOLDER_API_KEY);
-    expect(p.embeddingsModel).toBe("all-minilm");
+    expect(p.embeddingsModel).toBe("qwen3-embedding:0.6b");
     expect(p.embeddingsBaseUrl).toBe(OLLAMA_LOCAL_BASE_URL);
+  });
+
+  it("task preset patch is scoped to one role", () => {
+    const emb = getTaskPresetPatch("embeddings", "ollama_minilm");
+    expect(emb.embeddingsModel).toBe("all-minilm");
+    expect(emb.baseUrl).toBeUndefined();
+    expect(emb.model).toBeUndefined();
+  });
+
+  it("mergePresetPatches builds mixed openrouter + ollama embeddings", () => {
+    const merged = mergePresetPatches([
+      getTaskPresetPatch("extraction", "openrouter"),
+      getTaskPresetPatch("chat", "openrouter"),
+      getTaskPresetPatch("embeddings", "ollama_qwen"),
+    ]);
+    expect(merged.baseUrl).toContain("openrouter.ai");
+    expect(merged.embeddingsBaseUrl).toBe(OLLAMA_LOCAL_BASE_URL);
+    expect(merged.embeddingsModel).toBe("qwen3-embedding:0.6b");
   });
 
   it("detects probable Ollama base URL", () => {
@@ -50,7 +71,7 @@ describe("llmProviderPresets", () => {
       advValues: {},
     });
     expect(body.tasks.extraction.base_url).toBe(OLLAMA_LOCAL_BASE_URL);
-    expect(body.tasks.embeddings.model).toBe("all-minilm");
+    expect(body.tasks.embeddings.model).toBe("qwen3-embedding:0.6b");
     expect(body.api_key).toBe("ollama");
     expect(body.embeddings_api_key).toBe("ollama");
     expect(body).not.toHaveProperty("embeddings_mode");

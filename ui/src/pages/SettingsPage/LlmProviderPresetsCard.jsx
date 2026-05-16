@@ -33,7 +33,7 @@ export default function LlmProviderPresetsCard({ tk, cardSx, taskBaseUrls, onApp
   return (
     <Box sx={{ ...cardSx, padding: 2 }}>
       <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>
-        {t("llm.presets.title")}
+        {t("llm.presets.quickStartTitle")}
       </Typography>
       <Typography sx={{ marginTop: 0.5, fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.5 }}>
         {t("llm.presets.intro")}

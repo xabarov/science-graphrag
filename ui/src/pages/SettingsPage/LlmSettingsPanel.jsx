@@ -13,6 +13,7 @@ import LlmConnectionTestCard from "./LlmConnectionTestCard.jsx";
 import LlmSecretTextField from "./LlmSecretTextField.jsx";
 import LlmProviderPresetsCard from "./LlmProviderPresetsCard.jsx";
 import LlmTaskCard from "./LlmTaskCard.jsx";
+import LlmTaskPresetActions from "./LlmTaskPresetActions.jsx";
 import { computeSaveBlockingMessage } from "./llmSaveValidation.js";
 import { buildAdvValuesFromLlm, buildLlmSettingsSubmitPayload } from "./llmSettingsPayload.js";
 import { LLM_RUNTIME_OVERRIDE_KEYS, schemaGroupForKey } from "./llmRuntimeOverrideKeys.js";
@@ -236,27 +237,32 @@ export default function LlmSettingsPanel({
     setAdvValues((prev) => ({ ...prev, ...next }));
   }
 
+  /** @param {import("./llmProviderPresets.js").LlmPresetFormPatch} patch */
+  function applyPresetPatch(patch) {
+    if (patch.baseUrl !== undefined) setBaseUrl(patch.baseUrl);
+    if (patch.model !== undefined) setModel(patch.model);
+    if (patch.temperature !== undefined) setTemperature(patch.temperature);
+    if (patch.timeoutSeconds !== undefined) setTimeoutSeconds(patch.timeoutSeconds);
+    if (patch.apiKey !== undefined) setApiKey(patch.apiKey);
+    if (patch.chatModel !== undefined) setChatModel(patch.chatModel);
+    if (patch.chatBaseUrl !== undefined) setChatBaseUrl(patch.chatBaseUrl);
+    if (patch.chatTemperature !== undefined) setChatTemperature(patch.chatTemperature);
+    if (patch.chatTimeoutSeconds !== undefined) setChatTimeoutSeconds(patch.chatTimeoutSeconds);
+    if (patch.chatApiKey !== undefined) setChatApiKey(patch.chatApiKey);
+    if (patch.vlModel !== undefined) setVlModel(patch.vlModel);
+    if (patch.vlBaseUrl !== undefined) setVlBaseUrl(patch.vlBaseUrl);
+    if (patch.vlTemperature !== undefined) setVlTemperature(patch.vlTemperature);
+    if (patch.vlTimeoutSeconds !== undefined) setVlTimeoutSeconds(patch.vlTimeoutSeconds);
+    if (patch.visionApiKey !== undefined) setVisionApiKey(patch.visionApiKey);
+    if (patch.embeddingsBaseUrl !== undefined) setEmbeddingsBaseUrl(patch.embeddingsBaseUrl);
+    if (patch.embeddingsModel !== undefined) setEmbeddingsModel(patch.embeddingsModel);
+    if (patch.embeddingsTimeoutSeconds !== undefined) setEmbeddingsTimeoutSeconds(patch.embeddingsTimeoutSeconds);
+    if (patch.embeddingsApiKey !== undefined) setEmbeddingsApiKey(patch.embeddingsApiKey);
+  }
+
   /** @param {import("./llmProviderPresets.js").LlmPresetFormValues} values */
   function applyProviderPreset(values) {
-    setBaseUrl(values.baseUrl);
-    setModel(values.model);
-    setTemperature(values.temperature);
-    setTimeoutSeconds(values.timeoutSeconds);
-    setApiKey(values.apiKey);
-    setChatModel(values.chatModel);
-    setChatBaseUrl(values.chatBaseUrl);
-    setChatTemperature(values.chatTemperature);
-    setChatTimeoutSeconds(values.chatTimeoutSeconds);
-    setChatApiKey(values.chatApiKey);
-    setVlModel(values.vlModel);
-    setVlBaseUrl(values.vlBaseUrl);
-    setVlTemperature(values.vlTemperature);
-    setVlTimeoutSeconds(values.vlTimeoutSeconds);
-    setVisionApiKey(values.visionApiKey);
-    setEmbeddingsBaseUrl(values.embeddingsBaseUrl);
-    setEmbeddingsModel(values.embeddingsModel);
-    setEmbeddingsTimeoutSeconds(values.embeddingsTimeoutSeconds);
-    setEmbeddingsApiKey(values.embeddingsApiKey);
+    applyPresetPatch(values);
   }
 
   function submit() {
@@ -346,7 +352,13 @@ export default function LlmSettingsPanel({
         onApplyPreset={applyProviderPreset}
       />
 
-      <LlmTaskCard tk={tk} cardSx={cardSx} title={t("llm.card.extraction")} subtitle={t("llm.card.extractionHint")}>
+      <LlmTaskCard
+        tk={tk}
+        cardSx={cardSx}
+        title={t("llm.card.extraction")}
+        subtitle={t("llm.card.extractionHint")}
+        headerExtra={<LlmTaskPresetActions tk={tk} task="extraction" onApply={applyPresetPatch} />}
+      >
         <TextField
           label={t("llm.field.baseUrl")}
           size="small"
@@ -393,7 +405,13 @@ export default function LlmSettingsPanel({
         />
       </LlmTaskCard>
 
-      <LlmTaskCard tk={tk} cardSx={cardSx} title={t("llm.card.chat")} subtitle={t("llm.hint.chatModelFallback")}>
+      <LlmTaskCard
+        tk={tk}
+        cardSx={cardSx}
+        title={t("llm.card.chat")}
+        subtitle={t("llm.hint.chatModelFallback")}
+        headerExtra={<LlmTaskPresetActions tk={tk} task="chat" onApply={applyPresetPatch} />}
+      >
         <TextField
           label={t("llm.field.chatModel")}
           size="small"
@@ -440,7 +458,13 @@ export default function LlmSettingsPanel({
         />
       </LlmTaskCard>
 
-      <LlmTaskCard tk={tk} cardSx={cardSx} title={t("llm.card.vision")} subtitle={t("llm.vision.intro")}>
+      <LlmTaskCard
+        tk={tk}
+        cardSx={cardSx}
+        title={t("llm.card.vision")}
+        subtitle={t("llm.card.visionHint")}
+        headerExtra={<LlmTaskPresetActions tk={tk} task="vision" onApply={applyPresetPatch} />}
+      >
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
           <TextField
             label={t("llm.field.vlModel")}
@@ -491,7 +515,13 @@ export default function LlmSettingsPanel({
         />
       </LlmTaskCard>
 
-      <LlmTaskCard tk={tk} cardSx={cardSx} title={t("llm.tasks.embeddings")} subtitle={t("llm.tasks.embeddingsKeyHint")}>
+      <LlmTaskCard
+        tk={tk}
+        cardSx={cardSx}
+        title={t("llm.card.embeddings")}
+        subtitle={t("llm.card.embeddingsHint")}
+        headerExtra={<LlmTaskPresetActions tk={tk} task="embeddings" onApply={applyPresetPatch} />}
+      >
         <TextField
           label={t("llm.field.baseUrl")}
           size="small"

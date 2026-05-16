@@ -4,6 +4,7 @@ import {
   getSettingsSnapshot,
   getSettingsSchema,
   revealLlmTaskSecret,
+  testAgentToolsSource,
   updateAgentToolsSettings,
 } from "./settingsApi.js";
 
@@ -12,6 +13,7 @@ describe("settingsApi auth headers", () => {
     expect(typeof getSettingsSchema).toBe("function");
     expect(typeof getSettingsSnapshot).toBe("function");
     expect(typeof updateAgentToolsSettings).toBe("function");
+    expect(typeof testAgentToolsSource).toBe("function");
     expect(typeof revealLlmTaskSecret).toBe("function");
   });
 });

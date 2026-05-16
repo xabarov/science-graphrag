@@ -10,7 +10,9 @@ from science_graphrag.settings.stored_bool import optional_stored_bool
 if TYPE_CHECKING:
     from science_graphrag.config import Settings
 
-from science_graphrag.agent.tools.external.pdf_read_durable_cache import pdf_read_durable_cache_active
+from science_graphrag.agent.tools.external.pdf_read_durable_cache import (
+    pdf_read_durable_cache_active,
+)
 from science_graphrag.settings.agent_tools_mcp import (
     MCP_DENYLIST_SNAPSHOT_PREVIEW_MAX,
     normalize_mcp_server_denylist,
@@ -39,9 +41,12 @@ def _mcp_operator_state(settings: Settings) -> str:
     return "configured"
 
 
-def _build_mcp_integrations_snapshot(settings: Settings) -> dict[str, Any]:
+def _build_mcp_integrations_snapshot(
+    settings: Settings, *, agent_tools_cfg: dict[str, Any] | None = None
+) -> dict[str, Any]:
     denylist = normalize_mcp_server_denylist(getattr(settings, "agent_mcp_server_denylist", None))
     preview = denylist[:MCP_DENYLIST_SNAPSHOT_PREVIEW_MAX]
+    mcp_last_test, mcp_last_error = _diag(dict(agent_tools_cfg or {}), "mcp")
     return {
         "mcp_tools_enabled": bool(getattr(settings, "agent_mcp_tools_enabled", False)),
         "mcp_http_base_url_configured": bool(
@@ -57,7 +62,13 @@ def _build_mcp_integrations_snapshot(settings: Settings) -> dict[str, Any]:
             str(getattr(settings, "agent_mcp_http_base_url", None) or "")
         ),
         "mcp_auth_model": "delegation_required",
-        "mcp_adapter_url_source": "environment",
+        "mcp_adapter_url_source": (
+            "settings"
+            if str(getattr(settings, "agent_mcp_http_base_url", None) or "").strip()
+            else "environment"
+        ),
+        "mcp_last_test": mcp_last_test,
+        "mcp_last_error": mcp_last_error,
     }
 
 
@@ -267,6 +278,9 @@ def build_agent_tools_snapshot(
         "agent_mcp_server_denylist": (
             persisted_mcp_denylist if isinstance(persisted_mcp_denylist, list) else None
         ),
+        "agent_mcp_http_base_url": (
+            str(agent_tools_cfg.get("agent_mcp_http_base_url") or "").strip() or None
+        ),
         "external_research_sources": persisted_sources or None,
         "effective": {
             "resolved_agent_supervisor_max_rounds": int(
@@ -330,7 +344,10 @@ def build_agent_tools_snapshot(
             },
         },
         "sources": sources,
-        "integrations": _build_mcp_integrations_snapshot(merged_settings),
+        "integrations": _build_mcp_integrations_snapshot(
+            merged_settings,
+            agent_tools_cfg=agent_tools_cfg,
+        ),
         "credentials": {
             "research_contact_email_configured": mailto_ok,
             "research_contact_email_status": "configured" if mailto_ok else "not_configured",

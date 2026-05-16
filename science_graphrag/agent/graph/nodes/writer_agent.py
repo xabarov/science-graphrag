@@ -16,6 +16,7 @@ from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
+from science_graphrag.agent.graph.nodes.retrieval_subgraph import merge_react_subgraph_debug_events
 from science_graphrag.agent.graph.react_edges import (
     final_answer_nudge_state_update,
     react_after_tools_decrement_budget,
@@ -38,12 +39,11 @@ from science_graphrag.agent.tool_execution_pipeline import (
     apply_allowed_tools_matrix,
     build_tool_execution_node,
 )
-from science_graphrag.agent.tool_search import build_tool_search_result_debug_event
 from science_graphrag.agent.tools import build_writer_tools
-from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import SpanAttributes, add_span_event, llm_span
+from science_graphrag.stores.registry import StoreRegistry
 
 SPECIALIST_NAME = "writer_agent"
 SYSTEM_PROMPT = (
@@ -378,18 +378,13 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
             ),
             "citations": citations,
             "current_specialist": SPECIALIST_NAME,
-            "debug_events": [
-                build_tool_search_result_debug_event(
-                    specialist=SPECIALIST_NAME,
-                    meta=meta,
-                    writer_mode=mode,
-                ),
-                *(
-                    [{"type": "tool_permissions", "matrix": mtx}]
-                    if not bool(mtx.get("skipped"))
-                    else []
-                ),
-            ],
+            "debug_events": merge_react_subgraph_debug_events(
+                specialist=SPECIALIST_NAME,
+                tool_search_meta=meta,
+                permissions_matrix=mtx,
+                subgraph_state=next_state,
+                writer_mode=mode,
+            ),
         }
 
     return writer_agent_node

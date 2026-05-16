@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from science_graphrag.api.auth import require_settings_access
 from science_graphrag.api.settings_models import (
+    AgentToolsSourceTestRequest,
+    AgentToolsSourceTestResponse,
     RevealLlmSecretRequest,
     RevealLlmSecretResponse,
     SettingsSchemaResponse,
@@ -182,6 +184,22 @@ def patch_agent_tools_settings(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _settings_snapshot_response(snapshot)
+
+
+@router.post("/agent_tools/test_source", response_model=AgentToolsSourceTestResponse)
+def post_agent_tools_test_source(
+    body: AgentToolsSourceTestRequest,
+    actor: str = Depends(require_settings_access),
+) -> AgentToolsSourceTestResponse:
+    try:
+        result = _SETTINGS_SERVICE.test_agent_tool_source(
+            base_settings=get_settings(),
+            actor=actor,
+            source_id=body.source_id,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return AgentToolsSourceTestResponse.model_validate(result)
 
 
 @router.patch("/benchmark", response_model=SettingsSnapshotResponse)

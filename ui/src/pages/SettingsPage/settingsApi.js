@@ -55,6 +55,15 @@ export async function updateAgentToolsSettings(payload) {
   return res.data;
 }
 
+export async function testAgentToolsSource(sourceId) {
+  const res = await apiClient.post(
+    buildApiUrl("/v1/settings/agent_tools/test_source"),
+    { source_id: sourceId },
+    { headers: authHeaders() },
+  );
+  return res.data;
+}
+
 /**
  * Explicit operator reveal of a managed vault secret (audit logged server-side).
  *

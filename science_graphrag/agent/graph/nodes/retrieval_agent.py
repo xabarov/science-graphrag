@@ -17,6 +17,9 @@ from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
 from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
     build_retrieval_subgraph as build_retrieval_subgraph_impl,
 )
+from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
+    merge_react_subgraph_debug_events,
+)
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.graph.supervisor_decisions import question_features_from_agent_state
 from science_graphrag.agent.subagents.specialist_results_v3 import (
@@ -25,10 +28,7 @@ from science_graphrag.agent.subagents.specialist_results_v3 import (
     prior_specialist_results_v3,
 )
 from science_graphrag.agent.tool_execution_pipeline import apply_allowed_tools_matrix
-from science_graphrag.agent.tool_search import (
-    build_tool_search_result_debug_event,
-    shortlist_tools_for_specialist,
-)
+from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_retrieval_tools
 from science_graphrag.config import Settings
 from science_graphrag.stores.registry import StoreRegistry
@@ -148,15 +148,13 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             "current_specialist": SPECIALIST_NAME,
             "metadata": meta_out,
         }
-        out["debug_events"] = [
-            build_tool_search_result_debug_event(specialist=SPECIALIST_NAME, meta=meta),
-            *(
-                [{"type": "tool_permissions", "matrix": mtx}]
-                if not bool(mtx.get("skipped"))
-                else []
-            ),
-            *fork_debug,
-        ]
+        out["debug_events"] = merge_react_subgraph_debug_events(
+            specialist=SPECIALIST_NAME,
+            tool_search_meta=meta,
+            permissions_matrix=mtx,
+            subgraph_state=next_state,
+            extra_events=fork_debug,
+        )
         return out
 
     return retrieval_agent_node

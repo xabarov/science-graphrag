@@ -32,6 +32,7 @@ import {
   updateStorageSettings,
   updateBenchmarkSettings,
   updateAgentToolsSettings,
+  testAgentToolsSource,
 } from "./SettingsPage/settingsApi.js";
 import { formatResearchApiError } from "../services/researchApi.js";
 import { useI18n } from "../i18n/useI18n.js";
@@ -147,6 +148,13 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleTestAgentToolsSource(sourceId) {
+    const result = await testAgentToolsSource(sourceId);
+    const next = await updateAgentToolsSettings({});
+    setSnapshot(next);
+    return result;
+  }
+
   async function handleSaveBenchmark(payload) {
     setBenchmarkSaving(true);
     setBenchmarkSaveError("");
@@ -255,6 +263,7 @@ export default function SettingsPage() {
           saveError={agentToolsSaveError}
           onSave={handleSaveAgentTools}
           onDirtyChange={setAgentToolsDirty}
+          onTestSource={handleTestAgentToolsSource}
         />
       );
     }

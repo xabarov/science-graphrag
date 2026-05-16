@@ -20,9 +20,7 @@ def test_normalize_mcp_server_denylist_trims_and_caps() -> None:
 def test_mcp_operator_state_matrix() -> None:
     assert _mcp_operator_state(Settings(agent_mcp_tools_enabled=False)) == "disabled"
     assert (
-        _mcp_operator_state(
-            Settings(agent_mcp_tools_enabled=True, agent_mcp_http_base_url=None)
-        )
+        _mcp_operator_state(Settings(agent_mcp_tools_enabled=True, agent_mcp_http_base_url=None))
         == "unconfigured"
     )
     assert (
@@ -49,6 +47,7 @@ def test_build_mcp_integrations_snapshot_masks_host_only() -> None:
     assert row["mcp_request_timeout_seconds"] == 22.0
     assert row["mcp_server_denylist_count"] == 2
     assert row["mcp_auth_model"] == "delegation_required"
+    assert row["mcp_adapter_url_source"] == "settings"
     assert "secret" not in str(row)
 
 

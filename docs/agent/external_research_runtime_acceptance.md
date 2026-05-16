@@ -38,6 +38,11 @@ This order keeps low-latency metadata checks ahead of long-running PDF validatio
 
 ## Latest lane snapshot (2026-05-16)
 
-- MCP adapter smoke: pending contour config (`SCIENCE_GRAPHRAG_AGENT_MCP_HTTP_BASE_URL` missing in current lane).
-- Semantic Scholar smoke: observed `403 Forbidden` in current lane (failure contract validated; source remains `needs_live_smoke`).
-- OpenAlex smoke: green (`http_status=200`, `results=1`) via `scripts/live_check/openalex_smoke.py`.
+- **MCP adapter smoke:** green (`http_status=200`, `rpc_ok=1`) with host stub `mcp_jsonrpc_stub.py` on port `19999` and `docker-compose.mcp-live-check.yml` API overlay.
+- **MCP agent E2E:** green (`mcp_agent_e2e_ok=1`, `call_mcp_tool` in `tool_trace`, `mcp_audit_summary.last.ok=true`) via `scripts/live_check/mcp_agent_e2e_smoke.py` against `AGENT_LIVE_BASE=http://127.0.0.1:18787`.
+- **Semantic Scholar smoke:** observed `429 Too Many Requests` (failure contract validated; source remains `needs_live_smoke` until green run with valid key/quota window).
+- **OpenAlex smoke:** green (`http_status=200`, `results=1`) via `scripts/live_check/openalex_smoke.py`.
+- **Settings source-test endpoint (`/v1/settings/agent_tools/test_source`):**
+  - `openalex`: green (`ok=true`, `detail=ok:results=1`)
+  - `semantic_scholar`: non-green (`ok=false`, `detail=http_429`)
+  - `mcp`: green after persisted adapter URL patch (`ok=true`, `detail=ok`)

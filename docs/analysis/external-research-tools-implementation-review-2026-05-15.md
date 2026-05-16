@@ -99,8 +99,10 @@ These should not run in regular unit CI by default; use an explicit live marker 
 Latest operator evidence (2026-05-16):
 
 - OpenAlex smoke: **green** (`http_status=200`, `results=1`) via `scripts/live_check/openalex_smoke.py`.
-- Semantic Scholar smoke: **observed 403 Forbidden** on search in current contour; failure contract behaves correctly and source remains `needs_live_smoke` until a green run is recorded.
-- MCP adapter smoke: **pending adapter configuration** (`missing_base_url` guard from `scripts/live_check/mcp_adapter_smoke.py`); expected until `SCIENCE_GRAPHRAG_AGENT_MCP_HTTP_BASE_URL` is set in operator contour.
+- Semantic Scholar smoke: **observed 429 Too Many Requests** on search in current contour; failure contract behaves correctly and source remains `needs_live_smoke` until a green run is recorded.
+- MCP adapter smoke: **green** with host stub + `docker-compose.mcp-live-check.yml` (`http_status=200`, `rpc_ok=1`).
+- MCP agent E2E: **green** via `scripts/live_check/mcp_agent_e2e_smoke.py` (`call_mcp_tool` + `mcp_audit_summary` on sync JSON `/v2/agent/query`).
+- Settings source-test endpoint: OpenAlex green, Semantic Scholar `http_429`, MCP green after persisted adapter URL override (`/v1/settings/agent_tools/test_source`).
 
 ### 3. Make external API status visible in docs
 

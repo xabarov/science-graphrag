@@ -14,13 +14,14 @@ import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTheme } from "@mui/material/styles";
 
-import { CursorPrimaryButton } from "../../components/common/index.js";
+import { CursorButton, CursorPrimaryButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import { outlinedAppTextFieldSx, settingsCardSx } from "../../theme/settingsFormSx.js";
 
 const PDF_READING_MODES = new Set(["off", "ask", "auto_safe_oa"]);
 const PDF_READ_BACKEND_MODES = new Set(["pypdf", "vl", "hybrid"]);
 const SOURCE_KEYS = ["crossref", "arxiv", "unpaywall", "openalex", "semantic_scholar"];
+const TESTABLE_SOURCE_IDS = new Set(["openalex", "semantic_scholar", "mcp"]);
 
 function parseMcpDenylistText(raw) {
   return String(raw ?? "")
@@ -97,6 +98,7 @@ function buildDraft(agentTools) {
     agentPdfReadDurableCacheEnabled: pdfDurable,
     agentMcpRequestTimeoutSeconds: mcpTimeout,
     agentMcpServerDenylistText: formatMcpDenylistText(denylistSeed),
+    agentMcpHttpBaseUrl: String(agentTools?.agent_mcp_http_base_url ?? ""),
   };
 }
 
@@ -108,7 +110,14 @@ function buildDraft(agentTools) {
  * @param {(payload: Record<string, unknown>) => Promise<void>} props.onSave
  * @param {(dirty: boolean) => void} props.onDirtyChange
  */
-export default function AgentToolsSettingsPanel({ agentTools, saving, saveError, onSave, onDirtyChange }) {
+export default function AgentToolsSettingsPanel({
+  agentTools,
+  saving,
+  saveError,
+  onSave,
+  onDirtyChange,
+  onTestSource,
+}) {
   const { t } = useI18n();
   const tk = useTheme().appTokens;
   const cardSx = useMemo(() => settingsCardSx(tk), [tk]);
@@ -125,6 +134,8 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
   const syncKey = useMemo(() => JSON.stringify(agentTools ?? null), [agentTools]);
   const [draft, setDraft] = useState(() => buildDraft(agentTools));
   const [baselineJson, setBaselineJson] = useState(() => JSON.stringify(buildDraft(agentTools)));
+  const [sourceTesting, setSourceTesting] = useState("");
+  const [sourceTestError, setSourceTestError] = useState("");
 
   const emailStatusKey = useMemo(() => {
     const raw = String(agentTools?.credentials?.research_contact_email_status || "unknown");
@@ -257,8 +268,22 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
         Math.min(120, parseFiniteNumber(draft.agentMcpRequestTimeoutSeconds, 15)),
       ),
       agent_mcp_server_denylist: parseMcpDenylistText(draft.agentMcpServerDenylistText),
+      agent_mcp_http_base_url: String(draft.agentMcpHttpBaseUrl || "").trim(),
     };
     await onSave(payload);
+  }
+
+  async function handleTestSource(sourceId) {
+    if (!onTestSource) return;
+    setSourceTesting(sourceId);
+    setSourceTestError("");
+    try {
+      await onTestSource(sourceId);
+    } catch (error) {
+      setSourceTestError(String(error?.message || error || "source test failed"));
+    } finally {
+      setSourceTesting("");
+    }
   }
 
   return (
@@ -403,6 +428,18 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
                   <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: { xs: "flex-start", sm: "flex-end" }, gap: 0.5, minWidth: 0 }}>
                     <Chip size="small" label={tierLabel(row)} variant="outlined" sx={{ fontSize: "0.7rem", maxWidth: "100%" }} />
                     <Chip size="small" label={statusLabel(row)} variant="outlined" sx={{ fontSize: "0.7rem", maxWidth: "100%" }} />
+                    {TESTABLE_SOURCE_IDS.has(String(row.id || "")) ? (
+                      <CursorButton
+                        type="button"
+                        size="small"
+                        disabled={Boolean(sourceTesting)}
+                        onClick={() => handleTestSource(row.id)}
+                      >
+                        {sourceTesting === row.id
+                          ? t("settings.agentTools.testRunning")
+                          : t("settings.agentTools.testButton")}
+                      </CursorButton>
+                    ) : null}
                   </Box>
                   {row.last_test ? (
                     <Typography sx={{ gridColumn: "1 / -1", fontSize: "0.72rem", color: tk.text.muted }}>
@@ -417,6 +454,11 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
                 </Box>
               ))}
             </Box>
+            {sourceTestError ? (
+              <Typography sx={{ marginTop: 0.75, fontSize: "0.72rem", color: tk.state.dangerFg }}>
+                {sourceTestError}
+              </Typography>
+            ) : null}
           </Box>
         </Box>
       </Box>
@@ -542,9 +584,27 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
                 n: Number(agentTools?.integrations?.mcp_server_denylist_count || 0),
               })}
             </div>
+            <div>
+              {t("settings.agentTools.mcpAdapterSource", {
+                value:
+                  String(agentTools?.integrations?.mcp_adapter_url_source || "environment") === "settings"
+                    ? t("settings.agentTools.mcpAdapterSourceSettings")
+                    : t("settings.agentTools.mcpAdapterSourceEnvironment"),
+              })}
+            </div>
             <Typography sx={{ marginTop: 0.5, fontSize: "0.72rem", color: tk.text.muted }}>
               {t("settings.agentTools.mcpAdapterUrlSource")}
             </Typography>
+            {agentTools?.integrations?.mcp_last_test ? (
+              <Typography sx={{ marginTop: 0.5, fontSize: "0.72rem", color: tk.text.muted }}>
+                {t("settings.agentTools.lastTest", { at: String(agentTools.integrations.mcp_last_test) })}
+              </Typography>
+            ) : null}
+            {agentTools?.integrations?.mcp_last_error ? (
+              <Typography sx={{ marginTop: 0.35, fontSize: "0.72rem", color: tk.state.dangerFg, overflowWrap: "anywhere" }}>
+                {String(agentTools.integrations.mcp_last_error)}
+              </Typography>
+            ) : null}
           </Box>
           <Accordion
             disableGutters
@@ -564,6 +624,20 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
             </AccordionSummary>
             <AccordionDetails>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+                <TextField
+                  label={t("settings.agentTools.mcpAdapterUrl")}
+                  size="small"
+                  value={draft.agentMcpHttpBaseUrl || ""}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...d,
+                      agentMcpHttpBaseUrl: e.target.value,
+                    }))
+                  }
+                  helperText={t("settings.agentTools.mcpAdapterUrlHint")}
+                  inputProps={{ "aria-label": t("settings.agentTools.mcpAdapterUrl") }}
+                  sx={fieldSx}
+                />
                 <TextField
                   label={t("settings.agentTools.mcpRequestTimeout")}
                   type="number"
@@ -600,6 +674,16 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
                   helperText={t("settings.agentTools.mcpDenylistHint")}
                   sx={fieldSx}
                 />
+                <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+                  <CursorButton
+                    type="button"
+                    size="small"
+                    disabled={Boolean(sourceTesting)}
+                    onClick={() => handleTestSource("mcp")}
+                  >
+                    {sourceTesting === "mcp" ? t("settings.agentTools.testRunning") : t("settings.agentTools.testMcpButton")}
+                  </CursorButton>
+                </Box>
               </Box>
             </AccordionDetails>
           </Accordion>

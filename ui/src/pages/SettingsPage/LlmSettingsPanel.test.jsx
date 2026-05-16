@@ -133,29 +133,51 @@ describe("LlmSettingsPanel distributed quota UX", () => {
     expect(screen.getByText("Extraction (text / structure)")).toBeTruthy();
   });
 
-  it("renders embeddings HTTP controls", () => {
+  it("renders embeddings HTTP controls with localized card title", () => {
     renderPanel();
+    expect(screen.getByText("Embeddings")).toBeTruthy();
     expect(screen.getByLabelText("Embeddings model")).toBeTruthy();
     expect(screen.queryByText(/Mode:/i)).toBeNull();
+    expect(screen.queryByText(/research agent/i)).toBeNull();
   });
 
-  it("renders provider preset controls", () => {
+  it("renders quick start controls", () => {
     renderPanel();
-    expect(screen.getByText("Provider preset")).toBeTruthy();
+    expect(screen.getByText("Quick start")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Ollama local" })).toBeTruthy();
   });
 
-  it("applies Ollama preset into form fields and enables save", () => {
+  it("applies global Ollama quick start into all role fields", () => {
     renderPanel();
     const saveButton = screen.getByRole("button", { name: /^Save/i });
     expect(saveButton.disabled).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "Ollama local" }));
-    const baseUrlFields = screen.getAllByDisplayValue("http://localhost:11434/v1");
-    expect(baseUrlFields.length).toBeGreaterThanOrEqual(4);
-    expect(screen.getAllByDisplayValue("llama3.2").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByDisplayValue("all-minilm")).toBeTruthy();
+    expect(screen.getAllByDisplayValue("http://localhost:11434/v1").length).toBeGreaterThanOrEqual(4);
+    expect(screen.getAllByDisplayValue("gemma4").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByDisplayValue("qwen3-embedding:0.6b")).toBeTruthy();
     expect(screen.getByDisplayValue("llava")).toBeTruthy();
-    expect(screen.getByText(/Ollama endpoint detected/i)).toBeTruthy();
     expect(saveButton.disabled).toBe(false);
+  });
+
+  it("applies embeddings-only Ollama preset without changing extraction", () => {
+    renderPanel();
+    fireEvent.click(screen.getByRole("button", { name: "Ollama qwen3-embedding" }));
+    expect(screen.getByDisplayValue("qwen3-embedding:0.6b")).toBeTruthy();
+    expect(screen.getByLabelText("Model (extraction / text)").value).toBe("openai/gpt-4o-mini");
+    const baseUrls = screen.getAllByLabelText("Base URL");
+    expect(baseUrls[0].value).toBe("https://openrouter.ai/api/v1");
+    expect(baseUrls[baseUrls.length - 1].value).toBe("http://localhost:11434/v1");
+  });
+
+  it("supports mixed OpenRouter extraction and Ollama embeddings", () => {
+    renderPanel();
+    const openRouterButtons = screen.getAllByRole("button", { name: "OpenRouter" });
+    fireEvent.click(openRouterButtons[1]);
+    fireEvent.click(screen.getByRole("button", { name: "Ollama qwen3-embedding" }));
+    expect(screen.getByLabelText("Model (extraction / text)").value).toBe("mistralai/mistral-small-3.2-24b-instruct");
+    expect(screen.getByDisplayValue("qwen3-embedding:0.6b")).toBeTruthy();
+    const baseUrls = screen.getAllByLabelText("Base URL");
+    expect(baseUrls[0].value).toBe("https://openrouter.ai/api/v1");
+    expect(baseUrls[baseUrls.length - 1].value).toBe("http://localhost:11434/v1");
   });
 });

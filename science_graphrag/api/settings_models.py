@@ -155,6 +155,14 @@ class UpdateAgentToolsSettingsRequest(BaseModel):
         max_length=32,
         description="Substring denylist for MCP server identifiers (operator policy).",
     )
+    agent_mcp_http_base_url: str | None = Field(
+        default=None,
+        max_length=1024,
+        description=(
+            "Optional persisted MCP adapter URL. Empty string clears persisted override "
+            "(falls back to environment)."
+        ),
+    )
 
     @field_validator("agent_mcp_server_denylist")
     @classmethod
@@ -162,6 +170,32 @@ class UpdateAgentToolsSettingsRequest(BaseModel):
         if value is None:
             return None
         return normalize_mcp_server_denylist(value)
+
+    @field_validator("agent_mcp_http_base_url")
+    @classmethod
+    def _normalize_mcp_http_base_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        raw = str(value).strip()
+        if not raw:
+            return ""
+        if not (raw.startswith("http://") or raw.startswith("https://")):
+            raise ValueError("agent_mcp_http_base_url must start with http:// or https://")
+        return raw.rstrip("/")
+
+
+class AgentToolsSourceTestRequest(BaseModel):
+    """Operator-triggered source live smoke request."""
+
+    model_config = ConfigDict(extra="forbid")
+    source_id: Literal["mcp", "openalex", "semantic_scholar"]
+
+
+class AgentToolsSourceTestResponse(BaseModel):
+    source_id: Literal["mcp", "openalex", "semantic_scholar"]
+    ok: bool
+    detail: str
+    checked_at: str
 
 
 class UpdateGeneralSettingsRequest(BaseModel):

@@ -157,6 +157,34 @@ def _compile_react_subgraph(
     return graph.compile()
 
 
+def merge_react_subgraph_debug_events(
+    *,
+    specialist: str,
+    tool_search_meta: dict[str, Any],
+    permissions_matrix: dict[str, Any],
+    subgraph_state: dict[str, Any],
+    writer_mode: str | None = None,
+    extra_events: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Assemble specialist ``debug_events`` including ReAct subgraph tool telemetry."""
+    from science_graphrag.agent.tool_search import build_tool_search_result_debug_event
+
+    sub_debug = [x for x in list(subgraph_state.get("debug_events") or []) if isinstance(x, dict)]
+    events: list[dict[str, Any]] = [
+        build_tool_search_result_debug_event(
+            specialist=specialist,
+            meta=tool_search_meta,
+            writer_mode=writer_mode,
+        ),
+    ]
+    if not bool(permissions_matrix.get("skipped")):
+        events.append({"type": "tool_permissions", "matrix": permissions_matrix})
+    events.extend(sub_debug)
+    if extra_events:
+        events.extend(extra_events)
+    return events
+
+
 def build_retrieval_subgraph(
     stores: Any,
     settings: Settings,
@@ -182,4 +210,5 @@ __all__ = [
     "_extract_tool_payloads",
     "_last_user_text",
     "build_retrieval_subgraph",
+    "merge_react_subgraph_debug_events",
 ]

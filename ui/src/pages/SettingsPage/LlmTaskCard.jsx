@@ -10,10 +10,11 @@ import Typography from "@mui/material/Typography";
  *   cardSx: object,
  *   title: string,
  *   subtitle?: string | null,
+ *   headerExtra?: React.ReactNode,
  *   children: React.ReactNode,
  * }} props
  */
-export default function LlmTaskCard({ tk, cardSx, title, subtitle, children }) {
+export default function LlmTaskCard({ tk, cardSx, title, subtitle, headerExtra, children }) {
   return (
     <Box
       sx={{
@@ -27,6 +28,7 @@ export default function LlmTaskCard({ tk, cardSx, title, subtitle, children }) {
           {subtitle}
         </Typography>
       ) : null}
+      {headerExtra ? <Box sx={{ marginTop: 1.25 }}>{headerExtra}</Box> : null}
       <Box sx={{ marginTop: 2, display: "flex", flexDirection: "column", gap: 1.5 }}>{children}</Box>
     </Box>
   );

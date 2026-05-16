@@ -251,6 +251,36 @@ def test_settings_agent_tools_patch_smoke(tmp_path: Path, monkeypatch: Any) -> N
     assert integrations.get("mcp_operator_state") in {"disabled", "unconfigured", "configured"}
 
 
+def test_settings_agent_tools_test_source_smoke(tmp_path: Path, monkeypatch: Any) -> None:
+    """POST /v1/settings/agent_tools/test_source persists source diagnostics."""
+    from science_graphrag.api import settings as settings_api
+    from science_graphrag.settings.repository import SettingsRepository
+    from science_graphrag.settings.secrets import SecretStore
+    from science_graphrag.settings.service import SettingsService
+
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    monkeypatch.setattr(settings_api, "_SETTINGS_SERVICE", service)
+    monkeypatch.setattr(SettingsService, "_probe_openalex", staticmethod(lambda _s: (True, "ok", 200)))
+
+    client = _client()
+    res = client.post("/v1/settings/agent_tools/test_source", json={"source_id": "openalex"})
+    assert res.status_code == 200
+    body = res.json()
+    assert body["source_id"] == "openalex"
+    assert body["ok"] is True
+
+    snap = client.get("/v1/settings")
+    assert snap.status_code == 200
+    payload = snap.json()
+    row = next(x for x in payload["agent_tools"]["sources"] if x["id"] == "openalex")
+    assert row["last_test"]
+    assert row["last_error"] in ("", None)
+
+
 def test_settings_service_llm_snapshot_env_secret_only(tmp_path: Path) -> None:
     """LLM snapshot reflects environment API key when vault is empty."""
 

@@ -294,7 +294,10 @@ def test_update_llm_settings_persists_ollama_like_tasks(tmp_path: Path) -> None:
     assert runtime.extraction_llm_base_url == "http://localhost:11434/v1"
     assert runtime.embeddings_http_base_url == "http://localhost:11434/v1"
     assert runtime.openrouter_embedding_model == "all-minilm"
-    assert service.reveal_llm_task_secret(task="embeddings", actor="tester", base_settings=base) == "ollama"
+    assert (
+        service.reveal_llm_task_secret(task="embeddings", actor="tester", base_settings=base)
+        == "ollama"
+    )
 
 
 def test_reveal_task_secret_falls_back_to_default_saved_key(tmp_path: Path) -> None:
@@ -314,8 +317,14 @@ def test_reveal_task_secret_falls_back_to_default_saved_key(tmp_path: Path) -> N
         api_key="sk-default",
     )
 
-    assert service.reveal_llm_task_secret(task="chat", actor="tester", base_settings=base) == "sk-default"
-    assert service.reveal_llm_task_secret(task="vision", actor="tester", base_settings=base) == "sk-default"
+    assert (
+        service.reveal_llm_task_secret(task="chat", actor="tester", base_settings=base)
+        == "sk-default"
+    )
+    assert (
+        service.reveal_llm_task_secret(task="vision", actor="tester", base_settings=base)
+        == "sk-default"
+    )
     assert (
         service.reveal_llm_task_secret(task="embeddings", actor="tester", base_settings=base)
         == "sk-default"
@@ -416,7 +425,9 @@ def test_update_agent_tools_settings_persists_pdf_limits(tmp_path: Path) -> None
     assert rt.agent_pdf_read_cache_max_entries == 400
 
 
-def test_update_agent_tools_settings_persists_pdf_durable_and_semantic_toggle(tmp_path: Path) -> None:
+def test_update_agent_tools_settings_persists_pdf_durable_and_semantic_toggle(
+    tmp_path: Path,
+) -> None:
     service = SettingsService(repo_root=tmp_path)
     base = Settings()
     snap = service.update_agent_tools_settings(
@@ -457,6 +468,7 @@ def test_update_agent_tools_settings_persists_mcp_knobs(tmp_path: Path) -> None:
         patch={
             "agent_mcp_request_timeout_seconds": 22.5,
             "agent_mcp_server_denylist": ["evil", "blocked"],
+            "agent_mcp_http_base_url": "http://adapter.internal:7777/rpc",
         },
     )
     eff = snap.agent_tools["effective"]
@@ -467,9 +479,25 @@ def test_update_agent_tools_settings_persists_mcp_knobs(tmp_path: Path) -> None:
     assert integrations.get("mcp_server_denylist_count") == 2
     assert integrations.get("mcp_server_denylist_preview") == ["evil", "blocked"]
     assert integrations.get("mcp_auth_model") == "delegation_required"
+    assert integrations.get("mcp_adapter_url_source") == "settings"
+    assert snap.agent_tools.get("agent_mcp_http_base_url") == "http://adapter.internal:7777/rpc"
     rt = service.build_runtime_settings(base)
     assert rt.agent_mcp_request_timeout_seconds == 22.5
     assert rt.agent_mcp_server_denylist == ["evil", "blocked"]
+    assert rt.agent_mcp_http_base_url == "http://adapter.internal:7777/rpc"
+
+
+def test_test_agent_tool_source_persists_diagnostics(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings(
+        agent_mcp_http_base_url="http://127.0.0.1:19999/rpc",
+        external_research_source_openalex_enabled=True,
+    )
+    out = service.test_agent_tool_source(base_settings=base, actor="tester", source_id="mcp")
+    assert out["source_id"] == "mcp"
+    snap = service.get_snapshot(base)
+    integ = snap.agent_tools.get("integrations") or {}
+    assert integ.get("mcp_last_test") is not None
 
 
 def test_update_llm_settings_persists_vision_api_key_secret(tmp_path: Path) -> None:
