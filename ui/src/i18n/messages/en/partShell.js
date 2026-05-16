@@ -44,8 +44,6 @@ export default {
 
   "shell.settings.navTitle": "Settings",
   "shell.settings.unsaved": "You have unsaved changes in this section.",
-  "shell.settings.statusReady": "Ready",
-  "shell.settings.statusSoon": "Soon",
 
   "app.adminHidden.eyebrow": "Research surface",
   "app.adminHidden.title": "Admin tools are hidden",

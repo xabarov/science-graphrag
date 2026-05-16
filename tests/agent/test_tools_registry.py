@@ -33,6 +33,8 @@ def test_build_tool_registry_includes_core_and_catalog_tools() -> None:
     assert "arxiv_fetch" in uniq
     assert "unpaywall_lookup" in uniq
     assert "openalex_works_search" in uniq
+    assert "semantic_scholar_search" in uniq
+    assert "semantic_scholar_paper" in uniq
     assert "read_external_pdf" in uniq
 
 
@@ -47,6 +49,8 @@ def test_build_retrieval_tools_includes_web_research() -> None:
     assert "arxiv_fetch" in names
     assert "unpaywall_lookup" in names
     assert "openalex_works_search" in names
+    assert "semantic_scholar_search" in names
+    assert "semantic_scholar_paper" in names
     assert "read_external_pdf" in names
 
 
@@ -58,6 +62,18 @@ def test_build_retrieval_tools_skips_openalex_when_disabled() -> None:
     tools = build_retrieval_tools(_fake_stores(), settings=st)
     names = {getattr(t, "name", "") for t in tools}
     assert "openalex_works_search" not in names
+    assert "web_search" in names
+
+
+def test_build_retrieval_tools_skips_semantic_scholar_when_disabled() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+    from science_graphrag.config import Settings
+
+    st = Settings(external_research_source_semantic_scholar_enabled=False)
+    tools = build_retrieval_tools(_fake_stores(), settings=st)
+    names = {getattr(t, "name", "") for t in tools}
+    assert "semantic_scholar_search" not in names
+    assert "semantic_scholar_paper" not in names
     assert "web_search" in names
 
 

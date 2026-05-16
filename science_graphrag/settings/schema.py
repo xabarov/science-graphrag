@@ -23,6 +23,15 @@ def build_settings_schema() -> dict[str, Any]:
             ),
         },
         {
+            "id": "chat_base_url",
+            "type": "url",
+            "required": False,
+            "group": "llm_provider",
+            "description": (
+                "Research chat base URL override; empty uses extraction base URL."
+            ),
+        },
+        {
             "id": "temperature",
             "type": "number",
             "required": True,
@@ -59,6 +68,22 @@ def build_settings_schema() -> dict[str, Any]:
             ),
         },
         {"id": "api_key", "type": "secret", "required": False, "group": "llm_provider"},
+        {"id": "chat_api_key", "type": "secret", "required": False, "group": "llm_provider"},
+        {
+            "id": "embeddings_mode",
+            "type": "string",
+            "required": False,
+            "group": "llm_provider",
+            "description": "Embeddings mode override: openrouter | local.",
+        },
+        {
+            "id": "embeddings_model",
+            "type": "string",
+            "required": False,
+            "group": "llm_provider",
+            "description": "Embeddings model id for selected embeddings mode.",
+        },
+        {"id": "embeddings_api_key", "type": "secret", "required": False, "group": "llm_provider"},
         {
             "id": "runtime_overrides",
             "type": "object",
@@ -149,7 +174,7 @@ def build_settings_schema() -> dict[str, Any]:
             "type": "object",
             "required": False,
             "group": "research_sources",
-            "description": "Per-source toggles: crossref, arxiv, unpaywall, openalex (operator).",
+            "description": "Per-source toggles: crossref, arxiv, unpaywall, openalex, semantic_scholar (operator).",
         },
         {
             "id": "pdf_reading_mode",
@@ -157,6 +182,13 @@ def build_settings_schema() -> dict[str, Any]:
             "required": False,
             "group": "pdf",
             "description": "PDF reading in chat: off | ask | auto_safe_oa (product default).",
+        },
+        {
+            "id": "agent_pdf_read_backend_mode",
+            "type": "string",
+            "required": False,
+            "group": "pdf",
+            "description": "PDF text extraction backend: pypdf | vl | hybrid (pypdf then VL fallback).",
         },
         {
             "id": "agent_unpaywall_oa_tool_enabled",
@@ -236,6 +268,16 @@ def build_settings_schema() -> dict[str, Any]:
             "description": "Max in-process cached PDF read entries (LRU).",
         },
         {
+            "id": "agent_pdf_read_durable_cache_enabled",
+            "type": "boolean",
+            "required": False,
+            "group": "pdf",
+            "description": (
+                "Persist successful PDF read results in Redis when redis_url is configured "
+                "(cross-process reuse)."
+            ),
+        },
+        {
             "id": "agent_supervisor_max_rounds",
             "type": "integer",
             "required": False,
@@ -249,7 +291,7 @@ def build_settings_schema() -> dict[str, Any]:
         },
     ]
     return {
-        "version": 12,
+        "version": 13,
         "sections": [
             {
                 "id": "general",

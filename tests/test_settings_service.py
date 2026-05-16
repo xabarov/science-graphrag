@@ -211,16 +211,19 @@ def test_test_llm_connection_marks_saved_secret_source_only_for_secret_store(
 
     monkeypatch.setattr("science_graphrag.settings.service.run_llm_connection_probe", _fake_probe)
 
+    # Avoid repo `.env` / shell keys so bootstrap does not pre-fill the vault before assertions.
+    empty_keys = Settings(api_key="", extraction_llm_api_key="", vl_api_key="")
+
     # Explicit draft api_key must not be marked as saved-secret usage.
     out_draft = service.test_llm_connection(
-        base_settings=Settings(),
+        base_settings=empty_keys,
         actor="tester",
         draft=LlmTestDraft(api_key="draft-key", use_saved_secret=False),
     )
     assert out_draft["resolved"]["used_saved_secret"] is False
 
     # Env fallback (no managed secret) also must not be marked as saved-secret usage.
-    base_env = Settings(extraction_llm_api_key="env-key")
+    base_env = Settings(api_key="", extraction_llm_api_key="env-key", vl_api_key="")
     out_env = service.test_llm_connection(
         base_settings=base_env,
         actor="tester",
@@ -230,7 +233,7 @@ def test_test_llm_connection_marks_saved_secret_source_only_for_secret_store(
 
     # Managed secret path should be marked explicitly.
     service.update_llm_settings(
-        base_settings=Settings(),
+        base_settings=empty_keys,
         base_url="https://example.org/v1",
         model="model-x",
         temperature=0.1,
@@ -239,12 +242,84 @@ def test_test_llm_connection_marks_saved_secret_source_only_for_secret_store(
         api_key="saved-secret",
     )
     out_saved = service.test_llm_connection(
-        base_settings=Settings(),
+        base_settings=empty_keys,
         actor="tester",
         draft=LlmTestDraft(api_key=None, use_saved_secret=True),
     )
     assert out_saved["resolved"]["used_saved_secret"] is True
     assert captured["used_saved_secret"] is True
+
+
+def test_update_llm_settings_persists_ollama_like_tasks(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings(api_key="", extraction_llm_api_key="", vl_api_key="")
+    snap = service.update_llm_settings(
+        base_settings=base,
+        actor="tester",
+        tasks_patch={
+            "extraction": {
+                "base_url": "http://localhost:11434/v1",
+                "model": "llama3.2",
+                "temperature": 0,
+                "timeout_seconds": 300,
+            },
+            "chat": {
+                "base_url": "http://localhost:11434/v1",
+                "model": "llama3.2",
+                "temperature": 0,
+                "timeout_seconds": 300,
+            },
+            "vision": {
+                "base_url": "http://localhost:11434/v1",
+                "model": "llava",
+                "temperature": 0,
+                "timeout_seconds": 300,
+            },
+            "embeddings": {
+                "mode": "http",
+                "base_url": "http://localhost:11434/v1",
+                "model": "all-minilm",
+                "timeout_seconds": 120,
+            },
+        },
+        api_key="ollama",
+        chat_api_key="ollama",
+        vision_api_key="ollama",
+        embeddings_api_key="ollama",
+    )
+    assert snap.llm["base_url"] == "http://localhost:11434/v1"
+    assert snap.llm["model"] == "llama3.2"
+    assert snap.llm["diagnostics"]["probable_ollama_endpoint"] is True
+    runtime = service.build_runtime_settings(base)
+    assert runtime.extraction_llm_base_url == "http://localhost:11434/v1"
+    assert runtime.embeddings_http_base_url == "http://localhost:11434/v1"
+    assert runtime.openrouter_embedding_model == "all-minilm"
+    assert service.reveal_llm_task_secret(task="embeddings", actor="tester", base_settings=base) == "ollama"
+
+
+def test_reveal_task_secret_falls_back_to_default_saved_key(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings(api_key="", extraction_llm_api_key="", vl_api_key="")
+    service.update_llm_settings(
+        base_settings=base,
+        actor="tester",
+        tasks_patch={
+            "extraction": {
+                "base_url": "https://openrouter.ai/api/v1",
+                "model": "mistralai/mistral-small",
+                "temperature": 0,
+                "timeout_seconds": 120,
+            }
+        },
+        api_key="sk-default",
+    )
+
+    assert service.reveal_llm_task_secret(task="chat", actor="tester", base_settings=base) == "sk-default"
+    assert service.reveal_llm_task_secret(task="vision", actor="tester", base_settings=base) == "sk-default"
+    assert (
+        service.reveal_llm_task_secret(task="embeddings", actor="tester", base_settings=base)
+        == "sk-default"
+    )
 
 
 def test_update_agent_tools_settings_persists_supervisor_rounds(tmp_path: Path) -> None:
@@ -341,13 +416,69 @@ def test_update_agent_tools_settings_persists_pdf_limits(tmp_path: Path) -> None
     assert rt.agent_pdf_read_cache_max_entries == 400
 
 
+def test_update_agent_tools_settings_persists_pdf_durable_and_semantic_toggle(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings()
+    snap = service.update_agent_tools_settings(
+        base_settings=base,
+        actor="tester",
+        patch={
+            "agent_pdf_read_durable_cache_enabled": False,
+            "external_research_sources": {"semantic_scholar": False},
+        },
+    )
+    eff = snap.agent_tools["effective"]
+    assert eff["resolved_agent_pdf_read_durable_cache_enabled"] is False
+    assert eff["resolved_external_research_sources"]["semantic_scholar"] is False
+    rt = service.build_runtime_settings(base)
+    assert rt.agent_pdf_read_durable_cache_enabled is False
+    assert rt.external_research_source_semantic_scholar_enabled is False
+
+
+def test_update_agent_tools_settings_persists_pdf_read_backend_mode(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings()
+    snap = service.update_agent_tools_settings(
+        base_settings=base,
+        actor="tester",
+        patch={"agent_pdf_read_backend_mode": "pypdf"},
+    )
+    assert snap.agent_tools["effective"]["resolved_agent_pdf_read_backend_mode"] == "pypdf"
+    rt = service.build_runtime_settings(base)
+    assert rt.agent_pdf_read_backend_mode == "pypdf"
+
+
+def test_update_agent_tools_settings_persists_mcp_knobs(tmp_path: Path) -> None:
+    service = SettingsService(repo_root=tmp_path)
+    base = Settings(agent_mcp_request_timeout_seconds=15.0)
+    snap = service.update_agent_tools_settings(
+        base_settings=base,
+        actor="tester",
+        patch={
+            "agent_mcp_request_timeout_seconds": 22.5,
+            "agent_mcp_server_denylist": ["evil", "blocked"],
+        },
+    )
+    eff = snap.agent_tools["effective"]
+    assert eff["resolved_agent_mcp_request_timeout_seconds"] == 22.5
+    assert eff["resolved_agent_mcp_server_denylist"] == ["evil", "blocked"]
+    integrations = snap.agent_tools.get("integrations") or {}
+    assert integrations.get("mcp_request_timeout_seconds") == 22.5
+    assert integrations.get("mcp_server_denylist_count") == 2
+    assert integrations.get("mcp_server_denylist_preview") == ["evil", "blocked"]
+    assert integrations.get("mcp_auth_model") == "delegation_required"
+    rt = service.build_runtime_settings(base)
+    assert rt.agent_mcp_request_timeout_seconds == 22.5
+    assert rt.agent_mcp_server_denylist == ["evil", "blocked"]
+
+
 def test_update_llm_settings_persists_vision_api_key_secret(tmp_path: Path) -> None:
     root = tmp_path / "data" / "settings"
     root.mkdir(parents=True, exist_ok=True)
     repo = SettingsRepository(root)
     secrets = SecretStore(root)
     service = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
-    base = Settings(extraction_llm_api_key="sk-base")
+    base = Settings(api_key="", extraction_llm_api_key="sk-base", vl_api_key="")
     service.update_llm_settings(
         base_settings=base,
         base_url="https://openrouter.ai/api/v1",
@@ -365,13 +496,13 @@ def test_update_llm_settings_persists_vision_api_key_secret(tmp_path: Path) -> N
     assert snap.llm["status"]["has_saved_vision_secret"] is True
 
 
-def test_delete_llm_vision_secret_clears_vault(tmp_path: Path) -> None:
+def test_clear_llm_vision_secret_clears_vault(tmp_path: Path) -> None:
     root = tmp_path / "data" / "settings"
     root.mkdir(parents=True, exist_ok=True)
     repo = SettingsRepository(root)
     secrets = SecretStore(root)
     service = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
-    base = Settings(extraction_llm_api_key="sk-base", vl_api_key="sk-env-vl")
+    base = Settings(api_key="", extraction_llm_api_key="sk-base", vl_api_key="sk-env-vl")
     service.update_llm_settings(
         base_settings=base,
         base_url="https://openrouter.ai/api/v1",
@@ -382,8 +513,61 @@ def test_delete_llm_vision_secret_clears_vault(tmp_path: Path) -> None:
         api_key="sk-default-vault",
         vision_api_key="sk-vision-vault",
     )
-    service.delete_llm_vision_secret(base_settings=base)
+    service.update_llm_settings(
+        base_settings=base,
+        base_url="https://openrouter.ai/api/v1",
+        model="m1",
+        temperature=0.0,
+        timeout_seconds=60.0,
+        actor="t",
+        api_key="sk-default-vault",
+        vision_api_key=None,
+    )
     snap = service.get_snapshot(base)
     assert snap.llm["status"]["has_saved_vision_secret"] is False
     rt = service.build_runtime_settings(base)
-    assert rt.vl_api_key == "sk-env-vl"
+    # After bootstrap, empty vision vault must not silently re-inject process env VL keys.
+    assert rt.vl_api_key == ""
+
+
+def test_clear_llm_chat_and_embeddings_secret_clear_vault(tmp_path: Path) -> None:
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    service = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
+    base = Settings(
+        api_key="",
+        extraction_llm_api_key="sk-base",
+        chat_llm_api_key="sk-env-chat",
+        embeddings_api_key="sk-env-emb",
+    )
+    service.update_llm_settings(
+        base_settings=base,
+        base_url="https://openrouter.ai/api/v1",
+        model="m1",
+        temperature=0.0,
+        timeout_seconds=60.0,
+        actor="t",
+        api_key="sk-default-vault",
+        chat_api_key="sk-chat-vault",
+        embeddings_mode="openrouter",
+        embeddings_model="baai/bge-m3",
+        embeddings_api_key="sk-emb-vault",
+    )
+    service.update_llm_settings(
+        base_settings=base,
+        base_url="https://openrouter.ai/api/v1",
+        model="m1",
+        temperature=0.0,
+        timeout_seconds=60.0,
+        actor="t",
+        api_key="sk-default-vault",
+        chat_api_key=None,
+        embeddings_mode="openrouter",
+        embeddings_model="baai/bge-m3",
+        embeddings_api_key=None,
+    )
+    rt = service.build_runtime_settings(base)
+    assert rt.chat_llm_api_key == ""
+    assert rt.embeddings_api_key == ""

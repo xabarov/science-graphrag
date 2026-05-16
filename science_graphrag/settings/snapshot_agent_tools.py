@@ -3,13 +3,62 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 
 from science_graphrag.settings.stored_bool import optional_stored_bool
 
 if TYPE_CHECKING:
     from science_graphrag.config import Settings
 
+from science_graphrag.agent.tools.external.pdf_read_durable_cache import pdf_read_durable_cache_active
+from science_graphrag.settings.agent_tools_mcp import (
+    MCP_DENYLIST_SNAPSHOT_PREVIEW_MAX,
+    normalize_mcp_server_denylist,
+)
+
 _SOURCE_IDS = ("crossref", "arxiv", "unpaywall", "openalex", "semantic_scholar")
+
+
+def _mcp_base_url_host_preview(base_url: str | None) -> str | None:
+    raw = str(base_url or "").strip()
+    if not raw:
+        return None
+    try:
+        parsed = urlparse(raw if "://" in raw else f"https://{raw}")
+        host = (parsed.hostname or "").strip()
+        return host or None
+    except (ValueError, AttributeError):
+        return None
+
+
+def _mcp_operator_state(settings: Settings) -> str:
+    if not bool(getattr(settings, "agent_mcp_tools_enabled", False)):
+        return "disabled"
+    if not str(getattr(settings, "agent_mcp_http_base_url", None) or "").strip():
+        return "unconfigured"
+    return "configured"
+
+
+def _build_mcp_integrations_snapshot(settings: Settings) -> dict[str, Any]:
+    denylist = normalize_mcp_server_denylist(getattr(settings, "agent_mcp_server_denylist", None))
+    preview = denylist[:MCP_DENYLIST_SNAPSHOT_PREVIEW_MAX]
+    return {
+        "mcp_tools_enabled": bool(getattr(settings, "agent_mcp_tools_enabled", False)),
+        "mcp_http_base_url_configured": bool(
+            str(getattr(settings, "agent_mcp_http_base_url", None) or "").strip()
+        ),
+        "mcp_operator_state": _mcp_operator_state(settings),
+        "mcp_request_timeout_seconds": float(
+            getattr(settings, "agent_mcp_request_timeout_seconds", 15.0) or 15.0
+        ),
+        "mcp_server_denylist_count": len(denylist),
+        "mcp_server_denylist_preview": preview,
+        "mcp_base_url_host": _mcp_base_url_host_preview(
+            str(getattr(settings, "agent_mcp_http_base_url", None) or "")
+        ),
+        "mcp_auth_model": "delegation_required",
+        "mcp_adapter_url_source": "environment",
+    }
 
 
 def _mailto_configured(settings: Settings) -> bool:
@@ -121,15 +170,19 @@ def _source_row(
             "last_error": last_error,
         }
     if source_id == "semantic_scholar":
+        en = bool(
+            getattr(merged_settings, "external_research_source_semantic_scholar_enabled", True)
+        )
+        s2_key = bool(str(getattr(merged_settings, "semantic_scholar_api_key", "") or "").strip())
         return {
             "id": "semantic_scholar",
             "label": "Semantic Scholar",
-            "enabled": False,
-            "available": False,
-            "configured": False,
-            "requires_key": True,
-            "status": "planned",
-            "tier": "planned",
+            "enabled": en,
+            "available": True,
+            "configured": s2_key,
+            "requires_key": False,
+            "status": "needs_live_smoke" if en else "disabled",
+            "tier": "beta",
             "last_test": last_test,
             "last_error": last_error,
         }
@@ -156,6 +209,7 @@ def build_agent_tools_snapshot(
         agent_tools_cfg, "external_research_default_enabled"
     )
     persisted_pdf_mode = agent_tools_cfg.get("pdf_reading_mode")
+    persisted_pdf_backend_mode = agent_tools_cfg.get("agent_pdf_read_backend_mode")
     persisted_unpaywall = _persisted_bool(agent_tools_cfg, "agent_unpaywall_oa_tool_enabled")
     persisted_ext_timeout = _persisted_float(agent_tools_cfg, "agent_external_http_timeout_seconds")
     persisted_max_calls = _persisted_int(agent_tools_cfg, "agent_external_max_calls_per_turn")
@@ -167,11 +221,14 @@ def build_agent_tools_snapshot(
     persisted_pdf_cache_max_entries = _persisted_int(
         agent_tools_cfg, "agent_pdf_read_cache_max_entries"
     )
+    persisted_pdf_durable = _persisted_bool(agent_tools_cfg, "agent_pdf_read_durable_cache_enabled")
+    persisted_mcp_timeout = _persisted_float(agent_tools_cfg, "agent_mcp_request_timeout_seconds")
+    persisted_mcp_denylist = agent_tools_cfg.get("agent_mcp_server_denylist")
 
     src_cfg = agent_tools_cfg.get("external_research_sources") or {}
     persisted_sources: dict[str, Any] = {}
     if isinstance(src_cfg, dict):
-        for k in ("crossref", "arxiv", "unpaywall", "openalex"):
+        for k in ("crossref", "arxiv", "unpaywall", "openalex", "semantic_scholar"):
             if k in src_cfg:
                 persisted_sources[k] = src_cfg[k]
 
@@ -191,6 +248,11 @@ def build_agent_tools_snapshot(
         "pdf_reading_mode": (
             persisted_pdf_mode if persisted_pdf_mode in {"off", "ask", "auto_safe_oa"} else None
         ),
+        "agent_pdf_read_backend_mode": (
+            persisted_pdf_backend_mode
+            if persisted_pdf_backend_mode in {"pypdf", "vl", "hybrid"}
+            else None
+        ),
         "agent_unpaywall_oa_tool_enabled": persisted_unpaywall,
         "agent_external_http_timeout_seconds": persisted_ext_timeout,
         "agent_external_max_calls_per_turn": persisted_max_calls,
@@ -200,6 +262,11 @@ def build_agent_tools_snapshot(
         "agent_pdf_read_max_pages": persisted_pdf_max_pages,
         "agent_pdf_read_cache_ttl_seconds": persisted_pdf_cache_ttl,
         "agent_pdf_read_cache_max_entries": persisted_pdf_cache_max_entries,
+        "agent_pdf_read_durable_cache_enabled": persisted_pdf_durable,
+        "agent_mcp_request_timeout_seconds": persisted_mcp_timeout,
+        "agent_mcp_server_denylist": (
+            persisted_mcp_denylist if isinstance(persisted_mcp_denylist, list) else None
+        ),
         "external_research_sources": persisted_sources or None,
         "effective": {
             "resolved_agent_supervisor_max_rounds": int(
@@ -209,6 +276,9 @@ def build_agent_tools_snapshot(
                 merged_settings.external_research_default_enabled
             ),
             "resolved_pdf_reading_mode": str(merged_settings.pdf_reading_mode),
+            "resolved_agent_pdf_read_backend_mode": str(
+                getattr(merged_settings, "agent_pdf_read_backend_mode", "hybrid") or "hybrid"
+            ),
             "resolved_agent_unpaywall_oa_tool_enabled": bool(
                 merged_settings.agent_unpaywall_oa_tool_enabled
             ),
@@ -236,6 +306,15 @@ def build_agent_tools_snapshot(
             "resolved_agent_pdf_read_cache_max_entries": int(
                 getattr(merged_settings, "agent_pdf_read_cache_max_entries", 256)
             ),
+            "resolved_agent_pdf_read_durable_cache_enabled": bool(
+                getattr(merged_settings, "agent_pdf_read_durable_cache_enabled", True)
+            ),
+            "resolved_agent_mcp_request_timeout_seconds": float(
+                getattr(merged_settings, "agent_mcp_request_timeout_seconds", 15.0) or 15.0
+            ),
+            "resolved_agent_mcp_server_denylist": normalize_mcp_server_denylist(
+                getattr(merged_settings, "agent_mcp_server_denylist", None)
+            ),
             "resolved_external_research_sources": {
                 "crossref": bool(merged_settings.external_research_source_crossref_enabled),
                 "arxiv": bool(merged_settings.external_research_source_arxiv_enabled),
@@ -243,21 +322,37 @@ def build_agent_tools_snapshot(
                 "openalex": bool(
                     getattr(merged_settings, "external_research_source_openalex_enabled", True)
                 ),
+                "semantic_scholar": bool(
+                    getattr(
+                        merged_settings, "external_research_source_semantic_scholar_enabled", True
+                    )
+                ),
             },
         },
         "sources": sources,
-        "integrations": {
-            "mcp_tools_enabled": bool(getattr(merged_settings, "agent_mcp_tools_enabled", False)),
-            "mcp_http_base_url_configured": bool(
-                str(getattr(merged_settings, "agent_mcp_http_base_url", None) or "").strip()
-            ),
-            "mcp_server_denylist_count": len(
-                list(getattr(merged_settings, "agent_mcp_server_denylist", None) or [])
-            ),
-        },
+        "integrations": _build_mcp_integrations_snapshot(merged_settings),
         "credentials": {
             "research_contact_email_configured": mailto_ok,
             "research_contact_email_status": "configured" if mailto_ok else "not_configured",
+            "semantic_scholar_api_key_configured": bool(
+                str(getattr(merged_settings, "semantic_scholar_api_key", "") or "").strip()
+            ),
+            "semantic_scholar_api_key_status": (
+                "configured"
+                if str(getattr(merged_settings, "semantic_scholar_api_key", "") or "").strip()
+                else "not_configured"
+            ),
+            "pdf_read_durable_cache": (
+                "active"
+                if pdf_read_durable_cache_active(merged_settings)
+                else (
+                    "disabled_flag"
+                    if not bool(
+                        getattr(merged_settings, "agent_pdf_read_durable_cache_enabled", True)
+                    )
+                    else "disabled_no_redis"
+                )
+            ),
         },
         "status": {
             "source": status_source,

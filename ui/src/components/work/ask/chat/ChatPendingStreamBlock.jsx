@@ -32,7 +32,7 @@ import { isPdfReadUserMessage } from "../../../../services/research/pdfReadUi.js
  *   isLoading: boolean,
  *   pdfReadingMode?: "off" | "ask" | "auto_safe_oa",
  *   onReadPdfSource?: (url: string) => void | Promise<void>,
- *   pdfReadState?: { isActive?: boolean, url?: string, error?: string, mode?: string } | null,
+ *   pdfReadState?: { isActive?: boolean, url?: string, error?: string, mode?: string, artifactId?: string } | null,
  * }} props
  */
 export default function ChatPendingStreamBlock({

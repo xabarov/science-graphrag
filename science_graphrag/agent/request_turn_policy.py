@@ -28,6 +28,8 @@ EXTERNAL_RESEARCH_TOOL_NAMES: frozenset[str] = frozenset(
         "arxiv_fetch",
         "unpaywall_lookup",
         "openalex_works_search",
+        "semantic_scholar_search",
+        "semantic_scholar_paper",
         "read_external_pdf",
     }
 )
@@ -246,7 +248,9 @@ def build_request_run_metadata_fragment(
         web_research_enabled,
         default_when_unspecified=bool(external_research_default_enabled),
     )
-    _ = settings
+    _b = str(getattr(settings, "agent_pdf_read_backend_mode", "hybrid") or "hybrid").strip().lower()
+    if _b not in {"pypdf", "vl", "hybrid"}:
+        _b = "hybrid"
     out: dict[str, Any] = {
         "request_web_research_enabled": web_research_enabled,
         "effective_web_research_user_enabled": user_on,
@@ -254,6 +258,7 @@ def build_request_run_metadata_fragment(
         "request_agent_mode": (agent_mode or "agent").strip().lower(),
         "turn_tool_denylist": list(turn_tool_denylist),
         "request_turn_warnings": list(request_warnings),
+        "agent_pdf_read_backend_mode": _b,
     }
     if request_pdf_reading_mode:
         out["request_pdf_reading_mode"] = str(request_pdf_reading_mode).strip().lower()

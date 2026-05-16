@@ -22,7 +22,8 @@ def _api_key_str(val: object) -> str:
 
 def _openrouter_embeddings_credentials_ok(settings: Settings) -> bool:
     return bool(
-        _api_key_str(settings.benchmark_teacher_llm_api_key)
+        _api_key_str(getattr(settings, "embeddings_api_key", None))
+        or _api_key_str(settings.benchmark_teacher_llm_api_key)
         or _api_key_str(settings.extraction_llm_api_key)
     )
 

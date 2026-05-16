@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from langchain_core.messages import HumanMessage
 
+from science_graphrag.agent.context.research_plan_session import (
+    get_research_plan_snapshot_for_thread,
+)
 from science_graphrag.agent.debug_events_telemetry import (
     extract_runtime_telemetry_from_debug_events,
+)
+from science_graphrag.agent.graph.tracing import (
+    extract_last_ok_tool_payload,
+    extract_last_tool_payload_for_tool,
 )
 from science_graphrag.agent.runtime import (
     aggregate_agent_llm_usage,
@@ -35,6 +43,23 @@ from science_graphrag.api.agent_v2_modules.stream_phase_recovery import (
 )
 
 
+@dataclass(frozen=True)
+class FinalizeRunMetadataRequest:
+    """Inputs required to build run_metadata for finalize SSE."""
+
+    ctx: StreamLifecycleRequestContext
+    latest_full_state: dict[str, Any] | None
+    envelope: dict[str, Any]
+    max_tool_calls: int
+    thread_id: str | None
+    compact_payload: dict[str, Any] | None
+    post_turn_compaction_wall_ms: int
+    salvaged_after_deadline: bool
+    salvaged_after_recursion_limit: bool
+    recursion_limit_value: int | None
+    prefetched_pdf_result: dict[str, Any] | None = None
+
+
 def _collect_human_message_payloads(
     latest_full_state: dict[str, Any] | None, *, kind: str, inner_key: str
 ) -> list[dict[str, Any]]:
@@ -55,186 +80,264 @@ def _collect_human_message_payloads(
     return out
 
 
-def build_finalize_run_metadata(
+def _merge_pdf_read_transport_fields(
+    run_meta: dict[str, Any],
     *,
-    ctx: StreamLifecycleRequestContext,
+    prefetched_pdf_result: dict[str, Any] | None,
     latest_full_state: dict[str, Any] | None,
-    envelope: dict[str, Any],
-    max_tool_calls: int,
-    thread_id: str | None,
-    compact_payload: dict[str, Any] | None,
-    post_turn_compaction_wall_ms: int,
+) -> None:
+    """Expose stable PDF read diagnostics for SSE/UI/session sync (compact keys)."""
+    pl: dict[str, Any] | None = None
+    if isinstance(prefetched_pdf_result, dict) and prefetched_pdf_result:
+        pl = dict(prefetched_pdf_result)
+    elif isinstance(latest_full_state, dict):
+        pl = extract_last_tool_payload_for_tool(
+            list(latest_full_state.get("messages") or []),
+            tool="read_external_pdf",
+        )
+    if not isinstance(pl, dict) or not pl:
+        return
+    aid = str(pl.get("artifact_id") or "").strip()
+    if aid:
+        run_meta["pdf_read_artifact_id"] = aid
+    if "ok" in pl:
+        run_meta["pdf_read_tool_ok"] = bool(pl.get("ok"))
+    err = str(pl.get("error") or "").strip()
+    if err:
+        run_meta["pdf_read_tool_error"] = err[:240]
+    if "cache_hit" in pl:
+        run_meta["pdf_read_cache_hit"] = bool(pl.get("cache_hit"))
+    if pl.get("durable_hit"):
+        run_meta["pdf_read_durable_hit"] = True
+
+
+def _debug_events_tail(latest_full_state: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not isinstance(latest_full_state, dict):
+        return []
+    tail = (latest_full_state.get("debug_events") or [])[-50:]
+    return [x for x in tail if isinstance(x, dict)]
+
+
+def _collect_metadata_spawn_rows(
+    latest_full_state: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    if not isinstance(latest_full_state, dict):
+        return []
+    metadata = latest_full_state.get("metadata") or {}
+    if not isinstance(metadata, dict):
+        return []
+    raw = metadata.get("subagent_spawn_rows")
+    if not isinstance(raw, list):
+        return []
+    return [x for x in raw if isinstance(x, dict)]
+
+
+def _patch_spawn_rows_on_parent_terminal(
+    rows: list[dict[str, Any]],
+    *,
     salvaged_after_deadline: bool,
     salvaged_after_recursion_limit: bool,
-    recursion_limit_value: int | None,
-) -> dict[str, Any]:
-    """Build the ``run_metadata`` object embedded in the ``final_answer`` SSE event."""
-    settings = ctx.settings
-    parent_turn_id_str = ctx.parent_turn_id_str
+) -> list[dict[str, Any]]:
+    if not rows:
+        return rows
+    if salvaged_after_deadline:
+        return patch_spawn_rows_on_parent_abort(
+            rows,
+            terminal_state=SPAWN_CANCEL_TERMINAL_ON_DEADLINE,
+            failure_code=SPAWN_CANCEL_FAILURE_CODE_ON_DEADLINE,
+        )
+    if salvaged_after_recursion_limit:
+        return patch_spawn_rows_on_parent_abort(
+            rows,
+            terminal_state=SPAWN_CANCEL_TERMINAL_ON_RECURSION,
+            failure_code=SPAWN_CANCEL_FAILURE_CODE_ON_RECURSION,
+        )
+    return patch_spawn_rows_on_parent_abort(
+        rows,
+        terminal_state="succeeded",
+        failure_code=None,
+    )
 
-    stream_usage: dict[str, int] | None = None
-    if latest_full_state is not None:
-        msgs_for_usage = list(latest_full_state.get("messages") or [])
-        stream_usage = aggregate_agent_llm_usage(msgs_for_usage)
+
+def _merge_result_payload_groups(
+    run_meta: dict[str, Any], latest_full_state: dict[str, Any] | None
+) -> None:
+    groups = (
+        ("subagent_task_notifications", "task_notification", "task_notification"),
+        (
+            "claim_verification_results",
+            "claim_verification_result",
+            "claim_verification_result",
+        ),
+        ("corpus_explore_results", "corpus_explore_result", "corpus_explore_result"),
+        ("research_plan_results", "research_plan_result", "research_plan_result"),
+    )
+    for out_key, kind, inner_key in groups:
+        rows = _collect_human_message_payloads(latest_full_state, kind=kind, inner_key=inner_key)
+        if rows:
+            run_meta[out_key] = rows
+
+
+def _merge_pdf_backend_fields(
+    run_meta: dict[str, Any],
+    *,
+    latest_full_state: dict[str, Any] | None,
+    prefetched_pdf_result: dict[str, Any] | None,
+) -> None:
+    pf = prefetched_pdf_result
+    if isinstance(pf, dict) and bool(pf.get("ok")):
+        rb = pf.get("read_backend")
+        if isinstance(rb, str) and rb.strip():
+            run_meta["pdf_read_effective_read_backend"] = rb.strip()
+        run_meta["pdf_read_fallback_used"] = bool(pf.get("fallback_used"))
+
+    if "pdf_read_effective_read_backend" not in run_meta and isinstance(latest_full_state, dict):
+        pl = extract_last_ok_tool_payload(
+            list(latest_full_state.get("messages") or []),
+            tool="read_external_pdf",
+        )
+        if isinstance(pl, dict):
+            rb2 = pl.get("read_backend")
+            if isinstance(rb2, str) and rb2.strip():
+                run_meta["pdf_read_effective_read_backend"] = rb2.strip()
+            if "fallback_used" in pl:
+                run_meta["pdf_read_fallback_used"] = bool(pl.get("fallback_used"))
+
+
+def _build_base_run_meta(
+    req: FinalizeRunMetadataRequest,
+    *,
+    debug_events_tail: list[dict[str, Any]],
+    messages: list[Any],
+) -> dict[str, Any]:
+    ctx = req.ctx
     run_meta: dict[str, Any] = build_run_metadata(
-        settings=settings,
-        max_tool_calls=max_tool_calls,
+        settings=ctx.settings,
+        max_tool_calls=req.max_tool_calls,
         run_kind=ctx.run_kind,
         graph_id=ctx.graph_id,
-        thread_id=thread_id,
+        thread_id=req.thread_id,
         extra={
-            "product_path": envelope.get("product_path"),
-            "product_markers": envelope.get("product_markers"),
-            "debug_events": (
-                (latest_full_state or {}).get("debug_events", [])[-50:]
-                if isinstance(latest_full_state, dict)
-                else []
-            ),
+            "product_path": req.envelope.get("product_path"),
+            "product_markers": req.envelope.get("product_markers"),
+            "debug_events": debug_events_tail,
         },
     )
-    _req_frag = getattr(ctx, "request_run_metadata_fragment", None)
-    if isinstance(_req_frag, dict) and _req_frag:
-        run_meta.update(dict(_req_frag))
-    debug_events_tail = (
-        (latest_full_state or {}).get("debug_events", [])[-50:]
-        if isinstance(latest_full_state, dict)
-        else []
-    )
-    if isinstance(debug_events_tail, list):
-        run_meta.update(
-            extract_runtime_telemetry_from_debug_events(
-                [x for x in debug_events_tail if isinstance(x, dict)]
-            )
-        )
+    req_frag = getattr(ctx, "request_run_metadata_fragment", None)
+    if isinstance(req_frag, dict) and req_frag:
+        run_meta.update(dict(req_frag))
+    run_meta.update(extract_runtime_telemetry_from_debug_events(debug_events_tail))
     merge_hook_chain_events_into_run_metadata(
         run_meta,
         extra_events=ctx.hook_chain_events,
-        debug_events_tail=(debug_events_tail if isinstance(debug_events_tail, list) else None),
+        debug_events_tail=debug_events_tail,
     )
+    stream_usage = aggregate_agent_llm_usage(messages) if messages else None
     if stream_usage:
         run_meta["usage"] = stream_usage
-    if isinstance(latest_full_state, dict) and bool(
-        getattr(settings, "agent_brief_output_enabled", False)
-    ):
-        _bf = extract_last_brief_from_messages(list(latest_full_state.get("messages") or []))
-        if isinstance(_bf, str) and _bf.strip():
-            run_meta["brief"] = _bf.strip()[:240]
-    if salvaged_after_deadline:
+    if messages and bool(getattr(ctx.settings, "agent_brief_output_enabled", False)):
+        brief = extract_last_brief_from_messages(messages)
+        if isinstance(brief, str) and brief.strip():
+            run_meta["brief"] = brief.strip()[:240]
+    return run_meta
+
+
+def _merge_compaction_and_insight_fields(
+    run_meta: dict[str, Any], req: FinalizeRunMetadataRequest
+) -> None:
+    thread_id = req.thread_id
+    settings = req.ctx.settings
+    if req.ctx.post_compact_paper_sources_restored_initial is not None:
+        run_meta["post_compact_paper_sources_restored_count"] = int(
+            req.ctx.post_compact_paper_sources_restored_initial
+        )
+    if thread_id and req.compact_payload is not None:
+        comp = req.compact_payload.get("compaction")
+        if isinstance(comp, dict):
+            run_meta["compaction"] = comp
+            if isinstance(comp.get("digest_count"), int):
+                run_meta["session_digest_count"] = comp["digest_count"]
+        audit_stream = req.compact_payload.get("audit")
+        if isinstance(audit_stream, dict):
+            run_meta["compaction_audit"] = audit_stream
+    ti_frag = thread_insight_audit_fragment(thread_id=thread_id, settings=settings)
+    if ti_frag:
+        run_meta.update(ti_frag)
+    if thread_id:
+        run_meta["post_turn_compaction_wall_ms"] = req.post_turn_compaction_wall_ms
+
+
+def build_finalize_run_metadata(req: FinalizeRunMetadataRequest) -> dict[str, Any]:
+    """Build the ``run_metadata`` object embedded in the ``final_answer`` SSE event."""
+    ctx = req.ctx
+    latest_full_state = req.latest_full_state
+    settings = ctx.settings
+    thread_id = req.thread_id
+    debug_events_tail = _debug_events_tail(latest_full_state)
+    messages = (
+        list(latest_full_state.get("messages") or []) if isinstance(latest_full_state, dict) else []
+    )
+    run_meta = _build_base_run_meta(req, debug_events_tail=debug_events_tail, messages=messages)
+    if req.salvaged_after_deadline:
         run_meta["salvaged_after_deadline"] = True
-    if salvaged_after_recursion_limit:
+    if req.salvaged_after_recursion_limit:
         run_meta["salvaged_after_recursion_limit"] = True
-        run_meta["recursion_limit"] = recursion_limit_value
+        run_meta["recursion_limit"] = req.recursion_limit_value
     run_meta = apply_runtime_metadata_from_state(
         run_metadata=run_meta,
         state=latest_full_state if isinstance(latest_full_state, dict) else None,
     )
-    _meta_spawn: list[dict[str, Any]] = []
-    if isinstance(latest_full_state, dict):
-        _m = latest_full_state.get("metadata") or {}
-        if isinstance(_m, dict):
-            _raw_sp = _m.get("subagent_spawn_rows")
-            if isinstance(_raw_sp, list):
-                _meta_spawn = [x for x in _raw_sp if isinstance(x, dict)]
-    if _meta_spawn and salvaged_after_deadline:
-        _meta_spawn = patch_spawn_rows_on_parent_abort(
-            _meta_spawn,
-            terminal_state=SPAWN_CANCEL_TERMINAL_ON_DEADLINE,
-            failure_code=SPAWN_CANCEL_FAILURE_CODE_ON_DEADLINE,
-        )
-    if _meta_spawn and salvaged_after_recursion_limit:
-        _meta_spawn = patch_spawn_rows_on_parent_abort(
-            _meta_spawn,
-            terminal_state=SPAWN_CANCEL_TERMINAL_ON_RECURSION,
-            failure_code=SPAWN_CANCEL_FAILURE_CODE_ON_RECURSION,
-        )
-    if _meta_spawn and not salvaged_after_deadline and not salvaged_after_recursion_limit:
-        _meta_spawn = patch_spawn_rows_on_parent_abort(
-            _meta_spawn,
-            terminal_state="succeeded",
-            failure_code=None,
-        )
+    meta_rows = _collect_metadata_spawn_rows(latest_full_state)
+    meta_rows = _patch_spawn_rows_on_parent_terminal(
+        meta_rows,
+        salvaged_after_deadline=req.salvaged_after_deadline,
+        salvaged_after_recursion_limit=req.salvaged_after_recursion_limit,
+    )
     merged_subagent_runs = merge_subagent_run_rows(
         routing_rows=ctx.routing_subagent_ledger.to_run_rows(),
-        spawned_rows=list(ctx.spawn_subagent_runtime.to_run_rows()) + _meta_spawn,
+        spawned_rows=list(ctx.spawn_subagent_runtime.to_run_rows()) + meta_rows,
     )
     if merged_subagent_runs:
         run_meta["subagent_runs"] = merged_subagent_runs
-    if parent_turn_id_str:
-        run_meta["parent_turn_id"] = parent_turn_id_str
+    if ctx.parent_turn_id_str:
+        run_meta["parent_turn_id"] = ctx.parent_turn_id_str
     run_meta["max_parallel_subagents"] = int(settings.agent_max_parallel_subagents)
-    _tn_collect = _collect_human_message_payloads(
-        latest_full_state, kind="task_notification", inner_key="task_notification"
-    )
-    if _tn_collect:
-        run_meta["subagent_task_notifications"] = _tn_collect
-    _cv_collect = _collect_human_message_payloads(
-        latest_full_state,
-        kind="claim_verification_result",
-        inner_key="claim_verification_result",
-    )
-    if _cv_collect:
-        run_meta["claim_verification_results"] = _cv_collect
-    _ce_collect = _collect_human_message_payloads(
-        latest_full_state,
-        kind="corpus_explore_result",
-        inner_key="corpus_explore_result",
-    )
-    if _ce_collect:
-        run_meta["corpus_explore_results"] = _ce_collect
-    _rp_collect = _collect_human_message_payloads(
-        latest_full_state,
-        kind="research_plan_result",
-        inner_key="research_plan_result",
-    )
-    if _rp_collect:
-        run_meta["research_plan_results"] = _rp_collect
+    _merge_result_payload_groups(run_meta, latest_full_state)
     request_plan_mode = str(run_meta.get("request_agent_mode") or "").strip().lower() == "plan"
     if thread_id and (
         request_plan_mode or bool(getattr(settings, "agent_research_plan_tool_enabled", False))
     ):
-        from science_graphrag.agent.context.research_plan_session import (
-            get_research_plan_snapshot_for_thread,
-        )
-
-        _rp_live = get_research_plan_snapshot_for_thread(str(thread_id).strip())
-        if isinstance(_rp_live, dict):
-            run_meta["research_plan"] = _rp_live
-    _sr3 = (
+        plan_snapshot = get_research_plan_snapshot_for_thread(str(thread_id).strip())
+        if isinstance(plan_snapshot, dict):
+            run_meta["research_plan"] = plan_snapshot
+    sr3 = (
         latest_full_state.get("specialist_results_v3")
         if isinstance(latest_full_state, dict)
         else None
     )
-    if isinstance(_sr3, dict) and _sr3:
-        run_meta["specialist_results_v3"] = dict(_sr3)
+    if isinstance(sr3, dict) and sr3:
+        run_meta["specialist_results_v3"] = dict(sr3)
     run_meta["subagent_observability_lane"] = (
         "fork_v3_enhanced"
         if str(settings.agent_runtime).strip() == "langgraph_supervisor_v3"
         and subagent_lifecycle_enhanced_enabled(settings)
         else "legacy_routing_sse_only"
     )
-    pm0 = ctx.prompt_memory_audit_initial
-    if isinstance(pm0, dict) and pm0:
-        run_meta.update(pm0)
-    if ctx.post_compact_paper_sources_restored_initial is not None:
-        run_meta["post_compact_paper_sources_restored_count"] = int(
-            ctx.post_compact_paper_sources_restored_initial
-        )
-    if thread_id and compact_payload is not None:
-        comp = compact_payload.get("compaction")
-        if isinstance(comp, dict):
-            run_meta["compaction"] = comp
-            if isinstance(comp.get("digest_count"), int):
-                run_meta["session_digest_count"] = comp["digest_count"]
-        aud_stream = compact_payload.get("audit")
-        if isinstance(aud_stream, dict):
-            run_meta["compaction_audit"] = aud_stream
-    ti_frag = thread_insight_audit_fragment(thread_id=thread_id, settings=settings)
-    if ti_frag:
-        run_meta.update(ti_frag)
-    if thread_id:
-        run_meta["post_turn_compaction_wall_ms"] = post_turn_compaction_wall_ms
+    if isinstance(ctx.prompt_memory_audit_initial, dict) and ctx.prompt_memory_audit_initial:
+        run_meta.update(ctx.prompt_memory_audit_initial)
+    _merge_compaction_and_insight_fields(run_meta, req)
 
+    _merge_pdf_backend_fields(
+        run_meta,
+        latest_full_state=latest_full_state,
+        prefetched_pdf_result=req.prefetched_pdf_result,
+    )
+    _merge_pdf_read_transport_fields(
+        run_meta,
+        prefetched_pdf_result=req.prefetched_pdf_result,
+        latest_full_state=latest_full_state,
+    )
     return run_meta
 
 
-__all__ = ["build_finalize_run_metadata"]
+__all__ = ["FinalizeRunMetadataRequest", "build_finalize_run_metadata"]

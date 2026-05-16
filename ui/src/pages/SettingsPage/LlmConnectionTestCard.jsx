@@ -5,6 +5,7 @@ import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
 import { CursorButton } from "../../components/common/index.js";
+import { useI18n } from "../../i18n/useI18n.js";
 import { settingsAlertMutedSx, settingsCardSx } from "../../theme/settingsFormSx.js";
 
 function toneForResult(result) {
@@ -21,10 +22,18 @@ export default function LlmConnectionTestCard({
   onTestSaved,
   onTestDraft,
 }) {
+  const { t } = useI18n();
   const tk = useTheme().appTokens;
   const cardSx = useMemo(() => settingsCardSx(tk), [tk]);
   const alertMutedSx = useMemo(() => settingsAlertMutedSx(tk), [tk]);
   const tone = toneForResult(result);
+
+  const statusTitle =
+    result?.status === "connected"
+      ? t("llm.test.connected")
+      : result?.status === "unexpected_response"
+        ? t("llm.test.unexpected")
+        : result?.error_kind || t("llm.test.connectionError");
 
   return (
     <Box
@@ -33,17 +42,17 @@ export default function LlmConnectionTestCard({
         padding: 2,
       }}
     >
-      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>Connection test</Typography>
+      <Typography sx={{ fontSize: "0.875rem", fontWeight: 600, color: tk.text.primary }}>{t("llm.test.title")}</Typography>
       <Typography sx={{ marginTop: 0.75, fontSize: "0.75rem", color: tk.text.secondary, lineHeight: 1.5 }}>
-        Runs a minimal provider call and expects a simple OK response. Test output is not persisted.
+        {t("llm.test.blurb")}
       </Typography>
 
       <Box sx={{ display: "flex", gap: 1, marginTop: 2, flexWrap: "wrap" }}>
         <CursorButton onClick={onTestSaved} disabled={disabled || testing}>
-          {testing ? "Testing..." : "Test saved config"}
+          {testing ? t("llm.test.testing") : t("llm.test.saved")}
         </CursorButton>
         <CursorButton onClick={onTestDraft} disabled={disabled || testing}>
-          {testing ? "Testing..." : "Test draft config"}
+          {testing ? t("llm.test.testing") : t("llm.test.draft")}
         </CursorButton>
       </Box>
 
@@ -55,20 +64,14 @@ export default function LlmConnectionTestCard({
             ...alertMutedSx,
           }}
         >
-          <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>
-            {result.status === "connected"
-              ? "Connected"
-              : result.status === "unexpected_response"
-                ? "Unexpected response"
-                : result.error_kind || "Connection error"}
-          </Typography>
+          <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>{statusTitle}</Typography>
           <Typography sx={{ fontSize: "0.75rem", marginTop: 0.5, color: tk.text.primary }}>{result.message}</Typography>
           <Typography sx={{ fontSize: "0.75rem", marginTop: 1, color: tk.text.secondary }}>
             {[
-              result.resolved?.base_url ? `Base URL: ${result.resolved.base_url}` : null,
-              result.resolved?.model ? `Model: ${result.resolved.model}` : null,
-              result.latency_ms != null ? `Latency: ${result.latency_ms} ms` : null,
-              result.tested_at ? `Tested: ${result.tested_at}` : null,
+              result.resolved?.base_url ? t("llm.test.baseUrl", { url: result.resolved.base_url }) : null,
+              result.resolved?.model ? t("llm.test.model", { model: result.resolved.model }) : null,
+              result.latency_ms != null ? t("llm.test.latency", { ms: result.latency_ms }) : null,
+              result.tested_at ? t("llm.test.testedAt", { at: result.tested_at }) : null,
             ]
               .filter(Boolean)
               .join(" | ")}

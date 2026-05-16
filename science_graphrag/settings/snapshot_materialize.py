@@ -8,7 +8,12 @@ from typing import TYPE_CHECKING, Any
 from science_graphrag.settings.benchmark_defaults import build_benchmark_ui_snapshot
 from science_graphrag.settings.runtime_overlay import build_non_secret_overrides
 from science_graphrag.settings.secret_display import mask_short_secret as _mask_secret
-from science_graphrag.settings.secret_store_keys import LLM_API_KEY, LLM_VISION_API_KEY
+from science_graphrag.settings.secret_store_keys import (
+    LLM_API_KEY,
+    LLM_CHAT_API_KEY,
+    LLM_EMBEDDINGS_API_KEY,
+    LLM_VISION_API_KEY,
+)
 from science_graphrag.settings.secrets import SecretStore
 from science_graphrag.settings.snapshot_agent_tools import build_agent_tools_snapshot
 from science_graphrag.settings.snapshot_general import build_general_snapshot
@@ -60,12 +65,16 @@ def materialize_settings_snapshot(
     """Build a full UI snapshot from already-loaded persisted JSON."""
     pj = _PersistedJson.from_persisted(persisted)
     saved_default_secret = secret_store.get_secret(LLM_API_KEY)
+    saved_chat_secret = secret_store.get_secret(LLM_CHAT_API_KEY)
+    saved_embeddings_secret = secret_store.get_secret(LLM_EMBEDDINGS_API_KEY)
     saved_vision_secret = secret_store.get_secret(LLM_VISION_API_KEY)
 
     llm_snapshot = build_llm_snapshot(
         persisted_llm=pj.llm,
         base_settings=base_settings,
         saved_default_secret=saved_default_secret,
+        saved_chat_secret=saved_chat_secret,
+        saved_embeddings_secret=saved_embeddings_secret,
         saved_vision_secret=saved_vision_secret,
         mask_secret=_mask_secret,
     )

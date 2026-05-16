@@ -8,8 +8,9 @@ import re
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
-from pdf2image import convert_from_path
+from pdf2image import convert_from_bytes, convert_from_path
 from PIL import Image
 
 from science_graphrag.config import Settings
@@ -62,6 +63,154 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         self.last_pages_processed: int | None = None
         self.last_batch_count: int | None = None
 
+    def _pdf_pages_from_bytes(self, content: bytes, *, max_pages: int) -> list[Image.Image]:
+        """Rasterize in-memory PDF bytes to page images (capped by VL + caller page limits)."""
+        pages = convert_from_bytes(content, dpi=self.settings.vl_dpi)
+        if self.settings.vl_max_pages > 0:
+            pages = pages[: self.settings.vl_max_pages]
+        if max_pages > 0:
+            pages = pages[:max_pages]
+        return pages
+
+    def _vl_markdown_from_pages(  # pylint: disable=too-many-locals
+        self,
+        all_pages: list[Image.Image],
+        *,
+        span_extra: dict[str, Any],
+        on_page_progress: Callable[[int, int], None] | None = None,
+        on_batches_ready: Callable[[int, int, int], None] | None = None,
+    ) -> str:
+        """Run VL batch extraction over pre-rendered page images."""
+        if not all_pages:
+            raise ValueError("No pages available for VL processing")
+
+        batch_size = (
+            self.settings.vl_batch_size if self.settings.vl_batch_size > 0 else len(all_pages)
+        )
+        batches = [all_pages[i : i + batch_size] for i in range(0, len(all_pages), batch_size)]
+
+        self.last_pages_total = len(all_pages)
+        self.last_pages_processed = len(all_pages)
+        self.last_batch_count = len(batches)
+
+        if on_batches_ready is not None:
+            try:
+                on_batches_ready(len(batches), len(all_pages), int(batch_size))
+            except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
+                pass
+
+        parts: list[str] = []
+        total_prompt_tokens = 0
+        total_completion_tokens = 0
+
+        vl_transport_s = float(getattr(self.settings, "vl_llm_timeout_seconds", None) or 300.0)
+        vl_temperature = float(getattr(self.settings, "vl_llm_temperature", None) or 0.0)
+        span_attrs = {
+            **SpanAttributes.llm_runtime_policy_attributes(
+                pool_name="vl_pdf",
+                transport_timeout_seconds=vl_transport_s,
+                timeout_contract="transport_only",
+                retry_extra_budget=2,
+                transport_max_attempts=3,
+            ),
+            "vl.model": self.settings.vl_model,
+            "vl.base_url": self.settings.vl_base_url,
+            "vl.pages_total": len(all_pages),
+            "vl.batch_count": len(batches),
+            "vl.batch_size": batch_size,
+            **span_extra,
+        }
+        with llm_span("llm.vl_pdf", span_attrs):
+            for batch_idx, batch in enumerate(batches):
+                prompt = DEFAULT_VL_PROMPT if batch_idx == 0 else CONTINUE_VL_PROMPT
+                pages_done_before = sum(len(batches[j]) for j in range(batch_idx))
+                if on_page_progress is not None:
+                    try:
+                        on_page_progress(pages_done_before, len(all_pages))
+                    except (
+                        Exception
+                    ):  # pylint: disable=broad-exception-caught  # optional UI callback
+                        pass
+                markdown_part, usage = self._call_vl_api(batch, prompt)
+                parts.append(markdown_part)
+
+                total_prompt_tokens += usage.get("prompt_tokens") or 0
+                total_completion_tokens += usage.get("completion_tokens") or 0
+                if on_page_progress is not None:
+                    done_pages = sum(len(batches[j]) for j in range(batch_idx + 1))
+                    try:
+                        on_page_progress(done_pages, len(all_pages))
+                    except (
+                        Exception
+                    ):  # pylint: disable=broad-exception-caught  # optional UI callback
+                        pass
+
+            markdown = "\n\n".join(parts)
+
+            SpanAttributes.set_llm_attrs(
+                model=self.settings.vl_model,
+                base_url=self.settings.vl_base_url,
+                temperature=vl_temperature,
+                max_tokens=self.settings.vl_max_tokens,
+            )
+            SpanAttributes.set_llm_invocation_parameters(
+                {
+                    "max_tokens": self.settings.vl_max_tokens,
+                    "pages": len(all_pages),
+                    "dpi": self.settings.vl_dpi,
+                    "batches": len(batches),
+                    "batch_size": batch_size,
+                }
+            )
+            SpanAttributes.set_llm_input_messages(
+                [
+                    {
+                        "role": "user",
+                        "content": (
+                            f"<{len(all_pages)} page(s) in {len(batches)} " "batch(es)> + VL prompt"
+                        ),
+                    }
+                ]
+            )
+            SpanAttributes.set_llm_output_messages([{"role": "assistant", "content": markdown}])
+
+            if total_prompt_tokens or total_completion_tokens:
+                SpanAttributes.set_llm_token_counts(
+                    prompt_tokens=total_prompt_tokens or None,
+                    completion_tokens=total_completion_tokens or None,
+                    total_tokens=(total_prompt_tokens + total_completion_tokens) or None,
+                    usage_source="api",
+                )
+            else:
+                SpanAttributes.set_llm_token_counts_from_text(
+                    prompt_text=DEFAULT_VL_PROMPT,
+                    completion_text=markdown,
+                )
+
+            return markdown
+
+    def pdf_bytes_to_markdown(
+        self,
+        content: bytes,
+        *,
+        max_pages: int,
+        on_page_progress: Callable[[int, int], None] | None = None,
+        on_batches_ready: Callable[[int, int, int], None] | None = None,
+    ) -> str:
+        """VL-extract Markdown from raw PDF bytes (agent ``read_external_pdf`` path)."""
+        if not self.settings.resolved_vl_api_key:
+            raise ValueError("VL API key is not configured")
+        all_pages = self._pdf_pages_from_bytes(content, max_pages=max_pages)
+        return self._vl_markdown_from_pages(
+            all_pages,
+            span_extra={
+                "pdf.source": "bytes",
+                "pdf.bytes": len(content),
+            },
+            on_page_progress=on_page_progress,
+            on_batches_ready=on_batches_ready,
+        )
+
     def _pdf_pages(self, path: Path) -> list[Image.Image]:
         pages = convert_from_path(str(path), dpi=self.settings.vl_dpi)
         if self.settings.vl_max_pages > 0:
@@ -90,11 +239,12 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         payload = {
             "model": self.settings.vl_model,
             "messages": [{"role": "user", "content": content}],
-            "temperature": 0.0,
+            "temperature": float(getattr(self.settings, "vl_llm_temperature", None) or 0.0),
             "max_tokens": self.settings.vl_max_tokens,
         }
 
         key = (self.settings.resolved_vl_api_key or "").strip()
+        transport_timeout = float(getattr(self.settings, "vl_llm_timeout_seconds", None) or 300.0)
         with llm_pool_slot("vl_pdf", self.settings):
             try:
                 data, usage = ingest_chat_completions_json(
@@ -102,7 +252,7 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
                     base_url=self.settings.vl_base_url,
                     api_key=key,
                     json_body=payload,
-                    timeout_seconds=300.0,
+                    timeout_seconds=transport_timeout,
                 )
             except ChatCompletionsNonJsonResponseError:
                 # post_chat_completions_json already includes a short preview in the message.
@@ -164,104 +314,9 @@ class VLPDFProcessor:  # pylint: disable=too-few-public-methods
         if not all_pages:
             raise ValueError("No pages available for VL processing")
 
-        batch_size = (
-            self.settings.vl_batch_size if self.settings.vl_batch_size > 0 else len(all_pages)
+        return self._vl_markdown_from_pages(
+            all_pages,
+            span_extra={"pdf.path": str(path)},
+            on_page_progress=on_page_progress,
+            on_batches_ready=on_batches_ready,
         )
-        batches = [all_pages[i : i + batch_size] for i in range(0, len(all_pages), batch_size)]
-
-        self.last_pages_total = len(all_pages)
-        self.last_pages_processed = len(all_pages)
-        self.last_batch_count = len(batches)
-
-        if on_batches_ready is not None:
-            try:
-                on_batches_ready(len(batches), len(all_pages), int(batch_size))
-            except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
-                pass
-
-        parts: list[str] = []
-        total_prompt_tokens = 0
-        total_completion_tokens = 0
-
-        vl_transport_s = 300.0
-        with llm_span(
-            "llm.vl_pdf",
-            {
-                **SpanAttributes.llm_runtime_policy_attributes(
-                    pool_name="vl_pdf",
-                    transport_timeout_seconds=vl_transport_s,
-                    timeout_contract="transport_only",
-                    retry_extra_budget=2,
-                    transport_max_attempts=3,
-                ),
-                "vl.model": self.settings.vl_model,
-                "vl.base_url": self.settings.vl_base_url,
-                "pdf.path": str(path),
-                "vl.pages_total": len(all_pages),
-                "vl.batch_count": len(batches),
-                "vl.batch_size": batch_size,
-            },
-        ):
-            for batch_idx, batch in enumerate(batches):
-                prompt = DEFAULT_VL_PROMPT if batch_idx == 0 else CONTINUE_VL_PROMPT
-                pages_done_before = sum(len(batches[j]) for j in range(batch_idx))
-                if on_page_progress is not None:
-                    try:
-                        on_page_progress(pages_done_before, len(all_pages))
-                    except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
-                        pass
-                markdown_part, usage = self._call_vl_api(batch, prompt)
-                parts.append(markdown_part)
-
-                total_prompt_tokens += usage.get("prompt_tokens") or 0
-                total_completion_tokens += usage.get("completion_tokens") or 0
-                if on_page_progress is not None:
-                    done_pages = sum(len(batches[j]) for j in range(batch_idx + 1))
-                    try:
-                        on_page_progress(done_pages, len(all_pages))
-                    except Exception:  # pylint: disable=broad-exception-caught  # optional UI callback
-                        pass
-
-            markdown = "\n\n".join(parts)
-
-            SpanAttributes.set_llm_attrs(
-                model=self.settings.vl_model,
-                base_url=self.settings.vl_base_url,
-                temperature=0.0,
-                max_tokens=self.settings.vl_max_tokens,
-            )
-            SpanAttributes.set_llm_invocation_parameters(
-                {
-                    "max_tokens": self.settings.vl_max_tokens,
-                    "pages": len(all_pages),
-                    "dpi": self.settings.vl_dpi,
-                    "batches": len(batches),
-                    "batch_size": batch_size,
-                }
-            )
-            SpanAttributes.set_llm_input_messages(
-                [
-                    {
-                        "role": "user",
-                        "content": (
-                            f"<{len(all_pages)} page(s) in {len(batches)} " "batch(es)> + VL prompt"
-                        ),
-                    }
-                ]
-            )
-            SpanAttributes.set_llm_output_messages([{"role": "assistant", "content": markdown}])
-
-            if total_prompt_tokens or total_completion_tokens:
-                SpanAttributes.set_llm_token_counts(
-                    prompt_tokens=total_prompt_tokens or None,
-                    completion_tokens=total_completion_tokens or None,
-                    total_tokens=(total_prompt_tokens + total_completion_tokens) or None,
-                    usage_source="api",
-                )
-            else:
-                SpanAttributes.set_llm_token_counts_from_text(
-                    prompt_text=DEFAULT_VL_PROMPT,
-                    completion_text=markdown,
-                )
-
-            return markdown

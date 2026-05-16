@@ -13,7 +13,10 @@ import { useAskWorkContext } from "./useAskWorkContext.js";
 import { useAskPerformAgentSubmit } from "./useAskPerformAgentSubmit.js";
 import { formatAskAgentUiError } from "./askAgentUiErrors.js";
 import { deriveAskPanelScopeEyebrow } from "./askPanelScopePresentation.js";
-import { PDF_READ_USER_MESSAGE_TOKEN } from "../../../../services/research/pdfReadUi.js";
+import {
+  extractPdfReadArtifactIdFromStreamEvents,
+  PDF_READ_USER_MESSAGE_TOKEN,
+} from "../../../../services/research/pdfReadUi.js";
 import { useAskPanelClipboard } from "./useAskPanelClipboard.js";
 import { useAskPanelStreamArtifacts } from "./useAskPanelStreamArtifacts.js";
 
@@ -61,6 +64,7 @@ export function useAskPanelOrchestration({
     url: "",
     error: "",
     mode: "",
+    artifactId: "",
   });
   /** When storage head matches this turn id, do not refill composer from `recent[0]` (avoids scopeKey churn after submit). */
   const composerSuppressHydrateTurnIdRef = useRef("");
@@ -268,18 +272,48 @@ export function useAskPanelOrchestration({
     async (pdfUrlRaw) => {
       const pdfUrl = String(pdfUrlRaw || "").trim();
       if (!pdfUrl || isLoading || pdfReadingMode === "off") return;
-      setPdfReadState({ isActive: true, url: pdfUrl, error: "", mode: "running" });
+      setPdfReadState({ isActive: true, url: pdfUrl, error: "", mode: "running", artifactId: "" });
       try {
-        await performAgentSubmit(PDF_READ_USER_MESSAGE_TOKEN, {
+        const res = await performAgentSubmit(PDF_READ_USER_MESSAGE_TOKEN, {
           pdfReadRequest: { pdf_url: pdfUrl },
         });
-        setPdfReadState({ isActive: false, url: pdfUrl, error: "", mode: "done" });
+        const streamEvents = res && typeof res === "object" && Array.isArray(res.streamEvents) ? res.streamEvents : [];
+        const fromStream = extractPdfReadArtifactIdFromStreamEvents(streamEvents);
+        const rm =
+          res && typeof res === "object" && res.ok !== false && res.normalized?.run_metadata != null
+            ? res.normalized.run_metadata
+            : null;
+        const fromMeta =
+          rm && typeof rm === "object" && rm.pdf_read_artifact_id != null
+            ? String(rm.pdf_read_artifact_id).trim()
+            : "";
+        const artifactId = fromMeta || fromStream;
+
+        if (!res || res.ok === false) {
+          setPdfReadState({
+            isActive: false,
+            url: pdfUrl,
+            error: t("askPanel.agentIncompleteTurn"),
+            mode: "failed",
+            artifactId,
+          });
+          return;
+        }
+
+        setPdfReadState({
+          isActive: false,
+          url: pdfUrl,
+          error: "",
+          mode: "done",
+          artifactId,
+        });
       } catch (exc) {
         setPdfReadState({
           isActive: false,
           url: pdfUrl,
           error: formatAskAgentUiError(t, String(exc?.message || exc || "")),
           mode: "failed",
+          artifactId: "",
         });
       }
     },

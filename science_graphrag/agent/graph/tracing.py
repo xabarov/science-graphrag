@@ -46,6 +46,47 @@ def _tool_result_payload(content: Any) -> tuple[dict[str, Any], str | None]:
     return {}, None
 
 
+def extract_last_ok_tool_payload(
+    messages: list[Any],
+    *,
+    tool: str,
+) -> dict[str, Any] | None:
+    """Return the last successful JSON tool payload for ``tool`` (e.g. ``read_external_pdf``)."""
+    want = normalize_tool_call_name(tool)
+    for msg in reversed(messages):
+        if not isinstance(msg, ToolMessage):
+            continue
+        if normalize_tool_call_name(str(msg.name or "")) != want:
+            continue
+        payload, err = _tool_result_payload(msg.content)
+        if err is not None:
+            continue
+        if isinstance(payload, dict) and bool(payload.get("ok")):
+            return payload
+    return None
+
+
+def extract_last_tool_payload_for_tool(
+    messages: list[Any],
+    *,
+    tool: str,
+) -> dict[str, Any] | None:
+    """Return last non-empty JSON tool payload for ``tool`` (includes ``ok=false``).
+
+    Skips unparseable tool results and empty ``{}`` payloads.
+    """
+    want = normalize_tool_call_name(tool)
+    for msg in reversed(messages):
+        if not isinstance(msg, ToolMessage):
+            continue
+        if normalize_tool_call_name(str(msg.name or "")) != want:
+            continue
+        payload, _err = _tool_result_payload(msg.content)
+        if isinstance(payload, dict) and payload:
+            return payload
+    return None
+
+
 def collect_tool_execution_steps(messages: list[Any]) -> list[ToolExecutionStep]:
     """Extract canonical execution steps from LangGraph message sequence."""
     steps: list[ToolExecutionStep] = []

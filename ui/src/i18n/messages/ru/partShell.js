@@ -44,8 +44,6 @@ export default {
 
   "shell.settings.navTitle": "Настройки",
   "shell.settings.unsaved": "В этой секции есть несохранённые изменения.",
-  "shell.settings.statusReady": "Готово",
-  "shell.settings.statusSoon": "Скоро",
 
   "app.adminHidden.eyebrow": "Исследовательская зона",
   "app.adminHidden.title": "Админ-инструменты скрыты",

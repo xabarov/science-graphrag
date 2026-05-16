@@ -1,21 +1,55 @@
 import React, { useMemo, useState } from "react";
+import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
 import { useTheme } from "@mui/material/styles";
 
+import { CursorPrimaryButton } from "../../components/common/index.js";
 import { useI18n } from "../../i18n/useI18n.js";
 import { outlinedAppTextFieldSx, settingsAlertMutedSx, settingsCardSx } from "../../theme/settingsFormSx.js";
 import LlmAdvancedSettingsCard from "./LlmAdvancedSettingsCard.jsx";
 import LlmConnectionTestCard from "./LlmConnectionTestCard.jsx";
-import LlmQuickStartCard from "./LlmQuickStartCard.jsx";
-import LlmSecretsCard from "./LlmSecretsCard.jsx";
-import LlmTaskOverridesCard from "./LlmTaskOverridesCard.jsx";
+import LlmSecretTextField from "./LlmSecretTextField.jsx";
+import LlmProviderPresetsCard from "./LlmProviderPresetsCard.jsx";
+import LlmTaskCard from "./LlmTaskCard.jsx";
 import { computeSaveBlockingMessage } from "./llmSaveValidation.js";
-import {
-  buildAdvValuesFromLlm,
-  buildLlmSettingsSubmitPayload,
-  buildRuntimeOverridesPayload,
-} from "./llmSettingsPayload.js";
+import { buildAdvValuesFromLlm, buildLlmSettingsSubmitPayload } from "./llmSettingsPayload.js";
 import { LLM_RUNTIME_OVERRIDE_KEYS, schemaGroupForKey } from "./llmRuntimeOverrideKeys.js";
+
+function valueFromTask(tasks, role, key, fallback = "") {
+  const taskValue = tasks?.[role]?.[key];
+  if (taskValue !== undefined && taskValue !== null && taskValue !== "") {
+    return taskValue;
+  }
+  return fallback;
+}
+
+function stringValue(value, fallback = "") {
+  return String(value ?? fallback ?? "");
+}
+
+function embeddingsBaseUrlValue(llm, tasks) {
+  return stringValue(
+    valueFromTask(
+      tasks,
+      "embeddings",
+      "base_url",
+      llm?.effective?.resolved_embeddings_base_url || llm?.base_url || "",
+    ),
+  ).trim();
+}
+
+function embeddingsModelValue(llm, tasks) {
+  return stringValue(
+    valueFromTask(
+      tasks,
+      "embeddings",
+      "model",
+      tasks?.embeddings?.model_label || llm?.embeddings_model || "",
+    ),
+  ).trim();
+}
 
 export default function LlmSettingsPanel({
   llm,
@@ -25,8 +59,6 @@ export default function LlmSettingsPanel({
   saveError,
   testResult,
   onSave,
-  onDeleteSecret,
-  onDeleteVisionSecret,
   onTestSaved,
   onTestDraft,
   onDirtyChange,
@@ -40,21 +72,41 @@ export default function LlmSettingsPanel({
   const [baseUrl, setBaseUrl] = useState(llm?.base_url || "");
   const [model, setModel] = useState(llm?.model || "");
   const [chatModel, setChatModel] = useState(llm?.chat_model || "");
+  const [chatBaseUrl, setChatBaseUrl] = useState(llm?.chat_base_url || "");
+  const [chatTemperature, setChatTemperature] = useState(
+    String(llm?.tasks?.chat?.temperature ?? llm?.temperature ?? 0),
+  );
+  const [chatTimeoutSeconds, setChatTimeoutSeconds] = useState(
+    String(llm?.tasks?.chat?.timeout_seconds ?? llm?.effective?.resolved_timeout_seconds ?? 180),
+  );
   const [vlModel, setVlModel] = useState("");
   const [vlBaseUrl, setVlBaseUrl] = useState("");
+  const [vlTemperature, setVlTemperature] = useState(String(llm?.tasks?.vision?.temperature ?? 0));
+  const [vlTimeoutSeconds, setVlTimeoutSeconds] = useState(String(llm?.tasks?.vision?.timeout_seconds ?? 300));
   const [temperature, setTemperature] = useState(String(llm?.temperature ?? 0));
   const [timeoutSeconds, setTimeoutSeconds] = useState(String(llm?.effective?.resolved_timeout_seconds ?? 180));
   const [apiKey, setApiKey] = useState("");
-  const [revealDraftKey, setRevealDraftKey] = useState(false);
-  const [replaceKey, setReplaceKey] = useState(false);
   const [visionApiKey, setVisionApiKey] = useState("");
-  const [revealVisionDraftKey, setRevealVisionDraftKey] = useState(false);
-  const [replaceVisionKey, setReplaceVisionKey] = useState(false);
+  const [chatApiKey, setChatApiKey] = useState("");
+  const [embeddingsBaseUrl, setEmbeddingsBaseUrl] = useState(
+    embeddingsBaseUrlValue(llm, llm?.tasks || {}),
+  );
+  const [embeddingsModel, setEmbeddingsModel] = useState(
+    embeddingsModelValue(llm, llm?.tasks || {}),
+  );
+  const [embeddingsTimeoutSeconds, setEmbeddingsTimeoutSeconds] = useState(
+    String(llm?.tasks?.embeddings?.timeout_seconds ?? 60),
+  );
+  const [embeddingsApiKey, setEmbeddingsApiKey] = useState("");
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [advValues, setAdvValues] = useState(() => buildAdvValuesFromLlm(llm));
 
   const hasSavedSecret = Boolean(llm?.status?.has_saved_secret);
-  const hasSavedVisionSecret = Boolean(llm?.status?.has_saved_vision_secret);
+  const hasRevealableSecret = hasSavedSecret;
+  const hasSavedVisionSecret = Boolean(llm?.status?.has_saved_vision_secret || hasRevealableSecret);
+  const hasSavedChatSecret = Boolean(llm?.status?.has_saved_chat_secret || hasRevealableSecret);
+  const hasSavedEmbeddingsSecret = Boolean(llm?.status?.has_saved_embeddings_secret || hasRevealableSecret);
+  const tasks = llm?.tasks || {};
 
   const llmSchemaFields = useMemo(() => {
     const sec = schema?.sections?.find((s) => s.id === "llm");
@@ -81,12 +133,23 @@ export default function LlmSettingsPanel({
     if (!llm) return;
     setBaseUrl(llm.base_url || "");
     setModel(llm.model || "");
-    setChatModel(llm.chat_model || "");
-    setVlModel((llm.vl_model || "").trim());
-    setVlBaseUrl((llm.vl_base_url || "").trim());
+    const nextTasks = llm.tasks || {};
+    setChatModel(stringValue(valueFromTask(nextTasks, "chat", "model", llm.chat_model)));
+    setChatBaseUrl(stringValue(valueFromTask(nextTasks, "chat", "base_url", llm.chat_base_url)));
+    setChatTemperature(stringValue(valueFromTask(nextTasks, "chat", "temperature", llm.temperature ?? 0)));
+    setChatTimeoutSeconds(
+      stringValue(valueFromTask(nextTasks, "chat", "timeout_seconds", llm.effective?.resolved_timeout_seconds ?? 180)),
+    );
+    setVlModel(stringValue(valueFromTask(nextTasks, "vision", "model", llm.vl_model)).trim());
+    setVlBaseUrl(stringValue(valueFromTask(nextTasks, "vision", "base_url", llm.vl_base_url)).trim());
+    setVlTemperature(stringValue(valueFromTask(nextTasks, "vision", "temperature", 0)));
+    setVlTimeoutSeconds(stringValue(valueFromTask(nextTasks, "vision", "timeout_seconds", 300)));
     setTemperature(String(llm.temperature ?? 0));
     setTimeoutSeconds(String(llm.effective?.resolved_timeout_seconds ?? 180));
     setAdvValues(buildAdvValuesFromLlm(llm));
+    setEmbeddingsBaseUrl(embeddingsBaseUrlValue(llm, nextTasks));
+    setEmbeddingsModel(embeddingsModelValue(llm, nextTasks));
+    setEmbeddingsTimeoutSeconds(stringValue(valueFromTask(nextTasks, "embeddings", "timeout_seconds", 60)));
   }, [llm]);
 
   const advDirty = useMemo(() => {
@@ -105,35 +168,53 @@ export default function LlmSettingsPanel({
   }, [llm, advValues]);
 
   const providerDirty = useMemo(() => {
-    const persistedVm = (llm?.vl_model || "").trim();
-    const persistedVb = (llm?.vl_base_url || "").trim();
+    const currentTasks = llm?.tasks || {};
     return (
       baseUrl !== (llm?.base_url || "") ||
       model !== (llm?.model || "") ||
-      chatModel !== (llm?.chat_model || "") ||
-      vlModel.trim() !== persistedVm ||
-      vlBaseUrl.trim() !== persistedVb ||
+      chatModel.trim() !== stringValue(valueFromTask(currentTasks, "chat", "model", llm?.chat_model)).trim() ||
+      chatBaseUrl.trim() !== stringValue(valueFromTask(currentTasks, "chat", "base_url", llm?.chat_base_url)).trim() ||
+      Number(chatTemperature) !== Number(valueFromTask(currentTasks, "chat", "temperature", llm?.temperature ?? 0)) ||
+      Number(chatTimeoutSeconds) !==
+        Number(valueFromTask(currentTasks, "chat", "timeout_seconds", llm?.effective?.resolved_timeout_seconds ?? 180)) ||
+      vlModel.trim() !== stringValue(valueFromTask(currentTasks, "vision", "model", llm?.vl_model)).trim() ||
+      vlBaseUrl.trim() !== stringValue(valueFromTask(currentTasks, "vision", "base_url", llm?.vl_base_url)).trim() ||
+      Number(vlTemperature) !== Number(valueFromTask(currentTasks, "vision", "temperature", 0)) ||
+      Number(vlTimeoutSeconds) !== Number(valueFromTask(currentTasks, "vision", "timeout_seconds", 300)) ||
       Number(temperature) !== Number(llm?.temperature ?? 0) ||
       Number(timeoutSeconds) !== Number(llm?.effective?.resolved_timeout_seconds ?? 180) ||
-      Boolean(apiKey) ||
-      replaceKey
+      Boolean(apiKey.trim()) ||
+      Boolean(chatApiKey.trim()) ||
+      Boolean(visionApiKey.trim()) ||
+      Boolean(embeddingsApiKey.trim()) ||
+      embeddingsBaseUrl.trim() !== embeddingsBaseUrlValue(llm, currentTasks) ||
+      embeddingsModel.trim() !== embeddingsModelValue(llm, currentTasks) ||
+      Number(embeddingsTimeoutSeconds) !== Number(valueFromTask(currentTasks, "embeddings", "timeout_seconds", 60))
     );
   }, [
     apiKey,
     baseUrl,
+    chatBaseUrl,
+    chatApiKey,
     chatModel,
+    chatTemperature,
+    chatTimeoutSeconds,
+    embeddingsApiKey,
+    embeddingsBaseUrl,
+    embeddingsModel,
+    embeddingsTimeoutSeconds,
     llm,
     model,
-    replaceKey,
     temperature,
     timeoutSeconds,
     vlBaseUrl,
     vlModel,
+    vlTemperature,
+    vlTimeoutSeconds,
+    visionApiKey,
   ]);
 
-  const visionKeyDirty = useMemo(() => replaceVisionKey && Boolean(visionApiKey.trim()), [replaceVisionKey, visionApiKey]);
-
-  const dirty = providerDirty || advDirty || visionKeyDirty;
+  const dirty = providerDirty || advDirty;
 
   const advancedValidationMessage = computeSaveBlockingMessage(t, advValues, timeoutSeconds);
 
@@ -155,31 +236,60 @@ export default function LlmSettingsPanel({
     setAdvValues((prev) => ({ ...prev, ...next }));
   }
 
+  /** @param {import("./llmProviderPresets.js").LlmPresetFormValues} values */
+  function applyProviderPreset(values) {
+    setBaseUrl(values.baseUrl);
+    setModel(values.model);
+    setTemperature(values.temperature);
+    setTimeoutSeconds(values.timeoutSeconds);
+    setApiKey(values.apiKey);
+    setChatModel(values.chatModel);
+    setChatBaseUrl(values.chatBaseUrl);
+    setChatTemperature(values.chatTemperature);
+    setChatTimeoutSeconds(values.chatTimeoutSeconds);
+    setChatApiKey(values.chatApiKey);
+    setVlModel(values.vlModel);
+    setVlBaseUrl(values.vlBaseUrl);
+    setVlTemperature(values.vlTemperature);
+    setVlTimeoutSeconds(values.vlTimeoutSeconds);
+    setVisionApiKey(values.visionApiKey);
+    setEmbeddingsBaseUrl(values.embeddingsBaseUrl);
+    setEmbeddingsModel(values.embeddingsModel);
+    setEmbeddingsTimeoutSeconds(values.embeddingsTimeoutSeconds);
+    setEmbeddingsApiKey(values.embeddingsApiKey);
+  }
+
   function submit() {
     if (advancedValidationMessage) return;
     const payload = buildLlmSettingsSubmitPayload({
       baseUrl,
       model,
       chatModel,
+      chatBaseUrl,
       temperature: Number(temperature),
       timeoutSeconds: Number(timeoutSeconds),
       vlModel,
       vlBaseUrl,
+      vlTemperature: Number(vlTemperature),
+      vlTimeoutSeconds: Number(vlTimeoutSeconds),
       llm,
-      replaceKey,
       apiKey,
-      replaceVisionKey,
+      chatApiKey,
       visionApiKey,
+      chatTemperature: Number(chatTemperature),
+      chatTimeoutSeconds: Number(chatTimeoutSeconds),
+      embeddingsBaseUrl,
+      embeddingsModel,
+      embeddingsTimeoutSeconds: Number(embeddingsTimeoutSeconds),
+      embeddingsApiKey,
       advDirty,
       advValues,
     });
     onSave(payload);
     setApiKey("");
-    setReplaceKey(false);
-    setRevealDraftKey(false);
+    setChatApiKey("");
     setVisionApiKey("");
-    setReplaceVisionKey(false);
-    setRevealVisionDraftKey(false);
+    setEmbeddingsApiKey("");
   }
 
   function buildDraftPayload(useSavedSecret) {
@@ -189,73 +299,234 @@ export default function LlmSettingsPanel({
       temperature: Number(temperature),
       timeout_seconds: Number(timeoutSeconds),
       use_saved_secret: useSavedSecret,
-      ...(apiKey ? { api_key: apiKey } : {}),
+      ...(apiKey.trim() ? { api_key: apiKey.trim() } : {}),
     };
   }
 
   function handleDraftTest() {
-    onTestDraft(buildDraftPayload(apiKey ? false : true));
+    onTestDraft(buildDraftPayload(apiKey.trim() ? false : true));
   }
+
+  const saveDisabled = saving || Boolean(advancedValidationMessage) || !dirty;
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-      <LlmQuickStartCard
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 1,
+          alignItems: "center",
+        }}
+      >
+        <CursorPrimaryButton onClick={submit} disabled={saveDisabled}>
+          {saving ? t("llm.save.saving") : t("llm.save.idle")}
+        </CursorPrimaryButton>
+        {advancedValidationMessage ? (
+          <Typography sx={{ fontSize: "0.75rem", color: tk.control.dangerFg, flex: "1 1 200px" }}>
+            {advancedValidationMessage}
+          </Typography>
+        ) : null}
+      </Box>
+      {saveError ? (
+        <Alert severity="error" sx={alertMutedSx}>
+          {saveError}
+        </Alert>
+      ) : null}
+
+      <LlmProviderPresetsCard
         tk={tk}
         cardSx={cardSx}
-        fieldSx={fieldSx}
-        llm={llm}
-        baseUrl={baseUrl}
-        setBaseUrl={setBaseUrl}
-        temperature={temperature}
-        setTemperature={setTemperature}
-        timeoutSeconds={timeoutSeconds}
-        setTimeoutSeconds={setTimeoutSeconds}
+        taskBaseUrls={{
+          extraction: baseUrl,
+          chat: chatBaseUrl,
+          vision: vlBaseUrl,
+          embeddings: embeddingsBaseUrl,
+        }}
+        onApplyPreset={applyProviderPreset}
       />
 
-      <LlmTaskOverridesCard
-        tk={tk}
-        cardSx={cardSx}
-        fieldSx={fieldSx}
-        llm={llm}
-        model={model}
-        setModel={setModel}
-        chatModel={chatModel}
-        setChatModel={setChatModel}
-        vlModel={vlModel}
-        setVlModel={setVlModel}
-        vlBaseUrl={vlBaseUrl}
-        setVlBaseUrl={setVlBaseUrl}
-      />
+      <LlmTaskCard tk={tk} cardSx={cardSx} title={t("llm.card.extraction")} subtitle={t("llm.card.extractionHint")}>
+        <TextField
+          label={t("llm.field.baseUrl")}
+          size="small"
+          value={baseUrl}
+          onChange={(e) => setBaseUrl(e.target.value)}
+          sx={fieldSx}
+          fullWidth
+        />
+        <TextField
+          label={t("llm.field.model")}
+          size="small"
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          sx={fieldSx}
+          fullWidth
+        />
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+          <TextField
+            label={t("llm.field.temperature")}
+            size="small"
+            value={temperature}
+            onChange={(e) => setTemperature(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+          <TextField
+            label={`${t("llm.field.timeout")} (${t("llm.field.secondsSuffix")})`}
+            size="small"
+            value={timeoutSeconds}
+            onChange={(e) => setTimeoutSeconds(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+            helperText={t("llm.hint.transportTimeout")}
+          />
+        </Box>
+        <LlmSecretTextField
+          label={t("llm.field.apiKey")}
+          value={apiKey}
+          onChange={setApiKey}
+          fieldSx={fieldSx}
+          placeholder={t("llm.card.apiKeyPlaceholder")}
+          revealTask="extraction"
+          savedPresent={hasSavedSecret}
+        />
+      </LlmTaskCard>
 
-      <LlmSecretsCard
-        tk={tk}
-        cardSx={cardSx}
-        fieldSx={fieldSx}
-        alertMutedSx={alertMutedSx}
-        llm={llm}
-        saving={saving}
-        testing={testing}
-        saveError={saveError}
-        dirty={dirty}
-        advancedValidationMessage={advancedValidationMessage}
-        replaceKey={replaceKey}
-        setReplaceKey={setReplaceKey}
-        apiKey={apiKey}
-        setApiKey={setApiKey}
-        revealDraftKey={revealDraftKey}
-        setRevealDraftKey={setRevealDraftKey}
-        replaceVisionKey={replaceVisionKey}
-        setReplaceVisionKey={setReplaceVisionKey}
-        visionApiKey={visionApiKey}
-        setVisionApiKey={setVisionApiKey}
-        revealVisionDraftKey={revealVisionDraftKey}
-        setRevealVisionDraftKey={setRevealVisionDraftKey}
-        onDeleteSecret={onDeleteSecret}
-        onDeleteVisionSecret={onDeleteVisionSecret}
-        onSubmit={submit}
-        hasSavedSecret={hasSavedSecret}
-        hasSavedVisionSecret={hasSavedVisionSecret}
-      />
+      <LlmTaskCard tk={tk} cardSx={cardSx} title={t("llm.card.chat")} subtitle={t("llm.hint.chatModelFallback")}>
+        <TextField
+          label={t("llm.field.chatModel")}
+          size="small"
+          value={chatModel}
+          onChange={(e) => setChatModel(e.target.value)}
+          sx={fieldSx}
+          fullWidth
+        />
+        <TextField
+          label={t("llm.field.chatBaseUrl")}
+          size="small"
+          value={chatBaseUrl}
+          onChange={(e) => setChatBaseUrl(e.target.value)}
+          sx={fieldSx}
+          fullWidth
+          placeholder={(llm?.effective?.resolved_chat_base_url || "").trim() || undefined}
+        />
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+          <TextField
+            label={t("llm.field.temperature")}
+            size="small"
+            value={chatTemperature}
+            onChange={(e) => setChatTemperature(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+          <TextField
+            label={`${t("llm.field.timeout")} (${t("llm.field.secondsSuffix")})`}
+            size="small"
+            value={chatTimeoutSeconds}
+            onChange={(e) => setChatTimeoutSeconds(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+        </Box>
+        <LlmSecretTextField
+          label={t("llm.field.apiKey")}
+          value={chatApiKey}
+          onChange={setChatApiKey}
+          fieldSx={fieldSx}
+          placeholder={t("llm.card.chatKeyPlaceholder")}
+          revealTask="chat"
+          savedPresent={hasSavedChatSecret}
+        />
+      </LlmTaskCard>
+
+      <LlmTaskCard tk={tk} cardSx={cardSx} title={t("llm.card.vision")} subtitle={t("llm.vision.intro")}>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 1.5 }}>
+          <TextField
+            label={t("llm.field.vlModel")}
+            size="small"
+            value={vlModel}
+            onChange={(e) => setVlModel(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+            placeholder={(llm?.effective?.resolved_vl_model || "").trim() || undefined}
+          />
+          <TextField
+            label={t("llm.field.vlBaseUrl")}
+            size="small"
+            value={vlBaseUrl}
+            onChange={(e) => setVlBaseUrl(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+            helperText={t("llm.hint.vlBaseUrlFallback")}
+            placeholder={(llm?.effective?.resolved_vl_base_url || "").trim() || undefined}
+          />
+        </Box>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+          <TextField
+            label={t("llm.field.temperature")}
+            size="small"
+            value={vlTemperature}
+            onChange={(e) => setVlTemperature(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+          <TextField
+            label={`${t("llm.field.timeout")} (${t("llm.field.secondsSuffix")})`}
+            size="small"
+            value={vlTimeoutSeconds}
+            onChange={(e) => setVlTimeoutSeconds(e.target.value)}
+            sx={fieldSx}
+            fullWidth
+          />
+        </Box>
+        <LlmSecretTextField
+          label={t("llm.field.apiKey")}
+          value={visionApiKey}
+          onChange={setVisionApiKey}
+          fieldSx={fieldSx}
+          placeholder={t("llm.card.visionKeyPlaceholder")}
+          revealTask="vision"
+          savedPresent={hasSavedVisionSecret}
+        />
+      </LlmTaskCard>
+
+      <LlmTaskCard tk={tk} cardSx={cardSx} title={t("llm.tasks.embeddings")} subtitle={t("llm.tasks.embeddingsKeyHint")}>
+        <TextField
+          label={t("llm.field.baseUrl")}
+          size="small"
+          value={embeddingsBaseUrl}
+          onChange={(e) => setEmbeddingsBaseUrl(e.target.value)}
+          sx={fieldSx}
+          fullWidth
+        />
+        <TextField
+          label={t("llm.embeddings.model")}
+          size="small"
+          value={embeddingsModel}
+          onChange={(e) => setEmbeddingsModel(e.target.value)}
+          sx={fieldSx}
+          fullWidth
+          placeholder={(tasks.embeddings?.model_label || "").trim() || undefined}
+        />
+        <TextField
+          label={`${t("llm.field.timeout")} (${t("llm.field.secondsSuffix")})`}
+          size="small"
+          value={embeddingsTimeoutSeconds}
+          onChange={(e) => setEmbeddingsTimeoutSeconds(e.target.value)}
+          sx={fieldSx}
+          fullWidth
+        />
+        <LlmSecretTextField
+          label={t("llm.field.apiKey")}
+          value={embeddingsApiKey}
+          onChange={setEmbeddingsApiKey}
+          fieldSx={fieldSx}
+          placeholder={t("llm.card.embeddingsKeyPlaceholder")}
+          revealTask="embeddings"
+          savedPresent={hasSavedEmbeddingsSecret}
+        />
+      </LlmTaskCard>
 
       <LlmConnectionTestCard
         disabled={!baseUrl || !model}

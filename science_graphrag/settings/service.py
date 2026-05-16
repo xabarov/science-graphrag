@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
@@ -17,15 +18,32 @@ from science_graphrag.settings.llm_advanced_fields import (
     clamp_advanced_field,
     validate_merged_runtime_settings,
 )
+from science_graphrag.settings.llm_task_persisted import (
+    apply_tasks_to_llm_dict,
+    get_normalized_llm_tasks,
+    merge_partial_tasks_patch,
+    strip_legacy_llm_task_flat_keys,
+)
 from science_graphrag.settings.llm_test_probe_service import (
     LlmTestDraft,
     run_llm_connection_probe,
     run_settings_llm_test_probe,
 )
 from science_graphrag.settings.repository import SettingsRepository
+from science_graphrag.settings.runtime_llm_bootstrap import (
+    ensure_llm_runtime_bootstrap_from_env,
+    llm_bootstrap_applied,
+)
+from science_graphrag.settings.agent_tools_mcp import normalize_mcp_server_denylist
 from science_graphrag.settings.runtime_overlay import build_non_secret_overrides
 from science_graphrag.settings.schema import build_settings_schema
-from science_graphrag.settings.secret_store_keys import LLM_API_KEY, LLM_VISION_API_KEY
+from science_graphrag.settings.secret_store_keys import (
+    LLM_API_KEY,
+    LLM_CHAT_API_KEY,
+    LLM_EMBEDDINGS_API_KEY,
+    LLM_VISION_API_KEY,
+    SEMANTIC_SCHOLAR_API_KEY,
+)
 from science_graphrag.settings.secrets import SecretStore
 from science_graphrag.settings.service_runtime_merge import (
     merged_runtime_candidate_from_persisted_payload,
@@ -49,6 +67,7 @@ _AGENT_TOOLS_PATCH_ALLOWLIST: frozenset[str] = frozenset(
         "external_research_default_enabled",
         "external_research_sources",
         "pdf_reading_mode",
+        "agent_pdf_read_backend_mode",
         "agent_unpaywall_oa_tool_enabled",
         "agent_external_http_timeout_seconds",
         "agent_external_max_calls_per_turn",
@@ -58,12 +77,20 @@ _AGENT_TOOLS_PATCH_ALLOWLIST: frozenset[str] = frozenset(
         "agent_pdf_read_max_pages",
         "agent_pdf_read_cache_ttl_seconds",
         "agent_pdf_read_cache_max_entries",
+        "agent_pdf_read_durable_cache_enabled",
+        "agent_mcp_request_timeout_seconds",
+        "agent_mcp_server_denylist",
     }
 )
 
 
 _UNSET_CHAT_MODEL = object()
 _UNSET_VISION_API_KEY = object()
+_UNSET_CHAT_API_KEY = object()
+_UNSET_EMBEDDINGS_API_KEY = object()
+_UNSET_EXTRACTION_API_KEY = object()
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _now_iso() -> str:
@@ -92,20 +119,41 @@ class SettingsService:
 
     def build_runtime_settings(self, base_settings: Settings) -> Settings:
         """Overlay persisted runtime overrides onto env-derived settings."""
+        ensure_llm_runtime_bootstrap_from_env(self, base_settings)
         overrides = self.get_snapshot(base_settings).non_secret_overrides
         payload = dict(overrides)
+        persisted = self._repository.load()
+        boot = llm_bootstrap_applied(persisted)
         api_key = self._secret_store.get_secret(LLM_API_KEY)
         if api_key:
             payload["extraction_llm_api_key"] = api_key
+        elif boot:
+            payload["extraction_llm_api_key"] = ""
+        chat_key = self._secret_store.get_secret(LLM_CHAT_API_KEY)
+        if chat_key:
+            payload["chat_llm_api_key"] = chat_key.strip()
+        elif boot:
+            payload["chat_llm_api_key"] = ""
+        emb_key = self._secret_store.get_secret(LLM_EMBEDDINGS_API_KEY)
+        if emb_key:
+            payload["embeddings_api_key"] = emb_key.strip()
+        elif boot:
+            payload["embeddings_api_key"] = ""
         vision_key = self._secret_store.get_secret(LLM_VISION_API_KEY)
         if vision_key:
             payload["vl_api_key"] = vision_key.strip()
+        elif boot:
+            payload["vl_api_key"] = ""
+        s2_key = self._secret_store.get_secret(SEMANTIC_SCHOLAR_API_KEY)
+        if s2_key:
+            payload["semantic_scholar_api_key"] = s2_key.strip()
         if not payload:
             return base_settings
         return base_settings.model_copy(update=payload)
 
     def get_snapshot(self, base_settings: Settings) -> SettingsSnapshot:
         """Return a masked UI-facing snapshot of runtime settings."""
+        ensure_llm_runtime_bootstrap_from_env(self, base_settings)
         persisted = self._repository.load()
         return materialize_settings_snapshot(
             base_settings=base_settings,
@@ -121,53 +169,87 @@ class SettingsService:
         self,
         *,
         base_settings: Settings,
-        base_url: str,
-        model: str,
-        temperature: float,
-        timeout_seconds: float,
         actor: str,
-        api_key: str | None = None,
+        tasks_patch: dict[str, dict[str, Any]] | None = None,
+        base_url: str | None = None,
+        model: str | None = None,
+        temperature: float | None = None,
+        timeout_seconds: float | None = None,
+        api_key: Any = _UNSET_EXTRACTION_API_KEY,
         chat_model: Any = _UNSET_CHAT_MODEL,
+        chat_base_url: Any = _UNSET_CHAT_MODEL,
         vl_model: Any = _UNSET_CHAT_MODEL,
         vl_base_url: Any = _UNSET_CHAT_MODEL,
         vision_api_key: Any = _UNSET_VISION_API_KEY,
+        chat_api_key: Any = _UNSET_CHAT_API_KEY,
+        embeddings_mode: Any = _UNSET_CHAT_MODEL,
+        embeddings_model: Any = _UNSET_CHAT_MODEL,
+        embeddings_api_key: Any = _UNSET_EMBEDDINGS_API_KEY,
         advanced_patch: dict[str, Any] | None = None,
     ) -> SettingsSnapshot:
-        """Persist editable LLM config and optionally replace the managed secret."""
+        """Persist editable LLM task blocks and optional managed secrets."""
+
         with self._lock:
             payload = self._repository.load()
             llm = dict(payload.get("llm") or {})
-            llm.update(
-                {
-                    "base_url": base_url.rstrip("/"),
-                    "model": model.strip(),
-                    "temperature": float(temperature),
-                    "timeout_seconds": float(timeout_seconds),
-                    "enabled": True,
-                    "_meta": {
-                        "last_updated_at": _now_iso(),
-                        "last_updated_by": actor,
-                    },
-                }
-            )
+            tasks_next = get_normalized_llm_tasks(llm, base_settings)
+
+            legacy_blocks: dict[str, dict[str, Any]] = {}
+            ext_legacy: dict[str, Any] = {}
+            if base_url is not None:
+                ext_legacy["base_url"] = str(base_url).strip().rstrip("/")
+            if model is not None:
+                ext_legacy["model"] = str(model).strip()
+            if temperature is not None:
+                ext_legacy["temperature"] = float(temperature)
+            if timeout_seconds is not None:
+                ext_legacy["timeout_seconds"] = float(timeout_seconds)
+            if ext_legacy:
+                legacy_blocks["extraction"] = ext_legacy
+
+            chat_legacy: dict[str, Any] = {}
             if chat_model is not _UNSET_CHAT_MODEL:
-                cm = str(chat_model or "").strip()
-                if cm:
-                    llm["chat_model"] = cm
-                else:
-                    llm.pop("chat_model", None)
+                chat_legacy["model"] = str(chat_model or "").strip()
+            if chat_base_url is not _UNSET_CHAT_MODEL:
+                chat_legacy["base_url"] = str(chat_base_url or "").strip().rstrip("/")
+            if chat_legacy:
+                legacy_blocks["chat"] = chat_legacy
+
+            vision_legacy: dict[str, Any] = {}
             if vl_model is not _UNSET_CHAT_MODEL:
-                vm = str(vl_model or "").strip()
-                if vm:
-                    llm["vl_model"] = vm
-                else:
-                    llm.pop("vl_model", None)
+                vision_legacy["model"] = str(vl_model or "").strip()
             if vl_base_url is not _UNSET_CHAT_MODEL:
-                vb = str(vl_base_url or "").strip().rstrip("/")
-                if vb:
-                    llm["vl_base_url"] = vb
-                else:
-                    llm.pop("vl_base_url", None)
+                vision_legacy["base_url"] = str(vl_base_url or "").strip().rstrip("/")
+            if vision_legacy:
+                legacy_blocks["vision"] = vision_legacy
+
+            emb_legacy: dict[str, Any] = {}
+            if embeddings_mode is not _UNSET_CHAT_MODEL:
+                em = str(embeddings_mode or "").strip().lower()
+                if em == "local":
+                    emb_legacy["mode"] = "local"
+                elif em == "openrouter":
+                    emb_legacy["mode"] = "http"
+            if embeddings_model is not _UNSET_CHAT_MODEL:
+                emd = str(embeddings_model or "").strip()
+                if emd:
+                    emb_legacy["model"] = emd
+            if emb_legacy:
+                legacy_blocks["embeddings"] = emb_legacy
+
+            if legacy_blocks:
+                tasks_next = merge_partial_tasks_patch(tasks_next, legacy_blocks)
+            if tasks_patch:
+                tasks_next = merge_partial_tasks_patch(tasks_next, tasks_patch)
+
+            meta = dict(llm.get("_meta") or {})
+            meta["last_updated_at"] = _now_iso()
+            meta["last_updated_by"] = actor
+            llm["_meta"] = meta
+            apply_tasks_to_llm_dict(llm, tasks_next)
+            strip_legacy_llm_task_flat_keys(llm)
+            llm["enabled"] = True
+
             if advanced_patch:
                 for key, raw in advanced_patch.items():
                     if key in LLM_ADVANCED_RUNTIME_KEYS:
@@ -191,8 +273,11 @@ class SettingsService:
             )
             payload["llm"] = llm
             self._repository.save(payload)
-            if api_key is not None:
-                self._secret_store.set_secret(LLM_API_KEY, api_key.strip())
+            if api_key is not _UNSET_EXTRACTION_API_KEY:
+                if api_key is None:
+                    self._secret_store.delete_secret(LLM_API_KEY)
+                else:
+                    self._secret_store.set_secret(LLM_API_KEY, str(api_key).strip())
             if vision_api_key is not _UNSET_VISION_API_KEY:
                 raw_v = vision_api_key
                 if raw_v is None:
@@ -203,7 +288,46 @@ class SettingsService:
                         self._secret_store.set_secret(LLM_VISION_API_KEY, stripped)
                     else:
                         self._secret_store.delete_secret(LLM_VISION_API_KEY)
+            if chat_api_key is not _UNSET_CHAT_API_KEY:
+                raw_c = chat_api_key
+                if raw_c is None:
+                    self._secret_store.delete_secret(LLM_CHAT_API_KEY)
+                else:
+                    stripped = str(raw_c).strip()
+                    if stripped:
+                        self._secret_store.set_secret(LLM_CHAT_API_KEY, stripped)
+                    else:
+                        self._secret_store.delete_secret(LLM_CHAT_API_KEY)
+            if embeddings_api_key is not _UNSET_EMBEDDINGS_API_KEY:
+                raw_e = embeddings_api_key
+                if raw_e is None:
+                    self._secret_store.delete_secret(LLM_EMBEDDINGS_API_KEY)
+                else:
+                    stripped = str(raw_e).strip()
+                    if stripped:
+                        self._secret_store.set_secret(LLM_EMBEDDINGS_API_KEY, stripped)
+                    else:
+                        self._secret_store.delete_secret(LLM_EMBEDDINGS_API_KEY)
         return self.get_snapshot(base_settings)
+
+    def reveal_llm_task_secret(self, *, task: str, actor: str, base_settings: Settings) -> str:
+        """Return a raw vault secret for ``task`` (explicit operator reveal; audit logged)."""
+
+        del base_settings  # Reserved for future tenant/workspace scoping.
+        allowed = {"extraction", "chat", "vision", "embeddings"}
+        if task not in allowed:
+            raise ValueError(f"Unknown LLM task: {task}")
+        key_map = {
+            "extraction": LLM_API_KEY,
+            "chat": LLM_CHAT_API_KEY,
+            "vision": LLM_VISION_API_KEY,
+            "embeddings": LLM_EMBEDDINGS_API_KEY,
+        }
+        secret = self._secret_store.get_secret(key_map[task])
+        if not secret and task in {"chat", "vision", "embeddings"}:
+            secret = self._secret_store.get_secret(LLM_API_KEY)
+        _LOGGER.info("LLM secret revealed (explicit operator action) task=%s actor=%s", task, actor)
+        return secret or ""
 
     def update_ingestion_settings(
         self,
@@ -291,7 +415,7 @@ class SettingsService:
                 inc = filtered["external_research_sources"]
                 prev = dict(at.get("external_research_sources") or {})
                 if isinstance(inc, dict):
-                    for key in ("crossref", "arxiv", "unpaywall", "openalex"):
+                    for key in ("crossref", "arxiv", "unpaywall", "openalex", "semantic_scholar"):
                         if key in inc and isinstance(inc[key], bool):
                             prev[key] = bool(inc[key])
                     at["external_research_sources"] = prev
@@ -299,6 +423,10 @@ class SettingsService:
                 mode = filtered["pdf_reading_mode"]
                 if mode in {"off", "ask", "auto_safe_oa"}:
                     at["pdf_reading_mode"] = mode
+            if "agent_pdf_read_backend_mode" in filtered:
+                bm = filtered["agent_pdf_read_backend_mode"]
+                if bm in {"pypdf", "vl", "hybrid"}:
+                    at["agent_pdf_read_backend_mode"] = bm
             if "agent_unpaywall_oa_tool_enabled" in filtered:
                 at["agent_unpaywall_oa_tool_enabled"] = bool(
                     filtered["agent_unpaywall_oa_tool_enabled"]
@@ -332,6 +460,19 @@ class SettingsService:
             if "agent_pdf_read_cache_max_entries" in filtered:
                 at["agent_pdf_read_cache_max_entries"] = max(
                     16, min(10_000, int(filtered["agent_pdf_read_cache_max_entries"]))
+                )
+            if "agent_pdf_read_durable_cache_enabled" in filtered:
+                at["agent_pdf_read_durable_cache_enabled"] = bool(
+                    filtered["agent_pdf_read_durable_cache_enabled"]
+                )
+            if "agent_mcp_request_timeout_seconds" in filtered:
+                at["agent_mcp_request_timeout_seconds"] = max(
+                    1.0,
+                    min(120.0, float(filtered["agent_mcp_request_timeout_seconds"])),
+                )
+            if "agent_mcp_server_denylist" in filtered:
+                at["agent_mcp_server_denylist"] = normalize_mcp_server_denylist(
+                    filtered["agent_mcp_server_denylist"]
                 )
 
             at["_meta"] = {
@@ -454,18 +595,6 @@ class SettingsService:
             }
             payload["benchmark"] = bench
             self._repository.save(payload)
-        return self.get_snapshot(base_settings)
-
-    def delete_llm_secret(self, *, base_settings: Settings) -> SettingsSnapshot:
-        """Remove the managed default LLM secret while keeping non-secret config intact."""
-        with self._lock:
-            self._secret_store.delete_secret(LLM_API_KEY)
-        return self.get_snapshot(base_settings)
-
-    def delete_llm_vision_secret(self, *, base_settings: Settings) -> SettingsSnapshot:
-        """Remove the managed vision-only LLM secret (falls back to default/env)."""
-        with self._lock:
-            self._secret_store.delete_secret(LLM_VISION_API_KEY)
         return self.get_snapshot(base_settings)
 
     def test_llm_connection(  # pylint: disable=too-many-locals

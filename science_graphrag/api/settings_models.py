@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 from science_graphrag.api.settings_llm_runtime_patch import LlmRuntimeOverridesPatch
+from science_graphrag.settings.agent_tools_mcp import normalize_mcp_server_denylist
 
 
 class SettingsSnapshotResponse(BaseModel):
@@ -51,6 +52,7 @@ class ExternalResearchSourcesPatch(BaseModel):
     arxiv: bool | None = None
     unpaywall: bool | None = None
     openalex: bool | None = None
+    semantic_scholar: bool | None = None
 
 
 class UpdateAgentToolsSettingsRequest(BaseModel):
@@ -76,11 +78,15 @@ class UpdateAgentToolsSettingsRequest(BaseModel):
     )
     external_research_sources: ExternalResearchSourcesPatch | None = Field(
         default=None,
-        description="Partial map for Crossref/arXiv/Unpaywall/OpenAlex tool availability.",
+        description="Partial map for Crossref/arXiv/Unpaywall/OpenAlex/Semantic Scholar tool availability.",
     )
     pdf_reading_mode: Literal["off", "ask", "auto_safe_oa"] | None = Field(
         default=None,
         description="PDF reading in chat (product default; pipeline phases follow).",
+    )
+    agent_pdf_read_backend_mode: Literal["pypdf", "vl", "hybrid"] | None = Field(
+        default=None,
+        description="Extraction backend for ``read_external_pdf`` (pypdf / VL / hybrid).",
     )
     agent_unpaywall_oa_tool_enabled: bool | None = Field(
         default=None,
@@ -132,6 +138,30 @@ class UpdateAgentToolsSettingsRequest(BaseModel):
         le=10_000,
         description="Max in-process cached PDF read entries (LRU).",
     )
+    agent_pdf_read_durable_cache_enabled: bool | None = Field(
+        default=None,
+        description=(
+            "When true and Redis is configured, persist successful PDF read tool payloads in Redis."
+        ),
+    )
+    agent_mcp_request_timeout_seconds: float | None = Field(
+        default=None,
+        ge=1.0,
+        le=120.0,
+        description="HTTP timeout for MCP adapter JSON-RPC calls.",
+    )
+    agent_mcp_server_denylist: list[str] | None = Field(
+        default=None,
+        max_length=32,
+        description="Substring denylist for MCP server identifiers (operator policy).",
+    )
+
+    @field_validator("agent_mcp_server_denylist")
+    @classmethod
+    def _normalize_mcp_server_denylist(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return None
+        return normalize_mcp_server_denylist(value)
 
 
 class UpdateGeneralSettingsRequest(BaseModel):
@@ -164,11 +194,57 @@ class UpdateIngestionSettingsRequest(BaseModel):
     )
 
 
+class LlmTaskProviderCard(BaseModel):
+    """Partial update for extraction/chat/vision task blocks."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    base_url: str | None = Field(default=None, max_length=512)
+    model: str | None = Field(default=None, max_length=256)
+    temperature: float | None = Field(default=None, ge=0.0, le=2.0)
+    timeout_seconds: float | None = Field(default=None, ge=5.0, le=3600.0)
+
+
+class LlmEmbeddingsTaskCard(BaseModel):
+    """Partial update for embeddings task block (no sampling temperature)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["http", "local"] | None = None
+    base_url: str | None = Field(default=None, max_length=512)
+    model: str | None = Field(default=None, max_length=256)
+    timeout_seconds: float | None = Field(default=None, ge=5.0, le=600.0)
+
+
+class LlmTasksUpdate(BaseModel):
+    """Nested task-oriented LLM settings (preferred over legacy flat fields)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    extraction: LlmTaskProviderCard | None = None
+    chat: LlmTaskProviderCard | None = None
+    vision: LlmTaskProviderCard | None = None
+    embeddings: LlmEmbeddingsTaskCard | None = None
+
+
+class RevealLlmSecretRequest(BaseModel):
+    """Explicit operator action to read a managed vault secret."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    task: Literal["extraction", "chat", "vision", "embeddings"]
+
+
+class RevealLlmSecretResponse(BaseModel):
+    secret: str = Field(default="")
+
+
 class UpdateLlmSettingsRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    base_url: HttpUrl
-    model: str = Field(..., min_length=1, max_length=256)
+    tasks: LlmTasksUpdate | None = None
+    base_url: HttpUrl | None = None
+    model: str | None = Field(default=None, max_length=256)
     vl_model: str | None = Field(
         default=None,
         max_length=256,
@@ -184,9 +260,23 @@ class UpdateLlmSettingsRequest(BaseModel):
         max_length=256,
         description="Optional research chat model; empty string clears persisted override.",
     )
-    temperature: float = Field(default=0.0, ge=0.0, le=2.0)
-    timeout_seconds: float = Field(default=180.0, ge=1.0, le=900.0)
-    api_key: str | None = Field(default=None, min_length=1, max_length=4096)
+    chat_base_url: str | None = Field(
+        default=None,
+        max_length=512,
+        description="Optional chat base URL; empty string clears persisted override.",
+    )
+    embeddings_mode: Literal["openrouter", "local"] | None = Field(
+        default=None,
+        description="Embeddings mode override; empty clears persisted override.",
+    )
+    embeddings_model: str | None = Field(
+        default=None,
+        max_length=256,
+        description="Optional embeddings model id; empty string clears persisted override.",
+    )
+    temperature: float | None = Field(default=None, ge=0.0, le=2.0)
+    timeout_seconds: float | None = Field(default=None, ge=1.0, le=900.0)
+    api_key: str | None = Field(default=None, max_length=4096)
     vision_api_key: str | None = Field(
         default=None,
         max_length=4096,
@@ -194,10 +284,44 @@ class UpdateLlmSettingsRequest(BaseModel):
             "Managed vision-only API key (omit field to leave unchanged; null or empty clears)."
         ),
     )
+    chat_api_key: str | None = Field(
+        default=None,
+        max_length=4096,
+        description=(
+            "Managed chat-task API key (omit field to leave unchanged; null or empty clears)."
+        ),
+    )
+    embeddings_api_key: str | None = Field(
+        default=None,
+        max_length=4096,
+        description=(
+            "Managed embeddings-task API key (omit field to leave unchanged; null or empty clears)."
+        ),
+    )
     runtime_overrides: LlmRuntimeOverridesPatch | None = Field(
         default=None,
         description="Optional LLM concurrency, agent, and dedup timeout overrides (Phase 3).",
     )
+
+    @model_validator(mode="after")
+    def _tasks_or_legacy(self) -> Self:
+        if self.tasks is not None:
+            return self
+        if self.runtime_overrides is not None:
+            return self
+        if any(
+            x is not None
+            for x in (
+                self.api_key,
+                self.chat_api_key,
+                self.vision_api_key,
+                self.embeddings_api_key,
+            )
+        ):
+            return self
+        if self.base_url is None or not (self.model or "").strip():
+            raise ValueError("Provide llm.tasks or legacy base_url and model fields")
+        return self
 
 
 class TestLlmConnectionRequest(BaseModel):

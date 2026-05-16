@@ -18,11 +18,13 @@ import StorageSettingsPanel from "./SettingsPage/StorageSettingsPanel.jsx";
 import BenchmarkSettingsPanel from "./SettingsPage/BenchmarkSettingsPanel.jsx";
 import AgentToolsSettingsPanel from "./SettingsPage/AgentToolsSettingsPanel.jsx";
 import SettingsLayout from "./SettingsPage/SettingsLayout.jsx";
+import {
+  resolveSettingsSectionDescription,
+  resolveSettingsSectionLabel,
+} from "./SettingsPage/settingsSectionText.js";
 import { PlaceholderSettingsSection } from "./SettingsPage/PlaceholderSettingsSection.jsx";
 import { useSettingsPageBootstrap } from "./SettingsPage/useSettingsPageBootstrap.js";
 import {
-  deleteLlmSecret,
-  deleteLlmVisionSecret,
   testLlmConnection,
   updateGeneralSettings,
   updateIngestionSettings,
@@ -160,32 +162,6 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleDeleteSecret() {
-    setSaving(true);
-    setSaveError("");
-    try {
-      const next = await deleteLlmSecret();
-      setSnapshot(next);
-    } catch (error) {
-      setSaveError(formatResearchApiError(error) || t("settings.page.removeKeyError"));
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleDeleteVisionSecret() {
-    setSaving(true);
-    setSaveError("");
-    try {
-      const next = await deleteLlmVisionSecret();
-      setSnapshot(next);
-    } catch (error) {
-      setSaveError(formatResearchApiError(error) || t("settings.page.removeVisionKeyError"));
-    } finally {
-      setSaving(false);
-    }
-  }
-
   async function handleTest(payload) {
     setTesting(true);
     setTestResult(null);
@@ -226,8 +202,6 @@ export default function SettingsPage() {
           saveError={saveError}
           testResult={testResult}
           onSave={handleSave}
-          onDeleteSecret={handleDeleteSecret}
-          onDeleteVisionSecret={handleDeleteVisionSecret}
           onTestSaved={() => handleTest({ use_saved_secret: true })}
           onTestDraft={(payload) => handleTest(payload)}
           onDirtyChange={setDirtyHint}
@@ -284,11 +258,12 @@ export default function SettingsPage() {
         />
       );
     }
-    const labelKey = `settings.snapshot.${activeSection.id}.label`;
-    const descKey = `settings.snapshot.${activeSection.id}.description`;
-    const title = t(labelKey) !== labelKey ? t(labelKey) : activeSection.label;
-    const description = t(descKey) !== descKey ? t(descKey) : activeSection.description;
-    return <PlaceholderSettingsSection title={title} description={description} />;
+    return (
+      <PlaceholderSettingsSection
+        title={resolveSettingsSectionLabel(activeSection, t)}
+        description={resolveSettingsSectionDescription(activeSection, t)}
+      />
+    );
   }
 
   if (loading) {

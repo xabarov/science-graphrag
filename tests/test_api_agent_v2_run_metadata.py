@@ -30,6 +30,7 @@ def test_build_run_metadata_includes_canonical_base_fields() -> None:
     assert meta["thread_id"] == "thr-1"
     assert meta["custom_flag"] is True
     assert "resolved_chat_llm_model" in meta
+    assert meta.get("agent_pdf_read_backend_mode") == "hybrid"
 
 
 def test_build_run_metadata_includes_openrouter_reference_pricing() -> None:

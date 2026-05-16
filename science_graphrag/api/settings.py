@@ -9,6 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from science_graphrag.api.auth import require_settings_access
 from science_graphrag.api.settings_models import (
+    RevealLlmSecretRequest,
+    RevealLlmSecretResponse,
     SettingsSchemaResponse,
     SettingsSnapshotResponse,
     TestLlmConnectionRequest,
@@ -60,23 +62,37 @@ def patch_llm_settings(
     actor: str = Depends(require_settings_access),
 ) -> SettingsSnapshotResponse:
     raw = body.model_dump(exclude_unset=True)
-    kwargs: dict[str, Any] = {
-        "base_settings": get_settings(),
-        "base_url": str(body.base_url),
-        "model": body.model,
-        "temperature": body.temperature,
-        "timeout_seconds": body.timeout_seconds,
-        "actor": actor,
-        "api_key": body.api_key,
-    }
+    kwargs: dict[str, Any] = {"base_settings": get_settings(), "actor": actor}
+    if body.tasks is not None:
+        kwargs["tasks_patch"] = body.tasks.model_dump(exclude_unset=True, exclude_none=True)
+    if "base_url" in raw and body.base_url is not None:
+        kwargs["base_url"] = str(body.base_url).rstrip("/")
+    if "model" in raw:
+        kwargs["model"] = body.model
+    if "temperature" in raw:
+        kwargs["temperature"] = body.temperature
+    if "timeout_seconds" in raw:
+        kwargs["timeout_seconds"] = body.timeout_seconds
+    if "api_key" in raw:
+        kwargs["api_key"] = body.api_key
     if "vl_model" in raw:
         kwargs["vl_model"] = body.vl_model
     if "vl_base_url" in raw:
         kwargs["vl_base_url"] = body.vl_base_url
     if "chat_model" in raw:
         kwargs["chat_model"] = body.chat_model
+    if "chat_base_url" in raw:
+        kwargs["chat_base_url"] = body.chat_base_url
     if "vision_api_key" in raw:
         kwargs["vision_api_key"] = body.vision_api_key
+    if "chat_api_key" in raw:
+        kwargs["chat_api_key"] = body.chat_api_key
+    if "embeddings_mode" in raw:
+        kwargs["embeddings_mode"] = body.embeddings_mode
+    if "embeddings_model" in raw:
+        kwargs["embeddings_model"] = body.embeddings_model
+    if "embeddings_api_key" in raw:
+        kwargs["embeddings_api_key"] = body.embeddings_api_key
     if body.runtime_overrides is not None:
         adv = body.runtime_overrides.model_dump(exclude_unset=True, exclude_none=True)
         if adv:
@@ -86,6 +102,22 @@ def patch_llm_settings(
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _settings_snapshot_response(snapshot)
+
+
+@router.post("/llm/reveal-secret", response_model=RevealLlmSecretResponse)
+def post_llm_reveal_secret(
+    body: RevealLlmSecretRequest,
+    actor: str = Depends(require_settings_access),
+) -> RevealLlmSecretResponse:
+    try:
+        secret = _SETTINGS_SERVICE.reveal_llm_task_secret(
+            task=body.task,
+            actor=actor,
+            base_settings=get_settings(),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return RevealLlmSecretResponse(secret=secret)
 
 
 @router.patch("/ingestion", response_model=SettingsSnapshotResponse)
@@ -168,22 +200,6 @@ def patch_benchmark_settings(
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return _settings_snapshot_response(snapshot)
-
-
-@router.delete("/llm/secret", response_model=SettingsSnapshotResponse)
-def delete_llm_secret(
-    _actor: str = Depends(require_settings_access),
-) -> SettingsSnapshotResponse:
-    snapshot = _SETTINGS_SERVICE.delete_llm_secret(base_settings=get_settings())
-    return _settings_snapshot_response(snapshot)
-
-
-@router.delete("/llm/vision-secret", response_model=SettingsSnapshotResponse)
-def delete_llm_vision_secret(
-    _actor: str = Depends(require_settings_access),
-) -> SettingsSnapshotResponse:
-    snapshot = _SETTINGS_SERVICE.delete_llm_vision_secret(base_settings=get_settings())
     return _settings_snapshot_response(snapshot)
 
 

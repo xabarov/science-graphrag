@@ -27,14 +27,18 @@ function makeLlm(overrides = {}) {
     base_url: "https://openrouter.ai/api/v1",
     model: "openai/gpt-4o-mini",
     chat_model: "",
+    chat_base_url: "",
+    embeddings_mode: "openrouter",
+    embeddings_model: "",
     temperature: 0,
     status: {
       configured: true,
       has_saved_secret: true,
+      has_saved_chat_secret: false,
+      has_saved_embeddings_secret: false,
       has_saved_vision_secret: false,
-      secret_source: "server_managed",
+      secret_source: "saved",
       masked_key: "sk-***",
-      vl_api_key_explicit_env: false,
     },
     vl_model: "",
     vl_base_url: "",
@@ -42,19 +46,43 @@ function makeLlm(overrides = {}) {
       resolved_timeout_seconds: 120,
       resolved_model: "openai/gpt-4o-mini",
       resolved_base_url: "https://openrouter.ai/api/v1",
+      resolved_chat_base_url: "https://openrouter.ai/api/v1",
       resolved_vl_model: "qwen/qwen3-vl-235b-a22b-instruct",
       resolved_vl_base_url: "https://openrouter.ai/api/v1",
+      resolved_embeddings_base_url: "https://openrouter.ai/api/v1",
     },
     tasks: {
-      extraction: { model: "openai/gpt-4o-mini", api_key: { source: "server_managed", masked: "sk-***" } },
-      chat: { model: "openai/gpt-4o-mini", inherits_extraction_model: true, api_key: { source: "server_managed" } },
+      extraction: {
+        base_url: "https://openrouter.ai/api/v1",
+        model: "openai/gpt-4o-mini",
+        temperature: 0,
+        timeout_seconds: 120,
+        api_key: { source: "saved", masked: "sk-***" },
+      },
+      chat: {
+        base_url: "https://openrouter.ai/api/v1",
+        model: "openai/gpt-4o-mini",
+        temperature: 0,
+        timeout_seconds: 120,
+        inherits_extraction_model: true,
+        api_key: { source: "saved" },
+      },
       vision: {
+        base_url: "https://openrouter.ai/api/v1",
         model: "qwen/qwen3-vl-235b-a22b-instruct",
+        temperature: 0,
+        timeout_seconds: 300,
         api_key: { source: "inherited", masked: "sk-***" },
       },
-      embeddings: { mode: "hash_deterministic", model_label: "hash-deterministic" },
+      embeddings: {
+        mode: "openrouter",
+        base_url: "https://openrouter.ai/api/v1",
+        model: "baai/bge-m3",
+        model_label: "baai/bge-m3",
+        timeout_seconds: 60,
+      },
     },
-    diagnostics: { operator_env_variables: ["SCIENCE_GRAPHRAG_API_KEY"], notes: "op" },
+    diagnostics: {},
     advanced_controls: {
       llm_distributed_quota_enabled: { effective: false, persisted: false },
       llm_distributed_quota_key_prefix: { effective: "science_graphrag:llm_quota:v1", persisted: null },
@@ -78,8 +106,6 @@ function renderPanel(llm = makeLlm()) {
           saveError={null}
           testResult={null}
           onSave={vi.fn()}
-          onDeleteSecret={vi.fn()}
-          onDeleteVisionSecret={vi.fn()}
           onTestSaved={vi.fn()}
           onTestDraft={vi.fn()}
           onDirtyChange={vi.fn()}
@@ -102,8 +128,34 @@ describe("LlmSettingsPanel distributed quota UX", () => {
     expect(screen.queryByText(/Advanced numeric fields cannot be empty/i)).toBeNull();
   });
 
-  it("renders task overrides heading", () => {
+  it("renders extraction task card heading", () => {
     renderPanel();
-    expect(screen.getByText(/Models by task/i)).toBeTruthy();
+    expect(screen.getByText("Extraction (text / structure)")).toBeTruthy();
+  });
+
+  it("renders embeddings HTTP controls", () => {
+    renderPanel();
+    expect(screen.getByLabelText("Embeddings model")).toBeTruthy();
+    expect(screen.queryByText(/Mode:/i)).toBeNull();
+  });
+
+  it("renders provider preset controls", () => {
+    renderPanel();
+    expect(screen.getByText("Provider preset")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ollama local" })).toBeTruthy();
+  });
+
+  it("applies Ollama preset into form fields and enables save", () => {
+    renderPanel();
+    const saveButton = screen.getByRole("button", { name: /^Save/i });
+    expect(saveButton.disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Ollama local" }));
+    const baseUrlFields = screen.getAllByDisplayValue("http://localhost:11434/v1");
+    expect(baseUrlFields.length).toBeGreaterThanOrEqual(4);
+    expect(screen.getAllByDisplayValue("llama3.2").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByDisplayValue("all-minilm")).toBeTruthy();
+    expect(screen.getByDisplayValue("llava")).toBeTruthy();
+    expect(screen.getByText(/Ollama endpoint detected/i)).toBeTruthy();
+    expect(saveButton.disabled).toBe(false);
   });
 });

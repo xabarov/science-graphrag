@@ -213,7 +213,11 @@ export function useAskPerformAgentSubmit({
             setNormalized,
             bumpSessions,
           });
-          return { ok: false };
+          return {
+            ok: false,
+            streamEvents: persistedStreamEvents,
+            agentToolTrace: persistedToolTrace,
+          };
         }
 
         const nextNormalized = pack.normalized;

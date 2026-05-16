@@ -51,12 +51,14 @@ The main gap is not the architecture, but **coverage and evidence level**:
 | `unpaywall_lookup` | Unpaywall v2 | Given DOI, return OA status and best OA landing/PDF URL; does not download PDF | Included when `agent_unpaywall_oa_tool_enabled=true`; denied when `web_research_enabled=false`; shortlist keeps it for OA/Unpaywall intent | Mock-backed unit coverage for invalid DOI, success payload, registry factory flag, shortlist | **Implementation-stable but not live-validated**. Needs one live trace against a real DOI before calling production-proven. |
 | `openalex_works_search` | OpenAlex `/works` | Metadata literature discovery by query (+ optional publication year filter) | Included when `external_research_source_openalex_enabled=true`; denied when `web_research_enabled=false` | Mock-backed tests in `tests/agent/test_openalex_works_search_tools.py`; registry/manifest sync | **Stable by unit contract**; optional live smoke still recommended |
 | `doi_resolver` | OpenAlex by DOI + Crossref fallback + Neo4j workspace mapping | Normalize DOI/URL, fetch metadata, optionally map to workspace Work id | Separately gated by `agent_doi_resolver_tool_enabled`; not currently in `EXTERNAL_RESEARCH_TOOL_NAMES` | Existing resolver/helper tests and manifest sync when enabled | **Stable as metadata bridge**, but semantically distinct from web-research toggle. |
+| `semantic_scholar_search` | Semantic Scholar Graph API | Bounded metadata search | Included when `external_research_source_semantic_scholar_enabled=true`; denied when external research off | `tests/agent/test_semantic_scholar_tools.py`; optional `scripts/live_check/semantic_scholar_smoke.py` | **Beta** — unit-contract stable; operator live smoke recommended |
+| `semantic_scholar_paper` | Semantic Scholar Graph API | Single paper card by id/DOI | Same gating as search | Same test module; smoke covers paper lookup | **Beta** — product step `paper_metadata` |
 
 ## Not Implemented Yet
 
 The broad tool landscape from `sci-tools.md` includes several categories not yet implemented as native tools:
 
-- `semantic_scholar_search`, `semantic_scholar_paper`, `semantic_scholar_citations`, `semantic_scholar_references`: high-value for citation graph and related papers.
+- `semantic_scholar_citations`, `semantic_scholar_references`: citation graph tools (deferred until bounded graph UX; see backlog `[PARTIAL] External research: Semantic Scholar tools`).
 - `pubmed_search` / `pubmed_fetch`: useful for biomedical/clinical domains, lower priority for the current CS/ML-heavy workflows unless corpus direction shifts.
 - `biorxiv_search` / `medrxiv_search`: preprint complement for biomedical domains.
 - PDF/text pipeline: `download_arxiv_pdf`, `extract_pdf_text`, `get_paper_sections`, `read_arxiv_paper`. This should not be added as a thin HTTP tool; it needs storage, timeouts, parser selection, safety limits, and artifact lifecycle.
@@ -93,6 +95,12 @@ Mocked tests are good, but for external APIs we should keep a tiny optional live
 - `web_search`: Crossref query by DOI/title, validate no schema drift.
 
 These should not run in regular unit CI by default; use an explicit live marker or script.
+
+Latest operator evidence (2026-05-16):
+
+- OpenAlex smoke: **green** (`http_status=200`, `results=1`) via `scripts/live_check/openalex_smoke.py`.
+- Semantic Scholar smoke: **observed 403 Forbidden** on search in current contour; failure contract behaves correctly and source remains `needs_live_smoke` until a green run is recorded.
+- MCP adapter smoke: **pending adapter configuration** (`missing_base_url` guard from `scripts/live_check/mcp_adapter_smoke.py`); expected until `SCIENCE_GRAPHRAG_AGENT_MCP_HTTP_BASE_URL` is set in operator contour.
 
 ### 3. Make external API status visible in docs
 
@@ -145,7 +153,7 @@ Add a compact **“External Research”** settings card rather than many scatter
   - arXiv metadata/abstracts: On, stable.
   - Unpaywall OA lookup: On, needs live validation label until smoke-tested.
   - OpenAlex search: On by default where enabled; stable by unit contract, optional live-smoke lane.
-  - Semantic Scholar: Planned / beta once implemented.
+  - Semantic Scholar: **Phase 5A shipped (2026-05-16)** — `semantic_scholar_search` / `semantic_scholar_paper` as beta with optional API key; references/citations tools still planned.
 - **Advanced section:** timeouts, max bytes, MCP tools, PDF extraction, source-specific beta flags.
 
 Do not expose every Settings field directly (`agent_web_fetch_max_bytes`, `agent_unpaywall_http_timeout_seconds`, etc.) in the ordinary user flow. Those are operator knobs.
@@ -164,7 +172,7 @@ Agent Tools
 │  ├─ arXiv metadata / abstracts        [status: stable]
 │  ├─ Unpaywall OA lookup               [status: unit-tested / needs live smoke]
 │  ├─ OpenAlex search                   [stable-by-contract / optional live smoke]
-│  └─ Semantic Scholar citation graph   [planned / beta]
+│  └─ Semantic Scholar search / paper   [beta; optional API key]
 ├─ Full-text / PDF
 │  ├─ PDF reading in chat               [Off | Ask | Auto safe OA]
 │  ├─ Max PDF size / pages              [advanced]
@@ -253,7 +261,7 @@ The current `agent_tools` PATCH model only allows `agent_supervisor_max_rounds`.
 - Keep persisted operator settings under `runtime_settings.json.agent_tools`.
 - Add allowlisted fields gradually:
   - `external_research_default_enabled`
-  - `external_research_sources` (`crossref`, `arxiv`, `unpaywall`, future `openalex`, `semantic_scholar`)
+  - `external_research_sources` (`crossref`, `arxiv`, `unpaywall`, `openalex`, `semantic_scholar`)
   - `pdf_reading_mode`
   - `agent_unpaywall_oa_tool_enabled`
   - selected advanced limits
@@ -386,16 +394,13 @@ Backend/product implication:
 
 Priority order:
 
-1. **`semantic_scholar_search` + `semantic_scholar_paper`**  
-   Adds citation-aware discovery and richer paper cards. Keep citations/references as follow-up tools to avoid a giant first payload.
-
-2. **`semantic_scholar_references` / `semantic_scholar_citations`**  
+1. **`semantic_scholar_references` / `semantic_scholar_citations`**  
    Add only after paper lookup is stable. Needs result caps and clear citation graph semantics.
 
-3. **PDF extraction pipeline**  
+2. **PDF extraction pipeline**  
    Do not implement as a small LangChain HTTP tool. Treat as a bounded ingestion/artifact subsystem: download, parse, cache, sectionize, expose excerpts. Needs timeout/checkpoint rules.
 
-4. **PubMed / bioRxiv / medRxiv**  
+3. **PubMed / bioRxiv / medRxiv**  
    Add when the corpus or user workflows need biomedical coverage. These are domain expansions, not core architecture blockers.
 
 ## Stable vs Not Yet Proven
@@ -414,8 +419,8 @@ Stable by unit contract but needing live proof:
 
 Not implemented / not stable:
 
-- PDF reading and section extraction.
-- Semantic Scholar tools.
+- PDF reading and section extraction (core path shipped; Postgres/object-store audit deferred).
+- Semantic Scholar citation graph tools (`references` / `citations`).
 - PubMed / bioRxiv / medRxiv tools.
 - Stateful reading list and export workflow.
 
@@ -630,9 +635,10 @@ ADR 030, the current native implementation, and the broader `sci-tools.md` lands
 The architecture is in good shape. The next improvement should be either:
 
 1. add live smoke evidence for `unpaywall_lookup` / Crossref / `openalex_works_search`, or
-2. continue toward Semantic Scholar / PDF pipeline per roadmap.
+2. execute the operator PDF live matrix (`scripts/live_check/pdf_read_live_matrix.md`) and attach artifacts, or
+3. continue toward **Semantic Scholar references/citations** (bounded graph UX) and **Postgres/object-store** durable PDF rows per backlog `[PARTIAL]` items; **Phase 6 MCP operator slice** (integrations snapshot, Settings PATCH for timeout/denylist, smoke) is shipped — see workplan Phase 6 status.
 
-**Execution detail:** Phase 3 **closeout** (optional OpenAlex live smoke, diagnostics `status` decision) and Phase 4 **staged delivery** (PDF artifact pipeline → SSE → trust → Ask UI → live matrix) are spelled out in `docs/analysis/external-research-tools-workplan-2026-05-15.md` (Phase 3 **Remaining / Closeout**, Phase 4 Stages 1–8, PR slicing PR 4b–PR 9).
+**Execution detail:** Phase 3 **closeout** (optional OpenAlex live smoke, diagnostics `status` decision) and Phase 4 **staged delivery** (PDF artifact pipeline → SSE → trust → Ask UI → live matrix) are spelled out in `docs/analysis/external-research-tools-workplan-2026-05-15.md` (Phase 3 **Remaining / Closeout**, Phase 4 Stages 1–8, PR slicing PR 4b–PR 9). **2026-05-16:** Phase 4 closeout added optional Redis durable cache + stable `artifact_id`; Phase 5A Semantic Scholar search/paper shipped (see workplan Phase 5 status).
 
 ## Phase 4 honest closure (2026-05-15) — shipped in repo
 
@@ -642,7 +648,9 @@ The architecture is in good shape. The next improvement should be either:
 - **Policy:** `EXTERNAL_RESEARCH_WEB_TOOL_NAMES` vs `read_external_pdf`; explicit `pdf_read_request` bypasses web-research denylist for PDF only; `pdf_reading_mode=off` blocks agent PDF unless explicit request; LLM `allowed_domains` / `blocked_domains` on the tool are ignored (server policy).
 - **Evidence:** PDF success uses `evidence_quality=variable`; failed `read_external_pdf` hydrates citations like `web_fetch` / `unpaywall` failures.
 - **UI:** Native token + i18n user-turn label; pdf-only submit; product-step strings for PDF prefetch.
+- **Transport:** `run_metadata` includes `pdf_read_artifact_id`, `pdf_read_tool_ok` / `pdf_read_tool_error`, and cache/durable hit flags when present; SSE `product_step` `pdf_read_extracting` echoes the same compact fields after server-side prefetch. Session sync keeps `pdf_read_*` keys via `compactAskTurnDetailsForSync`.
+- **Durable cache (optional):** Redis JSON metadata keyed by URL hash + budget fingerprint when `agent_pdf_read_durable_cache_enabled` is on and Redis URL is configured; enables cold-start reuse without rewriting `execute_pdf_read` core.
 - **Live matrix:** Operator checklist in `scripts/live_check/pdf_read_live_matrix.md` (after `make dev-up` + `config-check`).
 
-**Residual:** durable artifact store / DB-backed job IDs beyond in-process cache — see `docs/backlog/refactor-backend.md` for follow-up.
+**Residual:** Postgres/object-store artifact rows for audit and large-byte retention — see `docs/backlog/refactor-backend.md` → `[PARTIAL] Durable PDF read artifacts`.
 

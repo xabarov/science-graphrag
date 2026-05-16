@@ -91,11 +91,13 @@ def cache_fingerprint_key(
     *,
     max_excerpt_chars: int,
     max_pages: int,
+    read_backend: str = "pypdf",
 ) -> str:
     payload = {
         "url": str(pdf_url or "").strip(),
         "max_excerpt_chars": int(max_excerpt_chars),
         "max_pages": int(max_pages),
+        "read_backend": str(read_backend or "pypdf").strip().lower(),
     }
     return json.dumps(payload, ensure_ascii=False, sort_keys=True)
 

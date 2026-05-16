@@ -87,6 +87,12 @@ def build_run_metadata(
         meta["thread_id"] = thread_id
     if extra:
         meta.update(extra)
+    _ab = (
+        str(getattr(settings, "agent_pdf_read_backend_mode", "hybrid") or "hybrid").strip().lower()
+    )
+    if _ab not in {"pypdf", "vl", "hybrid"}:
+        _ab = "hybrid"
+    meta["agent_pdf_read_backend_mode"] = _ab
     return meta
 
 

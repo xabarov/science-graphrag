@@ -91,6 +91,7 @@ def test_build_agent_request_turn_context_metadata_keys() -> None:
     assert ctx.turn_tool_denylist
     assert ctx.run_metadata_fragment.get("effective_web_research_tools") is False
     assert ctx.run_metadata_fragment.get("request_pdf_reading_mode") == "ask"
+    assert ctx.run_metadata_fragment.get("agent_pdf_read_backend_mode") == "hybrid"
 
 
 def test_plan_mode_seeds_research_plan(monkeypatch) -> None:

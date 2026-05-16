@@ -96,4 +96,20 @@ describe("askSessionServerBridge details sync", () => {
     expect(compactAskTurnDetailsForSync(null)).toBeUndefined();
     expect(compactAskTurnDetailsForSync({})).toBeUndefined();
   });
+
+  it("compactAskTurnDetailsForSync preserves compact PDF read diagnostics", () => {
+    const slim = compactAskTurnDetailsForSync({
+      run_metadata: {
+        brief: "x",
+        pdf_read_artifact_id: "sg-pdf-sync",
+        pdf_read_tool_ok: false,
+        pdf_read_tool_error: "blocked",
+        noise: "drop",
+      },
+    });
+    expect(slim?.run_metadata?.pdf_read_artifact_id).toBe("sg-pdf-sync");
+    expect(slim?.run_metadata?.pdf_read_tool_ok).toBe(false);
+    expect(slim?.run_metadata?.pdf_read_tool_error).toBe("blocked");
+    expect(slim?.run_metadata?.noise).toBeUndefined();
+  });
 });

@@ -114,6 +114,25 @@ def test_mcp_server_denylist() -> None:
     assert _server_denied(st, "my_evil_server") is not None
 
 
+def test_native_external_tools_independent_of_mcp_unconfigured() -> None:
+    from science_graphrag.agent.tools.external import build_external_research_tools
+    from science_graphrag.agent.tools.mcp_surface import build_mcp_surface_tools
+
+    st = Settings(
+        agent_mcp_tools_enabled=True,
+        agent_mcp_http_base_url=None,
+        external_research_source_crossref_enabled=True,
+    )
+    ext_names = {getattr(t, "name", "") for t in build_external_research_tools(settings=st)}
+    assert "web_search" in ext_names
+
+    mcp_tools = build_mcp_surface_tools(st)
+    call = next(t for t in mcp_tools if getattr(t, "name", "") == "call_mcp_tool")
+    out = call.invoke({"server": "demo", "tool": "ping", "arguments": {}})
+    assert out.get("error") == "mcp_unconfigured"
+    assert out.get("ok") is False
+
+
 def test_runtime_monitor_registry() -> None:
     from science_graphrag.agent.tools.runtime_monitor_surface import build_runtime_monitor_tools
 

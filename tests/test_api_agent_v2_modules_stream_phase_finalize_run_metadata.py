@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import json
+
+from langchain_core.messages import ToolMessage
+
 from science_graphrag.agent.subagents.runtime import (
     RoutingSubagentLegLedger,
     SubagentRuntime,
@@ -11,6 +15,7 @@ from science_graphrag.api.agent_v2_modules.stream_lifecycle_state import (
     StreamLifecycleRequestContext,
 )
 from science_graphrag.api.agent_v2_modules.stream_phase_finalize_run_metadata import (
+    FinalizeRunMetadataRequest,
     build_finalize_run_metadata,
 )
 from science_graphrag.config import Settings
@@ -64,16 +69,18 @@ def test_finalize_preserves_failed_spawn_row_in_subagent_runs() -> None:
         "metadata": {"subagent_spawn_rows": [failed_row]},
     }
     meta = build_finalize_run_metadata(
-        ctx=ctx,
-        latest_full_state=latest,
-        envelope={},
-        max_tool_calls=8,
-        thread_id=None,
-        compact_payload=None,
-        post_turn_compaction_wall_ms=0,
-        salvaged_after_deadline=False,
-        salvaged_after_recursion_limit=False,
-        recursion_limit_value=None,
+        FinalizeRunMetadataRequest(
+            ctx=ctx,
+            latest_full_state=latest,
+            envelope={},
+            max_tool_calls=8,
+            thread_id=None,
+            compact_payload=None,
+            post_turn_compaction_wall_ms=0,
+            salvaged_after_deadline=False,
+            salvaged_after_recursion_limit=False,
+            recursion_limit_value=None,
+        )
     )
     runs = meta.get("subagent_runs") or []
     assert runs
@@ -81,6 +88,31 @@ def test_finalize_preserves_failed_spawn_row_in_subagent_runs() -> None:
     assert len(spawned) == 1
     assert spawned[0]["terminal_state"] == "failed"
     assert spawned[0]["failure_code"] == "tool_error"
+
+
+def test_finalize_merges_prefetched_pdf_read_backend_into_run_metadata() -> None:
+    ctx = _ctx()
+    meta = build_finalize_run_metadata(
+        FinalizeRunMetadataRequest(
+            ctx=ctx,
+            latest_full_state={"messages": [], "debug_events": [], "metadata": {}},
+            envelope={},
+            max_tool_calls=8,
+            thread_id=None,
+            compact_payload=None,
+            post_turn_compaction_wall_ms=0,
+            salvaged_after_deadline=False,
+            salvaged_after_recursion_limit=False,
+            recursion_limit_value=None,
+            prefetched_pdf_result={
+                "ok": True,
+                "read_backend": "vl",
+                "fallback_used": True,
+            },
+        )
+    )
+    assert meta.get("pdf_read_effective_read_backend") == "vl"
+    assert meta.get("pdf_read_fallback_used") is True
 
 
 def test_finalize_patches_inflight_metadata_spawn_to_timed_out_when_parent_deadline() -> None:
@@ -108,16 +140,18 @@ def test_finalize_patches_inflight_metadata_spawn_to_timed_out_when_parent_deadl
         "metadata": {"subagent_spawn_rows": [inflight]},
     }
     meta = build_finalize_run_metadata(
-        ctx=ctx,
-        latest_full_state=latest,
-        envelope={},
-        max_tool_calls=8,
-        thread_id=None,
-        compact_payload=None,
-        post_turn_compaction_wall_ms=0,
-        salvaged_after_deadline=True,
-        salvaged_after_recursion_limit=False,
-        recursion_limit_value=None,
+        FinalizeRunMetadataRequest(
+            ctx=ctx,
+            latest_full_state=latest,
+            envelope={},
+            max_tool_calls=8,
+            thread_id=None,
+            compact_payload=None,
+            post_turn_compaction_wall_ms=0,
+            salvaged_after_deadline=True,
+            salvaged_after_recursion_limit=False,
+            recursion_limit_value=None,
+        )
     )
     spawned = [r for r in (meta.get("subagent_runs") or []) if r.get("kind") == "spawned"]
     assert len(spawned) == 1
@@ -159,18 +193,123 @@ def test_finalize_dedupes_spawn_duplicate_prefers_failed_over_stale_succeeded() 
         "metadata": {"subagent_spawn_rows": [stale]},
     }
     meta = build_finalize_run_metadata(
-        ctx=ctx,
-        latest_full_state=latest,
-        envelope={},
-        max_tool_calls=8,
-        thread_id=None,
-        compact_payload=None,
-        post_turn_compaction_wall_ms=0,
-        salvaged_after_deadline=False,
-        salvaged_after_recursion_limit=False,
-        recursion_limit_value=None,
+        FinalizeRunMetadataRequest(
+            ctx=ctx,
+            latest_full_state=latest,
+            envelope={},
+            max_tool_calls=8,
+            thread_id=None,
+            compact_payload=None,
+            post_turn_compaction_wall_ms=0,
+            salvaged_after_deadline=False,
+            salvaged_after_recursion_limit=False,
+            recursion_limit_value=None,
+        )
     )
     spawned = [r for r in (meta.get("subagent_runs") or []) if r.get("kind") == "spawned"]
     assert len(spawned) == 1
     assert spawned[0]["terminal_state"] == "failed"
     assert spawned[0]["failure_code"] == "tool_error"
+
+
+def test_finalize_merges_pdf_read_from_tool_messages_when_no_prefetch() -> None:
+    ctx = _ctx()
+    payload = {
+        "ok": True,
+        "read_backend": "pypdf",
+        "fallback_used": False,
+        "summary": "x",
+        "row_count": 1,
+    }
+    latest = {
+        "messages": [
+            ToolMessage(
+                content=json.dumps(payload),
+                tool_call_id="tc1",
+                name="read_external_pdf",
+            )
+        ],
+        "debug_events": [],
+        "metadata": {},
+    }
+    meta = build_finalize_run_metadata(
+        FinalizeRunMetadataRequest(
+            ctx=ctx,
+            latest_full_state=latest,
+            envelope={},
+            max_tool_calls=8,
+            thread_id=None,
+            compact_payload=None,
+            post_turn_compaction_wall_ms=0,
+            salvaged_after_deadline=False,
+            salvaged_after_recursion_limit=False,
+            recursion_limit_value=None,
+            prefetched_pdf_result=None,
+        )
+    )
+    assert meta.get("pdf_read_effective_read_backend") == "pypdf"
+    assert meta.get("pdf_read_fallback_used") is False
+
+
+def test_finalize_exposes_pdf_read_artifact_id_from_prefetch_even_on_failure() -> None:
+    ctx = _ctx()
+    meta = build_finalize_run_metadata(
+        FinalizeRunMetadataRequest(
+            ctx=ctx,
+            latest_full_state={"messages": [], "debug_events": [], "metadata": {}},
+            envelope={},
+            max_tool_calls=8,
+            thread_id=None,
+            compact_payload=None,
+            post_turn_compaction_wall_ms=0,
+            salvaged_after_deadline=False,
+            salvaged_after_recursion_limit=False,
+            recursion_limit_value=None,
+            prefetched_pdf_result={
+                "ok": False,
+                "artifact_id": "sg-pdf-testfail",
+                "error": "unsupported_scheme",
+                "cache_hit": False,
+            },
+        )
+    )
+    assert meta.get("pdf_read_artifact_id") == "sg-pdf-testfail"
+    assert meta.get("pdf_read_tool_ok") is False
+    assert meta.get("pdf_read_tool_error") == "unsupported_scheme"
+
+
+def test_finalize_exposes_pdf_read_artifact_from_last_tool_message() -> None:
+    ctx = _ctx()
+    payload = {
+        "ok": False,
+        "artifact_id": "sg-pdf-from-msg",
+        "error": "too_large",
+    }
+    latest = {
+        "messages": [
+            ToolMessage(
+                content=json.dumps(payload),
+                tool_call_id="tc2",
+                name="read_external_pdf",
+            )
+        ],
+        "debug_events": [],
+        "metadata": {},
+    }
+    meta = build_finalize_run_metadata(
+        FinalizeRunMetadataRequest(
+            ctx=ctx,
+            latest_full_state=latest,
+            envelope={},
+            max_tool_calls=8,
+            thread_id=None,
+            compact_payload=None,
+            post_turn_compaction_wall_ms=0,
+            salvaged_after_deadline=False,
+            salvaged_after_recursion_limit=False,
+            recursion_limit_value=None,
+            prefetched_pdf_result=None,
+        )
+    )
+    assert meta.get("pdf_read_artifact_id") == "sg-pdf-from-msg"
+    assert meta.get("pdf_read_tool_ok") is False

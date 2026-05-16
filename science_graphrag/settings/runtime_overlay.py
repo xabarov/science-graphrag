@@ -5,9 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from science_graphrag.settings.llm_advanced_fields import merge_llm_advanced_into_overrides
+from science_graphrag.settings.llm_task_persisted import get_normalized_llm_tasks
 from science_graphrag.settings.secrets import SecretStore
 from science_graphrag.settings.snapshots import resolve_ingestion_fields
 from science_graphrag.settings.storage_runtime import merge_storage_runtime_fields
+from science_graphrag.settings.agent_tools_mcp import normalize_mcp_server_denylist
 from science_graphrag.settings.stored_bool import optional_stored_bool
 
 if TYPE_CHECKING:
@@ -26,35 +28,85 @@ def build_non_secret_overrides(
     agent_tools: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build settings overlay dict used by snapshot + runtime merge."""
-    timeout_seconds = llm.get("timeout_seconds")
-    if timeout_seconds is None:
-        timeout_seconds = base_settings.extraction_llm_timeout_seconds
+    tasks = get_normalized_llm_tasks(llm, base_settings)
+    ext = tasks["extraction"]
+    chat = tasks["chat"]
+    vision = tasks["vision"]
+    emb = tasks["embeddings"]
 
-    persisted_chat = str(llm.get("chat_model") or "").strip()
+    ext_base = (
+        str(ext.get("base_url") or "").strip().rstrip("/") or base_settings.extraction_llm_base_url
+    )
+    ext_model = str(ext.get("model") or "").strip() or base_settings.extraction_llm_model
+    ext_temp = float(ext.get("temperature", base_settings.extraction_llm_temperature))
+    ext_timeout = float(ext.get("timeout_seconds", base_settings.extraction_llm_timeout_seconds))
+
+    chat_model = str(chat.get("model") or "").strip()
+    chat_base = str(chat.get("base_url") or "").strip().rstrip("/")
     env_chat = str(base_settings.chat_llm_model or "").strip()
 
     resolved_upload_mb, resolved_claims_enabled = resolve_ingestion_fields(
         ingestion_cfg, base_settings
     )
 
-    persisted_vl_model = str(llm.get("vl_model") or "").strip()
-    persisted_vl_base = str(llm.get("vl_base_url") or "").strip().rstrip("/")
+    vl_model = str(vision.get("model") or "").strip() or base_settings.vl_model
+    vl_base = str(vision.get("base_url") or "").strip().rstrip("/") or str(
+        base_settings.vl_base_url or ""
+    ).strip().rstrip("/")
+
+    emb_mode = str(emb.get("mode") or "http").strip().lower()
+    emb_model = str(emb.get("model") or "").strip()
+    emb_base = str(emb.get("base_url") or "").strip().rstrip("/")
+    emb_timeout = float(emb.get("timeout_seconds", 60.0))
+
+    nested = llm.get("tasks") if isinstance(llm.get("tasks"), dict) else {}
+    chat_raw = nested.get("chat") if isinstance(nested.get("chat"), dict) else {}
+    vision_raw = nested.get("vision") if isinstance(nested.get("vision"), dict) else {}
+    emb_raw = nested.get("embeddings") if isinstance(nested.get("embeddings"), dict) else {}
 
     non_secret_overrides: dict[str, Any] = {
-        "extraction_llm_base_url": llm.get("base_url") or base_settings.extraction_llm_base_url,
-        "extraction_llm_model": llm.get("model") or base_settings.extraction_llm_model,
-        "extraction_llm_temperature": llm.get(
-            "temperature", base_settings.extraction_llm_temperature
-        ),
-        "extraction_llm_timeout_seconds": timeout_seconds,
-        "vl_model": persisted_vl_model or base_settings.vl_model,
-        "vl_base_url": persisted_vl_base or base_settings.vl_base_url,
+        "extraction_llm_base_url": ext_base,
+        "extraction_llm_model": ext_model,
+        "extraction_llm_temperature": ext_temp,
+        "extraction_llm_timeout_seconds": ext_timeout,
+        "vl_model": vl_model,
+        "vl_base_url": vl_base,
     }
+    if chat_raw and "temperature" in chat_raw:
+        non_secret_overrides["chat_llm_temperature"] = float(chat.get("temperature", ext_temp))
+    if chat_raw and "timeout_seconds" in chat_raw:
+        non_secret_overrides["chat_llm_timeout_seconds"] = float(
+            chat.get("timeout_seconds", ext_timeout)
+        )
+    if vision_raw and "temperature" in vision_raw:
+        non_secret_overrides["vl_llm_temperature"] = float(vision.get("temperature", 0.0))
+    if vision_raw and "timeout_seconds" in vision_raw:
+        non_secret_overrides["vl_llm_timeout_seconds"] = float(vision.get("timeout_seconds", 300.0))
+    if isinstance(emb_raw, dict) and "base_url" in emb_raw:
+        non_secret_overrides["embeddings_http_base_url"] = emb_base if emb_base else None
+    elif emb_base:
+        non_secret_overrides["embeddings_http_base_url"] = emb_base
+    if emb_raw and "timeout_seconds" in emb_raw:
+        non_secret_overrides["embeddings_http_timeout_seconds"] = emb_timeout
     if "enabled" in llm:
         non_secret_overrides["extraction_llm_enabled"] = bool(llm["enabled"])
-    chat_override = persisted_chat or env_chat
+    chat_override = chat_model or env_chat
     if chat_override:
         non_secret_overrides["chat_llm_model"] = chat_override
+    if isinstance(chat_raw, dict) and "base_url" in chat_raw:
+        non_secret_overrides["chat_llm_base_url"] = chat_base if chat_base else None
+    elif chat_base:
+        non_secret_overrides["chat_llm_base_url"] = chat_base
+    if emb_mode == "local":
+        non_secret_overrides["openrouter_embedding_model"] = ""
+        non_secret_overrides["embedding_model"] = (
+            emb_model or base_settings.embedding_model or "all-MiniLM-L6-v2"
+        )
+    else:
+        non_secret_overrides["openrouter_embedding_model"] = (
+            emb_model or base_settings.openrouter_embedding_model or "baai/bge-m3"
+        )
+        non_secret_overrides["embedding_model"] = ""
     non_secret_overrides["workspace_upload_max_file_size_mb"] = resolved_upload_mb
     non_secret_overrides["claims_extraction_enabled"] = resolved_claims_enabled
     gcfg = dict(general_cfg or {})
@@ -111,6 +163,7 @@ def _merge_persisted_agent_tools(
                 ("arxiv", "external_research_source_arxiv_enabled"),
                 ("unpaywall", "external_research_source_unpaywall_enabled"),
                 ("openalex", "external_research_source_openalex_enabled"),
+                ("semantic_scholar", "external_research_source_semantic_scholar_enabled"),
             ):
                 if key not in src:
                     continue
@@ -121,6 +174,10 @@ def _merge_persisted_agent_tools(
         raw = agent_tools.get("pdf_reading_mode")
         if raw in {"off", "ask", "auto_safe_oa"}:
             non_secret_overrides["pdf_reading_mode"] = raw
+    if "agent_pdf_read_backend_mode" in agent_tools:
+        raw = agent_tools.get("agent_pdf_read_backend_mode")
+        if raw in {"pypdf", "vl", "hybrid"}:
+            non_secret_overrides["agent_pdf_read_backend_mode"] = raw
     if "agent_unpaywall_oa_tool_enabled" in agent_tools:
         raw = agent_tools.get("agent_unpaywall_oa_tool_enabled")
         b = optional_stored_bool(raw)
@@ -162,9 +219,7 @@ def _merge_persisted_agent_tools(
         except (TypeError, ValueError):
             pass
         else:
-            non_secret_overrides["agent_pdf_read_max_bytes"] = max(
-                100_000, min(100_000_000, n)
-            )
+            non_secret_overrides["agent_pdf_read_max_bytes"] = max(100_000, min(100_000_000, n))
     if "agent_pdf_read_max_pages" in agent_tools:
         raw = agent_tools.get("agent_pdf_read_max_pages")
         try:
@@ -189,3 +244,20 @@ def _merge_persisted_agent_tools(
             pass
         else:
             non_secret_overrides["agent_pdf_read_cache_max_entries"] = max(16, min(10_000, n))
+    if "agent_pdf_read_durable_cache_enabled" in agent_tools:
+        raw = agent_tools.get("agent_pdf_read_durable_cache_enabled")
+        b = optional_stored_bool(raw)
+        if b is not None:
+            non_secret_overrides["agent_pdf_read_durable_cache_enabled"] = b
+    if "agent_mcp_request_timeout_seconds" in agent_tools:
+        raw = agent_tools.get("agent_mcp_request_timeout_seconds")
+        try:
+            t = float(raw)
+        except (TypeError, ValueError):
+            pass
+        else:
+            non_secret_overrides["agent_mcp_request_timeout_seconds"] = max(1.0, min(120.0, t))
+    if "agent_mcp_server_denylist" in agent_tools:
+        non_secret_overrides["agent_mcp_server_denylist"] = normalize_mcp_server_denylist(
+            agent_tools.get("agent_mcp_server_denylist")
+        )

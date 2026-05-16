@@ -19,11 +19,30 @@ import { useI18n } from "../../i18n/useI18n.js";
 import { outlinedAppTextFieldSx, settingsCardSx } from "../../theme/settingsFormSx.js";
 
 const PDF_READING_MODES = new Set(["off", "ask", "auto_safe_oa"]);
-const SOURCE_KEYS = ["crossref", "arxiv", "unpaywall", "openalex"];
+const PDF_READ_BACKEND_MODES = new Set(["pypdf", "vl", "hybrid"]);
+const SOURCE_KEYS = ["crossref", "arxiv", "unpaywall", "openalex", "semantic_scholar"];
+
+function parseMcpDenylistText(raw) {
+  return String(raw ?? "")
+    .split(/[\n,]+/)
+    .map((s) => s.trim().slice(0, 64))
+    .filter(Boolean)
+    .slice(0, 32);
+}
+
+function formatMcpDenylistText(list) {
+  if (!Array.isArray(list) || list.length === 0) return "";
+  return list.map((x) => String(x).trim()).filter(Boolean).join("\n");
+}
 
 function normalizePdfMode(raw) {
   const s = String(raw ?? "").trim();
   return PDF_READING_MODES.has(s) ? s : "ask";
+}
+
+function normalizePdfReadBackend(raw) {
+  const s = String(raw ?? "").trim();
+  return PDF_READ_BACKEND_MODES.has(s) ? s : "hybrid";
 }
 
 /** Parses a number from controlled input; keeps ``fallback`` on empty or non-finite. */
@@ -45,6 +64,15 @@ function buildDraft(agentTools) {
   const pdfMaxPages = parseFiniteNumber(e.resolved_agent_pdf_read_max_pages, 30);
   const pdfCacheTtl = parseFiniteNumber(e.resolved_agent_pdf_read_cache_ttl_seconds, 300);
   const pdfCacheMaxEntries = parseFiniteNumber(e.resolved_agent_pdf_read_cache_max_entries, 256);
+  const pdfDurable = Boolean(e.resolved_agent_pdf_read_durable_cache_enabled ?? true);
+  const mcpTimeout = parseFiniteNumber(e.resolved_agent_mcp_request_timeout_seconds, 15);
+  const denylistEffective = e.resolved_agent_mcp_server_denylist;
+  const denylistPersisted = agentTools?.agent_mcp_server_denylist;
+  const denylistSeed = Array.isArray(denylistPersisted)
+    ? denylistPersisted
+    : Array.isArray(denylistEffective)
+      ? denylistEffective
+      : [];
   return {
     externalResearchDefault: Boolean(e.resolved_external_research_default_enabled),
     sources: {
@@ -52,9 +80,11 @@ function buildDraft(agentTools) {
       arxiv: src.arxiv !== false,
       unpaywall: src.unpaywall !== false,
       openalex: src.openalex !== false,
+      semantic_scholar: src.semantic_scholar !== false,
     },
     agentUnpaywallOaToolEnabled: Boolean(e.resolved_agent_unpaywall_oa_tool_enabled),
     pdfReadingMode: normalizePdfMode(e.resolved_pdf_reading_mode),
+    agentPdfReadBackendMode: normalizePdfReadBackend(e.resolved_agent_pdf_read_backend_mode),
     agentSupervisorMaxRounds: sup,
     agentExternalHttpTimeoutSeconds: extTo,
     agentExternalMaxCallsPerTurn: maxCalls,
@@ -64,6 +94,9 @@ function buildDraft(agentTools) {
     agentPdfReadMaxPages: pdfMaxPages,
     agentPdfReadCacheTtlSeconds: pdfCacheTtl,
     agentPdfReadCacheMaxEntries: pdfCacheMaxEntries,
+    agentPdfReadDurableCacheEnabled: pdfDurable,
+    agentMcpRequestTimeoutSeconds: mcpTimeout,
+    agentMcpServerDenylistText: formatMcpDenylistText(denylistSeed),
   };
 }
 
@@ -99,6 +132,28 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
     if (raw === "not_configured") return "settings.agentTools.emailStatus.not_configured";
     return "settings.agentTools.emailStatus.unknown";
   }, [agentTools?.credentials?.research_contact_email_status]);
+
+  const semanticScholarKeyStatusLabel = useMemo(() => {
+    const raw = String(agentTools?.credentials?.semantic_scholar_api_key_status || "unknown");
+    if (raw === "configured") return t("settings.agentTools.emailStatus.configured");
+    if (raw === "not_configured") return t("settings.agentTools.emailStatus.not_configured");
+    return t("settings.agentTools.emailStatus.unknown");
+  }, [agentTools?.credentials?.semantic_scholar_api_key_status, t]);
+
+  const mcpOperatorState = String(agentTools?.integrations?.mcp_operator_state || "disabled");
+
+  const mcpStateLabel = useMemo(() => {
+    const key = `settings.agentTools.mcpState.${mcpOperatorState}`;
+    const out = t(key);
+    return out !== key ? out : mcpOperatorState;
+  }, [mcpOperatorState, t]);
+
+  const pdfDurableStatusLabel = useMemo(() => {
+    const raw = String(agentTools?.credentials?.pdf_read_durable_cache || "disabled_no_redis");
+    const key = `settings.agentTools.pdfDurableStatus.${raw}`;
+    const out = t(key);
+    return out !== key ? out : raw;
+  }, [agentTools?.credentials?.pdf_read_durable_cache, t]);
 
   /* eslint-disable react-hooks/set-state-in-effect -- hydrate when server snapshot changes */
   useEffect(() => {
@@ -161,6 +216,7 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
       external_research_default_enabled: draft.externalResearchDefault,
       external_research_sources: { ...draft.sources },
       pdf_reading_mode: draft.pdfReadingMode,
+      agent_pdf_read_backend_mode: draft.agentPdfReadBackendMode,
       agent_unpaywall_oa_tool_enabled: draft.agentUnpaywallOaToolEnabled,
       agent_supervisor_max_rounds: Math.max(
         2,
@@ -195,6 +251,12 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
         16,
         Math.min(10000, Math.trunc(parseFiniteNumber(draft.agentPdfReadCacheMaxEntries, 256))),
       ),
+      agent_pdf_read_durable_cache_enabled: Boolean(draft.agentPdfReadDurableCacheEnabled),
+      agent_mcp_request_timeout_seconds: Math.max(
+        1,
+        Math.min(120, parseFiniteNumber(draft.agentMcpRequestTimeoutSeconds, 15)),
+      ),
+      agent_mcp_server_denylist: parseMcpDenylistText(draft.agentMcpServerDenylistText),
     };
     await onSave(payload);
   }
@@ -382,6 +444,25 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
               <MenuItem value="ask">{t("settings.agentTools.pdfMode.ask")}</MenuItem>
               <MenuItem value="auto_safe_oa">{t("settings.agentTools.pdfMode.auto")}</MenuItem>
             </Select>
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted, marginBottom: 0.75, marginTop: 1.5 }}>
+              {t("settings.agentTools.pdfBackendLabel")}
+            </Typography>
+            <Select
+              size="small"
+              fullWidth
+              value={draft.agentPdfReadBackendMode}
+              onChange={(e) =>
+                setDraft((d) => ({
+                  ...d,
+                  agentPdfReadBackendMode: normalizePdfReadBackend(e.target.value),
+                }))
+              }
+              inputProps={{ "aria-label": t("settings.agentTools.pdfBackendLabel") }}
+            >
+              <MenuItem value="pypdf">{t("settings.agentTools.pdfBackend.pypdf")}</MenuItem>
+              <MenuItem value="vl">{t("settings.agentTools.pdfBackend.vl")}</MenuItem>
+              <MenuItem value="hybrid">{t("settings.agentTools.pdfBackend.hybrid")}</MenuItem>
+            </Select>
             <FormControlLabel
               sx={{ mt: 1, ml: 0 }}
               control={
@@ -393,6 +474,17 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
               }
               label={t("settings.agentTools.pdfToolEnabledLabel")}
             />
+            <FormControlLabel
+              sx={{ mt: 1, ml: 0 }}
+              control={
+                <Switch
+                  checked={Boolean(draft.agentPdfReadDurableCacheEnabled)}
+                  onChange={(_e, v) => setDraft((d) => ({ ...d, agentPdfReadDurableCacheEnabled: v }))}
+                  size="small"
+                />
+              }
+              label={t("settings.agentTools.pdfDurableCacheLabel")}
+            />
           </Box>
         </Box>
 
@@ -403,7 +495,22 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
           <Typography sx={{ marginTop: 0.75, fontSize: "0.78rem", color: tk.text.secondary, lineHeight: 1.55 }}>
             {t("settings.agentTools.integrationsHint")}
           </Typography>
-          <Box sx={{ marginTop: 1.5, fontSize: "0.8125rem", color: tk.text.secondary }}>
+          <Box sx={{ marginTop: 1.25, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+            <Chip
+              size="small"
+              label={mcpStateLabel}
+              sx={{
+                height: 22,
+                fontSize: "0.75rem",
+                backgroundColor: tk.control.outlinedBg,
+                border: `1px solid ${tk.border.default}`,
+              }}
+            />
+            <Typography sx={{ fontSize: "0.75rem", color: tk.text.muted }}>
+              {t("settings.agentTools.mcpAuthModel")}
+            </Typography>
+          </Box>
+          <Box sx={{ marginTop: 1.25, fontSize: "0.8125rem", color: tk.text.secondary, lineHeight: 1.6 }}>
             <div>
               {t("settings.agentTools.mcpEnabled", {
                 value: agentTools?.integrations?.mcp_tools_enabled
@@ -419,11 +526,83 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
               })}
             </div>
             <div>
+              {t("settings.agentTools.mcpAdapterHost", {
+                host:
+                  agentTools?.integrations?.mcp_base_url_host ||
+                  t("settings.agentTools.mcpAdapterHostUnset"),
+              })}
+            </div>
+            <div>
+              {t("settings.agentTools.mcpTimeoutEffective", {
+                seconds: Number(agentTools?.integrations?.mcp_request_timeout_seconds || 15),
+              })}
+            </div>
+            <div>
               {t("settings.agentTools.mcpDenylist", {
                 n: Number(agentTools?.integrations?.mcp_server_denylist_count || 0),
               })}
             </div>
+            <Typography sx={{ marginTop: 0.5, fontSize: "0.72rem", color: tk.text.muted }}>
+              {t("settings.agentTools.mcpAdapterUrlSource")}
+            </Typography>
           </Box>
+          <Accordion
+            disableGutters
+            elevation={0}
+            sx={{
+              marginTop: 1.25,
+              border: `1px solid ${tk.border.default}`,
+              borderRadius: 1,
+              backgroundColor: tk.control.outlinedBg,
+              "&:before": { display: "none" },
+            }}
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ fontSize: "1rem" }} />}>
+              <Typography sx={{ fontSize: "0.78rem", fontWeight: 600, color: tk.text.primary }}>
+                {t("settings.agentTools.mcpAdvancedTitle")}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+                <TextField
+                  label={t("settings.agentTools.mcpRequestTimeout")}
+                  type="number"
+                  size="small"
+                  value={draft.agentMcpRequestTimeoutSeconds}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...d,
+                      agentMcpRequestTimeoutSeconds: parseFiniteNumber(
+                        e.target.value,
+                        d.agentMcpRequestTimeoutSeconds,
+                      ),
+                    }))
+                  }
+                  inputProps={{
+                    min: 1,
+                    max: 120,
+                    step: 0.5,
+                    "aria-label": t("settings.agentTools.mcpRequestTimeout"),
+                  }}
+                  sx={fieldSx}
+                />
+                <TextField
+                  label={t("settings.agentTools.mcpDenylistField")}
+                  size="small"
+                  multiline
+                  minRows={2}
+                  maxRows={6}
+                  inputProps={{ "aria-label": t("settings.agentTools.mcpDenylistField") }}
+                  value={draft.agentMcpServerDenylistText}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, agentMcpServerDenylistText: e.target.value }))
+                  }
+                  helperText={t("settings.agentTools.mcpDenylistHint")}
+                  sx={fieldSx}
+                />
+              </Box>
+            </AccordionDetails>
+          </Accordion>
         </Box>
 
         <Box sx={{ ...cardSx, padding: 1.5 }}>
@@ -434,6 +613,12 @@ export default function AgentToolsSettingsPanel({ agentTools, saving, saveError,
             {t("settings.agentTools.credentialsMailto", {
               status: t(emailStatusKey),
             })}
+          </Typography>
+          <Typography sx={{ marginTop: 1, fontSize: "0.8125rem", color: tk.text.secondary }}>
+            {t("settings.agentTools.credentialsSemanticScholar", { status: semanticScholarKeyStatusLabel })}
+          </Typography>
+          <Typography sx={{ marginTop: 0.75, fontSize: "0.8125rem", color: tk.text.secondary }}>
+            {t("settings.agentTools.credentialsPdfDurable", { status: pdfDurableStatusLabel })}
           </Typography>
           <Typography sx={{ marginTop: 1, fontSize: "0.72rem", color: tk.text.muted, lineHeight: 1.55 }}>
             {t("settings.agentTools.credentialsHint")}

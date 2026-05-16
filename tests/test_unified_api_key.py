@@ -62,110 +62,105 @@ def test_explicit_vl_key_overrides_shared(monkeypatch: pytest.MonkeyPatch, tmp_p
     assert s.extraction_llm_api_key == "sk-shared"
 
 
-def test_settings_snapshot_llm_status_flags(
+def test_settings_snapshot_llm_status_after_bootstrap(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Snapshot llm.status reflects canonical key and first-run flags."""
+    """After one-time bootstrap, snapshot marks API key as saved (no env vocabulary)."""
     monkeypatch.chdir(tmp_path)
     _clear_llm_api_env(monkeypatch)
     monkeypatch.setenv("SCIENCE_GRAPHRAG_API_KEY", "sk-canon")
     base = Settings()
-    svc = SettingsService(
-        repo_root=tmp_path,
-        repository=SettingsRepository(tmp_path),
-        secret_store=SecretStore(tmp_path),
-    )
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    svc = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
     snap = svc.get_snapshot(base)
     st = snap.llm["status"]
-    assert st["canonical_api_key_env_set"] is True
     assert st["setup_status"] == "ready"
     assert st["needs_initial_setup"] is False
-    assert st["uses_env_defaults"] is True
-    assert st["legacy_override_detected"] is False
+    assert st["secret_source"] == "saved"
+    assert st["has_saved_secret"] is True
 
 
-def test_settings_snapshot_vl_same_as_extraction_not_explicit_override(
+def test_settings_snapshot_vl_same_as_extraction_after_bootstrap(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Redundant SCIENCE_GRAPHRAG_VL_API_KEY equal to unified key must not show VL override."""
+    """Equal VL + extraction keys resolve to inherited vision key source in UI."""
     monkeypatch.chdir(tmp_path)
     _clear_llm_api_env(monkeypatch)
     same = "sk-same-value-12345678901234567890"
     monkeypatch.setenv("SCIENCE_GRAPHRAG_API_KEY", same)
     monkeypatch.setenv("SCIENCE_GRAPHRAG_VL_API_KEY", same)
     base = Settings()
-    svc = SettingsService(
-        repo_root=tmp_path,
-        repository=SettingsRepository(tmp_path),
-        secret_store=SecretStore(tmp_path),
-    )
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    svc = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
     st = svc.get_snapshot(base).llm["status"]
-    assert st["vl_api_key_explicit_env"] is False
-    assert st["legacy_override_detected"] is False
+    assert st["vision_key_source"] == "inherited"
 
 
-def test_settings_snapshot_legacy_override_when_vl_dedicated(
+def test_settings_snapshot_dedicated_vl_key_saved_after_bootstrap(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Dedicated VL key sets legacy_override_detected and vl_api_key_explicit_env."""
+    """Dedicated VL env key is copied to vision vault; UI shows saved vision secret."""
     monkeypatch.chdir(tmp_path)
     _clear_llm_api_env(monkeypatch)
     monkeypatch.setenv("SCIENCE_GRAPHRAG_API_KEY", "sk-main")
     monkeypatch.setenv("SCIENCE_GRAPHRAG_VL_API_KEY", "sk-vl")
     base = Settings()
-    svc = SettingsService(
-        repo_root=tmp_path,
-        repository=SettingsRepository(tmp_path),
-        secret_store=SecretStore(tmp_path),
-    )
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    svc = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
     st = svc.get_snapshot(base).llm["status"]
-    assert st["vl_api_key_explicit_env"] is True
-    assert st["legacy_override_detected"] is True
+    assert st["has_saved_vision_secret"] is True
+    assert st["vision_key_source"] == "saved"
 
 
-def test_snapshot_legacy_extraction_env_only_without_canonical(
+def test_snapshot_legacy_extraction_env_only_after_bootstrap(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Legacy EXTRACTION_LLM_API_KEY alone fills extraction; snapshot marks legacy env."""
+    """Legacy extraction env key is bootstrapped into vault; snapshot shows saved."""
     monkeypatch.chdir(tmp_path)
     _clear_llm_api_env(monkeypatch)
     monkeypatch.setenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY", "sk-legacy-only")
     base = Settings()
     assert base.extraction_llm_api_key == "sk-legacy-only"
-    svc = SettingsService(
-        repo_root=tmp_path,
-        repository=SettingsRepository(tmp_path),
-        secret_store=SecretStore(tmp_path),
-    )
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    svc = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
     st = svc.get_snapshot(base).llm["status"]
-    assert st["canonical_api_key_env_set"] is False
-    assert st["legacy_extraction_key_env_set"] is True
-    assert st["legacy_override_detected"] is True
-    assert st["vl_api_key_explicit_env"] is False
     assert st["configured"] is True
     assert st["needs_initial_setup"] is False
     assert st["setup_status"] == "ready"
+    assert st["secret_source"] == "saved"
+    assert st["has_saved_secret"] is True
 
 
-def test_snapshot_canonical_plus_legacy_env_marks_legacy_extraction_env(
+def test_snapshot_canonical_plus_legacy_env_bootstrap_still_saved(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Canonical wins extraction; legacy env var still appears in status (operator hint)."""
+    """Canonical key wins extraction; bootstrap persists vault entry from effective key."""
     monkeypatch.chdir(tmp_path)
     _clear_llm_api_env(monkeypatch)
     monkeypatch.setenv("SCIENCE_GRAPHRAG_API_KEY", "sk-canon")
     monkeypatch.setenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY", "sk-legacy-unused")
     base = Settings()
     assert base.extraction_llm_api_key == "sk-canon"
-    svc = SettingsService(
-        repo_root=tmp_path,
-        repository=SettingsRepository(tmp_path),
-        secret_store=SecretStore(tmp_path),
-    )
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    svc = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
     st = svc.get_snapshot(base).llm["status"]
-    assert st["canonical_api_key_env_set"] is True
-    assert st["legacy_extraction_key_env_set"] is True
-    assert st["legacy_override_detected"] is True
+    assert st["secret_source"] == "saved"
+    assert st["has_saved_secret"] is True
 
 
 def test_snapshot_needs_initial_setup_without_any_llm_key(
@@ -176,11 +171,11 @@ def test_snapshot_needs_initial_setup_without_any_llm_key(
     _clear_llm_api_env(monkeypatch)
     monkeypatch.setenv("SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY", "")
     base = Settings()
-    svc = SettingsService(
-        repo_root=tmp_path,
-        repository=SettingsRepository(tmp_path),
-        secret_store=SecretStore(tmp_path),
-    )
+    root = tmp_path / "data" / "settings"
+    root.mkdir(parents=True, exist_ok=True)
+    repo = SettingsRepository(root)
+    secrets = SecretStore(root)
+    svc = SettingsService(repo_root=tmp_path, repository=repo, secret_store=secrets)
     st = svc.get_snapshot(base).llm["status"]
     assert st["configured"] is False
     assert st["needs_initial_setup"] is True

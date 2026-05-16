@@ -50,7 +50,7 @@ import { useChatThreadScroll } from "./useChatThreadScroll.js";
  *   onStructuredAnswersSubmit?: (payload: { request_id: string, answers: unknown[] }) => void | Promise<void>,
  *   pdfReadingMode?: "off" | "ask" | "auto_safe_oa",
  *   onReadPdfSource?: (url: string) => void | Promise<void>,
- *   pdfReadState?: { isActive?: boolean, url?: string, error?: string, mode?: string } | null,
+ *   pdfReadState?: { isActive?: boolean, url?: string, error?: string, mode?: string, artifactId?: string } | null,
  * }} props
  */
 export function ChatMessageThread({

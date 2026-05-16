@@ -13,6 +13,9 @@ from science_graphrag.agent.tools.external.openalex_works_search_tools import (
     build_openalex_works_search_tools,
 )
 from science_graphrag.agent.tools.external.pdf_read_tools import build_pdf_read_tools
+from science_graphrag.agent.tools.external.semantic_scholar_tools import (
+    build_semantic_scholar_tools,
+)
 from science_graphrag.agent.tools.external.unpaywall_tools import build_unpaywall_tools
 from science_graphrag.agent.tools.web_research_tools import build_web_research_tools
 from science_graphrag.config import Settings
@@ -31,6 +34,8 @@ def build_external_research_tools(*, settings: Settings) -> list[Any]:
         out.extend(build_unpaywall_tools(settings=settings))
     if bool(getattr(settings, "external_research_source_openalex_enabled", True)):
         out.extend(build_openalex_works_search_tools(settings))
+    if bool(getattr(settings, "external_research_source_semantic_scholar_enabled", True)):
+        out.extend(build_semantic_scholar_tools(settings))
     if bool(getattr(settings, "agent_pdf_read_tool_enabled", True)):
         out.extend(build_pdf_read_tools(settings=settings))
     return out

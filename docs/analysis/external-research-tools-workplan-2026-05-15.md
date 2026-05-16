@@ -10,8 +10,9 @@ Companion docs:
 
 - Architecture decision: `docs/adr/030-external-research-tools-architecture.md`
 - Implementation review/status: `docs/analysis/external-research-tools-implementation-review-2026-05-15.md`
+- Runtime acceptance index: `docs/agent/external_research_runtime_acceptance.md`
 - Landscape scan (archived stub): `docs/analysis/sci-tools.md`
-- Backlog anchor: `docs/backlog/refactor-backend.md` → `[OPEN] External research: Semantic Scholar tools` (OpenAlex search is shipped; Phase 3 **Remaining / Closeout** below tracks optional smoke + doc alignment)
+- Backlog anchor: `docs/backlog/refactor-backend.md` → `[PARTIAL] External research: Semantic Scholar tools` (Phase 5A core shipped; references/citations deferred) and `[PARTIAL] Durable PDF read artifacts` (Redis JSON + stable `artifact_id`; DB/blob audit deferred). Phase 3 **Remaining / Closeout** below tracks optional smoke + doc alignment.
 
 ## Goal
 
@@ -135,7 +136,7 @@ Implement `AgentToolsSettingsPanel` under Settings:
 - **Research sources** card:
   - External scholarly sources main switch.
   - Crossref, arXiv, Unpaywall rows with status chips.
-  - OpenAlex row (operator toggle; shipped); Semantic Scholar planned.
+  - OpenAlex row (operator toggle; shipped); Semantic Scholar row (beta; Phase 5A search/paper shipped).
 - **Full-text / PDF** card:
   - `PDF reading in chat`: `Off` / `Ask before reading` / `Auto for safe OA/arXiv PDFs`.
   - Advanced limits collapsed.
@@ -252,7 +253,7 @@ Purpose: add broad literature discovery without duplicating `doi_resolver`.
 ### Remaining / Closeout (operator + docs; not part of “core shipped”)
 
 1. **OpenAlex live smoke (optional, non-default CI)**  
-   Add a small harness under `scripts/live_check/` (httpx to OpenAlex with bounded query, exit 0 on structured success or documented graceful failure). Does not run in default unit CI. Runbook line in `docs/analysis/external-research-tools-implementation-review-2026-05-15.md` after first green operator run.
+   `scripts/live_check/openalex_smoke.py` added (bounded query, structured success/failure contract). Does not run in default unit CI. 2026-05-16 operator run in current contour: `http_status=200`, `results=1` (green).
 
 2. **Backlog / doc alignment**  
    `docs/backlog/refactor-backend.md` external-research card tracks **Semantic Scholar** only; OpenAlex search is treated as delivered.
@@ -355,7 +356,9 @@ flowchart TD
 
 ### Acceptance (Phase 4)
 
-**Status (2026-05-15):** Core backend+UI path shipped — typed `pdf_read_request`, `execute_pdf_read` orchestrator, bounded LRU+TTL cache, SSE prefetch steps, denylist/`pdf_reading_mode` alignment, citation hydration on PDF failures, variable evidence quality, Ask UI token+i18n. Durable cross-process artifact persistence remains backlog (see implementation review “Phase 4 honest closure”).
+**Status (2026-05-15):** Core backend+UI path shipped — typed `pdf_read_request`, `execute_pdf_read` orchestrator, bounded LRU+TTL cache, SSE prefetch steps, denylist/`pdf_reading_mode` alignment, citation hydration on PDF failures, variable evidence quality, Ask UI token+i18n.
+
+**Status (2026-05-16) — Phase 4 closeout slice:** stable `artifact_id` on PDF tool outcomes; optional **Redis-backed** durable JSON cache (`agent_pdf_read_durable_cache_enabled` + `REDIS_URL` wiring) for cold-start reuse of excerpt metadata keyed by URL hash + budget fingerprint; operator credential line for durable-cache availability. Full DB/object-store artifact rows remain deferred (backlog `[PARTIAL] Durable PDF read artifacts`).
 
 - Explicit PDF read produces visible progress + persisted artifact + answer grounded in extracted evidence with correct trust labels.
 - Agent never silently claims full-text reading when extraction did not run or failed.
@@ -363,6 +366,14 @@ flowchart TD
 ## Phase 5 — Semantic Scholar
 
 Purpose: add citation-aware discovery once current sources and trust model are stable.
+
+**Status (2026-05-16) — Phase 5A shipped:** `semantic_scholar_search` and `semantic_scholar_paper` are registered behind external-research toggles, manifest + product-step mapping (`semantic_scholar_search` → `searching_literature`; `semantic_scholar_paper` → `paper_metadata`), bounded payloads, mock HTTP tests. **Optional** API key (`SCIENCE_GRAPHRAG_SEMANTIC_SCHOLAR_API_KEY` / secret store) improves rate limits — snapshot/UI treat as **beta + optional**, not hard-required. Operator-only HTTP smoke: `scripts/live_check/semantic_scholar_smoke.py` (search + paper lookup). Snapshot keeps `needs_live_smoke` until operator documents a green smoke run. `semantic_scholar_references` / `semantic_scholar_citations` remain explicitly **out of scope** until bounded graph UX exists.
+
+**Phase 5 closeout (quality, no graph tools):** API-key header unit test, transport-failure vocabulary test, extended smoke for paper lookup; doc sync in implementation review.
+
+**Operator acceptance runbook:** use `docs/agent/semantic_scholar_runtime_acceptance.md` → **Operator acceptance checklist** for exact commands and expected outputs (unit contract, registry, live smoke, failure contract).
+
+**Latest live lane note (2026-05-16):** Semantic Scholar smoke in current contour returned `403 Forbidden`; treat as non-green evidence and keep `needs_live_smoke` until a successful operator run is recorded.
 
 ### Backend
 
@@ -395,6 +406,10 @@ Purpose: add citation-aware discovery once current sources and trust model are s
 ## Phase 6 — MCP and External Integrations
 
 Purpose: keep MCP available for advanced integrations without making native tools depend on it.
+
+**Status (2026-05-16) — Phase 6 shipped (operator slice):** expanded `agent_tools.integrations` snapshot (operator state, timeout, denylist preview, auth model); allowlisted PATCH for `agent_mcp_request_timeout_seconds` and `agent_mcp_server_denylist` (adapter base URL remains **env-only**); Integrations card with explicit states + MCP advanced fields; operator smoke `scripts/live_check/mcp_adapter_smoke.py`; isolation test that native external tools register independently of MCP gate failures. See `docs/agent/mcp_runtime_acceptance.md`.
+
+**Operator acceptance runbook:** use `docs/agent/mcp_runtime_acceptance.md` → **Operator acceptance checklist** for exact commands and expected outputs (snapshot/overlay/isolation/UI/live smoke).
 
 ### Backend
 
@@ -464,7 +479,7 @@ Recommended order (dependencies first):
 
 **Later waves (unchanged intent)**
 
-- **PR 10+: Semantic Scholar** — search/paper first; citations/references later (ties to backlog `[OPEN] External research: Semantic Scholar tools`).
+- **PR 10+: Semantic Scholar Phase 5A** — **done (2026-05-16)** (`semantic_scholar_search`, `semantic_scholar_paper`, settings/snapshot beta + optional key, tests, `semantic_scholar_smoke.py`). **Deferred:** reference/citation graph tools (same backlog item, remain `[PARTIAL]`).
 
 ## Definition of Done
 

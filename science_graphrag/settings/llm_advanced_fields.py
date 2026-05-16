@@ -87,10 +87,16 @@ _RESERVED_LLM_JSON_KEYS: frozenset[str] = frozenset(
         "base_url",
         "model",
         "chat_model",
+        "chat_base_url",
+        "vl_model",
+        "vl_base_url",
+        "embeddings_mode",
+        "embeddings_model",
         "temperature",
         "timeout_seconds",
         "enabled",
         "_meta",
+        "tasks",
     )
 )
 

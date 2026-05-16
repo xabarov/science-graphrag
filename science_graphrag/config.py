@@ -8,7 +8,6 @@ from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, Settings
 import science_graphrag.settings.dotenv_bootstrap  # noqa: F401 — side-effect env bootstrap
 from science_graphrag.config_mixins.agent_runtime_fields import AgentRuntimeFields
 from science_graphrag.config_mixins.core_storage_fields import CoreStorageFields
-from science_graphrag.settings.service import SettingsService
 
 
 class Settings(CoreStorageFields, AgentRuntimeFields, BaseSettings):
@@ -152,6 +151,64 @@ class Settings(CoreStorageFields, AgentRuntimeFields, BaseSettings):
             "Optional OpenRouter-compatible model id for research agent chat. "
             "When unset, ``extraction_llm_model`` is used."
         ),
+    )
+    chat_llm_base_url: str | None = Field(
+        default=None,
+        description=(
+            "Optional OpenAI-compatible base URL for research chat. "
+            "When unset, ``extraction_llm_base_url`` is used."
+        ),
+    )
+    chat_llm_api_key: str | None = Field(
+        default=None,
+        description=(
+            "Optional dedicated API key for research chat. "
+            "When unset, ``extraction_llm_api_key`` is used."
+        ),
+    )
+    embeddings_api_key: str | None = Field(
+        default=None,
+        description=(
+            "Optional dedicated API key for embeddings provider. "
+            "When unset, embedding providers reuse extraction/teacher keys."
+        ),
+    )
+    chat_llm_temperature: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=2.0,
+        description="When set from persisted LLM chat task, overrides default agent chat sampling.",
+    )
+    chat_llm_timeout_seconds: float | None = Field(
+        default=None,
+        ge=5.0,
+        le=3600.0,
+        description="HTTP timeout for research chat transport when set from persisted LLM chat task.",
+    )
+    vl_llm_temperature: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=2.0,
+        description="Sampling temperature for VL PDF calls when set from persisted vision task.",
+    )
+    vl_llm_timeout_seconds: float | None = Field(
+        default=None,
+        ge=30.0,
+        le=3600.0,
+        description="HTTP timeout for VL chat.completions when set from persisted vision task.",
+    )
+    embeddings_http_base_url: str | None = Field(
+        default=None,
+        description=(
+            "OpenAI-compatible base URL for remote HTTP embeddings; "
+            "when unset, extraction/benchmark teacher bases are used."
+        ),
+    )
+    embeddings_http_timeout_seconds: float | None = Field(
+        default=None,
+        ge=5.0,
+        le=600.0,
+        description="HTTP timeout for remote embedding provider when set from persisted embeddings task.",
     )
     extraction_llm_temperature: float = Field(default=0.0)
     extraction_llm_max_tokens_metadata: int = Field(default=4096)
@@ -540,6 +597,8 @@ class Settings(CoreStorageFields, AgentRuntimeFields, BaseSettings):
 
 def get_settings() -> Settings:
     """Return ``Settings`` with persisted runtime overlays and managed LLM secret applied."""
+
+    from science_graphrag.settings.service import SettingsService
 
     base_settings = Settings()
     service = SettingsService(repo_root=Path(__file__).resolve().parents[1])

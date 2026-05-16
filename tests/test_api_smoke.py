@@ -146,6 +146,8 @@ def test_settings_snapshot_endpoint_smoke() -> None:
     assert res.status_code == 200
     payload = res.json()
     assert any(item["id"] == "llm" for item in payload["sections"])
+    for nav_section in payload["sections"]:
+        assert "status" not in nav_section
     assert "status" in payload["llm"]
     assert "effective" in payload["llm"]
     assert "ingestion" in payload
@@ -173,11 +175,7 @@ def test_settings_snapshot_endpoint_smoke() -> None:
     st = payload["llm"]["status"]
     assert "needs_initial_setup" in st
     assert st.get("setup_status") in ("ready", "needs_api_key")
-    assert "uses_env_defaults" in st
-    assert "legacy_override_detected" in st
-    assert "canonical_api_key_env_set" in st
-    assert "legacy_extraction_key_env_set" in st
-    assert "vl_api_key_explicit_env" in st
+    assert st.get("secret_source") in ("saved", "inherited", "none")
     assert "resolved_vl_model" in payload["llm"]["effective"]
     assert "resolved_vl_base_url" in payload["llm"]["effective"]
     assert "tasks" in payload["llm"]
@@ -234,11 +232,23 @@ def test_settings_agent_tools_patch_smoke(tmp_path: Path, monkeypatch: Any) -> N
     client = _client()
     res = client.patch(
         "/v1/settings/agent_tools",
-        json={"agent_supervisor_max_rounds": 12},
+        json={
+            "agent_supervisor_max_rounds": 12,
+            "agent_pdf_read_backend_mode": "vl",
+            "agent_mcp_request_timeout_seconds": 20.0,
+            "agent_mcp_server_denylist": ["blocked_server"],
+        },
     )
     assert res.status_code == 200
     payload = res.json()
     assert payload["agent_tools"]["effective"]["resolved_agent_supervisor_max_rounds"] == 12
+    assert payload["agent_tools"]["effective"]["resolved_agent_pdf_read_backend_mode"] == "vl"
+    assert payload["agent_tools"]["effective"]["resolved_agent_mcp_request_timeout_seconds"] == 20.0
+    assert payload["agent_tools"]["effective"]["resolved_agent_mcp_server_denylist"] == [
+        "blocked_server"
+    ]
+    integrations = payload["agent_tools"].get("integrations") or {}
+    assert integrations.get("mcp_operator_state") in {"disabled", "unconfigured", "configured"}
 
 
 def test_settings_service_llm_snapshot_env_secret_only(tmp_path: Path) -> None:
@@ -257,8 +267,8 @@ def test_settings_service_llm_snapshot_env_secret_only(tmp_path: Path) -> None:
     base = Settings(extraction_llm_api_key="sk-env-12345678901234567890")
     snap = service.get_snapshot(base)
     st = snap.llm["status"]
-    assert st["secret_source"] == "environment"
-    assert st["has_saved_secret"] is False
+    assert st["secret_source"] == "saved"
+    assert st["has_saved_secret"] is True
     assert st["configured"] is True
     assert st["masked_key"]
 
@@ -357,8 +367,10 @@ def test_settings_storage_patch_smoke(tmp_path: Path, monkeypatch: Any) -> None:
     assert runtime.neo4j_uri == "bolt://patched-from-api:7687"
 
 
-def test_settings_llm_patch_and_delete_secret_smoke(tmp_path: Path, monkeypatch: Any) -> None:
-    """Settings API persists non-secret values and masks stored API key."""
+def test_settings_llm_patch_clear_extraction_secret_and_reveal_smoke(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    """Settings API persists non-secret values, reveal returns raw secret, PATCH can clear vault."""
 
     from science_graphrag.api import settings as settings_api
     from science_graphrag.settings.repository import SettingsRepository
@@ -387,24 +399,39 @@ def test_settings_llm_patch_and_delete_secret_smoke(tmp_path: Path, monkeypatch:
     body = patch_res.json()
     assert body["llm"]["status"]["configured"] is True
     assert body["llm"]["status"]["has_saved_secret"] is True
-    assert body["llm"]["status"]["secret_source"] == "server_managed"
+    assert body["llm"]["status"]["secret_source"] == "saved"
     assert body["llm"]["status"]["masked_key"].startswith("sk-d")
     assert body["llm"]["effective"]["resolved_model"] == "mistralai/mistral-small-3.2-24b-instruct"
 
-    delete_res = client.delete("/v1/settings/llm/secret")
-    assert delete_res.status_code == 200
-    deleted = delete_res.json()
-    assert deleted["llm"]["status"]["has_saved_secret"] is False
-    assert deleted["llm"]["status"]["secret_source"] in ("none", "environment")
-    if deleted["llm"]["status"]["secret_source"] == "none":
-        assert deleted["llm"]["status"]["configured"] is False
+    reveal_res = client.post("/v1/settings/llm/reveal-secret", json={"task": "extraction"})
+    assert reveal_res.status_code == 200
+    assert reveal_res.json().get("secret") == "sk-demo-secret"
+
+    clear_res = client.patch(
+        "/v1/settings/llm",
+        json={
+            "base_url": "https://openrouter.ai/api/v1",
+            "model": "mistralai/mistral-small-3.2-24b-instruct",
+            "temperature": 0.1,
+            "timeout_seconds": 120,
+            "api_key": None,
+        },
+    )
+    assert clear_res.status_code == 200
+    cleared = clear_res.json()
+    assert cleared["llm"]["status"]["has_saved_secret"] is False
+    assert cleared["llm"]["status"]["secret_source"] in ("none", "saved")
+    if cleared["llm"]["status"]["secret_source"] == "none":
+        assert cleared["llm"]["status"]["configured"] is False
     else:
-        assert deleted["llm"]["status"]["configured"] is True
-    assert "ingestion" in deleted
+        assert cleared["llm"]["status"]["configured"] is True
+    assert "ingestion" in cleared
 
 
-def test_settings_llm_vision_secret_patch_and_delete_smoke(tmp_path: Path, monkeypatch: Any) -> None:
-    """PATCH /v1/settings/llm can persist vision API key; DELETE clears vault entry."""
+def test_settings_llm_vision_secret_patch_and_clear_smoke(
+    tmp_path: Path, monkeypatch: Any
+) -> None:
+    """PATCH /v1/settings/llm can persist vision API key; null vision_api_key clears vault entry."""
 
     from science_graphrag.api import settings as settings_api
     from science_graphrag.settings.repository import SettingsRepository
@@ -435,9 +462,19 @@ def test_settings_llm_vision_secret_patch_and_delete_smoke(tmp_path: Path, monke
     assert body["llm"]["status"]["has_saved_secret"] is True
     assert body["llm"]["status"]["has_saved_vision_secret"] is True
 
-    delete_res = client.delete("/v1/settings/llm/vision-secret")
-    assert delete_res.status_code == 200
-    deleted = delete_res.json()
+    clear_res = client.patch(
+        "/v1/settings/llm",
+        json={
+            "base_url": "https://openrouter.ai/api/v1",
+            "model": "mistralai/mistral-small-3.2-24b-instruct",
+            "temperature": 0.1,
+            "timeout_seconds": 120,
+            "api_key": "sk-demo-secret-vision-flow",
+            "vision_api_key": None,
+        },
+    )
+    assert clear_res.status_code == 200
+    deleted = clear_res.json()
     assert deleted["llm"]["status"]["has_saved_vision_secret"] is False
     assert deleted["llm"]["status"]["has_saved_secret"] is True
 

@@ -156,6 +156,9 @@ services:
       # Host PDF tree mounted at /data/blobs. Set SCIENCE_GRAPHRAG_HOST_BLOB_MOUNT=./data/blobs_merged in .env after rsync merge (ingest-corpus runbook).
       - ${SCIENCE_GRAPHRAG_HOST_BLOB_MOUNT:-./data/blobs}:/data/blobs
       - ./data/artifacts:/data/artifacts
+    extra_hosts:
+      # Allow containers to reach host services (e.g., local Ollama on Linux).
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
@@ -263,6 +266,8 @@ services:
       - .:/app
       - ${SCIENCE_GRAPHRAG_HOST_BLOB_MOUNT:-./data/blobs}:/data/blobs
       - ./data/artifacts:/data/artifacts
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy

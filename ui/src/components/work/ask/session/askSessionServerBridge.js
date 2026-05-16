@@ -70,6 +70,13 @@ export function compactAskTurnDetailsForSync(details) {
   const slimRm = {};
   if (rm.brief != null && String(rm.brief).trim()) slimRm.brief = String(rm.brief).trim();
   if (rm.research_plan != null && typeof rm.research_plan === "object") slimRm.research_plan = rm.research_plan;
+  if (rm.pdf_read_artifact_id != null && String(rm.pdf_read_artifact_id).trim()) {
+    slimRm.pdf_read_artifact_id = String(rm.pdf_read_artifact_id).trim();
+  }
+  if (rm.pdf_read_tool_ok != null) slimRm.pdf_read_tool_ok = Boolean(rm.pdf_read_tool_ok);
+  if (rm.pdf_read_tool_error != null && String(rm.pdf_read_tool_error).trim()) {
+    slimRm.pdf_read_tool_error = String(rm.pdf_read_tool_error).trim().slice(0, 240);
+  }
   const se = Array.isArray(details.stream_events) ? details.stream_events.slice(-30) : [];
   /** @type {Record<string, unknown>} */
   const out = {};

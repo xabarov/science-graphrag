@@ -60,15 +60,22 @@ export function buildRuntimeOverridesPayload(advValues) {
  *   baseUrl: string,
  *   model: string,
  *   chatModel: string,
+ *   chatBaseUrl: string,
  *   temperature: number,
  *   timeoutSeconds: number,
  *   vlModel: string,
  *   vlBaseUrl: string,
- *   llm: object,
- *   replaceKey: boolean,
+ *   vlTemperature: number,
+ *   vlTimeoutSeconds: number,
  *   apiKey: string,
- *   replaceVisionKey: boolean,
+ *   chatApiKey: string,
  *   visionApiKey: string,
+ *   chatTemperature: number,
+ *   chatTimeoutSeconds: number,
+ *   embeddingsBaseUrl: string,
+ *   embeddingsModel: string,
+ *   embeddingsTimeoutSeconds: number,
+ *   embeddingsApiKey: string,
  *   advDirty: boolean,
  *   advValues: object,
  * }} opts
@@ -78,44 +85,66 @@ export function buildLlmSettingsSubmitPayload(opts) {
     baseUrl,
     model,
     chatModel,
+    chatBaseUrl,
     temperature,
     timeoutSeconds,
     vlModel,
     vlBaseUrl,
-    llm,
-    replaceKey,
+    vlTemperature,
+    vlTimeoutSeconds,
     apiKey,
-    replaceVisionKey,
+    chatApiKey,
     visionApiKey,
+    chatTemperature,
+    chatTimeoutSeconds,
+    embeddingsBaseUrl,
+    embeddingsModel,
+    embeddingsTimeoutSeconds,
+    embeddingsApiKey,
     advDirty,
     advValues,
   } = opts;
 
-  const persistedVm = (llm?.vl_model || "").trim();
-  const persistedVb = (llm?.vl_base_url || "").trim();
-  const persistedCm = (llm?.chat_model || "").trim();
-
   const payload = {
-    base_url: baseUrl,
-    model,
-    temperature: Number(temperature),
-    timeout_seconds: Number(timeoutSeconds),
+    tasks: {
+      extraction: {
+        base_url: baseUrl.trim(),
+        model: model.trim(),
+        temperature: Number(temperature),
+        timeout_seconds: Number(timeoutSeconds),
+      },
+      chat: {
+        base_url: chatBaseUrl.trim(),
+        model: chatModel.trim(),
+        temperature: Number(chatTemperature),
+        timeout_seconds: Number(chatTimeoutSeconds),
+      },
+      vision: {
+        base_url: vlBaseUrl.trim(),
+        model: vlModel.trim(),
+        temperature: Number(vlTemperature),
+        timeout_seconds: Number(vlTimeoutSeconds),
+      },
+      embeddings: {
+        mode: "http",
+        base_url: embeddingsBaseUrl.trim(),
+        model: embeddingsModel.trim(),
+        timeout_seconds: Number(embeddingsTimeoutSeconds),
+      },
+    },
   };
 
-  if (chatModel.trim() !== persistedCm) {
-    payload.chat_model = chatModel.trim();
+  if (apiKey.trim()) {
+    payload.api_key = apiKey.trim();
   }
-  if (vlModel.trim() !== persistedVm) {
-    payload.vl_model = vlModel.trim();
+  if (chatApiKey.trim()) {
+    payload.chat_api_key = chatApiKey.trim();
   }
-  if (vlBaseUrl.trim() !== persistedVb) {
-    payload.vl_base_url = vlBaseUrl.trim();
-  }
-  if (replaceKey && apiKey) {
-    payload.api_key = apiKey;
-  }
-  if (replaceVisionKey && visionApiKey.trim()) {
+  if (visionApiKey.trim()) {
     payload.vision_api_key = visionApiKey.trim();
+  }
+  if (embeddingsApiKey.trim()) {
+    payload.embeddings_api_key = embeddingsApiKey.trim();
   }
   if (advDirty) {
     payload.runtime_overrides = buildRuntimeOverridesPayload(advValues);

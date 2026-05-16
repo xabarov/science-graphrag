@@ -201,6 +201,7 @@ def test_build_non_secret_overrides_merges_pdf_read_limits() -> None:
             "agent_pdf_read_max_pages": 22,
             "agent_pdf_read_cache_ttl_seconds": 77,
             "agent_pdf_read_cache_max_entries": 400,
+            "agent_pdf_read_backend_mode": "vl",
         },
     )
     assert overlay["agent_pdf_read_tool_enabled"] is False
@@ -208,3 +209,85 @@ def test_build_non_secret_overrides_merges_pdf_read_limits() -> None:
     assert overlay["agent_pdf_read_max_pages"] == 22
     assert overlay["agent_pdf_read_cache_ttl_seconds"] == 77
     assert overlay["agent_pdf_read_cache_max_entries"] == 400
+    assert overlay["agent_pdf_read_backend_mode"] == "vl"
+
+
+def test_build_non_secret_overrides_merges_semantic_scholar_source_toggle() -> None:
+    base = Settings()
+    secret_store = SecretStore(Path("/tmp/non-existent-overlay-agent-tools-s2"))
+    overlay = build_non_secret_overrides(
+        base_settings=base,
+        llm={},
+        ingestion_cfg={},
+        general_cfg={},
+        storage_cfg={},
+        secret_store=secret_store,
+        agent_tools={"external_research_sources": {"semantic_scholar": False}},
+    )
+    assert overlay["external_research_source_semantic_scholar_enabled"] is False
+
+
+def test_build_non_secret_overrides_merges_mcp_knobs() -> None:
+    base = Settings()
+    secret_store = SecretStore(Path("/tmp/non-existent-overlay-agent-tools-mcp"))
+    overlay = build_non_secret_overrides(
+        base_settings=base,
+        llm={},
+        ingestion_cfg={},
+        general_cfg={},
+        storage_cfg={},
+        secret_store=secret_store,
+        agent_tools={
+            "agent_mcp_request_timeout_seconds": 33.0,
+            "agent_mcp_server_denylist": ["evil", ""],
+        },
+    )
+    assert overlay["agent_mcp_request_timeout_seconds"] == 33.0
+    assert overlay["agent_mcp_server_denylist"] == ["evil"]
+
+
+def test_build_non_secret_overrides_merges_pdf_durable_flag() -> None:
+    base = Settings()
+    secret_store = SecretStore(Path("/tmp/non-existent-overlay-agent-tools-pdf-durable"))
+    overlay = build_non_secret_overrides(
+        base_settings=base,
+        llm={},
+        ingestion_cfg={},
+        general_cfg={},
+        storage_cfg={},
+        secret_store=secret_store,
+        agent_tools={"agent_pdf_read_durable_cache_enabled": False},
+    )
+    assert overlay["agent_pdf_read_durable_cache_enabled"] is False
+
+
+def test_build_non_secret_overrides_ollama_embeddings_task() -> None:
+    base = Settings()
+    secret_store = SecretStore(Path("/tmp/non-existent-overlay-ollama-emb"))
+    overlay = build_non_secret_overrides(
+        base_settings=base,
+        llm={
+            "tasks": {
+                "extraction": {
+                    "base_url": "http://localhost:11434/v1",
+                    "model": "llama3.2",
+                    "temperature": 0,
+                    "timeout_seconds": 300,
+                },
+                "embeddings": {
+                    "mode": "http",
+                    "base_url": "http://localhost:11434/v1",
+                    "model": "all-minilm",
+                    "timeout_seconds": 120,
+                },
+            },
+        },
+        ingestion_cfg={},
+        general_cfg={},
+        storage_cfg={},
+        secret_store=secret_store,
+    )
+    assert overlay["extraction_llm_base_url"] == "http://localhost:11434/v1"
+    assert overlay["embeddings_http_base_url"] == "http://localhost:11434/v1"
+    assert overlay["openrouter_embedding_model"] == "all-minilm"
+    assert overlay["embeddings_http_timeout_seconds"] == 120.0

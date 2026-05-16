@@ -362,11 +362,30 @@ class AgentRuntimeFields(BaseModel):
         default=True,
         description="Operator: include OpenAlex ``openalex_works_search`` tool.",
     )
+    external_research_source_semantic_scholar_enabled: bool = Field(
+        default=True,
+        description="Operator: include Semantic Scholar ``semantic_scholar_*`` tools (beta).",
+    )
+    semantic_scholar_api_key: str | None = Field(
+        default=None,
+        description=(
+            "Optional Semantic Scholar API key (higher rate limits). Prefer "
+            "``runtime_secrets.json`` key ``agent_tools.semantic_scholar_api_key`` merged at "
+            "runtime; env ``SCIENCE_GRAPHRAG_SEMANTIC_SCHOLAR_API_KEY`` is also supported."
+        ),
+    )
     pdf_reading_mode: Literal["off", "ask", "auto_safe_oa"] = Field(
         default="ask",
         description=(
             "UI/product default for PDF reading in chat (full pipeline in later phases): "
             "``off`` | ``ask`` | ``auto_safe_oa``."
+        ),
+    )
+    agent_pdf_read_backend_mode: Literal["pypdf", "vl", "hybrid"] = Field(
+        default="hybrid",
+        description=(
+            "Operator: extraction backend for ``read_external_pdf`` / prefetch: "
+            "``pypdf`` (text layer), ``vl`` (vision), ``hybrid`` (pypdf then VL on low quality)."
         ),
     )
     agent_pdf_read_tool_enabled: bool = Field(
@@ -396,6 +415,13 @@ class AgentRuntimeFields(BaseModel):
         ge=16,
         le=10_000,
         description="Max in-process cached PDF read entries (LRU eviction beyond TTL).",
+    )
+    agent_pdf_read_durable_cache_enabled: bool = Field(
+        default=True,
+        description=(
+            "When true and ``redis_url`` is configured, persist successful PDF read payloads in "
+            "Redis (cross-process reuse; TTL aligns with ``agent_pdf_read_cache_ttl_seconds``)."
+        ),
     )
     agent_external_http_timeout_seconds: float = Field(
         default=25.0,

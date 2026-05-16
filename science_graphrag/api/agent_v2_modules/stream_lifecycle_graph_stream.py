@@ -285,15 +285,26 @@ async def stream_agent_events(
                         )
                     }
                     await asyncio.to_thread(_pdf_prefetch)
-                    yield {
-                        "data": json.dumps(
-                            {
-                                "type": "product_step",
-                                "code": "pdf_read_extracting",
-                                "tool": "read_external_pdf",
-                            }
-                        )
+                    _pdf_step: dict[str, Any] = {
+                        "type": "product_step",
+                        "code": "pdf_read_extracting",
+                        "tool": "read_external_pdf",
                     }
+                    _pfr = state.prefetched_pdf_result
+                    if isinstance(_pfr, dict):
+                        _aid = str(_pfr.get("artifact_id") or "").strip()
+                        if _aid:
+                            _pdf_step["pdf_read_artifact_id"] = _aid
+                        if "ok" in _pfr:
+                            _pdf_step["pdf_read_ok"] = bool(_pfr.get("ok"))
+                        _perr = str(_pfr.get("error") or "").strip()
+                        if _perr:
+                            _pdf_step["pdf_read_error"] = _perr[:240]
+                        if "cache_hit" in _pfr:
+                            _pdf_step["pdf_read_cache_hit"] = bool(_pfr.get("cache_hit"))
+                        if _pfr.get("durable_hit"):
+                            _pdf_step["pdf_read_durable_hit"] = True
+                    yield {"data": json.dumps(_pdf_step)}
 
                 try:
                     _graph_it = iter_graph_chunks(

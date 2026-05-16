@@ -460,4 +460,4 @@ Implementation: [`science_graphrag/api/workspace_graph/router.py`](../../science
 
 **`DELETE /v1/settings/llm/vision-secret`** — удаляет только vault-запись vision-ключа; основной `llm.api_key` и прочие поля не трогаются. После удаления effective vision снова наследует env/default по правилам resolver.
 
-Клиент: `ui/src/pages/SettingsPage/settingsApi.js` (`deleteLlmVisionSecret`, `updateLlmSettings`).
+Клиент: `ui/src/pages/SettingsPage/settingsApi.js` (`revealLlmTaskSecret`, `updateLlmSettings`).

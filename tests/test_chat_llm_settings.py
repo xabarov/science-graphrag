@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from science_graphrag.agent.llm.chat import build_chat_model, effective_chat_llm_model
+from science_graphrag.agent.llm.chat import (
+    build_chat_model,
+    effective_chat_llm_api_key,
+    effective_chat_llm_base_url,
+    effective_chat_llm_model,
+)
 from science_graphrag.config import Settings
 from science_graphrag.settings.repository import SettingsRepository
 from science_graphrag.settings.secrets import SecretStore
@@ -29,6 +34,19 @@ def test_build_chat_model_uses_effective_model() -> None:
     )
     chat = build_chat_model(s)
     assert getattr(chat, "model_name", None) == "chat/model"
+
+
+def test_chat_base_url_and_key_overrides() -> None:
+    s = Settings(
+        extraction_llm_api_key="sk-ext",
+        extraction_llm_base_url="https://ext.example/v1",
+        extraction_llm_model="ext/model",
+        chat_llm_model="chat/model",
+        chat_llm_base_url="https://chat.example/v1",
+        chat_llm_api_key="sk-chat",
+    )
+    assert effective_chat_llm_base_url(s) == "https://chat.example/v1"
+    assert effective_chat_llm_api_key(s) == "sk-chat"
 
 
 def test_build_chat_model_explicit_model_override() -> None:
@@ -64,6 +82,31 @@ def test_settings_snapshot_resolved_chat_model(tmp_path: Path) -> None:
     assert snap2.llm["effective"]["resolved_model"] == "m-persist"
     assert snap2.llm["effective"]["resolved_chat_model"] == "m-chat-persist"
     assert snap2.non_secret_overrides.get("chat_llm_model") == "m-chat-persist"
+
+
+def test_settings_snapshot_chat_secret_and_base_url(tmp_path: Path) -> None:
+    service = SettingsService(
+        repo_root=tmp_path,
+        repository=SettingsRepository(tmp_path),
+        secret_store=SecretStore(tmp_path),
+    )
+    base = Settings(extraction_llm_model="m-ext", chat_llm_model="m-env")
+    service.update_llm_settings(
+        base_settings=base,
+        base_url="https://openrouter.ai/api/v1",
+        model="m-persist",
+        temperature=0.0,
+        timeout_seconds=60.0,
+        actor="test",
+        chat_model="m-chat-persist",
+        chat_base_url="https://chat.example/v1",
+        chat_api_key="sk-chat-persist",
+    )
+    snap = service.get_snapshot(base)
+    assert snap.llm["effective"]["resolved_chat_base_url"] == "https://chat.example/v1"
+    assert snap.llm["tasks"]["chat"]["api_key"]["source"] == "saved"
+    rt = service.build_runtime_settings(base)
+    assert rt.chat_llm_api_key == "sk-chat-persist"
 
 
 def test_settings_service_runtime_overrides_roundtrip(tmp_path: Path) -> None:

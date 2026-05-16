@@ -233,16 +233,38 @@ Sequencing after **SSE stream lifecycle split** (`stream_lifecycle.py` + `stream
 - **Remaining:** stage registry / declarative graph (if we remove remaining conditional branches in orchestrator) + final migration of tests/scripts off legacy import paths. `ingestion/pipeline.py` is the public facade; private export surface from `_pipeline_impl` should stay minimal.
 - **Raised:** 2026-05-05
 
-### [OPEN] External research: Semantic Scholar tools
-- **Area:** `science_graphrag/agent/tools/external/`, `science_graphrag/agent/tool_manifest.py`, `science_graphrag/agent/request_turn_policy.py`
-- **Issue:** `openalex_works_search` is shipped (see `docs/analysis/external-research-tools-workplan-2026-05-15.md` Phase 3). Remaining product gap vs `docs/analysis/sci-tools.md`: **citation-aware** discovery via Semantic Scholar (`semantic_scholar_search`, `semantic_scholar_paper`, later references/citations) without duplicating DOI resolution (`doi_resolver` owns OpenAlex-by-DOI).
-- **Proposal:** add bounded `semantic_scholar_*` modules under `external/`, reuse `http_transport`, optional API key in secret store, operator flags in `Settings`, extend `EXTERNAL_RESEARCH_TOOL_NAMES` when user web-toggle applies; manifest + product_step + mock HTTP tests per tool.
-- **Acceptance:** httpx-mocked unit tests, manifest/registry sync tests, product_step mapping, documented per-tool denylist/toggle; optional live smoke when key/rate limits allow.
-- **Raised:** 2026-05-15, **updated:** 2026-05-15 (OpenAlex search split out as delivered; backlog tracks Semantic Scholar only)
+### [PARTIAL] External research: Semantic Scholar tools (Phase 5A shipped; graph tools deferred)
+- **Area:** `science_graphrag/agent/tools/external/semantic_scholar_tools.py`, `science_graphrag/agent/tool_manifest.py`, `science_graphrag/agent/request_turn_policy.py`, settings/snapshot/UI
+- **Issue (resolved for core slice):** bounded `semantic_scholar_search` + `semantic_scholar_paper` are registered behind external-research toggles; optional `SCIENCE_GRAPHRAG_SEMANTIC_SCHOLAR_API_KEY` improves rate limits.
+- **Remaining:** `semantic_scholar_references` / `semantic_scholar_citations` (bounded graph UX + budgets) — intentionally out of Phase 5A scope.
+- **Acceptance (done for Phase 5A):** httpx-mocked unit tests, manifest/registry sync, product_step mapping, settings snapshot beta/optional-key semantics; optional operator smoke: `scripts/live_check/semantic_scholar_smoke.py`.
+- **Operator live lane (2026-05-16):** smoke observed `403 Forbidden` in current contour; treat as non-green evidence and keep status `needs_live_smoke` until a successful run is recorded in target contour.
+- **Raised:** 2026-05-15, **updated:** 2026-05-16 (Phase 5A core tools shipped)
 
-### [OPEN] Durable PDF read artifacts (cross-process)
-- **Area:** `science_graphrag/agent/tools/external/pdf_read_*`, future `stores/` or Postgres
-- **Issue:** Phase 4 ships in-process LRU+TTL cache and optional prefetch job bookkeeping only; workers lose cache on restart and there is no durable artifact row for audit/replay.
-- **Proposal:** add persisted artifact metadata (url hash, sizes, status, excerpt pointer) keyed by `parent_turn_id` / workspace; optional object storage for raw bytes; align GC with operator TTL knobs.
-- **Acceptance:** repeat read after cold start hits persisted excerpt or cleanly refetches; trace-review shows stable `artifact_id`; repository unit tests.
-- **Raised:** 2026-05-15
+### [OPEN] MCP Integrations UI: operator test buttons and adapter URL policy decision
+- **Area:** `ui/src/pages/SettingsPage/AgentToolsSettingsPanel.jsx`, `science_graphrag/api/settings_models.py`, `science_graphrag/settings/service.py`
+- **Issue:** Phase 6 shipped with env-only adapter URL and diagnostics-only Integrations card; per-source **Test connection** actions and explicit MCP adapter URL edit policy in Settings are still unresolved.
+- **Proposal:** add operator-triggered test buttons (MCP, Semantic Scholar, OpenAlex) with last-run stamp/error; decide and document whether `agent_mcp_http_base_url` remains env-only or becomes persisted allowlist PATCH with masking/restart semantics.
+- **Acceptance:** operator can launch smoke checks from Settings and see last outcome; adapter URL policy is explicit and reflected consistently in API model, snapshot, and docs.
+- **Raised:** 2026-05-16
+
+### [OPEN] Rename OpenRouter-specific HTTP embeddings module to neutral OpenAI-compatible name
+- **Area:** `science_graphrag/embeddings/openrouter_provider.py`, `OpenRouterEmbeddingProvider` / `OpenRouterEmbeddingSettings`, `resolve_openrouter_embedding_settings`, Settings field `openrouter_embedding_model`
+- **Issue:** Runtime path is generic OpenAI-compatible HTTP (`POST /v1/embeddings` for OpenRouter, vLLM, Ollama); module and Settings names still say OpenRouter, which confuses operators and Ollama preset docs.
+- **Proposal:** Rename module to `openai_compatible_embeddings.py` (or similar) with re-export shims; add neutral alias for `openrouter_embedding_model` in snapshot/API only after migration plan; update imports in ingest/benchmark/tests incrementally.
+- **Acceptance:** No user-facing error or docstring says “OpenRouter-only” for generic HTTP path; grep for `openrouter_provider` in prod code is zero or shim-only; existing env names documented as aliases until cutover.
+- **Raised:** 2026-05-16 (Ollama preset / embeddings compat pass)
+
+### [OPEN] LLM provider presets as shared data (backend or JSON), not JSX literals
+- **Area:** `ui/src/pages/SettingsPage/llmProviderPresets.js`, `LlmProviderPresetsCard.jsx`, optional `science_graphrag/settings/llm_provider_compat.py`
+- **Issue:** Preset defaults (models, timeouts, base URLs) live only in frontend JS; backend diagnostics duplicate Ollama heuristics separately — drift risk when adding providers.
+- **Proposal:** Single source for preset ids + default task blocks (API `GET /settings/llm/presets` or static JSON imported by UI); keep apply logic in UI; backend uses same heuristics module only.
+- **Acceptance:** Adding a provider preset touches one data file + i18n labels; unit test asserts Ollama preset matches backend overlay smoke values.
+- **Raised:** 2026-05-16 (Ollama preset pass)
+
+### [PARTIAL] Durable PDF read artifacts (Redis JSON cache + stable artifact_id; DB/blob deferred)
+- **Area:** `science_graphrag/agent/tools/external/pdf_read_durable_cache.py`, `pdf_read_orchestrator.py`, `Settings.agent_pdf_read_durable_cache_enabled`, operator toggle in Agent Tools settings
+- **Issue (narrowed):** in-process LRU remains primary; **optional** Redis-backed durable JSON keyed by URL hash + budget fingerprint enables cold-start reuse when Redis URL is configured and toggle is on.
+- **Remaining:** Postgres/object-store rows for audit, large-byte retention, workspace-scoped GC — not in this wave (avoid mixing with ingest pipeline).
+- **Acceptance (done for this slice):** stable `artifact_id` on tool outcomes; Redis get/put path + unit tests with mocked Redis client; operator diagnostics for durable cache status in settings snapshot.
+- **Raised:** 2026-05-15, **updated:** 2026-05-16

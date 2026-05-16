@@ -30,6 +30,41 @@ def effective_chat_llm_model(settings: Settings) -> str:
     return (settings.extraction_llm_model or "").strip()
 
 
+def effective_chat_llm_base_url(settings: Settings) -> str:
+    """Base URL for research chat; optional ``chat_llm_base_url`` overrides extraction base."""
+    override = (getattr(settings, "chat_llm_base_url", None) or "").strip()
+    if override:
+        return override
+    return (settings.extraction_llm_base_url or "").strip()
+
+
+def effective_chat_llm_api_key(settings: Settings) -> str | None:
+    """API key for research chat; optional ``chat_llm_api_key`` overrides extraction key."""
+    override = (getattr(settings, "chat_llm_api_key", None) or "").strip()
+    if override:
+        return override
+    fallback = (settings.extraction_llm_api_key or "").strip()
+    return fallback or None
+
+
+def effective_chat_llm_temperature(settings: Settings) -> float:
+    """Sampling temperature for agent chat when task-specific override is persisted."""
+
+    raw = getattr(settings, "chat_llm_temperature", None)
+    if raw is not None:
+        return float(raw)
+    return float(settings.agent_chat_temperature)
+
+
+def effective_chat_llm_timeout_seconds(settings: Settings) -> float:
+    """HTTP timeout for agent chat transport."""
+
+    raw = getattr(settings, "chat_llm_timeout_seconds", None)
+    if raw is not None:
+        return float(raw)
+    return float(settings.extraction_llm_timeout_seconds)
+
+
 # Some OpenRouter / vLLM backends reject requests where the final chat turn is an
 # assistant message while the client sets add_generation_prompt=True (default in
 # LangChain). Nudge with a user turn when subgraphs concatenate full history.
@@ -65,14 +100,16 @@ def build_chat_model(
     mk = {k: v for k, v in (model_kwargs or {}).items() if v is not None}
     params: dict[str, Any] = {
         "model": resolved_model,
-        "api_key": settings.extraction_llm_api_key,
-        "base_url": settings.extraction_llm_base_url,
-        "temperature": temperature if temperature is not None else settings.agent_chat_temperature,
+        "api_key": effective_chat_llm_api_key(settings),
+        "base_url": effective_chat_llm_base_url(settings),
+        "temperature": (
+            temperature if temperature is not None else effective_chat_llm_temperature(settings)
+        ),
         "max_tokens": max_tokens if max_tokens is not None else settings.agent_chat_max_tokens,
         "timeout": (
             timeout_seconds
             if timeout_seconds is not None
-            else settings.extraction_llm_timeout_seconds
+            else effective_chat_llm_timeout_seconds(settings)
         ),
         "max_retries": retries,
     }

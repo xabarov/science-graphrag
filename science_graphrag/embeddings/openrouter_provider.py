@@ -1,4 +1,7 @@
-"""OpenRouter-backed embedding provider with on-disk cache.
+"""OpenAI-compatible HTTP embedding provider with on-disk cache.
+
+Historically named ``openrouter_provider``; runtime uses ``POST /v1/embeddings``
+against any OpenAI-compatible host (OpenRouter, vLLM, Ollama ``/v1``, etc.).
 
 Compatible with the historic ``EmbeddingProvider`` Protocol from
 ``science_graphrag.ingestion.embeddings`` so the same instance can drive Qdrant
@@ -6,8 +9,7 @@ ingestion / retrieval and the dual-validate matcher cascade.
 
 Design notes:
 
-* OpenAI-compatible: works against ``POST /v1/embeddings`` on OpenRouter
-  (and any other OpenAI-compatible provider).
+* OpenAI-compatible: ``POST /v1/embeddings`` with ``model``, ``input``, Bearer key.
 * On-disk cache keyed by ``sha256(model + "|" + text)`` — file per text, JSON.
   Re-runs of the same dataset are zero-cost / zero-network. Cache is intentionally
   per-text rather than per-batch so partial overlap across runs still hits.
@@ -76,20 +78,20 @@ def _raise_for_bad_embedding_payload(
     if data is None:
         if code_i == 404 or (msg and "no successful provider" in msg.lower()):
             raise EmbeddingProviderUnavailableError(
-                f"OpenRouter embeddings: no successful provider responses "
+                f"OpenAI-compatible HTTP embeddings: no successful provider responses "
                 f"(batch={batch_len}): {preview}"
             ) from None
         raise EmbeddingEmptyPayloadError(
-            f"OpenRouter embeddings returned no data for {batch_len} inputs: {preview}"
+            f"OpenAI-compatible HTTP embeddings returned no data for {batch_len} inputs: {preview}"
         ) from None
     if not isinstance(data, list):
         raise EmbeddingEmptyPayloadError(
-            f"OpenRouter embeddings ``data`` is not a list (batch={batch_len}): {preview}"
+            f"OpenAI-compatible HTTP embeddings ``data`` is not a list (batch={batch_len}): {preview}"
         ) from None
     if len(data) != batch_len:
         raise EmbeddingPartialPayloadError(
-            f"OpenRouter embeddings length mismatch: got {len(data)} items for {batch_len} inputs; "
-            f"{preview}"
+            f"OpenAI-compatible HTTP embeddings length mismatch: got {len(data)} items for "
+            f"{batch_len} inputs; {preview}"
         ) from None
 
 
@@ -126,7 +128,7 @@ def _safe_response_preview(resp: object, *, limit: int = 500) -> str:
 
 @dataclass(frozen=True)
 class OpenRouterEmbeddingSettings:
-    """Resolved credentials + model for an OpenRouter embeddings call."""
+    """Resolved credentials + model for an OpenAI-compatible HTTP embeddings call."""
 
     api_key: str
     base_url: str
@@ -146,15 +148,16 @@ def resolve_openrouter_embedding_settings(
     cache_root: Path | None = None,
     vector_dim_hint: int | None = None,
 ) -> OpenRouterEmbeddingSettings:
-    """Resolve API key / base URL / model for eval/dual_validate OpenRouter embeddings.
+    """Resolve API key / base URL / model for OpenAI-compatible HTTP embeddings.
 
     Precedence: CLI overrides > ``Settings`` fields only (canonical ``SCIENCE_GRAPHRAG_*`` env).
 
-    - API key: CLI > ``benchmark_teacher_llm_api_key`` > ``extraction_llm_api_key``
-      (``extraction_llm_api_key`` includes ``SCIENCE_GRAPHRAG_API_KEY`` merge)
-    - Base URL: CLI > ``benchmark_teacher_llm_base_url`` > ``extraction_llm_base_url`` >
-      default ``https://openrouter.ai/api/v1``
+    - API key: CLI > ``embeddings_api_key`` > ``benchmark_teacher_llm_api_key`` > ``extraction_llm_api_key``
+      (``extraction_llm_api_key`` includes ``SCIENCE_GRAPHRAG_API_KEY`` merge; Ollama accepts any non-empty key)
+    - Base URL: CLI > ``embeddings_http_base_url`` (persisted embeddings task) >
+      ``benchmark_teacher_llm_base_url`` > ``extraction_llm_base_url`` > default ``https://openrouter.ai/api/v1``
     - Model: CLI > ``openrouter_embedding_model`` > default ``baai/bge-m3``
+    - Timeout: ``embeddings_http_timeout_seconds`` when set, else 60 seconds
     """
 
     api_key = (cli_api_key or "").strip()
@@ -163,8 +166,15 @@ def resolve_openrouter_embedding_settings(
     if settings is not None:
         if not api_key:
             api_key = (
-                settings.benchmark_teacher_llm_api_key or settings.extraction_llm_api_key or ""
+                settings.embeddings_api_key
+                or settings.benchmark_teacher_llm_api_key
+                or settings.extraction_llm_api_key
+                or ""
             ).strip()
+        if not base_url:
+            emb_http = (getattr(settings, "embeddings_http_base_url", None) or "").strip()
+            if emb_http:
+                base_url = emb_http.rstrip("/")
         if not base_url:
             base_url = (
                 settings.benchmark_teacher_llm_base_url or settings.extraction_llm_base_url or ""
@@ -178,9 +188,10 @@ def resolve_openrouter_embedding_settings(
 
     if not api_key:
         raise RuntimeError(
-            "OpenRouter embedding API key not configured "
-            "(set --api-key, SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY, "
-            "SCIENCE_GRAPHRAG_API_KEY, or SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY in Settings / environment)."
+            "Embeddings API key not configured for OpenAI-compatible HTTP provider "
+            "(set --api-key, SCIENCE_GRAPHRAG_EMBEDDINGS_API_KEY / persisted embeddings key, "
+            "SCIENCE_GRAPHRAG_BENCHMARK_TEACHER_LLM_API_KEY, SCIENCE_GRAPHRAG_API_KEY, "
+            "or SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY; for Ollama use a placeholder such as ollama)."
         )
 
     root = cache_root or Path("eval/dual_validate/embeddings_cache")
@@ -189,12 +200,18 @@ def resolve_openrouter_embedding_settings(
         dim_hint = settings.openrouter_embedding_dim
     if dim_hint is None:
         dim_hint = 1024
+    resolved_timeout = 60.0
+    if settings is not None:
+        htt = getattr(settings, "embeddings_http_timeout_seconds", None)
+        if htt is not None:
+            resolved_timeout = float(htt)
     return OpenRouterEmbeddingSettings(
         api_key=api_key,
         base_url=base_url,
         model=model,
         cache_root=root,
         vector_dim_hint=int(dim_hint),
+        timeout_seconds=resolved_timeout,
     )
 
 
@@ -303,7 +320,7 @@ class OpenRouterEmbeddingProvider:
                     embedding = getattr(item, "embedding", None)
                     if embedding is None:
                         raise EmbeddingEmptyPayloadError(
-                            "OpenRouter embeddings item missing embedding "
+                            "OpenAI-compatible HTTP embeddings item missing embedding "
                             f"at index={idx}: {_safe_response_preview(resp)}"
                         ) from None
                     vectors.append(list(embedding))
@@ -319,7 +336,7 @@ class OpenRouterEmbeddingProvider:
                 status = self._api_status(exc)
                 if status is not None and 400 <= status < 500 and status != 429:
                     raise EmbeddingNonRetryableHttpError(
-                        f"OpenRouter embeddings HTTP {status}: {exc}",
+                        f"OpenAI-compatible HTTP embeddings HTTP {status}: {exc}",
                         status_code=status,
                     ) from exc
                 if status is not None and status >= 500:
@@ -330,7 +347,7 @@ class OpenRouterEmbeddingProvider:
                 last_err = exc
                 self._client = self._build_client()
                 time.sleep(min(2.0, float(attempt)))
-        raise RuntimeError(f"OpenRouter embeddings failed after retries: {last_err}")
+        raise RuntimeError(f"OpenAI-compatible HTTP embeddings failed after retries: {last_err}")
 
     def embed(self, texts: list[str]) -> np.ndarray:
         if not texts:
@@ -346,7 +363,8 @@ class OpenRouterEmbeddingProvider:
             vectors = self._call_openrouter(batch_texts)
             if len(vectors) != len(chunk):
                 raise RuntimeError(
-                    f"OpenRouter returned {len(vectors)} vectors for {len(chunk)} inputs"
+                    f"OpenAI-compatible HTTP embeddings returned {len(vectors)} vectors for "
+                    f"{len(chunk)} inputs"
                 )
             for local_idx, vec in zip(chunk, vectors):
                 self._store_cached(keys[local_idx], texts[local_idx], vec)

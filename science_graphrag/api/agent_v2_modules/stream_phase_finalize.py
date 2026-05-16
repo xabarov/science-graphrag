@@ -39,6 +39,7 @@ from science_graphrag.api.agent_v2_modules.stream_phase_finalize_envelope import
     build_finalize_envelope_and_trace,
 )
 from science_graphrag.api.agent_v2_modules.stream_phase_finalize_run_metadata import (
+    FinalizeRunMetadataRequest,
     build_finalize_run_metadata,
 )
 from science_graphrag.api.agent_v2_modules.stream_phase_product_steps import (
@@ -285,16 +286,23 @@ async def iter_finalize_stream_events(
 
     phx = current_otel_trace_id_hex()
     run_meta = build_finalize_run_metadata(
-        ctx=ctx,
-        latest_full_state=latest_full_state if isinstance(latest_full_state, dict) else None,
-        envelope=envelope,
-        max_tool_calls=max_tool_calls,
-        thread_id=thread_id,
-        compact_payload=compact_payload,
-        post_turn_compaction_wall_ms=post_turn_compaction_wall_ms,
-        salvaged_after_deadline=salvaged_after_deadline,
-        salvaged_after_recursion_limit=salvaged_after_recursion_limit,
-        recursion_limit_value=recursion_limit_value,
+        FinalizeRunMetadataRequest(
+            ctx=ctx,
+            latest_full_state=latest_full_state if isinstance(latest_full_state, dict) else None,
+            envelope=envelope,
+            max_tool_calls=max_tool_calls,
+            thread_id=thread_id,
+            compact_payload=compact_payload,
+            post_turn_compaction_wall_ms=post_turn_compaction_wall_ms,
+            salvaged_after_deadline=salvaged_after_deadline,
+            salvaged_after_recursion_limit=salvaged_after_recursion_limit,
+            recursion_limit_value=recursion_limit_value,
+            prefetched_pdf_result=(
+                state.prefetched_pdf_result
+                if isinstance(state.prefetched_pdf_result, dict)
+                else None
+            ),
+        )
     )
 
     _warn_seen: set[str] = set()

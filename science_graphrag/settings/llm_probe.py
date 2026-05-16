@@ -30,7 +30,9 @@ def run_llm_connection_probe(
             "message": (
                 "API key is not configured (set SCIENCE_GRAPHRAG_API_KEY or "
                 "SCIENCE_GRAPHRAG_EXTRACTION_LLM_API_KEY, save a key in Settings, "
-                "or pass api_key in the draft request)."
+                "or pass api_key in the draft request). For Ollama local endpoints use a "
+                "non-empty placeholder such as ollama (Ollama ignores it but OpenAI clients "
+                "require it)."
             ),
             "resolved": {
                 "base_url": base_url,

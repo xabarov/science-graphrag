@@ -55,18 +55,20 @@ export async function updateAgentToolsSettings(payload) {
   return res.data;
 }
 
-export async function deleteLlmSecret() {
-  const res = await apiClient.delete(buildApiUrl("/v1/settings/llm/secret"), {
-    headers: authHeaders(),
-  });
-  return res.data;
-}
-
-export async function deleteLlmVisionSecret() {
-  const res = await apiClient.delete(buildApiUrl("/v1/settings/llm/vision-secret"), {
-    headers: authHeaders(),
-  });
-  return res.data;
+/**
+ * Explicit operator reveal of a managed vault secret (audit logged server-side).
+ *
+ * @param {"extraction"|"chat"|"vision"|"embeddings"} task
+ * @returns {Promise<string>}
+ */
+export async function revealLlmTaskSecret(task) {
+  const res = await apiClient.post(
+    buildApiUrl("/v1/settings/llm/reveal-secret"),
+    { task },
+    { headers: authHeaders() },
+  );
+  const secret = res.data?.secret;
+  return typeof secret === "string" ? secret : "";
 }
 
 export async function testLlmConnection(payload) {
