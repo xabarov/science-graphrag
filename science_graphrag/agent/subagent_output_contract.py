@@ -1,12 +1,13 @@
 """Prompt discipline helpers for writer / verification-style outputs (Train T2 §10.4).
 
 No subagent runtime here — only reusable directives, output-shape text, and handoff guards.
+Phase 4 adds ``ManagedReportProtocol`` parsing and typed merge field extraction.
 """
 
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 
 if TYPE_CHECKING:
     from science_graphrag.config import Settings
@@ -152,6 +153,171 @@ _RESEARCH_PLAN_SECTIONS = (
     r"(?is)Graph\s+sub-queries\s*:",
     r"(?is)Writer\s+spec\s*:",
 )
+
+# Phase 4 — smolagents managed-agent report sections (prompt + parser contract).
+MANAGED_REPORT_PROTOCOL_HEADER: Final[str] = "## ManagedReportProtocol"
+MANAGED_REPORT_SECTION_SHORT: Final[str] = "Task outcome (short)"
+MANAGED_REPORT_SECTION_DETAILED: Final[str] = "Task outcome (detailed)"
+MANAGED_REPORT_SECTION_LIMITATIONS: Final[str] = "Open limitations / next checks"
+
+MANAGED_REPORT_PROTOCOL_BLOCK: Final[str] = f"""{MANAGED_REPORT_PROTOCOL_HEADER}
+After your existing Scope/Result/Key sources lines (when applicable), also include:
+{MANAGED_REPORT_SECTION_SHORT}: <one line>
+{MANAGED_REPORT_SECTION_DETAILED}: <2-6 sentences>
+{MANAGED_REPORT_SECTION_LIMITATIONS}: <bullets; prefix follow-ups with "Next check:">
+"""
+
+_RE_MANAGED_SHORT = re.compile(
+    rf"(?is)^\s*{re.escape(MANAGED_REPORT_SECTION_SHORT)}\s*:\s*(.+?)"
+    rf"(?=^\s*{re.escape(MANAGED_REPORT_SECTION_DETAILED)}\s*:|"
+    rf"^\s*{re.escape(MANAGED_REPORT_SECTION_LIMITATIONS)}\s*:|\Z)",
+    re.MULTILINE,
+)
+_RE_MANAGED_DETAILED = re.compile(
+    rf"(?is)^\s*{re.escape(MANAGED_REPORT_SECTION_DETAILED)}\s*:\s*(.+?)"
+    rf"(?=^\s*{re.escape(MANAGED_REPORT_SECTION_LIMITATIONS)}\s*:|\Z)",
+    re.MULTILINE,
+)
+_RE_MANAGED_LIMITATIONS = re.compile(
+    rf"(?is)^\s*{re.escape(MANAGED_REPORT_SECTION_LIMITATIONS)}\s*:\s*(.+?)\Z",
+    re.MULTILINE,
+)
+_RE_SCOPE = re.compile(r"(?im)^\s*Scope\s*:\s*(.+)$")
+_RE_RESULT = re.compile(r"(?is)^\s*Result\s*:\s*(.+?)(?=^\s*Key sources\s*:|\Z)", re.MULTILINE)
+
+_NEXT_CHECK_PREFIXES = (
+    "next check:",
+    "next:",
+    "follow-up:",
+    "follow up:",
+    "retry:",
+)
+
+
+def _bullet_lines(block: str) -> list[str]:
+    out: list[str] = []
+    for raw in str(block or "").splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        line = re.sub(r"^[-*•]\s*", "", line).strip()
+        line = re.sub(r"^\d+[\.\)]\s*", "", line).strip()
+        if line:
+            out.append(line)
+    return out[:32]
+
+
+def _split_limitations_and_next_checks(block: str) -> tuple[list[str], list[str]]:
+    limitations: list[str] = []
+    next_checks: list[str] = []
+    for line in _bullet_lines(block):
+        low = line.lower()
+        if any(low.startswith(p) for p in _NEXT_CHECK_PREFIXES):
+            next_checks.append(line)
+        else:
+            limitations.append(line)
+    return limitations, next_checks
+
+
+def parse_managed_report_from_text(text: str) -> dict[str, Any]:
+    """Extract typed managed-report fields from subagent plain-text output."""
+    s = str(text or "")
+    outcome_short = ""
+    outcome_detailed = ""
+    limitations: list[str] = []
+    next_checks: list[str] = []
+    sections_present = False
+
+    m_short = _RE_MANAGED_SHORT.search(s)
+    if m_short:
+        sections_present = True
+        outcome_short = str(m_short.group(1) or "").strip()[:500]
+    m_det = _RE_MANAGED_DETAILED.search(s)
+    if m_det:
+        sections_present = True
+        outcome_detailed = str(m_det.group(1) or "").strip()[:4000]
+    m_lim = _RE_MANAGED_LIMITATIONS.search(s)
+    if m_lim:
+        sections_present = True
+        lims, nxt = _split_limitations_and_next_checks(str(m_lim.group(1) or ""))
+        limitations.extend(lims)
+        next_checks.extend(nxt)
+
+    if not sections_present:
+        scope_m = _RE_SCOPE.search(s)
+        result_m = _RE_RESULT.search(s)
+        if scope_m or result_m:
+            scope_txt = str(scope_m.group(1) or "").strip() if scope_m else ""
+            result_txt = str(result_m.group(1) or "").strip() if result_m else ""
+            outcome_short = scope_txt or result_txt[:200]
+            outcome_detailed = result_txt[:4000]
+            lims, nxt = _split_limitations_and_next_checks(result_txt)
+            limitations.extend(lims)
+            next_checks.extend(nxt)
+
+    return {
+        "outcome_summary": outcome_short,
+        "outcome_detailed": outcome_detailed,
+        "limitations": limitations,
+        "next_checks": next_checks,
+        "report_sections_present": sections_present,
+    }
+
+
+def managed_report_answer_matches_contract(answer: str) -> bool:
+    """True when explicit ManagedReportProtocol sections are present."""
+    parsed = parse_managed_report_from_text(answer)
+    if not parsed.get("report_sections_present"):
+        return False
+    return bool(str(parsed.get("outcome_summary") or "").strip())
+
+
+def merge_limitation_signals(merge: dict[str, Any] | None) -> tuple[list[str], list[str]]:
+    """Return typed ``limitations`` and ``next_checks`` lists from a v3 merge block."""
+    if not isinstance(merge, dict):
+        return [], []
+    raw_lims = merge.get("limitations")
+    raw_nxt = merge.get("next_checks")
+    lims_list = raw_lims if isinstance(raw_lims, list) else []
+    nxt_list = raw_nxt if isinstance(raw_nxt, list) else []
+    out_lims = [str(x).strip() for x in lims_list if str(x).strip()]
+    out_nxt = [str(x).strip() for x in nxt_list if str(x).strip()]
+    return out_lims[:32], out_nxt[:32]
+
+
+def format_salvage_limitation_lines(
+    *,
+    language: str,
+    limitations: list[str],
+    next_checks: list[str],
+    outcome_summary: str = "",
+    writer_directive: str = "",
+) -> list[str]:
+    """Build human-facing salvage lines from typed merge fields (Phase 4/5 contract)."""
+    lines: list[str] = []
+    summary = str(outcome_summary or "").strip()
+    directive = str(writer_directive or "").strip()
+    lims = [str(x).strip() for x in limitations if str(x).strip()][:6]
+    nxt = [str(x).strip() for x in next_checks if str(x).strip()][:6]
+    if language == "ru":
+        if summary:
+            lines.append(f"- краткий итог субагентов: {summary[:300]}")
+        if lims:
+            lines.append("- ограничения: " + "; ".join(lims))
+        if nxt:
+            lines.append("- следующие шаги: " + "; ".join(nxt))
+        if directive and not lims and not nxt:
+            lines.append(f"- замечания merge: {directive[:600]}")
+        return lines
+    if summary:
+        lines.append(f"- subagent outcome (short): {summary[:300]}")
+    if lims:
+        lines.append("- limitations: " + "; ".join(lims))
+    if nxt:
+        lines.append("- next checks: " + "; ".join(nxt))
+    if directive and not lims and not nxt:
+        lines.append(f"- merge notes: {directive[:600]}")
+    return lines
 
 
 def research_plan_subagent_answer_matches_contract(answer: str) -> bool:

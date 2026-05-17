@@ -14,6 +14,10 @@ from science_graphrag.agent.graph.react_loop_guardrails import (
     apply_react_loop_guardrails,
 )
 from science_graphrag.agent.graph.state import AgentState
+from science_graphrag.agent.prompt_protocol_cards import (
+    FINAL_ANSWER_NUDGE_TEXT,
+    FINAL_ANSWER_NUDGE_TEXT_SECOND,
+)
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.config import Settings, get_settings
 from science_graphrag.observability.spans.decorators import add_span_event
@@ -21,19 +25,6 @@ from science_graphrag.observability.spans.decorators import add_span_event
 # Stop looping after this many *bad* ``final_answer`` tool payloads (JSON empty/malformed).
 # Two hops allows one repair chat turn after an empty payload (writer/supervisor subgraphs).
 _MAX_FINAL_ANSWER_EMPTY_REPAIR_HOPS = 2
-
-# Shared with supervisor + specialist subgraphs that can call ``final_answer`` (writer only).
-FINAL_ANSWER_NUDGE_TEXT = (
-    "You must finish this turn by calling the ``final_answer`` tool exactly once. "
-    "Put your user-facing summary into ``final_answer.answer`` (and citations if any); "
-    "do not call other research tools unless you must fix a factual gap."
-)
-
-FINAL_ANSWER_NUDGE_TEXT_SECOND = (
-    "Second reminder: the turn is incomplete without a successful ``final_answer`` tool call. "
-    "Call ``final_answer`` once with a complete markdown ``answer`` summarizing evidence you "
-    "already gathered; do not add more catalog research unless you must fix a factual error."
-)
 
 
 def final_answer_nudge_state_update(state: AgentState) -> dict[str, Any]:

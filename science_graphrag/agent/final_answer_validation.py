@@ -12,6 +12,7 @@ from typing import Any, Literal
 
 from science_graphrag.agent.evidence_trust import MODE_METADATA_ONLY
 from science_graphrag.agent.runtime_answer_salvage import RUNTIME_FALLBACK_ANSWER
+from science_graphrag.agent.subagent_output_contract import merge_limitation_signals
 
 ValidationStatus = Literal["ok", "warn", "fail"]
 EnforcementMode = Literal["diagnostic", "enforced"]
@@ -85,6 +86,15 @@ def _answer_has_limitation_language(text: str) -> bool:
     return any(m in lowered for m in _LIMITATION_MARKERS)
 
 
+def _merge_has_typed_limitations(merge: dict[str, Any]) -> bool:
+    lims, nxt = merge_limitation_signals(merge)
+    return bool(lims or nxt)
+
+
+def _limitation_present(*, answer: str, merge: dict[str, Any]) -> bool:
+    return _answer_has_limitation_language(answer) or _merge_has_typed_limitations(merge)
+
+
 def _merge_block(specialist_results_v3: dict[str, Any] | None) -> dict[str, Any]:
     if not isinstance(specialist_results_v3, dict):
         return {}
@@ -109,6 +119,10 @@ def evidence_present(
         return True
     merge = _merge_block(sr3)
     if str(merge.get("writer_directive") or "").strip():
+        return True
+    if str(merge.get("outcome_summary") or "").strip():
+        return True
+    if _merge_has_typed_limitations(merge):
         return True
     sr = specialist_results if isinstance(specialist_results, dict) else {}
     if sr:
@@ -137,7 +151,9 @@ def _context_requires_pdf_limitation(
     merge: dict[str, Any],
 ) -> bool:
     directive = str(merge.get("writer_directive") or "").lower()
-    if any(m in directive for m in _PDF_UNAVAILABLE_MARKERS):
+    lims, _ = merge_limitation_signals(merge)
+    combined = directive + " " + " ".join(lims).lower()
+    if any(m in combined for m in _PDF_UNAVAILABLE_MARKERS):
         return True
     for c in citations:
         fb = str(c.get("fallback_reason") or c.get("trust_fallback_reason") or "").lower()
@@ -148,7 +164,9 @@ def _context_requires_pdf_limitation(
 
 def _context_requires_fetch_limitation(*, merge: dict[str, Any]) -> bool:
     directive = str(merge.get("writer_directive") or "").lower()
-    return any(m in directive for m in _FETCH_FAILURE_MARKERS)
+    lims, _ = merge_limitation_signals(merge)
+    combined = directive + " " + " ".join(lims).lower()
+    return any(m in combined for m in _FETCH_FAILURE_MARKERS)
 
 
 def classify_answer_kind(
@@ -204,20 +222,20 @@ def validate_final_answer(
         status = "fail"
     elif answer_kind == "partial":
         reasons.append(REASON_PARTIAL_ANSWER_OK)
-        status = "warn" if not _answer_has_limitation_language(answer) else "ok"
+        status = "warn" if not _limitation_present(answer=answer, merge=merge) else "ok"
     else:
-        if _citations_metadata_only(cits) and not _answer_has_limitation_language(answer):
+        if _citations_metadata_only(cits) and not _limitation_present(answer=answer, merge=merge):
             reasons.append(REASON_METADATA_ONLY_WITHOUT_LIMITATION)
             status = "warn"
         if _context_requires_pdf_limitation(citations=cits, merge=merge) and not (
             any(m in str(answer or "").lower() for m in _PDF_UNAVAILABLE_MARKERS)
-            or _answer_has_limitation_language(answer)
+            or _limitation_present(answer=answer, merge=merge)
         ):
             if REASON_PDF_UNAVAILABLE_WITHOUT_LIMITATION not in reasons:
                 reasons.append(REASON_PDF_UNAVAILABLE_WITHOUT_LIMITATION)
             status = "warn" if status == "ok" else status
-        if _context_requires_fetch_limitation(merge=merge) and not _answer_has_limitation_language(
-            answer
+        if _context_requires_fetch_limitation(merge=merge) and not _limitation_present(
+            answer=answer, merge=merge
         ):
             if REASON_FAILED_FETCH_WITHOUT_LIMITATION not in reasons:
                 reasons.append(REASON_FAILED_FETCH_WITHOUT_LIMITATION)
@@ -244,7 +262,7 @@ def validate_final_answer(
             or _context_requires_pdf_limitation(citations=cits, merge=merge)
             or _context_requires_fetch_limitation(merge=merge)
         ),
-        "limitation_present": _answer_has_limitation_language(answer),
+        "limitation_present": _limitation_present(answer=answer, merge=merge),
         "user_visible_answer_allowed": user_allowed,
         "enforcement_mode": enforcement_mode,
     }

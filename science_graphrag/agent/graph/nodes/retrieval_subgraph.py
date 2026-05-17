@@ -27,7 +27,7 @@ from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.agent.prompt_protocol_cards import build_retrieval_system_prompt
 from science_graphrag.observability.spans import SpanAttributes, add_span_event, llm_span
 
-SYSTEM_PROMPT = build_retrieval_system_prompt()
+SYSTEM_PROMPT = build_retrieval_system_prompt(None)
 
 
 def _extract_tool_payloads(messages: list[Any], from_index: int) -> list[dict]:
@@ -170,7 +170,7 @@ def build_retrieval_subgraph(
     return _compile_react_subgraph(
         all_tools,
         settings,
-        SYSTEM_PROMPT,
+        build_retrieval_system_prompt(settings),
         specialist_name=specialist_name,
         sidechain_tag="diagnostics_full",
     )

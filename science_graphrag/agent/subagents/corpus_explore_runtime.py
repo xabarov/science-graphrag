@@ -32,6 +32,7 @@ from science_graphrag.agent.llm.chat import (
 )
 from science_graphrag.agent.sidechain_paths import sidechain_transcripts_enabled
 from science_graphrag.agent.subagent_output_contract import (
+    MANAGED_REPORT_PROTOCOL_BLOCK,
     SYNTHESIZE_NOT_DELEGATE_DIRECTIVE,
     detect_handoff_phrase,
     read_only_subagent_answer_matches_contract,
@@ -47,10 +48,10 @@ from science_graphrag.agent.subagents.react_subgraph_utils import (
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.tool_execution_pipeline import build_tool_execution_node
 from science_graphrag.agent.tools import build_retrieval_tools
-from science_graphrag.stores.registry import StoreRegistry
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
 from science_graphrag.observability.spans import SpanAttributes, llm_span
+from science_graphrag.stores.registry import StoreRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,8 @@ CORPUS_EXPLORE_SYSTEM = (
     "Scope: <one line>\n"
     "Result: <body>\n"
     "Key sources: <work_ids or none>\n"
+    + "\n\n"
+    + MANAGED_REPORT_PROTOCOL_BLOCK
 )
 
 

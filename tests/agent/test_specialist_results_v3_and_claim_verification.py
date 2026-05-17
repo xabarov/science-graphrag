@@ -16,6 +16,54 @@ from science_graphrag.agent.tool_execution_pipeline import build_tool_execution_
 from science_graphrag.config import Settings
 
 
+def test_managed_report_skips_duplicate_directive_enrichment() -> None:
+    from science_graphrag.agent.subagents.specialist_results_v3 import append_corpus_explore_leg
+
+    text = (
+        "Task outcome (short): Thin workspace coverage.\n"
+        "Task outcome (detailed): Only metadata hits.\n"
+        "Open limitations / next checks:\n"
+        "- metadata_only evidence\n"
+    )
+    v3 = append_corpus_explore_leg(
+        None,
+        subagent_id="ce-1",
+        text=text,
+        terminal_state="succeeded",
+        failure_code=None,
+        issues=[],
+    )
+    directive = str((v3.get("merge") or {}).get("writer_directive") or "")
+    assert "Open limitations:" not in directive
+    assert (v3.get("merge") or {}).get("report_sections_present") is True
+
+
+def test_corpus_explore_leg_populates_typed_merge_limitations() -> None:
+    from science_graphrag.agent.subagents.specialist_results_v3 import append_corpus_explore_leg
+
+    text = (
+        "Task outcome (short): Thin workspace coverage.\n"
+        "Task outcome (detailed): Only metadata hits for two papers.\n"
+        "Open limitations / next checks:\n"
+        "- metadata_only evidence\n"
+        "- Next check: expand find_works query\n"
+    )
+    v3 = append_corpus_explore_leg(
+        None,
+        subagent_id="ce-1",
+        text=text,
+        terminal_state="succeeded",
+        failure_code=None,
+        issues=[],
+    )
+    merge = v3.get("merge") or {}
+    assert merge.get("limitations")
+    assert merge.get("next_checks")
+    assert merge.get("report_sections_present") is True
+    legs = v3.get("legs") or []
+    assert isinstance(legs[0].get("managed_report"), dict)
+
+
 def test_specialist_results_v3_merge_conflict_on_verdict_mismatch() -> None:
     v3 = empty_specialist_results_v3()
     v3 = append_parent_tool_leg(v3, specialist_id="retrieval_agent", tool_payloads=[{"ok": True}])

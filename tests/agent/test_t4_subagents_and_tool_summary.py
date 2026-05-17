@@ -14,14 +14,17 @@ from science_graphrag.agent.debug_events_telemetry import (
 )
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.subagent_output_contract import (
+    MANAGED_REPORT_PROTOCOL_HEADER,
     read_only_subagent_answer_matches_contract,
     research_plan_subagent_answer_matches_contract,
 )
+from science_graphrag.agent.subagents.claim_verification_runtime import CLAIM_VERIFICATION_SYSTEM
 from science_graphrag.agent.subagents.react_subgraph_utils import (
     fanout_suffixes,
     last_assistant_text,
     permission_denied_in_messages,
 )
+from science_graphrag.agent.subagents.corpus_explore_runtime import CORPUS_EXPLORE_SYSTEM
 from science_graphrag.agent.subagents.corpus_explore_runtime import (
     create_corpus_explore_can_use_tool,
 )
@@ -29,7 +32,10 @@ from science_graphrag.agent.subagents.isolated_subagent_state import (
     SUBAGENT_MEMORY_ISOLATION_VERSION,
     build_isolated_subagent_initial_state,
 )
-from science_graphrag.agent.subagents.research_plan_runtime import create_research_plan_can_use_tool
+from science_graphrag.agent.subagents.research_plan_runtime import (
+    RESEARCH_PLAN_SYSTEM,
+    create_research_plan_can_use_tool,
+)
 from science_graphrag.agent.subagents.specialist_results_v3 import (
     append_corpus_explore_leg,
     append_parent_tool_leg,
@@ -89,6 +95,12 @@ def test_research_plan_can_use_tool_write_gated() -> None:
     }
     assert deny(st, "research_plan_write", {"args": {}}) is not None
     assert allow(st, "research_plan_write", {"args": {}}) is None
+
+
+def test_subagent_system_prompts_include_managed_report_protocol() -> None:
+    assert MANAGED_REPORT_PROTOCOL_HEADER in CORPUS_EXPLORE_SYSTEM
+    assert MANAGED_REPORT_PROTOCOL_HEADER in CLAIM_VERIFICATION_SYSTEM
+    assert MANAGED_REPORT_PROTOCOL_HEADER in RESEARCH_PLAN_SYSTEM
 
 
 def test_read_only_contract_no_verdict() -> None:

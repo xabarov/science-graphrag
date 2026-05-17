@@ -9,12 +9,10 @@ from science_graphrag.agent.graph.nodes.retrieval_completion import (
 )
 from science_graphrag.agent.graph.nodes.retrieval_fork_legs import run_retrieval_fork_bundles
 from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
-    SYSTEM_PROMPT,
     _compile_react_subgraph,
     _extract_tool_payloads,
     _last_user_text,
 )
-from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
 from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
     build_retrieval_subgraph as build_retrieval_subgraph_impl,
 )
@@ -23,6 +21,8 @@ from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
 )
 from science_graphrag.agent.graph.state import AgentState
 from science_graphrag.agent.graph.supervisor_decisions import question_features_from_agent_state
+from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
+from science_graphrag.agent.prompt_protocol_cards import build_retrieval_system_prompt
 from science_graphrag.agent.subagents.specialist_results_v3 import (
     append_parent_tool_leg,
     append_writer_directive,
@@ -53,15 +53,21 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
     subgraph_tags: dict[tuple[str, ...], str] = {}
     seq = {"n": 0}
 
+    retrieval_prompt = build_retrieval_system_prompt(settings)
+    experiment_on = bool(settings.agent_external_research_toolcalling_experiment_enabled)
+
     def _cached_subgraph(tools: list[Any]) -> Any:
-        key = tuple(sorted(getattr(t, "name", "") or "" for t in tools))
+        key = (
+            tuple(sorted(getattr(t, "name", "") or "" for t in tools)),
+            experiment_on,
+        )
         if key not in subgraph_cache:
             seq["n"] += 1
             tag = subgraph_tags.setdefault(key, f"h{seq['n']}")
             subgraph_cache[key] = _compile_react_subgraph(
                 tools,
                 settings,
-                SYSTEM_PROMPT,
+                retrieval_prompt,
                 specialist_name=SPECIALIST_NAME,
                 sidechain_tag=tag,
             )

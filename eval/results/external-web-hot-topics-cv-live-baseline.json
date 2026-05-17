@@ -1,0 +1,1937 @@
+{
+  "lane_label": "baseline",
+  "base_url": "http://127.0.0.1:18787",
+  "workspace_id": "ws-pilot-od",
+  "total_cases": 10,
+  "passed_cases": 4,
+  "failed_cases": 6,
+  "coverage": {
+    "with_web_search": 5,
+    "with_web_fetch": 5,
+    "with_final_answer": 5,
+    "with_semantic_scholar": 5,
+    "with_pdf_read": 3,
+    "runtime_ok_cases": 5,
+    "tool_trace_ok_cases": 5,
+    "phoenix_ok_cases": 4,
+    "with_final_answer_validation": 5,
+    "validation_fail_cases": 0,
+    "generic_fallback_with_evidence_cases": 0,
+    "with_terminal_reason": 5,
+    "terminal_reason_distribution": {
+      "partial_final_answer": 1,
+      "final_answer_ok": 2,
+      "budget_exhausted_with_partial": 2,
+      "missing": 5
+    }
+  },
+  "cases": [
+    {
+      "id": "sam3_architecture",
+      "topic": "SAM 3 promptable segmentation",
+      "question": "Найди свежую информацию о архитектуре SAM 3 в CV. Сначала сделай web search + web fetch по официальным и исследовательским источникам, затем используй Semantic Scholar для релевантной статьи, и если есть открытый PDF — попробуй прочитать PDF. В конце дай сжатый итог с ограничениями.",
+      "ok": true,
+      "http_status": 200,
+      "elapsed_sec": 100.45,
+      "tool_names": [
+        "coordinator_gate",
+        "route_to_specialist",
+        "route_to_specialist",
+        "web_search",
+        "semantic_scholar_search",
+        "web_fetch",
+        "unpaywall_lookup",
+        "read_external_pdf",
+        "final_answer"
+      ],
+      "tool_flags": {
+        "web_search": true,
+        "web_fetch": true,
+        "final_answer": true,
+        "read_external_pdf": true,
+        "semantic_scholar": true,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": true
+      },
+      "phoenix_trace_id": "eedfe20b17ea7d6798691e013a9109aa",
+      "phoenix": {
+        "ok": true,
+        "error": null,
+        "url": "http://127.0.0.1:16006/v1/projects/science-graphrag/spans"
+      },
+      "phoenix_span_names_sample": [
+        "final_answer",
+        "tool.final_answer",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.writer",
+        "ChatOpenAI",
+        "__start__",
+        "ChannelWrite<start:chat>",
+        "ChannelWrite<...>",
+        "supervisor",
+        "route_to_specialist",
+        "ChannelWrite<...,supervisor>",
+        "retrieval_agent",
+        "ChannelWrite<...,retrieval_agent>",
+        "LangGraph",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools"
+      ],
+      "verdicts": {
+        "ok": true,
+        "issues": [],
+        "runtime": {
+          "ok": true,
+          "issues": []
+        },
+        "tool_trace": {
+          "ok": true,
+          "issues": []
+        },
+        "phoenix": {
+          "ok": true,
+          "issues": []
+        },
+        "answer_len": 719,
+        "citations_count": 7
+      },
+      "quality": {
+        "ok": true,
+        "issues": [],
+        "answer_len": 719,
+        "citations_count": 7
+      },
+      "answer_preview": "По текущим данным, официальной архитектуры SAM 3 в компьютерном зрении не обнаружено. Была найдена работа *SAM-Mamba: Mamba Guided SAM Architecture for Generalized Zero-Shot Polyp Segmentation*, которая представляет собой модификацию оригинального Segment Anything Model (SAM), но не является его третьей версией. Попытки получить полный текст этой статьи через DOI и PDF-чтение не увенчались успехом из-за технических ограничений (ошибка доступа и защиты PDF на стороне IEEE Xplore). Поиск в Semantic Scholar невозможен из-за ошибки 403. Информация в рабочем пространстве также не содержит упоминаний SAM 3. Таким образом, на основе доступных источников нельзя подтвердить существование или архитект",
+      "citations": [
+        {
+          "title": "SAM-Mamba: Mamba Guided SAM Architecture for Generalized Zero-Shot Polyp Segmentation",
+          "url": "https://doi.org/10.1109/wacv61041.2025.00457",
+          "doi": "10.1109/wacv61041.2025.00457",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "source_tier": "metadata_only",
+          "source_tool": "web_search"
+        },
+        {
+          "title": "ieeexplore.ieee.org",
+          "url": "https://ieeexplore.ieee.org/document/10943995/",
+          "doi": "",
+          "snippet": "The provided web page excerpt is not scholarly in content. It consists primarily of obfuscated JavaScript code and metadata used for website functionality (e.g., tracking, security, and page rendering), along with some basic HTML and Open Graph tags. There is no accessible scholarly text, research data, or article content visible in the excerpt that would allow for a meaningful summary of academic findings.\n\nTherefore, the requested bullet points cannot be generated from the given content. The actual scholarly content of the paper (e.g., methodology, results, conclusions) is not present in the excerpt and would need to be retrieved from the full document on IEEE Xplore.",
+          "provenance_kind": "web_page_summary",
+          "evidence_quality": "variable",
+          "evidence_mode": "web_summary",
+          "is_external": true,
+          "source_tier": "general",
+          "source_tool": "web_fetch"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1093/9780197610145.003.1286",
+          "title": "AOAC Official Method 2015.15Nitrogen, Phosphorus, and Potassium Release Rates of Slow- and Controlled-Release Fertilizers",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1093/9780197610145.003.1286"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1007/978-3-030-49100-0_31",
+          "title": "Artificial Intelligence and Computer Vision",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1007/978-3-030-49100-0_31"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.24108/preprints-3114040",
+          "title": "Vision Transformers: Architecture, Attention Mechanisms, and Perspectives for Computer Vision Development",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.24108/preprints-3114040"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1007/3-540-49256-9_21",
+          "title": "Reactive Computer Vision System with Reconfigurable Architecture",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1007/3-540-49256-9_21"
+        },
+        {
+          "source_type": "web",
+          "url": "https://ieeexplore.ieee.org/document/10943995/;jsessionid=F51BF85A1E592024246ECE88C5F74E0B",
+          "title": "https://ieeexplore.ieee.org/document/10943995/;jsessionid=F51BF85A1E592024246ECE88C5F74E0B",
+          "source_tool": "read_external_pdf",
+          "fallback_reason": "unknown_tool_failure",
+          "fallback_message": "A tool step failed; see trace for details.",
+          "provenance_kind": "extracted_pdf_text",
+          "evidence_quality": "variable",
+          "evidence_mode": "pdf_read",
+          "is_external": true
+        }
+      ],
+      "final_answer_validation": {
+        "status": "ok",
+        "reasons": [
+          "partial_answer_ok"
+        ],
+        "terminal_reason": "partial_final_answer",
+        "evidence_present": true,
+        "citations_present": true,
+        "citation_count": 7,
+        "answer_kind": "partial",
+        "limitation_required": false,
+        "limitation_present": true,
+        "user_visible_answer_allowed": true,
+        "enforcement_mode": "diagnostic"
+      },
+      "terminal_reason": "partial_final_answer",
+      "audit_diagnostics": {}
+    },
+    {
+      "id": "open_vocabulary_detection",
+      "topic": "Open-vocabulary object detection",
+      "question": "Собери обзор open-vocabulary object detection (2025-2026): лидирующие подходы, бенчмарки, ограничения. Используй web search + web fetch, затем Semantic Scholar для подтверждения минимум одной работы и попытайся прочитать ее OA PDF, если доступен.",
+      "ok": true,
+      "http_status": 200,
+      "elapsed_sec": 282.93,
+      "tool_names": [
+        "coordinator_gate",
+        "route_to_specialist",
+        "route_to_specialist",
+        "web_search",
+        "semantic_scholar_search",
+        "web_fetch",
+        "unpaywall_lookup",
+        "web_fetch",
+        "web_search",
+        "web_fetch",
+        "unpaywall_lookup",
+        "web_search",
+        "arxiv_search",
+        "final_answer"
+      ],
+      "tool_flags": {
+        "web_search": true,
+        "web_fetch": true,
+        "final_answer": true,
+        "read_external_pdf": false,
+        "semantic_scholar": true,
+        "openalex": false,
+        "arxiv": true,
+        "unpaywall": true
+      },
+      "phoenix_trace_id": "9ea06e9ceb6b6dd2510864a057ef7591",
+      "phoenix": {
+        "ok": true,
+        "error": null,
+        "url": "http://127.0.0.1:16006/v1/projects/science-graphrag/spans"
+      },
+      "phoenix_span_names_sample": [
+        "ChannelWrite<...,writer_agent>",
+        "LangGraph",
+        "after_tools",
+        "_route_after_tools",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "final_answer",
+        "tool.final_answer",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.writer",
+        "ChatOpenAI",
+        "__start__",
+        "ChannelWrite<start:chat>",
+        "ChannelWrite<...>",
+        "supervisor",
+        "route_to_specialist",
+        "ChannelWrite<...,supervisor>",
+        "retrieval_agent",
+        "ChannelWrite<...,retrieval_agent>",
+        "LangGraph",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "idea_search",
+        "tool.idea_search",
+        "retrieval.qdrant.idea_search",
+        "embedding.agent.idea_search",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next"
+      ],
+      "verdicts": {
+        "ok": true,
+        "issues": [],
+        "runtime": {
+          "ok": true,
+          "issues": []
+        },
+        "tool_trace": {
+          "ok": true,
+          "issues": []
+        },
+        "phoenix": {
+          "ok": true,
+          "issues": []
+        },
+        "answer_len": 986,
+        "citations_count": 7
+      },
+      "quality": {
+        "ok": true,
+        "issues": [],
+        "answer_len": 986,
+        "citations_count": 7
+      },
+      "answer_preview": "На основе проведённого исследования, обзор современных подходов к open-vocabulary object detection (2025-2026) ограничен доступностью информации. Были выявлены несколько потенциальных источников, включая обзорную статью (DOI: 10.1016/j.procs.2025.08.008) и работы по применению технологии в дистанционном зондировании и художественных изображениях. Однако попытки получить содержимое этих статей с помощью `web_fetch` и `unpaywall_lookup` оказались неудачными из-за технических ограничений (ошибки 403, 422, таймауты) и недоступности открытых версий (OA). Попытка найти препринт на arXiv с помощью `arxiv_search` была отклонена из-за ограничений прав доступа к инструменту.\n\nВ результате, несмотря на",
+      "citations": [
+        {
+          "title": "Open-vocabulary Object Detection Survey",
+          "url": "https://doi.org/10.1016/j.procs.2025.08.008",
+          "doi": "10.1016/j.procs.2025.08.008",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "source_tier": "metadata_only",
+          "source_tool": "web_search",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only."
+        },
+        {
+          "title": "Hierarchical Semantic Prompt Design for Robust Open-Vocabulary Object Detection",
+          "url": "https://doi.org/10.5626/jok.2025.52.6.499",
+          "doi": "10.5626/jok.2025.52.6.499",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "source_tier": "metadata_only",
+          "source_tool": "web_search",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only."
+        },
+        {
+          "title": "Open-Vocabulary Object Detection for Remote Sensing Images",
+          "url": "https://doi.org/10.2139/ssrn.5393893",
+          "doi": "10.2139/ssrn.5393893",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "source_tier": "metadata_only",
+          "source_tool": "web_search",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only."
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.2139/ssrn.5434798",
+          "title": "Open-Vocabulary Object Detection for Remote Sensing Images",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.2139/ssrn.5434798"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.2139/ssrn.5658209",
+          "title": "Open-Vocabulary Object Detection in Artistic Images",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.2139/ssrn.5658209"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.2139/ssrn.5400294",
+          "title": "Foggy Weather Multi-Object Tracking Model Based on Open-Vocabulary Detection",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.2139/ssrn.5400294"
+        },
+        {
+          "source_type": "web",
+          "url": "https://linkinghub.elsevier.com/retrieve/pii/S1877050925023130",
+          "title": "linkinghub.elsevier.com",
+          "source_tool": "web_fetch",
+          "provenance_kind": "web_page_summary",
+          "evidence_quality": "variable",
+          "evidence_mode": "web_summary",
+          "is_external": true,
+          "excerpt": "The provided web page excerpt does not contain scholarly content. It is an HTML redirect page used by Elsevier's linking hub to route users to the actual article hosted on ScienceDirect. The page itself includes metadata and scripting for redirection and analytics but does not present any substantive information about open-vocabulary object detection, including methods, benchmarks, or limitations.\n\nTherefore, no key contributions on open-vocabulary object detection can be extracted from this excerpt. For a summary of methods, benchmarks, and limitations, the full text of the article titled \"Open-vocabulary Object Detection Survey\" (PII: S1877050925023130) must be accessed via the target URL."
+        }
+      ],
+      "final_answer_validation": {
+        "status": "ok",
+        "reasons": [
+          "answer_ok"
+        ],
+        "terminal_reason": "final_answer_ok",
+        "evidence_present": true,
+        "citations_present": true,
+        "citation_count": 7,
+        "answer_kind": "complete",
+        "limitation_required": false,
+        "limitation_present": true,
+        "user_visible_answer_allowed": true,
+        "enforcement_mode": "diagnostic"
+      },
+      "terminal_reason": "final_answer_ok",
+      "audit_diagnostics": {}
+    },
+    {
+      "id": "video_diffusion_world_models",
+      "topic": "Video diffusion world models",
+      "question": "Найди горячие тренды video diffusion world models для computer vision. Проверь web источники, затем найди 1-2 научные работы через Semantic Scholar, и попробуй извлечь PDF-текст хотя бы для одной OA статьи.",
+      "ok": true,
+      "http_status": 200,
+      "elapsed_sec": 225.21,
+      "tool_names": [
+        "coordinator_gate",
+        "route_to_specialist",
+        "route_to_specialist",
+        "web_search",
+        "semantic_scholar_search",
+        "web_fetch",
+        "web_fetch",
+        "unpaywall_lookup",
+        "web_fetch",
+        "read_external_pdf",
+        "web_search",
+        "web_fetch",
+        "web_fetch",
+        "read_external_pdf",
+        "web_search",
+        "web_fetch",
+        "web_fetch",
+        "final_answer"
+      ],
+      "tool_flags": {
+        "web_search": true,
+        "web_fetch": true,
+        "final_answer": true,
+        "read_external_pdf": true,
+        "semantic_scholar": true,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": true
+      },
+      "phoenix_trace_id": "3a02598108d899284fd86b00642d3e1b",
+      "phoenix": {
+        "ok": true,
+        "error": null,
+        "url": "http://127.0.0.1:16006/v1/projects/science-graphrag/spans"
+      },
+      "phoenix_span_names_sample": [
+        "tools",
+        "ChannelWrite<...,tools>",
+        "final_answer",
+        "tool.final_answer",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.writer",
+        "ChatOpenAI",
+        "__start__",
+        "ChannelWrite<start:chat>",
+        "ChannelWrite<...>",
+        "supervisor",
+        "route_to_specialist",
+        "ChannelWrite<...,supervisor>",
+        "retrieval_agent",
+        "ChannelWrite<...,retrieval_agent>",
+        "LangGraph",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "workspace_inspect",
+        "tool.workspace_inspect",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "idea_search",
+        "tool.idea_search",
+        "retrieval.qdrant.idea_search",
+        "embedding.agent.idea_search",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works"
+      ],
+      "verdicts": {
+        "ok": true,
+        "issues": [],
+        "runtime": {
+          "ok": true,
+          "issues": []
+        },
+        "tool_trace": {
+          "ok": true,
+          "issues": []
+        },
+        "phoenix": {
+          "ok": true,
+          "issues": []
+        },
+        "answer_len": 977,
+        "citations_count": 13
+      },
+      "quality": {
+        "ok": true,
+        "issues": [],
+        "answer_len": 977,
+        "citations_count": 13
+      },
+      "answer_preview": "Горячим трендом в области computer vision является адаптация video diffusion моделей для создания world models, что позволяет системам лучше понимать и предсказывать динамику визуальной среды. Конкретная работа \"AVID: Adapting Video Diffusion Models to World Models\" упоминается в нескольких веб-источниках как релевантная, однако её полный текст не был извлечён из-за тайм-аутов при попытке доступа к DOI-ссылкам (10.32388/djb4a0, 10.32388/9j5p7z, 10.32388/h7bfdw). Поиск по научному корпусу не удался из-за ошибки 403 на Semantic Scholar. Таким образом, детальный анализ методологии и результатов работы AVID невозможен на основе имеющихся данных.\n\nДругие найденные работы в основном сосредоточены ",
+      "citations": [
+        {
+          "url": "https://doi.org/10.32388/djb4a0",
+          "provenance_kind": "crossref_metadata",
+          "evidence_mode": "metadata_only",
+          "source_tier": "metadata_only",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only.",
+          "evidence_quality": "variable",
+          "is_external": false
+        },
+        {
+          "url": "https://doi.org/10.32388/9j5p7z",
+          "provenance_kind": "crossref_metadata",
+          "evidence_mode": "metadata_only",
+          "source_tier": "metadata_only",
+          "evidence_quality": "variable",
+          "is_external": false
+        },
+        {
+          "url": "https://doi.org/10.32388/h7bfdw",
+          "provenance_kind": "crossref_metadata",
+          "evidence_mode": "metadata_only",
+          "source_tier": "metadata_only",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only.",
+          "evidence_quality": "variable",
+          "is_external": false
+        },
+        {
+          "url": "https://arxiv.org/abs/2411.14816",
+          "provenance_kind": "web_page_summary",
+          "evidence_mode": "web_summary",
+          "source_tier": "scholarly",
+          "evidence_quality": "variable",
+          "is_external": false
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1109/wacv61042.2026.00073",
+          "title": "Zero-Shot Video Deraining with Video Diffusion Models",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1109/wacv61042.2026.00073"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1109/wacv61042.2026.00321",
+          "title": "Show Me: Unifying Instructional Image and Video Generation with Diffusion Models",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1109/wacv61042.2026.00321"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1561/0600000112",
+          "title": "Tutorial on Diffusion Models for Imaging and Vision",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1561/0600000112",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only."
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1109/tcset65181.2026.11461052",
+          "title": "Cross-Environment Integration of Diffusion Models for .NET-Based Computer Vision",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1109/tcset65181.2026.11461052"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.5220/0013304800003912",
+          "title": "Enhancing Sketch Animation: Text-to-Video Diffusion Models with Temporal Consistency and Rigidity Constraints",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.5220/0013304800003912"
+        },
+        {
+          "source_type": "web",
+          "url": "https://ieeexplore.ieee.org/document/11491973/",
+          "title": "ieeexplore.ieee.org",
+          "source_tool": "web_fetch",
+          "provenance_kind": "web_page_summary",
+          "evidence_quality": "variable",
+          "evidence_mode": "web_summary",
+          "is_external": true,
+          "excerpt": "The provided web page excerpt does not contain scholarly content suitable for summarizing in bullet points. It consists primarily of:\n\n- Obfuscated JavaScript code used for client-side tracking or security purposes.\n- Metadata related to the IEEE Xplore website (e.g., page title, description, social media tags).\n- A brief meta-description indicating the topic: *\"Existing video deraining methods are often trained on paired datasets, either synthetic, which limits their ability to generalize to real-world rain, or capture...\"*\n\nHowever, the full scholarly content of the paper (e.g., methodology, results, analysis) is not present in the excerpt. Therefore, **no factual scholarly summary can be generated from this excerpt alone**.\n\n**Conclusion:** The content is not scholarly in nature as presented; it is technical web page scaffolding with minimal descriptive metadata."
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1109/iccvw69036.2025.00686",
+          "title": "Fitting Image Diffusion Models on Video Datasets",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1109/iccvw69036.2025.00686"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1109/iccv51701.2025.01456",
+          "title": "LeanVAE: An Ultra-Efficient Reconstruction VAE for Video Diffusion Models",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1109/iccv51701.2025.01456"
+        },
+        {
+          "source_type": "web",
+          "url": "https://arxiv.org/pdf/2411.14816.pdf",
+          "title": "https://arxiv.org/pdf/2411.14816.pdf",
+          "source_tool": "read_external_pdf",
+          "fallback_reason": "pdf_too_large",
+          "fallback_message": "PDF exceeds configured size limit.",
+          "provenance_kind": "extracted_pdf_text",
+          "evidence_quality": "variable",
+          "evidence_mode": "pdf_read",
+          "is_external": true
+        }
+      ],
+      "final_answer_validation": {
+        "status": "ok",
+        "reasons": [
+          "answer_ok"
+        ],
+        "terminal_reason": "budget_exhausted_with_partial",
+        "evidence_present": true,
+        "citations_present": true,
+        "citation_count": 13,
+        "answer_kind": "complete",
+        "limitation_required": true,
+        "limitation_present": true,
+        "user_visible_answer_allowed": true,
+        "enforcement_mode": "diagnostic"
+      },
+      "terminal_reason": "budget_exhausted_with_partial",
+      "audit_diagnostics": {}
+    },
+    {
+      "id": "vla_robotics",
+      "topic": "Vision-language-action for robotics",
+      "question": "Собери данные по vision-language-action моделям для робототехники: что реально работает, где bottlenecks. Используй web search/fetch + Semantic Scholar + PDF read (если OA есть). Финал — практическая оценка готовности.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadTimeout: timed out",
+      "elapsed_sec": 300.04,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "gaussian_splatting",
+      "topic": "3D Gaussian Splatting",
+      "question": "Найди последние материалы по 3D Gaussian Splatting в CV и сравни с NeRF. Нужны web источники и научные источники через Semantic Scholar. Для одного ключевого paper попробуй прочитать PDF и дать конкретные выводы.",
+      "ok": true,
+      "http_status": 200,
+      "elapsed_sec": 212.86,
+      "tool_names": [
+        "coordinator_gate",
+        "route_to_specialist",
+        "route_to_specialist",
+        "web_search",
+        "semantic_scholar_search",
+        "web_fetch",
+        "unpaywall_lookup",
+        "arxiv_search",
+        "web_fetch",
+        "web_fetch",
+        "read_external_pdf",
+        "web_search",
+        "web_fetch",
+        "web_fetch",
+        "unpaywall_lookup",
+        "arxiv_search",
+        "corpus_explore",
+        "final_answer"
+      ],
+      "tool_flags": {
+        "web_search": true,
+        "web_fetch": true,
+        "final_answer": true,
+        "read_external_pdf": true,
+        "semantic_scholar": true,
+        "openalex": false,
+        "arxiv": true,
+        "unpaywall": true
+      },
+      "phoenix_trace_id": "da1c723a139553bb4ca0758613478e71",
+      "phoenix": {
+        "ok": true,
+        "error": null,
+        "url": "http://127.0.0.1:16006/v1/projects/science-graphrag/spans"
+      },
+      "phoenix_span_names_sample": [
+        "LangGraph",
+        "writer_agent",
+        "ChannelWrite<...,writer_agent>",
+        "LangGraph",
+        "after_tools",
+        "_route_after_tools",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "final_answer",
+        "tool.final_answer",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.writer",
+        "ChatOpenAI",
+        "after_tools",
+        "_route_after_tools",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.writer",
+        "ChatOpenAI",
+        "__start__",
+        "ChannelWrite<start:chat>",
+        "ChannelWrite<...>",
+        "supervisor",
+        "route_to_specialist",
+        "ChannelWrite<...,supervisor>",
+        "retrieval_agent",
+        "ChannelWrite<...,retrieval_agent>",
+        "LangGraph",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "find_works",
+        "tool.find_works",
+        "find_works",
+        "find_works",
+        "tool.find_works",
+        "find_works",
+        "tool.find_works",
+        "tool.find_works",
+        "workspace_inspect",
+        "tool.workspace_inspect",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "__start__"
+      ],
+      "verdicts": {
+        "ok": true,
+        "issues": [],
+        "runtime": {
+          "ok": true,
+          "issues": []
+        },
+        "tool_trace": {
+          "ok": true,
+          "issues": []
+        },
+        "phoenix": {
+          "ok": true,
+          "issues": []
+        },
+        "answer_len": 1494,
+        "citations_count": 12
+      },
+      "quality": {
+        "ok": true,
+        "issues": [],
+        "answer_len": 1494,
+        "citations_count": 12
+      },
+      "answer_preview": "На основе доступных данных, полное сравнение технологий 3D Gaussian Splatting (3DGS) и Neural Radiance Fields (NeRF) с анализом конкретной научной публикации невозможно из-за ограниченного доступа к полнотекстовому контенту.\n\nБыло идентифицировано несколько потенциально релевантных источников, включая обзорные работы, такие как \"A survey on 3D reconstruction techniques in plant phenotyping\" (DOI: 10.1016/j.plaphe.2025.100137) и \"Applications of NeRF and 3D Gaussian splatting for synthesis of 3D scenes\" (DOI: 10.1088/978-0-7503-6244-3ch12). Однако попытки получить их полный текст через `web_fetch` и `unpaywall_lookup` оказались неудачными. В одном случае был получен только технический редирек",
+      "citations": [
+        {
+          "title": "Applications of NeRF and 3D Gaussian splatting for synthesis of 3D scenes",
+          "url": "https://doi.org/10.1088/978-0-7503-6244-3ch12",
+          "doi": "10.1088/978-0-7503-6244-3ch12",
+          "provenance_kind": "crossref_metadata",
+          "evidence_mode": "metadata_only",
+          "source_tier": "metadata_only",
+          "evidence_quality": "variable",
+          "is_external": false
+        },
+        {
+          "title": "A survey on 3D reconstruction techniques in plant phenotyping: From classical methods to Neural Radiance Fields (NeRF), 3D Gaussian Splatting (3DGS), and beyond",
+          "url": "https://doi.org/10.1016/j.plaphe.2025.100137",
+          "doi": "10.1016/j.plaphe.2025.100137",
+          "provenance_kind": "crossref_metadata",
+          "evidence_mode": "metadata_only",
+          "source_tier": "metadata_only",
+          "evidence_quality": "variable",
+          "is_external": false
+        },
+        {
+          "title": "iopscience.iop.org",
+          "url": "https://iopscience.iop.org/book/mono/978-0-7503-6244-3/chapter/bk978-0-7503-6244-3ch12",
+          "provenance_kind": "web_page_summary",
+          "evidence_mode": "web_summary",
+          "source_tier": "general",
+          "evidence_quality": "variable",
+          "is_external": false
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1016/j.cviu.2024.104273",
+          "title": "Gaussian Splatting with NeRF-based color and opacity",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1016/j.cviu.2024.104273"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.5220/0014310900004084",
+          "title": "DiGS-3D: Diffusion Transformer as Unstructured 3D Gaussian Splatting Generator",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.5220/0014310900004084"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.5220/0013308500003912",
+          "title": "Improving Adaptive Density Control for 3D Gaussian Splatting",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.5220/0013308500003912"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.20944/preprints202410.2041.v1",
+          "title": "Impact of camera settings on 3D Reconstruction quality: Insights from NeRF and Gaussian Splatting",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.20944/preprints202410.2041.v1",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only."
+        },
+        {
+          "source_type": "web",
+          "url": "https://linkinghub.elsevier.com/retrieve/pii/S1077314224003540",
+          "title": "linkinghub.elsevier.com",
+          "source_tool": "web_fetch",
+          "provenance_kind": "web_page_summary",
+          "evidence_quality": "variable",
+          "evidence_mode": "web_summary",
+          "is_external": true,
+          "excerpt": "The provided web page excerpt does not contain scholarly content. It is a redirect page from Elsevier's linking hub, automatically forwarding to a ScienceDirect article. The metadata includes technical details for page redirection and tracking (e.g., PII identifier, URL parameters, JavaScript functions), but no actual research findings, methodology, or analysis are presented. Therefore, no scholarly summary can be generated from this excerpt."
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.2352/ei.2025.37.15.avm-114",
+          "title": "A Comparative Study of NeRF and 3D Gaussian Splatting for Automotive and Edge Applications",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.2352/ei.2025.37.15.avm-114",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only."
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.25686/978-5-8158-2474-4-2025-113-132",
+          "title": "Enhancing 3D Gaussian Splatting with diffusion models: a survey",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.25686/978-5-8158-2474-4-2025-113-132"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.21203/rs.3.rs-7300179/v1",
+          "title": "Evaluating 3D Reconstruction: A Side-by-Side comparison of  NeRF and Gaussian Splatting under various filming techniques",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.21203/rs.3.rs-7300179/v1"
+        },
+        {
+          "source_type": "web",
+          "url": "https://iopscience.iop.org/book-pdf/978-0-7503-6244-3/bk978-0-7503-6244-3ch12.pdf",
+          "title": "https://iopscience.iop.org/book-pdf/978-0-7503-6244-3/bk978-0-7503-6244-3ch12.pdf",
+          "source_tool": "read_external_pdf",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only.",
+          "provenance_kind": "extracted_pdf_text",
+          "evidence_quality": "variable",
+          "evidence_mode": "pdf_read",
+          "is_external": true
+        }
+      ],
+      "final_answer_validation": {
+        "status": "ok",
+        "reasons": [
+          "partial_answer_ok"
+        ],
+        "terminal_reason": "budget_exhausted_with_partial",
+        "evidence_present": true,
+        "citations_present": true,
+        "citation_count": 12,
+        "answer_kind": "partial",
+        "limitation_required": false,
+        "limitation_present": true,
+        "user_visible_answer_allowed": true,
+        "enforcement_mode": "diagnostic"
+      },
+      "terminal_reason": "budget_exhausted_with_partial",
+      "audit_diagnostics": {}
+    },
+    {
+      "id": "efficient_edge_cv",
+      "topic": "Efficient edge CV models",
+      "question": "Проведи web+scholar обзор efficient edge CV models (mobile/edge inference): архитектуры, ускорение, accuracy-latency tradeoff. Обязательно используй web search/fetch и Semantic Scholar; при наличии OA PDF — выполни чтение PDF.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadTimeout: timed out",
+      "elapsed_sec": 300.1,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "medical_foundation_vision",
+      "topic": "Medical vision foundation models",
+      "question": "Найди горячие темы по medical vision foundation models (segmentation/diagnostics). Сначала web search/fetch, затем Semantic Scholar для новых статей, после этого попытайся прочитать OA PDF, если есть.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadTimeout: timed out",
+      "elapsed_sec": 300.09,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "synthetic_data_cv",
+      "topic": "Synthetic data pipelines for CV",
+      "question": "Собери обзор synthetic data pipelines для CV обучения: где помогает, где domain gap. Используй web search + web fetch, затем Semantic Scholar, и попытайся прочитать PDF для одной ключевой работы.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadTimeout: timed out",
+      "elapsed_sec": 300.1,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "multimodal_pretraining_cv",
+      "topic": "Multimodal pretraining for CV",
+      "question": "Найди актуальные результаты по multimodal pretraining для CV (2025-2026). Нужны web источники и научные подтверждения через Semantic Scholar, плюс попытка PDF read для OA статьи.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadTimeout: timed out",
+      "elapsed_sec": 300.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "document_vlm_ocr_free",
+      "topic": "OCR-free VLM document understanding",
+      "question": "Собери информацию по OCR-free VLM для document understanding: layout reasoning, tables/charts, production risks. Используй web search/fetch, Semantic Scholar, и PDF read, если возможно.",
+      "ok": false,
+      "http_status": 200,
+      "elapsed_sec": 267.28,
+      "tool_names": [
+        "coordinator_gate",
+        "route_to_specialist",
+        "route_to_specialist",
+        "web_search",
+        "semantic_scholar_search",
+        "idea_search",
+        "web_fetch",
+        "web_fetch",
+        "find_works",
+        "semantic_scholar_search",
+        "semantic_scholar_search",
+        "idea_search",
+        "workspace_inspect",
+        "paper_profile",
+        "paper_quote_search",
+        "final_answer"
+      ],
+      "tool_flags": {
+        "web_search": true,
+        "web_fetch": true,
+        "final_answer": true,
+        "read_external_pdf": false,
+        "semantic_scholar": true,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "3a616fbab50d05faad80dcf60410ac7b",
+      "phoenix": {
+        "ok": true,
+        "error": null,
+        "url": "http://127.0.0.1:16006/v1/projects/science-graphrag/spans"
+      },
+      "phoenix_span_names_sample": [
+        "final_answer_nudge",
+        "ChannelWrite<...,final_answer_nudge>",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.writer",
+        "ChatOpenAI",
+        "final_answer_nudge",
+        "ChannelWrite<...,final_answer_nudge>",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.writer",
+        "ChatOpenAI",
+        "__start__",
+        "ChannelWrite<start:chat>",
+        "ChannelWrite<...>",
+        "supervisor",
+        "route_to_specialist",
+        "ChannelWrite<...,supervisor>",
+        "retrieval_agent",
+        "ChannelWrite<...,retrieval_agent>",
+        "LangGraph",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "ChatOpenAI",
+        "paper_quote_search",
+        "tool.paper_quote_search",
+        "retrieval.qdrant.paper_quote_search",
+        "embedding.agent.paper_quote_search",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "ChatOpenAI",
+        "paper_quote_search",
+        "tool.paper_quote_search",
+        "retrieval.qdrant.paper_quote_search",
+        "embedding.agent.paper_quote_search",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "ChatOpenAI",
+        "paper_quote_search",
+        "tool.paper_quote_search",
+        "retrieval.qdrant.paper_quote_search",
+        "embedding.agent.paper_quote_search",
+        "chat",
+        "route_react_chat_to_tools",
+        "ChannelWrite<...,chat>",
+        "llm.agent.research_plan",
+        "ChatOpenAI",
+        "after_tools",
+        "route_react_tools_next",
+        "ChannelWrite<...,after_tools>",
+        "tools",
+        "ChannelWrite<...,tools>",
+        "idea_search",
+        "tool.idea_search"
+      ],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "missing_span_but_tool_trace_present"
+        ],
+        "runtime": {
+          "ok": true,
+          "issues": []
+        },
+        "tool_trace": {
+          "ok": true,
+          "issues": []
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "missing_span_but_tool_trace_present"
+          ]
+        },
+        "answer_len": 3092,
+        "citations_count": 7
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "phoenix_missing_final_answer_span"
+        ],
+        "answer_len": 3092,
+        "citations_count": 7
+      },
+      "answer_preview": "### Обзор OCR-free VLM для понимания документов: анализ компоновки, таблиц/диаграмм и рисков в производстве\n\n#### Ключевые архитектуры и подходы\nOCR-free визуальные языковые модели (VLM) для понимания документов представляют собой конвейеры, которые напрямую обрабатывают пиксели изображений документов, минуя традиционный этап оптического распознавания символов (OCR). Этот подход устраняет каскадное распространение ошибок, присущее системам, зависящим от OCR. Архитектуры, такие как **Donut** и **Pix2Struct**, используют энкодеры на основе Vision Transformer (ViT) для извлечения визуальных признаков и декодеры, основанные на трансформерах, для генерации структурированного текстового вывода (на",
+      "citations": [
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.2139/ssrn.6574554",
+          "title": "Towards Visual Document Understanding of Meitei Mayek: A Survey of Layout Analysis and OCR Techniques",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.2139/ssrn.6574554"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.52202/079017-3362",
+          "title": "Hierarchical Visual Feature Aggregation for OCR-Free Document Understanding",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.52202/079017-3362",
+          "fallback_reason": "source_unreachable",
+          "fallback_message": "External source could not be reached; using other evidence only."
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.71143/gaza7e33",
+          "title": "The Evolution of OCR-Free Visual Document Understanding: From Heuristic OCR to End-to-End Multimodal Transformers",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.71143/gaza7e33"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.1088/1361-665x/ae6958/data1",
+          "title": "Supplementary Information",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.1088/1361-665x/ae6958/data1"
+        },
+        {
+          "source_type": "web",
+          "url": "https://doi.org/10.21275/sr25513013837",
+          "title": "AI - Powered Document Intelligence in Insurance: Building Vendor - Free, Open - Source OCR Systems to Eliminate Operational Bottlenecks",
+          "source_tool": "web_search",
+          "provenance_kind": "crossref_metadata",
+          "evidence_quality": "weak",
+          "evidence_mode": "metadata_only",
+          "is_external": true,
+          "doi": "10.21275/sr25513013837"
+        },
+        {
+          "source_type": "web",
+          "url": "https://ijrasht.com/index.php/files/article/view/287",
+          "title": "ijrasht.com",
+          "source_tool": "web_fetch",
+          "provenance_kind": "web_page_summary",
+          "evidence_quality": "variable",
+          "evidence_mode": "web_summary",
+          "is_external": true,
+          "excerpt": "The provided web page excerpt is metadata for a journal article titled *\"The Evolution of OCR-Free Visual Document Understanding: From Heuristic OCR to End-to-End Multimodal Transformers\"*, authored by Aarti Ahirwar and Ritu Tandon, affiliated with SAGE University, India. The article is set to be published in Volume 3, Issue 2 (2026) of the *International Journal of Research and Review in Applied Science, Humanities, and Technology* (ISSN: 3048-975X), and is indexed with DOI: 10.71143/gaza7e33.\n\n**Summary for a Researcher:**\n\nThe abstract outlines a shift in Visual Document Understanding (VDU) from traditional OCR-dependent, multi-stage pipelines to OCR-free, end-to-end multimodal transformer models that process raw pixels directly into structured text outputs. It identifies OCR error propagation—where inaccuracies in OCR degrade downstream NLP performance—as a key limitation of prior approaches. The paper reviews the architectural evolution toward OCR-free systems, including Layout-aware Transformers, Vision Transformers (ViT), hierarchical models like Swin, and generative frameworks such as Donut and Pix2Struct. It also discusses core technical challenges, including handling high-resolution document images and achieving effective cross-modal alignment between visual and textual elements. The authors evaluate state-of-the-art performance on standard benchmarks and suggest future research directions in the context of Large Multimodal Models (LMMs).\n\n**Assessment of Scholarly Quality:**\n\nWhile the metadata follows a standard academic format and includes relevant keywords, DOIs, and institutional affiliations, **the journal—*International Journal of Research and Review in Applied Science, Humanities, and Technology*—does not appear in recognized scholarly databases such as Scopus, Web of Science, or DOAJ (as of current knowledge up to 2024)**. The use of Open Journal Systems (OJS) does not inherently validate quality, and the presence of placeholder-like elements in t"
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "excerpt": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.",
+          "provenance_kind": "workspace_metadata",
+          "evidence_quality": "medium",
+          "evidence_mode": "abstract",
+          "is_external": false
+        }
+      ],
+      "final_answer_validation": {
+        "status": "ok",
+        "reasons": [
+          "answer_ok"
+        ],
+        "terminal_reason": "final_answer_ok",
+        "evidence_present": true,
+        "citations_present": true,
+        "citation_count": 7,
+        "answer_kind": "complete",
+        "limitation_required": false,
+        "limitation_present": true,
+        "user_visible_answer_allowed": true,
+        "enforcement_mode": "diagnostic"
+      },
+      "terminal_reason": "final_answer_ok",
+      "audit_diagnostics": {
+        "phoenix_missing_final_answer_span": "missing_span_but_tool_trace_present"
+      }
+    }
+  ],
+  "next_slice_gates": {
+    "all_ok": false,
+    "checks": {
+      "runtime_ok_cases": {
+        "ok": false,
+        "actual": 5,
+        "minimum": 6
+      },
+      "tool_trace_ok_cases": {
+        "ok": false,
+        "actual": 5,
+        "minimum": 6
+      },
+      "phoenix_ok_cases": {
+        "ok": false,
+        "actual": 4,
+        "minimum": 5
+      },
+      "with_final_answer": {
+        "ok": false,
+        "actual": 5,
+        "minimum": 8
+      },
+      "generic_fallback_with_evidence_cases": {
+        "ok": true,
+        "actual": 0,
+        "maximum": 0
+      }
+    }
+  }
+}

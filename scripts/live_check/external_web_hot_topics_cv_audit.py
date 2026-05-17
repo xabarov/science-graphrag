@@ -221,6 +221,35 @@ def build_audit_diagnostics(
     return diagnostics
 
 
+# Minimum next-slice gates from smolagents analysis doc (Phase 3 operator closeout).
+NEXT_SLICE_GATES: dict[str, int] = {
+    "runtime_ok_cases": 6,
+    "tool_trace_ok_cases": 6,
+    "phoenix_ok_cases": 5,
+    "with_final_answer": 8,
+    "generic_fallback_with_evidence_cases": 0,
+}
+
+
+def evaluate_next_slice_gates(coverage: dict[str, Any]) -> dict[str, Any]:
+    """Compare coverage counters to minimum next-slice targets."""
+    cov = coverage if isinstance(coverage, dict) else {}
+    checks: dict[str, dict[str, Any]] = {}
+    for key, minimum in NEXT_SLICE_GATES.items():
+        if key == "generic_fallback_with_evidence_cases":
+            actual = int(cov.get(key, 0) or 0)
+            ok = actual <= int(minimum)
+            checks[key] = {"ok": ok, "actual": actual, "maximum": minimum}
+        else:
+            actual = int(cov.get(key, 0) or 0)
+            ok = actual >= int(minimum)
+            checks[key] = {"ok": ok, "actual": actual, "minimum": minimum}
+    return {
+        "all_ok": all(bool(v.get("ok")) for v in checks.values()),
+        "checks": checks,
+    }
+
+
 def evaluate_case_verdicts(
     *,
     http_status: int | None,
@@ -280,12 +309,46 @@ def evaluate_case_verdicts(
     }
 
 
+def _print_compare_delta(baseline_path: Path, current: dict[str, Any]) -> None:
+    """Print coverage and next-slice gate deltas vs a prior CV JSON report."""
+    if not baseline_path.is_file():
+        print(f"compare-json: missing file {baseline_path}", flush=True)
+        return
+    try:
+        baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        print(f"compare-json: failed to read {baseline_path}: {exc}", flush=True)
+        return
+    b_cov = baseline.get("coverage") if isinstance(baseline.get("coverage"), dict) else {}
+    c_cov = current.get("coverage") if isinstance(current.get("coverage"), dict) else {}
+    keys = sorted(set(b_cov) | set(c_cov))
+    print("--- compare-json delta (current - baseline) ---", flush=True)
+    print(
+        f"lane: baseline={baseline.get('lane_label', '?')} current={current.get('lane_label', '?')}",
+        flush=True,
+    )
+    for key in keys:
+        if key == "terminal_reason_distribution":
+            continue
+        try:
+            delta = int(c_cov.get(key, 0) or 0) - int(b_cov.get(key, 0) or 0)
+        except (TypeError, ValueError):
+            continue
+        if delta:
+            print(f"  {key}: {b_cov.get(key, 0)} -> {c_cov.get(key, 0)} ({delta:+d})", flush=True)
+    b_gates = (baseline.get("next_slice_gates") or {}).get("all_ok")
+    c_gates = (current.get("next_slice_gates") or {}).get("all_ok")
+    print(f"  next_slice_gates.all_ok: {b_gates} -> {c_gates}", flush=True)
+
+
 def _write_markdown(report: dict[str, Any], out_md: Path) -> None:
     lines: list[str] = []
     lines.append("# External CV Hot Topics Live Audit")
     lines.append("")
     lines.append(f"- Base URL: `{report['base_url']}`")
     lines.append(f"- Workspace: `{report['workspace_id']}`")
+    if report.get("lane_label"):
+        lines.append(f"- Lane label: `{report['lane_label']}`")
     lines.append(
         f"- Passed: **{report['passed_cases']} / {report['total_cases']}**, failed: **{report['failed_cases']}**"
     )
@@ -311,6 +374,13 @@ def _write_markdown(report: dict[str, Any], out_md: Path) -> None:
     dist = cov.get("terminal_reason_distribution") or {}
     if dist:
         lines.append(f"- terminal_reason_distribution: `{dist}`")
+    gates = report.get("next_slice_gates") or {}
+    if gates:
+        lines.append("")
+        lines.append("## Next-slice gates")
+        lines.append(f"- all_ok: `{gates.get('all_ok')}`")
+        for name, detail in (gates.get("checks") or {}).items():
+            lines.append(f"- {name}: `{detail}`")
     lines.append("")
     lines.append("## Case Results")
     for case in report.get("cases") or []:
@@ -371,6 +441,20 @@ def main() -> int:
         "--out-phoenix-failures",
         default="",
         help="Optional JSONL with full span names for failing Phoenix checks.",
+    )
+    parser.add_argument(
+        "--lane-label",
+        default="baseline",
+        help=(
+            "Metadata label for this run (e.g. baseline vs experiment). "
+            "Phase 6 A/B: run twice with API env "
+            "SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED=0|1."
+        ),
+    )
+    parser.add_argument(
+        "--compare-json",
+        default="",
+        help="Optional path to a prior CV JSON report; prints coverage/gate deltas after this run.",
     )
     args = parser.parse_args()
 
@@ -510,6 +594,7 @@ def main() -> int:
         terminal_reason_dist[tr_key] = terminal_reason_dist.get(tr_key, 0) + 1
 
     report: dict[str, Any] = {
+        "lane_label": str(args.lane_label or "baseline").strip() or "baseline",
         "base_url": base,
         "workspace_id": args.workspace_id,
         "total_cases": len(_CASES),
@@ -559,6 +644,7 @@ def main() -> int:
         },
         "cases": rows,
     }
+    report["next_slice_gates"] = evaluate_next_slice_gates(report["coverage"])
 
     out_json.parent.mkdir(parents=True, exist_ok=True)
     out_json.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -569,15 +655,21 @@ def main() -> int:
         encoding="utf-8",
     )
 
+    compare_path = str(args.compare_json or "").strip()
+    if compare_path:
+        _print_compare_delta(Path(compare_path), report)
+
     print(
         json.dumps(
             {
                 "written_json": str(out_json),
                 "written_md": str(out_md),
                 "written_phoenix_failures": str(out_failures),
+                "lane_label": report.get("lane_label"),
                 "passed": report["passed_cases"],
                 "failed": report["failed_cases"],
                 "coverage": report["coverage"],
+                "next_slice_gates": report.get("next_slice_gates"),
             },
             ensure_ascii=False,
             indent=2,

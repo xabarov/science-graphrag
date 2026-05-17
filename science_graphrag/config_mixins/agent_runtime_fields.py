@@ -1092,6 +1092,13 @@ class AgentRuntimeFields(BaseModel):
         ),
     )
 
+    agent_external_research_toolcalling_experiment_enabled: bool = Field(
+        default=False,
+        description=(
+            "Smolagents Phase 6: swap retrieval specialist external-research protocol card "
+            "for a compact toolcalling-style loop (operator A/B only; default off)."
+        ),
+    )
     agent_sidechain_transcripts_enabled: bool = Field(
         default=True,
         description="Append JSONL sidechain transcripts for specialist ReAct branches (debug/recovery).",

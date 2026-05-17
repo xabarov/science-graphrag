@@ -9,6 +9,10 @@ from langchain_core.messages import AIMessage, ToolMessage
 
 from science_graphrag.agent.chat_envelope import collect_typed_payloads
 from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
+from science_graphrag.agent.subagent_output_contract import (
+    format_salvage_limitation_lines,
+    merge_limitation_signals,
+)
 from science_graphrag.agent.tool_call_normalization import normalize_tool_call_name
 from science_graphrag.agent.trace import ToolCallTrace
 
@@ -30,8 +34,16 @@ def synthesize_partial_answer_from_specialist_context(
     merge = sr3.get("merge") if isinstance(sr3.get("merge"), dict) else {}
     completion_state = str(merge.get("completion_state") or "").strip()
     directive = str(merge.get("writer_directive") or "").strip()
-    if directive:
-        directive = directive[:600]
+    limitations, next_checks = merge_limitation_signals(merge)
+    outcome_summary = str(merge.get("outcome_summary") or "").strip()
+    directive_trim = directive[:600] if directive else ""
+    limitation_lines = format_salvage_limitation_lines(
+        language=language,
+        limitations=limitations,
+        next_checks=next_checks,
+        outcome_summary=outcome_summary,
+        writer_directive=directive_trim,
+    )
     if language == "ru":
         lines = [
             (
@@ -43,8 +55,7 @@ def synthesize_partial_answer_from_specialist_context(
         if completion_state:
             lines.append(f"- completion_state: {completion_state}")
         lines.append(f"- получено источников: {len(cits)}")
-        if directive:
-            lines.append(f"- ограничения и замечания: {directive}")
+        lines.extend(limitation_lines)
         lines.append(
             "Рекомендация: продолжить с уже собранными источниками; "
             "текущий вывод ограничен доступной выборкой."
@@ -60,8 +71,7 @@ def synthesize_partial_answer_from_specialist_context(
     if completion_state:
         lines.append(f"- completion_state: {completion_state}")
     lines.append(f"- collected sources: {len(cits)}")
-    if directive:
-        lines.append(f"- limitations: {directive}")
+    lines.extend(limitation_lines)
     lines.append("Recommendation: continue from the collected evidence; this turn is partial.")
     return "\n".join(lines)
 

@@ -112,3 +112,36 @@ def test_resolve_validation_failed_generic_fallback_with_evidence() -> None:
 def test_compute_audit_diagnostics_missing_final_answer_tool() -> None:
     diag = compute_audit_diagnostics(tool_trace=[type("T", (), {"tool": "web_search"})()])
     assert diag["tool_trace_missing_final_answer"] is True
+
+
+def test_resolve_budget_exhausted_without_evidence() -> None:
+    verdict = validate_final_answer(answer=RUNTIME_FALLBACK_ANSWER, citations=[])
+    reason = resolve_terminal_reason(
+        answer=RUNTIME_FALLBACK_ANSWER,
+        validation_verdict=verdict,
+        routing_log=[{"reason": "budget_exhausted", "to": "writer_agent"}],
+    )
+    assert reason == "budget_exhausted_without_evidence"
+
+
+def test_resolve_validation_failed_on_empty_answer() -> None:
+    verdict = validate_final_answer(answer="", citations=[])
+    reason = resolve_terminal_reason(
+        answer="",
+        validation_verdict=verdict,
+    )
+    assert reason == "validation_failed"
+
+
+def test_resolve_partial_final_answer_without_budget() -> None:
+    verdict = validate_final_answer(
+        answer="Partial answer with explicit limitations on metadata-only sources.",
+        citations=[{"work_id": "w1"}],
+        specialist_results_v3={"merge": {"completion_state": "partial"}},
+    )
+    reason = resolve_terminal_reason(
+        answer="Partial answer with explicit limitations on metadata-only sources.",
+        validation_verdict=verdict,
+        tool_trace=[type("T", (), {"tool": "final_answer"})()],
+    )
+    assert reason == "partial_final_answer"

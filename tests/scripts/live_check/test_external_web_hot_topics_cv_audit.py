@@ -18,6 +18,7 @@ _SPEC.loader.exec_module(_MOD)
 _evaluate_verdicts = _MOD.evaluate_case_verdicts
 _extract_terminal_reason = _MOD.extract_terminal_reason_from_run_metadata
 _build_audit_diagnostics = _MOD.build_audit_diagnostics
+_evaluate_next_slice_gates = _MOD.evaluate_next_slice_gates
 
 
 def test_verdicts_tool_trace_final_answer_but_missing_phoenix_span() -> None:
@@ -64,6 +65,63 @@ def test_build_audit_diagnostics_phoenix_mismatch() -> None:
         span_names=["chat", "tool.web_fetch"],
     )
     assert diag.get("phoenix_missing_final_answer_span") == "missing_span_but_tool_trace_present"
+
+
+def test_evaluate_next_slice_gates_passes_minimum_targets() -> None:
+    gates = _evaluate_next_slice_gates(
+        {
+            "runtime_ok_cases": 6,
+            "tool_trace_ok_cases": 6,
+            "phoenix_ok_cases": 5,
+            "with_final_answer": 8,
+            "generic_fallback_with_evidence_cases": 0,
+        }
+    )
+    assert gates["all_ok"] is True
+
+
+def test_evaluate_next_slice_gates_fails_when_runtime_low() -> None:
+    gates = _evaluate_next_slice_gates({"runtime_ok_cases": 4})
+    assert gates["all_ok"] is False
+    assert gates["checks"]["runtime_ok_cases"]["ok"] is False
+
+
+def test_print_compare_delta_reports_diff(capsys) -> None:
+    baseline = {
+        "lane_label": "baseline",
+        "coverage": {"runtime_ok_cases": 4, "with_final_answer": 3},
+        "next_slice_gates": {"all_ok": False},
+    }
+    current = {
+        "lane_label": "experiment",
+        "coverage": {"runtime_ok_cases": 6, "with_final_answer": 8},
+        "next_slice_gates": {"all_ok": True},
+    }
+    import tempfile
+
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as fh:
+        import json
+
+        json.dump(baseline, fh)
+        path = Path(fh.name)
+    _MOD._print_compare_delta(path, current)
+    out = capsys.readouterr().out
+    assert "runtime_ok_cases" in out
+    path.unlink(missing_ok=True)
+
+
+def test_audit_diagnostics_keys_align_with_runtime_constants() -> None:
+    from science_graphrag.agent.terminal_reason import (
+        AUDIT_PHOENIX_MISSING_FINAL_ANSWER_SPAN,
+        AUDIT_TOOL_TRACE_MISSING_FINAL_ANSWER,
+    )
+
+    diag = _build_audit_diagnostics(
+        tool_flags={"final_answer": False},
+        span_names=[],
+    )
+    assert AUDIT_TOOL_TRACE_MISSING_FINAL_ANSWER in diag
+    assert AUDIT_PHOENIX_MISSING_FINAL_ANSWER_SPAN in diag
 
 
 def test_verdicts_runtime_fallback_detected_even_with_http_200() -> None:

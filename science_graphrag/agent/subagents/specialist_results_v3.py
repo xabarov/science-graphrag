@@ -18,6 +18,7 @@ from typing import Any
 # (CompletionSignalId); this re-export lets v3 callers validate without
 # importing the planner package.
 from science_graphrag.agent.coordination.route_plan import CompletionSignalId as _CompletionSignalId
+from science_graphrag.agent.subagent_output_contract import parse_managed_report_from_text
 
 _SCHEMA_VERSION = 1
 
@@ -72,19 +73,42 @@ def _evidence_origin_for_subagent_id(subagent_id: str) -> str:
     return f"subagent:{sid}" if sid else "subagent:unknown"
 
 
+def _empty_merge_block() -> dict[str, Any]:
+    return {
+        "evidence_origin": "parent_tool",
+        "confidence": 1.0,
+        "conflict": None,
+        "writer_directive": "",
+        "partial_failure": False,
+        "completion_state": "any_specialist_payload",
+        "outcome_summary": "",
+        "limitations": [],
+        "next_checks": [],
+        "report_sections_present": False,
+    }
+
+
 def empty_specialist_results_v3() -> dict[str, Any]:
     return {
         "schema_version": _SCHEMA_VERSION,
         "legs": [],
-        "merge": {
-            "evidence_origin": "parent_tool",
-            "confidence": 1.0,
-            "conflict": None,
-            "writer_directive": "",
-            "partial_failure": False,
-            "completion_state": "any_specialist_payload",
-        },
+        "merge": _empty_merge_block(),
     }
+
+
+def _attach_managed_report_to_leg(leg: dict[str, Any], text: str) -> dict[str, Any]:
+    """Parse child text into ``leg[\"managed_report\"]`` for typed parent merge."""
+    parsed = parse_managed_report_from_text(text)
+    if any(
+        (
+            parsed.get("report_sections_present"),
+            str(parsed.get("outcome_summary") or "").strip(),
+            parsed.get("limitations"),
+            parsed.get("next_checks"),
+        )
+    ):
+        leg["managed_report"] = parsed
+    return leg
 
 
 def append_writer_directive(prev: dict[str, Any] | None, extra: str) -> dict[str, Any]:
@@ -176,6 +200,7 @@ def append_corpus_explore_leg(
         "evidence_origin": _evidence_origin_for_subagent_id(subagent_id),
         "confidence": _confidence_for_child(terminal_state, failure_code, verdict=None),
     }
+    _attach_managed_report_to_leg(leg, text)
     legs.append(leg)
     base["schema_version"] = _SCHEMA_VERSION
     base["legs"] = legs
@@ -212,6 +237,7 @@ def append_research_plan_leg(
         "evidence_origin": _evidence_origin_for_subagent_id(subagent_id),
         "confidence": _confidence_for_child(terminal_state, failure_code, verdict=None),
     }
+    _attach_managed_report_to_leg(leg, text)
     legs.append(leg)
     base["schema_version"] = _SCHEMA_VERSION
     base["legs"] = legs
@@ -247,6 +273,7 @@ def append_claim_verification_leg(
         "evidence_origin": _evidence_origin_for_subagent_id(subagent_id),
         "confidence": conf,
     }
+    _attach_managed_report_to_leg(leg, text)
     legs.append(leg)
     base["schema_version"] = _SCHEMA_VERSION
     base["legs"] = legs
@@ -286,15 +313,46 @@ def _excerpt_payloads(payloads: list[dict[str, Any]], max_items: int = 6) -> lis
     return out
 
 
+def _aggregate_managed_report_from_legs(legs: list[dict[str, Any]]) -> dict[str, Any]:
+    limitations: list[str] = []
+    next_checks: list[str] = []
+    outcome_summary = ""
+    report_sections_present = False
+    subagent_kinds = frozenset({"claim_verification", "corpus_explore", "research_plan"})
+    for leg in legs:
+        if leg.get("kind") not in subagent_kinds:
+            continue
+        mr = leg.get("managed_report")
+        if not isinstance(mr, dict):
+            text = str(leg.get("text_excerpt") or "")
+            if text.strip():
+                mr = parse_managed_report_from_text(text)
+            else:
+                continue
+        if mr.get("report_sections_present"):
+            report_sections_present = True
+        short = str(mr.get("outcome_summary") or "").strip()
+        if short:
+            outcome_summary = short
+        for item in list(mr.get("limitations") or []):
+            s = str(item).strip()
+            if s and s not in limitations:
+                limitations.append(s)
+        for item in list(mr.get("next_checks") or []):
+            s = str(item).strip()
+            if s and s not in next_checks:
+                next_checks.append(s)
+    return {
+        "outcome_summary": outcome_summary,
+        "limitations": limitations[:32],
+        "next_checks": next_checks[:32],
+        "report_sections_present": report_sections_present,
+    }
+
+
 def _compute_merge(legs: list[dict[str, Any]]) -> dict[str, Any]:
     if not legs:
-        return {
-            "evidence_origin": "parent_tool",
-            "confidence": 1.0,
-            "conflict": None,
-            "writer_directive": "",
-            "partial_failure": False,
-        }
+        return _empty_merge_block()
     kinds = {str(x.get("kind") or "") for x in legs}
     has_parent = "parent_tool" in kinds
     has_cv = "claim_verification" in kinds
@@ -344,6 +402,14 @@ def _compute_merge(legs: list[dict[str, Any]]) -> dict[str, Any]:
     )
 
     writer_directive = _build_writer_directive(origin, conflict, partial_failure, legs)
+    managed = _aggregate_managed_report_from_legs(legs)
+    if not bool(managed.get("report_sections_present")):
+        writer_directive = _enrich_writer_directive_with_managed_fields(
+            writer_directive,
+            limitations=list(managed.get("limitations") or []),
+            next_checks=list(managed.get("next_checks") or []),
+            outcome_summary=str(managed.get("outcome_summary") or ""),
+        )
 
     completion_state = _infer_completion_state(legs, partial_failure=partial_failure)
 
@@ -354,6 +420,10 @@ def _compute_merge(legs: list[dict[str, Any]]) -> dict[str, Any]:
         "writer_directive": writer_directive,
         "partial_failure": partial_failure,
         "completion_state": completion_state,
+        "outcome_summary": managed.get("outcome_summary") or "",
+        "limitations": list(managed.get("limitations") or []),
+        "next_checks": list(managed.get("next_checks") or []),
+        "report_sections_present": bool(managed.get("report_sections_present")),
     }
 
 
@@ -373,6 +443,23 @@ def _infer_completion_state(legs: list[dict[str, Any]], *, partial_failure: bool
     if partial_failure:
         return "partial_failure_recoverable"
     return "any_specialist_payload"
+
+
+def _enrich_writer_directive_with_managed_fields(
+    directive: str,
+    *,
+    limitations: list[str],
+    next_checks: list[str],
+    outcome_summary: str,
+) -> str:
+    parts = [str(directive or "").strip()]
+    if outcome_summary:
+        parts.append(f"Subagent outcome (short): {outcome_summary[:400]}")
+    if limitations:
+        parts.append("Open limitations: " + "; ".join(limitations[:8]))
+    if next_checks:
+        parts.append("Next checks: " + "; ".join(next_checks[:8]))
+    return "\n".join(p for p in parts if p).strip()
 
 
 def _build_writer_directive(

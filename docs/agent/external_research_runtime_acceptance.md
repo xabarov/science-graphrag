@@ -26,6 +26,29 @@ Use this index to pick the correct checklist for the component you are validatin
 - Unit: `.venv/bin/pytest tests/agent/test_terminal_reason.py tests/agent/test_debug_events_telemetry.py tests/scripts/live_check/test_external_web_hot_topics_cv_audit.py -q`
 - After a live run, inspect `run_metadata.terminal_reason` and/or `run_metadata.final_answer_validation.terminal_reason`; optional `debug_events` row `type=terminal_outcome`.
 - Live CV audit reports per-case `terminal_reason` and `audit_diagnostics` (tool trace / Phoenix mismatch keys are **not** copied into runtime `terminal_reason`).
+- JSON/MD report includes `next_slice_gates` (minimum targets from the smolagents analysis doc). **Code acceptance is done**; numeric gate pass requires a fresh operator CV run on the target contour.
+
+### Phase 4 closeout (managed-subagent report contract)
+
+- Unit: `.venv/bin/pytest tests/agent/test_subagent_output_contract.py tests/agent/test_specialist_results_v3_and_claim_verification.py tests/agent/test_final_answer_validation.py -q`
+- Fork subagents (`corpus_explore`, `claim_verification`, `research_plan`) prompt for `ManagedReportProtocol` sections; `specialist_results_v3.merge` carries typed `limitations`, `next_checks`, and `outcome_summary`.
+- Writer/salvage/validation read typed merge fields first; `writer_directive` remains as backward-compatible synthesis text (no duplicate managed-report prose when `report_sections_present`).
+
+### Phase 5 closeout (controlled simplification)
+
+- Unit: `.venv/bin/pytest tests/agent/test_prompt_protocol_cards.py tests/agent/test_subagent_output_contract.py tests/agent/test_specialist_results_v3_and_claim_verification.py -q`
+- `final_answer` nudge strings live in `prompt_protocol_cards` (imported by `react_edges`).
+- Partial salvage uses `format_salvage_limitation_lines` for consistent RU/EN limitation lines.
+
+### Phase 6 closeout (toolcalling experiment lane — operator A/B)
+
+- Enable on API process only: `SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED=1` (default off).
+- Unit: `.venv/bin/pytest tests/agent/test_prompt_protocol_cards.py -q` (toolcalling protocol card when flag on).
+- A/B procedure (same matrix, same workspace):
+  1. Baseline run: flag off → `eval/results/external-web-hot-topics-cv-live-baseline.json`
+  2. Experiment run: flag on + restart API → `eval/results/external-web-hot-topics-cv-live-experiment.json`
+  3. Compare: `--compare-json eval/results/external-web-hot-topics-cv-live-baseline.json --lane-label experiment`
+- Decision: see [`phase6-toolcalling-experiment-decision-2026-05-17.md`](../analysis/phase6-toolcalling-experiment-decision-2026-05-17.md).
 
 ### CV hot-topics matrix (runtime / tool_trace / Phoenix)
 
@@ -34,12 +57,15 @@ export AGENT_LIVE_BASE=http://127.0.0.1:18787
 export AGENT_LIVE_WORKSPACE_ID=ws-pilot-od
 .venv/bin/python scripts/live_check/external_web_hot_topics_cv_audit.py \
   --out-json eval/results/external-web-hot-topics-cv-live-latest.json \
-  --out-md eval/results/external-web-hot-topics-cv-live-latest.md
+  --out-md eval/results/external-web-hot-topics-cv-live-latest.md \
+  --lane-label baseline
 ```
 
-Report includes per-case `verdicts` (runtime / tool_trace / phoenix), optional `final_answer_validation`, `terminal_reason`, and `audit_diagnostics`. Compare `coverage` block (including `terminal_reason_distribution`) to baseline in `eval/results/external-web-hot-topics-cv-live-2026-05-16.md`.
+Report includes `lane_label`, per-case `verdicts` (runtime / tool_trace / phoenix), optional `final_answer_validation`, `terminal_reason`, `audit_diagnostics`, and `next_slice_gates`. Compare `coverage` block (including `terminal_reason_distribution`) to baseline in `eval/results/external-web-hot-topics-cv-live-2026-05-16.md` or a prior `*-latest.json` via `--compare-json`.
 
-**Next-slice targets** (from smolagents analysis doc, not yet required for Phase 2 code acceptance): `runtime_ok_cases >= 6/10`, `tool_trace_ok_cases >= 6/10`, `phoenix_ok_cases >= 5/10`, `final_answer` tool coverage `>= 8/10`, generic fallback with evidence `0/10`.
+**Next-slice targets** (Phase 3 operator evidence; evaluated automatically in CV report `next_slice_gates`): `runtime_ok_cases >= 6/10`, `tool_trace_ok_cases >= 6/10`, `phoenix_ok_cases >= 5/10`, `with_final_answer >= 8/10`, `generic_fallback_with_evidence_cases == 0`.
+
+**2026-05-17 evidence:** conservative baseline `eval/results/external-web-hot-topics-cv-live-baseline.json` → `all_ok=false` (5/10 cases timed out at 300s). Toolcalling experiment lane (`SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED=1`) → `eval/results/external-web-hot-topics-cv-live-experiment.json` with `all_ok=true` (7/10 passed, 10/10 completed). Historical `eval/results/external-web-hot-topics-cv-live-2026-05-16.md` predates Phase 3–6 slices.
 
 ## Acceptance map
 

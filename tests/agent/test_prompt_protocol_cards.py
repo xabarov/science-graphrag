@@ -6,8 +6,13 @@ from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
     SYSTEM_PROMPT as RETRIEVAL_SYSTEM_PROMPT,
 )
 from science_graphrag.agent.graph.nodes.writer_agent import _system_prompt_for_mode
+from science_graphrag.agent.graph.react_edges import FINAL_ANSWER_NUDGE_TEXT
 from science_graphrag.agent.prompt_protocol_cards import (
     EXTERNAL_RESEARCH_PROTOCOL_HEADER,
+)
+from science_graphrag.agent.prompt_protocol_cards import FINAL_ANSWER_NUDGE_TEXT as NUDGE_FROM_CARDS
+from science_graphrag.agent.prompt_protocol_cards import (
+    TOOLCALLING_EXTERNAL_RESEARCH_PROTOCOL_HEADER,
     WRITER_TERMINAL_PROTOCOL_HEADER,
     build_retrieval_system_prompt,
     build_writer_terminal_protocol_block,
@@ -23,6 +28,19 @@ def test_retrieval_prompt_includes_external_research_protocol_header() -> None:
     prompt = build_retrieval_system_prompt()
     assert EXTERNAL_RESEARCH_PROTOCOL_HEADER in prompt
     assert prompt == RETRIEVAL_SYSTEM_PROMPT
+
+
+def test_retrieval_toolcalling_experiment_protocol_when_flag_on() -> None:
+    st = Settings.model_construct(agent_external_research_toolcalling_experiment_enabled=True)
+    prompt = build_retrieval_system_prompt(st)
+    assert TOOLCALLING_EXTERNAL_RESEARCH_PROTOCOL_HEADER in prompt
+    assert EXTERNAL_RESEARCH_PROTOCOL_HEADER not in prompt
+    assert "exactly one tool Action" in prompt
+
+
+def test_final_answer_nudge_text_centralized_in_protocol_cards() -> None:
+    assert FINAL_ANSWER_NUDGE_TEXT == NUDGE_FROM_CARDS
+    assert "final_answer" in FINAL_ANSWER_NUDGE_TEXT
 
 
 def test_retrieval_protocol_web_scholar_pdf_clauses() -> None:

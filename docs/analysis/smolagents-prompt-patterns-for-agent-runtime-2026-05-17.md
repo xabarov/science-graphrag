@@ -1,13 +1,13 @@
 # Smolagents Prompt Patterns for Agent Runtime
 
-**Doc status:** `active` (Phase 0 complete; Phase 1 shipped + closeout aligned; Phase 2 shipped diagnostics-only + enforcement-readiness gates; Phase 3 shipped runtime terminal_reason + live-audit reporting; Phases 4–6 are implementation backlog)  
+**Doc status:** `active` (Phases 0–5 shipped; Phase 6 toolcalling experiment lane shipped behind flag; 2026-05-17 A/B evidence saved; next step = controlled re-baseline before default promotion)  
 **Date:** 2026-05-17  
 **Checked on:** 2026-05-17  
 **Owner:** agent runtime / external research  
 **Reviewers:** operator lane owner for trace-review + external-research acceptance  
 **Scope:** prompt/tool/final-answer discipline for `science-graphrag` agent runtime.  
 **Phase scope:** Phase 0 = source-backed architecture note + instrumentation alignment only (no runtime code changes).  
-**Read hint:** architecture note + implementation roadmap; pair with [external-research-tools-workplan-2026-05-15.md](./external-research-tools-workplan-2026-05-15.md) and live-audit artifacts under `eval/results/`.
+**Read hint:** architecture note + implementation roadmap; pair with [external-research-tools-workplan-2026-05-15.md](./external-research-tools-workplan-2026-05-15.md), the Phase 6 [decision memo](./phase6-toolcalling-experiment-decision-2026-05-17.md), and the live-audit artifacts linked below.
 
 ## Relationship to existing docs
 
@@ -75,7 +75,9 @@ Our current work should therefore not be framed as "replace deterministic code w
 | ReAct paper | arXiv `2210.03629v3` | 2026-05-17 | conceptual reason/action/observation loop |
 | OpenAI Agents docs | live "Running agents" guide | 2026-05-17 | production loop, handoff/final-answer stopping, state/resume/failure framing |
 | LangGraph docs | live agents documentation | 2026-05-17 | explicit graph state, tool calls, graph-level control flow |
-| Live baseline | `eval/results/external-web-hot-topics-cv-live-2026-05-16.md` (+ harness JSON when present) | 2026-05-16 run | observed failure classes and metric split |
+| Live baseline | [`external-web-hot-topics-cv-live-2026-05-16.md`](../../eval/results/external-web-hot-topics-cv-live-2026-05-16.md) (+ harness JSON when present) | 2026-05-16 run | observed failure classes and metric split |
+| Live A/B baseline | [`external-web-hot-topics-cv-live-baseline.md`](../../eval/results/external-web-hot-topics-cv-live-baseline.md) / [`json`](../../eval/results/external-web-hot-topics-cv-live-baseline.json) / [`phoenix failures`](../../eval/results/external-web-hot-topics-cv-live-baseline_phoenix_failures.jsonl) | 2026-05-17 run | conservative lane after Phases 1–5; `next_slice_gates.all_ok=false` |
+| Live A/B experiment | [`external-web-hot-topics-cv-live-experiment.md`](../../eval/results/external-web-hot-topics-cv-live-experiment.md) / [`json`](../../eval/results/external-web-hot-topics-cv-live-experiment.json) / [`phoenix failures`](../../eval/results/external-web-hot-topics-cv-live-experiment_phoenix_failures.jsonl) | 2026-05-17 run | Phase 6 flagged toolcalling lane; `next_slice_gates.all_ok=true` |
 
 ### Revalidation policy
 
@@ -110,6 +112,27 @@ The most important signal from this baseline is not only the pass rate. It is th
 | Phoenix-ok cases | 1 / 10 |
 
 This means the remaining problem is multi-layered: tool access improved, but terminalization, budget behavior, route handoff, and Phoenix alignment are still unstable.
+
+## Current A/B Evidence (2026-05-17)
+
+The Phase 6 operator run compared the conservative baseline lane against the flagged toolcalling protocol lane on the same CV hot-topics matrix and workspace (`ws-pilot-od`).
+
+| Lane | Artifact | Passed | runtime_ok | tool_trace_ok | phoenix_ok | final_answer | next_slice_gates |
+|---|---|---:|---:|---:|---:|---:|---|
+| Conservative baseline | [`md`](../../eval/results/external-web-hot-topics-cv-live-baseline.md) / [`json`](../../eval/results/external-web-hot-topics-cv-live-baseline.json) | 4 / 10 | 5 | 5 | 4 | 5 | `all_ok=false` |
+| Toolcalling experiment (`SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED=1`) | [`md`](../../eval/results/external-web-hot-topics-cv-live-experiment.md) / [`json`](../../eval/results/external-web-hot-topics-cv-live-experiment.json) | 7 / 10 | 10 | 10 | 7 | 10 | `all_ok=true` |
+
+Sidecars:
+
+- Baseline Phoenix failures: [`external-web-hot-topics-cv-live-baseline_phoenix_failures.jsonl`](../../eval/results/external-web-hot-topics-cv-live-baseline_phoenix_failures.jsonl)
+- Experiment Phoenix failures: [`external-web-hot-topics-cv-live-experiment_phoenix_failures.jsonl`](../../eval/results/external-web-hot-topics-cv-live-experiment_phoenix_failures.jsonl)
+- Latest alias after the run: [`external-web-hot-topics-cv-live-latest.md`](../../eval/results/external-web-hot-topics-cv-live-latest.md) / [`json`](../../eval/results/external-web-hot-topics-cv-live-latest.json)
+
+Interpretation:
+
+- The experiment is a strong positive signal: it completed all 10 cases, hit all next-slice gates, and improved runtime/tool/final-answer coverage.
+- The baseline comparison is not clean enough for immediate default promotion because 5 baseline cases hit `ReadTimeout` at 300s. Treat this as "promote candidate", not "flip default today".
+- Production/default runtime should remain the conservative path until a controlled re-baseline reduces the timeout confound.
 
 ## Smolagents Prompt Inventory
 
@@ -583,9 +606,9 @@ Acceptance:
 - [x] coordinator-gate-only fallback distinguishable (`coordinator_gate_fallback`) from budget/validation outcomes;
 - [x] budget pressure with evidence attempts partial synthesis before generic fallback (not only under enforcement);
 - [x] live audit reports `terminal_reason` + `audit_diagnostics` alongside runtime/tool_trace/phoenix verdicts;
-- [ ] numeric next-slice gates on CV matrix (`runtime_ok_cases >= 6/10`, …) — operator re-run required.
+- [ ] numeric next-slice gates on CV matrix (`runtime_ok_cases >= 6/10`, …) — **2026-05-17 baseline rerun** (`eval/results/external-web-hot-topics-cv-live-baseline.json`): `all_ok=false` (5/5/4/5 vs 6/6/5/8); 5× `ReadTimeout` on long cases — see fail-buckets below.
 
-### Phase 4 (subagent contract simplification)
+### Phase 4 (subagent contract simplification) — **shipped (typed merge + parser)**
 
 - Align forked subagent output with a managed-agent report contract.
 - Prefer typed merge fields over free-form prompt prose.
@@ -599,40 +622,70 @@ Concrete files:
 
 Acceptance:
 
-- subagent report sections are documented and testable;
-- `specialist_results_v3.merge` carries limitations and next-checks in typed metadata;
-- writer no longer needs to infer critical limitations from arbitrary prose only.
+- [x] subagent report sections are documented and testable (`ManagedReportProtocol` in `subagent_output_contract.py`, `tests/agent/test_subagent_output_contract.py`);
+- [x] `specialist_results_v3.merge` carries `limitations`, `next_checks`, `outcome_summary`, `report_sections_present` in typed metadata;
+- [x] writer/salvage/validation consume typed merge fields; `writer_directive` remains backward-compatible synthesis text.
 
-### Phase 5 (controlled simplification)
+### Phase 5 (controlled simplification) — **shipped (dedup slice)**
 
-- Identify deterministic branches now duplicated by protocol cards.
-- Remove only branches with stable regression coverage.
-
-Candidate review areas:
-
-- duplicate prompt prose vs `web_evidence_policy` writer directives;
-- repeated final-answer nudging/fallback paths across writer and single-agent ReAct;
-- duplicated PDF limitation wording between retrieval prompt and evidence policy;
-- external-tool sequencing rules that can move from scattered prose into a named protocol block while the code guard remains.
+- Centralized `final_answer` nudge copy in [`prompt_protocol_cards.py`](../../science_graphrag/agent/prompt_protocol_cards.py) (consumed by `react_edges.py`).
+- Typed managed-report fields no longer duplicated into `writer_directive` when `report_sections_present` (see `specialist_results_v3._compute_merge`).
+- Salvage partial answers use `format_salvage_limitation_lines` so typed `limitations` / `next_checks` are not re-labeled as duplicate prose.
 
 Acceptance:
 
-- every removed branch has a before/after test proving unchanged behavior;
-- no safety, SSRF, PDF, denylist, or Phoenix invariant is moved from code to prompt;
-- simplification reduces duplicated orchestration rather than hiding it in prompt text.
+- [x] nudge text single source + contract test (`tests/agent/test_prompt_protocol_cards.py`);
+- [x] managed-report directive dedup + salvage formatter tests;
+- [x] safety/SSRF/PDF/Phoenix invariants unchanged (code-owned).
 
-### Phase 6 (optional experiment)
+### Phase 6 (optional experiment) — **shipped (flagged lane; A/B evidence positive)**
 
-- Prototype isolated `toolcalling_agent` style loop for one external-research lane.
-- Compare on same CV hot-topics matrix and Phoenix validator.
-- Do not make it the default runtime without A/B evidence.
+- Flag: `SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED` (default off).
+- Retrieval specialist swaps to `## ToolcallingExternalResearchProtocol` via `build_retrieval_system_prompt(settings)`.
+- CV harness: `--lane-label` + `--compare-json` on `scripts/live_check/external_web_hot_topics_cv_audit.py`.
+- Decision memo: [`phase6-toolcalling-experiment-decision-2026-05-17.md`](./phase6-toolcalling-experiment-decision-2026-05-17.md).
 
 Acceptance:
 
-- experiment is behind a feature flag;
-- it reuses existing tool implementations and safety wrappers;
-- it reports the same runtime/tool/Phoenix verdict schema as the main lane;
-- it is deleted or kept isolated if it does not beat the conservative path.
+- [x] experiment behind feature flag; reuses existing tools/safety wrappers;
+- [x] same runtime/tool/Phoenix verdict schema as main lane;
+- [x] operator A/B on CV matrix (2026-05-17): experiment lane `next_slice_gates.all_ok=true` vs baseline `false` (baseline had 5× ReadTimeout); see [`phase6-toolcalling-experiment-decision-2026-05-17.md`](./phase6-toolcalling-experiment-decision-2026-05-17.md). Default runtime remains conservative path.
+
+Decision:
+
+- Keep the experiment lane available behind `SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED=1`.
+- Do **not** delete it: it beat the conservative lane on this matrix.
+- Do **not** flip it default-on yet: baseline had 5× `ReadTimeout`, so the comparison needs one cleaner confirmation run.
+
+## Operator fail-buckets (baseline CV 2026-05-17)
+
+Fresh run on healthy contour (`eval/results/external-web-hot-topics-cv-live-baseline.md`):
+
+| Bucket | Count | Typical signal | Follow-up module |
+|---|---:|---|---|
+| Request timeout | 5 | `ReadTimeout`, empty tool trace | `agent_step_timeout` / CV `--timeout`; consider narrower cases |
+| Phoenix span mismatch | 1 | `missing_span_but_tool_trace_present` | observability / `final_answer` span export |
+| Next-slice gate miss (completed cases) | 5 ok cases | runtime/tool_trace/phoenix short of 6/6/5/8 | Phase 5+ routing/budget, not Phase 4 merge |
+
+`generic_fallback_with_evidence_cases == 0` — Phase 2/4 salvage path held on completed runs.
+
+## Next Decision
+
+Recommended next step: run a **controlled re-baseline** before promoting Phase 6.
+
+1. Re-run conservative baseline with a less confounded setup:
+   - same matrix/workspace;
+   - `--timeout 600` or split the 10-case matrix into smaller batches;
+   - API stable contour (`docker-compose.live-check.yml`);
+   - no repo file edits during the run.
+2. Re-run the toolcalling experiment under the same conditions.
+3. Promote `agent_external_research_toolcalling_experiment_enabled` from operator-only to default-on only if:
+   - experiment still passes `next_slice_gates.all_ok`;
+   - experiment is not worse on `phoenix_ok_cases`;
+   - `generic_fallback_with_evidence_cases` remains `0`;
+   - baseline timeouts no longer explain the delta.
+
+If the confirmation run matches the 2026-05-17 signal, the practical next implementation slice is small: rename the flag from "experiment" to a stable external-research protocol setting, keep an emergency disable flag for one release, and update operator docs to treat the toolcalling protocol as the default external-research prompt path.
 
 ## Acceptance Checks
 

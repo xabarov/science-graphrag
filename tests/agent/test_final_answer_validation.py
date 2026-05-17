@@ -109,6 +109,21 @@ def test_validate_pdf_unavailable_requires_limitation_language() -> None:
     assert REASON_PDF_UNAVAILABLE_WITHOUT_LIMITATION in verdict["reasons"]
 
 
+def test_typed_merge_limitations_count_as_limitation_present() -> None:
+    verdict = validate_final_answer(
+        answer="Answer without limitation keywords in prose.",
+        citations=[{"work_id": "w1", "evidence_mode": "metadata_only"}],
+        specialist_results_v3={
+            "merge": {
+                "limitations": ["metadata_only sources only"],
+                "completion_state": "partial",
+            }
+        },
+    )
+    assert verdict["limitation_present"] is True
+    assert verdict["status"] in {"ok", "warn"}
+
+
 def test_evidence_present_from_specialist_results_v3() -> None:
     assert evidence_present(
         citations=[],

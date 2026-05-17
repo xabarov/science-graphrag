@@ -100,6 +100,29 @@ def test_terminal_outcome_emits_terminal_reason() -> None:
     assert tel.get("terminal_reason") == "partial_final_answer"
 
 
+def test_terminal_outcome_overrides_validation_terminal_reason() -> None:
+    """``terminal_outcome`` is emitted after validation and wins for telemetry."""
+    evs = [
+        {
+            "type": "final_answer_validation",
+            "verdict": {
+                "status": "ok",
+                "terminal_reason": "final_answer_ok",
+            },
+        },
+        {
+            "type": "terminal_outcome",
+            "terminal_reason": "partial_final_answer",
+            "validation_status": "warn",
+        },
+    ]
+    tel = extract_runtime_telemetry_from_debug_events(evs)
+    assert tel.get("terminal_reason") == "partial_final_answer"
+    fav = tel.get("final_answer_validation")
+    assert isinstance(fav, dict)
+    assert fav.get("terminal_reason") == "final_answer_ok"
+
+
 def test_final_answer_validation_telemetry_last_wins() -> None:
     evs = [
         {

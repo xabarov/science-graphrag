@@ -5,8 +5,11 @@ Stable section headers are part of the contract — prompt-contract tests assert
 
 from __future__ import annotations
 
+from science_graphrag.config import Settings
+
 # Stable markers for tests and log review (do not rename casually).
 EXTERNAL_RESEARCH_PROTOCOL_HEADER: str = "## ExternalResearchProtocol"
+TOOLCALLING_EXTERNAL_RESEARCH_PROTOCOL_HEADER: str = "## ToolcallingExternalResearchProtocol"
 WRITER_TERMINAL_PROTOCOL_HEADER: str = "## WriterTerminalProtocol"
 
 EXTERNAL_RESEARCH_PROTOCOL_CARD: str = f"""{EXTERNAL_RESEARCH_PROTOCOL_HEADER}
@@ -19,6 +22,29 @@ Must-not:
 - Do not finish on metadata-only evidence when safe fetch paths exist.
 - Do not call final_answer (return tool outputs only).
 - Do not treat Crossref metadata alone as proof that an official release does not exist."""
+
+TOOLCALLING_EXTERNAL_RESEARCH_PROTOCOL_CARD: str = f"""{TOOLCALLING_EXTERNAL_RESEARCH_PROTOCOL_HEADER}
+Action loop (external research experiment — smolagents toolcalling_agent style):
+- Every step: emit exactly one tool Action; observe ToolMessage; repeat until evidence is sufficient.
+- Web intent: web_search then web_fetch on at least one fetchable HTTPS URL from results.
+- Scholar intent: semantic_scholar_search and/or semantic_scholar_paper when relevant.
+- PDF intent: read_external_pdf on a safe OA URL when available; otherwise state pdf_unavailable.
+Must-not:
+- Do not finish on metadata-only evidence when safe fetch paths exist.
+- Do not call final_answer (return tool outputs only).
+- Do not repeat an identical tool call with the same arguments."""
+
+# Shared with react_edges (Phase 5 dedup).
+FINAL_ANSWER_NUDGE_TEXT: str = (
+    "You must finish this turn by calling the ``final_answer`` tool exactly once. "
+    "Put your user-facing summary into ``final_answer.answer`` (and citations if any); "
+    "do not call other research tools unless you must fix a factual gap."
+)
+FINAL_ANSWER_NUDGE_TEXT_SECOND: str = (
+    "Second reminder: the turn is incomplete without a successful ``final_answer`` tool call. "
+    "Call ``final_answer`` once with a complete markdown ``answer`` summarizing evidence you "
+    "already gathered; do not add more catalog research unless you must fix a factual error."
+)
 
 WRITER_TERMINAL_PROTOCOL_CARD: str = f"""{WRITER_TERMINAL_PROTOCOL_HEADER}
 Completion contract:
@@ -75,9 +101,18 @@ WRITER_BASE_SYSTEM_PROMPT: str = (
 )
 
 
-def build_retrieval_system_prompt() -> str:
+def _external_research_protocol_card(settings: Settings | None) -> str:
+    if settings is not None and bool(
+        getattr(settings, "agent_external_research_toolcalling_experiment_enabled", False)
+    ):
+        return TOOLCALLING_EXTERNAL_RESEARCH_PROTOCOL_CARD
+    return EXTERNAL_RESEARCH_PROTOCOL_CARD
+
+
+def build_retrieval_system_prompt(settings: Settings | None = None) -> str:
     """Assemble retrieval specialist system prompt with external-research protocol card."""
-    return f"{RETRIEVAL_BASE_SYSTEM_PROMPT}\n\n{EXTERNAL_RESEARCH_PROTOCOL_CARD}"
+    protocol = _external_research_protocol_card(settings)
+    return f"{RETRIEVAL_BASE_SYSTEM_PROMPT}\n\n{protocol}"
 
 
 def build_writer_terminal_protocol_block() -> str:
