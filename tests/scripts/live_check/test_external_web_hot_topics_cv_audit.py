@@ -16,6 +16,8 @@ assert _SPEC.loader is not None
 _SPEC.loader.exec_module(_MOD)
 
 _evaluate_verdicts = _MOD.evaluate_case_verdicts
+_extract_terminal_reason = _MOD.extract_terminal_reason_from_run_metadata
+_build_audit_diagnostics = _MOD.build_audit_diagnostics
 
 
 def test_verdicts_tool_trace_final_answer_but_missing_phoenix_span() -> None:
@@ -44,6 +46,24 @@ def test_verdicts_tool_trace_final_answer_but_missing_phoenix_span() -> None:
     assert verdicts["tool_trace"]["ok"] is True
     assert verdicts["phoenix"]["ok"] is False
     assert "missing_span_but_tool_trace_present" in verdicts["phoenix"]["issues"]
+
+
+def test_extract_terminal_reason_prefers_top_level_field() -> None:
+    tr = _extract_terminal_reason(
+        {
+            "terminal_reason": "partial_final_answer",
+            "final_answer_validation": {"terminal_reason": "final_answer_ok"},
+        }
+    )
+    assert tr == "partial_final_answer"
+
+
+def test_build_audit_diagnostics_phoenix_mismatch() -> None:
+    diag = _build_audit_diagnostics(
+        tool_flags={"final_answer": True},
+        span_names=["chat", "tool.web_fetch"],
+    )
+    assert diag.get("phoenix_missing_final_answer_span") == "missing_span_but_tool_trace_present"
 
 
 def test_verdicts_runtime_fallback_detected_even_with_http_200() -> None:

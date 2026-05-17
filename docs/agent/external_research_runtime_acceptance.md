@@ -5,7 +5,7 @@
 Single entrypoint for operator acceptance checks across external research surfaces.
 Use this index to pick the correct checklist for the component you are validating.
 
-**Architecture note (prompt / terminal / observability):** [`smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md`](../analysis/smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md) — defines the three verdict surfaces (runtime, tool trace, Phoenix), a fourth **diagnostic** surface (`run_metadata.final_answer_validation` from Phase 2), planned `terminal_reason` vocabulary (Phase 3+), and live-audit gates.
+**Architecture note (prompt / terminal / observability):** [`smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md`](../analysis/smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md) — defines the three verdict surfaces (runtime, tool trace, Phoenix), a fourth **diagnostic** surface (`run_metadata.final_answer_validation` from Phase 2), runtime `terminal_reason` (Phase 3), and live-audit gates.
 
 ## Smolagents Phase 1 / Phase 2 operator gates
 
@@ -19,6 +19,13 @@ Use this index to pick the correct checklist for the component you are validatin
 - Unit: `.venv/bin/pytest tests/agent/test_final_answer_validation.py tests/agent/test_writer_agent_tool_guard.py -q`
 - After a live run, inspect sync JSON or SSE `run_metadata.final_answer_validation` (canonical: recorded once per turn in `runtime.py` after citation hydration) and/or `debug_events` rows with `type=final_answer_validation`.
 - Enforcement stays off unless `SCIENCE_GRAPHRAG_AGENT_FINAL_ANSWER_VALIDATION_ENFORCEMENT_ENABLED=1` (operator-only; not default CI).
+- Before enabling enforcement: CV matrix must meet next-slice targets and `generic_fallback_with_evidence_cases == 0` (see `ENFORCEMENT_READINESS_GATES` in `final_answer_validation.py`).
+
+### Phase 3 closeout (terminal_reason + budget partial salvage)
+
+- Unit: `.venv/bin/pytest tests/agent/test_terminal_reason.py tests/agent/test_debug_events_telemetry.py tests/scripts/live_check/test_external_web_hot_topics_cv_audit.py -q`
+- After a live run, inspect `run_metadata.terminal_reason` and/or `run_metadata.final_answer_validation.terminal_reason`; optional `debug_events` row `type=terminal_outcome`.
+- Live CV audit reports per-case `terminal_reason` and `audit_diagnostics` (tool trace / Phoenix mismatch keys are **not** copied into runtime `terminal_reason`).
 
 ### CV hot-topics matrix (runtime / tool_trace / Phoenix)
 
@@ -30,7 +37,7 @@ export AGENT_LIVE_WORKSPACE_ID=ws-pilot-od
   --out-md eval/results/external-web-hot-topics-cv-live-latest.md
 ```
 
-Report includes per-case `verdicts` (runtime / tool_trace / phoenix) and optional `final_answer_validation` when present in `run_metadata`. Compare `coverage` block to baseline in `eval/results/external-web-hot-topics-cv-live-2026-05-16.md`.
+Report includes per-case `verdicts` (runtime / tool_trace / phoenix), optional `final_answer_validation`, `terminal_reason`, and `audit_diagnostics`. Compare `coverage` block (including `terminal_reason_distribution`) to baseline in `eval/results/external-web-hot-topics-cv-live-2026-05-16.md`.
 
 **Next-slice targets** (from smolagents analysis doc, not yet required for Phase 2 code acceptance): `runtime_ok_cases >= 6/10`, `tool_trace_ok_cases >= 6/10`, `phoenix_ok_cases >= 5/10`, `final_answer` tool coverage `>= 8/10`, generic fallback with evidence `0/10`.
 

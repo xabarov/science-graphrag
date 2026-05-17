@@ -17,6 +17,13 @@ ValidationStatus = Literal["ok", "warn", "fail"]
 EnforcementMode = Literal["diagnostic", "enforced"]
 AnswerKind = Literal["complete", "partial", "fallback", "empty"]
 
+# Operator gates before flipping ``agent_final_answer_validation_enforcement_enabled``.
+ENFORCEMENT_READINESS_GATES: tuple[str, ...] = (
+    "generic_fallback_with_evidence_cases == 0 on external CV matrix",
+    "final_answer_validation present on all matrix cases",
+    "no false reject on accepted partial_final_answer / budget_exhausted_with_partial",
+)
+
 REASON_EMPTY_ANSWER = "empty_answer"
 REASON_GENERIC_FALLBACK_WITH_EVIDENCE = "generic_fallback_with_evidence"
 REASON_METADATA_ONLY_WITHOUT_LIMITATION = "metadata_only_without_limitation"
@@ -227,7 +234,7 @@ def validate_final_answer(
     return {
         "status": status,
         "reasons": reasons,
-        "terminal_reason": None,  # Phase 3 vocabulary
+        "terminal_reason": None,
         "evidence_present": ev_present,
         "citations_present": bool(cits),
         "citation_count": len(cits),

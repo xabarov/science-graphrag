@@ -88,6 +88,18 @@ def test_tool_use_summary_batch_emits_side_llm_cache_ratio_avg() -> None:
     assert tel.get("tool_use_summary_side_llm_cache_read_ratio_avg") == 0.4
 
 
+def test_terminal_outcome_emits_terminal_reason() -> None:
+    evs = [
+        {
+            "type": "terminal_outcome",
+            "terminal_reason": "partial_final_answer",
+            "validation_status": "warn",
+        }
+    ]
+    tel = extract_runtime_telemetry_from_debug_events(evs)
+    assert tel.get("terminal_reason") == "partial_final_answer"
+
+
 def test_final_answer_validation_telemetry_last_wins() -> None:
     evs = [
         {

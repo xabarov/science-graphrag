@@ -1,6 +1,6 @@
 # Smolagents Prompt Patterns for Agent Runtime
 
-**Doc status:** `active` (Phase 0 complete; Phase 1 shipped + closeout aligned; Phase 2 shipped in diagnostics-only mode; Phases 3–6 are implementation backlog)  
+**Doc status:** `active` (Phase 0 complete; Phase 1 shipped + closeout aligned; Phase 2 shipped diagnostics-only + enforcement-readiness gates; Phase 3 shipped runtime terminal_reason + live-audit reporting; Phases 4–6 are implementation backlog)  
 **Date:** 2026-05-17  
 **Checked on:** 2026-05-17  
 **Owner:** agent runtime / external research  
@@ -546,10 +546,11 @@ Acceptance:
 - [x] diagnostics mode records verdicts via `debug_events` type `final_answer_validation` → `run_metadata.final_answer_validation` without changing user-visible behavior by default;
 - [x] tests in `tests/agent/test_final_answer_validation.py` and writer integration tests;
 - [x] enforcement flag `agent_final_answer_validation_enforcement_enabled` defaults **off** until live evidence improves.
+- [x] enforcement-readiness gates documented in code (`ENFORCEMENT_READINESS_GATES` in `final_answer_validation.py`); flip enforcement only after CV matrix meets next-slice targets.
 
 Code anchors: [`final_answer_validation.py`](../../science_graphrag/agent/final_answer_validation.py), [`runtime.py`](../../science_graphrag/agent/runtime.py) (canonical per-turn verdict after citation hydration), [`runtime_answer_salvage.py`](../../science_graphrag/agent/runtime_answer_salvage.py) (enforcement partial synthesis), [`debug_events_telemetry.py`](../../science_graphrag/agent/debug_events_telemetry.py).
 
-### Phase 3 (loop and handoff discipline)
+### Phase 3 (loop and handoff discipline) — **shipped (runtime metadata + audit split)**
 
 - Add explicit terminal reason vocabulary.
 - Ensure budget-exhaustion paths synthesize partial answers when evidence exists.
@@ -563,23 +564,26 @@ Initial terminal reason vocabulary:
 - `budget_exhausted_without_evidence`
 - `coordinator_gate_fallback`
 - `validation_failed`
-- `tool_trace_missing_final_answer`
-- `phoenix_missing_final_answer_span`
+- `tool_trace_missing_final_answer` *(audit-only; live harness `audit_diagnostics`, not runtime `terminal_reason`)*
+- `phoenix_missing_final_answer_span` *(audit-only; live harness `audit_diagnostics`, not runtime `terminal_reason`)*
 
 Concrete files:
 
+- [`science_graphrag/agent/terminal_reason.py`](../../science_graphrag/agent/terminal_reason.py)
+- [`science_graphrag/agent/runtime.py`](../../science_graphrag/agent/runtime.py)
+- [`science_graphrag/agent/debug_events_telemetry.py`](../../science_graphrag/agent/debug_events_telemetry.py)
 - [`science_graphrag/agent/coordination/route_planner.py`](../../science_graphrag/agent/coordination/route_planner.py)
 - [`science_graphrag/agent/graph/supervisor_decisions.py`](../../science_graphrag/agent/graph/supervisor_decisions.py)
 - [`science_graphrag/agent/graph/react_edges.py`](../../science_graphrag/agent/graph/react_edges.py)
-- [`science_graphrag/agent/graph/nodes/writer_agent.py`](../../science_graphrag/agent/graph/nodes/writer_agent.py)
 - `scripts/live_check/external_web_hot_topics_cv_audit.py`
 
 Acceptance:
 
-- terminal reason is present in run/debug metadata for all external-research turns;
-- coordinator-gate-only fallback cases become distinguishable from tool/runtime failures;
-- budget exhaustion with evidence attempts partial synthesis before generic fallback;
-- Phoenix/live audit reports terminal reason alongside runtime/tool/Phoenix verdicts.
+- [x] `terminal_reason` resolved in `runtime.py` and emitted via `run_metadata.terminal_reason`, nested `final_answer_validation.terminal_reason`, and `debug_events` (`terminal_outcome`);
+- [x] coordinator-gate-only fallback distinguishable (`coordinator_gate_fallback`) from budget/validation outcomes;
+- [x] budget pressure with evidence attempts partial synthesis before generic fallback (not only under enforcement);
+- [x] live audit reports `terminal_reason` + `audit_diagnostics` alongside runtime/tool_trace/phoenix verdicts;
+- [ ] numeric next-slice gates on CV matrix (`runtime_ok_cases >= 6/10`, …) — operator re-run required.
 
 ### Phase 4 (subagent contract simplification)
 
@@ -677,7 +681,7 @@ Acceptance:
 
 ## Instrumentation Alignment Appendix
 
-Phase 0 defines vocabulary only. Emitting these fields in production is Phase 3+ work.
+Phase 0 defined vocabulary; Phase 3 emits runtime `terminal_reason` in production metadata. Audit-only mismatch keys remain in live harness `audit_diagnostics`.
 
 ### Three verdict surfaces (keep independent)
 
@@ -689,7 +693,7 @@ Phase 0 defines vocabulary only. Emitting these fields in production is Phase 3+
 
 Live harness reference: `scripts/live_check/external_web_hot_topics_cv_audit.py` (reports `runtime` / `tool_trace` / `phoenix` per case).
 
-### `terminal_reason` (planned run/debug metadata)
+### `terminal_reason` (runtime-owned run/debug metadata)
 
 | Value | Meaning | Should correlate with |
 |---|---|---|
@@ -699,14 +703,20 @@ Live harness reference: `scripts/live_check/external_web_hot_topics_cv_audit.py`
 | `budget_exhausted_without_evidence` | Budget cutoff, no grounded salvage | coordinator or early stop |
 | `coordinator_gate_fallback` | No specialist leg; gate-only path | tool trace stops at `coordinator_gate` |
 | `validation_failed` | `final_answer_checks` analogue rejected payload | diagnostics before enforcement |
-| `tool_trace_missing_final_answer` | Answer text without terminal tool | tool trace verdict fail |
-| `phoenix_missing_final_answer_span` | Trace claims final answer, span missing | Phoenix verdict fail |
 
-### Planned field placement (alignment target)
+Audit-only (live harness `audit_diagnostics`, not `terminal_reason`):
+
+| Key | Meaning |
+|---|---|
+| `tool_trace_missing_final_answer` | No `final_answer` tool in trace |
+| `phoenix_missing_final_answer_span` | Tool trace vs Phoenix span mismatch |
+
+### Field placement (current)
 
 | Field / concept | Run/debug metadata | Tool trace / SSE | Phoenix / live audit |
 |---|---|---|---|
-| `terminal_reason` | yes | optional debug event | optional span attribute |
+| `terminal_reason` | yes (`extract_runtime_telemetry_from_debug_events`) | `debug_events` `terminal_outcome` | reported in CV audit JSON/MD |
+| `audit_diagnostics` | no (harness-computed) | no | per-case in CV audit |
 | `final_answer_validation` | diagnostics JSON | no | no |
 | `budget_stop_reasons` | already partially (`agent_response_budget_cutoff`) | yes | compare in trace-review |
 | Per-case verdicts | — | — | `runtime_ok`, `tool_trace_ok`, `phoenix_ok` |

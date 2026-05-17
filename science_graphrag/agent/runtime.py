@@ -21,8 +21,16 @@ from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.deadline_salvage import invoke_agent_graph_with_deadline_partial
 from science_graphrag.agent.final_answer_validation import (
     EnforcementMode,
+    evidence_present,
     is_generic_fallback_answer,
     maybe_append_final_answer_validation_event,
+)
+from science_graphrag.agent.terminal_reason import (
+    attach_terminal_reason_to_verdict,
+    budget_pressure_detected,
+    compute_audit_diagnostics,
+    maybe_append_terminal_outcome_event,
+    resolve_terminal_reason,
 )
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
@@ -385,13 +393,34 @@ class RetrievalAgent:
                 replace_existing=refresh,
             )
 
-        validation_verdict = _record_validation(refresh=True)
-        if (
-            enforcement_mode == "enforced"
-            and not validation_verdict.get("user_visible_answer_allowed")
-            and is_generic_fallback_answer(str(answer or ""))
-            and validation_verdict.get("evidence_present")
-        ):
+        raw_routing_early = final_state.get("routing_log")
+        routing_log_early: list[dict[str, Any]] = (
+            [x for x in raw_routing_early if isinstance(x, dict)]
+            if isinstance(raw_routing_early, list)
+            else []
+        )
+        budget_hit = budget_pressure_detected(
+            routing_log=routing_log_early,
+            debug_events=debug_events_out,
+            deadline_partial_used=deadline_partial_used,
+        )
+        partial_salvage_applied = False
+
+        def _maybe_synthesize_partial_from_evidence() -> bool:
+            nonlocal answer, fallback_answer_used, partial_salvage_applied
+            if not evidence_present(
+                citations=cits_for_validation,
+                specialist_results_v3=sr3_for_validation,
+                specialist_results=sr_for_validation,
+                tool_trace_count=len(trace),
+            ):
+                return False
+            if not (
+                fallback_answer_used
+                or is_generic_fallback_answer(str(answer or ""))
+                or not str(answer or "").strip()
+            ):
+                return False
             qf_lang = "unknown"
             meta_tp = (final_state.get("metadata") or {}).get("turn_policy")
             if isinstance(meta_tp, dict):
@@ -403,10 +432,52 @@ class RetrievalAgent:
                 specialist_results_v3=sr3_for_validation,
                 language=qf_lang,
             )
-            if partial.strip():
-                answer = partial.strip()
-                fallback_answer_used = False
-                _record_validation(refresh=True)
+            if not partial.strip():
+                return False
+            answer = partial.strip()
+            fallback_answer_used = False
+            partial_salvage_applied = True
+            return True
+
+        validation_verdict = _record_validation(refresh=True)
+        should_try_partial = budget_hit or (
+            enforcement_mode == "enforced"
+            and not validation_verdict.get("user_visible_answer_allowed")
+            and is_generic_fallback_answer(str(answer or ""))
+            and validation_verdict.get("evidence_present")
+        )
+        if should_try_partial and _maybe_synthesize_partial_from_evidence():
+            validation_verdict = _record_validation(refresh=True)
+
+        terminal_reason = resolve_terminal_reason(
+            answer=str(answer or ""),
+            validation_verdict=validation_verdict,
+            specialist_results_v3=sr3_for_validation,
+            routing_log=routing_log_early,
+            debug_events=debug_events_out,
+            tool_trace=trace,
+            messages=messages,
+            fallback_answer_used=fallback_answer_used,
+            deadline_partial_used=deadline_partial_used,
+            partial_salvage_applied=partial_salvage_applied,
+        )
+        validation_verdict = attach_terminal_reason_to_verdict(
+            validation_verdict, terminal_reason
+        )
+        for idx, ev in enumerate(debug_events_out):
+            if isinstance(ev, dict) and ev.get("type") == "final_answer_validation":
+                debug_events_out[idx] = {
+                    "type": "final_answer_validation",
+                    "verdict": dict(validation_verdict),
+                }
+                break
+        audit_diag = compute_audit_diagnostics(tool_trace=trace, messages=messages)
+        maybe_append_terminal_outcome_event(
+            debug_events_out,
+            terminal_reason=terminal_reason,
+            validation_verdict=validation_verdict,
+            audit_diagnostics=audit_diag,
+        )
         extra_warn_list: list[str] = []
         if graph_salvage:
             extra_warn_list.append("answer_salvaged_from_graph_tool")
@@ -463,10 +534,7 @@ class RetrievalAgent:
             )
 
         ac = str(envelope.get("answer_class") or "grounded_explanation")
-        raw_routing = final_state.get("routing_log")
-        routing_log: list[dict[str, Any]] = (
-            [x for x in raw_routing if isinstance(x, dict)] if isinstance(raw_routing, list) else []
-        )
+        routing_log = routing_log_early
         meta_final = final_state.get("metadata") or {}
         parent_tid = (
             str(meta_final.get("parent_turn_id")).strip()

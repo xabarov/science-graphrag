@@ -187,6 +187,40 @@ def _has_final_answer_span(span_names: list[str]) -> bool:
     )
 
 
+def extract_terminal_reason_from_run_metadata(
+    run_metadata: dict[str, Any] | None,
+) -> str | None:
+    """Read runtime-owned terminal reason from finalize run_metadata."""
+    if not isinstance(run_metadata, dict):
+        return None
+    tr = str(run_metadata.get("terminal_reason") or "").strip()
+    if tr:
+        return tr
+    fav = run_metadata.get("final_answer_validation")
+    if isinstance(fav, dict):
+        tr2 = str(fav.get("terminal_reason") or "").strip()
+        if tr2:
+            return tr2
+    return None
+
+
+def build_audit_diagnostics(
+    *,
+    tool_flags: dict[str, bool],
+    span_names: list[str],
+) -> dict[str, str]:
+    """Audit-layer mismatch signals (independent from runtime terminal_reason)."""
+    diagnostics: dict[str, str] = {}
+    if not tool_flags.get("final_answer"):
+        diagnostics["tool_trace_missing_final_answer"] = "missing_final_answer_tool"
+    final_span_seen = _has_final_answer_span(span_names)
+    if tool_flags.get("final_answer") and not final_span_seen:
+        diagnostics["phoenix_missing_final_answer_span"] = "missing_span_but_tool_trace_present"
+    elif not tool_flags.get("final_answer") and not final_span_seen:
+        diagnostics["phoenix_missing_final_answer_span"] = "phoenix_missing_final_answer_span"
+    return diagnostics
+
+
 def evaluate_case_verdicts(
     *,
     http_status: int | None,
@@ -273,6 +307,10 @@ def _write_markdown(report: dict[str, Any], out_md: Path) -> None:
         f"validation_fail_cases: {cov.get('validation_fail_cases', 0)}; "
         f"generic_fallback_with_evidence_cases: {cov.get('generic_fallback_with_evidence_cases', 0)}"
     )
+    lines.append(f"- terminal_reason_present: {cov.get('with_terminal_reason', 0)}")
+    dist = cov.get("terminal_reason_distribution") or {}
+    if dist:
+        lines.append(f"- terminal_reason_distribution: `{dist}`")
     lines.append("")
     lines.append("## Case Results")
     for case in report.get("cases") or []:
@@ -298,6 +336,12 @@ def _write_markdown(report: dict[str, Any], out_md: Path) -> None:
                 f"- final_answer_validation: status={fav.get('status')} "
                 f"reasons={fav.get('reasons')} evidence_present={fav.get('evidence_present')}"
             )
+        tr = case.get("terminal_reason")
+        if tr:
+            lines.append(f"- terminal_reason: `{tr}`")
+        audit_diag = case.get("audit_diagnostics")
+        if isinstance(audit_diag, dict) and audit_diag:
+            lines.append(f"- audit_diagnostics: `{audit_diag}`")
         lines.append(f"- answer preview: {str(case.get('answer_preview') or '')[:300]}")
         lines.append("")
     out_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -404,8 +448,13 @@ def main() -> int:
                 if isinstance(run_metadata.get("final_answer_validation"), dict)
                 else None
             )
+            terminal_reason = extract_terminal_reason_from_run_metadata(run_metadata)
             trace_id = str(data.get("phoenix_trace_id") or "").strip()
             phoenix_meta, span_names = _phoenix_names(trace_id, timeout=float(args.timeout))
+            audit_diagnostics = build_audit_diagnostics(
+                tool_flags=flags,
+                span_names=span_names,
+            )
             verdicts = evaluate_case_verdicts(
                 http_status=status,
                 error=None,
@@ -433,6 +482,8 @@ def main() -> int:
                 "answer_preview": answer.strip()[:700],
                 "citations": citations,
                 "final_answer_validation": final_answer_validation,
+                "terminal_reason": terminal_reason,
+                "audit_diagnostics": audit_diagnostics,
             }
             rows.append(row)
             if not (verdicts.get("phoenix") or {}).get("ok", True):
@@ -452,6 +503,11 @@ def main() -> int:
                 f"  -> ok={row['ok']} tools={len(tool_names)} answer_len={verdicts['answer_len']} issues={verdicts['issues']}",
                 flush=True,
             )
+
+    terminal_reason_dist: dict[str, int] = {}
+    for r in rows:
+        tr_key = str(r.get("terminal_reason") or "missing").strip() or "missing"
+        terminal_reason_dist[tr_key] = terminal_reason_dist.get(tr_key, 0) + 1
 
     report: dict[str, Any] = {
         "base_url": base,
@@ -498,6 +554,8 @@ def main() -> int:
                 and "generic_fallback_with_evidence"
                 in list((r.get("final_answer_validation") or {}).get("reasons") or [])
             ),
+            "with_terminal_reason": sum(1 for r in rows if r.get("terminal_reason")),
+            "terminal_reason_distribution": terminal_reason_dist,
         },
         "cases": rows,
     }

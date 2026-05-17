@@ -5,6 +5,7 @@ from __future__ import annotations
 from science_graphrag.agent.evidence_trust import MODE_METADATA_ONLY
 from science_graphrag.agent.final_answer_validation import (
     REASON_EMPTY_ANSWER,
+    REASON_FAILED_FETCH_WITHOUT_LIMITATION,
     REASON_GENERIC_FALLBACK_WITH_EVIDENCE,
     REASON_METADATA_ONLY_WITHOUT_LIMITATION,
     REASON_PARTIAL_ANSWER_OK,
@@ -69,6 +70,30 @@ def test_validate_partial_answer_with_limitation() -> None:
         },
     )
     assert verdict["answer_kind"] == "partial"
+    assert REASON_PARTIAL_ANSWER_OK in verdict["reasons"]
+    assert verdict["user_visible_answer_allowed"] is True
+
+
+def test_validate_failed_fetch_requires_limitation_language() -> None:
+    verdict = validate_final_answer(
+        answer="Claims based on fetched page content.",
+        citations=[],
+        specialist_results_v3={
+            "merge": {"writer_directive": "web_fetch failed for primary source."}
+        },
+    )
+    assert REASON_FAILED_FETCH_WITHOUT_LIMITATION in verdict["reasons"]
+    assert verdict["status"] == "warn"
+
+
+def test_validate_partial_without_limitation_is_warn() -> None:
+    verdict = validate_final_answer(
+        answer="Short interim summary from collected sources only.",
+        citations=[{"work_id": "w1"}],
+        specialist_results_v3={"merge": {"completion_state": "partial"}},
+    )
+    assert verdict["answer_kind"] == "partial"
+    assert verdict["status"] == "warn"
     assert REASON_PARTIAL_ANSWER_OK in verdict["reasons"]
     assert verdict["user_visible_answer_allowed"] is True
 
