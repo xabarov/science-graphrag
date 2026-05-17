@@ -139,12 +139,16 @@ def _ensure_web_tools_in_picked(
     tools: list[BaseTool],
     *,
     asks_for_web_research: bool,
+    asks_for_official_product_research: bool,
 ) -> None:
     """Keep Crossref web tools available when the user explicitly asks for internet research."""
     if not asks_for_web_research:
         return
     have = {getattr(t, "name", "") for t in picked}
-    for nm in ("official_web_lookup", "web_search", "web_fetch"):
+    required = ["web_search", "web_fetch"]
+    if asks_for_official_product_research:
+        required.insert(0, "official_web_lookup")
+    for nm in required:
         if nm in have:
             continue
         hit = next((t for t in tools if getattr(t, "name", "") == nm), None)
@@ -187,6 +191,54 @@ def _ensure_unpaywall_tool_in_picked(
     hit = next((t for t in tools if getattr(t, "name", "") == "unpaywall_lookup"), None)
     if hit is not None:
         picked.append(hit)
+
+
+def _ensure_semantic_scholar_tools_in_picked(
+    picked: list[BaseTool],
+    tools: list[BaseTool],
+    *,
+    asks_for_semantic_scholar: bool,
+) -> None:
+    """Keep Semantic Scholar tools available when the user explicitly asks for them."""
+    if not asks_for_semantic_scholar:
+        return
+    have = {getattr(t, "name", "") for t in picked}
+    for nm in ("semantic_scholar_search", "semantic_scholar_paper"):
+        if nm in have:
+            continue
+        hit = next((t for t in tools if getattr(t, "name", "") == nm), None)
+        if hit is not None:
+            picked.append(hit)
+            have.add(nm)
+
+
+def _ensure_pdf_read_tool_in_picked(
+    picked: list[BaseTool],
+    tools: list[BaseTool],
+    *,
+    asks_for_pdf_read: bool,
+) -> None:
+    """Keep PDF read tool available when the user explicitly asks for PDF extraction."""
+    if not asks_for_pdf_read:
+        return
+    have = {getattr(t, "name", "") for t in picked}
+    if "read_external_pdf" in have:
+        return
+    hit = next((t for t in tools if getattr(t, "name", "") == "read_external_pdf"), None)
+    if hit is not None:
+        picked.append(hit)
+
+
+def _prune_official_lookup_for_non_product_query(
+    picked: list[BaseTool],
+    *,
+    asks_for_web_research: bool,
+    asks_for_official_product_research: bool,
+) -> list[BaseTool]:
+    """Avoid irrelevant official_web_lookup for generic web research questions."""
+    if not asks_for_web_research or asks_for_official_product_research:
+        return picked
+    return [t for t in picked if getattr(t, "name", "") != "official_web_lookup"]
 
 
 def _ensure_final_answer_in_picked(picked: list[BaseTool], tools: list[BaseTool]) -> None:
@@ -397,14 +449,26 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
     session: dict[str, Any] | None = None,
     lc_messages: Sequence[Any] | None = None,
     asks_for_web_research: bool = False,
+    asks_for_official_product_research: bool = False,
     asks_for_arxiv: bool = False,
     asks_for_unpaywall: bool = False,
+    asks_for_semantic_scholar: bool = False,
+    asks_for_pdf_read: bool = False,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Return possibly narrowed tool list and debug meta for SSE / run_metadata."""
+    full_tools = _prune_official_lookup_for_non_product_query(
+        list(tools),
+        asks_for_web_research=asks_for_web_research,
+        asks_for_official_product_research=asks_for_official_product_research,
+    )
     if not settings.agent_rule_tool_search_enabled:
-        return tools, {"skipped": True, "reason": "disabled", "catalog_size": len(tools)}
+        return full_tools, {"skipped": True, "reason": "disabled", "catalog_size": len(full_tools)}
     if specialist == "writer_agent":
-        return tools, {"skipped": True, "reason": "writer_minimal_set", "catalog_size": len(tools)}
+        return full_tools, {
+            "skipped": True,
+            "reason": "writer_minimal_set",
+            "catalog_size": len(full_tools),
+        }
 
     q = _norm_question(strip_tool_search_context_wrappers(question))
     scored = _build_scored_tools_for_shortlist(
@@ -416,19 +480,19 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
         answer_class=answer_class,
     )
     if not scored:
-        return tools, {
+        return full_tools, {
             "reason": "fallback_full",
             "matched": [],
-            "catalog_size": len(tools),
+            "catalog_size": len(full_tools),
             "activation_policy": "relaxed_fallback_full",
         }
 
     top_score = scored[0][0]
     if top_score < _RULE_TOOL_SEARCH_LOW_SIGNAL_FLOOR:
-        return tools, {
+        return full_tools, {
             "reason": "low_signal",
             "top_score": top_score,
-            "catalog_size": len(tools),
+            "catalog_size": len(full_tools),
             "activation_policy": "relaxed_low_signal",
         }
 
@@ -467,6 +531,7 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             picked,
             tools,
             asks_for_web_research=asks_for_web_research,
+            asks_for_official_product_research=asks_for_official_product_research,
         )
         _ensure_arxiv_tools_in_picked(
             picked,
@@ -478,19 +543,37 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             tools,
             asks_for_unpaywall=asks_for_unpaywall,
         )
+        _ensure_semantic_scholar_tools_in_picked(
+            picked,
+            tools,
+            asks_for_semantic_scholar=asks_for_semantic_scholar,
+        )
+        _ensure_pdf_read_tool_in_picked(
+            picked,
+            tools,
+            asks_for_pdf_read=asks_for_pdf_read,
+        )
     core_exempt = (
         _RETRIEVAL_CORE_EXEMPT
         if (specialist == "retrieval_agent" or for_single_agent)
         else frozenset()
     )
-    if asks_for_web_research and (specialist == "retrieval_agent" or for_single_agent):
+    if asks_for_official_product_research and (specialist == "retrieval_agent" or for_single_agent):
         core_exempt = frozenset(core_exempt) | frozenset(
             {"official_web_lookup", "web_search", "web_fetch"}
         )
+    elif asks_for_web_research and (specialist == "retrieval_agent" or for_single_agent):
+        core_exempt = frozenset(core_exempt) | frozenset({"web_search", "web_fetch"})
     if asks_for_arxiv and (specialist == "retrieval_agent" or for_single_agent):
         core_exempt = frozenset(core_exempt) | frozenset({"arxiv_search", "arxiv_fetch"})
     if asks_for_unpaywall and (specialist == "retrieval_agent" or for_single_agent):
         core_exempt = frozenset(core_exempt) | frozenset({"unpaywall_lookup"})
+    if asks_for_semantic_scholar and (specialist == "retrieval_agent" or for_single_agent):
+        core_exempt = frozenset(core_exempt) | frozenset(
+            {"semantic_scholar_search", "semantic_scholar_paper"}
+        )
+    if asks_for_pdf_read and (specialist == "retrieval_agent" or for_single_agent):
+        core_exempt = frozenset(core_exempt) | frozenset({"read_external_pdf"})
     if strict_on:
         picked, strict_removed_tools = apply_strict_deferred_activation_filter(
             picked,
@@ -499,6 +582,11 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             carry_merged=set(carryover_merged),
             retrieval_core_exempt=core_exempt,
         )
+    picked = _prune_official_lookup_for_non_product_query(
+        picked,
+        asks_for_web_research=asks_for_web_research,
+        asks_for_official_product_research=asks_for_official_product_research,
+    )
     # Retrieval catalog is large — avoid over-narrow shortlists
     # Keep shortlists only when they still cover a reasonable slice of the catalog.
     need_full, fb_reason = _shortlist_needs_full_catalog_fallback(
@@ -507,10 +595,10 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
         for_single_agent=for_single_agent,
     )
     if need_full:
-        return tools, {
+        return full_tools, {
             "reason": fb_reason,
             "matched": [getattr(x, "name", "") for x in picked],
-            "catalog_size": len(tools),
+            "catalog_size": len(full_tools),
             "activation_policy": "relaxed_fallback_full",
         }
 
@@ -529,6 +617,7 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             picked,
             tools,
             asks_for_web_research=asks_for_web_research,
+            asks_for_official_product_research=asks_for_official_product_research,
         )
         _ensure_arxiv_tools_in_picked(
             picked,
@@ -539,6 +628,21 @@ def shortlist_tools_for_specialist(  # pylint: disable=too-many-arguments,too-ma
             picked,
             tools,
             asks_for_unpaywall=asks_for_unpaywall,
+        )
+        _ensure_semantic_scholar_tools_in_picked(
+            picked,
+            tools,
+            asks_for_semantic_scholar=asks_for_semantic_scholar,
+        )
+        _ensure_pdf_read_tool_in_picked(
+            picked,
+            tools,
+            asks_for_pdf_read=asks_for_pdf_read,
+        )
+        picked = _prune_official_lookup_for_non_product_query(
+            picked,
+            asks_for_web_research=asks_for_web_research,
+            asks_for_official_product_research=asks_for_official_product_research,
         )
 
     meta_out = _shortlist_build_rules_meta(
@@ -629,8 +733,11 @@ def shortlist_tools_for_single_agent(  # pylint: disable=too-many-arguments
     session: dict[str, Any] | None = None,
     lc_messages: Sequence[Any] | None = None,
     asks_for_web_research: bool = False,
+    asks_for_official_product_research: bool = False,
     asks_for_arxiv: bool = False,
     asks_for_unpaywall: bool = False,
+    asks_for_semantic_scholar: bool = False,
+    asks_for_pdf_read: bool = False,
 ) -> tuple[list[BaseTool], dict[str, Any]]:
     """Rule-based shortlist for single-agent ReAct (full registry in one bind_tools surface)."""
 
@@ -645,6 +752,9 @@ def shortlist_tools_for_single_agent(  # pylint: disable=too-many-arguments
         session=session,
         lc_messages=lc_messages,
         asks_for_web_research=asks_for_web_research,
+        asks_for_official_product_research=asks_for_official_product_research,
         asks_for_arxiv=asks_for_arxiv,
         asks_for_unpaywall=asks_for_unpaywall,
+        asks_for_semantic_scholar=asks_for_semantic_scholar,
+        asks_for_pdf_read=asks_for_pdf_read,
     )

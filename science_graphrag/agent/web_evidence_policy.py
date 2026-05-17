@@ -186,6 +186,72 @@ def collect_source_tiers_from_payloads(payloads: list[dict[str, Any]]) -> set[So
     return tiers
 
 
+def collect_pdf_candidates_from_payloads(payloads: list[dict[str, Any]]) -> list[str]:
+    """Collect candidate PDF URLs discovered via arXiv / Unpaywall / S2 / web rows."""
+    out: list[str] = []
+    seen: set[str] = set()
+
+    def _add(url: str) -> None:
+        u = str(url or "").strip()
+        if not u or u in seen:
+            return
+        if not u.startswith(("http://", "https://")):
+            return
+        ul = u.lower()
+        if ul.endswith(".pdf") or "/pdf/" in ul:
+            seen.add(u)
+            out.append(u)
+
+    for pl in payloads:
+        if not isinstance(pl, dict):
+            continue
+        for item in pl.get("items") or []:
+            if not isinstance(item, dict):
+                continue
+            _add(str(item.get("pdf_url") or ""))
+            _add(str(item.get("oa_pdf_url") or ""))
+            _add(str(item.get("url") or ""))
+        single_item = pl.get("item")
+        if isinstance(single_item, dict):
+            _add(str(single_item.get("pdf_url") or ""))
+            _add(str(single_item.get("oa_pdf_url") or ""))
+            _add(str(single_item.get("url") or ""))
+        for src in pl.get("web_sources") or []:
+            if isinstance(src, dict):
+                _add(str(src.get("url") or ""))
+    return out
+
+
+def pdf_read_evidence_status(
+    payloads: list[dict[str, Any]],
+    *,
+    tool_counts: dict[str, int] | None = None,
+    requires_pdf_read: bool,
+) -> tuple[bool, str]:
+    """Return (sufficient, reason) for explicit PDF-read requirements."""
+    if not requires_pdf_read:
+        return True, "pdf_not_requested"
+    counts = tool_counts or {}
+    read_calls = int(counts.get("read_external_pdf", 0))
+    if read_calls <= 0:
+        for pl in payloads:
+            if not isinstance(pl, dict):
+                continue
+            if str(pl.get("source_tool") or "").strip() == "read_external_pdf":
+                read_calls += 1
+                continue
+            for src in pl.get("web_sources") or []:
+                if isinstance(src, dict) and str(src.get("source_tool") or "").strip() == "read_external_pdf":
+                    read_calls += 1
+                    break
+    if read_calls > 0:
+        return True, "pdf_read_attempted"
+    candidates = collect_pdf_candidates_from_payloads(payloads)
+    if candidates:
+        return False, "pdf_candidate_found_but_not_read"
+    return True, "pdf_unavailable_no_safe_candidate"
+
+
 def web_evidence_sufficient_for_product_query(
     payloads: list[dict[str, Any]],
     *,
@@ -254,7 +320,65 @@ def writer_directive_for_web_evidence(
             f"WEB_FETCH_FAILURES: {failed_fetches} fetch(es) returned ok=false; "
             "cite only what was actually retrieved."
         )
+    weak_crossref = sum(
+        1
+        for pl in payloads
+        if isinstance(pl, dict)
+        for src in (pl.get("web_sources") or [])
+        if isinstance(src, dict)
+        and str(src.get("provenance_kind") or "").strip() == "crossref_metadata"
+    )
+    boilerplate_fetch = sum(
+        1
+        for pl in payloads
+        if isinstance(pl, dict)
+        and str(pl.get("provenance_kind") or "").strip() == "web_page_summary"
+        and (
+            "does not contain scholarly content" in str(pl.get("summary") or "").lower()
+            or "obfuscated javascript" in str(pl.get("summary") or "").lower()
+        )
+    )
+    if weak_crossref >= 3 and (failed_fetches > 0 or boilerplate_fetch > 0):
+        parts.append(
+            "SOURCE_QUALITY_GUARD: evidence is dominated by metadata-only rows and/or boilerplate "
+            "fetch summaries; avoid strong factual claims and clearly mark the answer as limited."
+        )
     return " ".join(parts)
+
+
+def writer_directive_for_pdf_pipeline(
+    payloads: list[dict[str, Any]],
+    *,
+    tool_counts: dict[str, int] | None = None,
+    requires_pdf_read: bool,
+) -> str:
+    """Extra writer directive for explicit PDF-read asks."""
+    ok, reason = pdf_read_evidence_status(
+        payloads,
+        tool_counts=tool_counts,
+        requires_pdf_read=requires_pdf_read,
+    )
+    if not requires_pdf_read:
+        return ""
+    if reason == "pdf_unavailable_no_safe_candidate":
+        return (
+            "PDF_UNAVAILABLE: no safe OA/arXiv/Unpaywall PDF URL was found in this run. "
+            "Do not claim full-text reading; explicitly say PDF extraction was unavailable."
+        )
+    if reason == "pdf_candidate_found_but_not_read":
+        urls = collect_pdf_candidates_from_payloads(payloads)
+        sample = ", ".join(urls[:2])
+        return (
+            "PDF_READ_PENDING: candidate PDF links were discovered but read_external_pdf "
+            "was not executed. Mention that full-text extraction was not completed "
+            f"(candidate_urls={sample})."
+        )
+    if ok and int((tool_counts or {}).get("read_external_pdf", 0)) > 0:
+        return (
+            "PDF_READ_EXECUTED: cite only extracted snippets tied to read_external_pdf "
+            "artifacts and distinguish metadata vs full-text evidence."
+        )
+    return ""
 
 
 __all__ = [
@@ -265,6 +389,9 @@ __all__ = [
     "detect_unsupported_negative_official_claim",
     "enrich_web_source",
     "official_source_candidates",
+    "collect_pdf_candidates_from_payloads",
+    "pdf_read_evidence_status",
     "web_evidence_sufficient_for_product_query",
+    "writer_directive_for_pdf_pipeline",
     "writer_directive_for_web_evidence",
 ]

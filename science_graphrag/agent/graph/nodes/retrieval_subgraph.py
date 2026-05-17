@@ -24,44 +24,10 @@ from science_graphrag.agent.llm.chat import (
 from science_graphrag.agent.tool_execution_pipeline import build_tool_execution_node
 from science_graphrag.config import Settings
 from science_graphrag.llm.concurrency import invoke_chat_gated
+from science_graphrag.agent.prompt_protocol_cards import build_retrieval_system_prompt
 from science_graphrag.observability.spans import SpanAttributes, add_span_event, llm_span
 
-SYSTEM_PROMPT = (
-    "You are a retrieval specialist for a research workspace. Callable tools: "
-    "workspace_inspect (mode=stats|papers|blurb — stats for counts, "
-    "papers for title list, blurb for short summary + sample work ids), "
-    "find_works (full-text work search; pass workspace_id when the user means "
-    "this workspace, omit for corpus-wide search), paper_profile "
-    "(metadata + authors for one work_id), paper_quote_search "
-    "(semantic chunk quotes), format_bibliography_gost, idea_search, "
-    "official_web_lookup (curated vendor/docs/GitHub URLs for known products — use first "
-    "when the user asks about a library/model/version on the internet), "
-    "web_search (Crossref metadata search for external scholarly literature), "
-    "web_fetch (GET + summarize one allowed HTTPS URL), "
-    "arxiv_search (official arXiv Atom API search for preprints), "
-    "arxiv_fetch (fetch one arXiv record: metadata + abstract by id or URL), "
-    "unpaywall_lookup (Unpaywall: open-access status + best OA landing/PDF URL for a DOI). "
-    "When <active_workspace_id> appears in the user message, use that exact "
-    "UUID as workspace_id for "
-    "workspace_inspect and for find_works whenever the question is scoped to this workspace. "
-    "Use find_works (without workspace_id) only for global title search. Call paper_profile only "
-    "when you have a real work_id (from find_works, workspace_inspect mode=papers or blurb—not "
-    "stats alone). Use idea_search for open semantic discovery; use paper_quote_search for "
-    "verbatim evidence. When the user asks about arXiv, preprints, arXiv.org links, or an arXiv id "
-    "(e.g. 1234.56789), start with arxiv_search for discovery and arxiv_fetch to pin a specific id "
-    "or URL; use web_search/web_fetch only for non-arXiv web pages. "
-    "When the user has a DOI and needs legal open-access links (not PDF extraction), "
-    "use unpaywall_lookup before blindly fetching publisher pages. "
-    "When the user explicitly asks about the internet, the web, online "
-    "discourse, or what people are saying outside the workspace corpus: "
-    "for product/model/version questions (e.g. YOLO, Ultralytics, a numbered release), "
-    "call official_web_lookup first, then web_fetch at least one official URL it returns, "
-    "then web_search for scholarly context. "
-    "Otherwise start with web_search and web_fetch for 1–3 relevant URLs. "
-    "For explicit web intent, do not finish with web_search-only metadata when fetchable URLs exist. "
-    "Never treat Crossref metadata alone as proof that an official release does not exist. "
-    "Return findings through tool outputs only. Do not call final_answer."
-)
+SYSTEM_PROMPT = build_retrieval_system_prompt()
 
 
 def _extract_tool_payloads(messages: list[Any], from_index: int) -> list[dict]:

@@ -1,0 +1,1249 @@
+{
+  "lane_id": "semantic_scholar",
+  "http_ok": true,
+  "request_payload_digest": {
+    "question": "Найди в Semantic Scholar статью Attention Is All You Need и верни карточку.",
+    "workspace_id": "ws-pilot-od",
+    "web_research_enabled": true
+  },
+  "response": {
+    "answer": "Статья \"Attention is All you Need\" (2017) представлена в Semantic Scholar как семинальная работа, введшая архитектуру Transformer. Она имеет более 176 000 цитирований и доступна по ссылке: https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776. Дополнительные данные, такие как авторы, реферат или полный текст, не были извлечены, поскольку доступны только метаданные.",
+    "citations": [
+      {
+        "title": "Attention is All you Need",
+        "url": "https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+        "provenance_kind": "semantic_scholar_metadata",
+        "evidence_mode": "metadata_only",
+        "is_external": true,
+        "semantic_scholar_paper_id": "204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+        "evidence_quality": "variable"
+      },
+      {
+        "source_type": "web",
+        "url": "https://arxiv.org/pdf/2010.13154",
+        "title": "Attention Is All You Need In Speech Separation",
+        "source_tool": "semantic_scholar_search",
+        "provenance_kind": "semantic_scholar_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": true,
+        "doi": "10.1109/ICASSP39728.2021.9413901",
+        "excerpt": "year=2020 · citations=760 · Recurrent Neural Networks (RNNs) have long been the dominant architecture in sequence-to-sequence learning. RNNs, however, are inherently sequential models that do not allow parallelization of their computations. Transformers are emerging as a natural alternative to standard RNNs"
+      },
+      {
+        "source_type": "web",
+        "url": "https://www.semanticscholar.org/paper/b4f9e9130b29754c526c454ab54043b49bdd387d",
+        "title": "Tensor Product Attention Is All You Need",
+        "source_tool": "semantic_scholar_search",
+        "provenance_kind": "semantic_scholar_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": true,
+        "doi": "10.48550/arXiv.2501.06425",
+        "excerpt": "year=2025 · citations=40 · Scaling language models to handle longer input sequences typically necessitates large key-value (KV) caches, resulting in substantial memory overhead during inference. In this paper, we propose Tensor Product Attention (TPA), a novel attention mechanism that uses tensor decomposi"
+      },
+      {
+        "source_type": "web",
+        "url": "https://ojs.aaai.org/index.php/AAAI/article/download/6693/6547",
+        "title": "Channel Attention Is All You Need for Video Frame Interpolation",
+        "source_tool": "semantic_scholar_search",
+        "provenance_kind": "semantic_scholar_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": true,
+        "doi": "10.1609/AAAI.V34I07.6693",
+        "excerpt": "year=2020 · citations=362 · Prevailing video frame interpolation techniques rely heavily on optical flow estimation and require additional model complexity and computational cost; it is also susceptible to error propagation in challenging scenarios with large motion and heavy occlusion. To alleviate the lim"
+      },
+      {
+        "source_type": "web",
+        "url": "https://www.semanticscholar.org/paper/b02159650df9813f25db4afd4f094e53bccd526c",
+        "title": "[CLS] Attention is All You Need for Training-Free Visual Token Pruning: Make VLM Inference Faster",
+        "source_tool": "semantic_scholar_search",
+        "provenance_kind": "semantic_scholar_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": true,
+        "doi": "10.48550/arXiv.2412.01818",
+        "excerpt": "year=2024 · citations=85"
+      },
+      {
+        "source_type": "web",
+        "url": "https://www.semanticscholar.org/paper/5d5cf18a381a7869715da6c04236c87e7ed566a8",
+        "title": "TransMLA: Multi-Head Latent Attention Is All You Need",
+        "source_tool": "semantic_scholar_search",
+        "provenance_kind": "semantic_scholar_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": true,
+        "excerpt": "year=2025 · citations=22 · In this paper, we present TransMLA, a framework that seamlessly converts any GQA-based pre-trained model into an MLA-based model. Our approach enables direct compatibility with DeepSeek's codebase, allowing these models to fully leverage DeepSeek-specific optimizations such as vL"
+      },
+      {
+        "source_type": "web",
+        "url": "https://academic.oup.com/bib/article-pdf/25/1/bbad467/55123365/bbad467.pdf",
+        "title": "Attention is all you need: utilizing attention in AI-enabled drug discovery",
+        "source_tool": "semantic_scholar_search",
+        "provenance_kind": "semantic_scholar_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": true,
+        "doi": "10.1093/bib/bbad467",
+        "excerpt": "year=2023 · citations=273 · Abstract Recently, attention mechanism and derived models have gained significant traction in drug development due to their outstanding performance and interpretability in handling complex data structures. This review offers an in-depth exploration of the principles underlying at"
+      },
+      {
+        "source_type": "web",
+        "url": "https://www.semanticscholar.org/paper/fa67ce14393ce96ece7d7732e90f579e23382b21",
+        "title": "Attention Is All You Need for KV Cache in Diffusion LLMs",
+        "source_tool": "semantic_scholar_search",
+        "provenance_kind": "semantic_scholar_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": true,
+        "doi": "10.48550/arXiv.2510.14973",
+        "excerpt": "year=2025 · citations=11 · This work studies how to adaptively recompute key-value (KV) caches for diffusion large language models (DLMs) to maximize prediction accuracy while minimizing decoding latency. Prior methods'decoders recompute QKV for all tokens at every denoising step and layer, despite KV stat"
+      }
+    ],
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": "1.0",
+          "classifier": "deterministic",
+          "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+          "question_features": "{'raw_question': 'Найди в Semantic Scholar статью Attention Is All You Need и верни карточку.', 'normalized_question': 'найди в semantic scholar статью attention is all you need и верни карточку.', 'h"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "reason": "coordinator_route_hint:retrieval_agent",
+          "budget_left": 12,
+          "decision_source": "route_plan",
+          "route_hint": "retrieval_agent"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 9,
+          "reason": null
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "semantic_scholar_search",
+        "args_summary": {
+          "query": "Attention Is All You Need"
+        },
+        "row_count": 10,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "semantic_scholar_paper",
+        "args_summary": {
+          "paper_id": "204e3073870fae3d05bcbc2f6a8e263d9b72e776"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "semantic_scholar_paper",
+        "args_summary": {
+          "paper_id": "204e3073870fae3d05bcbc2f6a8e263d9b72e776"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 4,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer": "Статья \"Attention is All you Need\" (2017) представлена в Semantic Scholar как семинальная работа, введшая архитектуру Transformer. Она имеет более 176 000 цитирований и доступна по ссылке: https://www",
+          "citations": "[{'title': 'Attention is All you Need', 'url': 'https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776', 'provenance_kind': 'semantic_scholar_metadata', 'evidence_mode': 'metad"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 37846,
+    "phoenix_trace_id": "6f21aea5fff07e0a5e09e9688eb08086",
+    "run_metadata": {
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_max_tool_calls": 12,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+      "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+      "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+      "openrouter_reference_pricing_usd_per_1m": {
+        "chat": {
+          "model_id": "qwen/qwen3-235b-a22b-2507",
+          "prompt_usd_per_1m": 0.071,
+          "completion_usd_per_1m": 0.1
+        },
+        "extraction": {
+          "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+          "prompt_usd_per_1m": 0.075,
+          "completion_usd_per_1m": 0.2
+        }
+      },
+      "agent_pdf_read_backend_mode": "hybrid",
+      "usage": {
+        "prompt_tokens": 24146,
+        "completion_tokens": 458,
+        "total_tokens": 24604,
+        "input_tokens": 24146,
+        "output_tokens": 458
+      },
+      "debug_events": [
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search",
+            "semantic_scholar_search",
+            "semantic_scholar_paper",
+            "read_external_pdf"
+          ],
+          "reason": "rules",
+          "top_score": 5.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 8,
+          "shortlist_ratio": 0.4706,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "workspace_inspect",
+            "idea_search"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search",
+            "semantic_scholar_search",
+            "semantic_scholar_paper",
+            "read_external_pdf"
+          ],
+          "deferred_strict_in_shortlist_count": 5,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "semantic_scholar_search"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 2442
+        },
+        {
+          "type": "tool_use_summary_batch",
+          "ok": true,
+          "count": 1,
+          "rows": [
+            {
+              "tool": "semantic_scholar_search",
+              "original_chars": 10895,
+              "merged_payload_chars": 11076,
+              "compression_ratio_vs_original": 0.9837,
+              "summary_mode": "llm",
+              "forked": true,
+              "side_llm_cache_read_ratio": 0.0,
+              "side_llm_cache_creation_tokens": null,
+              "side_llm_cache_read_tokens": 0,
+              "merged_payload_chars_after_overflow": 8286
+            }
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "semantic_scholar_paper"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 762
+        },
+        {
+          "type": "web_fetched",
+          "url": "https://api.semanticscholar.org/graph/v1",
+          "status": 200,
+          "cache_hit": false,
+          "mode": "semantic_scholar_paper"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "semantic_scholar_paper"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 767
+        },
+        {
+          "type": "web_fetched",
+          "url": "https://api.semanticscholar.org/graph/v1",
+          "status": 200,
+          "cache_hit": false,
+          "mode": "semantic_scholar_paper"
+        },
+        {
+          "type": "warning",
+          "code": "duplicate_tool_batch_signature",
+          "detail": "Same tool+args batch as the previous step; prefer consolidating evidence or finishing with final_answer."
+        },
+        {
+          "type": "warning",
+          "code": "react_force_finalize",
+          "reason": "duplicate_tool_batch",
+          "react_total_hops": 3,
+          "react_consecutive_same_batch_count": 2,
+          "detail": "ReAct soft-cap engaged before recursion_limit; next route forces final_answer to close the turn."
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-088445579d46",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-088445579d46",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 7277
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-0a2ffc0b6ee1",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": false,
+          "detail": {
+            "subagent_id": "rp-0a2ffc0b6ee1",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "research_plan",
+            "terminal_state": "failed",
+            "leg_kind": "spawned",
+            "latency_ms": 7982,
+            "failure_code": "tool_denied"
+          }
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "writer_agent",
+          "tools": null,
+          "reason": "writer_terminal_synthesis_seam",
+          "top_score": null,
+          "score_band": null,
+          "catalog_size": 1,
+          "shortlist_size": null,
+          "shortlist_ratio": null,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": true,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "writer_mode": "normal"
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search",
+            "semantic_scholar_search",
+            "semantic_scholar_paper",
+            "read_external_pdf"
+          ],
+          "reason": "rules",
+          "top_score": 5.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 8,
+          "shortlist_ratio": 0.4706,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "workspace_inspect",
+            "idea_search"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search",
+            "semantic_scholar_search",
+            "semantic_scholar_paper",
+            "read_external_pdf"
+          ],
+          "deferred_strict_in_shortlist_count": 5,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "explicit_research_signal",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "semantic_scholar_search"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 2442
+        },
+        {
+          "type": "tool_use_summary_batch",
+          "ok": true,
+          "count": 1,
+          "rows": [
+            {
+              "tool": "semantic_scholar_search",
+              "original_chars": 10895,
+              "merged_payload_chars": 11076,
+              "compression_ratio_vs_original": 0.9837,
+              "summary_mode": "llm",
+              "forked": true,
+              "side_llm_cache_read_ratio": 0.0,
+              "side_llm_cache_creation_tokens": null,
+              "side_llm_cache_read_tokens": 0,
+              "merged_payload_chars_after_overflow": 8286
+            }
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "semantic_scholar_paper"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 762
+        },
+        {
+          "type": "web_fetched",
+          "url": "https://api.semanticscholar.org/graph/v1",
+          "status": 200,
+          "cache_hit": false,
+          "mode": "semantic_scholar_paper"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "semantic_scholar_paper"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 767
+        },
+        {
+          "type": "web_fetched",
+          "url": "https://api.semanticscholar.org/graph/v1",
+          "status": 200,
+          "cache_hit": false,
+          "mode": "semantic_scholar_paper"
+        },
+        {
+          "type": "warning",
+          "code": "duplicate_tool_batch_signature",
+          "detail": "Same tool+args batch as the previous step; prefer consolidating evidence or finishing with final_answer."
+        },
+        {
+          "type": "warning",
+          "code": "react_force_finalize",
+          "reason": "duplicate_tool_batch",
+          "react_total_hops": 3,
+          "react_consecutive_same_batch_count": 2,
+          "detail": "ReAct soft-cap engaged before recursion_limit; next route forces final_answer to close the turn."
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-088445579d46",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-088445579d46",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 7277
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-0a2ffc0b6ee1",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": false,
+          "detail": {
+            "subagent_id": "rp-0a2ffc0b6ee1",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "research_plan",
+            "terminal_state": "failed",
+            "leg_kind": "spawned",
+            "latency_ms": 7982,
+            "failure_code": "tool_denied"
+          }
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "final_answer"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 6
+        }
+      ],
+      "tool_search_shortlist_ratio_avg": 0.4706,
+      "deferred_tool_activation_rate": 0.0,
+      "tool_use_summary_batch_count": 2,
+      "tool_use_summary_row_count": 2,
+      "tool_use_summary_compression_ratio_avg": 0.9837,
+      "tool_use_summary_side_llm_cache_read_ratio_avg": 0.0,
+      "hook_chain_events": [
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-088445579d46",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-088445579d46",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 7277
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-0a2ffc0b6ee1",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": false,
+          "detail": {
+            "subagent_id": "rp-0a2ffc0b6ee1",
+            "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+            "spawn_reason": "research_plan",
+            "terminal_state": "failed",
+            "leg_kind": "spawned",
+            "latency_ms": 7982,
+            "failure_code": "tool_denied"
+          }
+        }
+      ],
+      "request_web_research_enabled": true,
+      "effective_web_research_user_enabled": true,
+      "effective_web_research_tools": true,
+      "request_agent_mode": "agent",
+      "turn_tool_denylist": [],
+      "request_turn_warnings": [],
+      "request_pdf_reading_mode": "ask",
+      "subagent_runs": [
+        {
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+          "child_turn_id": null,
+          "spawn_reason": "coordinator_route_hint:retrieval_agent",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "coordinator_route_hint:retrieval_agent",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "writer_agent",
+          "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+          "child_turn_id": null,
+          "spawn_reason": "routing",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "routing",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "ce-088445579d46",
+          "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+          "child_turn_id": null,
+          "spawn_reason": "corpus_explore",
+          "task": {
+            "task_id": "6a61737f-4698-4e35-9628-c42eaed313f8",
+            "task_type": "corpus_explore",
+            "description": "Read-only corpus exploration child",
+            "execution_mode": "sync",
+            "fanout_slot": 1
+          },
+          "task_id": null,
+          "task_type": "corpus_explore",
+          "description": "Read-only corpus exploration child",
+          "execution_mode": "sync",
+          "fanout_slot": 1,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": 7277,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "spawned",
+          "merge_provenance": {
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "corpus_explore_result",
+            "carried_keys": [
+              "corpus_explore_results",
+              "specialist_results_v3"
+            ],
+            "evidence_origin": "subagent:ce-088445579d46",
+            "parent_state_write": "bounded_append_only"
+          },
+          "output_pointer": "run_metadata.corpus_explore_results[0]"
+        },
+        {
+          "subagent_id": "rp-0a2ffc0b6ee1",
+          "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+          "child_turn_id": null,
+          "spawn_reason": "research_plan",
+          "task": {
+            "task_id": "0a97c4fb-fcb1-488c-940a-5dcde4f854a7",
+            "task_type": "research_plan",
+            "description": "Read-only research plan child",
+            "execution_mode": "sync",
+            "fanout_slot": 1
+          },
+          "task_id": null,
+          "task_type": "research_plan",
+          "description": "Read-only research plan child",
+          "execution_mode": "sync",
+          "fanout_slot": 1,
+          "task_status": "failed",
+          "terminal_state": "failed",
+          "latency_ms": 7982,
+          "failure_code": "tool_denied",
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "spawned",
+          "merge_provenance": {
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "research_plan_result",
+            "carried_keys": [
+              "research_plan_results",
+              "specialist_results_v3"
+            ],
+            "evidence_origin": "subagent:rp-0a2ffc0b6ee1",
+            "parent_state_write": "bounded_append_only"
+          },
+          "output_pointer": "run_metadata.research_plan_results[0]"
+        }
+      ],
+      "subagent_task_notifications": [
+        {
+          "schema_version": 1,
+          "task_id": "0c88cc82-222d-4384-ad74-40ab1b103ee1",
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+          "status": "completed",
+          "carry_back": {
+            "summary": "Specialist leg completed.",
+            "result_excerpt": "{'ok': True, 'row_count': 1, 'items': [{'title': 'Attention is All you Need', 'doi': '', 'url': 'https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776', 'publication_year': 2017, 'semantic_scholar_paper_id': '204e3073870fae3d05bcbc2f6a8e263d9b72e776', 'citation_count': 176052, 'reference_count': 41}], 'web_sources': [{'title': 'Attention is All you Need', 'url': 'https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776', 'source_tool': 'semantic_scholar_paper', 'snippet': 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architect', 'provenance_kind': 'semantic_scholar_metadata', 'evidence_quality': 'weak', 'evidence_mode': 'metadata_only', 'is_external': True, 'semantic_scholar_paper_id': '204e3073870fae3d05bcbc2f6a8e263d9b72e776'}], 'evidence_origin': 'external_web', 'sse_hint': {'type': 'web_fetched', 'url': 'https://api.semanticscholar.org/graph/v1', 'status': 200, 'bytes': None, 'cache_hit': False, 'mode': 'semantic_scholar_paper'}}",
+            "key_sources": [],
+            "verdict": null
+          },
+          "usage": {}
+        },
+        {
+          "schema_version": 1,
+          "task_id": "e02619e7-34c8-4623-b200-767499d4d3a9",
+          "subagent_id": "writer_agent",
+          "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+          "status": "completed",
+          "carry_back": {
+            "summary": "No structured specialist payload recorded.",
+            "result_excerpt": null,
+            "key_sources": [],
+            "verdict": null
+          },
+          "usage": {}
+        }
+      ],
+      "subagent_observability_lane": "fork_v3_enhanced",
+      "specialist_results_v3": {
+        "schema_version": 1,
+        "legs": [
+          {
+            "kind": "parent_tool",
+            "specialist_id": "retrieval_agent",
+            "spawn_reason": "parent_specialist",
+            "tool_payloads_count": 3,
+            "tool_payloads_excerpt": [
+              {
+                "_tool_use_summary": {
+                  "schema_version": "tool_use_summary_v1",
+                  "tool": "semantic_scholar_search",
+                  "bullets": [
+                    "The seminal paper \"Attention is All you Need\" (2017) introduced the Transformer architecture and has received over 176,000 citations.",
+                    "Multiple studies extend the original attention mechanism to specialized domains such as speech separation, video frame interpolation, and drug discovery.",
+                    "Recent works (2024–2025) explore attention for efficient inference, including visual token pruning and KV cache optimization in diffusion LLMs.",
+                    "Variants like Tensor Product Attention and Multi-Head Latent Attention propose architectural improvements for scalability and efficiency.",
+                    "Cross-attention is shown to be critical in adapting pretrained Transformers for machine translation and other transfer learning tasks.",
+                    "Attention mechanisms are being applied to diverse scientific problems, including quantum physics (e.g., chiral superconductivity).",
+                    "Papers indicate a trend of using attention as a universal building block across modalities and tasks.",
+                    "Several papers focus on reducing computational and memory costs in attention-based models while maintaining performance.",
+                    "The attention paradigm continues to evolve with novel mechanisms targeting long-sequence modeling and model parallelization.",
+                    "Citation counts vary widely, from 11 to over 176,000, reflecting the foundational impact of the original work."
+                  ],
+                  "work_ids": [
+                    "204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+                    "51c9d4d2f50ac5707c1f889aa97f08350d549132",
+                    "b4f9e9130b29754c526c454ab54043b49bdd387d",
+                    "bb4a9650ca3946c70a7e92007cc61dc0dfd75522",
+                    "b02159650df9813f25db4afd4f094e53bccd526c",
+                    "5d5cf18a381a7869715da6c04236c87e7ed566a8",
+                    "56e5f5810441f0ce72641cc8db2217510fd5f48d",
+                    "fa67ce14393ce96ece7d7732e90f579e23382b21",
+                    "d48610e731b93dbc1fb7320e25e2d143049a77fb",
+                    "3e32139deb17761a25075f8839daa61ad5992fc9"
+                  ],
+                  "numeric_facts": {
+                    "most_cited_paper_citations": 176052,
+                    "papers_from_2025_count": 4,
+                    "average_citation_count": 18729.6,
+                    "papers_with_doi_count": 6
+                  },
+                  "warnings": []
+                },
+                "_tool_use_summary_meta": {
+                  "schema_version": "tool_use_summary_envelope_v1",
+                  "original_chars": 10895,
+                  "summary_mode": "llm",
+                  "forked": true,
+                  "side_llm_cache_read_ratio": 0.0,
+                  "side_llm_cache_creation_tokens": null,
+                  "side_llm_cache_read_tokens": 0,
+                  "merged_payload_chars": 11076,
+                  "compression_ratio_vs_original": 0.9837
+                },
+                "_tool_use_summary_overflow_drop": true,
+                "evidence_origin": "external_web",
+                "ok": true,
+                "row_count": 10,
+                "web_sources": [
+                  {
+                    "title": "Attention is All you Need",
+                    "url": "https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+                    "source_tool": "semantic_scholar_search",
+                    "snippet": "year=2017 · citations=176052 · The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architect",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "semantic_scholar_paper_id": "204e3073870fae3d05bcbc2f6a8e263d9b72e776"
+                  },
+                  {
+                    "title": "Attention Is All You Need In Speech Separation",
+                    "url": "https://arxiv.org/pdf/2010.13154",
+                    "source_tool": "semantic_scholar_search",
+                    "snippet": "year=2020 · citations=760 · Recurrent Neural Networks (RNNs) have long been the dominant architecture in sequence-to-sequence learning. RNNs, however, are inherently sequential models that do not allow parallelization of their computations. Transformers are emerging as a natural alternative to standard RNNs",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "doi": "10.1109/ICASSP39728.2021.9413901",
+                    "semantic_scholar_paper_id": "51c9d4d2f50ac5707c1f889aa97f08350d549132"
+                  },
+                  {
+                    "title": "Tensor Product Attention Is All You Need",
+                    "url": "https://www.semanticscholar.org/paper/b4f9e9130b29754c526c454ab54043b49bdd387d",
+                    "source_tool": "semantic_scholar_search",
+                    "snippet": "year=2025 · citations=40 · Scaling language models to handle longer input sequences typically necessitates large key-value (KV) caches, resulting in substantial memory overhead during inference. In this paper, we propose Tensor Product Attention (TPA), a novel attention mechanism that uses tensor decomposi",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "doi": "10.48550/arXiv.2501.06425",
+                    "semantic_scholar_paper_id": "b4f9e9130b29754c526c454ab54043b49bdd387d"
+                  },
+                  {
+                    "title": "Channel Attention Is All You Need for Video Frame Interpolation",
+                    "url": "https://ojs.aaai.org/index.php/AAAI/article/download/6693/6547",
+                    "source_tool": "semantic_scholar_search",
+                    "snippet": "year=2020 · citations=362 · Prevailing video frame interpolation techniques rely heavily on optical flow estimation and require additional model complexity and computational cost; it is also susceptible to error propagation in challenging scenarios with large motion and heavy occlusion. To alleviate the lim",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "doi": "10.1609/AAAI.V34I07.6693",
+                    "semantic_scholar_paper_id": "bb4a9650ca3946c70a7e92007cc61dc0dfd75522"
+                  },
+                  {
+                    "title": "[CLS] Attention is All You Need for Training-Free Visual Token Pruning: Make VLM Inference Faster",
+                    "url": "https://www.semanticscholar.org/paper/b02159650df9813f25db4afd4f094e53bccd526c",
+                    "source_tool": "semantic_scholar_search",
+                    "snippet": "year=2024 · citations=85",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "doi": "10.48550/arXiv.2412.01818",
+                    "semantic_scholar_paper_id": "b02159650df9813f25db4afd4f094e53bccd526c"
+                  },
+                  {
+                    "title": "TransMLA: Multi-Head Latent Attention Is All You Need",
+                    "url": "https://www.semanticscholar.org/paper/5d5cf18a381a7869715da6c04236c87e7ed566a8",
+                    "source_tool": "semantic_scholar_search",
+                    "snippet": "year=2025 · citations=22 · In this paper, we present TransMLA, a framework that seamlessly converts any GQA-based pre-trained model into an MLA-based model. Our approach enables direct compatibility with DeepSeek's codebase, allowing these models to fully leverage DeepSeek-specific optimizations such as vL",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "semantic_scholar_paper_id": "5d5cf18a381a7869715da6c04236c87e7ed566a8"
+                  },
+                  {
+                    "title": "Attention is all you need: utilizing attention in AI-enabled drug discovery",
+                    "url": "https://academic.oup.com/bib/article-pdf/25/1/bbad467/55123365/bbad467.pdf",
+                    "source_tool": "semantic_scholar_search",
+                    "snippet": "year=2023 · citations=273 · Abstract Recently, attention mechanism and derived models have gained significant traction in drug development due to their outstanding performance and interpretability in handling complex data structures. This review offers an in-depth exploration of the principles underlying at",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "doi": "10.1093/bib/bbad467",
+                    "semantic_scholar_paper_id": "56e5f5810441f0ce72641cc8db2217510fd5f48d"
+                  },
+                  {
+                    "title": "Attention Is All You Need for KV Cache in Diffusion LLMs",
+                    "url": "https://www.semanticscholar.org/paper/fa67ce14393ce96ece7d7732e90f579e23382b21",
+                    "source_tool": "semantic_scholar_search",
+                    "snippet": "year=2025 · citations=11 · This work studies how to adaptively recompute key-value (KV) caches for diffusion large language models (DLMs) to maximize prediction accuracy while minimizing decoding latency. Prior methods'decoders recompute QKV for all tokens at every denoising step and layer, despite KV stat",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "doi": "10.48550/arXiv.2510.14973",
+                    "semantic_scholar_paper_id": "fa67ce14393ce96ece7d7732e90f579e23382b21"
+                  }
+                ]
+              },
+              {
+                "evidence_origin": "external_web",
+                "items": [
+                  {
+                    "title": "Attention is All you Need",
+                    "doi": "",
+                    "url": "https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+                    "publication_year": 2017,
+                    "semantic_scholar_paper_id": "204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+                    "citation_count": 176052,
+                    "reference_count": 41
+                  }
+                ],
+                "ok": true,
+                "row_count": 1,
+                "sse_hint": {
+                  "type": "web_fetched",
+                  "url": "https://api.semanticscholar.org/graph/v1",
+                  "status": 200,
+                  "bytes": null,
+                  "cache_hit": false,
+                  "mode": "semantic_scholar_paper"
+                },
+                "web_sources": [
+                  {
+                    "title": "Attention is All you Need",
+                    "url": "https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+                    "source_tool": "semantic_scholar_paper",
+                    "snippet": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architect",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "semantic_scholar_paper_id": "204e3073870fae3d05bcbc2f6a8e263d9b72e776"
+                  }
+                ]
+              },
+              {
+                "evidence_origin": "external_web",
+                "items": [
+                  {
+                    "title": "Attention is All you Need",
+                    "doi": "",
+                    "url": "https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+                    "publication_year": 2017,
+                    "semantic_scholar_paper_id": "204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+                    "citation_count": 176052,
+                    "reference_count": 41
+                  }
+                ],
+                "ok": true,
+                "row_count": 1,
+                "sse_hint": {
+                  "type": "web_fetched",
+                  "url": "https://api.semanticscholar.org/graph/v1",
+                  "status": 200,
+                  "bytes": null,
+                  "cache_hit": false,
+                  "mode": "semantic_scholar_paper"
+                },
+                "web_sources": [
+                  {
+                    "title": "Attention is All you Need",
+                    "url": "https://www.semanticscholar.org/paper/204e3073870fae3d05bcbc2f6a8e263d9b72e776",
+                    "source_tool": "semantic_scholar_paper",
+                    "snippet": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architect",
+                    "provenance_kind": "semantic_scholar_metadata",
+                    "evidence_quality": "weak",
+                    "evidence_mode": "metadata_only",
+                    "is_external": true,
+                    "semantic_scholar_paper_id": "204e3073870fae3d05bcbc2f6a8e263d9b72e776"
+                  }
+                ]
+              }
+            ],
+            "evidence_origin": "parent_tool",
+            "confidence": 0.9,
+            "terminal_state": "succeeded",
+            "failure_code": null
+          },
+          {
+            "kind": "corpus_explore",
+            "subagent_id": "ce-088445579d46",
+            "spawn_reason": "corpus_explore",
+            "text_excerpt": "Scope: Find and return the paper card for \"Attention Is All You Need\" in Semantic Scholar.\nResult: The paper \"Attention Is All You Need\" is identified in the corpus with work_id `d37b197a-2307-4f8a-9ff2-988f5c8b1d6a` and published in 2025. However, no verbatim quotes or full-text snippets were found within its chunks, as indicated by the empty result from `paper_quote_search` with reason \"no_hits_for_work\". The paper is not present in the active workspace `ws-pilot-od`.\nKey sources: d37b197a-2307-4f8a-9ff2-988f5c8b1d6a",
+            "issues": [],
+            "terminal_state": "succeeded",
+            "failure_code": null,
+            "salvage_used": false,
+            "evidence_origin": "subagent:ce-088445579d46",
+            "confidence": 0.35
+          },
+          {
+            "kind": "research_plan",
+            "subagent_id": "rp-0a2ffc0b6ee1",
+            "spawn_reason": "research_plan",
+            "text_excerpt": "Scope: Retrieve metadata for the paper \"Attention Is All You Need\" from the corpus.\nResult:\nCorpus sub-queries:\n- Find the paper \"Attention Is All You Need\" in the global corpus using full-text search (workspace_id: null).\nGraph sub-queries:\n- Retrieve core metadata (title, year, doi, citation count, abstract) for the identified work_id using Cypher.\nWriter spec:\n- Return a concise metadata card with title, year, DOI, citation count, and abstract; if any field is missing, state \"not available\".\nKey sources: d37b197a-2307-4f8a-9ff2-988f5c8b1d6a",
+            "issues": [
+              "tool_permission_denied"
+            ],
+            "terminal_state": "failed",
+            "failure_code": "tool_denied",
+            "salvage_used": false,
+            "research_plan_write_attempted": false,
+            "research_plan_write_ok": null,
+            "evidence_origin": "subagent:rp-0a2ffc0b6ee1",
+            "confidence": 0.0
+          }
+        ],
+        "merge": {
+          "evidence_origin": "mixed",
+          "confidence": 0.0,
+          "conflict": null,
+          "writer_directive": "Evidence merge (v3): synthesize a single grounded answer. evidence_origin='mixed'. Do not hide tool denials, timeouts, or conflicting VERDICT lines; state them explicitly.\nPARTIAL_FAILURE legs: rp-0a2ffc0b6ee1: tool_denied",
+          "partial_failure": true,
+          "completion_state": "partial_failure_recoverable"
+        }
+      },
+      "corpus_explore_results": [
+        {
+          "schema_version": 1,
+          "subagent_id": "ce-088445579d46",
+          "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+          "issues": [],
+          "terminal_state": "succeeded",
+          "failure_code": null,
+          "latency_ms": 7277
+        }
+      ],
+      "research_plan_results": [
+        {
+          "schema_version": 1,
+          "subagent_id": "rp-0a2ffc0b6ee1",
+          "parent_turn_id": "ea3c7a49-b78f-4a81-8ce0-6d2c0c3c2e4a",
+          "issues": [
+            "tool_permission_denied"
+          ],
+          "terminal_state": "failed",
+          "failure_code": "tool_denied",
+          "latency_ms": 7982,
+          "research_plan_write_ok": null
+        }
+      ],
+      "routing_log": [
+        {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "reason": "coordinator_route_hint:retrieval_agent",
+          "budget_left": 12,
+          "decision_source": "route_plan",
+          "route_hint": "retrieval_agent"
+        },
+        {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 9,
+          "reason": null
+        }
+      ]
+    },
+    "thread_id": null,
+    "session_summary_excerpt": null,
+    "answer_class": "inventory",
+    "evidence_summary": "8 citation(s), 7 trace step(s)",
+    "warnings": [
+      "research_plan_child_non_success"
+    ],
+    "inventory": null,
+    "relation_trace": null,
+    "quote_candidates": null,
+    "idea_suggestions": null,
+    "bibliography": null,
+    "product_path": "tool_assisted",
+    "product_markers": [
+      "answered_with_tools"
+    ]
+  }
+}

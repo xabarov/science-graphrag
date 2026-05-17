@@ -149,6 +149,36 @@ def test_question_features_asks_for_unpaywall_open_access() -> None:
     assert feats.asks_for_unpaywall is True
 
 
+def test_question_features_asks_for_semantic_scholar_markers() -> None:
+    feats = extract_question_features(
+        question="Use Semantic Scholar to find fresh papers on diffusion models",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_semantic_scholar is True
+    assert "semantic scholar" in feats.matched_markers
+
+
+def test_question_features_asks_for_pdf_read_ru_marker() -> None:
+    feats = extract_question_features(
+        question="Найди статью и прочитай PDF, затем дай вывод",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_pdf_read is True
+    assert "прочитай pdf" in feats.matched_markers
+
+
+def test_question_features_external_scholar_pack_enables_s2_and_pdf() -> None:
+    feats = extract_question_features(
+        question=(
+            "Run web search + web fetch, then semantic scholar and OA PDF read for one key paper."
+        ),
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_external_scholar_pack is True
+    assert feats.asks_for_semantic_scholar is True
+    assert feats.asks_for_pdf_read is True
+
+
 def test_question_features_ru_instruction_with_english_terms_stays_ru() -> None:
     feats = extract_question_features(
         question=(

@@ -34,6 +34,7 @@ def test_writer_suffix_includes_evidence_trust_directive() -> None:
     s = writer_system_prompt_suffix(settings=st, writer_mode="normal")
     assert EVIDENCE_TRUST_DIRECTIVE.split()[0] in s
     assert "evidence_mode" in s
+    assert "Source-quality guard" in s
 
 
 def test_verification_format_block_when_flag_enabled() -> None:

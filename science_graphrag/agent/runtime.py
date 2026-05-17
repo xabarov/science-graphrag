@@ -19,6 +19,11 @@ from science_graphrag.agent.chat_envelope import (
 from science_graphrag.agent.citation_enrichment import hydrate_citations_for_ui
 from science_graphrag.agent.context.session_store import get_session_for_thread
 from science_graphrag.agent.deadline_salvage import invoke_agent_graph_with_deadline_partial
+from science_graphrag.agent.final_answer_validation import (
+    EnforcementMode,
+    is_generic_fallback_answer,
+    maybe_append_final_answer_validation_event,
+)
 from science_graphrag.agent.graph.state import build_initial_agent_state
 from science_graphrag.agent.graph.supervisor import build_retrieval_graph
 from science_graphrag.agent.graph.tracing import collect_tool_trace
@@ -31,6 +36,7 @@ from science_graphrag.agent.runtime_answer_salvage import (
     extract_last_brief_from_messages,
     resolve_langgraph_answer_with_salvage,
     salvage_markdown_from_quote_candidates,
+    synthesize_partial_answer_from_specialist_context,
 )
 from science_graphrag.agent.runtime_envelope import collect_subagent_fork_warning_codes
 from science_graphrag.agent.runtime_post_turn import run_agent_post_turn_digest_and_hooks
@@ -347,6 +353,60 @@ class RetrievalAgent:
             specialist_results=sr if isinstance(sr, dict) else None,
             web_sources=list(typed_payloads.get("web_sources") or []),
         )
+        sr3_for_validation = final_state.get("specialist_results_v3")
+        if not isinstance(sr3_for_validation, dict):
+            sr3_for_validation = None
+        enforcement_mode: EnforcementMode = (
+            "enforced"
+            if bool(
+                getattr(self._settings, "agent_final_answer_validation_enforcement_enabled", False)
+            )
+            else "diagnostic"
+        )
+        debug_events_out = [
+            x for x in list(final_state.get("debug_events") or []) if isinstance(x, dict)
+        ]
+        cits_for_validation = [c for c in list(citations) if isinstance(c, dict)]
+        sr_for_validation = (
+            final_state.get("specialist_results")
+            if isinstance(final_state.get("specialist_results"), dict)
+            else None
+        )
+
+        def _record_validation(*, refresh: bool) -> dict[str, Any]:
+            return maybe_append_final_answer_validation_event(
+                debug_events_out,
+                answer=str(answer or ""),
+                citations=cits_for_validation,
+                specialist_results_v3=sr3_for_validation,
+                specialist_results=sr_for_validation,
+                tool_trace_count=len(trace),
+                enforcement_mode=enforcement_mode,
+                replace_existing=refresh,
+            )
+
+        validation_verdict = _record_validation(refresh=True)
+        if (
+            enforcement_mode == "enforced"
+            and not validation_verdict.get("user_visible_answer_allowed")
+            and is_generic_fallback_answer(str(answer or ""))
+            and validation_verdict.get("evidence_present")
+        ):
+            qf_lang = "unknown"
+            meta_tp = (final_state.get("metadata") or {}).get("turn_policy")
+            if isinstance(meta_tp, dict):
+                qf = meta_tp.get("question_features")
+                if isinstance(qf, dict):
+                    qf_lang = str(qf.get("language") or "unknown").strip().lower() or "unknown"
+            partial = synthesize_partial_answer_from_specialist_context(
+                citations=cits_for_validation,
+                specialist_results_v3=sr3_for_validation,
+                language=qf_lang,
+            )
+            if partial.strip():
+                answer = partial.strip()
+                fallback_answer_used = False
+                _record_validation(refresh=True)
         extra_warn_list: list[str] = []
         if graph_salvage:
             extra_warn_list.append("answer_salvaged_from_graph_tool")
@@ -358,6 +418,8 @@ class RetrievalAgent:
             extra_warn_list.append("answer_salvaged_from_runtime_fallback")
         if deadline_partial_used:
             extra_warn_list.append("agent_turn_deadline_partial_salvage")
+        if str(validation_verdict.get("status") or "") == "fail":
+            extra_warn_list.append("final_answer_validation_failed")
         extra_warn: list[str] | None = extra_warn_list or None
         if graph_salvage:
             add_span_event(
@@ -487,7 +549,7 @@ class RetrievalAgent:
             idea_suggestions=envelope.get("idea_suggestions"),
             bibliography=envelope.get("bibliography"),
             llm_usage=llm_usage,
-            debug_events=list(final_state.get("debug_events") or []),
+            debug_events=debug_events_out,
             phoenix_trace_id=current_otel_trace_id_hex(),
             thread_id=thread_id,
             brief=brief_out,

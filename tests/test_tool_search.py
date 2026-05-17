@@ -552,6 +552,7 @@ def test_shortlist_retrieval_keeps_web_tools_when_asks_for_web_research() -> Non
     names = {getattr(t, "name", "") for t in out}
     assert "web_search" in names
     assert "web_fetch" in names
+    assert "official_web_lookup" not in names
 
 
 def test_shortlist_retrieval_keeps_unpaywall_when_asks_for_unpaywall() -> None:
@@ -573,3 +574,70 @@ def test_shortlist_retrieval_keeps_unpaywall_when_asks_for_unpaywall() -> None:
     )
     names = {getattr(t, "name", "") for t in out}
     assert "unpaywall_lookup" in names
+
+
+def test_shortlist_retrieval_keeps_official_lookup_for_product_web_queries() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    out, _meta = shortlist_tools_for_specialist(
+        tools,
+        question="Найди в интернете официальный анонс YOLOv11",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        asks_for_web_research=True,
+        asks_for_official_product_research=True,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "web_search" in names
+    assert "web_fetch" in names
+    assert "official_web_lookup" in names
+
+
+def test_shortlist_retrieval_keeps_semantic_scholar_when_requested() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    out, _meta = shortlist_tools_for_specialist(
+        tools,
+        question="Use Semantic Scholar for recent papers about object detection",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        asks_for_semantic_scholar=True,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "semantic_scholar_search" in names
+    assert "semantic_scholar_paper" in names
+
+
+def test_shortlist_retrieval_keeps_pdf_read_when_requested() -> None:
+    from science_graphrag.agent.tools import build_retrieval_tools
+
+    stores = MagicMock()
+    stores.neo4j = MagicMock()
+    stores.qdrant_chunks = MagicMock()
+    stores.qdrant_works = MagicMock()
+    settings = Settings(agent_rule_tool_search_enabled=True)
+    tools = build_retrieval_tools(stores, settings)
+    out, _meta = shortlist_tools_for_specialist(
+        tools,
+        question="Find OA paper and read PDF",
+        specialist="retrieval_agent",
+        settings=settings,
+        has_workspace=True,
+        asks_for_pdf_read=True,
+    )
+    names = {getattr(t, "name", "") for t in out}
+    assert "read_external_pdf" in names

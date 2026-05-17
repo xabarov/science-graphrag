@@ -1,0 +1,10 @@
+{
+  "ok": false,
+  "command": [
+    "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+    "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/mcp_adapter_smoke.py",
+    "--server",
+    "smoke"
+  ],
+  "output_tail": "missing_base_url: set SCIENCE_GRAPHRAG_AGENT_MCP_HTTP_BASE_URL"
+}

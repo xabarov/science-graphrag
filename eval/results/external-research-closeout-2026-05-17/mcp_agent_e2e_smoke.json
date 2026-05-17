@@ -1,0 +1,9 @@
+{
+  "ok": false,
+  "command": [
+    "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+    "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/mcp_agent_e2e_smoke.py",
+    "--skip-adapter-smoke"
+  ],
+  "output_tail": "api_health_ok=True\nagent_query_url=http://127.0.0.1:18787/v2/agent/query\ntool_trace_tools=['coordinator_gate', 'route_to_specialist', 'route_to_specialist', 'call_mcp_tool', 'final_answer']\nmcp_audit_summary=null\n\nissue: missing_mcp_audit_summary\nmcp_agent_e2e_ok=0"
+}

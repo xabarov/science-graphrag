@@ -23,10 +23,11 @@ The current direction is architecturally sound: **native, bounded HTTP tools** c
 - External tools return the expected citation-friendly contract: `ok`, `error` where relevant, `row_count`, `evidence_origin: "external_web"`, and `web_sources` where useful.
 - The per-turn web toggle now behaves as a broader **external HTTP research toggle** via `EXTERNAL_RESEARCH_TOOL_NAMES`, with `WEB_RESEARCH_TOOL_NAMES` kept as a compatibility alias.
 
-The main gap is not the architecture, but **coverage and evidence level**:
+The main gap is not the architecture, but **coverage and evidence level** (see also orchestrated closeout `2026-05-17` below):
 
 - `arxiv_search` / `arxiv_fetch`, `web_fetch`, `doi_resolver`, and `unpaywall_lookup` have useful mock-backed unit coverage.
-- Live/API evidence exists historically for arXiv scenarios, but Unpaywall and Crossref-by-live-network were not yet validated in a live agent trace after the new architecture pass.
+- **Operator closeout (2026-05-17):** lanes `external_web`, `arxiv`, `unpaywall`, and `semantic_scholar` are green in `eval/results/external-research-closeout-2026-05-17/index.json`; provider smokes for Crossref/Unpaywall are covered via those lanes and dedicated scripts.
+- Remaining non-green items are **routing / tool-surface / contour-config** (OpenAlex tool selection, PDF `read_external_pdf` bound surface, MCP adapter URL in closeout contour), not generic HTTP transport failure.
 - `docs/analysis/sci-tools.md` is a broad landscape note, not a status page; this document is the implementation-status companion.
 
 ## Architecture Mapping
@@ -44,11 +45,11 @@ The main gap is not the architecture, but **coverage and evidence level**:
 
 | Tool | Source | Purpose | Registration / gating | Test evidence | Stability |
 |---|---|---|---|---|---|
-| `web_search` | Crossref `/works` | Academic metadata search by query, returns title/DOI/URL rows | Always included in external research tools; denied when `web_research_enabled=false` | Mock/unit coverage in `test_external_research_tools.py`; registry/manifest/product-step coverage | **Stable for metadata search**, not a general web search. Live Crossref trace not re-run in this pass. |
+| `web_search` | Crossref `/works` | Academic metadata search by query, returns title/DOI/URL rows | Always included in external research tools; denied when `web_research_enabled=false` | Mock/unit coverage in `test_external_research_tools.py`; registry/manifest/product-step coverage; green in closeout `external_web` lane (2026-05-17) | **Stable for metadata search**, not a general web search. |
 | `web_fetch` | Public HTTPS fetch + LLM summary | Fetch and summarize allowed scholarly URLs with SSRF guards, byte cap, cache | Always included in external research tools; denied when `web_research_enabled=false` | Unit coverage for scheme rejection, private hosts, cache key, redirect host safety | **Stable guardrails**, but content quality depends on page structure + summarizer. |
 | `arxiv_search` | arXiv Atom API | Search preprints; returns metadata, abstracts, abs/pdf links | Included in external research tools; denied when `web_research_enabled=false`; shortlist keeps it for arXiv intent | Unit coverage for query building and Atom parsing; prior live/API evidence from arXiv work | **Stable** for metadata/abstract search. No PDF extraction by design. |
 | `arxiv_fetch` | arXiv Atom API | Fetch one arXiv record by id/URL | Included in external research tools; denied when `web_research_enabled=false`; shortlist keeps it for arXiv intent | Unit coverage for id resolution, fetch, empty feed, unsupported PDF text; prior live/API evidence | **Stable** for metadata/abstract fetch. PDF text explicitly unsupported. |
-| `unpaywall_lookup` | Unpaywall v2 | Given DOI, return OA status and best OA landing/PDF URL; does not download PDF | Included when `agent_unpaywall_oa_tool_enabled=true`; denied when `web_research_enabled=false`; shortlist keeps it for OA/Unpaywall intent | Mock-backed unit coverage for invalid DOI, success payload, registry factory flag, shortlist | **Implementation-stable but not live-validated**. Needs one live trace against a real DOI before calling production-proven. |
+| `unpaywall_lookup` | Unpaywall v2 | Given DOI, return OA status and best OA landing/PDF URL; does not download PDF | Included when `agent_unpaywall_oa_tool_enabled=true`; denied when `web_research_enabled=false`; shortlist keeps it for OA/Unpaywall intent | Mock-backed unit coverage; green in closeout `unpaywall` lane (2026-05-17) | **Stable by unit contract + operator closeout lane**; not the same as full agent-matrix pass rate for all CV topics. |
 | `openalex_works_search` | OpenAlex `/works` | Metadata literature discovery by query (+ optional publication year filter) | Included when `external_research_source_openalex_enabled=true`; denied when `web_research_enabled=false` | Mock-backed tests in `tests/agent/test_openalex_works_search_tools.py`; registry/manifest sync | **Stable by unit contract**; optional live smoke still recommended |
 | `doi_resolver` | OpenAlex by DOI + Crossref fallback + Neo4j workspace mapping | Normalize DOI/URL, fetch metadata, optionally map to workspace Work id | Separately gated by `agent_doi_resolver_tool_enabled`; not currently in `EXTERNAL_RESEARCH_TOOL_NAMES` | Existing resolver/helper tests and manifest sync when enabled | **Stable as metadata bridge**, but semantically distinct from web-research toggle. |
 | `semantic_scholar_search` | Semantic Scholar Graph API | Bounded metadata search | Included when `external_research_source_semantic_scholar_enabled=true`; denied when external research off | `tests/agent/test_semantic_scholar_tools.py`; optional `scripts/live_check/semantic_scholar_smoke.py` | **Beta** — unit-contract stable; operator live smoke recommended |
@@ -636,11 +637,42 @@ ADR 030, the current native implementation, and the broader `sci-tools.md` lands
 
 The architecture is in good shape. The next improvement should be either:
 
-1. add live smoke evidence for `unpaywall_lookup` / Crossref / `openalex_works_search`, or
-2. execute the operator PDF live matrix (`scripts/live_check/pdf_read_live_matrix.md`) and attach artifacts, or
-3. continue toward **Semantic Scholar references/citations** (bounded graph UX) and **Postgres/object-store** durable PDF rows per backlog `[PARTIAL]` items; **Phase 6 MCP operator slice** (integrations snapshot, Settings PATCH for timeout/denylist, smoke) is shipped — see workplan Phase 6 status.
+1. fix **agent routing / bound tool surface** for OpenAlex and `read_external_pdf` (closeout 2026-05-17 failures are policy/routing, not provider transport), or
+2. execute the operator PDF live matrix (`scripts/live_check/pdf_read_live_matrix.md`) after PDF tool-surface alignment, or
+3. continue toward **Semantic Scholar references/citations** (bounded graph UX) and **Postgres/object-store** durable PDF rows per backlog `[PARTIAL]` items; **Phase 6 MCP operator slice** is shipped but closeout contour may still need MCP base URL for direct lanes — see workplan Phase 6 status.
 
 **Execution detail:** Phase 3 **closeout** (optional OpenAlex live smoke, diagnostics `status` decision) and Phase 4 **staged delivery** (PDF artifact pipeline → SSE → trust → Ask UI → live matrix) are spelled out in `docs/analysis/external-research-tools-workplan-2026-05-15.md` (Phase 3 **Remaining / Closeout**, Phase 4 Stages 1–8, PR slicing PR 4b–PR 9). **2026-05-16:** Phase 4 closeout added optional Redis durable cache + stable `artifact_id`; Phase 5A Semantic Scholar search/paper shipped (see workplan Phase 5 status).
+
+## External-only closeout run (2026-05-17)
+
+Operator command:
+
+```bash
+AGENT_LIVE_BASE=http://127.0.0.1:18787 \
+AGENT_LIVE_WORKSPACE_ID=ws-pilot-od \
+PHOENIX_UI_BASE_URL=http://127.0.0.1:16006 \
+.venv/bin/python scripts/live_check/external_research_closeout.py \
+  --out-dir eval/results/external-research-closeout-2026-05-17
+```
+
+Evidence pack:
+
+- index: `eval/results/external-research-closeout-2026-05-17/index.json`
+- lane reports: `eval/results/external-research-closeout-2026-05-17/*-report.json`
+- Phoenix review: `eval/results/external-research-closeout-2026-05-17/phoenix-analysis.md`
+
+Observed status:
+
+- Green lanes: `external_web`, `arxiv`, `unpaywall`, `semantic_scholar`
+- Non-green lanes:
+  - `openalex`: expected `openalex_works_search` not selected (provider smoke/source-test remain green)
+  - `pdf_read`: expected `read_external_pdf` not reached in default lane; forced run shows policy deny (`not_in_bound_tool_surface`)
+  - MCP contour checks: adapter base URL missing and `mcp_audit_summary` absent in agent E2E lane
+
+Interpretation:
+
+- Phoenix transport and trace fetch are healthy (`fetch_ok=true` in all lane snapshots).
+- Remaining failures are policy/routing/contour-config completeness issues, not generic external API transport instability.
 
 ## Phase 4 honest closure (2026-05-15) — shipped in repo
 

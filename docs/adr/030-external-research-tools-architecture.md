@@ -33,3 +33,4 @@ The agent retrieval surface mixes **workspace/corpus tools** (Neo4j, Qdrant) wit
 - `science_graphrag/agent/tool_manifest.py`
 - `science_graphrag/agent/request_turn_policy.py` (`EXTERNAL_RESEARCH_TOOL_NAMES`)
 - `docs/analysis/sci-tools.md`
+- **Agent behavior on top of these tools (prompt protocol, `final_answer`, observability):** [`smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md`](../analysis/smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md)

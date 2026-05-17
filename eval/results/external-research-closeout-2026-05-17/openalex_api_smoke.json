@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "command": [
+    "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+    "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/openalex_smoke.py",
+    "--query",
+    "object detection",
+    "--max-results",
+    "1"
+  ],
+  "output_tail": "http_status=200\nresults=1\nfirst_openalex_id=https://openalex.org/W639708223"
+}

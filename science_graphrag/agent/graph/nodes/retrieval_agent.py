@@ -14,6 +14,7 @@ from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
     _extract_tool_payloads,
     _last_user_text,
 )
+from science_graphrag.agent.graph.tracing import collect_tool_execution_steps
 from science_graphrag.agent.graph.nodes.retrieval_subgraph import (
     build_retrieval_subgraph as build_retrieval_subgraph_impl,
 )
@@ -31,7 +32,10 @@ from science_graphrag.agent.subagents.specialist_results_v3 import (
 from science_graphrag.agent.tool_execution_pipeline import apply_allowed_tools_matrix
 from science_graphrag.agent.tool_search import shortlist_tools_for_specialist
 from science_graphrag.agent.tools import build_retrieval_tools
-from science_graphrag.agent.web_evidence_policy import writer_directive_for_web_evidence
+from science_graphrag.agent.web_evidence_policy import (
+    writer_directive_for_pdf_pipeline,
+    writer_directive_for_web_evidence,
+)
 from science_graphrag.config import Settings
 from science_graphrag.stores.registry import StoreRegistry
 
@@ -87,8 +91,11 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             session=sess,
             lc_messages=list(state.get("messages") or []),
             asks_for_web_research=feats.asks_for_web_research,
+            asks_for_official_product_research=feats.asks_for_official_product_research,
             asks_for_arxiv=feats.asks_for_arxiv,
             asks_for_unpaywall=feats.asks_for_unpaywall,
+            asks_for_semantic_scholar=feats.asks_for_semantic_scholar,
+            asks_for_pdf_read=feats.asks_for_pdf_read,
         )
         tools, mtx = apply_allowed_tools_matrix(tools, settings=settings, state=state)
         compiled = _cached_subgraph(tools)
@@ -121,12 +128,24 @@ def build_retrieval_agent_node(stores: StoreRegistry, settings: Settings):
             specialist_name=SPECIALIST_NAME,
         )
         if new_payloads and feats.asks_for_web_research:
+            tool_counts: dict[str, int] = {}
+            for step in collect_tool_execution_steps(messages):
+                tname = str(step.get("tool") or "").strip()
+                if tname:
+                    tool_counts[tname] = tool_counts.get(tname, 0) + 1
             web_directive = writer_directive_for_web_evidence(
                 new_payloads,
                 requires_official=feats.asks_for_official_product_research,
             )
             if web_directive:
                 sr3 = append_writer_directive(sr3, web_directive)
+            pdf_directive = writer_directive_for_pdf_pipeline(
+                new_payloads,
+                tool_counts=tool_counts,
+                requires_pdf_read=feats.asks_for_pdf_read,
+            )
+            if pdf_directive:
+                sr3 = append_writer_directive(sr3, pdf_directive)
 
         meta_out = dict(state.get("metadata") or {})
         spawn_rows = list(meta_out.get("subagent_spawn_rows") or [])

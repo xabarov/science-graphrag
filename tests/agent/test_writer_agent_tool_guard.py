@@ -9,6 +9,8 @@ from langchain_core.messages import AIMessage, ToolMessage
 from science_graphrag.agent.graph.nodes.writer_agent import (
     _drop_non_final_tool_calls_from_tail,
     _ensure_final_answer_tool,
+    _is_generic_writer_fallback_text,
+    _synthesize_partial_answer_from_context,
     _ensure_terminal_final_answer_tool_call,
 )
 from science_graphrag.agent.tools import build_writer_tools
@@ -76,3 +78,44 @@ def test_drop_non_final_tool_calls_from_tail_for_writer_terminal() -> None:
     assert len(out) == 1
     assert isinstance(out[0], AIMessage)
     assert not getattr(out[0], "tool_calls", None)
+
+
+def test_generic_writer_fallback_detection() -> None:
+    assert _is_generic_writer_fallback_text(
+        "I could not produce a complete final answer for this turn. Please rephrase."
+    )
+    assert not _is_generic_writer_fallback_text("Partial grounded answer based on evidence.")
+
+
+def test_synthesize_partial_answer_from_context_ru() -> None:
+    text = _synthesize_partial_answer_from_context(
+        citations=[{"url": "https://example.org/a"}],
+        specialist_results_v3={
+            "merge": {
+                "completion_state": "evidence_insufficient",
+                "writer_directive": "PDF_UNAVAILABLE: no safe candidate",
+            }
+        },
+        language="ru",
+    )
+    assert "Промежуточный результат" in text
+    assert "completion_state: evidence_insufficient" in text
+    assert "получено источников: 1" in text
+
+
+def test_terminal_final_answer_fallback_replaces_generic_with_partial_when_citations_present() -> None:
+    msgs = [
+        AIMessage(
+            content="I could not produce a complete final answer for this turn. Please rephrase."
+        )
+    ]
+    out = _ensure_terminal_final_answer_tool_call(
+        msgs,
+        citations=[{"url": "https://example.org/a"}],
+        specialist_results_v3={"merge": {"completion_state": "any_specialist_payload"}},
+        answer_language="ru",
+    )
+    assert len(out) == 3
+    payload = json.loads(str(out[-1].content))
+    assert "Промежуточный результат" in payload["answer"]
+    assert payload["citations"] == [{"url": "https://example.org/a"}]

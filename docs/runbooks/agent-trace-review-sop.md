@@ -4,6 +4,8 @@
 
 **Planning context (live):** [`../analysis/ACTIVE.md`](../analysis/ACTIVE.md), [`../analysis/agent-engine-next-horizon-2026-05-13.md`](../analysis/agent-engine-next-horizon-2026-05-13.md) §Wave G / trace-review, [`../analysis/agent-engine-feature-status-2026-05-13.md`](../analysis/agent-engine-feature-status-2026-05-13.md). Исторический детальный лог волн — stub [`../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md`](../analysis/agent-engine-and-benchmarks-next-waves-2026-05-09.md).
 
+**External research / terminal discipline:** [`../analysis/smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md`](../analysis/smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md) — разделение runtime vs tool trace vs Phoenix, планируемый `terminal_reason` (Phase 3+), Phase 1 protocol cards in code. **Live baselines:** CV matrix `external_web_hot_topics_cv_audit.py` → `eval/results/external-web-hot-topics-cv-live-*.md`; orchestrated lanes → `external_research_closeout.py` (see [`external_research_runtime_acceptance.md`](../agent/external_research_runtime_acceptance.md) §Canonical operator snapshots).
+
 Цель: любой агент/разработчик запускает одинаковый цикл проверки без ручного
 описания шагов, с артефактами JSON/MD, пригодными для PR и регрессии.
 

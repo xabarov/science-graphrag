@@ -88,6 +88,23 @@ def test_tool_use_summary_batch_emits_side_llm_cache_ratio_avg() -> None:
     assert tel.get("tool_use_summary_side_llm_cache_read_ratio_avg") == 0.4
 
 
+def test_final_answer_validation_telemetry_last_wins() -> None:
+    evs = [
+        {
+            "type": "final_answer_validation",
+            "verdict": {"status": "warn", "reasons": ["metadata_only_without_limitation"]},
+        },
+        {
+            "type": "final_answer_validation",
+            "verdict": {"status": "ok", "reasons": ["answer_ok"]},
+        },
+    ]
+    tel = extract_runtime_telemetry_from_debug_events(evs)
+    fav = tel.get("final_answer_validation")
+    assert isinstance(fav, dict)
+    assert fav.get("status") == "ok"
+
+
 def test_tool_use_summary_batch_zero_read_tokens_yields_ratio_zero() -> None:
     """Rows with explicit ``side_llm_cache_read_tokens: 0`` and no ratio still roll up."""
     evs = [

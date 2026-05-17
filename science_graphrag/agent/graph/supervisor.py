@@ -341,8 +341,11 @@ def _build_single_agent_graph(stores: StoreRegistry, settings: Settings):
             session=sess,
             lc_messages=list(state.get("messages") or []),
             asks_for_web_research=feats.asks_for_web_research,
+            asks_for_official_product_research=feats.asks_for_official_product_research,
             asks_for_arxiv=feats.asks_for_arxiv,
             asks_for_unpaywall=feats.asks_for_unpaywall,
+            asks_for_semantic_scholar=feats.asks_for_semantic_scholar,
+            asks_for_pdf_read=feats.asks_for_pdf_read,
         )
         bound_tools, _mtx = apply_allowed_tools_matrix(bound_tools, settings=settings, state=state)
         ts_meta = dict(_ts_meta or {})

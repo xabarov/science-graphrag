@@ -1,0 +1,896 @@
+{
+  "lane_id": "unpaywall",
+  "http_ok": true,
+  "request_payload_digest": {
+    "question": "Проверь OA-доступ через Unpaywall для DOI 10.48550/arXiv.1706.03762.",
+    "workspace_id": "ws-pilot-od",
+    "web_research_enabled": true
+  },
+  "response": {
+    "answer": "DOI `10.48550/arXiv.1706.03762` не удалось обработать через Unpaywall из-за ошибки 422 (Unprocessable Entity). Однако соответствующая запись на arXiv доступна и подтверждает, что работа **открыта**.\n\nРабота:\n\n- **Название**: *Attention Is All You Need*\n- **Авторы**: Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin\n- **arXiv ID**: [1706.03762v7](https://arxiv.org/abs/1706.03762v7)\n- **PDF**: Доступен по ссылке [https://arxiv.org/pdf/1706.03762v7](https://arxiv.org/pdf/1706.03762v7)\n\nТак как arXiv является открытым репозиторием, статья доступна бесплатно.",
+    "citations": [
+      {
+        "url": "https://arxiv.org/abs/1706.03762v7",
+        "title": "Attention Is All You Need",
+        "provenance_kind": "arxiv_abstract",
+        "evidence_mode": "abstract",
+        "evidence_quality": "variable",
+        "is_external": false
+      }
+    ],
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": "1.0",
+          "classifier": "deterministic",
+          "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+          "question_features": "{'raw_question': 'Проверь OA-доступ через Unpaywall для DOI 10.48550/arXiv.1706.03762.', 'normalized_question': 'проверь oa-доступ через unpaywall для doi 10.48550/arxiv.1706.03762.', 'has_workspace':"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "reason": "coordinator_route_hint:retrieval_agent",
+          "budget_left": 12,
+          "decision_source": "route_plan",
+          "route_hint": "retrieval_agent"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "reason": "retrieval_completion_arxiv_research",
+          "budget_left": 10
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "unpaywall_lookup",
+        "args_summary": {
+          "doi": "10.48550/arXiv.1706.03762"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "arxiv_fetch",
+        "args_summary": {
+          "arxiv_id_or_url": "1706.03762"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer": "DOI `10.48550/arXiv.1706.03762` не удалось обработать через Unpaywall из-за ошибки 422 (Unprocessable Entity). Однако соответствующая запись на arXiv доступна и подтверждает, что работа **открыта**.\n\n",
+          "citations": "[{'url': 'https://arxiv.org/abs/1706.03762v7', 'title': 'Attention Is All You Need', 'provenance_kind': 'arxiv_abstract', 'evidence_mode': 'abstract'}]"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 22974,
+    "phoenix_trace_id": "a7c9148006adfc3a6ccf48a469e200d3",
+    "run_metadata": {
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_max_tool_calls": 12,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+      "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+      "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+      "openrouter_reference_pricing_usd_per_1m": {
+        "chat": {
+          "model_id": "qwen/qwen3-235b-a22b-2507",
+          "prompt_usd_per_1m": 0.071,
+          "completion_usd_per_1m": 0.1
+        },
+        "extraction": {
+          "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+          "prompt_usd_per_1m": 0.075,
+          "completion_usd_per_1m": 0.2
+        }
+      },
+      "agent_pdf_read_backend_mode": "hybrid",
+      "usage": {
+        "prompt_tokens": 18354,
+        "completion_tokens": 680,
+        "total_tokens": 19034,
+        "input_tokens": 18354,
+        "output_tokens": 680
+      },
+      "debug_events": [
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search",
+            "arxiv_search",
+            "arxiv_fetch",
+            "unpaywall_lookup"
+          ],
+          "reason": "rules",
+          "top_score": 6.0,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 8,
+          "shortlist_ratio": 0.4706,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "unpaywall_lookup"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search",
+            "arxiv_search",
+            "arxiv_fetch",
+            "unpaywall_lookup"
+          ],
+          "deferred_strict_in_shortlist_count": 5,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "unpaywall_lookup"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 820
+        },
+        {
+          "type": "web_fetched",
+          "url": "https://api.unpaywall.org/v2/10.48550%2Farxiv.1706.03762",
+          "status": 0,
+          "bytes": 0,
+          "cache_hit": false,
+          "mode": "unpaywall"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "arxiv_fetch"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 901
+        },
+        {
+          "type": "web_fetched",
+          "url": "https://export.arxiv.org/api/query",
+          "status": 200,
+          "bytes": 2965,
+          "cache_hit": false,
+          "mode": "arxiv_fetch"
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-1e93090fad83",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-1e93090fad83",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2734
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-f81620bd6da4",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-f81620bd6da4",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "research_plan",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 5508
+          }
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "writer_agent",
+          "tools": null,
+          "reason": "writer_terminal_synthesis_seam",
+          "top_score": null,
+          "score_band": null,
+          "catalog_size": 1,
+          "shortlist_size": null,
+          "shortlist_ratio": null,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": true,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "writer_mode": "normal"
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search",
+            "arxiv_search",
+            "arxiv_fetch",
+            "unpaywall_lookup"
+          ],
+          "reason": "rules",
+          "top_score": 6.0,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 8,
+          "shortlist_ratio": 0.4706,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "unpaywall_lookup"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search",
+            "arxiv_search",
+            "arxiv_fetch",
+            "unpaywall_lookup"
+          ],
+          "deferred_strict_in_shortlist_count": 5,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "unpaywall_lookup"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 820
+        },
+        {
+          "type": "web_fetched",
+          "url": "https://api.unpaywall.org/v2/10.48550%2Farxiv.1706.03762",
+          "status": 0,
+          "bytes": 0,
+          "cache_hit": false,
+          "mode": "unpaywall"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "arxiv_fetch"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 901
+        },
+        {
+          "type": "web_fetched",
+          "url": "https://export.arxiv.org/api/query",
+          "status": 200,
+          "bytes": 2965,
+          "cache_hit": false,
+          "mode": "arxiv_fetch"
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-1e93090fad83",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-1e93090fad83",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2734
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-f81620bd6da4",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-f81620bd6da4",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "research_plan",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 5508
+          }
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "final_answer"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 12
+        }
+      ],
+      "tool_search_shortlist_ratio_avg": 0.4706,
+      "deferred_tool_activation_rate": 0.0,
+      "hook_chain_events": [
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-1e93090fad83",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-1e93090fad83",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2734
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-f81620bd6da4",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-f81620bd6da4",
+            "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+            "spawn_reason": "research_plan",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 5508
+          }
+        }
+      ],
+      "request_web_research_enabled": true,
+      "effective_web_research_user_enabled": true,
+      "effective_web_research_tools": true,
+      "request_agent_mode": "agent",
+      "turn_tool_denylist": [],
+      "request_turn_warnings": [],
+      "request_pdf_reading_mode": "ask",
+      "subagent_runs": [
+        {
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+          "child_turn_id": null,
+          "spawn_reason": "coordinator_route_hint:retrieval_agent",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "coordinator_route_hint:retrieval_agent",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "writer_agent",
+          "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+          "child_turn_id": null,
+          "spawn_reason": "retrieval_completion_arxiv_research",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "retrieval_completion_arxiv_research",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "ce-1e93090fad83",
+          "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+          "child_turn_id": null,
+          "spawn_reason": "corpus_explore",
+          "task": {
+            "task_id": "2c7b797d-763e-47b5-8d9c-7185f0b88c94",
+            "task_type": "corpus_explore",
+            "description": "Read-only corpus exploration child",
+            "execution_mode": "sync",
+            "fanout_slot": 1
+          },
+          "task_id": null,
+          "task_type": "corpus_explore",
+          "description": "Read-only corpus exploration child",
+          "execution_mode": "sync",
+          "fanout_slot": 1,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": 2734,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "spawned",
+          "merge_provenance": {
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "corpus_explore_result",
+            "carried_keys": [
+              "corpus_explore_results",
+              "specialist_results_v3"
+            ],
+            "evidence_origin": "subagent:ce-1e93090fad83",
+            "parent_state_write": "bounded_append_only"
+          },
+          "output_pointer": "run_metadata.corpus_explore_results[0]"
+        },
+        {
+          "subagent_id": "rp-f81620bd6da4",
+          "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+          "child_turn_id": null,
+          "spawn_reason": "research_plan",
+          "task": {
+            "task_id": "11e8f183-a287-47a4-9e41-556b34acb5e5",
+            "task_type": "research_plan",
+            "description": "Read-only research plan child",
+            "execution_mode": "sync",
+            "fanout_slot": 1
+          },
+          "task_id": null,
+          "task_type": "research_plan",
+          "description": "Read-only research plan child",
+          "execution_mode": "sync",
+          "fanout_slot": 1,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": 5508,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "spawned",
+          "merge_provenance": {
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "research_plan_result",
+            "carried_keys": [
+              "research_plan_results",
+              "specialist_results_v3"
+            ],
+            "evidence_origin": "subagent:rp-f81620bd6da4",
+            "parent_state_write": "bounded_append_only"
+          },
+          "output_pointer": "run_metadata.research_plan_results[0]"
+        }
+      ],
+      "subagent_task_notifications": [
+        {
+          "schema_version": 1,
+          "task_id": "b69d50ba-15a5-4294-bc30-3b6980995b4f",
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+          "status": "completed",
+          "carry_back": {
+            "summary": "Specialist leg completed.",
+            "result_excerpt": "{'ok': True, 'row_count': 1, 'item': {'arxiv_id': '1706.03762v7', 'title': 'Attention Is All You Need', 'authors': ['Ashish Vaswani', 'Noam Shazeer', 'Niki Parmar', 'Jakob Uszkoreit', 'Llion Jones', 'Aidan N. Gomez', 'Lukasz Kaiser', 'Illia Polosukhin'], 'summary': 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.', 'published': '2017-06-12T17:57:34Z', 'updated': '2023-08-02T00:41:18Z', 'entry_url': 'https://arxiv.org/abs/1706.03762v7', 'pdf_url': 'https://arxiv.org/pdf/1706.03762v7', 'categories': ['cs.CL', 'cs.LG'], 'doi': ''}, 'web_sources': [{'title': 'Attention Is All You Need', 'url': 'https://arxiv.org/abs/1706.03762v7', 'doi': '', 'source_tool': 'arxiv_fetch', 'snippet': 'The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the W…', 'provenance_kind': 'arxiv_abstract', 'evidence_quality': 'medium', 'evidence_mode': 'abstract', 'is_external': True}], 'evidence_origin': 'external_web', 'sse_hint': {'type': 'web_fetched', 'url': 'https://export.arxiv.org/api/query', 'status': 200, 'bytes': 2965, 'cache_hit': False, 'mode': 'arxiv_fetch'}}",
+            "key_sources": [],
+            "verdict": null
+          },
+          "usage": {}
+        },
+        {
+          "schema_version": 1,
+          "task_id": "96d57366-0feb-49e1-9ece-d048a6318313",
+          "subagent_id": "writer_agent",
+          "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+          "status": "completed",
+          "carry_back": {
+            "summary": "No structured specialist payload recorded.",
+            "result_excerpt": null,
+            "key_sources": [],
+            "verdict": null
+          },
+          "usage": {}
+        }
+      ],
+      "subagent_observability_lane": "fork_v3_enhanced",
+      "specialist_results_v3": {
+        "schema_version": 1,
+        "legs": [
+          {
+            "kind": "parent_tool",
+            "specialist_id": "retrieval_agent",
+            "spawn_reason": "parent_specialist",
+            "tool_payloads_count": 2,
+            "tool_payloads_excerpt": [
+              {
+                "detail": "Client error '422 Unprocessable Entity' for url 'https://api.unpaywall.org/v2/10.48550%2Farxiv.1706.03762?email=you%40example.com'\nFor more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422",
+                "error": "unpaywall_request_failed",
+                "evidence_origin": "external_web",
+                "item": null,
+                "normalized_doi": "10.48550/arXiv.1706.03762",
+                "ok": false,
+                "row_count": 0,
+                "sse_hint": {
+                  "type": "web_fetched",
+                  "url": "https://api.unpaywall.org/v2/10.48550%2Farxiv.1706.03762",
+                  "status": 0,
+                  "bytes": 0,
+                  "cache_hit": false,
+                  "mode": "unpaywall"
+                }
+              },
+              {
+                "evidence_origin": "external_web",
+                "item": {
+                  "arxiv_id": "1706.03762v7",
+                  "title": "Attention Is All You Need",
+                  "authors": [
+                    "Ashish Vaswani",
+                    "Noam Shazeer",
+                    "Niki Parmar",
+                    "Jakob Uszkoreit",
+                    "Llion Jones",
+                    "Aidan N. Gomez",
+                    "Lukasz Kaiser",
+                    "Illia Polosukhin"
+                  ],
+                  "summary": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.",
+                  "published": "2017-06-12T17:57:34Z",
+                  "updated": "2023-08-02T00:41:18Z",
+                  "entry_url": "https://arxiv.org/abs/1706.03762v7",
+                  "pdf_url": "https://arxiv.org/pdf/1706.03762v7",
+                  "categories": [
+                    "cs.CL",
+                    "cs.LG"
+                  ],
+                  "doi": ""
+                },
+                "ok": true,
+                "row_count": 1,
+                "sse_hint": {
+                  "type": "web_fetched",
+                  "url": "https://export.arxiv.org/api/query",
+                  "status": 200,
+                  "bytes": 2965,
+                  "cache_hit": false,
+                  "mode": "arxiv_fetch"
+                },
+                "web_sources": [
+                  {
+                    "title": "Attention Is All You Need",
+                    "url": "https://arxiv.org/abs/1706.03762v7",
+                    "doi": "",
+                    "source_tool": "arxiv_fetch",
+                    "snippet": "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the W…",
+                    "provenance_kind": "arxiv_abstract",
+                    "evidence_quality": "medium",
+                    "evidence_mode": "abstract",
+                    "is_external": true
+                  }
+                ]
+              }
+            ],
+            "evidence_origin": "parent_tool",
+            "confidence": 0.9,
+            "terminal_state": "succeeded",
+            "failure_code": null
+          },
+          {
+            "kind": "corpus_explore",
+            "subagent_id": "ce-1e93090fad83",
+            "spawn_reason": "corpus_explore",
+            "text_excerpt": "Scope: Проверка OA-доступа через Unpaywall для указанного DOI.\nResult: Запрос к Unpaywall для DOI 10.48550/arXiv.1706.03762 завершился с ошибкой 422 (Unprocessable Entity), что указывает на проблему обработки запроса сервером Unpaywall. Однако доступ к полному тексту статьи доступен через arXiv: https://arxiv.org/pdf/1706.03762v7. Таким образом, несмотря на сбой в Unpaywall, работа открыта и доступна в репозитории arXiv.\nKey sources: none",
+            "issues": [],
+            "terminal_state": "succeeded",
+            "failure_code": null,
+            "salvage_used": false,
+            "evidence_origin": "subagent:ce-1e93090fad83",
+            "confidence": 0.35
+          },
+          {
+            "kind": "research_plan",
+            "subagent_id": "rp-f81620bd6da4",
+            "spawn_reason": "research_plan",
+            "text_excerpt": "Scope: Проверить наличие открытого доступа через Unpaywall для указанного DOI, используя доступные данные и инструменты.\n\nResult:\nCorpus sub-queries:\n- Запрос к find_works с DOI \"10.48550/arXiv.1706.03762\" в глобальном корпусе для подтверждения идентификатора работы.\n- Проверка метаданных статьи в arXiv через внешние источники (уже частично доступна).\n\nGraph sub-queries:\n- Нет необходимости в графовых запросах, так как вопрос касается внешнего источника (Unpaywall), а не внутренней структуры графа.\n\nWriter spec:\n- Ответ должен быть кратким, с указанием статуса OA и причины (ошибка Unpaywall, отсутствие данных).\n- Упомянуть, что статья доступна через arXiv (зелёный OA), несмотря на сбой в Unpaywall.\n- Риск: невозможность подтвердить статус через Unpaywall из-за технической ошибки (422).\n\nKey sources: none",
+            "issues": [],
+            "terminal_state": "succeeded",
+            "failure_code": null,
+            "salvage_used": false,
+            "research_plan_write_attempted": false,
+            "research_plan_write_ok": null,
+            "evidence_origin": "subagent:rp-f81620bd6da4",
+            "confidence": 0.35
+          }
+        ],
+        "merge": {
+          "evidence_origin": "mixed",
+          "confidence": 0.35,
+          "conflict": null,
+          "writer_directive": "Evidence merge (v3): synthesize a single grounded answer. evidence_origin='mixed'. Do not hide tool denials, timeouts, or conflicting VERDICT lines; state them explicitly.",
+          "partial_failure": false,
+          "completion_state": "any_specialist_payload"
+        }
+      },
+      "corpus_explore_results": [
+        {
+          "schema_version": 1,
+          "subagent_id": "ce-1e93090fad83",
+          "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+          "issues": [],
+          "terminal_state": "succeeded",
+          "failure_code": null,
+          "latency_ms": 2734
+        }
+      ],
+      "research_plan_results": [
+        {
+          "schema_version": 1,
+          "subagent_id": "rp-f81620bd6da4",
+          "parent_turn_id": "7197b83b-9df5-45d3-bdb8-65ca4698604f",
+          "issues": [],
+          "terminal_state": "succeeded",
+          "failure_code": null,
+          "latency_ms": 5508,
+          "research_plan_write_ok": null
+        }
+      ],
+      "routing_log": [
+        {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "reason": "coordinator_route_hint:retrieval_agent",
+          "budget_left": 12,
+          "decision_source": "route_plan",
+          "route_hint": "retrieval_agent"
+        },
+        {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "reason": "retrieval_completion_arxiv_research",
+          "budget_left": 10
+        }
+      ]
+    },
+    "thread_id": null,
+    "session_summary_excerpt": null,
+    "answer_class": "grounded_explanation",
+    "evidence_summary": "1 citation(s), 6 trace step(s)",
+    "warnings": [],
+    "inventory": null,
+    "relation_trace": null,
+    "quote_candidates": null,
+    "idea_suggestions": null,
+    "bibliography": null,
+    "product_path": "tool_assisted",
+    "product_markers": [
+      "answered_with_tools"
+    ]
+  }
+}

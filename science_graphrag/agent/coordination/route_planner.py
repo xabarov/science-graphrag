@@ -32,7 +32,10 @@ from science_graphrag.agent.coordination.route_plan import (
     TerminationRule,
 )
 from science_graphrag.agent.coordination.turn_policy import TurnPolicy
-from science_graphrag.agent.web_evidence_policy import web_evidence_sufficient_for_product_query
+from science_graphrag.agent.web_evidence_policy import (
+    pdf_read_evidence_status,
+    web_evidence_sufficient_for_product_query,
+)
 
 
 def _pure_arxiv_discovery_intent(features: QuestionFeatures) -> bool:
@@ -110,6 +113,13 @@ def _derive_external_research_completion(  # pylint: disable=too-many-return-sta
         return "any_specialist_payload"
     if features.asks_for_web_research:
         requires_official = bool(features.asks_for_official_product_research)
+        pdf_ok, _pdf_reason = pdf_read_evidence_status(
+            payloads,
+            tool_counts=tool_counts,
+            requires_pdf_read=bool(features.asks_for_pdf_read),
+        )
+        if not pdf_ok:
+            return "evidence_insufficient"
         if payloads:
             sufficient, _reason = web_evidence_sufficient_for_product_query(
                 payloads,
@@ -123,6 +133,13 @@ def _derive_external_research_completion(  # pylint: disable=too-many-return-sta
         if tool_counts.get("web_search", 0) > 0 or tool_counts.get("official_web_lookup", 0) > 0:
             return "evidence_insufficient"
     if _pure_arxiv_discovery_intent(features):
+        pdf_ok, _pdf_reason = pdf_read_evidence_status(
+            payloads,
+            tool_counts=tool_counts,
+            requires_pdf_read=bool(features.asks_for_pdf_read),
+        )
+        if not pdf_ok:
+            return "evidence_insufficient"
         if tool_counts.get("arxiv_fetch", 0) > 0 or tool_counts.get("arxiv_search", 0) > 0:
             return "minimal_bundle_ready"
         return "evidence_insufficient"

@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "command": [
+    "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
+    "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/semantic_scholar_smoke.py",
+    "--query",
+    "attention is all you need"
+  ],
+  "output_tail": "search_http_status=200\nsearch_results=1\npaper_http_status=200\npaper_title=Attention is All you Need"
+}

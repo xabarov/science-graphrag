@@ -254,6 +254,14 @@ class AgentRuntimeFields(BaseModel):
             "batch (no additional chat→tools repair hops). Operator-only; default off."
         ),
     )
+    agent_final_answer_validation_enforcement_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true, ``final_answer_validation`` may block generic fallback answers when "
+            "grounded evidence exists (smolagents Phase 2 enforcement). Default false: "
+            "diagnostics-only verdicts in run_metadata without changing user-visible text."
+        ),
+    )
     agent_max_tool_calls: int = Field(default=12, ge=1, le=30)
     agent_route_plan_enabled: bool = Field(
         default=True,

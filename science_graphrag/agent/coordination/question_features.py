@@ -92,6 +92,39 @@ _QUOTE_VERBATIM_MARKERS: tuple[str, ...] = (
     "цитат",
 )
 
+_SEMANTIC_SCHOLAR_MARKERS: tuple[str, ...] = (
+    "semantic scholar",
+    "semanticscholar",
+    "s2 api",
+    "s2 paper",
+)
+
+_PDF_READ_MARKERS: tuple[str, ...] = (
+    "read pdf",
+    "extract pdf",
+    "pdf read",
+    "pdf extract",
+    "прочитай pdf",
+    "прочитать pdf",
+    "извлеки pdf",
+    "извлечь pdf",
+    "извлеки текст из pdf",
+    "oa pdf",
+    "open access pdf",
+)
+
+_EXTERNAL_SCHOLAR_PACK_MARKERS: tuple[str, ...] = (
+    "semantic scholar",
+    "semanticscholar",
+    "oa pdf",
+    "open access pdf",
+    "scholar обзор",
+    "scholar review",
+    "web+scholar",
+    "web scholar",
+    "web search + web fetch",
+)
+
 
 _RU_LETTERS = re.compile(r"[а-яё]", re.IGNORECASE)
 _EN_LETTERS = re.compile(r"[a-z]", re.IGNORECASE)
@@ -127,6 +160,9 @@ class QuestionFeatures:
     asks_for_official_product_research: bool = False
     asks_for_arxiv: bool = False
     asks_for_unpaywall: bool = False
+    asks_for_semantic_scholar: bool = False
+    asks_for_pdf_read: bool = False
+    asks_for_external_scholar_pack: bool = False
 
     matched_markers: tuple[str, ...] = field(default_factory=tuple)
 
@@ -149,6 +185,9 @@ class QuestionFeatures:
             "asks_for_official_product_research": bool(self.asks_for_official_product_research),
             "asks_for_arxiv": bool(self.asks_for_arxiv),
             "asks_for_unpaywall": bool(self.asks_for_unpaywall),
+            "asks_for_semantic_scholar": bool(self.asks_for_semantic_scholar),
+            "asks_for_pdf_read": bool(self.asks_for_pdf_read),
+            "asks_for_external_scholar_pack": bool(self.asks_for_external_scholar_pack),
             "matched_markers": list(self.matched_markers),
         }
 
@@ -192,6 +231,9 @@ class QuestionFeatures:
             ),
             asks_for_arxiv=bool(payload.get("asks_for_arxiv")),
             asks_for_unpaywall=bool(payload.get("asks_for_unpaywall")),
+            asks_for_semantic_scholar=bool(payload.get("asks_for_semantic_scholar")),
+            asks_for_pdf_read=bool(payload.get("asks_for_pdf_read")),
+            asks_for_external_scholar_pack=bool(payload.get("asks_for_external_scholar_pack")),
             matched_markers=markers,
         )
 
@@ -297,6 +339,15 @@ def extract_question_features(  # pylint: disable=too-many-locals
     if asks_official_product:
         matched.append("official_product_research")
 
+    asks_semantic_scholar, sem_hits = _has_any(qn, _SEMANTIC_SCHOLAR_MARKERS)
+    matched.extend(sem_hits)
+    asks_pdf_read, pdf_hits = _has_any(qn, _PDF_READ_MARKERS)
+    matched.extend(pdf_hits)
+    asks_external_scholar_pack, pack_hits = _has_any(qn, _EXTERNAL_SCHOLAR_PACK_MARKERS)
+    matched.extend(pack_hits)
+    asks_semantic_scholar = bool(asks_semantic_scholar or asks_external_scholar_pack)
+    asks_pdf_read = bool(asks_pdf_read or asks_external_scholar_pack)
+
     return QuestionFeatures(
         raw_question=raw,
         normalized_question=qn,
@@ -314,6 +365,9 @@ def extract_question_features(  # pylint: disable=too-many-locals
         asks_for_official_product_research=asks_official_product,
         asks_for_arxiv=asks_arxiv,
         asks_for_unpaywall=asks_unpaywall,
+        asks_for_semantic_scholar=asks_semantic_scholar,
+        asks_for_pdf_read=asks_pdf_read,
+        asks_for_external_scholar_pack=asks_external_scholar_pack,
         matched_markers=tuple(dict.fromkeys(matched)),  # de-dupe, preserve order
     )
 

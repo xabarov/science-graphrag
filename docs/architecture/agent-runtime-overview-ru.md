@@ -4,6 +4,8 @@
 
 Документ задуман как инженерная точка входа: его можно читать без предварительного погружения в roadmap, ADR и кодовую базу. Для детальных контрактов и исторических решений в конце есть ссылки на первоисточники.
 
+**См. также (англ., external research / terminal discipline):** [`smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md`](../analysis/smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md) — как усилить промпт-протокол и `final_answer` поверх этого runtime, не заменяя LangGraph и детерминированные guards.
+
 ## Зачем это читать
 
 Этот обзор отвечает на четыре вопроса:

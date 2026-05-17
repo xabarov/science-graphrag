@@ -18,6 +18,54 @@ RUNTIME_FALLBACK_ANSWER = (
 )
 
 
+def synthesize_partial_answer_from_specialist_context(
+    *,
+    citations: list[dict[str, Any]] | None,
+    specialist_results_v3: dict[str, Any] | None,
+    language: str,
+) -> str:
+    """Build a deterministic partial answer when terminal synthesis failed but evidence exists."""
+    cits = [c for c in list(citations or []) if isinstance(c, dict)]
+    sr3 = specialist_results_v3 if isinstance(specialist_results_v3, dict) else {}
+    merge = sr3.get("merge") if isinstance(sr3.get("merge"), dict) else {}
+    completion_state = str(merge.get("completion_state") or "").strip()
+    directive = str(merge.get("writer_directive") or "").strip()
+    if directive:
+        directive = directive[:600]
+    if language == "ru":
+        lines = [
+            (
+                "Не удалось автоматически завершить полноценный ответ в этом ходе, "
+                "но собранные данные сохранены."
+            ),
+            "Промежуточный результат:",
+        ]
+        if completion_state:
+            lines.append(f"- completion_state: {completion_state}")
+        lines.append(f"- получено источников: {len(cits)}")
+        if directive:
+            lines.append(f"- ограничения и замечания: {directive}")
+        lines.append(
+            "Рекомендация: продолжить с уже собранными источниками; "
+            "текущий вывод ограничен доступной выборкой."
+        )
+        return "\n".join(lines)
+    lines = [
+        (
+            "The run did not finish a complete final synthesis, "
+            "but intermediate evidence was collected."
+        ),
+        "Partial status:",
+    ]
+    if completion_state:
+        lines.append(f"- completion_state: {completion_state}")
+    lines.append(f"- collected sources: {len(cits)}")
+    if directive:
+        lines.append(f"- limitations: {directive}")
+    lines.append("Recommendation: continue from the collected evidence; this turn is partial.")
+    return "\n".join(lines)
+
+
 def coerce_optional_str(value: object) -> str | None:
     if not isinstance(value, str):
         return None
@@ -389,6 +437,7 @@ def aggregate_agent_llm_usage(messages: list[Any]) -> dict[str, int] | None:
 
 __all__ = [
     "RUNTIME_FALLBACK_ANSWER",
+    "synthesize_partial_answer_from_specialist_context",
     "agent_query_output_summary",
     "aggregate_agent_llm_usage",
     "coerce_optional_str",

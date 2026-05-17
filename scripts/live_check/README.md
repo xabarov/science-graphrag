@@ -4,6 +4,7 @@ Reusable checks live in [`http_suite.py`](./http_suite.py). They are invoked fro
 
 - [`agent_v2_http.py`](./agent_v2_http.py) (CLI operator script)
 - [`external_web_research_smoke.py`](./external_web_research_smoke.py) — live `/v2/agent/query` with `web_research_enabled`: official-source pass, citation diversity, negative-claim guard (YOLO11 regression lane); see `docs/agent/external_research_runtime_acceptance.md`
+- [`external_research_closeout.py`](./external_research_closeout.py) — orchestrated external-only closeout lane: per-source sync API run, Phoenix pull (`*-phoenix.jsonl`), diagnostics probe (`/v1/settings/agent_tools/test_source`), lane JSON/MD reports, and consolidated `index.json`/`index.md`
 - [`chat_nav_resume_smoke.py`](./chat_nav_resume_smoke.py) — Graph↔Chat trace-scope routing contract (Vitest, default) + `run_started` + GET resume stream replay (needs live API unless `--routing-contract-only`)
 - [`trace_scope_routing_contract_smoke.py`](./trace_scope_routing_contract_smoke.py) — Vitest-only: `preserve_trace` between `/graph` and `/chat`, no implicit `work_id` from session history when URL is workspace-wide
 - [`agent_od_workspace_e2e_audit.py`](./agent_od_workspace_e2e_audit.py) — OD workspace questions (`--suite default|heavy|full`), `tool_trace` step counts, optional Phoenix REST audit, Postgres `ingest_jobs` counts; per-case fields include `edge_search_zero_row_max_streak`, `paper_profile_max_consecutive_same_work_id`, `cypher_query_error_count`. `--trace-audit` adds fan-out / span heuristics (including `paper_profile` same-`work_id` streak and multi-step Cypher errors) and **`phoenix_structure_audit`** when Phoenix returns span names (coverage vs `tool_trace`, sequence hints for prompts/tools). Phoenix span **names** are **trace-scoped** (`eval.chat_agent.phoenix_export.extract_span_names_for_trace`) so ingest / unrelated `name` keys in JSON do not pollute the audit sample. **`--markdown-report PATH`** writes a human table (incl. **tool sequence** per case). Env **`AGENT_E2E_PHOENIX_SPAN_CAP`** (default `400`, max `2000`) caps stored span names per case. Exit `1` if any case lacks `final_answer` as last catalog tool or answer too short; `--write-report PATH` appends one JSON line per run for CI artifacts
@@ -84,6 +85,25 @@ Operator-only; not default CI. Runbook: [`docs/agent/mcp_runtime_acceptance.md`]
 | `mcp_agent_e2e_smoke.py` | Full `/v2/agent/query` + `call_mcp_tool` + `mcp_audit_summary` |
 
 Compose overlay: `docker-compose.mcp-live-check.yml` (use with `docker-compose.live-check.yml` for stable API).
+
+## External-research closeout lane (operator)
+
+Run a full external-only acceptance pack (per-source artifacts + Phoenix snapshots):
+
+```bash
+export AGENT_LIVE_BASE=http://127.0.0.1:18787
+export AGENT_LIVE_WORKSPACE_ID=ws-pilot-od
+.venv/bin/python scripts/live_check/external_research_closeout.py
+```
+
+Artifacts are written under `eval/results/external-research-closeout-<timestamp>/`:
+
+- `<lane>-smoke.json`
+- `<lane>-phoenix.jsonl`
+- `<lane>-report.json`
+- `<lane>-report.md`
+- `index.json`
+- `index.md`
 
 ## Standardized trace review
 

@@ -9,6 +9,7 @@ Date: 2026-05-15
 Companion docs:
 
 - Architecture decision: `docs/adr/030-external-research-tools-architecture.md`
+- **Agent prompt/loop/terminal discipline (Phase 0 architecture note):** [`smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md`](./smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md) — source-backed patterns for `final_answer`, protocol cards, validation, and observability layering (distinct from **Phase 0 — Stabilize Current Tools** below).
 - Implementation review/status: `docs/analysis/external-research-tools-implementation-review-2026-05-15.md`
 - Runtime acceptance index: `docs/agent/external_research_runtime_acceptance.md`
 - Landscape scan (archived stub): `docs/analysis/sci-tools.md`
@@ -265,7 +266,13 @@ Purpose: add broad literature discovery without duplicating `doi_resolver`.
    `docs/backlog/refactor-backend.md` external-research card tracks **Semantic Scholar** only; OpenAlex search is treated as delivered.
 
 3. **Diagnostics `status` semantics**  
-   Today `snapshot_agent_tools` reports OpenAlex as `ok` when enabled, while Unpaywall can show `needs_live_smoke`. **Decision to take in closeout PR:** either (a) align OpenAlex with `needs_live_smoke` until a recorded live probe updates `source_diagnostics.openalex`, or (b) keep `ok` but document that “ok” means unit-contract + operator trust, not live-validated. `last_test` / `last_error` remain empty until per-source **Test** hooks land (Phase 1 deferred).
+   Today `snapshot_agent_tools` reports OpenAlex as `ok` when enabled, while Unpaywall can show `needs_live_smoke`. **Decision (closeout 2026-05-17):** keep **`ok` = operator-configured + contract-healthy** for OpenAlex; lane-level proof stays in operator artifacts. Per-source **Test** hooks and `last_test` / `last_error` are shipped via `POST /v1/settings/agent_tools/test_source` and Settings UI (Phase 1 Agent Tools panel closeout 2026-05-16); populate diagnostics by running Test on each source in the target contour.
+
+**Closeout lane note (2026-05-17):**
+
+- Orchestrated external-only live run (`scripts/live_check/external_research_closeout.py`) produced `closeout_gate_status=fail` in `eval/results/external-research-closeout-2026-05-17/index.json`.
+- OpenAlex provider smoke and source-test are green, but retrieval lane did not select `openalex_works_search` for the closeout query family (`missing_expected_tools:openalex_works_search`).
+- Decision for this wave: keep OpenAlex status semantics as **`ok` = operator-configured + contract-healthy**, while lane-level proof remains in operator artifacts; route-intent tuning is tracked as follow-up, not as transport/API failure.
 
 ### Not in Phase 3 closeout (defer explicitly)
 
@@ -366,6 +373,12 @@ flowchart TD
 
 **Status (2026-05-16) — Phase 4 closeout slice:** stable `artifact_id` on PDF tool outcomes; optional **Redis-backed** durable JSON cache (`agent_pdf_read_durable_cache_enabled` + `REDIS_URL` wiring) for cold-start reuse of excerpt metadata keyed by URL hash + budget fingerprint; operator credential line for durable-cache availability. Full DB/object-store artifact rows remain deferred (backlog `[PARTIAL] Durable PDF read artifacts`).
 
+**Closeout lane note (2026-05-17):**
+
+- In `external-research-closeout-2026-05-17`, PDF lane is non-green: expected `read_external_pdf` was not reached in default prompt run, and forced run shows `read_external_pdf` denied with `reason=not_in_bound_tool_surface` in `tool_trace`.
+- This is a policy/allow-surface mismatch in current live contour, not a fetch/parser transport failure.
+- DB/object-store durable artifact rows remain deferred under backlog `[PARTIAL] Durable PDF read artifacts`.
+
 - Explicit PDF read produces visible progress + persisted artifact + answer grounded in extracted evidence with correct trust labels.
 - Agent never silently claims full-text reading when extraction did not run or failed.
 
@@ -380,6 +393,11 @@ Purpose: add citation-aware discovery once current sources and trust model are s
 **Operator acceptance runbook:** use `docs/agent/semantic_scholar_runtime_acceptance.md` → **Operator acceptance checklist** for exact commands and expected outputs (unit contract, registry, live smoke, failure contract).
 
 **Latest live lane note (2026-05-16):** Semantic Scholar smoke in current contour returned `429 Too Many Requests`; treat as non-green evidence and keep `needs_live_smoke` until a successful operator run is recorded.
+
+**Closeout lane note (2026-05-17):**
+
+- Semantic Scholar lane is green in orchestrated closeout (`semantic_scholar_search` + `semantic_scholar_paper` observed in `tool_trace`; Phoenix `fetch_ok=true`).
+- Direct API smoke is green (`search_http_status=200`, `paper_http_status=200`) and source-test endpoint now records green (`ok=true`, `detail=ok:results=1`).
 
 ### Backend
 
@@ -414,6 +432,13 @@ Purpose: add citation-aware discovery once current sources and trust model are s
 Purpose: keep MCP available for advanced integrations without making native tools depend on it.
 
 **Status (2026-05-16) — Phase 6 shipped (operator slice):** expanded `agent_tools.integrations` snapshot (operator state, timeout, denylist preview, auth model); allowlisted PATCH for `agent_mcp_request_timeout_seconds`, `agent_mcp_server_denylist`, and persisted `agent_mcp_http_base_url`; Integrations card with explicit states + MCP advanced fields + test action; operator smokes `mcp_adapter_smoke.py` + **agent E2E** `mcp_agent_e2e_smoke.py` (host stub `mcp_jsonrpc_stub.py`, compose overlay `docker-compose.mcp-live-check.yml`); retrieval specialist now forwards subgraph `debug_events` so `mcp_audit_summary` appears in sync JSON `run_metadata`; source-test endpoint `/v1/settings/agent_tools/test_source` writes latest MCP/OpenAlex/S2 diagnostics. Isolation test confirms native external tools remain independent of MCP gate failures. See `docs/agent/mcp_runtime_acceptance.md`.
+
+**Closeout lane note (2026-05-17):**
+
+- MCP direct lane is non-green in this contour:
+  - `mcp_adapter_smoke`: `missing_base_url`
+  - `mcp_agent_e2e_smoke`: `call_mcp_tool` present but `run_metadata.mcp_audit_summary` is null
+- This is treated as contour/config completeness gap for closeout evidence, not regression of native external tools.
 
 **Operator acceptance runbook:** use `docs/agent/mcp_runtime_acceptance.md` → **Operator acceptance checklist** for exact commands and expected outputs (snapshot/overlay/isolation/UI/live smoke).
 

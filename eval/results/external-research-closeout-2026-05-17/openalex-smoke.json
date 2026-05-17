@@ -1,0 +1,1819 @@
+{
+  "lane_id": "openalex",
+  "http_ok": true,
+  "request_payload_digest": {
+    "question": "Подбери релевантные работы по object detection за последние годы.",
+    "workspace_id": "ws-pilot-od",
+    "web_research_enabled": true
+  },
+  "response": {
+    "answer": "Вот подборка релевантных работ по object detection, включая как основополагающую статью YOLO, так и более поздние значимые разработки:\n\n1. **You Only Look Once: Unified, Real-Time Object Detection**  \n   - **Авторы**: Joseph Redmon, Santosh Divvala, Ross Girshick, Ali Farhadi  \n   - **Аннотация**: Представлена модель YOLO, которая решает задачу детекции как регрессионную, предсказывая ограничивающие рамки и вероятности классов напрямую из полного изображения за одну итерацию. Модель обрабатывает изображения в реальном времени (45 кадров/с), а упрощённая версия Fast YOLO достигает 155 кадров/с. YOLO демонстрирует хорошую обобщающую способность, превосходя R-CNN и DPM при адаптации к новым доменам, например, в обнаружении людей на художественных изображениях.\n\n2. **End-to-End Object Detection with Transformers (DETR)**  \n   - **Авторы**: Nicolas Carion, Francisco Massa, Gabriel Synnaeve, Nicolas Usunier, Alexander Kirillov, Sergey Zagoruyko  \n   - **Аннотация**: Вводится DETR — детектор, использующий архитектуру трансформера для прямого предсказания множества объектов. Метод устраняет необходимость в ручных компонентах, таких как NMS и генерация анкеров, и использует бипартитное сопоставление для уникальных предсказаний. DETR достигает качества, сопоставимого с Faster R-CNN, и легко расширяется до задач паноптической сегментации.\n\n3. **Feature Pyramid Networks for Object Detection (FPN)**  \n   - **Авторы**: Tsung-Yi Lin, Piotr Dollár, Ross Girshick, Kaiming He, Bharath Hariharan, Serge Belongie  \n   - **Аннотация**: Предлагается FPN — эффективная архитектура с верхне-нижним потоком и боковыми соединениями для построения семантически насыщенных признаковых пирамид на всех масштабах. Использование FPN в Faster R-CNN приводит к улучшению качества детекции и становится стандартом для мультимасштабного анализа.\n\n4. **EfficientDet: Scalable and Efficient Object Detection**  \n   - **Авторы**: Mingxing Tan, Ruoming Pang, Quoc V. Le  \n   - **Аннотация**: Семейство моделей EfficientDet, основанное на взвешенной двунаправленной FPN (BiFPN) и компаундном масштабировании. Достигает высокой эффективности: EfficientDet-D7 показывает 55.1 mAP на COCO, оставаясь при этом в 4–9 раз меньше и используя в 13–42 раз меньше вычислений по сравнению с предыдущими детекторами.\n\n5. **FCOS: Fully Convolutional One-Stage Object Detection**  \n   - **Авторы**: Zhi Tian, Chunhua Shen, Hao Chen, Tong He  \n   - **Аннотация**: FCOS — детектор, не использующий анкерные коробки, работающий по принципу «на каждый пиксель — предсказание». Упрощает архитектуру, избегая чувствительных к настройке гиперпараметров анкеров. При использовании ResNeXt-101 достигает 44.7% mAP, превосходя другие одноэтапные методы.\n\n6. **CenterNet: Keypoint Triplets for Object Detection**  \n   - **Авторы**: Kaiwen Duan, Song Bai, Lingxi Xie, Honggang Qi, Qingming Huang, Qi Tian",
+    "citations": [
+      {
+        "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "title": "You Only Look Once: Unified, Real-Time Object Detection",
+        "excerpt": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.",
+        "provenance_kind": "workspace_metadata",
+        "evidence_quality": "medium",
+        "evidence_mode": "abstract",
+        "is_external": false
+      },
+      {
+        "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
+        "title": "Task-aligned One-stage Object Detection",
+        "provenance_kind": "workspace_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": false
+      },
+      {
+        "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
+        "title": "Feature Pyramid Networks for Object Detection",
+        "excerpt": "Feature pyramids are a basic component in recognition systems for detecting objects at different scales. But recent deep learning object detectors have avoided pyramid representations, in part because they are compute and memory intensive. In this paper, we exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks to construct feature pyramids with marginal extra cost. A top-down architecture with lateral connections is developed for building high-level semantic feature maps at all scales. This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications. Using FPN in a basic Faster R-CNN system, our method achieves state-of-the-art single-model results on the COCO detection benchmark without bells and whistles, surpassing all existing single-model entries including those from the COCO 2016 challenge winners. In addition, our method can run at 6 FPS on a GPU and thus is a practical and accurate solution to multi-scale object detection. Code will be made publicly available.",
+        "provenance_kind": "workspace_metadata",
+        "evidence_quality": "medium",
+        "evidence_mode": "abstract",
+        "is_external": false
+      },
+      {
+        "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+        "title": "End-to-End Object Detection with Transformers",
+        "excerpt": "We present a new method that views object detection as a direct set prediction problem. Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode our prior knowledge about the task. The main ingredients of the new framework, called DEtection TRansformer or DETR, are a set-based global loss that forces unique predictions via bipartite matching, and a transformer encoder-decoder architecture. Given a fixed small set of learned object queries, DETR reasons about the relations of the objects and the global image context to directly output the final set of predictions in parallel. The new model is conceptually simple and does not require a specialized library, unlike many other modern detectors. DETR demonstrates accuracy and run-time performance on par with the well-established and highly-optimized Faster R-CNN baseline on the challenging COCO object detection dataset. Moreover, DETR can be easily generalized to produce panoptic segmentation in a unified manner. We show that it significantly outperforms competitive baselines. Training code and pretrained models are available at https://github.com/facebookresearch/detr.",
+        "provenance_kind": "workspace_metadata",
+        "evidence_quality": "medium",
+        "evidence_mode": "abstract",
+        "is_external": false
+      },
+      {
+        "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+        "title": "FCOS: Fully Convolutional One-Stage Object Detection",
+        "excerpt": "We propose a fully convolutional one-stage object detector (FCOS) to solve object detection in a per-pixel prediction fashion, analogue to semantic segmentation. Almost all state-of-the-art object detectors such as RetinaNet, SSD, YOLOv3, and Faster R-CNN rely on pre-defined anchor boxes. In contrast, our proposed detector FCOS is anchor box free, as well as proposal free. By eliminating the pre-defined set of anchor boxes, FCOS completely avoids the complicated computation related to anchor boxes such as calculating overlapping during training. More importantly, we also avoid all hyper-parameters related to anchor boxes, which are often very sensitive to the final detection performance. With the only post-processing non-maximum suppression (NMS), FCOS with ResNeXt-64x4d-101 achieves 44.7% in AP with single-model and single-scale testing, surpassing previous one-stage detectors with the advantage of being much simpler. For the first time, we demonstrate a much simpler and flexible detection framework achieving improved detection accuracy. We hope that the proposed FCOS framework can serve as a simple and strong alternative for many other instance-level tasks. Code is available at: tinyurl.com/FCOSv1",
+        "provenance_kind": "workspace_metadata",
+        "evidence_quality": "medium",
+        "evidence_mode": "abstract",
+        "is_external": false
+      },
+      {
+        "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+        "title": "CenterNet: Keypoint Triplets for Object Detection",
+        "excerpt": "In object detection, keypoint-based approaches often suffer a large number of incorrect object bounding boxes, arguably due to the lack of an additional look into the cropped regions. This paper presents an efficient solution which explores the visual patterns within each cropped region with minimal costs. We build our framework upon a representative one-stage keypoint-based detector named CornerNet. Our approach, named CenterNet, detects each object as a triplet, rather than a pair, of keypoints, which improves both precision and recall. Accordingly, we design two customized modules named cascade corner pooling and center pooling, which play the roles of enriching information collected by both top-left and bottom-right corners and providing more recognizable information at the central regions, respectively. On the MS-COCO dataset, CenterNet achieves an AP of 47.0%, which outperforms all existing one-stage detectors by at least 4.9%. Meanwhile, with a faster inference speed, CenterNet demonstrates quite comparable performance to the top-ranked two-stage detectors. Code is available at https://github.com/Duankaiwen/CenterNet",
+        "provenance_kind": "workspace_metadata",
+        "evidence_quality": "medium",
+        "evidence_mode": "abstract",
+        "is_external": false
+      },
+      {
+        "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+        "title": "EfficientDet: Scalable and Efficient Object Detection",
+        "excerpt": "Model efficiency has become increasingly important in computer vision. In this paper, we systematically study neural network architecture design choices for object detection and propose several key optimizations to improve efficiency. First, we propose a weighted bi-directional feature pyramid network (BiFPN), which allows easy and fast multi-scale feature fusion; Second, we propose a compound scaling method that uniformly scales the resolution, depth, and width for all backbone, feature network, and box/class prediction networks at the same time. Based on these optimizations and better backbones, we have developed a new family of object detectors, called EfficientDet, which consistently achieve much better efficiency than prior art across a wide spectrum of resource constraints. In particular, with single-model and single-scale, our EfficientDet-D7 achieves state-of-the-art 55.1 AP on COCO test-dev with 77M parameters and 410B FLOPs1, being 4x – 9x smaller and using 13x – 42x fewer FLOPs than previous detectors. Code is available at https://github.com/google/automl/tree/master/efficientdet.",
+        "provenance_kind": "workspace_metadata",
+        "evidence_quality": "medium",
+        "evidence_mode": "abstract",
+        "is_external": false
+      },
+      {
+        "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+        "title": "Object Detection with Discriminatively Trained Part Based Models",
+        "provenance_kind": "workspace_metadata",
+        "evidence_quality": "weak",
+        "evidence_mode": "metadata_only",
+        "is_external": false
+      }
+    ],
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": "1.0",
+          "classifier": "deterministic",
+          "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+          "question_features": "{'raw_question': 'Подбери релевантные работы по object detection за последние годы.', 'normalized_question': 'подбери релевантные работы по object detection за последние годы.', 'has_workspace': True,"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "reason": "coordinator_route_hint:retrieval_agent",
+          "budget_left": 12,
+          "decision_source": "route_plan",
+          "route_hint": "retrieval_agent"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 2,
+          "reason": null
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "find_works",
+        "args_summary": {
+          "query": "object detection",
+          "workspace_id": "ws-pilot-od",
+          "limit": "10"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "paper_profile",
+        "args_summary": {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "idea_search",
+        "args_summary": {
+          "query": "recent advances in object detection after YOLO",
+          "kinds": "['chunk', 'work']",
+          "workspace_id": "ws-pilot-od",
+          "top_k": "5"
+        },
+        "row_count": 5,
+        "duration_ms": 0,
+        "truncated": true,
+        "error": null
+      },
+      {
+        "step": 4,
+        "tool": "find_works",
+        "args_summary": {
+          "query": "object detection",
+          "limit": "10"
+        },
+        "row_count": 10,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 5,
+        "tool": "paper_profile",
+        "args_summary": {
+          "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 6,
+        "tool": "paper_profile",
+        "args_summary": {
+          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 7,
+        "tool": "paper_profile",
+        "args_summary": {
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 8,
+        "tool": "paper_profile",
+        "args_summary": {
+          "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 9,
+        "tool": "paper_profile",
+        "args_summary": {
+          "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 10,
+        "tool": "paper_quote_search",
+        "args_summary": {
+          "query": "recent advances in object detection after YOLO",
+          "workspace_id": "ws-pilot-od",
+          "top_k": "5"
+        },
+        "row_count": 5,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 11,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer": "Вот подборка релевантных работ по object detection, включая как основополагающую статью YOLO, так и более поздние значимые разработки:\n\n1. **You Only Look Once: Unified, Real-Time Object Detection**  "
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 104786,
+    "phoenix_trace_id": "725c95af7db3c026cb4898617b735b38",
+    "run_metadata": {
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_max_tool_calls": 12,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+      "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+      "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+      "openrouter_reference_pricing_usd_per_1m": {
+        "chat": {
+          "model_id": "qwen/qwen3-235b-a22b-2507",
+          "prompt_usd_per_1m": 0.071,
+          "completion_usd_per_1m": 0.1
+        },
+        "extraction": {
+          "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+          "prompt_usd_per_1m": 0.075,
+          "completion_usd_per_1m": 0.2
+        }
+      },
+      "agent_pdf_read_backend_mode": "hybrid",
+      "usage": {
+        "prompt_tokens": 91422,
+        "completion_tokens": 2528,
+        "total_tokens": 93950,
+        "input_tokens": 91422,
+        "output_tokens": 2528
+      },
+      "debug_events": [
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "find_works"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 26
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 46
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 44
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 40
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 47
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 50
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_quote_search"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 16
+        },
+        {
+          "type": "tool_use_summary_batch",
+          "ok": true,
+          "count": 1,
+          "rows": [
+            {
+              "tool": "paper_quote_search",
+              "original_chars": 9039,
+              "merged_payload_chars": 10602,
+              "compression_ratio_vs_original": 0.8526,
+              "summary_mode": "llm",
+              "forked": true,
+              "side_llm_cache_read_ratio": 0.0,
+              "side_llm_cache_creation_tokens": null,
+              "side_llm_cache_read_tokens": 0,
+              "merged_payload_chars_after_overflow": 1692
+            }
+          ]
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-decc9ae8142b",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-decc9ae8142b",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 22045
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-947387943fa2",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": false,
+          "detail": {
+            "subagent_id": "rp-947387943fa2",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "research_plan",
+            "terminal_state": "failed",
+            "leg_kind": "spawned",
+            "latency_ms": 12785,
+            "failure_code": "tool_denied"
+          }
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "writer_agent",
+          "tools": null,
+          "reason": "writer_terminal_synthesis_seam",
+          "top_score": null,
+          "score_band": null,
+          "catalog_size": 1,
+          "shortlist_size": null,
+          "shortlist_ratio": null,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": true,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "writer_mode": "normal"
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "reason": "rules",
+          "top_score": 5.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 5,
+          "shortlist_ratio": 0.2941,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "workspace_inspect"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "deferred_strict_in_shortlist_count": 2,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "find_works"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 14
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 46
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "idea_search"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 796
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "find_works"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 26
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 46
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 44
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 40
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 47
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 50
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_quote_search"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 16
+        },
+        {
+          "type": "tool_use_summary_batch",
+          "ok": true,
+          "count": 1,
+          "rows": [
+            {
+              "tool": "paper_quote_search",
+              "original_chars": 9039,
+              "merged_payload_chars": 10602,
+              "compression_ratio_vs_original": 0.8526,
+              "summary_mode": "llm",
+              "forked": true,
+              "side_llm_cache_read_ratio": 0.0,
+              "side_llm_cache_creation_tokens": null,
+              "side_llm_cache_read_tokens": 0,
+              "merged_payload_chars_after_overflow": 1692
+            }
+          ]
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-decc9ae8142b",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-decc9ae8142b",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 22045
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-947387943fa2",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": false,
+          "detail": {
+            "subagent_id": "rp-947387943fa2",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "research_plan",
+            "terminal_state": "failed",
+            "leg_kind": "spawned",
+            "latency_ms": 12785,
+            "failure_code": "tool_denied"
+          }
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "final_answer"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 5
+        }
+      ],
+      "tool_search_shortlist_ratio_avg": 0.2941,
+      "deferred_tool_activation_rate": 0.0,
+      "tool_use_summary_batch_count": 2,
+      "tool_use_summary_row_count": 2,
+      "tool_use_summary_compression_ratio_avg": 0.8526,
+      "tool_use_summary_side_llm_cache_read_ratio_avg": 0.0,
+      "hook_chain_events": [
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-decc9ae8142b",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-decc9ae8142b",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 22045
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-947387943fa2",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": false,
+          "detail": {
+            "subagent_id": "rp-947387943fa2",
+            "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+            "spawn_reason": "research_plan",
+            "terminal_state": "failed",
+            "leg_kind": "spawned",
+            "latency_ms": 12785,
+            "failure_code": "tool_denied"
+          }
+        }
+      ],
+      "request_web_research_enabled": true,
+      "effective_web_research_user_enabled": true,
+      "effective_web_research_tools": true,
+      "request_agent_mode": "agent",
+      "turn_tool_denylist": [],
+      "request_turn_warnings": [],
+      "request_pdf_reading_mode": "ask",
+      "subagent_runs": [
+        {
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+          "child_turn_id": null,
+          "spawn_reason": "coordinator_route_hint:retrieval_agent",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "coordinator_route_hint:retrieval_agent",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "writer_agent",
+          "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+          "child_turn_id": null,
+          "spawn_reason": "routing",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "routing",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "ce-decc9ae8142b",
+          "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+          "child_turn_id": null,
+          "spawn_reason": "corpus_explore",
+          "task": {
+            "task_id": "fbdf4f10-5e96-46fb-a524-8bc9d15b4c9c",
+            "task_type": "corpus_explore",
+            "description": "Read-only corpus exploration child",
+            "execution_mode": "sync",
+            "fanout_slot": 1
+          },
+          "task_id": null,
+          "task_type": "corpus_explore",
+          "description": "Read-only corpus exploration child",
+          "execution_mode": "sync",
+          "fanout_slot": 1,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": 22045,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "spawned",
+          "merge_provenance": {
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "corpus_explore_result",
+            "carried_keys": [
+              "corpus_explore_results",
+              "specialist_results_v3"
+            ],
+            "evidence_origin": "subagent:ce-decc9ae8142b",
+            "parent_state_write": "bounded_append_only"
+          },
+          "output_pointer": "run_metadata.corpus_explore_results[0]"
+        },
+        {
+          "subagent_id": "rp-947387943fa2",
+          "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+          "child_turn_id": null,
+          "spawn_reason": "research_plan",
+          "task": {
+            "task_id": "02b45619-1b40-474e-82b4-2dbe78322706",
+            "task_type": "research_plan",
+            "description": "Read-only research plan child",
+            "execution_mode": "sync",
+            "fanout_slot": 1
+          },
+          "task_id": null,
+          "task_type": "research_plan",
+          "description": "Read-only research plan child",
+          "execution_mode": "sync",
+          "fanout_slot": 1,
+          "task_status": "failed",
+          "terminal_state": "failed",
+          "latency_ms": 12785,
+          "failure_code": "tool_denied",
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "spawned",
+          "merge_provenance": {
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "research_plan_result",
+            "carried_keys": [
+              "research_plan_results",
+              "specialist_results_v3"
+            ],
+            "evidence_origin": "subagent:rp-947387943fa2",
+            "parent_state_write": "bounded_append_only"
+          },
+          "output_pointer": "run_metadata.research_plan_results[0]"
+        }
+      ],
+      "subagent_task_notifications": [
+        {
+          "schema_version": 1,
+          "task_id": "37a2871b-7c3c-45de-ab80-66a4d6629f06",
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+          "status": "completed",
+          "carry_back": {
+            "summary": "Specialist leg completed.",
+            "result_excerpt": "{'row_count': 5, '_tool_use_summary': {'schema_version': 'tool_use_summary_v1', 'tool': 'paper_quote_search', 'bullets': ['Introduces YOLO (You Only Look Once), a unified, real-time object detection system that frames detection as a regression problem to spatially separated bounding boxes and class probabilities', 'Processes images at 45 frames per second for the base model, and Fast YOLO achieves 155 frames per second while maintaining high accuracy', 'Uses a single neural network to predict bounding boxes and class probabilities directly from full images in one evaluation, enabling end-to-end optimization', 'Trained on a loss function directly aligned with detection performance, differing from classifier-based approaches', 'Demonstrates strong generalization on artwork datasets like Picasso and People-Art, outperforming R-CNN and DPM in domain adaptation', 'Achieves real-time performance when connected to a webcam, functioning effectively as an interactive tracking system', 'Trained jointly as a complete model, simplifying the detection pipeline compared to multi-stage methods', 'YOLO maintains detection accuracy even when test data diverges significantly from training data'], 'work_ids': ['da37b10b-f5e6-4b74-9659-cc66e4abec26'], 'numeric_facts': {'base_model_fps': 45, 'fast_yolo_fps': 155}, 'warnings': []}, '_tool_use_summary_meta': {'schema_version': 'tool_use_summary_envelope_v1', 'original_chars': 9039, 'summary_mode': 'llm', 'forked': True, 'side_llm_cache_read_ratio': 0.0, 'side_llm_cache_creation_tokens': None, 'side_llm_cache_read_tokens': 0, 'merged_payload_chars': 10602, 'compression_ratio_vs_original': 0.8526}, '_tool_use_summary_overflow_drop': True}",
+            "key_sources": [],
+            "verdict": null
+          },
+          "usage": {}
+        },
+        {
+          "schema_version": 1,
+          "task_id": "1372c94a-13b0-4f92-aff6-899260250281",
+          "subagent_id": "writer_agent",
+          "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+          "status": "completed",
+          "carry_back": {
+            "summary": "No structured specialist payload recorded.",
+            "result_excerpt": null,
+            "key_sources": [],
+            "verdict": null
+          },
+          "usage": {}
+        }
+      ],
+      "subagent_observability_lane": "fork_v3_enhanced",
+      "specialist_results_v3": {
+        "schema_version": 1,
+        "legs": [
+          {
+            "kind": "parent_tool",
+            "specialist_id": "retrieval_agent",
+            "spawn_reason": "parent_specialist",
+            "tool_payloads_count": 10,
+            "tool_payloads_excerpt": [
+              {
+                "inventory": {
+                  "paper_matches": [
+                    {
+                      "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                      "score": 2.3789172172546387,
+                      "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                      "year": null
+                    }
+                  ]
+                },
+                "matches": [
+                  {
+                    "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                    "score": 2.3789172172546387,
+                    "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                    "year": null
+                  }
+                ],
+                "row_count": 1,
+                "scoped_to_workspace": true,
+                "truncated": false,
+                "workspace_id": "ws-pilot-od"
+              },
+              {
+                "abstract": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.",
+                "arxiv_id": "",
+                "authors": [
+                  {
+                    "id": "d18576c3-572c-56cb-b92f-726daa81aefe",
+                    "full_name": "Ali Farhadi"
+                  },
+                  {
+                    "id": "98fe6eca-0bad-56aa-a75b-c048a4b62159",
+                    "full_name": "Santosh Divvala"
+                  },
+                  {
+                    "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+                    "full_name": "Ross Girshick"
+                  },
+                  {
+                    "id": "1ce26753-51f2-5623-9b93-80363d723357",
+                    "full_name": "Joseph Redmon"
+                  }
+                ],
+                "doi": "",
+                "first_author": "Joseph Redmon",
+                "inventory": {
+                  "authors_by_work": {
+                    "da37b10b-f5e6-4b74-9659-cc66e4abec26": [
+                      {
+                        "id": "d18576c3-572c-56cb-b92f-726daa81aefe",
+                        "full_name": "Ali Farhadi"
+                      },
+                      {
+                        "id": "98fe6eca-0bad-56aa-a75b-c048a4b62159",
+                        "full_name": "Santosh Divvala"
+                      },
+                      {
+                        "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+                        "full_name": "Ross Girshick"
+                      },
+                      {
+                        "id": "1ce26753-51f2-5623-9b93-80363d723357",
+                        "full_name": "Joseph Redmon"
+                      }
+                    ],
+                    "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93": [
+                      {
+                        "id": "69c82b52-b335-554f-ade2-9f0c68caf927",
+                        "full_name": "Alexander Kirillov"
+                      },
+                      {
+                        "id": "87ae9e7d-42b0-5c0e-83a0-11310ffa71fb",
+                        "full_name": "Nicolas Usunier"
+                      },
+                      {
+                        "id": "0c4154e1-8d3f-5604-a769-7b7314851798",
+                        "full_name": "Sergey Zagoruyko"
+                      },
+                      {
+                        "id": "5114f352-71a5-5432-980b-ecef2407b3a8",
+                        "full_name": "Francisco Massa"
+                      },
+                      {
+                        "id": "37d84d4e-8687-5961-8119-065370f8aaba",
+                        "full_name": "Nicolas Carion"
+                      },
+                      {
+                        "id": "3fc64858-c55d-55eb-ae23-fed276d2b032",
+                        "full_name": "Gabriel Synnaeve"
+                      }
+                    ],
+                    "0ccc5f8d-239c-442b-8e43-82a1a6a6597f": [
+                      {
+                        "id": "0ba6afd2-a8e5-519a-beef-4abaaa89bf7a",
+                        "full_name": "Tsung-Yi Lin"
+                      },
+                      {
+                        "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+                        "full_name": "Ross Girshick"
+                      },
+                      {
+                        "id": "e6757c1a-48f9-5521-8907-5c4df85dedab",
+                        "full_name": "Piotr Dollár"
+                      },
+                      {
+                        "id": "26851fcd-5858-5fec-bb7b-7f250e500e10",
+                        "full_name": "Serge Belongie"
+                      },
+                      {
+                        "id": "ee093a26-99e3-5684-9d2d-cd3af97e314b",
+                        "full_name": "Bharath Hariharan"
+                      },
+                      {
+                        "id": "da3b66ec-bb02-5ce8-a511-ebe3b97653f7",
+                        "full_name": "Kaiming He"
+                      }
+                    ],
+                    "142db14f-610a-44ca-b928-83aa48f749a0": [
+                      {
+                        "id": "83891e7a-e2f2-5b15-b27a-1da3a289ec79",
+                        "full_name": "Quoc V. Le"
+                      },
+                      {
+                        "id": "aee38cbf-1a93-5970-927b-77a610bf3a66",
+                        "full_name": "Ruoming Pang"
+                      },
+                      {
+                        "id": "881e02a4-a1cc-562a-bb9e-922f4d7a034c",
+                        "full_name": "Mingxing Tan"
+                      }
+                    ],
+                    "3ca82fea-ba1d-4478-b34d-9182e88252de": [
+                      {
+                        "id": "c6f53d89-c0f2-5046-8245-4876d6ccd923",
+                        "full_name": "Chunhua Shen*"
+                      },
+                      {
+                        "id": "63092649-9b1d-5983-ae7a-49242f23c206",
+                        "full_name": "Hao Chen"
+                      },
+                      {
+                        "id": "f343d792-8937-5ef8-9723-ff33390d192d",
+                        "full_name": "Zhi Tian"
+                      },
+                      {
+                        "id": "d8d50f7c-ff04-5759-8f7e-f5ebf611269a",
+                        "full_name": "Tong He"
+                      }
+                    ],
+                    "99835def-0a25-4cc5-9d79-bdda878cae15": [
+                      {
+                        "id": "6ac0bcae-0249-59e2-8052-db5747baa312",
+                        "full_name": "Qi Tian"
+                      },
+                      {
+                        "id": "f8c5316e-f2a7-53c8-9c45-431242b8f49e",
+                        "full_name": "Kaiwen Duan"
+                      },
+                      {
+                        "id": "8156dffd-4972-5890-b942-3e28b7b75ef0",
+                        "full_name": "Song Bai"
+                      },
+                      {
+                        "id": "0af2ef5c-e595-539e-899b-a32f949c4a49",
+                        "full_name": "Lingxi Xie"
+                      },
+                      {
+                        "id": "a5c339c1-a5c9-5991-8f97-73c259194ea9",
+                        "full_name": "Qingming Huang"
+                      },
+                      {
+                        "id": "319061c6-1cb1-5e6b-ad4c-a7ee5ff09c00",
+                        "full_name": "Honggang Qi"
+                      }
+                    ]
+                  }
+                },
+                "metadata_completeness": {
+                  "title": "present",
+                  "year": "absent",
+                  "doi": "absent",
+                  "venue": "absent",
+                  "abstract": "present"
+                },
+                "metadata_source": "neo4j_work_card",
+                "row_count": 1,
+                "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                "truncated": false,
+                "venue": null
+              },
+              {
+                "items": [
+                  {
+                    "kind": "chunk",
+                    "id": "ca3848db-7339-5988-ad36-f152e5a0342a",
+                    "score": 0.7055298,
+                    "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                    "snippet": "## Abstract\n\nWe present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes a"
+                  },
+                  {
+                    "kind": "chunk",
+                    "id": "c480769d-9606-5a1a-9b18-e2ea2d100029",
+                    "score": 0.6872376,
+                    "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                    "snippet": "the test data can diverge from what the system has seen before [3]. We compare YOLO to other detection systems on the Picasso Dataset [12] and the People-Art Dataset [3], two datasets for testing person detection on artwork.\n\nFigure 5 shows"
+                  },
+                  {
+                    "kind": "chunk",
+                    "id": "da55fc41-efa3-51be-a323-6078a98c66ec",
+                    "score": 0.6860932,
+                    "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                    "snippet": "## 6. Conclusion\n\nWe introduce YOLO, a unified model for object detection. Our model is simple to construct and can be trained directly on full images. Unlike classifier-based approaches, YOLO is trained on a loss function that directly cor"
+                  },
+                  {
+                    "kind": "chunk",
+                    "id": "b7645310-2162-5f07-89d3-1e8408590a69",
+                    "score": 0.65864813,
+                    "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                    "snippet": "## 5. Real-Time Detection In The Wild\n\nYOLO is a fast, accurate object detector, making it ideal for computer vision applications. We connect YOLO to a webcam and verify that it maintains real-time performance,\n\nFigure 5: Generalization res"
+                  },
+                  {
+                    "kind": "chunk",
+                    "id": "1a92c912-7ec5-58da-bc62-9b9fdd5a3687",
+                    "score": 0.6579102,
+                    "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                    "snippet": "# You Only Look Once: Unified, Real-Time Object Detection\n\nJoseph Redmon*, Santosh Divvala*†, Ross Girshick†, Ali Farhadi*†\n\nUniversity of Washington*, Allen Institute for AI†, Facebook AI Research†\n\nhttp://pjreddie.com/yolo/\n\n## Abstract\n\n"
+                  }
+                ],
+                "row_count": 5,
+                "truncated": true
+              },
+              {
+                "inventory": {
+                  "paper_matches": [
+                    {
+                      "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
+                      "score": 2.5558245182037354,
+                      "title": "Task-aligned One-stage Object Detection",
+                      "year": null
+                    },
+                    {
+                      "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
+                      "score": 2.514491558074951,
+                      "title": "Feature Pyramid Networks for Object Detection",
+                      "year": null
+                    },
+                    {
+                      "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+                      "score": 2.501436233520508,
+                      "title": "End-to-End Object Detection with Transformers",
+                      "year": null
+                    },
+                    {
+                      "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+                      "score": 2.501436233520508,
+                      "title": "FCOS: Fully Convolutional One-Stage Object Detection",
+                      "year": null
+                    },
+                    {
+                      "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+                      "score": 2.4833717346191406,
+                      "title": "CenterNet: Keypoint Triplets for Object Detection",
+                      "year": null
+                    },
+                    {
+                      "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+                      "score": 2.4581642150878906,
+                      "title": "EfficientDet: Scalable and Efficient Object Detection",
+                      "year": null
+                    },
+                    {
+                      "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+                      "score": 2.3807566165924072,
+                      "title": "Object Detection with Discriminatively Trained Part Based Models",
+                      "year": null
+                    },
+                    {
+                      "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                      "score": 2.3789172172546387,
+                      "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                      "year": null
+                    },
+                    {
+                      "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
+                      "score": 2.308777093887329,
+                      "title": "Libra R-CNN: Towards Balanced Learning for Object Detection",
+                      "year": null
+                    },
+                    {
+                      "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+                      "score": 2.293396472930908,
+                      "title": "Cascade R-CNN: Delving into High Quality Object Detection",
+                      "year": null
+                    }
+                  ]
+                },
+                "matches": [
+                  {
+                    "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
+                    "score": 2.5558245182037354,
+                    "title": "Task-aligned One-stage Object Detection",
+                    "year": null
+                  },
+                  {
+                    "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
+                    "score": 2.514491558074951,
+                    "title": "Feature Pyramid Networks for Object Detection",
+                    "year": null
+                  },
+                  {
+                    "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+                    "score": 2.501436233520508,
+                    "title": "End-to-End Object Detection with Transformers",
+                    "year": null
+                  },
+                  {
+                    "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+                    "score": 2.501436233520508,
+                    "title": "FCOS: Fully Convolutional One-Stage Object Detection",
+                    "year": null
+                  },
+                  {
+                    "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+                    "score": 2.4833717346191406,
+                    "title": "CenterNet: Keypoint Triplets for Object Detection",
+                    "year": null
+                  },
+                  {
+                    "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+                    "score": 2.4581642150878906,
+                    "title": "EfficientDet: Scalable and Efficient Object Detection",
+                    "year": null
+                  },
+                  {
+                    "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+                    "score": 2.3807566165924072,
+                    "title": "Object Detection with Discriminatively Trained Part Based Models",
+                    "year": null
+                  },
+                  {
+                    "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                    "score": 2.3789172172546387,
+                    "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                    "year": null
+                  },
+                  {
+                    "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
+                    "score": 2.308777093887329,
+                    "title": "Libra R-CNN: Towards Balanced Learning for Object Detection",
+                    "year": null
+                  },
+                  {
+                    "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+                    "score": 2.293396472930908,
+                    "title": "Cascade R-CNN: Delving into High Quality Object Detection",
+                    "year": null
+                  }
+                ],
+                "row_count": 10,
+                "scoped_to_workspace": false,
+                "truncated": false
+              },
+              {
+                "abstract": "We present a new method that views object detection as a direct set prediction problem. Our approach streamlines the detection pipeline, effectively removing the need for many hand-designed components like a non-maximum suppression procedure or anchor generation that explicitly encode our prior knowledge about the task. The main ingredients of the new framework, called DEtection TRansformer or DETR, are a set-based global loss that forces unique predictions via bipartite matching, and a transformer encoder-decoder architecture. Given a fixed small set of learned object queries, DETR reasons about the relations of the objects and the global image context to directly output the final set of predictions in parallel. The new model is conceptually simple and does not require a specialized library, unlike many other modern detectors. DETR demonstrates accuracy and run-time performance on par with the well-established and highly-optimized Faster R-CNN baseline on the challenging COCO object detection dataset. Moreover, DETR can be easily generalized to produce panoptic segmentation in a unified manner. We show that it significantly outperforms competitive baselines. Training code and pretrained models are available at https://github.com/facebookresearch/detr.",
+                "arxiv_id": "",
+                "authors": [
+                  {
+                    "id": "69c82b52-b335-554f-ade2-9f0c68caf927",
+                    "full_name": "Alexander Kirillov"
+                  },
+                  {
+                    "id": "87ae9e7d-42b0-5c0e-83a0-11310ffa71fb",
+                    "full_name": "Nicolas Usunier"
+                  },
+                  {
+                    "id": "0c4154e1-8d3f-5604-a769-7b7314851798",
+                    "full_name": "Sergey Zagoruyko"
+                  },
+                  {
+                    "id": "5114f352-71a5-5432-980b-ecef2407b3a8",
+                    "full_name": "Francisco Massa"
+                  },
+                  {
+                    "id": "37d84d4e-8687-5961-8119-065370f8aaba",
+                    "full_name": "Nicolas Carion"
+                  },
+                  {
+                    "id": "3fc64858-c55d-55eb-ae23-fed276d2b032",
+                    "full_name": "Gabriel Synnaeve"
+                  }
+                ],
+                "doi": "",
+                "first_author": "Nicolas Carion",
+                "inventory": {
+                  "authors_by_work": {
+                    "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93": [
+                      {
+                        "id": "69c82b52-b335-554f-ade2-9f0c68caf927",
+                        "full_name": "Alexander Kirillov"
+                      },
+                      {
+                        "id": "87ae9e7d-42b0-5c0e-83a0-11310ffa71fb",
+                        "full_name": "Nicolas Usunier"
+                      },
+                      {
+                        "id": "0c4154e1-8d3f-5604-a769-7b7314851798",
+                        "full_name": "Sergey Zagoruyko"
+                      },
+                      {
+                        "id": "5114f352-71a5-5432-980b-ecef2407b3a8",
+                        "full_name": "Francisco Massa"
+                      },
+                      {
+                        "id": "37d84d4e-8687-5961-8119-065370f8aaba",
+                        "full_name": "Nicolas Carion"
+                      },
+                      {
+                        "id": "3fc64858-c55d-55eb-ae23-fed276d2b032",
+                        "full_name": "Gabriel Synnaeve"
+                      }
+                    ]
+                  }
+                },
+                "metadata_completeness": {
+                  "title": "present",
+                  "year": "absent",
+                  "doi": "absent",
+                  "venue": "absent",
+                  "abstract": "present"
+                },
+                "metadata_source": "neo4j_work_card",
+                "row_count": 1,
+                "title": "End-to-End Object Detection with Transformers",
+                "truncated": false,
+                "venue": null
+              },
+              {
+                "abstract": "Feature pyramids are a basic component in recognition systems for detecting objects at different scales. But recent deep learning object detectors have avoided pyramid representations, in part because they are compute and memory intensive. In this paper, we exploit the inherent multi-scale, pyramidal hierarchy of deep convolutional networks to construct feature pyramids with marginal extra cost. A top-down architecture with lateral connections is developed for building high-level semantic feature maps at all scales. This architecture, called a Feature Pyramid Network (FPN), shows significant improvement as a generic feature extractor in several applications. Using FPN in a basic Faster R-CNN system, our method achieves state-of-the-art single-model results on the COCO detection benchmark without bells and whistles, surpassing all existing single-model entries including those from the COCO 2016 challenge winners. In addition, our method can run at 6 FPS on a GPU and thus is a practical and accurate solution to multi-scale object detection. Code will be made publicly available.",
+                "arxiv_id": "",
+                "authors": [
+                  {
+                    "id": "0ba6afd2-a8e5-519a-beef-4abaaa89bf7a",
+                    "full_name": "Tsung-Yi Lin"
+                  },
+                  {
+                    "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+                    "full_name": "Ross Girshick"
+                  },
+                  {
+                    "id": "e6757c1a-48f9-5521-8907-5c4df85dedab",
+                    "full_name": "Piotr Dollár"
+                  },
+                  {
+                    "id": "26851fcd-5858-5fec-bb7b-7f250e500e10",
+                    "full_name": "Serge Belongie"
+                  },
+                  {
+                    "id": "ee093a26-99e3-5684-9d2d-cd3af97e314b",
+                    "full_name": "Bharath Hariharan"
+                  },
+                  {
+                    "id": "da3b66ec-bb02-5ce8-a511-ebe3b97653f7",
+                    "full_name": "Kaiming He"
+                  }
+                ],
+                "doi": "",
+                "first_author": "Tsung-Yi Lin",
+                "inventory": {
+                  "authors_by_work": {
+                    "0ccc5f8d-239c-442b-8e43-82a1a6a6597f": [
+                      {
+                        "id": "0ba6afd2-a8e5-519a-beef-4abaaa89bf7a",
+                        "full_name": "Tsung-Yi Lin"
+                      },
+                      {
+                        "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+                        "full_name": "Ross Girshick"
+                      },
+                      {
+                        "id": "e6757c1a-48f9-5521-8907-5c4df85dedab",
+                        "full_name": "Piotr Dollár"
+                      },
+                      {
+                        "id": "26851fcd-5858-5fec-bb7b-7f250e500e10",
+                        "full_name": "Serge Belongie"
+                      },
+                      {
+                        "id": "ee093a26-99e3-5684-9d2d-cd3af97e314b",
+                        "full_name": "Bharath Hariharan"
+                      },
+                      {
+                        "id": "da3b66ec-bb02-5ce8-a511-ebe3b97653f7",
+                        "full_name": "Kaiming He"
+                      }
+                    ]
+                  }
+                },
+                "metadata_completeness": {
+                  "title": "present",
+                  "year": "absent",
+                  "doi": "absent",
+                  "venue": "absent",
+                  "abstract": "present"
+                },
+                "metadata_source": "neo4j_work_card",
+                "row_count": 1,
+                "title": "Feature Pyramid Networks for Object Detection",
+                "truncated": false,
+                "venue": null
+              }
+            ],
+            "evidence_origin": "parent_tool",
+            "confidence": 0.9,
+            "terminal_state": "succeeded",
+            "failure_code": null
+          },
+          {
+            "kind": "corpus_explore",
+            "subagent_id": "ce-decc9ae8142b",
+            "spawn_reason": "corpus_explore",
+            "text_excerpt": "Scope: Recent works on object detection within the active workspace.\nResult: The active workspace contains one key paper on object detection: \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). This paper introduces YOLO, a unified, real-time detection system that frames detection as a regression problem, achieving speeds of 45 fps (base) and 155 fps (Fast YOLO) while maintaining competitive accuracy. It emphasizes end-to-end training and strong generalization to new domains. No other recent works on object detection were found in this workspace.\nKey sources: da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "issues": [],
+            "terminal_state": "succeeded",
+            "failure_code": null,
+            "salvage_used": false,
+            "evidence_origin": "subagent:ce-decc9ae8142b",
+            "confidence": 0.35
+          },
+          {
+            "kind": "research_plan",
+            "subagent_id": "rp-947387943fa2",
+            "spawn_reason": "research_plan",
+            "text_excerpt": "Scope: Identify and summarize recent, relevant works on object detection, focusing on key advances beyond the YOLO framework present in the workspace.\nResult:\nCorpus sub-queries:\n- Search for works on object detection within the active workspace to assess current coverage (scoped).\n- Perform a broad corpus-wide search for recent object detection works to identify key modern approaches (global).\n- Conduct a semantic search for recent advances in object detection, including anchor-free, real-time, and transformer-based methods, within the workspace for focused results (scoped).\n- Perform a targeted semantic search for transformer-based models like DETR to identify a major recent paradigm shift (global).\nGraph sub-queries:\n- Retrieve full metadata (title, year, venue, abstract, etc.) for the YOLO paper already in the workspace to establish a baseline.\nWriter spec:\n- The final answer should provide a concise list of key works with their core contributions, contrasting them with the YOLO model. Focus on clarity and significance of advances. Risk of limited metadata (e.g., missing years) in the current results.\nKey sources: da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "issues": [
+              "tool_permission_denied"
+            ],
+            "terminal_state": "failed",
+            "failure_code": "tool_denied",
+            "salvage_used": false,
+            "research_plan_write_attempted": false,
+            "research_plan_write_ok": null,
+            "evidence_origin": "subagent:rp-947387943fa2",
+            "confidence": 0.0
+          }
+        ],
+        "merge": {
+          "evidence_origin": "mixed",
+          "confidence": 0.0,
+          "conflict": null,
+          "writer_directive": "Evidence merge (v3): synthesize a single grounded answer. evidence_origin='mixed'. Do not hide tool denials, timeouts, or conflicting VERDICT lines; state them explicitly.\nPARTIAL_FAILURE legs: rp-947387943fa2: tool_denied",
+          "partial_failure": true,
+          "completion_state": "partial_failure_recoverable"
+        }
+      },
+      "corpus_explore_results": [
+        {
+          "schema_version": 1,
+          "subagent_id": "ce-decc9ae8142b",
+          "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+          "issues": [],
+          "terminal_state": "succeeded",
+          "failure_code": null,
+          "latency_ms": 22045
+        }
+      ],
+      "research_plan_results": [
+        {
+          "schema_version": 1,
+          "subagent_id": "rp-947387943fa2",
+          "parent_turn_id": "9c57614e-03de-480e-ae29-046bfb3fd196",
+          "issues": [
+            "tool_permission_denied"
+          ],
+          "terminal_state": "failed",
+          "failure_code": "tool_denied",
+          "latency_ms": 12785,
+          "research_plan_write_ok": null
+        }
+      ],
+      "routing_log": [
+        {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "reason": "coordinator_route_hint:retrieval_agent",
+          "budget_left": 12,
+          "decision_source": "route_plan",
+          "route_hint": "retrieval_agent"
+        },
+        {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 2,
+          "reason": null
+        }
+      ]
+    },
+    "thread_id": null,
+    "session_summary_excerpt": null,
+    "answer_class": "grounded_explanation",
+    "evidence_summary": "8 citation(s), 14 trace step(s)",
+    "warnings": [
+      "research_plan_child_non_success"
+    ],
+    "inventory": {
+      "paper_matches": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "score": 2.3789172172546387,
+          "title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "year": null
+        },
+        {
+          "work_id": "eb99ebf1-d745-4465-a9de-12830062dbc2",
+          "score": 2.5558245182037354,
+          "title": "Task-aligned One-stage Object Detection",
+          "year": null
+        },
+        {
+          "work_id": "0ccc5f8d-239c-442b-8e43-82a1a6a6597f",
+          "score": 2.514491558074951,
+          "title": "Feature Pyramid Networks for Object Detection",
+          "year": null
+        },
+        {
+          "work_id": "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93",
+          "score": 2.501436233520508,
+          "title": "End-to-End Object Detection with Transformers",
+          "year": null
+        },
+        {
+          "work_id": "3ca82fea-ba1d-4478-b34d-9182e88252de",
+          "score": 2.501436233520508,
+          "title": "FCOS: Fully Convolutional One-Stage Object Detection",
+          "year": null
+        },
+        {
+          "work_id": "99835def-0a25-4cc5-9d79-bdda878cae15",
+          "score": 2.4833717346191406,
+          "title": "CenterNet: Keypoint Triplets for Object Detection",
+          "year": null
+        },
+        {
+          "work_id": "142db14f-610a-44ca-b928-83aa48f749a0",
+          "score": 2.4581642150878906,
+          "title": "EfficientDet: Scalable and Efficient Object Detection",
+          "year": null
+        },
+        {
+          "work_id": "62c0204d-cccb-431e-a2ea-4142ad49f194",
+          "score": 2.3807566165924072,
+          "title": "Object Detection with Discriminatively Trained Part Based Models",
+          "year": null
+        },
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "score": 2.3789172172546387,
+          "title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "year": null
+        },
+        {
+          "work_id": "ee487d82-2719-4276-9ca4-ad54ea102685",
+          "score": 2.308777093887329,
+          "title": "Libra R-CNN: Towards Balanced Learning for Object Detection",
+          "year": null
+        },
+        {
+          "work_id": "0f72bbe1-d5cc-4b73-83a3-c88fe0c10373",
+          "score": 2.293396472930908,
+          "title": "Cascade R-CNN: Delving into High Quality Object Detection",
+          "year": null
+        }
+      ],
+      "authors_by_work": {
+        "da37b10b-f5e6-4b74-9659-cc66e4abec26": [
+          {
+            "id": "d18576c3-572c-56cb-b92f-726daa81aefe",
+            "full_name": "Ali Farhadi"
+          },
+          {
+            "id": "98fe6eca-0bad-56aa-a75b-c048a4b62159",
+            "full_name": "Santosh Divvala"
+          },
+          {
+            "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+            "full_name": "Ross Girshick"
+          },
+          {
+            "id": "1ce26753-51f2-5623-9b93-80363d723357",
+            "full_name": "Joseph Redmon"
+          }
+        ],
+        "0ae8f9d9-ebcc-43f2-84c1-83c350b34d93": [
+          {
+            "id": "69c82b52-b335-554f-ade2-9f0c68caf927",
+            "full_name": "Alexander Kirillov"
+          },
+          {
+            "id": "87ae9e7d-42b0-5c0e-83a0-11310ffa71fb",
+            "full_name": "Nicolas Usunier"
+          },
+          {
+            "id": "0c4154e1-8d3f-5604-a769-7b7314851798",
+            "full_name": "Sergey Zagoruyko"
+          },
+          {
+            "id": "5114f352-71a5-5432-980b-ecef2407b3a8",
+            "full_name": "Francisco Massa"
+          },
+          {
+            "id": "37d84d4e-8687-5961-8119-065370f8aaba",
+            "full_name": "Nicolas Carion"
+          },
+          {
+            "id": "3fc64858-c55d-55eb-ae23-fed276d2b032",
+            "full_name": "Gabriel Synnaeve"
+          }
+        ],
+        "0ccc5f8d-239c-442b-8e43-82a1a6a6597f": [
+          {
+            "id": "0ba6afd2-a8e5-519a-beef-4abaaa89bf7a",
+            "full_name": "Tsung-Yi Lin"
+          },
+          {
+            "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+            "full_name": "Ross Girshick"
+          },
+          {
+            "id": "e6757c1a-48f9-5521-8907-5c4df85dedab",
+            "full_name": "Piotr Dollár"
+          },
+          {
+            "id": "26851fcd-5858-5fec-bb7b-7f250e500e10",
+            "full_name": "Serge Belongie"
+          },
+          {
+            "id": "ee093a26-99e3-5684-9d2d-cd3af97e314b",
+            "full_name": "Bharath Hariharan"
+          },
+          {
+            "id": "da3b66ec-bb02-5ce8-a511-ebe3b97653f7",
+            "full_name": "Kaiming He"
+          }
+        ],
+        "142db14f-610a-44ca-b928-83aa48f749a0": [
+          {
+            "id": "83891e7a-e2f2-5b15-b27a-1da3a289ec79",
+            "full_name": "Quoc V. Le"
+          },
+          {
+            "id": "aee38cbf-1a93-5970-927b-77a610bf3a66",
+            "full_name": "Ruoming Pang"
+          },
+          {
+            "id": "881e02a4-a1cc-562a-bb9e-922f4d7a034c",
+            "full_name": "Mingxing Tan"
+          }
+        ],
+        "3ca82fea-ba1d-4478-b34d-9182e88252de": [
+          {
+            "id": "c6f53d89-c0f2-5046-8245-4876d6ccd923",
+            "full_name": "Chunhua Shen*"
+          },
+          {
+            "id": "63092649-9b1d-5983-ae7a-49242f23c206",
+            "full_name": "Hao Chen"
+          },
+          {
+            "id": "f343d792-8937-5ef8-9723-ff33390d192d",
+            "full_name": "Zhi Tian"
+          },
+          {
+            "id": "d8d50f7c-ff04-5759-8f7e-f5ebf611269a",
+            "full_name": "Tong He"
+          }
+        ],
+        "99835def-0a25-4cc5-9d79-bdda878cae15": [
+          {
+            "id": "6ac0bcae-0249-59e2-8052-db5747baa312",
+            "full_name": "Qi Tian"
+          },
+          {
+            "id": "f8c5316e-f2a7-53c8-9c45-431242b8f49e",
+            "full_name": "Kaiwen Duan"
+          },
+          {
+            "id": "8156dffd-4972-5890-b942-3e28b7b75ef0",
+            "full_name": "Song Bai"
+          },
+          {
+            "id": "0af2ef5c-e595-539e-899b-a32f949c4a49",
+            "full_name": "Lingxi Xie"
+          },
+          {
+            "id": "a5c339c1-a5c9-5991-8f97-73c259194ea9",
+            "full_name": "Qingming Huang"
+          },
+          {
+            "id": "319061c6-1cb1-5e6b-ad4c-a7ee5ff09c00",
+            "full_name": "Honggang Qi"
+          }
+        ]
+      }
+    },
+    "relation_trace": null,
+    "quote_candidates": null,
+    "idea_suggestions": null,
+    "bibliography": null,
+    "product_path": "tool_assisted",
+    "product_markers": [
+      "answered_with_tools"
+    ]
+  }
+}

@@ -1,0 +1,1145 @@
+{
+  "http_status": 200,
+  "response": {
+    "answer": "The key paper on object detection in the workspace is *You Only Look Once: Unified, Real-Time Object Detection* by Joseph Redmon et al. This work introduces YOLO, a real-time object detection system that frames detection as a regression problem, enabling end-to-end optimization. The base model runs at 45 frames per second, while Fast YOLO achieves 155 frames per second, outperforming other real-time detectors in mAP. YOLO generalizes well to non-photographic domains like artwork, though it tends to make more localization errors compared to state-of-the-art systems.",
+    "citations": [
+      {
+        "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+        "provenance_kind": "workspace_abstract",
+        "evidence_mode": "abstract",
+        "excerpt": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.",
+        "evidence_quality": "medium",
+        "is_external": false
+      }
+    ],
+    "tool_trace": [
+      {
+        "step": 0,
+        "tool": "coordinator_gate",
+        "args_summary": {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": "1.0",
+          "classifier": "deterministic",
+          "route_plan": "{'schema_version': 1, 'planner': 'deterministic_v1', 'steps': [{'specialist': 'retrieval_agent', 'expected_completion': ['any_specialist_payload'], 'budget_hint': None, 'reason': 'coordinator_route_hi",
+          "question_features": "{'raw_question': 'Use only the openalex_works_search tool once with query object detection and max_results 3, then provide a short answer.', 'normalized_question': 'use only the openalex_works_search "
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "reason": "coordinator_route_hint:retrieval_agent",
+          "budget_left": 12,
+          "decision_source": "route_plan",
+          "route_hint": "retrieval_agent"
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 12,
+          "reason": null
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": -1,
+        "tool": "route_to_specialist",
+        "args_summary": {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 10,
+          "reason": null
+        },
+        "row_count": 0,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 1,
+        "tool": "find_works",
+        "args_summary": {
+          "query": "object detection",
+          "limit": "3",
+          "workspace_id": "ws-pilot-od"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 2,
+        "tool": "paper_profile",
+        "args_summary": {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      },
+      {
+        "step": 3,
+        "tool": "final_answer",
+        "args_summary": {
+          "answer": "The key paper on object detection in the workspace is *You Only Look Once: Unified, Real-Time Object Detection* by Joseph Redmon et al. This work introduces YOLO, a real-time object detection system t",
+          "citations": "[{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'provenance_kind': 'workspace_abstract', 'evidence_mode': 'abstract'}]"
+        },
+        "row_count": 1,
+        "duration_ms": 0,
+        "truncated": false,
+        "error": null
+      }
+    ],
+    "duration_ms": 14953,
+    "phoenix_trace_id": "2856ec88a0597dc84209b8a78d7974a5",
+    "run_metadata": {
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_max_tool_calls": 12,
+      "extraction_llm_model": "mistralai/mistral-small-3.2-24b-instruct",
+      "extraction_llm_base_url": "https://openrouter.ai/api/v1",
+      "chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+      "resolved_chat_llm_model": "qwen/qwen3-235b-a22b-2507",
+      "openrouter_reference_pricing_usd_per_1m": {
+        "chat": {
+          "model_id": "qwen/qwen3-235b-a22b-2507",
+          "prompt_usd_per_1m": 0.071,
+          "completion_usd_per_1m": 0.1
+        },
+        "extraction": {
+          "model_id": "mistralai/mistral-small-3.2-24b-instruct",
+          "prompt_usd_per_1m": 0.075,
+          "completion_usd_per_1m": 0.2
+        }
+      },
+      "agent_pdf_read_backend_mode": "hybrid",
+      "usage": {
+        "prompt_tokens": 15932,
+        "completion_tokens": 419,
+        "total_tokens": 16351,
+        "input_tokens": 15932,
+        "output_tokens": 419
+      },
+      "debug_events": [
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "reason": "rules",
+          "top_score": 7.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 5,
+          "shortlist_ratio": 0.2941,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "find_works"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "deferred_strict_in_shortlist_count": 2,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "reason": "rules",
+          "top_score": 7.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 5,
+          "shortlist_ratio": 0.2941,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "find_works"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "deferred_strict_in_shortlist_count": 2,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "reason": "rules",
+          "top_score": 7.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 5,
+          "shortlist_ratio": 0.2941,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "find_works"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "deferred_strict_in_shortlist_count": 2,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "find_works"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 19
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 50
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-2fee1d53755e",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-2fee1d53755e",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2389
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-58f3f112cf6c",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-58f3f112cf6c",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "research_plan",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2754
+          }
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "writer_agent",
+          "tools": null,
+          "reason": "writer_terminal_synthesis_seam",
+          "top_score": null,
+          "score_band": null,
+          "catalog_size": 1,
+          "shortlist_size": null,
+          "shortlist_ratio": null,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": true,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "writer_mode": "normal"
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "reason": "rules",
+          "top_score": 7.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 5,
+          "shortlist_ratio": 0.2941,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "find_works"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "deferred_strict_in_shortlist_count": 2,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "reason": "rules",
+          "top_score": 7.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 5,
+          "shortlist_ratio": 0.2941,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "find_works"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "deferred_strict_in_shortlist_count": 2,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_search_result",
+          "specialist": "retrieval_agent",
+          "tools": [
+            "workspace_inspect",
+            "paper_profile",
+            "find_works",
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "reason": "rules",
+          "top_score": 7.5,
+          "score_band": 1.35,
+          "catalog_size": 17,
+          "shortlist_size": 5,
+          "shortlist_ratio": 0.2941,
+          "deferred_schema_mode": null,
+          "deferred_schema_refs": null,
+          "skipped": false,
+          "carryover_tools": null,
+          "message_discovery_tools": null,
+          "message_discovery_merged": null,
+          "activation_policy": "default",
+          "rules_matched_tools": [
+            "find_works"
+          ],
+          "deferred_strict_candidates": [
+            "paper_quote_search",
+            "idea_search"
+          ],
+          "deferred_strict_in_shortlist_count": 2,
+          "deferred_activated_via_message_or_carryover_count": 0,
+          "tool_search_miss_due_to_no_discovery": 0,
+          "deferred_tool_activation_rate": 0.0,
+          "selector_stage": "rules_only",
+          "selector_reason_codes": [
+            "llm_rerank_disabled"
+          ]
+        },
+        {
+          "conversation_intent": "research_task",
+          "tool_policy": "allow_tools",
+          "route_hint": "retrieval_agent",
+          "reason": "default_research_assumption",
+          "suggested_answer_class": "grounded_explanation",
+          "confidence": 1.0,
+          "classifier": "deterministic",
+          "type": "intent_classified",
+          "source": "coordinator_gate_v0",
+          "answer_class": "grounded_explanation",
+          "run_kind": "supervisor_specialists_v3",
+          "graph_id": "supervisor_graph_v3"
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "find_works"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 19
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "paper_profile"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 50
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-2fee1d53755e",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-2fee1d53755e",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2389
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-58f3f112cf6c",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-58f3f112cf6c",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "research_plan",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2754
+          }
+        },
+        {
+          "type": "tool_execution",
+          "phase": "pre_hooks",
+          "ok": true,
+          "tools": [
+            "final_answer"
+          ]
+        },
+        {
+          "type": "tool_execution",
+          "phase": "post_hooks",
+          "ok": true,
+          "elapsed_ms": 6
+        }
+      ],
+      "tool_search_shortlist_ratio_avg": 0.2941,
+      "deferred_tool_activation_rate": 0.0,
+      "hook_chain_events": [
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-2fee1d53755e",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "corpus_explore",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "ce-2fee1d53755e",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "corpus_explore",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2389
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_start",
+          "phase": "subagent_start",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-58f3f112cf6c",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "research_plan",
+            "leg_kind": "spawned",
+            "execution_mode": "sync"
+          }
+        },
+        {
+          "type": "hook_chain_event",
+          "hook": "subagent_stop",
+          "phase": "subagent_stop",
+          "ok": true,
+          "detail": {
+            "subagent_id": "rp-58f3f112cf6c",
+            "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+            "spawn_reason": "research_plan",
+            "terminal_state": "succeeded",
+            "leg_kind": "spawned",
+            "latency_ms": 2754
+          }
+        }
+      ],
+      "request_web_research_enabled": true,
+      "effective_web_research_user_enabled": true,
+      "effective_web_research_tools": true,
+      "request_agent_mode": "agent",
+      "turn_tool_denylist": [],
+      "request_turn_warnings": [],
+      "request_pdf_reading_mode": "ask",
+      "subagent_runs": [
+        {
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "child_turn_id": null,
+          "spawn_reason": "coordinator_route_hint:retrieval_agent",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "coordinator_route_hint:retrieval_agent",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "child_turn_id": null,
+          "spawn_reason": "routing",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "routing",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "writer_agent",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "child_turn_id": null,
+          "spawn_reason": "routing",
+          "task": null,
+          "task_id": null,
+          "task_type": "routing_leg",
+          "description": "routing",
+          "execution_mode": null,
+          "fanout_slot": null,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": null,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "routing_leg",
+          "merge_provenance": null,
+          "output_pointer": null
+        },
+        {
+          "subagent_id": "ce-2fee1d53755e",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "child_turn_id": null,
+          "spawn_reason": "corpus_explore",
+          "task": {
+            "task_id": "0370b129-046b-49a1-97c5-eba7c50faa7a",
+            "task_type": "corpus_explore",
+            "description": "Read-only corpus exploration child",
+            "execution_mode": "sync",
+            "fanout_slot": 1
+          },
+          "task_id": null,
+          "task_type": "corpus_explore",
+          "description": "Read-only corpus exploration child",
+          "execution_mode": "sync",
+          "fanout_slot": 1,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": 2389,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "spawned",
+          "merge_provenance": {
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "corpus_explore_result",
+            "carried_keys": [
+              "corpus_explore_results",
+              "specialist_results_v3"
+            ],
+            "evidence_origin": "subagent:ce-2fee1d53755e",
+            "parent_state_write": "bounded_append_only"
+          },
+          "output_pointer": "run_metadata.corpus_explore_results[0]"
+        },
+        {
+          "subagent_id": "rp-58f3f112cf6c",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "child_turn_id": null,
+          "spawn_reason": "research_plan",
+          "task": {
+            "task_id": "0a334c5e-6a76-43aa-b051-0e2c9199ba88",
+            "task_type": "research_plan",
+            "description": "Read-only research plan child",
+            "execution_mode": "sync",
+            "fanout_slot": 1
+          },
+          "task_id": null,
+          "task_type": "research_plan",
+          "description": "Read-only research plan child",
+          "execution_mode": "sync",
+          "fanout_slot": 1,
+          "task_status": "completed",
+          "terminal_state": "succeeded",
+          "latency_ms": 2754,
+          "failure_code": null,
+          "tokens": null,
+          "cost_usd_estimate": null,
+          "kind": "spawned",
+          "merge_provenance": {
+            "strategy": "typed_specialist_results_v3",
+            "source_kind": "research_plan_result",
+            "carried_keys": [
+              "research_plan_results",
+              "specialist_results_v3"
+            ],
+            "evidence_origin": "subagent:rp-58f3f112cf6c",
+            "parent_state_write": "bounded_append_only"
+          },
+          "output_pointer": "run_metadata.research_plan_results[0]"
+        }
+      ],
+      "subagent_task_notifications": [
+        {
+          "schema_version": 1,
+          "task_id": "c8512cb1-807c-487b-b945-1fe1febddfd1",
+          "subagent_id": "retrieval_agent",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "status": "completed",
+          "carry_back": {
+            "summary": "Specialist leg completed.",
+            "result_excerpt": "{'work_id': 'da37b10b-f5e6-4b74-9659-cc66e4abec26', 'title': 'You Only Look Once: Unified, Real-Time Object Detection', 'year': None, 'doi': '', 'arxiv_id': '', 'abstract': 'We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.', 'first_author': 'Joseph Redmon', 'venue': None, 'authors': [{'id': 'd18576c3-572c-56cb-b92f-726daa81aefe', 'full_name': 'Ali Farhadi'}, {'id': '98fe6eca-0bad-56aa-a75b-c048a4b62159', 'full_name': 'Santosh Divvala'}, {'id': '2050fcea-1ba9-569a-b274-7a002358fa02', 'full_name': 'Ross Girshick'}, {'id': '1ce26753-51f2-5623-9b93-80363d723357', 'full_name': 'Joseph Redmon'}], 'inventory': {'authors_by_work': {'da37b10b-f5e6-4b74-9659-cc66e4abec26': [{'id': 'd18576c3-572c-56cb-b92f-726daa81aefe', 'full_name': 'Ali Farhadi'}, {'id': '98fe6eca-0bad-56aa-a75b-c048a4b62159', 'full_name': 'Santosh Divvala'}, {'id': '2050fcea-1ba9-569a-b274-7a002358fa02', 'full_name': 'Ross Girshick'}, {'id': '1ce26753-51f2-5623-9b93-80363d723357', 'full_name': 'Joseph Redmon'}]}}, 'metadata_completeness': {'title': 'present', 'year': 'absent', 'doi': 'absent', 'venue': 'absent', 'abstract': 'present'}, 'venue_resolution': 'no_venue_linked', 'metadata_source': 'neo4j_work_card', 'row_count': 1, 'truncated': False}",
+            "key_sources": [],
+            "verdict": null
+          },
+          "usage": {}
+        },
+        {
+          "schema_version": 1,
+          "task_id": "db8f6d86-a0b8-4163-a0af-0cee0f17a68a",
+          "subagent_id": "writer_agent",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "status": "completed",
+          "carry_back": {
+            "summary": "No structured specialist payload recorded.",
+            "result_excerpt": null,
+            "key_sources": [],
+            "verdict": null
+          },
+          "usage": {}
+        }
+      ],
+      "subagent_observability_lane": "fork_v3_enhanced",
+      "specialist_results_v3": {
+        "schema_version": 1,
+        "legs": [
+          {
+            "kind": "parent_tool",
+            "specialist_id": "retrieval_agent",
+            "spawn_reason": "parent_specialist",
+            "tool_payloads_count": 2,
+            "tool_payloads_excerpt": [
+              {
+                "inventory": {
+                  "paper_matches": [
+                    {
+                      "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                      "score": 2.3789172172546387,
+                      "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                      "year": null
+                    }
+                  ]
+                },
+                "matches": [
+                  {
+                    "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+                    "score": 2.3789172172546387,
+                    "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                    "year": null
+                  }
+                ],
+                "row_count": 1,
+                "scoped_to_workspace": true,
+                "truncated": false,
+                "workspace_id": "ws-pilot-od"
+              },
+              {
+                "abstract": "We present YOLO, a new approach to object detection. Prior work on object detection repurposes classifiers to perform detection. Instead, we frame object detection as a regression problem to spatially separated bounding boxes and associated class probabilities. A single neural network predicts bounding boxes and class probabilities directly from full images in one evaluation. Since the whole detection pipeline is a single network, it can be optimized end-to-end directly on detection performance. Our unified architecture is extremely fast. Our base YOLO model processes images in real-time at 45 frames per second. A smaller version of the network, Fast YOLO, processes an astounding 155 frames per second while still achieving double the mAP of other real-time detectors. Compared to state-of-the-art detection systems, YOLO makes more localization errors but is less likely to predict false positives on background. Finally, YOLO learns very general representations of objects. It outperforms other detection methods, including DPM and R-CNN, when generalizing from natural images to other domains like artwork.",
+                "arxiv_id": "",
+                "authors": [
+                  {
+                    "id": "d18576c3-572c-56cb-b92f-726daa81aefe",
+                    "full_name": "Ali Farhadi"
+                  },
+                  {
+                    "id": "98fe6eca-0bad-56aa-a75b-c048a4b62159",
+                    "full_name": "Santosh Divvala"
+                  },
+                  {
+                    "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+                    "full_name": "Ross Girshick"
+                  },
+                  {
+                    "id": "1ce26753-51f2-5623-9b93-80363d723357",
+                    "full_name": "Joseph Redmon"
+                  }
+                ],
+                "doi": "",
+                "first_author": "Joseph Redmon",
+                "inventory": {
+                  "authors_by_work": {
+                    "da37b10b-f5e6-4b74-9659-cc66e4abec26": [
+                      {
+                        "id": "d18576c3-572c-56cb-b92f-726daa81aefe",
+                        "full_name": "Ali Farhadi"
+                      },
+                      {
+                        "id": "98fe6eca-0bad-56aa-a75b-c048a4b62159",
+                        "full_name": "Santosh Divvala"
+                      },
+                      {
+                        "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+                        "full_name": "Ross Girshick"
+                      },
+                      {
+                        "id": "1ce26753-51f2-5623-9b93-80363d723357",
+                        "full_name": "Joseph Redmon"
+                      }
+                    ]
+                  }
+                },
+                "metadata_completeness": {
+                  "title": "present",
+                  "year": "absent",
+                  "doi": "absent",
+                  "venue": "absent",
+                  "abstract": "present"
+                },
+                "metadata_source": "neo4j_work_card",
+                "row_count": 1,
+                "title": "You Only Look Once: Unified, Real-Time Object Detection",
+                "truncated": false,
+                "venue": null
+              }
+            ],
+            "evidence_origin": "parent_tool",
+            "confidence": 0.9,
+            "terminal_state": "succeeded",
+            "failure_code": null
+          },
+          {
+            "kind": "corpus_explore",
+            "subagent_id": "ce-2fee1d53755e",
+            "spawn_reason": "corpus_explore",
+            "text_excerpt": "Scope: Identification of key papers on object detection within the active workspace.\nResult: The primary paper on object detection in the workspace is \"You Only Look Once: Unified, Real-Time Object Detection\" (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26). This work introduces YOLO, a real-time object detection system that frames detection as a regression problem, achieving high speed (45 fps for the base model, 155 fps for Fast YOLO) and strong generalization across domains, though with a tendency for localization errors.\nKey sources: da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "issues": [],
+            "terminal_state": "succeeded",
+            "failure_code": null,
+            "salvage_used": false,
+            "evidence_origin": "subagent:ce-2fee1d53755e",
+            "confidence": 0.35
+          },
+          {
+            "kind": "research_plan",
+            "subagent_id": "rp-58f3f112cf6c",
+            "spawn_reason": "research_plan",
+            "text_excerpt": "Scope: Identify key information about the YOLO object detection model from the top-ranked paper in the workspace.\nResult:\nCorpus sub-queries:\n- Search for papers related to \"object detection\" in the active workspace (ws-pilot-od) to identify the most relevant work.\nGraph sub-queries:\n- Retrieve the abstract, authors, and metadata of the top paper (work_id: da37b10b-f5e6-4b74-9659-cc66e4abec26) to summarize its contribution and context.\nWriter spec:\n- Provide a concise answer with minimal citations; focus on the core innovation, performance, and generalization of YOLO as described in the paper.\nKey sources: da37b10b-f5e6-4b74-9659-cc66e4abec26",
+            "issues": [],
+            "terminal_state": "succeeded",
+            "failure_code": null,
+            "salvage_used": false,
+            "research_plan_write_attempted": false,
+            "research_plan_write_ok": null,
+            "evidence_origin": "subagent:rp-58f3f112cf6c",
+            "confidence": 0.35
+          }
+        ],
+        "merge": {
+          "evidence_origin": "mixed",
+          "confidence": 0.35,
+          "conflict": null,
+          "writer_directive": "Evidence merge (v3): synthesize a single grounded answer. evidence_origin='mixed'. Do not hide tool denials, timeouts, or conflicting VERDICT lines; state them explicitly.",
+          "partial_failure": false,
+          "completion_state": "any_specialist_payload"
+        }
+      },
+      "corpus_explore_results": [
+        {
+          "schema_version": 1,
+          "subagent_id": "ce-2fee1d53755e",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "issues": [],
+          "terminal_state": "succeeded",
+          "failure_code": null,
+          "latency_ms": 2389
+        }
+      ],
+      "research_plan_results": [
+        {
+          "schema_version": 1,
+          "subagent_id": "rp-58f3f112cf6c",
+          "parent_turn_id": "964c4e60-66a0-4dc1-a1b7-43ca86960665",
+          "issues": [],
+          "terminal_state": "succeeded",
+          "failure_code": null,
+          "latency_ms": 2754,
+          "research_plan_write_ok": null
+        }
+      ],
+      "routing_log": [
+        {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "reason": "coordinator_route_hint:retrieval_agent",
+          "budget_left": 12,
+          "decision_source": "route_plan",
+          "route_hint": "retrieval_agent"
+        },
+        {
+          "from": "supervisor",
+          "to": "retrieval_agent",
+          "budget_left": 12,
+          "reason": null
+        },
+        {
+          "from": "supervisor",
+          "to": "writer_agent",
+          "budget_left": 10,
+          "reason": null
+        }
+      ]
+    },
+    "thread_id": null,
+    "session_summary_excerpt": null,
+    "answer_class": "fact_lookup",
+    "evidence_summary": "1 citation(s), 7 trace step(s)",
+    "warnings": [],
+    "inventory": {
+      "paper_matches": [
+        {
+          "work_id": "da37b10b-f5e6-4b74-9659-cc66e4abec26",
+          "score": 2.3789172172546387,
+          "title": "You Only Look Once: Unified, Real-Time Object Detection",
+          "year": null
+        }
+      ],
+      "authors_by_work": {
+        "da37b10b-f5e6-4b74-9659-cc66e4abec26": [
+          {
+            "id": "d18576c3-572c-56cb-b92f-726daa81aefe",
+            "full_name": "Ali Farhadi"
+          },
+          {
+            "id": "98fe6eca-0bad-56aa-a75b-c048a4b62159",
+            "full_name": "Santosh Divvala"
+          },
+          {
+            "id": "2050fcea-1ba9-569a-b274-7a002358fa02",
+            "full_name": "Ross Girshick"
+          },
+          {
+            "id": "1ce26753-51f2-5623-9b93-80363d723357",
+            "full_name": "Joseph Redmon"
+          }
+        ]
+      }
+    },
+    "relation_trace": null,
+    "quote_candidates": null,
+    "idea_suggestions": null,
+    "bibliography": null,
+    "product_path": "tool_assisted",
+    "product_markers": [
+      "answered_with_tools"
+    ]
+  }
+}

@@ -16,6 +16,10 @@ from langchain_core.tools import BaseTool
 from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
+from science_graphrag.agent.final_answer_validation import is_generic_fallback_answer
+from science_graphrag.agent.runtime_answer_salvage import (
+    synthesize_partial_answer_from_specialist_context,
+)
 from science_graphrag.agent.graph.nodes.retrieval_subgraph import merge_react_subgraph_debug_events
 from science_graphrag.agent.graph.react_edges import (
     final_answer_nudge_state_update,
@@ -29,6 +33,10 @@ from science_graphrag.agent.llm.chat import (
     agent_chat_transport_max_attempts,
     build_chat_model,
     ensure_messages_safe_for_generation,
+)
+from science_graphrag.agent.prompt_protocol_cards import (
+    WRITER_BASE_SYSTEM_PROMPT,
+    build_writer_terminal_protocol_block,
 )
 from science_graphrag.agent.subagent_output_contract import writer_system_prompt_suffix
 from science_graphrag.agent.subagents.lifecycle import (
@@ -46,14 +54,7 @@ from science_graphrag.observability.spans import SpanAttributes, add_span_event,
 from science_graphrag.stores.registry import StoreRegistry
 
 SPECIALIST_NAME = "writer_agent"
-SYSTEM_PROMPT = (
-    "You are a writer specialist (terminal synthesis only). You receive findings from retrieval "
-    "and graph specialists via specialist_results; you do not run workspace or search tools — "
-    "only final_answer is available. Synthesize a concise, grounded answer and call final_answer "
-    "with citations. Always call the final_answer tool (do not reply with plain text only). "
-    "Match the user's language (e.g. Russian question → Russian answer) when "
-    "specialist_results allow."
-)
+SYSTEM_PROMPT = WRITER_BASE_SYSTEM_PROMPT
 
 DIRECT_SYSTEM_PROMPT = (
     "You are a helpful research assistant in a scholarly workspace UI. "
@@ -122,8 +123,12 @@ def _system_prompt_for_mode(mode: str, *, settings: Settings) -> str:
         base = CLARIFY_SYSTEM_PROMPT
     else:
         base = SYSTEM_PROMPT
-    suffix = writer_system_prompt_suffix(settings=settings, writer_mode=mode)
-    return f"{base}\n\n{suffix}"
+    parts = [
+        base,
+        build_writer_terminal_protocol_block(),
+        writer_system_prompt_suffix(settings=settings, writer_mode=mode),
+    ]
+    return "\n\n".join(parts)
 
 
 def _compile_writer_subgraph(
@@ -250,10 +255,30 @@ def _normalize_synthetic_final_answer_text(text: str) -> str:
     return out
 
 
+def _is_generic_writer_fallback_text(text: str) -> bool:
+    return is_generic_fallback_answer(text)
+
+
+def _synthesize_partial_answer_from_context(
+    *,
+    citations: list[dict[str, Any]] | None,
+    specialist_results_v3: dict[str, Any] | None,
+    language: str,
+) -> str:
+    """Backward-compatible alias for tests and terminal salvage paths."""
+    return synthesize_partial_answer_from_specialist_context(
+        citations=citations,
+        specialist_results_v3=specialist_results_v3,
+        language=language,
+    )
+
+
 def _ensure_terminal_final_answer_tool_call(
     messages: list[Any],
     *,
     citations: list[dict[str, Any]] | None = None,
+    specialist_results_v3: dict[str, Any] | None = None,
+    answer_language: str = "unknown",
 ) -> list[Any]:
     """Close the writer leg with a synthetic ``final_answer`` when only bare text remains."""
 
@@ -269,12 +294,28 @@ def _ensure_terminal_final_answer_tool_call(
         if candidate.strip():
             visible_text = candidate.strip()
             break
+    cits = [c for c in list(citations or []) if isinstance(c, dict)]
+    if not visible_text:
+        if cits or isinstance(specialist_results_v3, dict):
+            visible_text = _synthesize_partial_answer_from_context(
+                citations=cits,
+                specialist_results_v3=specialist_results_v3,
+                language=answer_language,
+            )
+    elif _is_generic_writer_fallback_text(visible_text) and (
+        cits or isinstance(specialist_results_v3, dict)
+    ):
+        visible_text = _synthesize_partial_answer_from_context(
+            citations=cits,
+            specialist_results_v3=specialist_results_v3,
+            language=answer_language,
+        )
     if not visible_text:
         return messages
     call_id = f"writer_final_answer_fallback_{uuid.uuid4().hex[:12]}"
     payload = {
         "answer": visible_text,
-        "citations": [c for c in list(citations or []) if isinstance(c, dict)],
+        "citations": cits,
     }
     return [
         *messages,
@@ -363,13 +404,26 @@ def build_writer_agent_node(stores: StoreRegistry, settings: Settings):
         next_state = compiled.invoke(state)
         messages = list(next_state.get("messages") or [])
         messages = _drop_non_final_tool_calls_from_tail(messages)
+        tp = (state.get("metadata") or {}).get("turn_policy")
+        qf = tp.get("question_features") if isinstance(tp, dict) else None
+        answer_language = (
+            str(qf.get("language") or "unknown").strip().lower()
+            if isinstance(qf, dict)
+            else "unknown"
+        )
+        sr3_for_fallback = next_state.get("specialist_results_v3")
+        if not isinstance(sr3_for_fallback, dict):
+            sr3_for_fallback = state.get("specialist_results_v3")
+        citations_for_terminal = [
+            c
+            for c in list(next_state.get("citations") or state.get("citations") or [])
+            if isinstance(c, dict)
+        ]
         messages = _ensure_terminal_final_answer_tool_call(
             messages,
-            citations=[
-                c
-                for c in list(next_state.get("citations") or state.get("citations") or [])
-                if isinstance(c, dict)
-            ],
+            citations=citations_for_terminal,
+            specialist_results_v3=sr3_for_fallback if isinstance(sr3_for_fallback, dict) else None,
+            answer_language=answer_language,
         )
         combo: AgentState = dict(state)
         nsr = next_state.get("specialist_results")

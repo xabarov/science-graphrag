@@ -7,11 +7,15 @@ from science_graphrag.agent.coordination.route_planner import derive_retrieval_c
 from science_graphrag.agent.subagent_output_contract import writer_system_prompt_suffix
 from science_graphrag.agent.tools.web_research_tools import _official_web_lookup_impl
 from science_graphrag.agent.web_evidence_policy import (
+    collect_pdf_candidates_from_payloads,
     asks_for_official_product_research,
     classify_source_tier,
     detect_unsupported_negative_official_claim,
     official_source_candidates,
+    pdf_read_evidence_status,
     web_evidence_sufficient_for_product_query,
+    writer_directive_for_web_evidence,
+    writer_directive_for_pdf_pipeline,
 )
 from science_graphrag.config import Settings
 
@@ -166,6 +170,31 @@ def test_official_web_lookup_empty_catalog() -> None:
     assert out.get("web_sources") == []
 
 
+def test_official_web_lookup_non_yolo_medical_query_no_catalog_injection() -> None:
+    out = _official_web_lookup_impl(
+        "medical vision foundation models segmentation diagnostics in healthcare"
+    )
+    assert out["ok"] is True
+    assert out["row_count"] == 0
+    assert out.get("web_sources") == []
+
+
+def test_writer_directive_for_web_evidence_flags_metadata_and_failed_fetch_mix() -> None:
+    payloads = [
+        {
+            "ok": True,
+            "web_sources": [
+                {"url": "https://doi.org/10.1/a", "provenance_kind": "crossref_metadata"},
+                {"url": "https://doi.org/10.1/b", "provenance_kind": "crossref_metadata"},
+                {"url": "https://doi.org/10.1/c", "provenance_kind": "crossref_metadata"},
+            ],
+        },
+        {"ok": False, "error": "fetch_failed", "summary": ""},
+    ]
+    directive = writer_directive_for_web_evidence(payloads, requires_official=False)
+    assert "SOURCE_QUALITY_GUARD" in directive
+
+
 def test_derive_retrieval_completion_scholarly_fetch_only_insufficient_for_product() -> None:
     from science_graphrag.agent.coordination.question_features import QuestionFeatures
 
@@ -197,3 +226,67 @@ def test_derive_retrieval_completion_scholarly_fetch_only_insufficient_for_produ
         tool_payloads=payloads,
     )
     assert cs == "evidence_insufficient"
+
+
+def test_collect_pdf_candidates_from_payloads_prefers_oa_and_arxiv_pdf() -> None:
+    payloads = [
+        {"item": {"oa_pdf_url": "https://example.org/oa.pdf"}},
+        {"items": [{"pdf_url": "https://arxiv.org/pdf/2401.00001.pdf"}]},
+        {"web_sources": [{"url": "https://example.org/not_pdf"}]},
+    ]
+    urls = collect_pdf_candidates_from_payloads(payloads)
+    assert "https://example.org/oa.pdf" in urls
+    assert "https://arxiv.org/pdf/2401.00001.pdf" in urls
+    assert all(u.endswith(".pdf") or "/pdf/" in u for u in urls)
+
+
+def test_pdf_read_evidence_status_requires_read_when_candidate_exists() -> None:
+    payloads = [{"item": {"oa_pdf_url": "https://example.org/paper.pdf"}}]
+    ok, reason = pdf_read_evidence_status(
+        payloads,
+        tool_counts={"web_fetch": 1},
+        requires_pdf_read=True,
+    )
+    assert ok is False
+    assert reason == "pdf_candidate_found_but_not_read"
+
+
+def test_pdf_read_evidence_status_allows_unavailable_when_no_candidate() -> None:
+    payloads = [{"items": [{"url": "https://example.org/page"}]}]
+    ok, reason = pdf_read_evidence_status(
+        payloads,
+        tool_counts={"web_fetch": 1},
+        requires_pdf_read=True,
+    )
+    assert ok is True
+    assert reason == "pdf_unavailable_no_safe_candidate"
+
+
+def test_writer_directive_for_pdf_pipeline_pending_mentions_candidate() -> None:
+    payloads = [{"item": {"oa_pdf_url": "https://example.org/paper.pdf"}}]
+    directive = writer_directive_for_pdf_pipeline(
+        payloads,
+        tool_counts={"web_fetch": 1},
+        requires_pdf_read=True,
+    )
+    assert "PDF_READ_PENDING" in directive
+    assert "candidate_urls=" in directive
+
+
+def test_writer_directive_for_pdf_pipeline_executed() -> None:
+    payloads = [
+        {
+            "web_sources": [
+                {
+                    "url": "https://example.org/paper.pdf",
+                    "source_tool": "read_external_pdf",
+                }
+            ]
+        }
+    ]
+    directive = writer_directive_for_pdf_pipeline(
+        payloads,
+        tool_counts={"read_external_pdf": 1},
+        requires_pdf_read=True,
+    )
+    assert "PDF_READ_EXECUTED" in directive

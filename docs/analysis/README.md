@@ -70,6 +70,7 @@ Do **not** treat [`master-roadmap-and-refactor-plan-2026-04-25.md`](./master-roa
 | Agent eval / harness / Phoenix audit | [`agent-chat-tools-and-trace-audit-master-2026-04-28.md`](./agent-chat-tools-and-trace-audit-master-2026-04-28.md) |
 | Agent prod flags / rollout | [`agent-chat-prod-rollout-2026-04-27.md`](./agent-chat-prod-rollout-2026-04-27.md) |
 | LangGraph Y5/Y6 vs smolagents | [`langgraph-migration-plan-2026-04-25.md`](./langgraph-migration-plan-2026-04-25.md) |
+| External research · prompt/loop/`final_answer` discipline (Phase 0 note, **not** smolagents runtime migration) | [`smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md`](./smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md) |
 | Graph UX (GR6–GR9 follow-on) | [`graph-readability-followup-2026-04-25.md`](./graph-readability-followup-2026-04-25.md); communities/GDS: [`graph-communities-and-gds-roadmap-2026-04-27.md`](./graph-communities-and-gds-roadmap-2026-04-27.md) |
 | Workspace UX | [`workspace-ux-redesign-2026-04-25.md`](./workspace-ux-redesign-2026-04-25.md) |
 | Reader + translation | [`reader-ux-and-translation-roadmap-2026-04-25.md`](./reader-ux-and-translation-roadmap-2026-04-25.md) |
@@ -239,6 +240,7 @@ Sorted alphabetically. See sections above for roles; stubs point into `_archive/
 | `phoenix-closeout-evidence-2026-04-27.md` | Phoenix evidence |
 | `phoenix-tracing-coverage-2026-04-25.md` | Stub → archived Phoenix plan |
 | `reader-ux-and-translation-roadmap-2026-04-25.md` | Reader / LX |
+| `smolagents-prompt-patterns-for-agent-runtime-2026-05-17.md` | External research · prompt/loop/`final_answer` discipline (Phase 0 note) |
 | `wave-a-residual-structural-hardening-2026-05-08.md` | Stub → archived Wave A checklist |
 | `work-graph-authorship-reader-contract-2026-04-28.md` | Authorship contract |
 | `workspace-graph-methods-citations-root-cause-2026-04-27.md` | Stub → archived workspace graph RCA |

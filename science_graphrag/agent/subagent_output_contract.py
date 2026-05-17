@@ -45,6 +45,12 @@ EVIDENCE_TRUST_DIRECTIVE: Final[str] = (
     "weaker metadata when they disagree."
 )
 
+METADATA_QUALITY_GUARD_DIRECTIVE: Final[str] = (
+    "Source-quality guard: when citations are mostly metadata_only (Crossref/S2/OpenAlex) "
+    "or failed/boilerplate web summaries, label conclusions as tentative and avoid wording "
+    "that implies full-text confirmation."
+)
+
 VERIFICATION_OUTPUT_FORMAT_BLOCK: Final[str] = (
     "When producing the user-visible answer inside final_answer.answer, use this exact section "
     "layout (markdown lines, English labels):\n"
@@ -100,10 +106,14 @@ def verification_format_enabled(*, settings: "Settings") -> bool:
 def writer_system_prompt_suffix(*, settings: "Settings", writer_mode: str) -> str:
     """Extra system text for writer (synthesize + optional verification layout)."""
     parts = [
+        "## WriterEvidenceDirectives",
+        "Must: synthesize concrete claims from specialist_results; call final_answer with limitations when thin.",
+        "Must-not: delegate with vague meta ('based on your findings'); generic refusal when partial evidence exists.",
         SYNTHESIZE_NOT_DELEGATE_DIRECTIVE,
         WEB_FETCH_FAILURE_SYNTHESIS_DIRECTIVE,
         NEGATIVE_CLAIM_GUARD_DIRECTIVE,
         EVIDENCE_TRUST_DIRECTIVE,
+        METADATA_QUALITY_GUARD_DIRECTIVE,
     ]
     if writer_mode == "normal" and verification_format_enabled(settings=settings):
         parts.append(VERIFICATION_OUTPUT_FORMAT_BLOCK)

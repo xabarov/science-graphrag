@@ -33,6 +33,7 @@ class _TelemetryAccum:  # pylint: disable=too-few-public-methods
         "lsp_audit_degraded_hits",
         "lsp_audit_timeout_hits",
         "lsp_audit_last",
+        "final_answer_validation_last",
     )
 
     def __init__(self) -> None:
@@ -59,6 +60,13 @@ class _TelemetryAccum:  # pylint: disable=too-few-public-methods
         self.lsp_audit_degraded_hits = 0
         self.lsp_audit_timeout_hits = 0
         self.lsp_audit_last: dict[str, Any] | None = None
+        self.final_answer_validation_last: dict[str, Any] | None = None
+
+
+def _accum_final_answer_validation(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
+    verdict = ev.get("verdict")
+    if isinstance(verdict, dict):
+        acc.final_answer_validation_last = dict(verdict)
 
 
 def _accum_tool_search_result(ev: dict[str, Any], acc: _TelemetryAccum) -> None:
@@ -183,6 +191,7 @@ def _accum_tool_use_summary_batch(ev: dict[str, Any], acc: _TelemetryAccum) -> N
 
 
 _EVENT_HANDLERS: dict[str, Callable[[dict[str, Any], _TelemetryAccum], None]] = {
+    "final_answer_validation": _accum_final_answer_validation,
     "tool_search_result": _accum_tool_search_result,
     "budget_stop_decision": _accum_budget_stop_decision,
     "tool_message_compact_audit": _accum_tool_message_compact_audit,
@@ -275,4 +284,6 @@ def extract_runtime_telemetry_from_debug_events(
         if acc.lsp_audit_last:
             ls["last"] = dict(acc.lsp_audit_last)
         telemetry["lsp_audit_summary"] = ls
+    if acc.final_answer_validation_last:
+        telemetry["final_answer_validation"] = dict(acc.final_answer_validation_last)
     return telemetry

@@ -264,3 +264,50 @@ def test_derive_retrieval_completion_state_arxiv_without_tool_is_insufficient() 
         has_payloads=True,
     )
     assert cs == "evidence_insufficient"
+
+
+def test_derive_retrieval_completion_state_pdf_requested_candidate_without_read_is_insufficient() -> None:
+    from science_graphrag.agent.coordination.route_planner import (
+        derive_retrieval_completion_state,
+    )
+
+    feats = extract_question_features(
+        question="web search + semantic scholar and read pdf for one OA paper",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_pdf_read is True
+    cs = derive_retrieval_completion_state(
+        features=feats,
+        tool_counts={"web_fetch": 1, "semantic_scholar_search": 1},
+        has_payloads=True,
+        tool_payloads=[{"item": {"oa_pdf_url": "https://example.org/paper.pdf"}}],
+    )
+    assert cs == "evidence_insufficient"
+
+
+def test_derive_retrieval_completion_state_pdf_requested_read_attempt_allows_ready() -> None:
+    from science_graphrag.agent.coordination.route_planner import (
+        derive_retrieval_completion_state,
+    )
+
+    feats = extract_question_features(
+        question="web search + semantic scholar and read pdf for one OA paper",
+        workspace_id="ws-1",
+    )
+    assert feats.asks_for_pdf_read is True
+    cs = derive_retrieval_completion_state(
+        features=feats,
+        tool_counts={"web_fetch": 1, "read_external_pdf": 1},
+        has_payloads=True,
+        tool_payloads=[
+            {
+                "web_sources": [
+                    {
+                        "url": "https://example.org/paper.pdf",
+                        "source_tool": "read_external_pdf",
+                    }
+                ]
+            }
+        ],
+    )
+    assert cs == "minimal_bundle_ready"

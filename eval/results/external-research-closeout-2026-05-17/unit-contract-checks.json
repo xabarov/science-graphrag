@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "checks": [
+    "tests/scripts/live_check/test_external_web_research_validate.py",
+    "tests/scripts/live_check/test_mcp_agent_e2e_validate.py",
+    "tests/agent/test_semantic_scholar_tools.py",
+    "tests/agent/test_openalex_works_search_tools.py"
+  ],
+  "tail": "..................                                                       [100%]\n18 passed in 1.73s"
+}
