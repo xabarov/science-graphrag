@@ -4,6 +4,8 @@ from eval.chat_agent.phoenix_export import (
     _classify_phoenix_json_payload,
     _normalize_otel_trace_id_hex,
     extract_span_names_for_trace,
+    has_final_answer_tool_span,
+    merge_span_name_lists,
     phoenix_ui_trace_url,
 )
 
@@ -108,6 +110,40 @@ def test_extract_span_names_embedded_root_trace_mismatch() -> None:
     want = "ff" * 16
     payload = {"trace_id": "00" * 16, "spans": [{"name": "agent.query"}]}
     assert extract_span_names_for_trace(payload, want) == []
+
+
+def test_has_final_answer_tool_span_accepts_tool_prefix() -> None:
+    assert has_final_answer_tool_span(["chat", "tool.final_answer"])
+    assert not has_final_answer_tool_span(["chat", "llm.agent.writer"])
+
+
+def test_merge_span_name_lists_preserves_order() -> None:
+    merged = merge_span_name_lists(["a", "b"], ["b", "c"])
+    assert merged == ["a", "b", "c"]
+
+
+def test_collect_phoenix_span_names_merges_desc_and_asc(monkeypatch) -> None:
+    from eval.chat_agent import phoenix_export as pe
+
+    want = "ab" * 16
+    payload_desc = {"data": [{"name": "llm.agent.writer", "span_id": "1"}]}
+    payload_asc = {"data": [{"name": "tool.final_answer", "span_id": "2"}]}
+
+    def _fake_fetch(
+        trace_id: str,
+        *,
+        sort_order=None,
+        **kwargs: object,
+    ) -> dict[str, object]:
+        _ = trace_id, kwargs
+        if sort_order == "asc":
+            return {"ok": True, "payload": payload_asc, "trace_id": want}
+        return {"ok": True, "payload": payload_desc, "trace_id": want}
+
+    monkeypatch.setattr(pe, "try_fetch_phoenix_spans", _fake_fetch)
+    snap = pe.collect_phoenix_span_names_for_trace(want)
+    assert snap["fetch_strategy"] == "desc_plus_asc"
+    assert "tool.final_answer" in snap["span_names"]
 
 
 def test_phoenix_project_identifier_default(monkeypatch) -> None:

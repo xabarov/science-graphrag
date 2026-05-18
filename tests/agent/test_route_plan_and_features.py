@@ -24,6 +24,7 @@ from science_graphrag.agent.coordination.route_planner import (
     planner_post_retrieval_handoff,
 )
 from science_graphrag.agent.coordination.turn_policy import TurnPolicy
+from science_graphrag.config import Settings
 
 # ---------------------------------------------------------------------------
 # RoutePlan serialization
@@ -248,6 +249,25 @@ def test_build_route_plan_default_research_for_open_ended_prompt() -> None:
     plan = build_route_plan(features=feats, turn_policy=_tp(route_hint="retrieval_agent"))
     assert plan.steps[0].specialist == "retrieval_agent"
     assert plan.termination.rule_id == "default_supervisor_round_cap"
+
+
+def test_build_route_plan_external_fast_path_when_flag_on() -> None:
+    feats = extract_question_features(
+        question=(
+            "Find hot trends in video diffusion world models using web search and fetch, "
+            "then Semantic Scholar and OA PDF if available."
+        ),
+        workspace_id="ws-1",
+    )
+    settings = Settings.model_construct(agent_external_research_fast_path_enabled=True)
+    plan = build_route_plan(
+        features=feats,
+        turn_policy=_tp(route_hint="retrieval_agent"),
+        settings=settings,
+    )
+    assert plan.steps[0].reason == "external_fast_path"
+    assert plan.steps[1].specialist == "writer_agent"
+    assert plan.termination.rule_id == "writer_after_first_hop_completion"
 
 
 # ---------------------------------------------------------------------------

@@ -1099,6 +1099,14 @@ class AgentRuntimeFields(BaseModel):
             "for a compact toolcalling-style loop (operator A/B only; default off)."
         ),
     )
+    agent_external_research_fast_path_enabled: bool = Field(
+        default=False,
+        description=(
+            "When true with ``agent_route_plan_enabled``, pure external web turns use a "
+            "retrieval→writer RoutePlan and deny corpus fan-out tools on the retrieval leg "
+            "(operator A/B; default off)."
+        ),
+    )
     agent_sidechain_transcripts_enabled: bool = Field(
         default=True,
         description="Append JSONL sidechain transcripts for specialist ReAct branches (debug/recovery).",

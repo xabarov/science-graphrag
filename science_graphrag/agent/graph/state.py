@@ -271,6 +271,8 @@ def build_initial_agent_state(
         )
         turn_policy_payload["route_plan"] = route_plan.to_dict()
         turn_policy_payload["question_features"] = features.to_dict()
+        if route_plan.steps and str(route_plan.steps[0].reason or "") == "external_fast_path":
+            turn_policy_payload["external_fast_path"] = True
     run_kind, graph_id = resolve_runtime_attribution(agent_runtime)
     meta = {
         "agent_runtime": agent_runtime,
@@ -298,6 +300,12 @@ def build_initial_agent_state(
             post_compact_paper_sources_restored_count
         )
     _tdl_meta2 = [str(x).strip() for x in (turn_tool_denylist or []) if str(x).strip()]
+    if bool(turn_policy_payload.get("external_fast_path")):
+        from science_graphrag.agent.external_fast_path import EXTERNAL_FAST_PATH_TOOL_DENYLIST
+
+        _tdl_meta2 = sorted(
+            set(_tdl_meta2) | {str(x) for x in EXTERNAL_FAST_PATH_TOOL_DENYLIST if str(x).strip()}
+        )
     if _tdl_meta2:
         meta["turn_tool_denylist"] = _tdl_meta2
     initial_intent = dict(turn_policy.sse_payload())

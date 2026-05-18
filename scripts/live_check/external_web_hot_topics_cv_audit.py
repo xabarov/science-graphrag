@@ -17,7 +17,10 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
-from eval.chat_agent.phoenix_export import extract_span_names_for_trace, try_fetch_phoenix_spans
+from eval.chat_agent.phoenix_export import (
+    collect_phoenix_span_names_for_trace,
+    has_final_answer_tool_span,
+)
 
 _DEFAULT_BASE = "http://127.0.0.1:18787"
 _DEFAULT_WORKSPACE = "ws-pilot-od"
@@ -143,12 +146,14 @@ def _tool_flags(tool_trace: list[dict[str, Any]]) -> dict[str, bool]:
 def _phoenix_names(trace_id: str, timeout: float) -> tuple[dict[str, Any], list[str]]:
     if not trace_id.strip():
         return {"ok": False, "error": "missing_trace_id"}, []
-    snap = try_fetch_phoenix_spans(trace_id, timeout_s=min(20.0, timeout))
-    meta = {"ok": bool(snap.get("ok")), "error": snap.get("error"), "url": snap.get("url")}
-    if not snap.get("ok") or snap.get("payload") is None:
-        return meta, []
-    norm_tid = str(snap.get("trace_id") or trace_id).replace("-", "").lower()
-    names = extract_span_names_for_trace(snap["payload"], norm_tid)
+    snap = collect_phoenix_span_names_for_trace(trace_id, timeout_s=min(20.0, timeout))
+    meta = {
+        "ok": bool(snap.get("ok")),
+        "error": snap.get("error"),
+        "url": snap.get("url"),
+        "fetch_strategy": snap.get("fetch_strategy"),
+    }
+    names = list(snap.get("span_names") or [])
     return meta, names
 
 
@@ -169,9 +174,7 @@ def _evaluate_case(
         issues.append("empty_answer")
     if len(citations) < 3:
         issues.append("few_citations")
-    if not any(
-        n in {"final_answer", "tool.final_answer"} or "tool.final_answer" in n for n in span_names
-    ):
+    if not has_final_answer_tool_span(span_names):
         issues.append("phoenix_missing_final_answer_span")
     return {
         "ok": not issues,
@@ -179,12 +182,6 @@ def _evaluate_case(
         "answer_len": len(answer.strip()),
         "citations_count": len(citations),
     }
-
-
-def _has_final_answer_span(span_names: list[str]) -> bool:
-    return any(
-        n in {"final_answer", "tool.final_answer"} or "tool.final_answer" in n for n in span_names
-    )
 
 
 def extract_terminal_reason_from_run_metadata(
@@ -213,7 +210,7 @@ def build_audit_diagnostics(
     diagnostics: dict[str, str] = {}
     if not tool_flags.get("final_answer"):
         diagnostics["tool_trace_missing_final_answer"] = "missing_final_answer_tool"
-    final_span_seen = _has_final_answer_span(span_names)
+    final_span_seen = has_final_answer_tool_span(span_names)
     if tool_flags.get("final_answer") and not final_span_seen:
         diagnostics["phoenix_missing_final_answer_span"] = "missing_span_but_tool_trace_present"
     elif not tool_flags.get("final_answer") and not final_span_seen:
@@ -258,6 +255,7 @@ def evaluate_case_verdicts(
     citations: list[dict[str, Any]],
     tool_flags: dict[str, bool],
     span_names: list[str],
+    require_web_tools: bool = True,
 ) -> dict[str, Any]:
     """Split quality into runtime/tool-trace/phoenix verdicts."""
     runtime_issues: list[str] = []
@@ -280,14 +278,15 @@ def evaluate_case_verdicts(
     if error:
         runtime_issues.append("request_error")
 
-    if not tool_flags.get("web_search"):
-        tool_trace_issues.append("missing_web_search")
-    if not tool_flags.get("web_fetch"):
-        tool_trace_issues.append("missing_web_fetch")
+    if require_web_tools:
+        if not tool_flags.get("web_search"):
+            tool_trace_issues.append("missing_web_search")
+        if not tool_flags.get("web_fetch"):
+            tool_trace_issues.append("missing_web_fetch")
     if not tool_flags.get("final_answer"):
         tool_trace_issues.append("missing_final_answer_tool")
 
-    final_span_seen = _has_final_answer_span(span_names)
+    final_span_seen = has_final_answer_tool_span(span_names)
     if tool_flags.get("final_answer") and not final_span_seen:
         phoenix_issues.append("missing_span_but_tool_trace_present")
     if not tool_flags.get("final_answer") and not final_span_seen:

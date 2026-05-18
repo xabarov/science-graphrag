@@ -21,6 +21,12 @@ _build_audit_diagnostics = _MOD.build_audit_diagnostics
 _evaluate_next_slice_gates = _MOD.evaluate_next_slice_gates
 
 
+def test_has_final_answer_span_uses_tool_final_answer_name() -> None:
+    from eval.chat_agent.phoenix_export import has_final_answer_tool_span
+
+    assert has_final_answer_tool_span(["tool.final_answer", "chat"])
+
+
 def test_verdicts_tool_trace_final_answer_but_missing_phoenix_span() -> None:
     verdicts = _evaluate_verdicts(
         http_status=200,

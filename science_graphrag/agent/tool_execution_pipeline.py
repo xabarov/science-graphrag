@@ -32,8 +32,10 @@ from science_graphrag.agent.sidechain_paths import (
     sidechain_transcripts_enabled,
     sidechain_transcripts_root,
 )
+from science_graphrag.agent.tool_call_dedup import split_duplicate_external_fetch_calls
 from science_graphrag.agent.tool_call_normalization import (
     normalize_tool_call_name,
+    state_with_last_ai_tool_calls,
     state_with_normalized_last_ai_tool_calls,
 )
 from science_graphrag.agent.tool_execution_phases import (
@@ -269,6 +271,31 @@ def _react_bound_tool_names_from_state(state: AgentState) -> set[str] | None:
     return out or None
 
 
+def _duplicate_fetch_suppression_messages(
+    suppressed: list[dict[str, Any]],
+) -> list[ToolMessage]:
+    out: list[ToolMessage] = []
+    for tc in suppressed:
+        if not isinstance(tc, dict):
+            continue
+        nm = normalize_tool_call_name(str(tc.get("name") or ""))
+        call_id = tc.get("id")
+        payload = {
+            "ok": False,
+            "error": "duplicate_identical_fetch",
+            "reason": "duplicate_identical_fetch",
+            "tool": nm,
+        }
+        out.append(
+            ToolMessage(
+                content=json.dumps(payload, ensure_ascii=False),
+                tool_call_id=str(call_id or ""),
+                name=nm,
+            )
+        )
+    return out
+
+
 def _permission_denial_messages_from_ai(
     tcs: list[Any], *, denies: dict[str, str]
 ) -> list[ToolMessage]:
@@ -321,7 +348,49 @@ def build_tool_execution_node(
             )
             return {"debug_events": events}
         assert isinstance(validated, ValidatedToolBatch)
-        tcs = validated.tool_calls
+        tcs = list(validated.tool_calls)
+        kept_tcs, suppressed_tcs, dedup_meta_patch = split_duplicate_external_fetch_calls(
+            state=st0,
+            tool_calls=tcs,
+        )
+        metadata_update: dict[str, Any] = {}
+        if dedup_meta_patch:
+            meta0 = dict(st0.get("metadata") or {})
+            meta0.update(dedup_meta_patch)
+            metadata_update["metadata"] = meta0
+            st0 = {**st0, "metadata": meta0}
+        if suppressed_tcs:
+            events.append(
+                {
+                    "type": "tool_dedup_suppressed",
+                    "ok": True,
+                    "tools": [
+                        normalize_tool_call_name(str(tc.get("name") or ""))
+                        for tc in suppressed_tcs
+                        if isinstance(tc, dict)
+                    ],
+                    "reason": "duplicate_identical_fetch",
+                }
+            )
+        if not kept_tcs and suppressed_tcs:
+            events.append(
+                {
+                    "type": "tool_execution",
+                    "phase": "dedup",
+                    "ok": False,
+                    "code": "duplicate_identical_fetch",
+                }
+            )
+            out = {
+                "messages": _duplicate_fetch_suppression_messages(suppressed_tcs),
+                "debug_events": events,
+            }
+            if metadata_update:
+                out.update(metadata_update)
+            return out
+        if len(kept_tcs) < len(tcs):
+            st0 = state_with_last_ai_tool_calls(st0, kept_tcs)
+            tcs = kept_tcs
 
         allowed_names = {normalize_tool_call_name(getattr(t, "name", "") or "") for t in tools}
         bound = _react_bound_tool_names_from_state(st0)
@@ -351,7 +420,10 @@ def build_tool_execution_node(
                     "denied": [{"tool": k, "reason": v} for k, v in denies.items()],
                 }
             )
-            return {"messages": out_msgs, "debug_events": events}
+            out_perm = {"messages": out_msgs, "debug_events": events}
+            if metadata_update:
+                out_perm.update(metadata_update)
+            return out_perm
 
         # Pre-hook (trace)
         pre_ts = time.time()
@@ -478,7 +550,13 @@ def build_tool_execution_node(
         events.extend(extra_sse)
 
         if isinstance(inner_out, dict) and isinstance(inner_out.get("messages"), list):
-            return {**inner_out, "debug_events": events}
-        return {"messages": inner_out, "debug_events": events}
+            merged = {**inner_out, "debug_events": events}
+            if metadata_update:
+                merged.update(metadata_update)
+            return merged
+        out = {"messages": inner_out, "debug_events": events}
+        if metadata_update:
+            out.update(metadata_update)
+        return out
 
     return tools_node

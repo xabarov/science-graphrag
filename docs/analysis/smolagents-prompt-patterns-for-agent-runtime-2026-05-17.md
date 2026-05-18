@@ -1,13 +1,13 @@
 # Smolagents Prompt Patterns for Agent Runtime
 
-**Doc status:** `active` (Phases 0–5 shipped; Phase 6 toolcalling experiment lane shipped behind flag; 2026-05-17 A/B evidence saved; next step = controlled re-baseline before default promotion)  
+**Doc status:** `active` (Phases 0–5 shipped; Phase 6 toolcalling lane behind flag; 2026-05-17 controlled re-baseline complete — both lanes pass gates; experiment wins pass/Phoenix; default promotion is a product decision)  
 **Date:** 2026-05-17  
 **Checked on:** 2026-05-17  
 **Owner:** agent runtime / external research  
 **Reviewers:** operator lane owner for trace-review + external-research acceptance  
 **Scope:** prompt/tool/final-answer discipline for `science-graphrag` agent runtime.  
 **Phase scope:** Phase 0 = source-backed architecture note + instrumentation alignment only (no runtime code changes).  
-**Read hint:** architecture note + implementation roadmap; pair with [external-research-tools-workplan-2026-05-15.md](./external-research-tools-workplan-2026-05-15.md), the Phase 6 [decision memo](./phase6-toolcalling-experiment-decision-2026-05-17.md), and the live-audit artifacts linked below.
+**Read hint:** architecture note + implementation roadmap; pair with [external-research-tools-workplan-2026-05-15.md](./external-research-tools-workplan-2026-05-15.md), the Phase 6 [decision memo](./phase6-toolcalling-experiment-decision-2026-05-17.md), the [CV re-baseline analysis (RU)](./agent-runtime-cv-rebaseline-analysis-2026-05-18.md), and the live-audit artifacts linked below.
 
 ## Relationship to existing docs
 
@@ -20,6 +20,7 @@
 | [030-external-research-tools-architecture.md](../adr/030-external-research-tools-architecture.md) | ADR for tool package boundary; this note covers model behavior on top of those tools. |
 | [langgraph-migration-plan-2026-04-25.md](./langgraph-migration-plan-2026-04-25.md) | **Historical:** smolagents library removal / LangGraph migration — not the same as borrowing prompt patterns without the dependency. |
 | [agent-runtime-tools-context-roadmap-2026-05-04.md](./agent-runtime-tools-context-roadmap-2026-05-04.md) | Operational roadmap for `tool_search`, compaction, writer discipline; see also, do not duplicate here. |
+| [agent-runtime-cv-rebaseline-analysis-2026-05-18.md](./agent-runtime-cv-rebaseline-analysis-2026-05-18.md) | **Смысловой разбор** controlled re-baseline: порядок tool calls, трейсы, архитектура, гипотезы, расширенная test matrix. |
 
 ## Executive Summary
 
@@ -77,7 +78,9 @@ Our current work should therefore not be framed as "replace deterministic code w
 | LangGraph docs | live agents documentation | 2026-05-17 | explicit graph state, tool calls, graph-level control flow |
 | Live baseline | [`external-web-hot-topics-cv-live-2026-05-16.md`](../../eval/results/external-web-hot-topics-cv-live-2026-05-16.md) (+ harness JSON when present) | 2026-05-16 run | observed failure classes and metric split |
 | Live A/B baseline | [`external-web-hot-topics-cv-live-baseline.md`](../../eval/results/external-web-hot-topics-cv-live-baseline.md) / [`json`](../../eval/results/external-web-hot-topics-cv-live-baseline.json) / [`phoenix failures`](../../eval/results/external-web-hot-topics-cv-live-baseline_phoenix_failures.jsonl) | 2026-05-17 run | conservative lane after Phases 1–5; `next_slice_gates.all_ok=false` |
-| Live A/B experiment | [`external-web-hot-topics-cv-live-experiment.md`](../../eval/results/external-web-hot-topics-cv-live-experiment.md) / [`json`](../../eval/results/external-web-hot-topics-cv-live-experiment.json) / [`phoenix failures`](../../eval/results/external-web-hot-topics-cv-live-experiment_phoenix_failures.jsonl) | 2026-05-17 run | Phase 6 flagged toolcalling lane; `next_slice_gates.all_ok=true` |
+| Live A/B experiment | [`external-web-hot-topics-cv-live-experiment.md`](../../eval/results/external-web-hot-topics-cv-live-experiment.md) / [`json`](../../eval/results/external-web-hot-topics-cv-live-experiment.json) / [`phoenix failures`](../../eval/results/external-web-hot-topics-cv-live-experiment_phoenix_failures.jsonl) | 2026-05-17 run | Phase 6 flagged toolcalling lane; `next_slice_gates.all_ok=true` (300s run) |
+| Controlled re-baseline baseline | [`external-web-hot-topics-cv-rebaseline-baseline.md`](../../eval/results/external-web-hot-topics-cv-rebaseline-baseline.md) / [`json`](../../eval/results/external-web-hot-topics-cv-rebaseline-baseline.json) | 2026-05-17 run | conservative lane, `--timeout 600`; **canonical** `latest` alias; `all_ok=true` |
+| Controlled re-baseline experiment | [`external-web-hot-topics-cv-rebaseline-experiment.md`](../../eval/results/external-web-hot-topics-cv-rebaseline-experiment.md) / [`json`](../../eval/results/external-web-hot-topics-cv-rebaseline-experiment.json) | 2026-05-17 run | toolcalling lane, `--timeout 600`; `all_ok=true`; 8/10 passed vs 6/10 baseline |
 
 ### Revalidation policy
 
@@ -133,6 +136,23 @@ Interpretation:
 - The experiment is a strong positive signal: it completed all 10 cases, hit all next-slice gates, and improved runtime/tool/final-answer coverage.
 - The baseline comparison is not clean enough for immediate default promotion because 5 baseline cases hit `ReadTimeout` at 300s. Treat this as "promote candidate", not "flip default today".
 - Production/default runtime should remain the conservative path until a controlled re-baseline reduces the timeout confound.
+
+### Controlled re-baseline (2026-05-17, `--timeout 600`)
+
+Same matrix/workspace; stable live-check API; no client `ReadTimeout` on either lane.
+
+| Lane | Artifact | Passed | runtime_ok | tool_trace_ok | phoenix_ok | final_answer | pdf_read | next_slice_gates |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| Conservative | [`rebaseline-baseline`](../../eval/results/external-web-hot-topics-cv-rebaseline-baseline.md) | 6 / 10 | 10 | 10 | 6 | 10 | 8 | `all_ok=true` |
+| Toolcalling experiment | [`rebaseline-experiment`](../../eval/results/external-web-hot-topics-cv-rebaseline-experiment.md) | 8 / 10 | 10 | 10 | 8 | 10 | 6 | `all_ok=true` |
+
+Operator alias: [`external-web-hot-topics-cv-live-latest.md`](../../eval/results/external-web-hot-topics-cv-live-latest.md) points at the conservative re-baseline run.
+
+Conclusion after re-baseline:
+
+- The earlier baseline miss was largely a **300s client timeout** confound, not a hard failure of the conservative protocol.
+- Toolcalling still wins on **verdict pass rate** (8 vs 6) and **Phoenix alignment** (8 vs 6) at equal completion rate.
+- Toolcalling showed **lower** `read_external_pdf` coverage (6 vs 8) on this matrix — track in a follow-up slice before blind default-on.
 
 ## Smolagents Prompt Inventory
 
@@ -606,7 +626,7 @@ Acceptance:
 - [x] coordinator-gate-only fallback distinguishable (`coordinator_gate_fallback`) from budget/validation outcomes;
 - [x] budget pressure with evidence attempts partial synthesis before generic fallback (not only under enforcement);
 - [x] live audit reports `terminal_reason` + `audit_diagnostics` alongside runtime/tool_trace/phoenix verdicts;
-- [ ] numeric next-slice gates on CV matrix (`runtime_ok_cases >= 6/10`, …) — **2026-05-17 baseline rerun** (`eval/results/external-web-hot-topics-cv-live-baseline.json`): `all_ok=false` (5/5/4/5 vs 6/6/5/8); 5× `ReadTimeout` on long cases — see fail-buckets below.
+- [x] numeric next-slice gates — **controlled re-baseline** [`external-web-hot-topics-cv-rebaseline-baseline.json`](../../eval/results/external-web-hot-topics-cv-rebaseline-baseline.json): conservative `all_ok=true` at `--timeout 600`; initial 300s run [`external-web-hot-topics-cv-live-baseline.json`](../../eval/results/external-web-hot-topics-cv-live-baseline.json) was confounded by 5× `ReadTimeout`.
 
 ### Phase 4 (subagent contract simplification) — **shipped (typed merge + parser)**
 
@@ -671,21 +691,21 @@ Fresh run on healthy contour (`eval/results/external-web-hot-topics-cv-live-base
 
 ## Next Decision
 
-Recommended next step: run a **controlled re-baseline** before promoting Phase 6.
+Controlled re-baseline is **done** (see table above). Recommended product/engineering path:
 
-1. Re-run conservative baseline with a less confounded setup:
-   - same matrix/workspace;
-   - `--timeout 600` or split the 10-case matrix into smaller batches;
-   - API stable contour (`docker-compose.live-check.yml`);
-   - no repo file edits during the run.
-2. Re-run the toolcalling experiment under the same conditions.
-3. Promote `agent_external_research_toolcalling_experiment_enabled` from operator-only to default-on only if:
-   - experiment still passes `next_slice_gates.all_ok`;
-   - experiment is not worse on `phoenix_ok_cases`;
-   - `generic_fallback_with_evidence_cases` remains `0`;
-   - baseline timeouts no longer explain the delta.
+| Option | When | Action |
+|---|---|---|
+| **A. Operator-only (current)** | Need zero risk this week | Keep `SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED=0` default; enable per contour for external-research lanes. |
+| **B. Default-on toolcalling (recommended)** | Accept 6/10 pdf_read on experiment vs 8/10 baseline | Flip default to toolcalling protocol; keep env flag as **disable** escape hatch for one release; add backlog item for PDF-read regression on experiment lane. |
+| **C. Stay conservative default** | PDF coverage more important than pass/Phoenix | Keep `ExternalResearchProtocol` default; document experiment flag in acceptance index for operators chasing gates. |
 
-If the confirmation run matches the 2026-05-17 signal, the practical next implementation slice is small: rename the flag from "experiment" to a stable external-research protocol setting, keep an emergency disable flag for one release, and update operator docs to treat the toolcalling protocol as the default external-research prompt path.
+**Suggested slice for Option B** (small PR):
+
+1. `agent_external_research_toolcalling_experiment_enabled` default `true` **or** merge toolcalling card into `EXTERNAL_RESEARCH_PROTOCOL_CARD` and delete the experiment-only header.
+2. CV harness default `--timeout 600` in acceptance doc (300s under-reports long external-research turns).
+3. Phoenix span follow-up for remaining `missing_span_but_tool_trace_present` cases (4 baseline / 2 experiment on re-baseline).
+
+Until Option B ships, operators should use **`--timeout 600`** for CV matrix runs and treat [`external-web-hot-topics-cv-rebaseline-baseline.md`](../../eval/results/external-web-hot-topics-cv-rebaseline-baseline.md) as the gate reference, not the 300s [`external-web-hot-topics-cv-live-baseline.md`](../../eval/results/external-web-hot-topics-cv-live-baseline.md) run.
 
 ## Acceptance Checks
 

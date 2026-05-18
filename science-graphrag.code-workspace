@@ -9,6 +9,9 @@
     {
       "path": "../../openclaude",
     },
+    {
+      "path": "../agent-driver",
+    },
   ],
   "settings": {},
 }

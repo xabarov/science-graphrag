@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from langchain_core.messages import AIMessage, ToolMessage
 
@@ -36,7 +36,11 @@ def test_ensure_final_answer_tool_keeps_existing_order() -> None:
 
 def test_writer_bare_text_gets_synthetic_final_answer_tool_call() -> None:
     msgs = [AIMessage(content="final_answer:\nHello from writer")]
-    out = _ensure_terminal_final_answer_tool_call(msgs, citations=[{"work_id": "w1"}])
+    with patch(
+        "science_graphrag.agent.graph.nodes.writer_agent._record_synthetic_final_answer_tool_span"
+    ) as record_span:
+        out = _ensure_terminal_final_answer_tool_call(msgs, citations=[{"work_id": "w1"}])
+    record_span.assert_called_once()
     assert len(out) == 3
     assert isinstance(out[-2], AIMessage)
     assert isinstance(out[-1], ToolMessage)

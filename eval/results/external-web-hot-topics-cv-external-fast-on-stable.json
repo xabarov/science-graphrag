@@ -1,0 +1,1107 @@
+{
+  "lane_label": "external-fast-on-stable",
+  "base_url": "http://127.0.0.1:18787",
+  "workspace_id": "ws-pilot-od",
+  "total_cases": 10,
+  "passed_cases": 0,
+  "failed_cases": 10,
+  "coverage": {
+    "with_web_search": 0,
+    "with_web_fetch": 0,
+    "with_final_answer": 0,
+    "with_semantic_scholar": 0,
+    "with_pdf_read": 0,
+    "runtime_ok_cases": 0,
+    "tool_trace_ok_cases": 0,
+    "phoenix_ok_cases": 0,
+    "with_final_answer_validation": 0,
+    "validation_fail_cases": 0,
+    "generic_fallback_with_evidence_cases": 0,
+    "with_terminal_reason": 0,
+    "terminal_reason_distribution": {
+      "missing": 10
+    }
+  },
+  "cases": [
+    {
+      "id": "sam3_architecture",
+      "topic": "SAM 3 promptable segmentation",
+      "question": "Найди свежую информацию о архитектуре SAM 3 в CV. Сначала сделай web search + web fetch по официальным и исследовательским источникам, затем используй Semantic Scholar для релевантной статьи, и если есть открытый PDF — попробуй прочитать PDF. В конце дай сжатый итог с ограничениями.",
+      "ok": false,
+      "http_status": null,
+      "error": "RemoteProtocolError: Server disconnected without sending a response.",
+      "elapsed_sec": 10.04,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "open_vocabulary_detection",
+      "topic": "Open-vocabulary object detection",
+      "question": "Собери обзор open-vocabulary object detection (2025-2026): лидирующие подходы, бенчмарки, ограничения. Используй web search + web fetch, затем Semantic Scholar для подтверждения минимум одной работы и попытайся прочитать ее OA PDF, если доступен.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadError: [Errno 104] Connection reset by peer",
+      "elapsed_sec": 0.01,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "video_diffusion_world_models",
+      "topic": "Video diffusion world models",
+      "question": "Найди горячие тренды video diffusion world models для computer vision. Проверь web источники, затем найди 1-2 научные работы через Semantic Scholar, и попробуй извлечь PDF-текст хотя бы для одной OA статьи.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadError: [Errno 104] Connection reset by peer",
+      "elapsed_sec": 0.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "vla_robotics",
+      "topic": "Vision-language-action for robotics",
+      "question": "Собери данные по vision-language-action моделям для робототехники: что реально работает, где bottlenecks. Используй web search/fetch + Semantic Scholar + PDF read (если OA есть). Финал — практическая оценка готовности.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadError: [Errno 104] Connection reset by peer",
+      "elapsed_sec": 0.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "gaussian_splatting",
+      "topic": "3D Gaussian Splatting",
+      "question": "Найди последние материалы по 3D Gaussian Splatting в CV и сравни с NeRF. Нужны web источники и научные источники через Semantic Scholar. Для одного ключевого paper попробуй прочитать PDF и дать конкретные выводы.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadError: [Errno 104] Connection reset by peer",
+      "elapsed_sec": 0.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "efficient_edge_cv",
+      "topic": "Efficient edge CV models",
+      "question": "Проведи web+scholar обзор efficient edge CV models (mobile/edge inference): архитектуры, ускорение, accuracy-latency tradeoff. Обязательно используй web search/fetch и Semantic Scholar; при наличии OA PDF — выполни чтение PDF.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadError: [Errno 104] Connection reset by peer",
+      "elapsed_sec": 0.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "medical_foundation_vision",
+      "topic": "Medical vision foundation models",
+      "question": "Найди горячие темы по medical vision foundation models (segmentation/diagnostics). Сначала web search/fetch, затем Semantic Scholar для новых статей, после этого попытайся прочитать OA PDF, если есть.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadError: [Errno 104] Connection reset by peer",
+      "elapsed_sec": 0.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "synthetic_data_cv",
+      "topic": "Synthetic data pipelines for CV",
+      "question": "Собери обзор synthetic data pipelines для CV обучения: где помогает, где domain gap. Используй web search + web fetch, затем Semantic Scholar, и попытайся прочитать PDF для одной ключевой работы.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadError: [Errno 104] Connection reset by peer",
+      "elapsed_sec": 0.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "multimodal_pretraining_cv",
+      "topic": "Multimodal pretraining for CV",
+      "question": "Найди актуальные результаты по multimodal pretraining для CV (2025-2026). Нужны web источники и научные подтверждения через Semantic Scholar, плюс попытка PDF read для OA статьи.",
+      "ok": false,
+      "http_status": null,
+      "error": "ReadError: [Errno 104] Connection reset by peer",
+      "elapsed_sec": 0.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    },
+    {
+      "id": "document_vlm_ocr_free",
+      "topic": "OCR-free VLM document understanding",
+      "question": "Собери информацию по OCR-free VLM для document understanding: layout reasoning, tables/charts, production risks. Используй web search/fetch, Semantic Scholar, и PDF read, если возможно.",
+      "ok": false,
+      "http_status": null,
+      "error": "RemoteProtocolError: Server disconnected without sending a response.",
+      "elapsed_sec": 0.0,
+      "tool_names": [],
+      "tool_flags": {
+        "web_search": false,
+        "web_fetch": false,
+        "final_answer": false,
+        "read_external_pdf": false,
+        "semantic_scholar": false,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": false
+      },
+      "phoenix_trace_id": "",
+      "phoenix": {
+        "ok": false,
+        "error": "missing_trace_id",
+        "url": null
+      },
+      "phoenix_span_names_sample": [],
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "quality": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0
+      },
+      "answer_preview": "",
+      "citations": []
+    }
+  ],
+  "next_slice_gates": {
+    "all_ok": false,
+    "checks": {
+      "runtime_ok_cases": {
+        "ok": false,
+        "actual": 0,
+        "minimum": 6
+      },
+      "tool_trace_ok_cases": {
+        "ok": false,
+        "actual": 0,
+        "minimum": 6
+      },
+      "phoenix_ok_cases": {
+        "ok": false,
+        "actual": 0,
+        "minimum": 5
+      },
+      "with_final_answer": {
+        "ok": false,
+        "actual": 0,
+        "minimum": 8
+      },
+      "generic_fallback_with_evidence_cases": {
+        "ok": true,
+        "actual": 0,
+        "maximum": 0
+      }
+    }
+  }
+}

@@ -8,10 +8,14 @@ Treat that as failure (not a span snapshot).
 from __future__ import annotations
 
 import os
-from typing import Any
+from collections.abc import Iterable
+from typing import Any, Literal
 from urllib.parse import quote
 
 import httpx
+
+PHOENIX_SPANS_FETCH_LIMIT = 2000
+FINAL_ANSWER_SPAN_NAMES = frozenset({"final_answer", "tool.final_answer"})
 
 
 def phoenix_project_identifier() -> str:
@@ -243,6 +247,33 @@ def _find_trace_payload_in_list(
     return None
 
 
+def has_final_answer_tool_span(span_names: Iterable[str]) -> bool:
+    """True when Phoenix span names include a terminal ``final_answer`` tool span."""
+
+    for raw in span_names:
+        name = str(raw or "").strip()
+        if not name:
+            continue
+        if name in FINAL_ANSWER_SPAN_NAMES or "tool.final_answer" in name:
+            return True
+    return False
+
+
+def merge_span_name_lists(*lists: list[str]) -> list[str]:
+    """Stable union preserving first-seen order."""
+
+    seen: set[str] = set()
+    out: list[str] = []
+    for lst in lists:
+        for name in lst:
+            nm = str(name or "").strip()
+            if not nm or nm in seen:
+                continue
+            seen.add(nm)
+            out.append(nm)
+    return out
+
+
 def try_fetch_phoenix_spans(
     trace_id: str,
     *,
@@ -250,6 +281,8 @@ def try_fetch_phoenix_spans(
     timeout_s: float = 8.0,
     session_id: str | None = None,
     project_identifier: str | None = None,
+    span_limit: int = PHOENIX_SPANS_FETCH_LIMIT,
+    sort_order: Literal["asc", "desc"] | None = None,
 ) -> dict[str, Any]:
     """Fetch span names for ``trace_id`` via Phoenix 13.x REST; never raises.
 
@@ -288,12 +321,14 @@ def try_fetch_phoenix_spans(
     candidates: list[tuple[str, dict[str, Any] | None]] = []
 
     spans_url = f"{base}/v1/projects/{proj_path}/spans"
-    candidates.append(
-        (
-            spans_url,
-            {"params": {"trace_id": trace_id_norm, "limit": "500"}},
-        )
-    )
+    span_params: dict[str, str] = {
+        "trace_id": trace_id_norm,
+        "limit": str(max(1, int(span_limit))),
+    }
+    if sort_order in ("asc", "desc"):
+        span_params["order"] = sort_order
+        span_params["sort"] = "start_time"
+    candidates.append((spans_url, {"params": span_params}))
 
     traces_params: dict[str, str] = {
         "include_spans": "true",
@@ -386,8 +421,65 @@ def try_fetch_phoenix_spans(
     )
 
 
+def collect_phoenix_span_names_for_trace(
+    trace_id: str,
+    *,
+    base_url: str | None = None,
+    timeout_s: float = 8.0,
+    session_id: str | None = None,
+    project_identifier: str | None = None,
+) -> dict[str, Any]:
+    """Fetch span names with desc+asc merge so late ``tool.final_answer`` survives truncation."""
+
+    snap = try_fetch_phoenix_spans(
+        trace_id,
+        base_url=base_url,
+        timeout_s=timeout_s,
+        session_id=session_id,
+        project_identifier=project_identifier,
+        sort_order="desc",
+    )
+    if not snap.get("ok") or snap.get("payload") is None:
+        return {**snap, "span_names": [], "fetch_strategy": "failed"}
+
+    norm_tid = str(snap.get("trace_id") or trace_id).replace("-", "").lower()
+    names_desc = extract_span_names_for_trace(snap["payload"], norm_tid)
+    if has_final_answer_tool_span(names_desc):
+        return {**snap, "span_names": names_desc, "fetch_strategy": "desc_only"}
+
+    snap_asc = try_fetch_phoenix_spans(
+        trace_id,
+        base_url=base_url,
+        timeout_s=timeout_s,
+        session_id=session_id,
+        project_identifier=project_identifier,
+        sort_order="asc",
+    )
+    if snap_asc.get("ok") and snap_asc.get("payload") is not None:
+        names_asc = extract_span_names_for_trace(snap_asc["payload"], norm_tid)
+        merged = merge_span_name_lists(names_desc, names_asc)
+        strategy = (
+            "desc_plus_asc"
+            if has_final_answer_tool_span(merged)
+            else "desc_plus_asc_no_final_answer"
+        )
+        return {
+            **snap,
+            "span_names": merged,
+            "fetch_strategy": strategy,
+            "asc_fetch_ok": True,
+        }
+
+    return {**snap, "span_names": names_desc, "fetch_strategy": "desc_only"}
+
+
 __all__ = [
+    "FINAL_ANSWER_SPAN_NAMES",
+    "PHOENIX_SPANS_FETCH_LIMIT",
+    "collect_phoenix_span_names_for_trace",
     "extract_span_names_for_trace",
+    "has_final_answer_tool_span",
+    "merge_span_name_lists",
     "phoenix_project_identifier",
     "phoenix_ui_trace_url",
     "try_fetch_phoenix_spans",

@@ -46,9 +46,54 @@ Artifacts: `eval/results/external-web-hot-topics-cv-live-baseline.json`, `eval/r
 
 **Caveat:** baseline run had five `ReadTimeout` cases (300s client timeout); experiment run completed all ten requests. Treat as strong signal for the toolcalling protocol card, but repeat baseline with higher `--timeout` or fewer concurrent load before default promotion.
 
-## Decision (2026-05-17)
+## Controlled re-baseline (2026-05-17, `--timeout 600`)
 
-**Keep isolated behind flag** for production default. Operator may enable `SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED=1` on external-research lanes when next-slice gates are required. **Do not** delete the experiment card; schedule a controlled re-baseline (no timeouts) before flipping default-on.
+| Lane | Artifact | Passed | phoenix_ok | pdf_read | next_slice_gates |
+|---|---|---:|---:|---:|---|
+| Conservative | [`external-web-hot-topics-cv-rebaseline-baseline.json`](../../eval/results/external-web-hot-topics-cv-rebaseline-baseline.json) | 6/10 | 6 | 8 | `all_ok=true` |
+| Experiment | [`external-web-hot-topics-cv-rebaseline-experiment.json`](../../eval/results/external-web-hot-topics-cv-rebaseline-experiment.json) | 8/10 | 8 | 6 | `all_ok=true` |
+
+No `ReadTimeout` on either lane. Conservative path **also** meets gates once timeout confound is removed.
+
+## Decision (2026-05-17, updated after re-baseline)
+
+**Keep behind flag for now** (production default unchanged). Re-baseline confirms:
+
+- Toolcalling is the better lane on pass rate and Phoenix (8 vs 6).
+- Conservative is viable at 600s client timeout (gates pass).
+- Experiment regressed slightly on `read_external_pdf` coverage (6 vs 8).
+
+**Recommended next engineering slice:** Option B in the main analysis doc — default-on toolcalling with disable escape hatch, CV `--timeout 600` in acceptance, PDF-read follow-up backlog. Do not delete the experiment card until Option B merges or two runs fail to reproduce the win.
+
+## Decision (2026-05-18, Agent Runtime External Research Hardening N1–N5)
+
+**Shipped in code (defaults unchanged):**
+
+| Item | Flag / artifact | Default |
+|------|-----------------|--------|
+| Phoenix alignment | `collect_phoenix_span_names_for_trace` (desc+asc merge, limit 2000) + synthetic `tool.final_answer` span on writer close | always on |
+| Tool dedup | `split_duplicate_external_fetch_calls` in tool pipeline | always on |
+| Expanded matrix | `scripts/live_check/agent_external_research_matrix.py` + `eval/fixtures/agent_external_research_matrix.json` (22 cases) | operator harness |
+| External-fast A/B | `agent_external_research_fast_path_enabled` + RoutePlan `external_fast_path` + corpus tool denylist | **off** |
+| Toolcalling experiment | `agent_external_research_toolcalling_experiment_enabled` | **off** |
+
+**Product decision (until next operator A/B):**
+
+1. **Do not** promote toolcalling experiment to default-on — re-baseline showed PDF-read regression (6 vs 8) and conservative path already passes gates at `--timeout 600`.
+2. **Keep** toolcalling card behind `SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED` for repeatable A/B; merge only the non-card wins (dedup, Phoenix audit, matrix) into mainline.
+3. **External-fast path** — run matrix/CV with `SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_FAST_PATH_ENABLED=1` and `agent_route_plan_enabled=1`; promote only if latency/tool-call count improves ≥20% without gate regression.
+4. **Phoenix gate** — re-run `external_web_hot_topics_cv_audit.py` after deploy; target `phoenix_ok_cases` ≥ 8/10 (synthetic span + dual-order fetch should clear `missing_span_but_tool_trace_present`).
+
+**Operator commands (post-deploy smoke):**
+
+```bash
+export AGENT_LIVE_BASE=http://127.0.0.1:18787 AGENT_LIVE_WORKSPACE_ID=ws-pilot-od
+.venv/bin/python scripts/live_check/external_web_hot_topics_cv_audit.py \
+  --lane-label post-n1-n2 --timeout 600 \
+  --out-json eval/results/external-web-hot-topics-cv-post-hardening.json
+.venv/bin/python scripts/live_check/agent_external_research_matrix.py \
+  --lane-label matrix-smoke --timeout 600
+```
 
 ## Delete criteria
 

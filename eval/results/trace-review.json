@@ -1,357 +1,164 @@
 {
   "review_version": "trace-review-v1",
-  "generated_at": "2026-05-05T10:33:42.665104+00:00",
+  "generated_at": "2026-05-18T10:06:10.739014+00:00",
   "run_context": {
-    "base_url": "http://127.0.0.1:18787",
-    "workspace_id": null,
+    "base_url": "http://127.0.0.1:8000",
+    "workspace_id": "",
     "suite": "default",
+    "profile": "default",
+    "run_kind": "supervisor_specialists_v3",
+    "graph_id": "supervisor_graph_v3",
+    "execution_diagnostics": {
+      "heartbeat_interval_sec": 60.0,
+      "e2e_subprocess_timeout_sec": null,
+      "stages": [
+        {
+          "stage": "http_suite",
+          "elapsed_ms": 114.775,
+          "ok": true
+        },
+        {
+          "stage": "e2e_audit_subprocess",
+          "elapsed_ms": 2743.536,
+          "ok": true
+        },
+        {
+          "stage": "merge_e2e_report_json",
+          "elapsed_ms": 0.087,
+          "ok": true
+        }
+      ]
+    },
     "feature_flags": {
-      "agent_runtime": null,
-      "agent_rule_tool_search_enabled": null
+      "agent_runtime": "langgraph_supervisor_v3",
+      "agent_rule_tool_search_enabled": null,
+      "agent_tool_search_deferred_schema_refs_enabled": null,
+      "agent_budget_stop_reasoning_enabled": null,
+      "agent_thread_insights_enabled": null,
+      "agent_thread_insights_llm_synthesis_enabled": null,
+      "agent_tool_search_strict_deferred_activation_enabled": null,
+      "long_thread_eval_offline": "false",
+      "agent_claim_verification_enabled": null,
+      "agent_subagent_lifecycle_enhanced_enabled": null,
+      "agent_corpus_explore_enabled": null,
+      "agent_research_plan_subagent_enabled": null,
+      "agent_tool_use_summary_enabled": null,
+      "agent_side_llm_openrouter_cache_control_enabled": null,
+      "agent_llm_full_history_compact_enabled": null,
+      "agent_tool_message_microcompact_time_trigger_enabled": null,
+      "agent_e1_retrieval_hop_evidence_gate_enabled": null,
+      "agent_e1_retrieval_hop_min_payloads": null,
+      "agent_writer_terminal_single_pass_shadow_enabled": null
     }
   },
   "checks": [
     {
       "name": "health",
-      "ok": true,
-      "detail": "ok",
-      "data": {
-        "body": {
-          "status": "ok",
-          "agent_session_memory_backend": "redis",
-          "agent_session_memory_configured": "redis"
-        }
-      }
+      "ok": false,
+      "detail": "[Errno 111] Connection refused",
+      "data": {}
     },
     {
       "name": "agent_v2_sync_json",
-      "ok": true,
-      "detail": "ok",
-      "data": {
-        "duration_ms": 2006,
-        "warnings": [
-          "no_workspace",
-          "weak_evidence",
-          "insufficient_evidence"
-        ],
-        "tools": [
-          "coordinator_gate"
-        ],
-        "answer_class": "grounded_explanation"
-      }
+      "ok": false,
+      "detail": "[Errno 111] Connection refused",
+      "data": {}
     },
     {
       "name": "multi_turn_digest",
-      "ok": true,
-      "detail": "ok",
-      "data": {
-        "thread_id": "live_check_4c144b65981e",
-        "turn2_warnings": [
-          "no_workspace",
-          "weak_evidence",
-          "insufficient_evidence"
-        ],
-        "turn2_tools": [
-          "coordinator_gate",
-          "session_init"
-        ]
-      }
+      "ok": false,
+      "detail": "turn1: [Errno 111] Connection refused",
+      "data": {}
     },
     {
       "name": "agent_v2_sse",
-      "ok": true,
-      "detail": "ok",
+      "ok": false,
+      "detail": "[Errno 111] Connection refused",
       "data": {
-        "event_types": [
-          "intent_classified",
-          "answer_synthesis_started",
-          "context_compacted",
-          "answer_synthesis_finished",
-          "final_answer"
-        ],
-        "event_count": 5
+        "partial_event_count": 0
       }
     }
   ],
-  "trace_timeline": [
-    {
-      "case_id": "catalog_resolution",
-      "thread_id": null,
-      "duration_ms": 10929.0,
-      "tool_steps": [
-        {
-          "idx": 1,
-          "tool": "coordinator_gate",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 2,
-          "tool": "find_works",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 3,
-          "tool": "find_works",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 4,
-          "tool": "paper_profile",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 5,
-          "tool": "final_answer",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        }
-      ],
-      "phoenix_alignment": {
-        "covered": 100,
-        "missing": []
-      },
-      "compaction_events": [
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest"
-          ],
-          "turn": 1,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest"
-          ],
-          "turn": 2,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest",
-            "rolling_memory"
-          ],
-          "turn": 3,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest",
-            "rolling_memory"
-          ],
-          "turn": 4,
-          "thread_id": "compaction_review_e068466f6142"
-        }
-      ],
-      "db_side_effects": null,
-      "warnings": []
-    },
-    {
-      "case_id": "workspace_stats",
-      "thread_id": null,
-      "duration_ms": 7288.0,
-      "tool_steps": [
-        {
-          "idx": 1,
-          "tool": "coordinator_gate",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 2,
-          "tool": "workspace_inspect",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 3,
-          "tool": "final_answer",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        }
-      ],
-      "phoenix_alignment": {
-        "covered": 100,
-        "missing": []
-      },
-      "compaction_events": [
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest"
-          ],
-          "turn": 1,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest"
-          ],
-          "turn": 2,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest",
-            "rolling_memory"
-          ],
-          "turn": 3,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest",
-            "rolling_memory"
-          ],
-          "turn": 4,
-          "thread_id": "compaction_review_e068466f6142"
-        }
-      ],
-      "db_side_effects": null,
-      "warnings": []
-    },
-    {
-      "case_id": "grounded_quote",
-      "thread_id": null,
-      "duration_ms": 11434.0,
-      "tool_steps": [
-        {
-          "idx": 1,
-          "tool": "coordinator_gate",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 2,
-          "tool": "idea_search",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 3,
-          "tool": "paper_quote_search",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        },
-        {
-          "idx": 4,
-          "tool": "final_answer",
-          "ok": true,
-          "duration_ms": 0,
-          "error": null
-        }
-      ],
-      "phoenix_alignment": {
-        "covered": 100,
-        "missing": []
-      },
-      "compaction_events": [
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest"
-          ],
-          "turn": 1,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest"
-          ],
-          "turn": 2,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest",
-            "rolling_memory"
-          ],
-          "turn": 3,
-          "thread_id": "compaction_review_e068466f6142"
-        },
-        {
-          "type": "context_compacted",
-          "kinds": [
-            "turn_digest",
-            "rolling_memory"
-          ],
-          "turn": 4,
-          "thread_id": "compaction_review_e068466f6142"
-        }
-      ],
-      "db_side_effects": null,
-      "warnings": []
-    }
-  ],
+  "trace_timeline": [],
   "metrics": {
     "tool_error_rate": 0.0,
     "missing_span_count": 0,
-    "compaction_event_count": 12,
+    "compaction_event_count": 0,
     "final_answer_missing_count": 0,
-    "latency_p95_ms": 10929.0,
-    "compaction_churn_score": null
+    "latency_p95_ms": null,
+    "post_turn_compaction_wall_ms_p95": null,
+    "compaction_churn_score": null,
+    "shortlist_ratio_avg": null,
+    "deferred_schema_event_count": 0,
+    "budget_cutoff_count": 0,
+    "side_llm_cache_read_ratio_avg": null,
+    "latency_p50_ms": null,
+    "insight_recall_at_k": null,
+    "stale_summary_error_rate": null,
+    "insight_stale_reason_rate": null,
+    "insight_conflict_resolved_rate": null,
+    "ptl_retry_rate": null,
+    "ptl_retry_count_per_compaction_avg": null,
+    "compaction_circuit_breaker_trips": 0,
+    "unnecessary_tool_calls_avg": null,
+    "hook_chain_event_count": 0,
+    "subagent_lifecycle_missing_count": 0,
+    "subagent_terminal_state_missing_count": 0,
+    "subagent_merge_provenance_missing_count": 0,
+    "subagent_timeout_count": 0,
+    "subagent_task_notification_count_avg": null,
+    "tool_search_miss_due_to_no_discovery_total": 0,
+    "tool_schema_bytes_saved_total": 0,
+    "tool_loop_repeat_max": 0,
+    "runtime_monitor_event_total": 0,
+    "runtime_monitor_degraded_total": 0,
+    "mcp_audit_event_total": 0,
+    "mcp_audit_deny_total": 0,
+    "lsp_audit_event_total": 0,
+    "lsp_audit_degraded_total": 0,
+    "claim_verification_verdict_parse_rate": null,
+    "live_trust_signal_avg": null,
+    "specialist_v3_merge_conflict_cases": 0,
+    "agent_usage_total_tokens_sum": null,
+    "writer_oscillation_count_max": 0,
+    "tool_use_summary_row_count_total": 0,
+    "post_compact_paper_sources_restored_cases": 0,
+    "post_compact_paper_sources_restored_total": 0
   },
   "verdict": {
-    "status": "pass",
-    "fail_reasons": [],
+    "status": "fail",
+    "fail_reasons": [
+      "failed_check:agent_v2_sse",
+      "failed_check:agent_v2_sync_json",
+      "failed_check:health",
+      "e2e_failed"
+    ],
     "warn_reasons": []
   },
   "e2e_audit": {
-    "ok": true,
-    "returncode": 0,
+    "ok": false,
+    "returncode": 1,
     "command": [
       "/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/bin/python",
       "/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py",
       "--suite",
       "default",
       "--timeout",
-      "240.0",
+      "15.0",
       "--write-report",
       "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
       "--write-report-json",
-      "/tmp/e2e_full_report_z_bihi22.json",
-      "--trace-audit"
+      "/tmp/e2e_full_report_p08_atd0.json",
+      "--skip-phoenix",
+      "--skip-postgres"
     ],
-    "stdout_tail": " \"tool.final_answer\",\n          \"chat\",\n          \"route_react_chat_to_tools\",\n          \"ChannelWrite<...,chat>\",\n          \"llm.agent.react_turn\",\n          \"ChatOpenAI\",\n          \"after_tools\",\n          \"route_react_tools_next\",\n          \"ChannelWrite<...,after_tools>\",\n          \"tools\",\n          \"ChannelWrite<...,tools>\",\n          \"paper_profile\",\n          \"tool.paper_profile\",\n          \"chat\",\n          \"route_react_chat_to_tools\",\n          \"ChannelWrite<...,chat>\",\n          \"llm.agent.react_turn\",\n          \"ChatOpenAI\"\n        ]\n      },\n      \"notes\": [],\n      \"tool_trace\": [\n        {\n          \"step\": 0,\n          \"tool\": \"coordinator_gate\",\n          \"args_summary\": {\n            \"tool_policy\": \"allow_tools\",\n            \"classifier\": \"single_agent_research_v1\",\n            \"suggested_answer_class\": \"quote_extraction\"\n          },\n          \"row_count\": 0,\n          \"duration_ms\": 0,\n          \"truncated\": false,\n          \"error\": null\n        },\n        {\n          \"step\": 1,\n          \"tool\": \"idea_search\",\n          \"args_summary\": {\n            \"query\": \"anchor free object detection\",\n            \"kinds\": \"['chunk']\",\n            \"workspace_id\": \"2678c5f1-1b31-4aac-92c9-6bd0f4472b23\"\n          },\n          \"row_count\": 5,\n          \"duration_ms\": 0,\n          \"truncated\": true,\n          \"error\": null\n        },\n        {\n          \"step\": 2,\n          \"tool\": \"paper_quote_search\",\n          \"args_summary\": {\n            \"query\": \"anchor free object detection\",\n            \"workspace_id\": \"2678c5f1-1b31-4aac-92c9-6bd0f4472b23\",\n            \"top_k\": \"1\"\n          },\n          \"row_count\": 1,\n          \"duration_ms\": 0,\n          \"truncated\": false,\n          \"error\": null\n        },\n        {\n          \"step\": 3,\n          \"tool\": \"final_answer\",\n          \"args_summary\": {\n            \"answer\": \"The workspace contains evidence on anchor-free object detection, particularly highlighting the distinction between anchor-based and anchor-free methods in terms of training sample selection. One key i\",\n            \"citations\": \"[{'work_id': '33599c70-fbad-41b1-9faf-96e5457699f9', 'chunk_id': 'cab9deac4592522e580eae9de1922955b10340194cb3534cbf377851917564e2', 'quote_text': 'It bridges the gap between anchor-based and anchor-f\"\n          },\n          \"row_count\": 1,\n          \"duration_ms\": 0,\n          \"truncated\": false,\n          \"error\": null\n        }\n      ],\n      \"thread_id\": null,\n      \"edge_search_zero_row_max_streak\": 0,\n      \"paper_profile_max_consecutive_same_work_id\": 0,\n      \"cypher_query_error_count\": 0,\n      \"duration_ms\": 11434,\n      \"warnings\": [],\n      \"answer_class\": \"quote_extraction\",\n      \"citations_count\": 1,\n      \"phoenix_ui_url\": \"http://127.0.0.1:16006/projects/science-graphrag/traces/00ffc667a38f9278a5cc0952080facde\",\n      \"trace_audit\": {\n        \"tool_counts\": {\n          \"coordinator_gate\": 1,\n          \"final_answer\": 1,\n          \"idea_search\": 1,\n          \"paper_quote_search\": 1\n        },\n        \"consecutive_duplicate_tools\": [],\n        \"tools_called_more_than_once\": {},\n        \"phoenix_sample_llm_agent_react_turn_hits\": 7,\n        \"phoenix_sample_channel_or_route_hits\": 39,\n        \"phoenix_sample_tool_dot_hits\": 7,\n        \"heuristic_issues\": [],\n        \"phoenix_structure_audit\": {\n          \"span_sample_size\": 100,\n          \"llm_agent_react_turn_hits\": 7,\n          \"tool_dot_span_hits\": 7,\n          \"embedding_span_hits\": 2,\n          \"retrieval_span_hits\": 2,\n          \"channel_or_route_noise_hits\": 39,\n          \"tool_dot_sample\": [\n            \"tool.final_answer\",\n            \"tool.paper_quote_search\",\n            \"tool.idea_search\",\n            \"tool.final_answer\",\n            \"tool.workspace_inspect\",\n            \"tool.final_answer\",\n            \"tool.paper_profile\"\n          ],\n          \"issues\": [],\n          \"sequence_hints\": [],\n          \"coverage\": {\n            \"covered\": 100,\n            \"missing\": []\n          }\n        }\n      }\n    }\n  ]\n}\n",
-    "stderr_tail": "note: PHOENIX_TRACE_SCOPE=extraction_llm (agent.* spans still allowed); if Phoenix is empty, check PHOENIX_COLLECTOR_ENDPOINT on the API container.\nwrote full report json: /tmp/e2e_full_report_z_bihi22.json\n\n--- summary ---\ncatalog_resolution: steps=5 final_answer=True answer_len=266 phoenix_ok=True ok=True\nworkspace_stats: steps=3 final_answer=True answer_len=114 phoenix_ok=True ok=True\ngrounded_quote: steps=4 final_answer=True answer_len=797 phoenix_ok=True ok=True\n",
+    "stdout_tail": "",
+    "stderr_tail": "^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py\", line 256, in handle_request\n    raise exc from None\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection_pool.py\", line 236, in handle_request\n    response = connection.handle_request(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py\", line 101, in handle_request\n    raise exc\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py\", line 78, in handle_request\n    stream = self._connect(request)\n             ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_sync/connection.py\", line 124, in _connect\n    stream = self._network_backend.connect_tcp(**kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_backends/sync.py\", line 207, in connect_tcp\n    with map_exceptions(exc_map):\n  File \"/usr/lib/python3.12/contextlib.py\", line 158, in __exit__\n    self.gen.throw(value)\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpcore/_exceptions.py\", line 14, in map_exceptions\n    raise to_exc(exc) from exc\nhttpcore.ConnectError: [Errno 111] Connection refused\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py\", line 359, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/scripts/live_check/agent_od_workspace_e2e_audit.py\", line 246, in main\n    health = client.get(f\"{base}/health\")\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 1053, in get\n    return self.request(\n           ^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 825, in request\n    return self.send(request, auth=auth, follow_redirects=follow_redirects)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 914, in send\n    response = self._send_handling_auth(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 942, in _send_handling_auth\n    response = self._send_handling_redirects(\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 979, in _send_handling_redirects\n    response = self._send_single_request(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_client.py\", line 1014, in _send_single_request\n    response = transport.handle_request(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_transports/default.py\", line 249, in handle_request\n    with map_httpcore_exceptions():\n  File \"/usr/lib/python3.12/contextlib.py\", line 158, in __exit__\n    self.gen.throw(value)\n  File \"/home/roman/pyprojects/ML/Prod/science-graphrag/.venv/lib/python3.12/site-packages/httpx/_transports/default.py\", line 118, in map_httpcore_exceptions\n    raise mapped_exc(message) from exc\nhttpx.ConnectError: [Errno 111] Connection refused\n",
     "report_path": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/results/trace_review_e2e_report.jsonl",
-    "full_report_json_path": "/tmp/e2e_full_report_z_bihi22.json"
+    "full_report_json_path": "/tmp/e2e_full_report_p08_atd0.json"
   },
-  "phoenix_snapshot_path": "eval/results/trace-review_phoenix_spans.jsonl",
-  "phoenix_pull": {
-    "ok": true,
-    "returncode": 0,
-    "path": "eval/results/trace-review_phoenix_spans.jsonl",
-    "stderr_tail": ""
-  },
-  "compaction_turn_review": {
-    "ok": true,
-    "returncode": 0,
-    "path": "eval/results/trace-review_compaction_review.json",
-    "stdout_tail": "[compaction-review] merged into: eval/results/trace-review.json\n[compaction-review] json: eval/results/trace-review_compaction_review.json\n[compaction-review] md:   eval/results/trace-review_compaction_review.md\n",
-    "stderr_tail": ""
-  }
+  "phoenix_snapshot_path": null,
+  "acceptable_warns": [
+    "^claim_verification_verdict_parse_rate:absent_no_cv_rows$"
+  ]
 }

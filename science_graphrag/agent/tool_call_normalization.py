@@ -42,6 +42,21 @@ def normalize_ai_message_tool_calls(msg: AIMessage) -> AIMessage:
     return msg.model_copy(update={"tool_calls": normalized})
 
 
+def state_with_last_ai_tool_calls(
+    state: AgentState,
+    tool_calls: list[dict[str, Any]],
+) -> AgentState:
+    """Copy state replacing the tail AIMessage ``tool_calls`` list."""
+    messages = list(state.get("messages") or [])
+    if not messages:
+        return state
+    last = messages[-1]
+    if isinstance(last, AIMessage):
+        fixed = last.model_copy(update={"tool_calls": list(tool_calls)})
+        return {**state, "messages": [*messages[:-1], fixed]}
+    return state
+
+
 def state_with_normalized_last_ai_tool_calls(state: AgentState) -> AgentState:
     """Copy state with last AIMessage tool_calls trimmed (ToolNode reads the tail)."""
     messages = list(state.get("messages") or [])

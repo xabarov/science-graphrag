@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "suites": {
+    "web_hot_topics": [
+      {
+        "id": "sam3_architecture",
+        "topic": "SAM 3 promptable segmentation",
+        "question": "Найди свежую информацию о архитектуре SAM 3 в CV. Сначала web search + web fetch, затем Semantic Scholar, и OA PDF если есть. Сжатый итог с ограничениями.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "scholar", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "open_vocabulary_detection",
+        "topic": "Open-vocabulary object detection",
+        "question": "Обзор open-vocabulary object detection (2025-2026): web search/fetch, Semantic Scholar, OA PDF read если доступен.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "scholar", "final_answer"],
+        "forbidden_tool_families": []
+      }
+    ],
+    "corpus_only": [
+      {
+        "id": "corpus_compare_two_papers",
+        "topic": "Corpus dual compare",
+        "question": "Сравни два ключевых paper в workspace по методам и ограничениям. Используй corpus tools (find_works, paper_profile), без внешнего web search.",
+        "workspace_id": "ws-pilot-od",
+        "web_research_enabled": false,
+        "expected_tool_families": ["corpus", "final_answer"],
+        "forbidden_tool_families": ["web"]
+      },
+      {
+        "id": "corpus_workspace_stats",
+        "topic": "Workspace stats",
+        "question": "Сколько работ и документов в workspace? Дай краткую статистику через workspace_inspect, без web.",
+        "workspace_id": "ws-pilot-od",
+        "web_research_enabled": false,
+        "expected_tool_families": ["corpus", "final_answer"],
+        "forbidden_tool_families": ["web"]
+      }
+    ],
+    "product_official": [
+      {
+        "id": "ultralytics_yolo_official",
+        "topic": "Ultralytics YOLO official",
+        "question": "Какие официальные источники Ultralytics YOLO11 описывают breaking changes? Используй official_web_lookup и web fetch, без corpus search.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "official", "final_answer"],
+        "forbidden_tool_families": ["corpus"]
+      },
+      {
+        "id": "pytorch_torchvision_release",
+        "topic": "PyTorch vision release notes",
+        "question": "Найди официальные release notes torchvision за 2025-2026 через official/product web lookup.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "official", "final_answer"],
+        "forbidden_tool_families": []
+      }
+    ],
+    "doi_first": [
+      {
+        "id": "doi_unpaywall_pdf",
+        "topic": "DOI resolver path",
+        "question": "Для DOI 10.1109/CVPR.2024.01234: resolve через unpaywall, затем web fetch/PDF read если OA. Без лишних corpus tools.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["doi", "final_answer"],
+        "forbidden_tool_families": ["corpus"]
+      },
+      {
+        "id": "doi_crossref_metadata",
+        "topic": "DOI metadata",
+        "question": "Получи bibliographic metadata для DOI 10.48550/arXiv.2301.00001 через resolver tools, краткий итог.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["doi", "final_answer"],
+        "forbidden_tool_families": []
+      }
+    ],
+    "arxiv_only": [
+      {
+        "id": "arxiv_sam_segmentation",
+        "topic": "arXiv SAM papers",
+        "question": "Найди на arXiv свежие SAM/segmentation preprints (arxiv_search/fetch). Не используй Semantic Scholar loop.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["arxiv", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "arxiv_diffusion",
+        "topic": "arXiv diffusion",
+        "question": "Список arXiv работ по video diffusion world models за 2025-2026 только через arxiv tools.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["arxiv", "final_answer"],
+        "forbidden_tool_families": []
+      }
+    ],
+    "negative_claim": [
+      {
+        "id": "negative_no_silver_bullet",
+        "topic": "Negative claim discipline",
+        "question": "Докажи ли, что SAM 3 полностью заменяет все CV pipelines? Используй web+scholar, но не overclaim — явно укажи ограничения и отрицание сильных утверждений.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": [],
+        "answer_must_not_contain": ["полностью заменяет", "silver bullet", "решает все задачи"]
+      }
+    ],
+    "metadata_only_trap": [
+      {
+        "id": "limitations_only",
+        "topic": "Limitations trap",
+        "question": "Перечисли только limitations и gaps по efficient edge CV models из web+scholar. Не выдумывай SOTA числа без источника.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "scholar", "final_answer"],
+        "forbidden_tool_families": [],
+        "answer_must_contain_any": ["огранич", "limitation", "gap", "недостат"]
+      }
+    ],
+    "settings_overlay": [
+      {
+        "id": "external_off",
+        "topic": "External off",
+        "question": "Кратко: что такое open-vocabulary detection? Без внешних источников, только общий ответ.",
+        "web_research_enabled": false,
+        "expected_tool_families": ["final_answer"],
+        "forbidden_tool_families": ["web", "scholar", "pdf"]
+      },
+      {
+        "id": "web_on_scholar_optional",
+        "topic": "Web on",
+        "question": "Горячие тренды 3D Gaussian Splatting: web search/fetch, scholar опционален.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": []
+      }
+    ],
+    "full_matrix_smoke": [
+      {
+        "id": "multimodal_pretraining_cv",
+        "topic": "Multimodal pretraining for CV",
+        "question": "Multimodal pretraining CV 2025-2026: web, Semantic Scholar, PDF read если OA.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "scholar", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "document_vlm_ocr_free",
+        "topic": "OCR-free VLM documents",
+        "question": "OCR-free VLM document understanding: web fetch, scholar, PDF read.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "vla_robotics",
+        "topic": "VLA robotics",
+        "question": "Vision-language-action robotics: web+scholar+PDF OA.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "gaussian_splatting",
+        "topic": "3D Gaussian Splatting",
+        "question": "3D Gaussian Splatting vs NeRF: web+scholar.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "efficient_edge_cv",
+        "topic": "Efficient edge CV",
+        "question": "Efficient edge CV models: web+scholar+PDF.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "medical_foundation_vision",
+        "topic": "Medical foundation vision",
+        "question": "Medical vision foundation models: web+scholar+PDF.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "synthetic_data_cv",
+        "topic": "Synthetic data CV",
+        "question": "Synthetic data pipelines for CV: web+scholar+PDF.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": []
+      },
+      {
+        "id": "video_diffusion_world_models",
+        "topic": "Video diffusion world models",
+        "question": "Video diffusion world models trends: web+scholar+PDF.",
+        "web_research_enabled": true,
+        "expected_tool_families": ["web", "final_answer"],
+        "forbidden_tool_families": []
+      }
+    ]
+  }
+}

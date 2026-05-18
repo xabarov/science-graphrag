@@ -17,9 +17,6 @@ from langgraph.graph import END, StateGraph
 
 from science_graphrag.agent.final_answer_policy import has_completed_final_answer_tool
 from science_graphrag.agent.final_answer_validation import is_generic_fallback_answer
-from science_graphrag.agent.runtime_answer_salvage import (
-    synthesize_partial_answer_from_specialist_context,
-)
 from science_graphrag.agent.graph.nodes.retrieval_subgraph import merge_react_subgraph_debug_events
 from science_graphrag.agent.graph.react_edges import (
     final_answer_nudge_state_update,
@@ -37,6 +34,9 @@ from science_graphrag.agent.llm.chat import (
 from science_graphrag.agent.prompt_protocol_cards import (
     WRITER_BASE_SYSTEM_PROMPT,
     build_writer_terminal_protocol_block,
+)
+from science_graphrag.agent.runtime_answer_salvage import (
+    synthesize_partial_answer_from_specialist_context,
 )
 from science_graphrag.agent.subagent_output_contract import writer_system_prompt_suffix
 from science_graphrag.agent.subagents.lifecycle import (
@@ -273,6 +273,28 @@ def _synthesize_partial_answer_from_context(
     )
 
 
+def _record_synthetic_final_answer_tool_span(
+    *,
+    answer: str,
+    citations: list[dict[str, Any]],
+) -> None:
+    """Emit ``tool.final_answer`` for writer synthetic closes (tool_trace without ToolNode)."""
+
+    from science_graphrag.agent.tools.base import run_tool_result_with_span
+    from science_graphrag.agent.tools.final_answer import FinalAnswerTool
+
+    runtime_tool = FinalAnswerTool()
+    run_tool_result_with_span(
+        tool_name="final_answer",
+        tool_parameters={
+            "answer_chars": len(answer or ""),
+            "citations_count": len(citations),
+            "synthetic": True,
+        },
+        fn=lambda: runtime_tool.run(answer=answer, citations=citations),
+    )
+
+
 def _ensure_terminal_final_answer_tool_call(
     messages: list[Any],
     *,
@@ -312,6 +334,7 @@ def _ensure_terminal_final_answer_tool_call(
         )
     if not visible_text:
         return messages
+    _record_synthetic_final_answer_tool_span(answer=visible_text, citations=cits)
     call_id = f"writer_final_answer_fallback_{uuid.uuid4().hex[:12]}"
     payload = {
         "answer": visible_text,

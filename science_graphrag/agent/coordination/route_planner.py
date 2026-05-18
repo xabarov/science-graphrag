@@ -32,6 +32,7 @@ from science_graphrag.agent.coordination.route_plan import (
     TerminationRule,
 )
 from science_graphrag.agent.coordination.turn_policy import TurnPolicy
+from science_graphrag.agent.external_fast_path import pure_external_web_fast_path_intent
 from science_graphrag.agent.web_evidence_policy import (
     pdf_read_evidence_status,
     web_evidence_sufficient_for_product_query,
@@ -288,6 +289,16 @@ def build_route_plan(  # pylint: disable=too-many-return-statements,unused-argum
         return _retrieval_then_writer(
             first_hop_reason="catalog_resolution_first_hop",
             expected=("minimal_bundle_ready",),
+        )
+
+    if (
+        settings is not None
+        and bool(getattr(settings, "agent_external_research_fast_path_enabled", False))
+        and pure_external_web_fast_path_intent(features)
+    ):
+        return _retrieval_then_writer(
+            first_hop_reason="external_fast_path",
+            expected=("minimal_bundle_ready", "any_specialist_payload"),
         )
 
     return _default_research_plan(

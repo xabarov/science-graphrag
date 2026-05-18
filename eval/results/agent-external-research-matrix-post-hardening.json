@@ -1,0 +1,1281 @@
+{
+  "lane_label": "matrix-post-hardening",
+  "suite": "all",
+  "fixture": "/home/roman/pyprojects/ML/Prod/science-graphrag/eval/fixtures/agent_external_research_matrix.json",
+  "base_url": "http://127.0.0.1:18787",
+  "total_cases": 22,
+  "passed_cases": 1,
+  "coverage": {
+    "runtime_ok_cases": 1,
+    "tool_trace_ok_cases": 1,
+    "phoenix_ok_cases": 1,
+    "matrix_ok_cases": 1,
+    "with_final_answer": 1,
+    "generic_fallback_with_evidence_cases": 0
+  },
+  "next_slice_gates": {
+    "all_ok": false,
+    "checks": {
+      "runtime_ok_cases": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 12,
+        "ratio": 0.55
+      },
+      "tool_trace_ok_cases": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 11,
+        "ratio": 0.5
+      },
+      "phoenix_ok_cases": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 9,
+        "ratio": 0.45
+      },
+      "matrix_ok_cases": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 11,
+        "ratio": 0.5
+      },
+      "with_final_answer": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 15,
+        "ratio": 0.7
+      },
+      "generic_fallback_with_evidence_cases": {
+        "ok": true,
+        "actual": 0,
+        "maximum": 0
+      }
+    }
+  },
+  "web_hot_topics_gates": {
+    "all_ok": false,
+    "checks": {
+      "runtime_ok_cases": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 6
+      },
+      "tool_trace_ok_cases": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 6
+      },
+      "phoenix_ok_cases": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 5
+      },
+      "with_final_answer": {
+        "ok": false,
+        "actual": 1,
+        "minimum": 8
+      },
+      "generic_fallback_with_evidence_cases": {
+        "ok": true,
+        "actual": 0,
+        "maximum": 0
+      }
+    }
+  },
+  "cases": [
+    {
+      "suite": "web_hot_topics",
+      "id": "sam3_architecture",
+      "topic": "SAM 3 promptable segmentation",
+      "ok": true,
+      "http_status": 200,
+      "elapsed_sec": 196.25,
+      "tool_names": [
+        "coordinator_gate",
+        "route_to_specialist",
+        "route_to_specialist",
+        "web_search",
+        "semantic_scholar_search",
+        "web_fetch",
+        "unpaywall_lookup",
+        "read_external_pdf",
+        "corpus_explore",
+        "final_answer"
+      ],
+      "tool_flags": {
+        "web_search": true,
+        "web_fetch": true,
+        "final_answer": true,
+        "read_external_pdf": true,
+        "semantic_scholar": true,
+        "openalex": false,
+        "arxiv": false,
+        "unpaywall": true
+      },
+      "phoenix_trace_id": "7b295ff2674d9d1e650093224174bf11",
+      "phoenix": {
+        "ok": true,
+        "error": null,
+        "url": "http://127.0.0.1:16006/v1/projects/science-graphrag/spans",
+        "fetch_strategy": "desc_only"
+      },
+      "verdicts": {
+        "ok": true,
+        "issues": [],
+        "runtime": {
+          "ok": true,
+          "issues": []
+        },
+        "tool_trace": {
+          "ok": true,
+          "issues": []
+        },
+        "phoenix": {
+          "ok": true,
+          "issues": []
+        },
+        "answer_len": 1053,
+        "citations_count": 7,
+        "matrix": {
+          "ok": true,
+          "issues": []
+        }
+      },
+      "terminal_reason": "final_answer_ok",
+      "audit_diagnostics": {}
+    },
+    {
+      "suite": "web_hot_topics",
+      "id": "open_vocabulary_detection",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:scholar",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:scholar",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 345.73
+    },
+    {
+      "suite": "corpus_only",
+      "id": "corpus_compare_two_papers",
+      "ok": false,
+      "error": "[Errno 104] Connection reset by peer",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:corpus",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:corpus",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "corpus_only",
+      "id": "corpus_workspace_stats",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:corpus",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:corpus",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "product_official",
+      "id": "ultralytics_yolo_official",
+      "ok": false,
+      "error": "[Errno 104] Connection reset by peer",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:official",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:official",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "product_official",
+      "id": "pytorch_torchvision_release",
+      "ok": false,
+      "error": "[Errno 104] Connection reset by peer",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:official",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:official",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "doi_first",
+      "id": "doi_unpaywall_pdf",
+      "ok": false,
+      "error": "[Errno 104] Connection reset by peer",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:doi",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:doi",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "doi_first",
+      "id": "doi_crossref_metadata",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:doi",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:doi",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "arxiv_only",
+      "id": "arxiv_sam_segmentation",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:arxiv",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:arxiv",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "arxiv_only",
+      "id": "arxiv_diffusion",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:arxiv",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:arxiv",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "negative_claim",
+      "id": "negative_no_silver_bullet",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "metadata_only_trap",
+      "id": "limitations_only",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:scholar",
+          "missing_family:final_answer",
+          "missing_limitations_language"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:scholar",
+            "missing_family:final_answer",
+            "missing_limitations_language"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "settings_overlay",
+      "id": "external_off",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "settings_overlay",
+      "id": "web_on_scholar_optional",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "full_matrix_smoke",
+      "id": "multimodal_pretraining_cv",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:scholar",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:scholar",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "full_matrix_smoke",
+      "id": "document_vlm_ocr_free",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "full_matrix_smoke",
+      "id": "vla_robotics",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "full_matrix_smoke",
+      "id": "gaussian_splatting",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "full_matrix_smoke",
+      "id": "efficient_edge_cv",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "full_matrix_smoke",
+      "id": "medical_foundation_vision",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "full_matrix_smoke",
+      "id": "synthetic_data_cv",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    },
+    {
+      "suite": "full_matrix_smoke",
+      "id": "video_diffusion_world_models",
+      "ok": false,
+      "error": "Server disconnected without sending a response.",
+      "verdicts": {
+        "ok": false,
+        "issues": [
+          "request_failed",
+          "empty_answer",
+          "few_citations",
+          "request_error",
+          "missing_web_search",
+          "missing_web_fetch",
+          "missing_final_answer_tool",
+          "phoenix_missing_final_answer_span",
+          "missing_family:web",
+          "missing_family:final_answer"
+        ],
+        "runtime": {
+          "ok": false,
+          "issues": [
+            "request_failed",
+            "empty_answer",
+            "few_citations",
+            "request_error"
+          ]
+        },
+        "tool_trace": {
+          "ok": false,
+          "issues": [
+            "missing_web_search",
+            "missing_web_fetch",
+            "missing_final_answer_tool"
+          ]
+        },
+        "phoenix": {
+          "ok": false,
+          "issues": [
+            "phoenix_missing_final_answer_span"
+          ]
+        },
+        "answer_len": 0,
+        "citations_count": 0,
+        "matrix": {
+          "ok": false,
+          "issues": [
+            "missing_family:web",
+            "missing_family:final_answer"
+          ]
+        }
+      },
+      "elapsed_sec": 0.0
+    }
+  ]
+}

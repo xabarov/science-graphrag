@@ -58,14 +58,34 @@ export AGENT_LIVE_WORKSPACE_ID=ws-pilot-od
 .venv/bin/python scripts/live_check/external_web_hot_topics_cv_audit.py \
   --out-json eval/results/external-web-hot-topics-cv-live-latest.json \
   --out-md eval/results/external-web-hot-topics-cv-live-latest.md \
-  --lane-label baseline
+  --lane-label baseline \
+  --timeout 600
 ```
 
-Report includes `lane_label`, per-case `verdicts` (runtime / tool_trace / phoenix), optional `final_answer_validation`, `terminal_reason`, `audit_diagnostics`, and `next_slice_gates`. Compare `coverage` block (including `terminal_reason_distribution`) to baseline in `eval/results/external-web-hot-topics-cv-live-2026-05-16.md` or a prior `*-latest.json` via `--compare-json`.
+Report includes `lane_label`, per-case `verdicts` (runtime / tool_trace / phoenix), optional `final_answer_validation`, `terminal_reason`, `audit_diagnostics`, and `next_slice_gates`. Compare `coverage` block (including `terminal_reason_distribution`) to [`external-web-hot-topics-cv-rebaseline-baseline.json`](../../eval/results/external-web-hot-topics-cv-rebaseline-baseline.json) or a prior run via `--compare-json`.
 
 **Next-slice targets** (Phase 3 operator evidence; evaluated automatically in CV report `next_slice_gates`): `runtime_ok_cases >= 6/10`, `tool_trace_ok_cases >= 6/10`, `phoenix_ok_cases >= 5/10`, `with_final_answer >= 8/10`, `generic_fallback_with_evidence_cases == 0`.
 
-**2026-05-17 evidence:** conservative baseline `eval/results/external-web-hot-topics-cv-live-baseline.json` → `all_ok=false` (5/10 cases timed out at 300s). Toolcalling experiment lane (`SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_TOOLCALLING_EXPERIMENT_ENABLED=1`) → `eval/results/external-web-hot-topics-cv-live-experiment.json` with `all_ok=true` (7/10 passed, 10/10 completed). Historical `eval/results/external-web-hot-topics-cv-live-2026-05-16.md` predates Phase 3–6 slices.
+**2026-05-17 evidence (canonical for gates):** controlled re-baseline at `--timeout 600`:
+
+- Conservative: [`external-web-hot-topics-cv-rebaseline-baseline.json`](../../eval/results/external-web-hot-topics-cv-rebaseline-baseline.json) → `all_ok=true` (6/10 passed, 10/10 completed).
+- Experiment: [`external-web-hot-topics-cv-rebaseline-experiment.json`](../../eval/results/external-web-hot-topics-cv-rebaseline-experiment.json) → `all_ok=true` (8/10 passed; better Phoenix).
+
+Use `--timeout 600` for this matrix; 300s runs under-report long external-research turns (`external-web-hot-topics-cv-live-baseline.json` had 5× ReadTimeout). Latest alias: [`external-web-hot-topics-cv-live-latest.md`](../../eval/results/external-web-hot-topics-cv-live-latest.md) (= re-baseline conservative).
+
+Phoenix audit uses `collect_phoenix_span_names_for_trace` (limit 2000, desc+asc merge). Writer synthetic `final_answer` closes emit `tool.final_answer` spans.
+
+### Expanded intent matrix (Phase N3)
+
+Fixture: `eval/fixtures/agent_external_research_matrix.json` (22 cases: corpus_only, product_official, doi_first, arxiv_only, negative_claim, metadata_only_trap, settings_overlay, …).
+
+```bash
+.venv/bin/python scripts/live_check/agent_external_research_matrix.py \
+  --suite full_matrix_smoke --timeout 600 \
+  --out-json eval/results/agent-external-research-matrix.json
+```
+
+External-fast A/B: enable `SCIENCE_GRAPHRAG_AGENT_EXTERNAL_RESEARCH_FAST_PATH_ENABLED=1` and `agent_route_plan_enabled=1` on API, then re-run the same harness.
 
 ## Acceptance map
 
